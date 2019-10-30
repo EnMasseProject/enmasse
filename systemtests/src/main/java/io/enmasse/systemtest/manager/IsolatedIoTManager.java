@@ -22,14 +22,13 @@ import java.util.List;
 import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
 
 public class IsolatedIoTManager extends ResourceManager {
-
-    private Logger LOGGER = CustomLogger.getLogger();
-    protected AmqpClientFactory amqpClientFactory;
-    protected MqttClientFactory mqttClientFactory;
-    protected List<IoTProject> ioTProjects;
-    protected List<IoTConfig> ioTConfigs;
+    private static final Logger LOGGER = CustomLogger.getLogger();
+    private AmqpClientFactory amqpClientFactory;
+    private MqttClientFactory mqttClientFactory;
+    private List<IoTProject> ioTProjects;
+    private List<IoTConfig> ioTConfigs;
     private static IsolatedIoTManager instance = null;
-    private UserCredentials defaultCredentials = environment.getDefaultCredentials();
+    private UserCredentials defaultCredentials = ENVIRONMENT.getDefaultCredentials();
 
     private IsolatedIoTManager() {
         ioTProjects = new ArrayList<>();
@@ -43,33 +42,33 @@ public class IsolatedIoTManager extends ResourceManager {
         return instance;
     }
 
-    public void initFactories(AddressSpace addressSpace) {
+    private void initFactories(AddressSpace addressSpace) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(addressSpace, defaultCredentials);
     }
 
-    public void initFactories(IoTProject project) {
+    private void initFactories(IoTProject project) {
         String addSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-        this.initFactories(kubernetes.getAddressSpaceClient(project.getMetadata()
+        this.initFactories(KUBERNETES.getAddressSpaceClient(project.getMetadata()
                 .getNamespace()).withName(addSpaceName).get());
     }
 
     @Override
-    public void setup() throws Exception {
-        if (!kubernetes.namespaceExists(IOT_PROJECT_NAMESPACE)) {
-            kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
+    public void setup() {
+        if (!KUBERNETES.namespaceExists(IOT_PROJECT_NAMESPACE)) {
+            KUBERNETES.createNamespace(IOT_PROJECT_NAMESPACE);
         }
     }
 
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
-        if (environment.skipCleanup()) {
+        if (ENVIRONMENT.skipCleanup()) {
             LOGGER.info("Skip cleanup is set, no cleanup process");
         } else {
             try {
                 tearDownProjects();
                 tearDownConfigs();
-                SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+                SystemtestsKubernetesApps.deleteInfinispanServer(KUBERNETES.getInfraNamespace());
             } catch (Exception e) {
                 LOGGER.error("Error tearing down iot test: {}", e.getMessage());
                 throw e;
@@ -80,9 +79,9 @@ public class IsolatedIoTManager extends ResourceManager {
     private void tearDownProjects() throws Exception {
         LOGGER.info("All IoTProjects will be removed");
         for (IoTProject project : ioTProjects) {
-            var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
+            var iotProjectApiClient = KUBERNETES.getIoTProjectClient(project.getMetadata().getNamespace());
             if (iotProjectApiClient.withName(project.getMetadata().getName()).get() != null) {
-                IoTUtils.deleteIoTProjectAndWait(kubernetes, project);
+                IoTUtils.deleteIoTProjectAndWait(KUBERNETES, project);
             } else {
                 LOGGER.info("IoTProject '{}' doesn't exists!", project.getMetadata().getName());
             }
@@ -93,10 +92,10 @@ public class IsolatedIoTManager extends ResourceManager {
     private void tearDownConfigs() throws Exception {
         // delete configs
         LOGGER.info("All IoTConfigs will be removed");
-        var iotConfigApiClient = kubernetes.getIoTConfigClient();
+        var iotConfigApiClient = KUBERNETES.getIoTConfigClient();
         for (IoTConfig config : ioTConfigs) {
             if (iotConfigApiClient.withName(config.getMetadata().getName()).get() != null) {
-                IoTUtils.deleteIoTConfigAndWait(kubernetes, config);
+                IoTUtils.deleteIoTConfigAndWait(KUBERNETES, config);
             } else {
                 LOGGER.info("IoTConfig '{}' doesn't exists!", config.getMetadata().getName());
             }
@@ -130,31 +129,14 @@ public class IsolatedIoTManager extends ResourceManager {
         initFactories(project);
     }
 
-    public void deleteIoTProject(IoTProject project) throws Exception {
-        IoTUtils.deleteIoTProjectAndWait(kubernetes, project);
-        ioTProjects.remove(project);
-    }
-
     public void createIoTConfig(IoTConfig ioTConfig) throws Exception {
         ioTConfigs.add(ioTConfig);
         IoTUtils.createIoTConfig(ioTConfig);
-    }
-
-    public void deleteIoTConfig(IoTConfig ioTConfig) throws Exception {
-        IoTUtils.deleteIoTConfigAndWait(kubernetes, ioTConfig);
-        ioTConfigs.add(ioTConfig);
-    }
-
-    public List<IoTProject> getIoTProjects() {
-        return ioTProjects;
     }
 
     public String getTenantId() {
         return IoTUtils.getTenantId(ioTProjects.get(0));
     }
 
-    public List<IoTConfig> getIoTConfigs() {
-        return ioTConfigs;
-    }
 
 }

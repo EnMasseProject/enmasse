@@ -60,9 +60,9 @@ public abstract class WebConsolePlansTest extends TestBase implements ITestIsola
         AddressPlan consoleTopicPlan2 = PlanUtils.createAddressPlanObject("console-topic-2", AddressType.TOPIC, addressResourcesTopic2);
         AddressPlan consoleQueuePlan3 = PlanUtils.createAddressPlanObject("console-queue-3", AddressType.QUEUE, addressResourcesQueue3);
 
-        isolatedResourcesManager.createAddressPlan(consoleQueuePlan1);
-        isolatedResourcesManager.createAddressPlan(consoleTopicPlan2);
-        isolatedResourcesManager.createAddressPlan(consoleQueuePlan3);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(consoleQueuePlan1);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(consoleTopicPlan2);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(consoleQueuePlan3);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -72,13 +72,13 @@ public abstract class WebConsolePlansTest extends TestBase implements ITestIsola
         List<AddressPlan> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
         AddressSpacePlan consolePlan = PlanUtils.createAddressSpacePlanObject("console-plan",
                 "default-minimal", AddressSpaceType.STANDARD, resources, addressPlans);
-        isolatedResourcesManager.createAddressSpacePlan(consolePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(consolePlan);
 
         //create address space plan with new plan
         AddressSpace consoleAddrSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("console-plan-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -89,14 +89,14 @@ public abstract class WebConsolePlansTest extends TestBase implements ITestIsola
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.createAddressSpace(consoleAddrSpace);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpace(consoleAddrSpace);
 
         //create new user
         UserCredentials user = new UserCredentials("test-newplan-name", "test_newplan_password");
-        isolatedResourcesManager.createOrUpdateUser(consoleAddrSpace, user);
+        ISOLATED_RESOURCES_MANAGER.createOrUpdateUser(consoleAddrSpace, user);
 
         //create addresses
-        consoleWebPage = new ConsoleWebPage(selenium, kubernetes.getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);
+        consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         Address q1 = new AddressBuilder()
                 .withNewMetadata()

@@ -52,20 +52,20 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         waitForMonitoringResources();
         KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-deployment"));
         Thread.sleep(30_000);
-        TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), 6, new TimeoutBudget(3, TimeUnit.MINUTES));
+        TestUtils.waitForExpectedReadyPods(KUBERNETES, environment.getMonitoringNamespace(), 6, new TimeoutBudget(3, TimeUnit.MINUTES));
 
         Kubernetes.getInstance().getClient().namespaces()
-                .withName(kubernetes.getInfraNamespace())
+                .withName(KUBERNETES.getInfraNamespace())
                 .edit()
                 .editMetadata()
                 .addToLabels("monitoring-key", "middleware")
                 .endMetadata()
                 .done();
-        KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
-        KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
+        KubeCMDClient.switchProject(KUBERNETES.getInfraNamespace());
+        KubeCMDClient.applyFromFile(KUBERNETES.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
 
         Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
-        this.prometheusApiClient = new PrometheusApiClient(kubernetes, prometheusEndpoint);
+        this.prometheusApiClient = new PrometheusApiClient(KUBERNETES, prometheusEndpoint);
 
         waitUntilPrometheusReady();
 
@@ -115,12 +115,12 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
             logCollector.collectLogsOfPodsInNamespace(environment.getMonitoringNamespace());
             logCollector.collectEvents(environment.getMonitoringNamespace());
         }
-        KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
-        KubeCMDClient.deleteFromFile(kubernetes.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
+        KubeCMDClient.switchProject(KUBERNETES.getInfraNamespace());
+        KubeCMDClient.deleteFromFile(KUBERNETES.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
         KubeCMDClient.switchProject(environment.getMonitoringNamespace());
         deleteMonitoringInfra();
         KubeCMDClient.deleteNamespace(environment.getMonitoringNamespace());
-        KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
+        KubeCMDClient.switchProject(KUBERNETES.getInfraNamespace());
     }
 
     private void deleteMonitoringInfra() {

@@ -193,22 +193,22 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         String appNamespace = "certificate-validator-ns";
         boolean testSucceeded = false;
         try {
-            SystemtestsKubernetesApps.deployOpenshiftCertValidator(appNamespace, kubernetes);
-            try (var client = new OpenshiftCertValidatorApiClient(kubernetes, SystemtestsKubernetesApps.getOpenshiftCertValidatorEndpoint(appNamespace, kubernetes))) {
+            SystemtestsKubernetesApps.deployOpenshiftCertValidator(appNamespace, KUBERNETES);
+            try (var client = new OpenshiftCertValidatorApiClient(KUBERNETES, SystemtestsKubernetesApps.getOpenshiftCertValidatorEndpoint(appNamespace, KUBERNETES))) {
 
                 JsonObject request = new JsonObject();
                 request.put("username", user.getUsername());
                 request.put("password", user.getPassword());
 
-                Endpoint messagingEndpoint = kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "amqps");
+                Endpoint messagingEndpoint = KUBERNETES.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "amqps");
                 request.put("messagingHost", messagingEndpoint.getHost());
                 request.put("messagingPort", messagingEndpoint.getPort());
 
-                Endpoint mqttEndpoint = kubernetes.getEndpoint("mqtt-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "secure-mqtt");
+                Endpoint mqttEndpoint = KUBERNETES.getEndpoint("mqtt-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "secure-mqtt");
                 request.put("mqttHost", mqttEndpoint.getHost());
                 request.put("mqttPort", Integer.toString(mqttEndpoint.getPort()));
 
-                Endpoint consoleEndpoint = kubernetes.getEndpoint("console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "https");
+                Endpoint consoleEndpoint = KUBERNETES.getEndpoint("console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "https");
                 request.put("consoleHost", consoleEndpoint.getHost());
                 request.put("consolePort", consoleEndpoint.getPort());
 
@@ -246,7 +246,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 logCollector.collectLogsOfPodsByLabels(appNamespace,
                         null, Collections.singletonMap("app", SystemtestsKubernetesApps.OPENSHIFT_CERT_VALIDATOR));
             }
-            SystemtestsKubernetesApps.deleteOpenshiftCertValidator(appNamespace, kubernetes);
+            SystemtestsKubernetesApps.deleteOpenshiftCertValidator(appNamespace, KUBERNETES);
         }
     }
 
@@ -258,7 +258,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-cert-provider-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -329,7 +329,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                         .addCertValue(Buffer.buffer(endpointCert)))
                 .setVerifyHost(true));
 
-        Endpoint consoleEndpoint = kubernetes.getConsoleEndpoint(addressSpace);
+        Endpoint consoleEndpoint = KUBERNETES.getConsoleEndpoint(addressSpace);
         CompletableFuture<Optional<Throwable>> promise = new CompletableFuture<>();
         webClient.get(consoleEndpoint.getPort(), consoleEndpoint.getHost(), "").ssl(true).send(ar -> {
             log.info("get console " + ar.toString());

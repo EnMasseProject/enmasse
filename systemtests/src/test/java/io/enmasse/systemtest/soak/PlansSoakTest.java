@@ -42,7 +42,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
         //define and create address plans
         List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.001), new ResourceRequest("router", 0.0));
         AddressPlan xxsQueuePlan = PlanUtils.createAddressPlanObject("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
-        isolatedResourcesManager.createAddressPlan(xxsQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -58,7 +58,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
         AddressSpace manyAddressesSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("many-plan-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -69,7 +69,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.createAddressSpace(manyAddressesSpace);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
         resourcesManager.createOrUpdateUser(manyAddressesSpace, cred);
@@ -80,7 +80,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
         for (int i = 0; i < destCount; i++) {
             dest.add(new AddressBuilder()
                     .withNewMetadata()
-                    .withNamespace(kubernetes.getInfraNamespace())
+                    .withNamespace(KUBERNETES.getInfraNamespace())
                     .withName(AddressUtils.generateAddressMetadataName(manyAddressesSpace, "xxs-queue-" + i))
                     .endMetadata()
                     .withNewSpec()
@@ -102,7 +102,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
             QueueTest.runQueueTest(queueClient, dest.get(i), 42);
         }
 
-        isolatedResourcesManager.deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
+        ISOLATED_RESOURCES_MANAGER.deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
         for (int i = toDeleteCount; i < destCount; i += 1000) {
             waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
         }

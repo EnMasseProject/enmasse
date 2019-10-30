@@ -44,7 +44,7 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("smoke-space-brokered")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -117,7 +117,7 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
         AddressSpace addressSpaceA = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("smoke-space-brokered-a")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -131,7 +131,7 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
         AddressSpace addressSpaceB = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("smoke-space-brokered-b")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -141,7 +141,7 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpaceList(addressSpaceA, addressSpaceB);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(addressSpaceA, addressSpaceB);
 
         Address queueA = new AddressBuilder()
                 .withNewMetadata()

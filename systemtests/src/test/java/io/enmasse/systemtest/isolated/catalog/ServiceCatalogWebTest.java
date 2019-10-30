@@ -62,7 +62,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         if (!environment.skipCleanup()) {
             provisionedServices.forEach((addressSpace) -> {
                 try {
-                    isolatedResourcesManager.deleteAddressSpaceCreatedBySC(addressSpace);
+                    ISOLATED_RESOURCES_MANAGER.deleteAddressSpaceCreatedBySC(addressSpace);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -89,7 +89,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         provisionedServices.add(brokered);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, kubernetes.getOCConsoleRoute(), ocTestUser);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, KUBERNETES.getOCConsoleRoute(), ocTestUser);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokered);
         ocPage.deprovisionAddressSpace(brokered.getMetadata().getNamespace());
@@ -111,7 +111,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         provisionedServices.add(standard);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, kubernetes.getOCConsoleRoute(), ocTestUser);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, KUBERNETES.getOCConsoleRoute(), ocTestUser);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(standard);
         ocPage.deprovisionAddressSpace(standard.getMetadata().getNamespace());
@@ -133,7 +133,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         provisionedServices.add(brokered);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, kubernetes.getOCConsoleRoute(), ocTestUser);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, KUBERNETES.getOCConsoleRoute(), ocTestUser);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokered);
         String binding1 = ocPage.createBinding(brokered, null, null);
@@ -182,11 +182,11 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         provisionedServices.add(brokered);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, kubernetes.getOCConsoleRoute(), ocTestUser);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, KUBERNETES.getOCConsoleRoute(), ocTestUser);
 
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokered);
-        brokered = kubernetes.getAddressSpaceClient(brokered.getMetadata().getNamespace()).withName(brokered.getMetadata().getName()).get();
+        brokered = KUBERNETES.getAddressSpaceClient(brokered.getMetadata().getNamespace()).withName(brokered.getMetadata().getName()).get();
 
         String bindingID = ocPage.createBinding(brokered, null, null);
         String restrictedAccesId = ocPage.createBinding(brokered, "noexists", "noexists");
@@ -241,11 +241,11 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         provisionedServices.add(addressSpace);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, kubernetes.getOCConsoleRoute(), ocTestUser);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, KUBERNETES.getOCConsoleRoute(), ocTestUser);
 
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(addressSpace);
-        addressSpace = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
+        addressSpace = KUBERNETES.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
 
         String bindingID = ocPage.createBinding(addressSpace, null, null);
         BindingSecretData credentials = ocPage.viewSecretOfBinding(addressSpace, bindingID);
@@ -280,10 +280,10 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         //provision via oc web ui and wait until ready
         provisionedServices.add(brokeredSpace);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, kubernetes.getOCConsoleRoute(), ocTestUser);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, KUBERNETES.getOCConsoleRoute(), ocTestUser);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(brokeredSpace);
-        brokeredSpace = kubernetes.getAddressSpaceClient(brokeredSpace.getMetadata().getNamespace()).withName(brokeredSpace.getMetadata().getName()).get();
+        brokeredSpace = KUBERNETES.getAddressSpaceClient(brokeredSpace.getMetadata().getNamespace()).withName(brokeredSpace.getMetadata().getName()).get();
 
         //open console login web page and use OpenShift credentials for login
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(brokeredSpace);
@@ -318,11 +318,11 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         provisionedServices.add(addressSpace);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, kubernetes.getOCConsoleRoute(), ocTestUser);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, KUBERNETES.getOCConsoleRoute(), ocTestUser);
 
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(addressSpace);
-        addressSpace = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
+        addressSpace = KUBERNETES.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
 
         String bindingID = ocPage.createBinding(addressSpace, null, null);
         BindingSecretData credentials = ocPage.viewSecretOfBinding(addressSpace, bindingID);
@@ -368,10 +368,10 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         provisionedServices.add(addressSpace);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, kubernetes.getOCConsoleRoute(), ocTestUser);
+        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, KUBERNETES.getOCConsoleRoute(), ocTestUser);
         ocPage.openOpenshiftPage();
         ocPage.provisionAddressSpaceViaSC(addressSpace);
-        addressSpace = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
+        addressSpace = KUBERNETES.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(addressSpace);
         consolePage.login(ocTestUser);
@@ -387,7 +387,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build(), true);
 
-        isolatedResourcesManager.deleteAddressSpaceCreatedBySC(addressSpace);
+        ISOLATED_RESOURCES_MANAGER.deleteAddressSpaceCreatedBySC(addressSpace);
 
         WebElement errorLog = selenium.getWebElement(() ->
                 selenium.getDriver().findElement(By.id("peerLostErrorDialogLabel")));

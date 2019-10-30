@@ -30,8 +30,8 @@ public class SharedResourceManager extends ResourceManager {
     protected MqttClientFactory mqttClientFactory = null;
     private AddressSpace sharedAddressSpace = null;
     private static final String DEFAULT_ADDRESS_TEMPLATE = "-shared-";
-    private UserCredentials defaultCredentials = environment.getSharedDefaultCredentials();
-    private UserCredentials managementCredentials = environment.getSharedManagementCredentials();
+    private UserCredentials defaultCredentials = ENVIRONMENT.getSharedDefaultCredentials();
+    private UserCredentials managementCredentials = ENVIRONMENT.getSharedManagementCredentials();
 
     public static synchronized SharedResourceManager getInstance() {
         if (instance == null) {
@@ -57,7 +57,7 @@ public class SharedResourceManager extends ResourceManager {
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
-            if (environment.skipCleanup()) {
+            if (ENVIRONMENT.skipCleanup()) {
                 LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
             } else {
                 LOGGER.info(String.format("test failed: %s.%s",
@@ -76,7 +76,7 @@ public class SharedResourceManager extends ResourceManager {
             }
         } else { //succeed
             try {
-                if (environment.skipCleanup()) {
+                if (ENVIRONMENT.skipCleanup()) {
                     LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
                 } else {
                     LOGGER.info("Shared address space will be deleted!");
@@ -136,10 +136,10 @@ public class SharedResourceManager extends ResourceManager {
     public void deleteSharedAddressSpace() {
         if (sharedAddressSpace != null && TestInfo.getInstance().isAddressSpaceDeleteable()) {
             LOGGER.info("Shared address {} space will be removed", sharedAddressSpace.getMetadata().getName());
-            if (environment.skipCleanup()) {
+            if (ENVIRONMENT.skipCleanup()) {
                 LOGGER.warn("Remove address spaces when test run finished - SKIPPED!");
             } else {
-                GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes, new File(environment.testLogDir()));
+                GlobalLogCollector logCollector = new GlobalLogCollector(KUBERNETES, new File(ENVIRONMENT.testLogDir()));
                 try {
                     AddressSpaceUtils.deleteAddressSpaceAndWait(sharedAddressSpace, logCollector);
                     sharedAddressSpace = null;

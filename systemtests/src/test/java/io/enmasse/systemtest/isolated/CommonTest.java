@@ -55,7 +55,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("mystandard")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -83,7 +83,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         List<Pod> unready;
         do {
-            unready = new ArrayList<>(kubernetes.listPods());
+            unready = new ArrayList<>(KUBERNETES.listPods());
             unready.removeIf(p -> TestUtils.isPodReady(p, true));
 
             if (!unready.isEmpty()) {
@@ -97,11 +97,11 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
         List<Map.Entry<String, String>> podsContainersWithNoLog = new ArrayList<>();
 
-        kubernetes.listPods().forEach(pod -> kubernetes.getContainersFromPod(pod.getMetadata().getName()).forEach(container -> {
+        KUBERNETES.listPods().forEach(pod -> KUBERNETES.getContainersFromPod(pod.getMetadata().getName()).forEach(container -> {
             String podName = pod.getMetadata().getName();
             String containerName = container.getName();
             log.info("Getting log from pod: {}, for container: {}", podName, containerName);
-            String podlog = kubernetes.getLog(podName, containerName);
+            String podlog = KUBERNETES.getLog(podName, containerName);
 
             // Retry - diagnostic code to help understand a sporadic Ci failure.
             if (podlog.isEmpty()) {
@@ -111,7 +111,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                     Thread.currentThread().interrupt();
                 }
                 log.info("(Retry) Getting log from pod: {}, for container: {}", podName, containerName);
-                podlog = kubernetes.getLog(podName, containerName);
+                podlog = KUBERNETES.getLog(podName, containerName);
             }
 
             if (podlog.isEmpty()) {
@@ -142,7 +142,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("space-restart-brokered")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -155,7 +155,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("space-restart-standard")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -165,7 +165,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(standard, brokered);
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
@@ -182,7 +182,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         log.info("------------------- Start with restating -------------------");
         log.info("------------------------------------------------------------");
 
-        List<Pod> pods = kubernetes.listPods();
+        List<Pod> pods = KUBERNETES.listPods();
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
         try {
@@ -190,14 +190,14 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 log.info("Restarting {}", label.labelValue);
                 KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
                 Thread.sleep(30_000);
-                TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+                TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
                 assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
             }
 
             log.info("Restarting whole enmasse");
-            KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
+            KubeCMDClient.deletePodByLabel("app", KUBERNETES.getEnmasseAppLabel());
             Thread.sleep(180_000);
-            TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+            TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
             AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
                     standardAddresses.toArray(new Address[0]));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
@@ -224,7 +224,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("space-restart-brokered")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -237,7 +237,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("space-restart-standard")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -247,7 +247,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(standard, brokered);
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
@@ -310,7 +310,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         log.info("------------------- Start with restating -------------------");
         log.info("------------------------------------------------------------");
 
-        List<Pod> pods = kubernetes.listPods();
+        List<Pod> pods = KUBERNETES.listPods();
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
@@ -318,7 +318,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             log.info("Restarting {}", label.labelValue);
             KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
             Thread.sleep(30_000);
-            TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+            TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
         }
 
@@ -339,7 +339,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("standard-space-monitor")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -353,12 +353,12 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         resourcesManager.createOrUpdateUser(standard, new UserCredentials("jenda", "cenda"));
         resourcesManager.setAddresses(AddressUtils.getAllStandardAddresses(standard).toArray(new Address[0]));
 
-        String qdRouterName = TestUtils.listRunningPods(kubernetes, standard).stream()
+        String qdRouterName = TestUtils.listRunningPods(KUBERNETES, standard).stream()
                 .filter(pod -> pod.getMetadata().getName().contains("qdrouter"))
                 .collect(Collectors.toList()).get(0).getMetadata().getName();
-        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-c", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
-        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-a", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
-        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-l", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(KUBERNETES.getInfraNamespace(), qdRouterName, "-c", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(KUBERNETES.getInfraNamespace(), qdRouterName, "-a", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(KUBERNETES.getInfraNamespace(), qdRouterName, "-l", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
     }
 
     @Test
@@ -373,7 +373,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("addr-space-restart-standard")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -386,7 +386,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("addr-space-restart-brokered")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -396,7 +396,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(standard, brokered);
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
@@ -413,7 +413,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         log.info("------------------- Start with restating -------------------");
         log.info("------------------------------------------------------------");
 
-        List<Pod> pods = kubernetes.listPods();
+        List<Pod> pods = KUBERNETES.listPods();
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
@@ -493,7 +493,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         log.info("Restarting {}", label.labelValue);
         KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
         Thread.sleep(30_000);
-        TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+        TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
         if (stopSend.isCompletedExceptionally()) {
             stopSend.get();
         }

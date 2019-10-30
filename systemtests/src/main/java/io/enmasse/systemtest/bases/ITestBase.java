@@ -13,11 +13,11 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import org.slf4j.Logger;
 
 public interface ITestBase {
-    MessagingUtils clientUtils = new MessagingUtils();
+    MessagingUtils MESSAGING_UTILS = new MessagingUtils();
     Logger LOGGER = CustomLogger.getLogger();
-    Kubernetes kubernetes = Kubernetes.getInstance();
+    Kubernetes KUBERNETES = Kubernetes.getInstance();
     default MessagingUtils getClientUtils() {
-        return clientUtils;
+        return MESSAGING_UTILS;
     }
 
     default AddressSpaceType getAddressSpaceType() {

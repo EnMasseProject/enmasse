@@ -61,7 +61,7 @@ class PlansTest extends TestBase implements ITestSharedStandard {
         int replicasCount = (int) (destCount * requiredCredit);
         waitForBrokerReplicas(getSharedAddressSpace(), dest.get(0), replicasCount);
 
-        List<Address> standardAddresses = kubernetes.getAddressClient().inAnyNamespace().list().getItems(); //get all addresses
+        List<Address> standardAddresses = KUBERNETES.getAddressClient().inAnyNamespace().list().getItems(); //get all addresses
         for (int i = 0; i < destCount; i++) {
             assertThat("Queue plan wasn't set properly",
                     standardAddresses.get(i).getSpec().getPlan(), is(weakQueuePlan.getMetadata().getName()));

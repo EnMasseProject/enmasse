@@ -73,7 +73,7 @@ public abstract class GlobalConsoleTest extends TestBase {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-custom-auth")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -95,7 +95,7 @@ public abstract class GlobalConsoleTest extends TestBase {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-view-console")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -144,7 +144,7 @@ public abstract class GlobalConsoleTest extends TestBase {
         } finally {
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
-            kubernetes.deleteNamespace(namespace);
+            KUBERNETES.deleteNamespace(namespace);
         }
     }
 
@@ -152,7 +152,7 @@ public abstract class GlobalConsoleTest extends TestBase {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-api")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -194,7 +194,7 @@ public abstract class GlobalConsoleTest extends TestBase {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("standard")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -220,11 +220,11 @@ public abstract class GlobalConsoleTest extends TestBase {
         log.warn("Finding: " + endpointPrefix + "console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
 
         //try to get all external endpoints
-        kubernetes.getExternalEndpoint(endpointPrefix + "console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+        KUBERNETES.getExternalEndpoint(endpointPrefix + "console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
 
         ConsoleWebPage console = new ConsoleWebPage(
                 selenium,
-                kubernetes.getConsoleRoute(addressSpace),
+                KUBERNETES.getConsoleRoute(addressSpace),
                 addressSpace,
                 clusterUser);
         console.openWebConsolePage();

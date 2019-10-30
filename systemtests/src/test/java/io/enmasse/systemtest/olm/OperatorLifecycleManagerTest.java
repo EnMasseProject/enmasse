@@ -11,7 +11,6 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.Openshift4WebPage;
@@ -22,7 +21,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,7 +46,7 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @SeleniumFirefox
     @Order(1)
     void installOperator() throws Exception {
-        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), kubernetes.getOCConsoleRoute(), clusterUser);
+        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), KUBERNETES.getOCConsoleRoute(), clusterUser);
         page.openOpenshiftPage();
         page.installFromCatalog(environment.getAppName());
         Thread.sleep(30_000);
@@ -59,7 +57,7 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @SeleniumFirefox
     @Order(2)
     void testCreateExampleResources() throws Exception {
-        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), kubernetes.getOCConsoleRoute(), clusterUser);
+        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), KUBERNETES.getOCConsoleRoute(), clusterUser);
         page.openOpenshiftPage();
         page.openInstalledOperators();
         page.selectNamespaceFromBar(infraNamespace);
@@ -73,7 +71,7 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
         TestUtils.waitUntilDeployed(infraNamespace);
 
         page.createExampleResourceItem("addressspace");
-        resourcesManager.waitForAddressSpaceReady(kubernetes.getAddressSpaceClient(infraNamespace).withName("myspace").get());
+        resourcesManager.waitForAddressSpaceReady(KUBERNETES.getAddressSpaceClient(infraNamespace).withName("myspace").get());
 
         page.createExampleResourceItem("address");
         page.createExampleResourceItem("messaginguser");
@@ -84,8 +82,8 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @Test
     @Order(3)
     void testBasicMessagingAfterOlmInstallation() throws Exception {
-        AddressSpace exampleSpace = kubernetes.getAddressSpaceClient(infraNamespace).withName("myspace").get();
-        Address exampleAddress = kubernetes.getAddressClient(infraNamespace).withName("myspace.myqueue").get();
+        AddressSpace exampleSpace = KUBERNETES.getAddressSpaceClient(infraNamespace).withName("myspace").get();
+        Address exampleAddress = KUBERNETES.getAddressClient(infraNamespace).withName("myspace.myqueue").get();
         getClientUtils().assertCanConnect(exampleSpace, new UserCredentials("user", "enmasse"), Collections.singletonList(exampleAddress), resourcesManager);
     }
 
@@ -94,10 +92,10 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @Order(4)
     void uninstallOperator() throws Exception {
         TestUtils.cleanAllEnmasseResourcesFromNamespace(infraNamespace);
-        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), kubernetes.getOCConsoleRoute(), clusterUser);
+        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), KUBERNETES.getOCConsoleRoute(), clusterUser);
         page.openOpenshiftPage();
         page.uninstallFromCatalog(environment.getAppName());
-        kubernetes.getConsoleServiceClient(infraNamespace).withPropagationPolicy("Background").delete();
+        KUBERNETES.getConsoleServiceClient(infraNamespace).withPropagationPolicy("Background").delete();
     }
 
 

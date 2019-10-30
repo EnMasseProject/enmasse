@@ -55,7 +55,7 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("ttest-restart-standard")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -68,7 +68,7 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-restart-brokered")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -78,7 +78,7 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(standard, brokered);
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
@@ -96,9 +96,9 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
             log.info("............................................................");
             log.info("............................................................");
             log.info("..........Scheduler will pick pod and delete them...........");
-            List<Pod> pods = kubernetes.listPods();
+            List<Pod> pods = KUBERNETES.listPods();
             int podNum = new Random(System.currentTimeMillis()).nextInt(pods.size() - 1);
-            kubernetes.deletePod(environment.namespace(), pods.get(podNum).getMetadata().getName());
+            KUBERNETES.deletePod(environment.namespace(), pods.get(podNum).getMetadata().getName());
             log.info("............................................................");
             log.info("............................................................");
             log.info("............................................................");
@@ -116,7 +116,7 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-ha-routers")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -126,7 +126,7 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpaceList(standard);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(standard);
         resourcesManager.createOrUpdateUser(standard, user);
 
         List<Address> standardAddresses = AddressUtils.getAllStandardAddresses(standard);
@@ -140,9 +140,9 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
             log.info("............................................................");
             log.info("............................................................");
             log.info("...........Scheduler will delete one of qdrouter............");
-            List<Pod> qdrouters = kubernetes.listPods().stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList());
+            List<Pod> qdrouters = KUBERNETES.listPods().stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList());
             Pod qdrouter = qdrouters.get(new Random(System.currentTimeMillis()).nextInt(qdrouters.size()) % qdrouters.size());
-            kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
+            KUBERNETES.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
             log.info("............................................................");
             log.info("............................................................");
             log.info("............................................................");

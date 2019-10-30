@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.bases.isolated;
 
-import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.ITestBase;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
@@ -12,25 +11,22 @@ import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.junit.jupiter.api.Tag;
 
-import java.util.List;
-
 import static io.enmasse.systemtest.TestTag.ISOLATED;
 
 @Tag(ISOLATED)
 public interface ITestBaseIsolated extends ITestBase {
-    IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
-    List<AddressSpace> currentAddressSpaces = isolatedResourcesManager.getCurrentAddressSpaces();
+    IsolatedResourcesManager ISOLATED_RESOURCES_MANAGER = IsolatedResourcesManager.getInstance();
 
     default AmqpClientFactory getAmqpClientFactory() {
-        return isolatedResourcesManager.getAmqpClientFactory();
+        return ISOLATED_RESOURCES_MANAGER.getAmqpClientFactory();
     }
 
     default MqttClientFactory getMqttClientFactory() {
-        return isolatedResourcesManager.getMqttClientFactory();
+        return ISOLATED_RESOURCES_MANAGER.getMqttClientFactory();
     }
 
     @Override
     default ResourceManager getResourceManager() {
-        return isolatedResourcesManager;
+        return ISOLATED_RESOURCES_MANAGER;
     }
 }

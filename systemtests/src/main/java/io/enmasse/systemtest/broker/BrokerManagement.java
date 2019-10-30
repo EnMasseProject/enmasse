@@ -11,9 +11,9 @@ import java.util.List;
 
 public abstract class BrokerManagement {
 
-    protected String managementAddress;
-    protected String resourceProperty;
-    protected String operationProperty;
+    String managementAddress;
+    String resourceProperty;
+    String operationProperty;
 
     public abstract List<String> getQueueNames(AmqpClient queueClient, Address replyQueue, String topic) throws Exception;
 

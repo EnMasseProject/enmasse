@@ -36,7 +36,7 @@ import static java.time.Duration.ofSeconds;
 
 public class HttpAdapterClient extends ApiClient {
 
-    protected static Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     public HttpAdapterClient(Kubernetes kubernetes, Endpoint endpoint, String deviceAuthId, String tenantId, String password) {
         super(kubernetes, () -> endpoint, "");
@@ -65,7 +65,8 @@ public class HttpAdapterClient extends ApiClient {
         this.client.close();
     }
 
-    public HttpResponse<?> send(MessageType messageType, JsonObject payload, Predicate<Integer> expectedCodePredicate, Consumer<HttpRequest<?>> requestCustomizer,
+    public HttpResponse<?> send(MessageType messageType, JsonObject payload,
+                                Predicate<Integer> expectedCodePredicate, Consumer<HttpRequest<?>> requestCustomizer,
                                 Duration responseTimeout) throws Exception {
         return send(messageType, null, payload, expectedCodePredicate, requestCustomizer, responseTimeout);
     }
@@ -76,7 +77,7 @@ public class HttpAdapterClient extends ApiClient {
         CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
         var ms = responseTimeout.toMillis();
 
-        log.info("POST-{}: body {}", messageType.name().toLowerCase(), payload);
+        LOGGER.info("POST-{}: body {}", messageType.name().toLowerCase(), payload);
 
         // create new request
 
@@ -109,16 +110,18 @@ public class HttpAdapterClient extends ApiClient {
             }
 
             final CompletableFuture<Buffer> nf = new CompletableFuture<>();
-            log.debug("POST-{}: body {} -> {} {}", messageType.name().toLowerCase(), payload, ar.result().statusCode(), ar.result().statusMessage());
+            LOGGER.debug("POST-{}: body {} -> {} {}", messageType.name().toLowerCase(), payload,
+                    ar.result().statusCode(), ar.result().statusMessage());
             if (ar.failed()) {
-                log.debug("Request failed", ar.cause());
+                LOGGER.debug("Request failed", ar.cause());
                 nf.completeExceptionally(ar.cause());
             } else {
                 var response = ar.result();
                 var code = response.statusCode();
-                log.info("POST: code {} -> {}", code, response.bodyAsString());
+                LOGGER.info("POST: code {} -> {}", code, response.bodyAsString());
                 if (!expectedCodePredicate.test(code)) {
-                    nf.completeExceptionally(new RuntimeException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code)));
+                    nf.completeExceptionally(new RuntimeException(String.format("Did not match expected status: %s - was: %s",
+                            expectedCodePredicate, code)));
                 } else {
                     nf.complete(response.body());
                 }

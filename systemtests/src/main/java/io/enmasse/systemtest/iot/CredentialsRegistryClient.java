@@ -31,7 +31,7 @@ import io.vertx.core.json.Json;
 public class CredentialsRegistryClient extends HonoApiClient {
 
     private static final String CREDENTIALS_PATH = "v1/credentials";
-    private static final Random rnd = new SecureRandom();
+    private static final Random RND = new SecureRandom();
 
     public CredentialsRegistryClient(Kubernetes kubernetes, Endpoint endpoint) {
         super(kubernetes, () -> endpoint);
@@ -73,7 +73,7 @@ public class CredentialsRegistryClient extends HonoApiClient {
         }
     }
 
-    public void setCredentials(final String tenantId, final String deviceId, final List<CommonCredential> credentials) throws Exception {
+    public void setCredentials(final String tenantId, final String deviceId,final List<CommonCredential> credentials) throws Exception {
         var requestPath = String.format("/%s/%s/%s", CREDENTIALS_PATH, tenantId, deviceId);
         fixInstants(credentials);
         var body = Json.encode(credentials.toArray(CommonCredential[]::new)); // jackson needs an array
@@ -92,7 +92,8 @@ public class CredentialsRegistryClient extends HonoApiClient {
         setCredentials(tenantId, deviceId, credentials);
     }
 
-    public void updateCredentials(String tenantId, String deviceId, Function<List<CommonCredential>, List<CommonCredential>> manipulator) throws Exception {
+    private void updateCredentials(String tenantId, String deviceId, Function<List<CommonCredential>,
+            List<CommonCredential>> manipulator) throws Exception {
         var credentials = manipulator.apply(getCredentials(tenantId, deviceId));
         if (credentials != null) {
             setCredentials(tenantId, deviceId, credentials);
@@ -103,12 +104,12 @@ public class CredentialsRegistryClient extends HonoApiClient {
         setCredentials(tenantId, deviceId, Collections.emptyList());
     }
 
-    static PasswordSecret createPasswordSecret(final String authId, final String password, final Instant notAfter) {
+    private static PasswordSecret createPasswordSecret(final String authId, final String password, final Instant notAfter) {
 
         var secret = new PasswordSecret();
 
         var salt = new byte[16];
-        rnd.nextBytes(salt);
+        RND.nextBytes(salt);
         secret.setSalt(Base64.getEncoder().encodeToString(salt));
 
         try {
@@ -128,7 +129,7 @@ public class CredentialsRegistryClient extends HonoApiClient {
         }
     }
 
-    static PasswordSecret createPlainPasswordSecret(final String authId, final String password, final Instant notAfter) {
+    private static PasswordSecret createPlainPasswordSecret(final String authId, final String password, final Instant notAfter) {
 
         final PasswordSecret secret = new PasswordSecret();
         secret.setPasswordPlain(password);
@@ -137,7 +138,8 @@ public class CredentialsRegistryClient extends HonoApiClient {
         return secret;
     }
 
-    static PasswordCredential createPlainPasswordCredentialsObject(final String authId, final String password, final Instant notAfter) {
+    private static PasswordCredential createPlainPasswordCredentialsObject(final String authId,
+                                                                           final String password, final Instant notAfter) {
 
         var secret = createPlainPasswordSecret(authId, password, notAfter);
 
@@ -165,23 +167,28 @@ public class CredentialsRegistryClient extends HonoApiClient {
 
     }
 
-    public void addPlainPasswordCredentials(final String tenantId, final String deviceId, final String authId, final String password) throws Exception {
+    public void addPlainPasswordCredentials(final String tenantId, final String deviceId,
+                                                            final String authId, final String password) throws Exception {
         addPlainPasswordCredentials(tenantId, deviceId, authId, password, null);
     }
 
-    public void addCredentials(final String tenantId, final String deviceId, final String authId, final String password) throws Exception {
+    public void addCredentials(final String tenantId, final String deviceId,
+                                                            final String authId, final String password) throws Exception {
         addCredentials(tenantId, deviceId, authId, password, null);
     }
 
-    public void addPlainPasswordCredentials(final String tenantId, final String deviceId, final String authId, final String password, final Instant notAfter) throws Exception {
+    private void addPlainPasswordCredentials(final String tenantId, final String deviceId, final String authId,
+                                                                        final String password, final Instant notAfter) throws Exception {
         addCredentials(tenantId, deviceId, Collections.singletonList(createPlainPasswordCredentialsObject(authId, password, notAfter)));
     }
 
-    public void addCredentials(final String tenantId, final String deviceId, final String authId, final String password, final Instant notAfter) throws Exception {
+    public void addCredentials(final String tenantId, final String deviceId, final String authId,
+                                                                        final String password, final Instant notAfter) throws Exception {
         addCredentials(tenantId, deviceId, Collections.singletonList(createCredentialsObject(authId, password, notAfter)));
     }
 
-    public void updateCredentials(final String tenantId, final String deviceId, final String authId, final String newPassword, final Instant notAfter) throws Exception {
+    public void updateCredentials(final String tenantId, final String deviceId, final String authId,
+                                                                    final String newPassword, final Instant notAfter) throws Exception {
         updateCredentials(tenantId, deviceId, credentials -> {
 
             for ( CommonCredential c : credentials ) {

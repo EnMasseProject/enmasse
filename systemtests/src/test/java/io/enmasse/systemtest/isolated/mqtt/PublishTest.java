@@ -34,7 +34,7 @@ class PublishTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("standard")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -70,8 +70,8 @@ class PublishTest extends TestBase implements ITestIsolatedStandard {
         resourcesManager.createOrUpdateUser(addressSpace, luckyUser);
 
         //try to get all external endpoints
-        kubernetes.getExternalEndpoint(endpointPrefix + "messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-        kubernetes.getExternalEndpoint(endpointPrefix + "mqtt-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+        KUBERNETES.getExternalEndpoint(endpointPrefix + "messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+        KUBERNETES.getExternalEndpoint(endpointPrefix + "mqtt-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
 
         //messsaging
         Address anycast = new AddressBuilder()

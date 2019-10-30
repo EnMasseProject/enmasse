@@ -43,7 +43,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
 
     @AfterEach
     void tearDown() {
-        SystemtestsKubernetesApps.deletePostgresDB(kubernetes.getInfraNamespace());
+        SystemtestsKubernetesApps.deletePostgresDB(KUBERNETES.getInfraNamespace());
     }
 
     @Test
@@ -64,7 +64,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-auth")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -105,7 +105,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpaceStandardAuth = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-standard-auth")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -148,7 +148,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpaceExternalAuth = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-external-auth")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -188,7 +188,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-ephe")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -202,7 +202,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpace2 = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-sauth")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -213,7 +213,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.createAddressSpaceList(addressSpace, addressSpace2);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(addressSpace, addressSpace2);
 
         Address queue = new AddressBuilder()
                 .withNewMetadata()
@@ -261,7 +261,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-custom-auth")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -301,7 +301,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-auth")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -340,7 +340,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
 
     @Test
     void testStandardAuthServiceWithDB() throws Exception {
-        Endpoint endpoint = SystemtestsKubernetesApps.deployPostgresDB(kubernetes.getInfraNamespace());
+        Endpoint endpoint = SystemtestsKubernetesApps.deployPostgresDB(KUBERNETES.getInfraNamespace());
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-postgres",
                 endpoint.getHost(), endpoint.getPort(), "postgresql", "postgresdb", SystemtestsKubernetesApps.POSTGRES_APP);
         resourcesManager.createAuthService(standardAuth);
@@ -349,7 +349,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-auth-postgres")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())

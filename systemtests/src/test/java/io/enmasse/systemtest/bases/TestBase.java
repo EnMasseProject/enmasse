@@ -32,7 +32,6 @@ import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
@@ -103,7 +102,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * The constant logCollector.
      */
-    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
+    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(KUBERNETES,
             new File(environment.testLogDir()));
     /**
      * The Resources manager.
@@ -162,7 +161,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @throws Exception the exception
      */
     protected AddressSpaceSchemaList getSchema() {
-        return kubernetes.getSchemaClient().list();
+        return KUBERNETES.getSchemaClient().list();
     }
 
     /**
@@ -176,12 +175,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "messaging");
         if (messagingEndpoint == null) {
             String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-            messagingEndpoint = kubernetes.getExternalEndpoint(externalEndpointName);
+            messagingEndpoint = KUBERNETES.getExternalEndpoint(externalEndpointName);
         }
         if (TestUtils.resolvable(messagingEndpoint)) {
             return messagingEndpoint;
         } else {
-            return kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getNamespace(), "amqps");
+            return KUBERNETES.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getNamespace(), "amqps");
         }
     }
 
@@ -191,7 +190,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return the oc console route
      */
     protected String getOCConsoleRoute() {
-        if (kubernetes.getOcpVersion() == 4) {
+        if (KUBERNETES.getOcpVersion() == 4) {
             return String.format("https://console-openshift-console.%s", environment.kubernetesDomain()).replaceAll("(?<!(http:|https:))[//]+", "/");
         } else {
             return String.format("%s/console", environment.getApiUrl()).replaceAll("(?<!(http:|https:))[//]+", "/");
@@ -221,7 +220,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         Endpoint consoleEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "console");
         if (consoleEndpoint == null) {
             String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "console");
-            consoleEndpoint = kubernetes.getExternalEndpoint(externalEndpointName);
+            consoleEndpoint = KUBERNETES.getExternalEndpoint(externalEndpointName);
         }
         return consoleEndpoint;
     }
@@ -257,7 +256,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         try {
             SeleniumManagement.deployFirefoxApp();
             selenium = getFirefoxSeleniumProvider();
-            ConsoleWebPage console = new ConsoleWebPage(selenium, kubernetes.getConsoleRoute(addressSpace), addressSpace, clusterUser);
+            ConsoleWebPage console = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(addressSpace), addressSpace, clusterUser);
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
 
@@ -366,7 +365,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     protected void waitForPodsToTerminate(List<String> uids) throws Exception {
         LOGGER.info("Waiting for following pods to be deleted {}", uids);
-        TestUtils.assertWaitForValue(true, () -> (kubernetes.listPods(kubernetes.getInfraNamespace()).stream()
+        TestUtils.assertWaitForValue(true, () -> (KUBERNETES.listPods(KUBERNETES.getInfraNamespace()).stream()
                 .noneMatch(pod -> uids.contains(pod.getMetadata().getUid()))), new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
@@ -761,7 +760,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         LOGGER.info("addresses {} successfully created", Arrays.toString(destinationsNames.toArray()));
 
         //get specific address d2
-        Address res = kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace()).withName(d2.getMetadata().getName()).get();
+        Address res = KUBERNETES.getAddressClient(addressSpace.getMetadata().getNamespace()).withName(d2.getMetadata().getName()).get();
         assertThat("Rest api does not return specific address", res.getSpec().getAddress(), is(d2.getSpec().getAddress()));
 
         resourcesManager.deleteAddresses(d1);

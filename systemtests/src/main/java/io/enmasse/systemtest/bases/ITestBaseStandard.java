@@ -26,7 +26,8 @@ public interface ITestBaseStandard extends ITestBase {
                 return DestinationPlan.STANDARD_SMALL_ANYCAST;
             case MULTICAST:
                 return DestinationPlan.STANDARD_SMALL_MULTICAST;
+            default:
+                return null;
         }
-        return null;
     }
 }

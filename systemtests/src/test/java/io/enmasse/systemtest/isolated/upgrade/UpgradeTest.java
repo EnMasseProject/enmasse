@@ -57,7 +57,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
     @BeforeAll
     void prepareUpgradeEnv() {
-        isolatedResourcesManager.setReuseAddressSpace();
+        ISOLATED_RESOURCES_MANAGER.setReuseAddressSpace();
         productName = Environment.getInstance().isDownstream() ? "amq-online" : "enmasse";
         startVersion = getVersionFromTemplateDir(Paths.get(Environment.getInstance().getStartTemplates()));
     }
@@ -143,7 +143,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), AddressUtils.getAddresses(brokered).toArray(new Address[0]));
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES),AddressUtils.getAddresses(standard).toArray(new Address[0]));
 
-        List<User> items = kubernetes.getUserClient().list().getItems();
+        List<User> items = KUBERNETES.getUserClient().list().getItems();
         log.info("After upgrade {} user(s)", items.size());
         items.forEach(u -> log.info("User {}", u.getSpec().getUsername()));
 
@@ -153,11 +153,11 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-small", MESSAGE_COUNT, true));
             assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", MESSAGE_COUNT, true));
         } else {
-            if (!KubeCMDClient.getUser(kubernetes.getInfraNamespace(), "brokered", "test-brokered").getRetCode()) {
-                createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "brokered", "v1alpha1");
+            if (!KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), "brokered", "test-brokered").getRetCode()) {
+                createUserCMD(KUBERNETES.getInfraNamespace(), "test-brokered", "brokered", "v1alpha1");
             }
-            if (!KubeCMDClient.getUser(kubernetes.getInfraNamespace(), "standard", "test-standard").getRetCode()) {
-                createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "standard", "v1alpha1");
+            if (!KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), "standard", "test-standard").getRetCode()) {
+                createUserCMD(KUBERNETES.getInfraNamespace(), "test-standard", "standard", "v1alpha1");
             }
             Thread.sleep(30_000);
 
@@ -197,27 +197,27 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", "systemtests.inventory");
         Path ansiblePlaybook = Paths.get(templateDir.toString(), "ansible", "playbooks", "openshift", "uninstall.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
-                "--extra-vars", String.format("namespace=%s", kubernetes.getInfraNamespace()));
+                "--extra-vars", String.format("namespace=%s", KUBERNETES.getInfraNamespace()));
         assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Uninstall failed");
     }
 
     private void installEnmasseBundle(Path templateDir, String version) throws Exception {
         log.info("Application will be deployed using bundle version {}", version);
-        KubeCMDClient.createNamespace(kubernetes.getInfraNamespace());
-        KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
+        KubeCMDClient.createNamespace(KUBERNETES.getInfraNamespace());
+        KubeCMDClient.switchProject(KUBERNETES.getInfraNamespace());
         if (version.startsWith("0.26") || version.equals("1.0")) {
-            KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "bundles", productName.equals("enmasse") ? "enmasse-with-standard-authservice" : productName));
+            KubeCMDClient.applyFromFile(KUBERNETES.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "bundles", productName.equals("enmasse") ? "enmasse-with-standard-authservice" : productName));
         } else {
-            KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "bundles", productName));
-            KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-plans"));
-            KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-authservices", "standard-authservice.yaml"));
+            KubeCMDClient.applyFromFile(KUBERNETES.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "bundles", productName));
+            KubeCMDClient.applyFromFile(KUBERNETES.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-plans"));
+            KubeCMDClient.applyFromFile(KUBERNETES.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-authservices", "standard-authservice.yaml"));
         }
         Thread.sleep(60_000);
-        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
+        TestUtils.waitUntilDeployed(KUBERNETES.getInfraNamespace());
     }
 
     private void upgradeEnmasseBundle(Path templateDir) throws Exception {
-        KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "bundles", productName));
+        KubeCMDClient.applyFromFile(KUBERNETES.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "bundles", productName));
         Thread.sleep(600_000);
         checkImagesUpdated(getVersionFromTemplateDir(templateDir));
     }
@@ -231,7 +231,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", "systemtests.inventory");
         Path ansiblePlaybook = Paths.get(templatePaths.toString(), "ansible", "playbooks", "openshift", "deploy_all.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
-                "--extra-vars", String.format("namespace=%s authentication_services=[\"standard\"]", kubernetes.getInfraNamespace()));
+                "--extra-vars", String.format("namespace=%s authentication_services=[\"standard\"]", KUBERNETES.getInfraNamespace()));
 
         assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Deployment of new version of enmasse failed");
         log.info("Sleep after {}", upgrade ? "upgrade" : "install");
@@ -241,7 +241,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             Thread.sleep(600_000);
             checkImagesUpdated(getVersionFromTemplateDir(templatePaths));
         } else {
-            TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
+            TestUtils.waitUntilDeployed(KUBERNETES.getInfraNamespace());
         }
     }
 
@@ -255,7 +255,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         TestUtils.waitUntilCondition("Images are updated", (phase) -> {
             AtomicBoolean ready = new AtomicBoolean(true);
             log.info("=======================================================");
-            kubernetes.listPods().forEach(pod -> {
+            KUBERNETES.listPods().forEach(pod -> {
                 pod.getSpec().getContainers().forEach(container -> {
                     log.info("Pod {}, current container {}", pod.getMetadata().getName(), container.getImage());
                     log.info("Comparing: {}", container.getImage()
@@ -284,7 +284,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             });
             return ready.get();
         }, new TimeoutBudget(5, TimeUnit.MINUTES));
-        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
+        TestUtils.waitUntilDeployed(KUBERNETES.getInfraNamespace());
     }
 
     boolean sendMessage(String addressSpace, AbstractClient client, UserCredentials
@@ -294,7 +294,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
         arguments.put(ClientArgument.CONN_SSL, "true");
         arguments.put(ClientArgument.MSG_CONTENT, "pepa");
-        arguments.put(ClientArgument.BROKER, KubeCMDClient.getMessagingEndpoint(kubernetes.getInfraNamespace(), addressSpace) + ":443");
+        arguments.put(ClientArgument.BROKER, KubeCMDClient.getMessagingEndpoint(KUBERNETES.getInfraNamespace(), addressSpace) + ":443");
         arguments.put(ClientArgument.ADDRESS, address);
         arguments.put(ClientArgument.COUNT, Integer.toString(UpgradeTest.MESSAGE_COUNT));
         arguments.put(ClientArgument.MSG_DURABLE, "true");
@@ -310,7 +310,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         arguments.put(ClientArgument.USERNAME, credentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
         arguments.put(ClientArgument.CONN_SSL, "true");
-        arguments.put(ClientArgument.BROKER, KubeCMDClient.getMessagingEndpoint(kubernetes.getInfraNamespace(), addressSpace) + ":443");
+        arguments.put(ClientArgument.BROKER, KubeCMDClient.getMessagingEndpoint(KUBERNETES.getInfraNamespace(), addressSpace) + ":443");
         arguments.put(ClientArgument.ADDRESS, address);
         arguments.put(ClientArgument.COUNT, Integer.toString(UpgradeTest.MESSAGE_COUNT));
         arguments.put(ClientArgument.LOG_MESSAGES, "json");
@@ -320,7 +320,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private void ensurePersistentAuthService(String authServiceName) throws Exception {
-        AuthenticationService authService = kubernetes.getAuthenticationServiceClient().withName(authServiceName).get();
+        AuthenticationService authService = KUBERNETES.getAuthenticationServiceClient().withName(authServiceName).get();
 
         if (authService.getSpec() != null && authService.getSpec().getStandard() != null) {
 
@@ -330,12 +330,12 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
                 resourcesManager.removeAuthService(authService);
 
                 AuthenticationService replacement = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, true);
-                kubernetes.getAuthenticationServiceClient().create(replacement);
+                KUBERNETES.getAuthenticationServiceClient().create(replacement);
 
                 log.info("Replacement auth service : {}", replacement);
 
                 Thread.sleep(30_000);
-                TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
+                TestUtils.waitUntilDeployed(KUBERNETES.getInfraNamespace());
             }
         }
     }

@@ -25,8 +25,6 @@ import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
-import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
@@ -55,7 +53,7 @@ import java.util.function.BiFunction;
 
 public class MqttClientFactory {
 
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     private final String SERVER_URI_TEMPLATE = "tcp://%s:%s";
     private final String TLS_SERVER_URI_TEMPLATE = "ssl://%s:%s";
@@ -122,12 +120,14 @@ public class MqttClientFactory {
                     mqttConnectOptions.setAutomaticReconnect(true);
                     mqttConnectOptions.setHttpsHostnameVerificationEnabled(false);
                 }
-                return MqttClientFactory.this.create(MqttClient::new, DelegatingMqttClient::new, endpoint, addressSpace, mqttConnectOptions, clientId);
+                return MqttClientFactory.this.create(MqttClient::new, DelegatingMqttClient::new,
+                        endpoint, addressSpace, mqttConnectOptions, clientId);
             }
 
             @Override
             public IMqttAsyncClient createAsync() throws Exception {
-                return MqttClientFactory.this.create(MqttAsyncClient::new, DelegatingMqttAsyncClient::new, endpoint, addressSpace, mqttConnectOptions, clientId);
+                return MqttClientFactory.this.create(MqttAsyncClient::new, DelegatingMqttAsyncClient::new,
+                        endpoint, addressSpace, mqttConnectOptions, clientId);
             }
         };
     }
@@ -136,11 +136,9 @@ public class MqttClientFactory {
         return build().create();
     }
 
-    public IMqttAsyncClient createAsycm() throws Exception {
-        return build().createAsync();
-    }
-
-    private <C> C create(ConnectionFactory<? extends C> factory, BiFunction<C, MqttConnectOptions, C> delegator, Endpoint endpoint, AddressSpace addressSpace, MqttConnectOptions options, String clientId) throws Exception {
+    private <C> C create(ConnectionFactory<? extends C> factory, BiFunction<C, MqttConnectOptions, C> delegator,
+                         Endpoint endpoint, AddressSpace addressSpace, MqttConnectOptions options,
+                         String clientId) throws Exception {
 
         Endpoint mqttEndpoint;
 
@@ -148,7 +146,8 @@ public class MqttClientFactory {
             mqttEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
             if (mqttEndpoint == null) {
                 String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "mqtt");
-                mqttEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+                mqttEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" +
+                        AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
             }
         } else {
             mqttEndpoint = endpoint;
@@ -169,7 +168,7 @@ public class MqttClientFactory {
             mqttEndpoint = new Endpoint("localhost", 443);
         }
 
-        log.info("Using mqtt endpoint {}", mqttEndpoint);
+        LOGGER.info("Using mqtt endpoint {}", mqttEndpoint);
 
         if (username != null && password != null) {
             options.setUserName(username);
@@ -188,6 +187,7 @@ public class MqttClientFactory {
             try {
                 client.close();
             } catch (Exception e) {
+                LOGGER.error(e.getMessage());
             }
         }
         connectedClients.clear();
@@ -236,7 +236,8 @@ public class MqttClientFactory {
         }
 
         @Override
-        public Socket createSocket(final Socket socket, final String host, final int port, final boolean autoClose) throws IOException {
+        public Socket createSocket(final Socket socket, final String host,
+                                   final int port, final boolean autoClose) throws IOException {
             return setHostnameParameter(socketFactory.createSocket(socket, host, port, autoClose));
         }
 
@@ -303,7 +304,7 @@ public class MqttClientFactory {
         private IMqttAsyncClient mqttClient;
         private MqttConnectOptions options;
 
-        public DelegatingMqttAsyncClient(IMqttAsyncClient mqttClient, MqttConnectOptions options) {
+        DelegatingMqttAsyncClient(IMqttAsyncClient mqttClient, MqttConnectOptions options) {
             this.mqttClient = mqttClient;
             this.options = options;
             connectedClients.add(this);
@@ -315,19 +316,19 @@ public class MqttClientFactory {
             mqttClient.close();
         }
 
-        public IMqttToken connect() throws MqttException, MqttSecurityException {
+        public IMqttToken connect() throws MqttException {
             return mqttClient.connect(options);
         }
 
-        public IMqttToken connect(MqttConnectOptions options) throws MqttException, MqttSecurityException {
+        public IMqttToken connect(MqttConnectOptions options) {
             throw new UnsupportedOperationException("Use the zero args this method.");
         }
 
-        public IMqttToken connect(Object userContext, IMqttActionListener callback) throws MqttException, MqttSecurityException {
+        public IMqttToken connect(Object userContext, IMqttActionListener callback) throws MqttException {
             return mqttClient.connect(options, userContext, callback);
         }
 
-        public IMqttToken connect(MqttConnectOptions options, Object userContext, IMqttActionListener callback) throws MqttException, MqttSecurityException {
+        public IMqttToken connect(MqttConnectOptions options, Object userContext, IMqttActionListener callback) {
             throw new UnsupportedOperationException("Use the zero args this method.");
         }
 
@@ -343,7 +344,8 @@ public class MqttClientFactory {
             return mqttClient.disconnect(userContext, callback);
         }
 
-        public IMqttToken disconnect(long quiesceTimeout, Object userContext, IMqttActionListener callback) throws MqttException {
+        public IMqttToken disconnect(long quiesceTimeout, Object userContext,
+                                                        IMqttActionListener callback) throws MqttException {
             return mqttClient.disconnect(quiesceTimeout, userContext, callback);
         }
 
@@ -371,20 +373,21 @@ public class MqttClientFactory {
             return mqttClient.getServerURI();
         }
 
-        public IMqttDeliveryToken publish(String topic, byte[] payload, int qos, boolean retained) throws MqttException, MqttPersistenceException {
+        public IMqttDeliveryToken publish(String topic, byte[] payload, int qos, boolean retained) throws MqttException {
             return mqttClient.publish(topic, payload, qos, retained);
         }
 
-        public IMqttDeliveryToken publish(String topic, byte[] payload, int qos, boolean retained, Object userContext, IMqttActionListener callback)
-                throws MqttException, MqttPersistenceException {
+        public IMqttDeliveryToken publish(String topic, byte[] payload, int qos, boolean retained,
+                                          Object userContext, IMqttActionListener callback) throws MqttException {
             return mqttClient.publish(topic, payload, qos, retained, userContext, callback);
         }
 
-        public IMqttDeliveryToken publish(String topic, MqttMessage message) throws MqttException, MqttPersistenceException {
+        public IMqttDeliveryToken publish(String topic, MqttMessage message) throws MqttException {
             return mqttClient.publish(topic, message);
         }
 
-        public IMqttDeliveryToken publish(String topic, MqttMessage message, Object userContext, IMqttActionListener callback) throws MqttException, MqttPersistenceException {
+        public IMqttDeliveryToken publish(String topic, MqttMessage message, Object userContext,
+                                          IMqttActionListener callback) throws MqttException {
             return mqttClient.publish(topic, message, userContext, callback);
         }
 
@@ -400,7 +403,8 @@ public class MqttClientFactory {
             return mqttClient.subscribe(topicFilter, qos);
         }
 
-        public IMqttToken subscribe(String topicFilter, int qos, Object userContext, IMqttActionListener callback) throws MqttException {
+        public IMqttToken subscribe(String topicFilter, int qos, Object userContext,
+                                    IMqttActionListener callback) throws MqttException {
             return mqttClient.subscribe(topicFilter, qos, userContext, callback);
         }
 
@@ -408,23 +412,28 @@ public class MqttClientFactory {
             return mqttClient.subscribe(topicFilters, qos);
         }
 
-        public IMqttToken subscribe(String[] topicFilters, int[] qos, Object userContext, IMqttActionListener callback) throws MqttException {
+        public IMqttToken subscribe(String[] topicFilters, int[] qos, Object userContext,
+                                    IMqttActionListener callback) throws MqttException {
             return mqttClient.subscribe(topicFilters, qos, userContext, callback);
         }
 
-        public IMqttToken subscribe(String topicFilter, int qos, Object userContext, IMqttActionListener callback, IMqttMessageListener messageListener) throws MqttException {
+        public IMqttToken subscribe(String topicFilter, int qos, Object userContext, IMqttActionListener callback,
+                                    IMqttMessageListener messageListener) throws MqttException {
             return mqttClient.subscribe(topicFilter, qos, userContext, callback, messageListener);
         }
 
-        public IMqttToken subscribe(String topicFilter, int qos, IMqttMessageListener messageListener) throws MqttException {
+        public IMqttToken subscribe(String topicFilter, int qos,
+                                    IMqttMessageListener messageListener) throws MqttException {
             return mqttClient.subscribe(topicFilter, qos, messageListener);
         }
 
-        public IMqttToken subscribe(String[] topicFilters, int[] qos, IMqttMessageListener[] messageListeners) throws MqttException {
+        public IMqttToken subscribe(String[] topicFilters, int[] qos,
+                                    IMqttMessageListener[] messageListeners) throws MqttException {
             return mqttClient.subscribe(topicFilters, qos, messageListeners);
         }
 
-        public IMqttToken subscribe(String[] topicFilters, int[] qos, Object userContext, IMqttActionListener callback, IMqttMessageListener[] messageListeners)
+        public IMqttToken subscribe(String[] topicFilters, int[] qos, Object userContext,
+                                    IMqttActionListener callback, IMqttMessageListener[] messageListeners)
                 throws MqttException {
             return mqttClient.subscribe(topicFilters, qos, userContext, callback, messageListeners);
         }
@@ -467,7 +476,7 @@ public class MqttClientFactory {
         private final IMqttClient mqttClient;
         private final MqttConnectOptions options;
 
-        public DelegatingMqttClient(IMqttClient mqttClient, MqttConnectOptions options) {
+        DelegatingMqttClient(IMqttClient mqttClient, MqttConnectOptions options) {
             this.mqttClient = mqttClient;
             this.options = options;
             connectedClients.add(this);
@@ -479,7 +488,7 @@ public class MqttClientFactory {
         }
 
         @Override
-        public IMqttToken connectWithResult(MqttConnectOptions options) throws MqttException {
+        public IMqttToken connectWithResult(MqttConnectOptions options) {
             throw new UnsupportedOperationException("Use the zero args this method.");
         }
 

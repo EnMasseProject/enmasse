@@ -70,10 +70,10 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
     @BeforeEach
     void initClient() {
-        Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
-        this.httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        this.registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
-        this.credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
+        Endpoint deviceRegistryEndpoint = KUBERNETES.getExternalEndpoint("device-registry");
+        this.httpAdapterEndpoint = KUBERNETES.getExternalEndpoint("iot-http-adapter");
+        this.registryClient = new DeviceRegistryClient(KUBERNETES, deviceRegistryEndpoint);
+        this.credentialsClient = new CredentialsRegistryClient(KUBERNETES, deviceRegistryEndpoint);
     }
 
     @BeforeEach
@@ -83,11 +83,11 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         String deviceId = UUID.randomUUID().toString();
         String authId = UUID.randomUUID().toString();
         String password = UUID.randomUUID().toString();
-        this.httpClient = new HttpAdapterClient(kubernetes, this.httpAdapterEndpoint, authId, sharedIoTResourceManager.getTenantId(), password);
+        this.httpClient = new HttpAdapterClient(KUBERNETES, this.httpAdapterEndpoint, authId, SHARED_IOT_MANAGER.getTenantId(), password);
         
         // set up new random device
-        this.registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
-        this.credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, authId, password);
+        this.registryClient.registerDevice(SHARED_IOT_MANAGER.getTenantId(), deviceId);
+        this.credentialsClient.addCredentials(SHARED_IOT_MANAGER.getTenantId(), deviceId, authId, password);
 
         // setup payload
         this.commandPayload = UUID.randomUUID().toString();
@@ -126,12 +126,12 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     void testRequestResponseCommand() throws Exception {
 
         final var reqId = UUID.randomUUID().toString();
-        final var replyToAddress = "control/" + sharedIoTResourceManager.getTenantId() + "/" + UUID.randomUUID().toString();
+        final var replyToAddress = "control/" + SHARED_IOT_MANAGER.getTenantId() + "/" + UUID.randomUUID().toString();
 
         final AtomicReference<Future<List<ProtonDelivery>>> sentFuture = new AtomicReference<>();
 
         // set up command response consumer (before responding to telemetry)
-        var f3 = sharedIoTResourceManager.getAmqpClient().recvMessages(replyToAddress, 1);
+        var f3 = SHARED_IOT_MANAGER.getAmqpClient().recvMessages(replyToAddress, 1);
 
         var f1 = setupMessagingReceiver(sentFuture, commandMessage -> {
             commandMessage.setCorrelationId(reqId);
@@ -191,7 +191,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
         // setup telemetry consumer
 
-        return sharedIoTResourceManager.getAmqpClient().recvMessages(new QueueTerminusFactory().getSource("telemetry/" + sharedIoTResourceManager.getTenantId()), msg -> {
+        return SHARED_IOT_MANAGER.getAmqpClient().recvMessages(new QueueTerminusFactory().getSource("telemetry/" + SHARED_IOT_MANAGER.getTenantId()), msg -> {
 
             log.info("Received message: {}", msg);
 
@@ -220,7 +220,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
             // send request command
 
             log.info("Sending out command message");
-            var f2 = sharedIoTResourceManager.getAmqpClient().sendMessage("control/" + sharedIoTResourceManager.getTenantId() + "/" + deviceId, commandMessage)
+            var f2 = SHARED_IOT_MANAGER.getAmqpClient().sendMessage("control/" + SHARED_IOT_MANAGER.getTenantId() + "/" + deviceId, commandMessage)
                     .whenComplete((res, err) -> {
                         String strres = null;
                         if (res != null) {

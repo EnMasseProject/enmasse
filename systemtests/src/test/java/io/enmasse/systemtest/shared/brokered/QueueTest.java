@@ -158,7 +158,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
@@ -237,7 +237,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -289,7 +289,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
 

@@ -93,7 +93,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
                 .withName("example-space-plan-standard")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withAddressSpaceType(AddressSpaceType.STANDARD.toString())
@@ -111,7 +111,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         exampleAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("example-address-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -196,7 +196,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
-        isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
+        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
                 () -> assertInfra(brokerMemory,
@@ -234,9 +234,9 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createInfraConfig(testInfra);
+        ISOLATED_RESOURCES_MANAGER.createInfraConfig(testInfra);
 
-        StandardInfraConfig actualInfra = isolatedResourcesManager.getStandardInfraConfig(testInfra.getMetadata().getName());
+        StandardInfraConfig actualInfra = ISOLATED_RESOURCES_MANAGER.getStandardInfraConfig(testInfra.getMetadata().getName());
 
         assertEquals(testInfra.getMetadata().getName(), actualInfra.getMetadata().getName());
 
@@ -261,7 +261,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
     private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, int routerReplicas, String routermemory, PodTemplateSpec routerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec) {
         log.info("Checking router infra");
-        List<Pod> routerPods = TestUtils.listRouterPods(kubernetes, exampleAddressSpace);
+        List<Pod> routerPods = TestUtils.listRouterPods(KUBERNETES, exampleAddressSpace);
         assertEquals(routerReplicas, routerPods.size(), "incorrect number of routers");
 
         for (Pod router : routerPods) {

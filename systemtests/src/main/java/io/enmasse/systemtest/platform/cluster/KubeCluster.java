@@ -18,7 +18,7 @@ public interface KubeCluster {
     String getKubeCmd();
 
     static KubeCluster detect() {
-        Logger LOGGER = CustomLogger.getLogger();
+        final Logger LOGGER = CustomLogger.getLogger();
 
         KubeCluster[] clusters = new KubeCluster[]{new MinikubeCluster(), new OpenShiftCluster()};
         KubeCluster cluster = null;

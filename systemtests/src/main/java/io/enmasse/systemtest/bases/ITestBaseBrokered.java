@@ -22,7 +22,8 @@ public interface ITestBaseBrokered extends ITestBase {
                 return DestinationPlan.BROKERED_QUEUE;
             case TOPIC:
                 return DestinationPlan.BROKERED_TOPIC;
+            default:
+                return null;
         }
-        return null;
     }
 }

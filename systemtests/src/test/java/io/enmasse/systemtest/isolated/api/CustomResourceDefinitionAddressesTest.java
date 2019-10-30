@@ -45,7 +45,7 @@ class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIso
         brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("crd-address-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -85,7 +85,7 @@ class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIso
                 .endSpec()
                 .build();
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, kubernetes.getConsoleRoute(brokered), brokered, clusterUser);
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(brokered), brokered, clusterUser);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.createAddressWebConsole(dest1, false);
@@ -93,7 +93,7 @@ class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIso
         resourcesManager.appendAddresses(false, dest2);
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), dest1, dest2);
 
-        Address addressFromConsole = kubernetes.getAddressClient(brokered.getMetadata().getNamespace()).list().getItems()
+        Address addressFromConsole = KUBERNETES.getAddressClient(brokered.getMetadata().getNamespace()).list().getItems()
                 .stream().filter(address -> address.getSpec().getAddress().equals(dest1.getSpec().getAddress())).findFirst().orElse(null);
         assertNotNull(addressFromConsole, "Didn't receive address from api server");
 
@@ -171,7 +171,7 @@ class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIso
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
                         dest2.getMetadata().getName(), output));
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, kubernetes.getConsoleRoute(brokered), brokered, clusterUser);
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(brokered), brokered, clusterUser);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.deleteAddressWebConsole(dest1);

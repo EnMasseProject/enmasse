@@ -174,8 +174,9 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deployChromeSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {
-        if (!kubeClient.namespaceExists(namespace))
+        if (!kubeClient.namespaceExists(namespace)) {
             kubeClient.createNamespace(namespace);
+        }
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(SELENIUM_CHROME, 4444));
         kubeClient.createConfigmapFromResource(namespace, getRheaConfigMap());
         kubeClient.createDeploymentFromResource(namespace,
@@ -389,21 +390,23 @@ public class SystemtestsKubernetesApps {
         TestUtils.waitForExpectedReadyPods(kubeCli, namespace, 1, new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
-    public static void applyDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
+    private static void applyDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
         loadDirectories(streamManipulator, Applicable::createOrReplace, paths);
     }
 
-    public static void deleteDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
+    private static void deleteDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
         loadDirectories(streamManipulator, Deletable::delete, paths);
     }
 
-    public static void loadDirectories(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
+    private static void loadDirectories(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
         for (Path path : paths) {
             loadDirectory(streamManipulator, consumer, path);
         }
     }
 
-    public static void loadDirectory(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path path) throws Exception {
+    private static void loadDirectory(final Function<InputStream, InputStream> streamManipulator,
+                                      Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata,
+                                              Boolean>> consumer, final Path path) throws Exception {
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
@@ -603,7 +606,8 @@ public class SystemtestsKubernetesApps {
                 .endMetadata()
                 .withNewSpec()
                 .withRules(new IngressRuleBuilder()
-                        .withHost(appName + "." + (env.kubernetesDomain().equals("nip.io") ? new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io" : env.kubernetesDomain()))
+                        .withHost(appName + "." + (env.kubernetesDomain().equals("nip.io") ?
+                                new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io" : env.kubernetesDomain()))
                         .withNewHttp()
                         .withPaths(path)
                         .endHttp()
@@ -785,7 +789,8 @@ public class SystemtestsKubernetesApps {
                                 .withName("artemis-init")
                                 .withImage("quay.io/enmasse/artemis-base:2.10.0")
                                 .withCommand("/bin/sh")
-                                .withArgs("-c", "/opt/apache-artemis/bin/artemis create /var/run/artemis --allow-anonymous --force --user " + user + " --password " + password + " --role admin")
+                                .withArgs("-c", "/opt/apache-artemis/bin/artemis create /var/run/artemis --allow-anonymous --force --user "
+                                        + user + " --password " + password + " --role admin")
                                 .withVolumeMounts(new VolumeMountBuilder()
                                                 .withName("data")
                                                 .withMountPath("/var/run/artemis")

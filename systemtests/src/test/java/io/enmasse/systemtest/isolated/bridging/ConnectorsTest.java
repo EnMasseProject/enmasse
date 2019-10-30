@@ -10,9 +10,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -65,7 +64,7 @@ class ConnectorsTest extends BridgingBase {
     void testNonExsistingHost() throws Exception {
         AddressSpace space = new AddressSpaceBuilder()
                 .withNewMetadata()
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .withName("send-to-connector")
                 .endMetadata()
                 .withNewSpec()
@@ -100,7 +99,7 @@ class ConnectorsTest extends BridgingBase {
     void testInvalidConnectorName() throws Exception {
         AddressSpace space = new AddressSpaceBuilder()
                 .withNewMetadata()
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .withName("invalid-connector-name")
                 .endMetadata()
                 .withNewSpec()
@@ -140,7 +139,7 @@ class ConnectorsTest extends BridgingBase {
     void testInvalidAddressRulePattern() throws Exception {
         AddressSpace space = new AddressSpaceBuilder()
                 .withNewMetadata()
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .withName("invalid-connector-name")
                 .endMetadata()
                 .withNewSpec()

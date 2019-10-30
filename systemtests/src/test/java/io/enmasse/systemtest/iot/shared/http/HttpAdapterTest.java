@@ -50,21 +50,21 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
 
     @BeforeEach
     void initEnv() throws Exception {
-        Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
-        registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
-        credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
-        registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
-        credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, deviceAuthId, devicePassword);
+        Endpoint deviceRegistryEndpoint = KUBERNETES.getExternalEndpoint("device-registry");
+        registryClient = new DeviceRegistryClient(KUBERNETES, deviceRegistryEndpoint);
+        credentialsClient = new CredentialsRegistryClient(KUBERNETES, deviceRegistryEndpoint);
+        registryClient.registerDevice(SHARED_IOT_MANAGER.getTenantId(), deviceId);
+        credentialsClient.addCredentials(SHARED_IOT_MANAGER.getTenantId(), deviceId, deviceAuthId, devicePassword);
 
         User businessApplicationUser = UserUtils.createUserResource(new UserCredentials(businessApplicationUsername, businessApplicationPassword))
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder()
                                 .withAddresses(
-                                        IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantId(),
-                                        IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantId() + "/*",
-                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantId(),
-                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantId() + "/*")
+                                        IOT_ADDRESS_TELEMETRY + "/" + SHARED_IOT_MANAGER.getTenantId(),
+                                        IOT_ADDRESS_TELEMETRY + "/" + SHARED_IOT_MANAGER.getTenantId() + "/*",
+                                        IOT_ADDRESS_EVENT + "/" + SHARED_IOT_MANAGER.getTenantId(),
+                                        IOT_ADDRESS_EVENT + "/" + SHARED_IOT_MANAGER.getTenantId() + "/*")
                                 .withOperations(Operation.recv)
                                 .build()))
                 .endSpec()
@@ -79,8 +79,8 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
                 .setUsername(businessApplicationUsername)
                 .setPassword(businessApplicationPassword);
 
-        Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        adapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, deviceAuthId, sharedIoTResourceManager.getTenantId(), devicePassword);
+        Endpoint httpAdapterEndpoint = KUBERNETES.getExternalEndpoint("iot-http-adapter");
+        adapterClient = new HttpAdapterClient(KUBERNETES, httpAdapterEndpoint, deviceAuthId, SHARED_IOT_MANAGER.getTenantId(), devicePassword);
 
     }
 
@@ -90,11 +90,11 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
             logCollector.collectHttpAdapterQdrProxyState();
         }
         if (credentialsClient != null) {
-            credentialsClient.deleteAllCredentials(sharedIoTResourceManager.getTenantId(), deviceId);
+            credentialsClient.deleteAllCredentials(SHARED_IOT_MANAGER.getTenantId(), deviceId);
         }
         if (registryClient != null) {
-            registryClient.deleteDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId);
-            registryClient.getDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
+            registryClient.deleteDeviceRegistration(SHARED_IOT_MANAGER.getTenantId(), deviceId);
+            registryClient.getDeviceRegistration(SHARED_IOT_MANAGER.getTenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         }
         if (adapterClient != null) {
             adapterClient.close();
@@ -120,7 +120,7 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, SHARED_IOT_MANAGER.getTenantId()))
                 .sender(adapterClient::send)
                 .amount(1)
                 .consume(MessageSendTester.Consume.BEFORE)
@@ -138,7 +138,7 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, SHARED_IOT_MANAGER.getTenantId()))
                 .sender(adapterClient::send)
                 .amount(1)
                 .consume(MessageSendTester.Consume.AFTER)
@@ -155,7 +155,7 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, SHARED_IOT_MANAGER.getTenantId()))
                 .sender(adapterClient::send)
                 .amount(50)
                 .consume(MessageSendTester.Consume.BEFORE)
@@ -175,7 +175,7 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofMillis(100))
                 .additionalSendTimeout(Duration.ofSeconds(10))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, SHARED_IOT_MANAGER.getTenantId()))
                 .sender(adapterClient::send)
                 .amount(5)
                 .consume(MessageSendTester.Consume.AFTER)
@@ -194,7 +194,7 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ZERO)
                 .additionalSendTimeout(Duration.ofSeconds(10))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, SHARED_IOT_MANAGER.getTenantId()))
                 .sender(adapterClient::send)
                 .amount(5)
                 .consume(MessageSendTester.Consume.BEFORE)

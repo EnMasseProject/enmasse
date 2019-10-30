@@ -13,7 +13,7 @@ public enum MessageType {
 
     private String address;
 
-    private MessageType(final String address) {
+    MessageType(final String address) {
         this.address = address;
     }
 

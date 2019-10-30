@@ -96,8 +96,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressPlan weakQueuePlan = PlanUtils.createAddressPlanObject("standard-queue-weak", AddressType.QUEUE, addressResourcesQueue);
         AddressPlan weakTopicPlan = PlanUtils.createAddressPlanObject("standard-topic-weak", AddressType.TOPIC, addressResourcesTopic);
 
-        isolatedResourcesManager.createAddressPlan(weakQueuePlan);
-        isolatedResourcesManager.createAddressPlan(weakTopicPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(weakQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(weakTopicPlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -113,7 +113,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressSpace weakAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("weak-plan-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -151,8 +151,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         resourcesManager.setAddresses(weakQueueDest, weakTopicDest);
 
         //get destinations
-        Address getWeakQueue = kubernetes.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(weakQueueDest.getMetadata().getName()).get();
-        Address getWeakTopic = kubernetes.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(weakTopicDest.getMetadata().getName()).get();
+        Address getWeakQueue = KUBERNETES.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(weakQueueDest.getMetadata().getName()).get();
+        Address getWeakTopic = KUBERNETES.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(weakTopicDest.getMetadata().getName()).get();
 
         String assertMessage = "Queue plan wasn't set properly";
         assertAll("Both destination should contain right addressPlan",
@@ -189,9 +189,9 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressPlan anycastPlan = PlanUtils.createAddressPlanObject("anycast-test1", AddressType.ANYCAST,
                 Collections.singletonList(new ResourceRequest("router", 0.3)));
 
-        isolatedResourcesManager.createAddressPlan(queuePlan);
-        isolatedResourcesManager.createAddressPlan(topicPlan);
-        isolatedResourcesManager.createAddressPlan(anycastPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(queuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(topicPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(anycastPlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -201,13 +201,13 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         List<AddressPlan> addressPlans = Arrays.asList(queuePlan, topicPlan, anycastPlan);
         AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject("quota-limits-pooled-plan",
                 "default-minimal", AddressSpaceType.STANDARD, resources, addressPlans);
-        isolatedResourcesManager.createAddressSpacePlan(addressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-pooled-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -365,8 +365,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                         new ResourceRequest("broker", 1.0),
                         new ResourceRequest("router", 0.01)));
 
-        isolatedResourcesManager.createAddressPlan(queuePlan);
-        isolatedResourcesManager.createAddressPlan(topicPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(queuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(topicPlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -382,7 +382,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-quota-sharded-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -516,9 +516,9 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.createAddressPlan(simpleQueue);
-        isolatedResourcesManager.createAddressPlan(partitionedQueue);
-        isolatedResourcesManager.createAddressPlan(manyPartitionedQueue);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(simpleQueue);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(partitionedQueue);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(manyPartitionedQueue);
 
         //define and create address space plan
         AddressSpacePlan partitionedAddressesPlan = new AddressSpacePlanBuilder()
@@ -543,7 +543,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressSpace partitioned = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("partitioned")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -593,12 +593,12 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressUtils.replaceAddress(address, false, budget);
         Address replaced;
         while (!budget.timeoutExpired()) {
-            replaced = kubernetes.getAddressClient(partitioned.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get();
+            replaced = KUBERNETES.getAddressClient(partitioned.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get();
             if (replaced.getStatus().getMessages().contains("Quota exceeded")) {
                 break;
             }
         }
-        replaced = kubernetes.getAddressClient(partitioned.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get();
+        replaced = KUBERNETES.getAddressClient(partitioned.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get();
         assertNotNull(replaced);
         assertTrue(replaced.getStatus().getMessages().contains("Quota exceeded"), "No status message is present");
     }
@@ -608,7 +608,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         //define and create address plans
         List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.99), new ResourceRequest("router", 0.0));
         AddressPlan xlQueuePlan = PlanUtils.createAddressPlanObject("pooled-xl-queue", AddressType.QUEUE, addressResourcesQueue);
-        isolatedResourcesManager.createAddressPlan(xlQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(xlQueuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -624,7 +624,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressSpace manyAddressesSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("many-addresses-standard")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -678,9 +678,9 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         List<ResourceRequest> addressResourcesQueueBeta = Arrays.asList(new ResourceRequest("broker", 0.6), new ResourceRequest("router", 0));
 
         AddressPlan queuePlanAlpha = PlanUtils.createAddressPlanObject("pooled-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueAlpha);
-        isolatedResourcesManager.createAddressPlan(queuePlanAlpha);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(queuePlanAlpha);
         AddressPlan queuePlanBeta = PlanUtils.createAddressPlanObject("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueueBeta);
-        isolatedResourcesManager.createAddressPlan(queuePlanBeta);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(queuePlanBeta);
 
 
         //define and create address space plan
@@ -697,7 +697,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressSpace messagePersistAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("persist-plan-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -760,8 +760,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
 
 
         // Dump address/broker assignment to help understand occasional test failure.
-        kubernetes.getAddressClient().list().getItems().forEach(q -> {
-            Address a = kubernetes.getAddressClient(messagePersistAddressSpace.getMetadata().getNamespace()).withName(q.getMetadata().getName()).get();
+        KUBERNETES.getAddressClient().list().getItems().forEach(q -> {
+            Address a = KUBERNETES.getAddressClient(messagePersistAddressSpace.getMetadata().getNamespace()).withName(q.getMetadata().getName()).get();
             log.info("Address {} => {}", q.getMetadata().getName(), a.getStatus().getBrokerStatuses());
         });
 
@@ -790,8 +790,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         try {
             TestUtils.waitForNBrokerReplicas(messagePersistAddressSpace, 1, queue4, new TimeoutBudget(5, TimeUnit.MINUTES));
         } finally {
-            kubernetes.getAddressClient().list().getItems().forEach(q -> {
-                Address a = kubernetes.getAddressClient(messagePersistAddressSpace.getMetadata().getNamespace()).withName(q.getMetadata().getName()).get();
+            KUBERNETES.getAddressClient().list().getItems().forEach(q -> {
+                Address a = KUBERNETES.getAddressClient(messagePersistAddressSpace.getMetadata().getNamespace()).withName(q.getMetadata().getName()).get();
                 log.info("Address {} => {}", q.getMetadata().getName(), a.getStatus().getBrokerStatuses());
             });
         }
@@ -830,11 +830,11 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressPlan pooledQueuePlan = PlanUtils.createAddressPlanObject("after-pooled-queue", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.44), new ResourceRequest("router", 0.0)));
 
-        isolatedResourcesManager.createAddressPlan(beforeQueuePlan);
-        isolatedResourcesManager.createAddressPlan(beforeTopicPlan);
-        isolatedResourcesManager.createAddressPlan(afterQueuePlan);
-        isolatedResourcesManager.createAddressPlan(afterTopicPlan);
-        isolatedResourcesManager.createAddressPlan(pooledQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(beforeQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(beforeTopicPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(afterQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(afterTopicPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(pooledQueuePlan);
 
         //define and create address space plans
 
@@ -863,15 +863,15 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 Collections.singletonList(pooledQueuePlan));
 
 
-        isolatedResourcesManager.createAddressSpacePlan(beforeAddressSpacePlan);
-        isolatedResourcesManager.createAddressSpacePlan(afterAddressSpacePlan);
-        isolatedResourcesManager.createAddressSpacePlan(pooledAddressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(beforeAddressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(afterAddressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(pooledAddressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("standard-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -911,13 +911,13 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
 
         resourcesManager.setAddresses(queue, topic);
 
-        clientUtils.sendDurableMessages(isolatedResourcesManager, addressSpace, queue, user, 16);
+        clientUtils.sendDurableMessages(ISOLATED_RESOURCES_MANAGER, addressSpace, queue, user, 16);
 
         addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
-        isolatedResourcesManager.replaceAddressSpace(addressSpace);
+        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(addressSpace);
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), queue, topic);
 
-        clientUtils.receiveDurableMessages(isolatedResourcesManager, addressSpace, queue, user, 16);
+        clientUtils.receiveDurableMessages(ISOLATED_RESOURCES_MANAGER, addressSpace, queue, user, 16);
 
         Address afterQueue = new AddressBuilder()
                 .withNewMetadata()
@@ -930,12 +930,12 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .withPlan(afterQueuePlan.getMetadata().getName())
                 .endSpec()
                 .build();
-        isolatedResourcesManager.appendAddresses(afterQueue);
+        ISOLATED_RESOURCES_MANAGER.appendAddresses(afterQueue);
 
         new MessagingUtils().assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue, topic), resourcesManager);
 
         addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(pooledAddressSpacePlan.getMetadata().getName()).endSpec().done();
-        isolatedResourcesManager.replaceAddressSpace(addressSpace);
+        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(addressSpace);
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), afterQueue, queue, topic);
 
         Address pooledQueue = new AddressBuilder()
@@ -963,8 +963,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressPlan beforeQueuePlan = PlanUtils.createAddressPlanObject("before-large-sharded-queue", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 2.0), new ResourceRequest("router", 0)));
 
-        isolatedResourcesManager.createAddressPlan(beforeQueuePlan);
-        isolatedResourcesManager.createAddressPlan(afterQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(beforeQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(afterQueuePlan);
 
         //define and create address space plans
 
@@ -985,14 +985,14 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 Collections.singletonList(afterQueuePlan));
 
 
-        isolatedResourcesManager.createAddressSpacePlan(beforeAddressSpacePlan);
-        isolatedResourcesManager.createAddressSpacePlan(afterAddressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(beforeAddressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-sharded-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -1038,7 +1038,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressSpace replaced = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-sharded-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -1048,7 +1048,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.replaceAddressSpace(replaced, false);
+        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(replaced, false);
 
         assertEquals(beforeAddressSpacePlan.getMetadata().getName(),
                 replaced.getMetadata().getAnnotations().get("enmasse.io/applied-plan"));
@@ -1065,8 +1065,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressPlan afterQueuePlan = PlanUtils.createAddressPlanObject("bigger-queue", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.8), new ResourceRequest("router", 0.0)));
 
-        isolatedResourcesManager.createAddressPlan(beforeQueuePlan);
-        isolatedResourcesManager.createAddressPlan(afterQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(beforeQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(afterQueuePlan);
 
         AddressSpacePlan addressPlan = PlanUtils.createAddressSpacePlanObject("address-switch-address-plan",
                 "default-minimal", AddressSpaceType.STANDARD,
@@ -1081,7 +1081,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-pooled-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -1110,10 +1110,10 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                         .build()).collect(Collectors.toList());
         resourcesManager.setAddresses(queues.toArray(new Address[0]));
 
-        assertThat("Failed there are no 2 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(2));
+        assertThat("Failed there are no 2 broker pods", TestUtils.listBrokerPods(KUBERNETES, addressSpace).size(), is(2));
 
         for (Address queue : queues) {
-            clientUtils.sendDurableMessages(isolatedResourcesManager, addressSpace, queue, cred, 400);
+            clientUtils.sendDurableMessages(ISOLATED_RESOURCES_MANAGER, addressSpace, queue, cred, 400);
         }
 
         Address queueAfter = new AddressBuilder()
@@ -1129,10 +1129,10 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.replaceAddress(queueAfter);
 
-        assertThat("Failed there are no 3 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(3));
+        assertThat("Failed there are no 3 broker pods", TestUtils.listBrokerPods(KUBERNETES, addressSpace).size(), is(3));
 
         for (Address queue : queues) {
-            clientUtils.receiveDurableMessages(isolatedResourcesManager, addressSpace, queue, cred, 400);
+            clientUtils.receiveDurableMessages(ISOLATED_RESOURCES_MANAGER, addressSpace, queue, cred, 400);
         }
     }
 
@@ -1142,7 +1142,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
 
     private void checkLimits(AddressSpace addressSpace, List<Address> allowedDest, List<Address> notAllowedDest, UserCredentials credentials)
             throws Exception {
-        var client = kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace());
+        var client = KUBERNETES.getAddressClient(addressSpace.getMetadata().getNamespace());
 
         log.info("Try to create {} addresses, and make sure that {} addresses will be not created",
                 Arrays.toString(allowedDest.stream().map(address -> address.getMetadata().getName()).toArray(String[]::new)),
@@ -1184,7 +1184,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
             }
         }
 
-        ConsoleWebPage page = new ConsoleWebPage(selenium, kubernetes.getConsoleRoute(addressSpace), addressSpace, clusterUser);
+        ConsoleWebPage page = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(addressSpace), addressSpace, clusterUser);
         page.openWebConsolePage();
         page.openAddressesPageWebConsole();
 

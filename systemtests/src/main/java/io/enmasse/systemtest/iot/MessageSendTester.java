@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 public class MessageSendTester {
 
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private Type type = Type.TELEMETRY;
     private int amount = 1;
     private Consume consume = Consume.BEFORE;
@@ -58,35 +58,10 @@ public class MessageSendTester {
     }
 
     /**
-     * Set the repeat factor accepted for messages.
-     */
-    public MessageSendTester sendRepeatFactor(final double sendRepeatFactor) {
-        this.sendRepeatFactor = sendRepeatFactor;
-        return this;
-    }
-
-    /**
      * Add an additional send timeout. This is added on top of the calculated send timeout.
      */
     public MessageSendTester additionalSendTimeout(final Duration additionalSendTimeout) {
         this.additionalSendTimeout = additionalSendTimeout;
-        return this;
-    }
-
-    /**
-     * Add an additional receive timeout. This is added on top of the calculated receive timeout.
-     */
-    public MessageSendTester additionalReceiveTimeout(final Duration additionalReceiveTimeout) {
-        this.additionalReceiveTimeout = additionalReceiveTimeout;
-        return this;
-    }
-
-    /**
-     * Set the default time slot considered for receiving a single message. Used to calculate the
-     * "receive timeout".
-     */
-    public MessageSendTester defaultReceiveSlot(final Duration defaultReceiveSlot) {
-        this.defaultReceiveSlot = defaultReceiveSlot;
         return this;
     }
 
@@ -123,14 +98,6 @@ public class MessageSendTester {
     }
 
     /**
-     * The overall receive timeout. Overriding the automatically calculated one.
-     */
-    public MessageSendTester receiveTimeout(final Duration receiveTimeout) {
-        this.receiveTimeout = receiveTimeout;
-        return this;
-    }
-
-    /**
      * The factory to create message consumers.
      */
     public MessageSendTester consumerFactory(final ConsumerFactory consumerFactory) {
@@ -160,10 +127,8 @@ public class MessageSendTester {
     /**
      * Calculate the receive timeout.
      * <br>
-     * If an explicit receive timeout was set using {@link #receiveTimeout(Duration)}, then this value
      * will be used.
      * Otherwise, the receive timeout is the {@link #defaultReceiveSlot} times the {@link #amount} of
-     * messages plus {@link #additionalReceiveTimeout(Duration)}.
      *
      * @return The receive timeout.
      */
@@ -185,12 +150,12 @@ public class MessageSendTester {
         return sendDuration.plus(MessageSendTester.this.additionalSendTimeout);
     }
 
-    public static enum Type {
+    public enum Type {
         TELEMETRY(MessageType.TELEMETRY), EVENT(MessageType.EVENT);
 
         private MessageType type;
 
-        private Type(final MessageType type) {
+        Type(final MessageType type) {
             this.type = type;
         }
 
@@ -199,8 +164,8 @@ public class MessageSendTester {
         }
     }
 
-    public static enum Consume {
-        BEFORE, AFTER;
+    public enum Consume {
+        BEFORE, AFTER
     }
 
     @FunctionalInterface
@@ -214,35 +179,25 @@ public class MessageSendTester {
          * @return {@code true} if the message was accepted, {@code false} otherwise.
          * @throws Exception In case anything went wrong.
          */
-        public boolean send(Type type, JsonObject payload, Duration sendTimeout) throws Exception;
+        boolean send(Type type, JsonObject payload, Duration sendTimeout) throws Exception;
     }
 
     @FunctionalInterface
     public interface ConsumerFactory {
 
-        public static ConsumerFactory of(final AmqpClient client, final String tenantId) {
-            return new ConsumerFactory() {
+        static ConsumerFactory of(final AmqpClient client, final String tenantId) {
+            return (type, messageConsumer) -> {
 
-                @Override
-                public AutoCloseable start(final Type type, final Consumer<Message> messageConsumer) {
+                var receiver = client.recvMessagesWithStatus(type.type().address() + "/" + tenantId, msg -> {
+                    messageConsumer.accept(msg);
+                    return false;
+                });
 
-                    var receiver = client.recvMessagesWithStatus(type.type().address() + "/" + tenantId, msg -> {
-                        messageConsumer.accept(msg);
-                        return false;
-                    });
-
-                    return new AutoCloseable() {
-
-                        @Override
-                        public void close() throws Exception {
-                            receiver.close();
-                        }
-                    };
-                }
+                return (AutoCloseable) receiver;
             };
         }
 
-        public AutoCloseable start(Type type, Consumer<Message> messageConsumer);
+        AutoCloseable start(Type type, Consumer<Message> messageConsumer);
     }
 
     /**
@@ -253,17 +208,13 @@ public class MessageSendTester {
         private Message message;
         private JsonObject payload;
 
-        public ReceivedMessage(final Message message, final JsonObject payload) {
+        ReceivedMessage(final Message message, final JsonObject payload) {
             this.message = message;
             this.payload = payload;
         }
 
         public Message getMessage() {
             return this.message;
-        }
-
-        public JsonObject getPayload() {
-            return this.payload;
         }
     }
 
@@ -282,7 +233,7 @@ public class MessageSendTester {
 
         private AutoCloseable consumer;
 
-        public Executor() {
+        Executor() {
             this.testId = UUID.randomUUID().toString();
         }
 
@@ -301,7 +252,7 @@ public class MessageSendTester {
 
             // duration = amount * delay * factor
             var sendDuration = calcSendTimeout();
-            log.info("Sending messages - total timeout: {} - delay: {} ms", sendDuration, delay);
+            LOGGER.info("Sending messages - total timeout: {} - delay: {} ms", sendDuration, delay);
             var sendTimeout = TimeoutBudget.ofDuration(sendDuration);
 
             // send
@@ -309,7 +260,7 @@ public class MessageSendTester {
             while (i < amount) {
 
                 if (sendTimeout.timeoutExpired()) {
-                    log.info("Send timeout");
+                    LOGGER.info("Send timeout");
                     throw new TimeoutException("Failed to execute message send test due to send timeout.");
                 }
 
@@ -325,7 +276,7 @@ public class MessageSendTester {
 
             }
 
-            log.info("Done sending messages");
+            LOGGER.info("Done sending messages");
 
             // setup consumer (after)
             if (Consume.AFTER == MessageSendTester.this.consume) {
@@ -334,13 +285,13 @@ public class MessageSendTester {
 
             // consumer ready?
             final Duration receiveTimeout = calcReceiveTimeout();
-            log.info("Receive timeout: {}", receiveTimeout);
+            LOGGER.info("Receive timeout: {}", receiveTimeout);
             var receiveBudget = TimeoutBudget.ofDuration(receiveTimeout);
             var receiveSleep = Math.min(receiveTimeout.toMillis() / 10, 1_000);
-            log.info("Receive sleep period: {}", receiveSleep);
+            LOGGER.info("Receive sleep period: {}", receiveSleep);
             while (!isConsumerReady(receiveBudget)) {
                 if (receiveBudget.timeoutExpired()) {
-                    log.info("Receive timeout");
+                    LOGGER.info("Receive timeout");
                     throw new TimeoutException("Failed to execute message send test due to receive timeout.");
                 }
                 Thread.sleep(receiveSleep);
@@ -362,20 +313,17 @@ public class MessageSendTester {
                 return true;
             }
 
-            if (receiveBudget.timeoutExpired() && missing <= MessageSendTester.this.acceptableMessageLoss) {
-                // we are still waiting for all messages, but the timeout expired and we are in the acceptable loss range - success
-                return true;
-            }
+            // we are still waiting for all messages, but the timeout expired and we are in the acceptable loss range - success
+            return receiveBudget.timeoutExpired() && missing <= MessageSendTester.this.acceptableMessageLoss;
 
             // need to wait longer
-            return false;
 
         }
 
         private void assertResult() {
 
             double avgMessageTime = ((double) this.sendTime) / ((double) this.receivedMessages.size());
-            log.info("Average message RTT: {} ms", String.format("%.2f", avgMessageTime));
+            LOGGER.info("Average message RTT: {} ms", String.format("%.2f", avgMessageTime));
 
             final int missing = MessageSendTester.this.amount - this.receivedMessages.size();
             if (missing > MessageSendTester.this.acceptableMessageLoss) {
@@ -394,11 +342,11 @@ public class MessageSendTester {
 
         private void handleMessage(final Message message) {
 
-            log.info("Received message - {}", message);
+            LOGGER.info("Received message - {}", message);
 
             var body = message.getBody();
             if (!(body instanceof Data)) {
-                handleInvalidMessage(message);
+                handleInvalidMessage();
                 return;
             }
 
@@ -406,20 +354,20 @@ public class MessageSendTester {
             var testId = json.getString("test-id");
             var timestamp = json.getInteger("timestamp");
             if (!this.testId.equals(testId) || timestamp == null) {
-                handleInvalidMessage(message);
+                handleInvalidMessage();
                 return;
             }
 
             handleValidMessage(message, timestamp, json);
         }
 
-        private void handleInvalidMessage(final Message message) {
+        private void handleInvalidMessage() {
         }
 
         private void handleValidMessage(final Message message, int timestamp, final JsonObject payload) {
             var diff = System.currentTimeMillis() - timestamp;
             sendTime += diff;
-            log.debug("Received message took {} ms", diff);
+            LOGGER.debug("Received message took {} ms", diff);
             this.receivedMessages.add(new ReceivedMessage(message, payload));
         }
 

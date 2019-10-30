@@ -144,7 +144,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -193,7 +193,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -265,7 +265,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
@@ -318,9 +318,9 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        Context context1 = jmsProvider.createContextForShared(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context1 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection1 = jmsProvider.createConnection(context1);
-        Context context2 = jmsProvider.createContextForShared(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context2 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection2 = jmsProvider.createConnection(context2);
         connection1.start();
         connection2.start();
@@ -377,9 +377,9 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        Context context1 = jmsProvider.createContextForShared(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context1 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection1 = jmsProvider.createConnection(context1);
-        Context context2 = jmsProvider.createContextForShared(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context2 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection2 = jmsProvider.createConnection(context2);
         connection1.start();
         connection2.start();

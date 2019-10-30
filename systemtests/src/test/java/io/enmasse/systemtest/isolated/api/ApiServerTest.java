@@ -96,7 +96,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         resourcesManager.createAddressSpacePlan(addressSpacePlan);
 
-        AddressSpaceSchemaList schemaData = kubernetes.getSchemaClient().list();
+        AddressSpaceSchemaList schemaData = KUBERNETES.getSchemaClient().list();
         log.info("Check if schema object is not null");
         assertThat(schemaData.getItems().size(), not(0));
 
@@ -140,7 +140,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("api-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -168,7 +168,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .build();
 
         resourcesManager.setAddresses(dest1);
-        Address dest1AddressObj = kubernetes.getAddressClient().list().getItems().get(0);
+        Address dest1AddressObj = KUBERNETES.getAddressClient().list().getItems().get(0);
         assertEquals(uuid, dest1AddressObj.getMetadata().getUid(), "Address uuid is not equal");
 
         Address destWithoutAddress = new AddressBuilder()
@@ -216,7 +216,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addrSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("create-address-resource-with-a-very-long-name")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -243,7 +243,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         names.add(anycast.getMetadata().getName());
         resourcesManager.setAddresses(anycast);
-        List<Address> addresses = kubernetes.getAddressClient(addrSpace.getMetadata().getNamespace()).list().getItems();
+        List<Address> addresses = KUBERNETES.getAddressClient(addrSpace.getMetadata().getNamespace()).list().getItems();
         assertThat(addresses.size(), is(1));
         assertThat(toStrings(addresses, address -> address.getMetadata().getName()), is(names));
 
@@ -260,7 +260,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         names.add(multicast.getMetadata().getName());
         resourcesManager.appendAddresses(multicast);
-        addresses = kubernetes.getAddressClient(addrSpace.getMetadata().getNamespace()).list().getItems();
+        addresses = KUBERNETES.getAddressClient(addrSpace.getMetadata().getNamespace()).list().getItems();
         assertThat(addresses.size(), is(2));
         assertThat(toStrings(addresses, address -> address.getMetadata().getName()), is(names));
 
@@ -279,13 +279,13 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         names.add(longname.getMetadata().getName());
         resourcesManager.appendAddresses(longname);
-        addresses = kubernetes.getAddressClient().list().getItems();
+        addresses = KUBERNETES.getAddressClient().list().getItems();
         assertThat(addresses.size(), is(3));
         assertThat(toStrings(addresses, address -> address.getMetadata().getName()), is(names));
 
         // ensure that getting all addresses (non-namespaces) returns the same result
 
-        Set<String> allNames = kubernetes.getAddressClient(addrSpace.getMetadata().getNamespace()).list().getItems()
+        Set<String> allNames = KUBERNETES.getAddressClient(addrSpace.getMetadata().getNamespace()).list().getItems()
                 .stream().map(address -> address.getMetadata().getName())
                 .collect(Collectors.toSet());
 
@@ -301,8 +301,8 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
         String namespace2 = "test-namespace-2";
 
         try {
-            kubernetes.createNamespace(namespace1);
-            kubernetes.createNamespace(namespace2);
+            KUBERNETES.createNamespace(namespace1);
+            KUBERNETES.createNamespace(namespace2);
 
             log.info("--------------- Address space part -------------------");
 
@@ -333,10 +333,10 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                     .endSpec()
                     .build();
 
-            isolatedResourcesManager.createAddressSpaceList(brokered, standard);
+            ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(brokered, standard);
 
             assertThat("Get all address spaces does not contain 2 address spaces",
-                    kubernetes.getAddressSpaceClient().inAnyNamespace().list().getItems().size(), is(2));
+                    KUBERNETES.getAddressSpaceClient().inAnyNamespace().list().getItems().size(), is(2));
 
             log.info("------------------ Address part ----------------------");
 
@@ -390,7 +390,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             resourcesManager.setAddresses(standardQueue, standardTopic);
 
             assertThat("Get all addresses does not contain 4 addresses",
-                    kubernetes.getAddressClient().inAnyNamespace().list().getItems().size(), is(4));
+                    KUBERNETES.getAddressClient().inAnyNamespace().list().getItems().size(), is(4));
 
             log.info("-------------------- User part -----------------------");
 
@@ -401,13 +401,13 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             resourcesManager.createOrUpdateUser(standard, cred);
 
             assertThat("Get all users does not contain 2 password users",
-                    (int) kubernetes.getUserClient().inAnyNamespace().list().getItems()
+                    (int) KUBERNETES.getUserClient().inAnyNamespace().list().getItems()
                             .stream().filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password)).count(),
                     is(2));
 
         } finally {
-            kubernetes.deleteNamespace(namespace1);
-            kubernetes.deleteNamespace(namespace2);
+            KUBERNETES.deleteNamespace(namespace1);
+            KUBERNETES.deleteNamespace(namespace2);
         }
     }
 
@@ -441,7 +441,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
         } finally {
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
-            kubernetes.deleteNamespace(namespace);
+            KUBERNETES.deleteNamespace(namespace);
         }
     }
 
@@ -451,7 +451,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
         AddressSpace addressspace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-replace-plan")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -480,7 +480,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
         getClientUtils().assertCanConnect(addressspace, cred, Collections.singletonList(dest), resourcesManager);
 
-        isolatedResourcesManager.replaceAddressSpace(addressspace);
+        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(addressspace);
 
         getClientUtils().assertCanConnect(addressspace, cred, Collections.singletonList(dest), resourcesManager);
 
@@ -490,7 +490,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .done();
 
-        Exception exception = assertThrows(KubernetesClientException.class, () -> isolatedResourcesManager.replaceAddressSpace(replace));
+        Exception exception = assertThrows(KubernetesClientException.class, () -> ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(replace));
         assertTrue(exception.getMessage().contains("Unknown address space plan no-exists"));
     }
 
@@ -511,7 +511,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
             KubeCMDClient.createGroupAndAddUser(groupName, user.getUsername());
 
-            kubernetes.getClient().rbac().clusterRoleBindings().create(new ClusterRoleBindingBuilder()
+            KUBERNETES.getClient().rbac().clusterRoleBindings().create(new ClusterRoleBindingBuilder()
                     .withNewMetadata()
                     .withName(rolebindingname)
                     .endMetadata()
@@ -546,7 +546,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             assertTrue(KubeCMDClient.createCR(namespace, space1Json.toString()).getRetCode());
             resourcesManager.deleteAddressSpace(space1);
 
-            kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).cascading(true).delete();
+            KUBERNETES.getClient().rbac().clusterRoleBindings().withName(rolebindingname).cascading(true).delete();
 
             AddressSpace space2 = supplier.get();
             JsonObject space2Json = AddressSpaceUtils.addressSpaceToJson(space2);
@@ -554,12 +554,12 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             assertFalse(space2Result.getRetCode());
 
         } finally {
-            if (kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).get() != null) {
-                kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).cascading(true).delete();
+            if (KUBERNETES.getClient().rbac().clusterRoleBindings().withName(rolebindingname).get() != null) {
+                KUBERNETES.getClient().rbac().clusterRoleBindings().withName(rolebindingname).cascading(true).delete();
             }
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
-            kubernetes.deleteNamespace(namespace);
+            KUBERNETES.deleteNamespace(namespace);
         }
 
     }

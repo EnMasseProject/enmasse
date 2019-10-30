@@ -20,8 +20,8 @@ import java.util.Map;
 
 @ExtendWith(ExtensionContextParameterResolver.class)
 public interface ITestSeparator {
-    Logger log = CustomLogger.getLogger();
-    String separatorChar = "#";
+    Logger LOGGER = CustomLogger.getLogger();
+    String SEPARATOR_CHAR = "#";
 
     static void printThreadDump() {
         Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
@@ -33,7 +33,7 @@ public interface ITestSeparator {
             for (StackTraceElement aTrace : trace) {
                 sb.append(" ").append(aTrace).append("\r\n");
             }
-            log.error(sb.toString());
+            LOGGER.error(sb.toString());
         }
     }
 
@@ -41,8 +41,8 @@ public interface ITestSeparator {
     default void beforeEachTest(TestInfo testInfo) {
         TimeMeasuringSystem.setTestName(testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName());
         TimeMeasuringSystem.startOperation(SystemtestsOperation.TEST_EXECUTION);
-        log.info(String.join("", Collections.nCopies(100, separatorChar)));
-        log.info(String.format("%s.%s-STARTED", testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName()));
+        LOGGER.info(String.join("", Collections.nCopies(100, SEPARATOR_CHAR)));
+        LOGGER.info(String.format("%s.%s-STARTED", testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName()));
     }
 
     @AfterEach
@@ -50,14 +50,14 @@ public interface ITestSeparator {
         if (context.getExecutionException().isPresent()) { // on failed
             Throwable ex = context.getExecutionException().get();
             if (ex instanceof OutOfMemoryError) {
-                log.error("Got OOM, dumping thread info");
+                LOGGER.error("Got OOM, dumping thread info");
                 printThreadDump();
             } else {
-                log.error("Caught exception", ex);
+                LOGGER.error("Caught exception", ex);
             }
         }
         TimeMeasuringSystem.stopOperation(SystemtestsOperation.TEST_EXECUTION);
-        log.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName()));
-        log.info(String.join("", Collections.nCopies(100, separatorChar)));
+        LOGGER.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName()));
+        LOGGER.info(String.join("", Collections.nCopies(100, SEPARATOR_CHAR)));
     }
 }

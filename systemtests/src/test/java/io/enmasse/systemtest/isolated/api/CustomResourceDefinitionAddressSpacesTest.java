@@ -51,7 +51,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("crd-space-foo")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -62,12 +62,12 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 .endSpec()
                 .build();
         JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
-        isolatedResourcesManager.addToAddressSpaces(brokered);
+        ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(brokered);
         createCR(addressSpacePayloadJson.toString());
         resourcesManager.waitForAddressSpaceReady(brokered);
 
         resourcesManager.deleteAddressSpace(brokered);
-        TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getMetadata().getName());
+        TestUtils.waitForNamespaceDeleted(KUBERNETES, brokered.getMetadata().getName());
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), "-a");
             return allAddresses.getStdOut() + allAddresses.getStdErr();
@@ -79,7 +79,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("crd-pach-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -89,9 +89,9 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.addToAddressSpaces(standard);
+        ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(standard);
         createCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
-        isolatedResourcesManager.addToAddressSpaces(standard);
+        ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(standard);
         resourcesManager.waitForAddressSpaceReady(standard);
         resourcesManager.waitForAddressSpacePlanApplied(standard);
 
@@ -114,7 +114,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("crd-space-bar")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -157,7 +157,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                     .endAuthenticationService()
                     .endSpec()
                     .build();
-            isolatedResourcesManager.addToAddressSpaces(brokered);
+            ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(brokered);
             JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
@@ -166,7 +166,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             resourcesManager.waitForAddressSpaceReady(brokered);
 
             resourcesManager.deleteAddressSpace(brokered);
-            TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getMetadata().getName());
+            TestUtils.waitForNamespaceDeleted(KUBERNETES, brokered.getMetadata().getName());
             TestUtils.waitUntilCondition(() -> {
                 ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(namespace, Optional.empty());
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
@@ -174,7 +174,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         } finally {
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
-            kubernetes.deleteNamespace(namespace);
+            KUBERNETES.deleteNamespace(namespace);
         }
     }
 
@@ -212,8 +212,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                     .endAuthenticationService()
                     .endSpec()
                     .build();
-            isolatedResourcesManager.addToAddressSpaces(brokered);
-            isolatedResourcesManager.addToAddressSpaces(standard);
+            ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(brokered);
+            ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(standard);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
@@ -358,8 +358,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             KubeCMDClient.deleteAddressSpace(namespace, brokered.getMetadata().getName());
             KubeCMDClient.deleteAddressSpace(namespace, standard.getMetadata().getName());
 
-            TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getMetadata().getName());
-            TestUtils.waitForNamespaceDeleted(kubernetes, standard.getMetadata().getName());
+            TestUtils.waitForNamespaceDeleted(KUBERNETES, brokered.getMetadata().getName());
+            TestUtils.waitForNamespaceDeleted(KUBERNETES, standard.getMetadata().getName());
             TestUtils.waitUntilCondition(() -> {
                 ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(namespace, Optional.empty());
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
@@ -367,7 +367,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         } finally {
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
-            kubernetes.deleteNamespace(namespace);
+            KUBERNETES.deleteNamespace(namespace);
         }
     }
 
@@ -378,7 +378,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             AddressSpace brokered = new AddressSpaceBuilder()
                     .withNewMetadata()
                     .withName("crd-addr-space-barr")
-                    .withNamespace(kubernetes.getInfraNamespace())
+                    .withNamespace(KUBERNETES.getInfraNamespace())
                     .endMetadata()
                     .withNewSpec()
                     .withType(AddressSpaceType.BROKERED.toString())

@@ -64,7 +64,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         List<String> msgs = TestUtils.generateMessages(countMessages);
         Count<Message> predicate = new Count<>(msgs.size());
         long timeoutMs = countMessages * MessagingUtils.ESTIMATE_MAX_MS_PER_MESSAGE;
-        log.info("Start sending with " + timeoutMs + " ms timeout");
+        LOGGER.info("Start sending with " + timeoutMs + " ms timeout");
         Future<Integer> numSent = client.sendMessages(dest.getSpec().getAddress(), msgs, predicate);
 
         assertNotNull(numSent, "Sending messages didn't start");
@@ -78,7 +78,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         assertThat("Wrong count of messages sent", actual, is(msgs.size()));
 
         predicate = new Count<>(msgs.size());
-        log.info("Start receiving with " + timeoutMs + " ms timeout");
+        LOGGER.info("Start receiving with " + timeoutMs + " ms timeout");
         Future<List<Message>> received = client.recvMessages(dest.getSpec().getAddress(), predicate);
         actual = 0;
         try {
@@ -167,7 +167,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
                 .endSpec()
                 .build();
-        kubernetes.getAddressClient().create(q2);
+        KUBERNETES.getAddressClient().create(q2);
 
         resourcesManager.appendAddresses(q1);
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), q2);
@@ -367,7 +367,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
 
         resourcesManager.replaceAddress(after);
         CustomLogger.getLogger().info(String.format("Now scaling from '%s' to '%s'", before.getSpec().getPlan(), after.getSpec().getPlan()));
-        logCollector.collectLogsOfPodsByLabels(kubernetes.getInfraNamespace(), before.getSpec().getPlan(), Collections.singletonMap("role", "broker"));
+        logCollector.collectLogsOfPodsByLabels(KUBERNETES.getInfraNamespace(), before.getSpec().getPlan(), Collections.singletonMap("role", "broker"));
         resourcesManager.replaceAddress(after);
         // Receive messages sent before address was replaced
         assertReceive("after replace", numReceivedAfterScaledPhase1, after, client);
@@ -470,7 +470,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
 

@@ -69,7 +69,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         IoTConfig iotConfig = new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withNewServices()
@@ -91,22 +91,22 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
                 .endAdapters()
                 .endSpec()
                 .build();
-        isolatedIoTManager.createIoTConfig(iotConfig);
+        ISOLATED_IOT_MANAGER.createIoTConfig(iotConfig);
 
-        Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
-        registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
-        credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
+        Endpoint deviceRegistryEndpoint = KUBERNETES.getExternalEndpoint("device-registry");
+        registryClient = new DeviceRegistryClient(KUBERNETES, deviceRegistryEndpoint);
+        credentialsClient = new CredentialsRegistryClient(KUBERNETES, deviceRegistryEndpoint);
 
         int numberOfProjects = 2;
         for (int i = 1; i <= numberOfProjects; i++) {
             String projectName = String.format("project-%s", i);
 
-            if (!kubernetes.namespaceExists(projectName)) {
-                kubernetes.createNamespace(projectName);
+            if (!KUBERNETES.namespaceExists(projectName)) {
+                KUBERNETES.createNamespace(projectName);
             }
             IoTProject project = IoTUtils.getBasicIoTProjectObject(projectName, projectName,
                     projectName, getDefaultAddressSpacePlan());
-            isolatedIoTManager.createIoTProject(project);
+            ISOLATED_IOT_MANAGER.createIoTProject(project);
             IoTProjectTestContext ctx = new IoTProjectTestContext(projectName, project);
 
             configureDeviceSide(ctx);
@@ -129,7 +129,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
             cleanAmqpSide(ctx);
         }
 
-        SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+        SystemtestsKubernetesApps.deleteInfinispanServer(KUBERNETES.getInfraNamespace());
     }
 
     @Test
@@ -158,7 +158,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     }
 
     private void configureAmqpSide(IoTProjectTestContext ctx) throws Exception {
-        AddressSpace addressSpace = isolatedIoTManager.getAddressSpace(ctx.getNamespace(),
+        AddressSpace addressSpace = ISOLATED_IOT_MANAGER.getAddressSpace(ctx.getNamespace(),
                 ctx.getProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         User amqpUser = configureAmqpUser(ctx.getProject(), addressSpace);
         ctx.setAmqpUser(amqpUser);
@@ -190,7 +190,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
                         .build()))
                 .endSpec()
                 .build();
-        kubernetes.getUserClient(project.getMetadata().getNamespace()).create(amqpUser);
+        KUBERNETES.getUserClient(project.getMetadata().getNamespace()).create(amqpUser);
 
         return amqpUser;
     }
@@ -206,7 +206,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
 
     private void cleanAmqpSide(IoTProjectTestContext ctx) throws Exception {
         ctx.getAmqpClient().close();
-        var userClient = kubernetes.getUserClient(ctx.getNamespace());
+        var userClient = KUBERNETES.getUserClient(ctx.getNamespace());
         userClient.withName(ctx.getAmqpUser().getMetadata().getName()).cascading(true).delete();
     }
 
@@ -217,8 +217,8 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         ctx.setDevicePassword(UUID.randomUUID().toString());
         registryClient.registerDevice(tenant, ctx.getDeviceId());
         credentialsClient.addCredentials(tenant, ctx.getDeviceId(), ctx.getDeviceAuthId(), ctx.getDevicePassword());
-        Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        ctx.setHttpAdapterClient(new HttpAdapterClient(kubernetes, httpAdapterEndpoint, ctx.getDeviceAuthId(), tenant, ctx.getDevicePassword()));
+        Endpoint httpAdapterEndpoint = KUBERNETES.getExternalEndpoint("iot-http-adapter");
+        ctx.setHttpAdapterClient(new HttpAdapterClient(KUBERNETES, httpAdapterEndpoint, ctx.getDeviceAuthId(), tenant, ctx.getDevicePassword()));
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
         mqttOptions.setAutomaticReconnect(true);
         mqttOptions.setConnectionTimeout(60);
@@ -226,7 +226,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         IMqttClient mqttAdapterClient = new MqttClientFactory(null, new UserCredentials(ctx.getDeviceAuthId() + "@" + tenant, ctx.getDevicePassword()))
                 .build()
                 .clientId(ctx.getDeviceId())
-                .endpoint(kubernetes.getExternalEndpoint("iot-mqtt-adapter"))
+                .endpoint(KUBERNETES.getExternalEndpoint("iot-mqtt-adapter"))
                 .mqttConnectionOptions(mqttOptions)
                 .create();
         TestUtils.waitUntilCondition("Successfully connect to mqtt adapter", phase -> {

@@ -8,7 +8,6 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -29,11 +28,11 @@ import java.util.Optional;
  * Class represent abstract client which keeps common features of client
  */
 public class KubeCMDClient {
-    protected static final int DEFAULT_SYNC_TIMEOUT = 10000;
-    protected static final int ONE_MINUTE_TIMEOUT = 60000;
-    protected static final int FIVE_MINUTES_TIMEOUT = 300000;
-    protected static String CMD = getCMD();
-    private static Logger log = CustomLogger.getLogger();
+    private static final int DEFAULT_SYNC_TIMEOUT = 10000;
+    private static final int ONE_MINUTE_TIMEOUT = 60000;
+    private static final int FIVE_MINUTES_TIMEOUT = 300000;
+    private static final String CMD = getCMD();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     public static String getCMD() {
         return Kubernetes.getInstance().getCluster().getKubeCmd();
@@ -45,13 +44,14 @@ public class KubeCMDClient {
      * @param definition in yaml or json format
      * @return result of execution
      */
-    public static ExecutionResultData createOrUpdateCR(String namespace, String definition, boolean replace) throws IOException {
+    private static ExecutionResultData createOrUpdateCR(String namespace, String definition, boolean replace) throws IOException {
         final File defInFile = new File("crdefinition.file");
         try (FileWriter wr = new FileWriter(defInFile.getName())) {
             wr.write(definition);
             wr.flush();
-            log.info("User '{}' created", defInFile.getAbsolutePath());
-            return Exec.execute(Arrays.asList(CMD, replace ? "replace" : "apply", "-n", namespace, "-f", defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
+            LOGGER.info("User '{}' created", defInFile.getAbsolutePath());
+            return Exec.execute(Arrays.asList(CMD, replace ? "replace" : "apply", "-n", namespace, "-f",
+                    defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
@@ -73,8 +73,9 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData patchCR(String kind, String name, String patchData) {
-        log.info("Patching {} {} in {}", kind, name, Environment.getInstance().namespace());
-        return Exec.execute(Arrays.asList(CMD, "patch", "-n", Environment.getInstance().namespace(), kind, name, "-p", patchData), DEFAULT_SYNC_TIMEOUT, true);
+        LOGGER.info("Patching {} {} in {}", kind, name, Environment.getInstance().namespace());
+        return Exec.execute(Arrays.asList(CMD, "patch", "-n", Environment.getInstance().namespace(),
+                kind, name, "-p", patchData), DEFAULT_SYNC_TIMEOUT, true);
     }
 
     public static ExecutionResultData updateCR(String namespace, String definition) throws IOException {
@@ -84,11 +85,6 @@ public class KubeCMDClient {
     public static String getOCUser() {
         List<String> command = Arrays.asList(CMD, "whoami");
         return Exec.execute(command, DEFAULT_SYNC_TIMEOUT, false).getStdOut().replace(System.getProperty("line.separator"), "");
-    }
-
-    public static void getCurrentProject() {
-        List<String> command = Arrays.asList(CMD, "project");
-        Exec.execute(command, DEFAULT_SYNC_TIMEOUT, true);
     }
 
     /**
@@ -109,15 +105,8 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData getAddress(String namespace) {
-        List<String> getCmd = getRessourcesCmd("get", "addresses", namespace, Optional.of("wide"));
+        List<String> getCmd = getRessourcesCmd("addresses", namespace, Optional.of("wide"));
         return Exec.execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-    public static void dumpPodLogs(final Pod pod) {
-        // we cannot use --all-containers, since kubectl is too old
-        for (var c : pod.getStatus().getContainerStatuses()) {
-            Exec.execute(DEFAULT_SYNC_TIMEOUT, true, CMD, "logs", pod.getMetadata().getName(), "-c", c.getName());
-        }
     }
 
     /**
@@ -151,7 +140,7 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData getAddressSpace(String namespace, Optional<String> format) {
-        List<String> getCmd = getRessourcesCmd("get", "addressspaces", namespace, format);
+        List<String> getCmd = getRessourcesCmd("addressspaces", namespace, format);
         return Exec.execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
@@ -168,7 +157,8 @@ public class KubeCMDClient {
         return Exec.execute(ressourcesCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
-    private static List<String> getRessourcesCmd(String operation, String kind, String namespace, String resourceName, Optional<String> format) {
+    private static List<String> getRessourcesCmd(String operation, String kind, String namespace,
+                                                 String resourceName, Optional<String> format) {
         List<String> cmd = new LinkedList<>(Arrays.asList(CMD, operation, kind, resourceName, "-n", namespace));
         format.ifPresent(s -> {
             cmd.add("-o");
@@ -177,8 +167,8 @@ public class KubeCMDClient {
         return cmd;
     }
 
-    private static List<String> getRessourcesCmd(String operation, String kind, String namespace, Optional<String> format) {
-        List<String> cmd = new LinkedList<>(Arrays.asList(CMD, operation, kind, "-n", namespace));
+    private static List<String> getRessourcesCmd(String kind, String namespace, Optional<String> format) {
+        List<String> cmd = new LinkedList<>(Arrays.asList(CMD, "get", kind, "-n", namespace));
         format.ifPresent(s -> {
             cmd.add("-o");
             cmd.add(s);
@@ -187,7 +177,8 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData checkPermission(String operation, String kind, String namespace, String serviceaccount) {
-        List<String> cmd = new LinkedList<>(Arrays.asList(CMD, "auth", "can-i", operation, kind, "-n", namespace, "--as", "system:serviceaccount:enmasse-monitoring:" + serviceaccount));
+        List<String> cmd = new LinkedList<>(Arrays.asList(CMD, "auth", "can-i", operation, kind, "-n",
+                namespace, "--as", "system:serviceaccount:enmasse-monitoring:" + serviceaccount));
         return Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
@@ -196,12 +187,12 @@ public class KubeCMDClient {
         Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
-    public static String loginUser(String username, String password) {
+    public static void loginUser(String username, String password) {
         List<String> cmd = Arrays.asList(CMD, "login", "-u", username, "-p", password);
         Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
         cmd = Arrays.asList(CMD, "whoami", "-t");
-        return Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, true)
-                .getStdOut().replace(System.getProperty("line.separator"), "");
+        Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+        System.getProperty("line.separator");
     }
 
     public static void createNamespace(String namespace) {
@@ -215,23 +206,26 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData getUser(String namespace) {
-        List<String> getCmd = getRessourcesCmd("get", "messaginguser", namespace, Optional.of("wide"));
+        List<String> getCmd = getRessourcesCmd("messaginguser", namespace, Optional.of("wide"));
         return Exec.execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
     public static ExecutionResultData getUser(String namespace, String addressSpace, String username) {
-        List<String> getCmd = getRessourcesCmd("get", "messaginguser", namespace, String.format("%s.%s", addressSpace, username), Optional.empty());
+        List<String> getCmd = getRessourcesCmd("get", "messaginguser", namespace,
+                String.format("%s.%s", addressSpace, username), Optional.empty());
         return Exec.execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
     public static ExecutionResultData deleteUser(String namespace, String addressSpace, String username) {
-        List<String> deleteCmd = getRessourcesCmd("delete", "messaginguser", namespace, String.format("%s.%s", addressSpace, username), Optional.empty());
+        List<String> deleteCmd = getRessourcesCmd("delete", "messaginguser", namespace,
+                String.format("%s.%s", addressSpace, username), Optional.empty());
         return Exec.execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
-    public static ExecutionResultData deletePodByLabel(String labelName, String labelValue) {
-        List<String> deleteCmd = Arrays.asList(CMD, "delete", "pod", "-l", String.format("%s=%s", labelName, labelValue));
-        return Exec.execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
+    public static void deletePodByLabel(String labelName, String labelValue) {
+        List<String> deleteCmd = Arrays.asList(CMD, "delete", "pod", "-l",
+                String.format("%s=%s", labelName, labelValue));
+        Exec.execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
     public static ExecutionResultData runOnPod(String namespace, String podName, Optional<String> container, String... args) {
@@ -251,22 +245,19 @@ public class KubeCMDClient {
         return Exec.execute(runCmd, ONE_MINUTE_TIMEOUT, true);
     }
 
-    public static ExecutionResultData copyPodContent(String podName, String source, String destination) {
-        log.info("Copying file {} from pod {}", source, podName);
+    public static void copyPodContent(String podName, String source, String destination) {
+        LOGGER.info("Copying file {} from pod {}", source, podName);
         List<String> deleteCmd = Arrays.asList(CMD, "cp", String.format("%s:%s", podName, source), destination);
-        return Exec.execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, false);
+        Exec.execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, false);
     }
 
-    public static String getOpenshiftUserId(String username) {
-        List<String> command = Arrays.asList(CMD, "get", "users", username, "-o", "jsonpath={.metadata.uid}");
-        return Exec.execute(command, DEFAULT_SYNC_TIMEOUT, true).getStdOut()
-                .replaceAll(System.getProperty("line.separator"), "");
-    }
 
     public static ExecutionResultData getEvents(String namespace) {
         List<String> command = Arrays.asList(CMD, "get", "events",
                 "--namespace", namespace,
-                "--output", "custom-columns=LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}",
+                "--output", "custom-columns=LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp}," +
+                        "COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath}," +
+                        "TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}",
                 "--sort-by={.lastTimestamp}");
 
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
@@ -281,9 +272,9 @@ public class KubeCMDClient {
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
-    public static ExecutionResultData deleteIoTConfig(String namespace, String name) {
+    public static void deleteIoTConfig(String namespace, String name) {
         List<String> ressourcesCmd = getRessourcesCmd("delete", "iotconfig", namespace, name, Optional.empty());
-        return Exec.execute(ressourcesCmd, DEFAULT_SYNC_TIMEOUT, true);
+        Exec.execute(ressourcesCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
     public static ExecutionResultData describePods(String namespace) {
@@ -294,57 +285,43 @@ public class KubeCMDClient {
         return Exec.execute(DEFAULT_SYNC_TIMEOUT, false, CMD, "describe", "nodes");
     }
 
-    public static ExecutionResultData createFromFile(String namespace, Path path) {
+    public static void createFromFile(String namespace, Path path) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(path);
-        return Exec.execute(Arrays.asList(CMD, "-n", namespace, "create", "-f", path.toString()), ONE_MINUTE_TIMEOUT, true);
+        Exec.execute(Arrays.asList(CMD, "-n", namespace, "create", "-f", path.toString()), ONE_MINUTE_TIMEOUT, true);
     }
 
-    public static ExecutionResultData applyFromFile(String namespace, Path path) {
+    public static void applyFromFile(String namespace, Path path) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(path);
-        return Exec.execute(Arrays.asList(CMD, "-n", namespace, "apply", "-f", path.toString()), ONE_MINUTE_TIMEOUT, true);
+        Exec.execute(Arrays.asList(CMD, "-n", namespace, "apply", "-f", path.toString()), ONE_MINUTE_TIMEOUT, true);
     }
 
-    public static ExecutionResultData deleteFromFile(String namespace, Path path) {
+    public static void deleteFromFile(String namespace, Path path) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(path);
-        return Exec.execute(Arrays.asList(CMD, "-n", namespace, "delete", "-f", path.toString()), ONE_MINUTE_TIMEOUT, true);
+        Exec.execute(Arrays.asList(CMD, "-n", namespace, "delete", "-f", path.toString()), ONE_MINUTE_TIMEOUT, true);
     }
 
     public static String getMessagingEndpoint(String namespace, String addressspace) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(addressspace);
-        return Exec.execute(Arrays.asList(CMD, "-n", namespace, "get", "addressspace", addressspace, "-o", "jsonpath={.status.endpointStatuses[?(@.name==\"messaging\")].externalHost}"), ONE_MINUTE_TIMEOUT, true, false).getStdOut();
+        return Exec.execute(Arrays.asList(CMD, "-n", namespace, "get", "addressspace", addressspace, "-o",
+                "jsonpath={.status.endpointStatuses[?(@.name==\"messaging\")].externalHost}"), ONE_MINUTE_TIMEOUT,
+                true, false).getStdOut();
     }
 
     public static ExecutionResultData deleteNamespace(String name) {
         return Exec.execute(Arrays.asList(CMD, "delete", "namespace", name), FIVE_MINUTES_TIMEOUT, true);
     }
 
-
-    public static ExecutionResultData applyCR(String definition) throws IOException {
-        final File defInFile = new File("crdefinition.file");
-        try (FileWriter wr = new FileWriter(defInFile.getName())) {
-            wr.write(definition);
-            wr.flush();
-            log.info("User '{}' created", defInFile.getAbsolutePath());
-            return Exec.execute(Arrays.asList(CMD, "apply", "-f", defInFile.getAbsolutePath()), ONE_MINUTE_TIMEOUT, true);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw e;
-        } finally {
-            Files.delete(Paths.get(defInFile.getAbsolutePath()));
-        }
-    }
-
-    public static ExecutionResultData deleteResource(String namespace, String resource, String name) {
+    public static void deleteResource(String namespace, String resource, String name) {
         List<String> ressourcesCmd = getRessourcesCmd("delete", resource, namespace, name, Optional.empty());
-        return Exec.execute(ressourcesCmd, ONE_MINUTE_TIMEOUT, true);
+        Exec.execute(ressourcesCmd, ONE_MINUTE_TIMEOUT, true);
     }
 
-    public static ExecutionResultData createGroupAndAddUser(String groupName, String username) {
-        return Exec.execute(Arrays.asList(CMD, "adm", "groups", "new", groupName, username), ONE_MINUTE_TIMEOUT, true);
+    public static void createGroupAndAddUser(String groupName, String username) {
+        Exec.execute(Arrays.asList(CMD, "adm", "groups", "new", groupName, username), ONE_MINUTE_TIMEOUT, true);
     }
 
     public static ExecutionResultData getConfigmaps(String namespace) {
@@ -359,10 +336,10 @@ public class KubeCMDClient {
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
-    public static ExecutionResultData runOnCluster(String... args) {
+    public static void runOnCluster(String... args) {
         List<String> command = new LinkedList<>();
         command.add(CMD);
         command.addAll(Arrays.asList(args));
-        return Exec.execute(command, ONE_MINUTE_TIMEOUT, true);
+        Exec.execute(command, ONE_MINUTE_TIMEOUT, true);
     }
 }

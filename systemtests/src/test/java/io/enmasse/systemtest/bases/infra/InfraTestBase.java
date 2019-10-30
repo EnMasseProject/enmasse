@@ -43,7 +43,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
 
     protected void assertBroker(String brokerMemory, String brokerStorage, PodTemplateSpec templateSpec) {
         log.info("Checking broker infra");
-        List<Pod> brokerPods = TestUtils.listBrokerPods(kubernetes, exampleAddressSpace);
+        List<Pod> brokerPods = TestUtils.listBrokerPods(KUBERNETES, exampleAddressSpace);
         assertEquals(1, brokerPods.size());
 
         Pod broker = brokerPods.stream().findFirst().get();
@@ -104,7 +104,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
 
     protected void assertAdminConsole(String adminMemory, PodTemplateSpec templateSpec) {
         log.info("Checking admin console infra");
-        List<Pod> adminPods = TestUtils.listAdminConsolePods(kubernetes, exampleAddressSpace);
+        List<Pod> adminPods = TestUtils.listAdminConsolePods(KUBERNETES, exampleAddressSpace);
         assertEquals(1, adminPods.size());
 
         List<ResourceRequirements> adminResources = adminPods.stream().findFirst().get().getSpec().getContainers()
@@ -147,19 +147,19 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
                 .filter(volume -> volume.getName().equals("data"))
                 .findFirst().get()
                 .getPersistentVolumeClaim().getClaimName();
-        return TestUtils.listPersistentVolumeClaims(kubernetes, exampleAddressSpace).stream()
+        return TestUtils.listPersistentVolumeClaims(KUBERNETES, exampleAddressSpace).stream()
                 .filter(pvc -> pvc.getMetadata().getName().equals(brokerVolumeClaimName))
                 .findFirst().get();
     }
 
     protected Boolean volumeResizingSupported() throws Exception {
-        List<Pod> brokerPods = TestUtils.listBrokerPods(kubernetes, exampleAddressSpace);
+        List<Pod> brokerPods = TestUtils.listBrokerPods(KUBERNETES, exampleAddressSpace);
         assertEquals(1, brokerPods.size());
         Pod broker = brokerPods.stream().findFirst().get();
         PersistentVolumeClaim brokerVolumeClaim = getBrokerPVCData(broker);
         String brokerStorageClassName = brokerVolumeClaim.getSpec().getStorageClassName();
         if (brokerStorageClassName != null) {
-            StorageClass brokerStorageClass = kubernetes.getStorageClass(brokerStorageClassName);
+            StorageClass brokerStorageClass = KUBERNETES.getStorageClass(brokerStorageClassName);
             if (resizingStorageProvisioners.contains(brokerStorageClass.getProvisioner())) {
                 if (brokerStorageClass.getAllowVolumeExpansion() != null && brokerStorageClass.getAllowVolumeExpansion()) {
                     log.info("Testing broker volume resize because of {}:{}", brokerStorageClassName, brokerStorageClass.getProvisioner());

@@ -28,9 +28,9 @@ import io.vertx.ext.web.codec.BodyCodec;
 
 public abstract class HonoApiClient extends ApiClient {
 
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
-    protected HonoApiClient(final Kubernetes kubernetes, final Supplier<Endpoint> endpointSupplier) {
+    HonoApiClient(final Kubernetes kubernetes, final Supplier<Endpoint> endpointSupplier) {
         super(kubernetes, endpointSupplier, "");
     }
 
@@ -42,9 +42,10 @@ public abstract class HonoApiClient extends ApiClient {
                 .setVerifyHost(false));
     }
 
-    protected HttpResponse<Buffer> execute (final HttpMethod method, final String requestPath, final String body) throws Exception {
+    protected HttpResponse<Buffer> execute (final HttpMethod method, final String requestPath,
+                                                                        final String body) throws Exception {
         final CompletableFuture<HttpResponse<Buffer>> responsePromise = new CompletableFuture<>();
-        log.info("{}-{}: path {}; body {}", method, apiClientName(), requestPath, body);
+        LOGGER.info("{}-{}: path {}; body {}", method, apiClientName(), requestPath, body);
         client.request(method, endpoint.getPort(), endpoint.getHost(), requestPath)
             .as(BodyCodec.buffer())
             .timeout(120000)
@@ -63,7 +64,7 @@ public abstract class HonoApiClient extends ApiClient {
     }
 
     private void logResult(final HttpResponse<Buffer> result) {
-        log.info("result - code: {}, headers: {}, body: {}",
+        LOGGER.info("result - code: {}, headers: {}, body: {}",
                 result.statusCode(),
                 result
                     .headers().entries().stream()
@@ -72,9 +73,10 @@ public abstract class HonoApiClient extends ApiClient {
                 result.bodyAsString());
     }
 
-    protected Buffer execute (final HttpMethod method, final String requestPath, final String body, int expectedStatusCode, String failureMessage) throws Exception {
+    protected Buffer execute (final HttpMethod method, final String requestPath, final String body,
+                                                        int expectedStatusCode, String failureMessage) throws Exception {
         final CompletableFuture<Buffer> responsePromise = new CompletableFuture<>();
-        log.info("{}-{}: path {}; body {}", method, apiClientName(), requestPath, body);
+        LOGGER.info("{}-{}: path {}; body {}", method, apiClientName(), requestPath, body);
         client.request(method, endpoint.getPort(), endpoint.getHost(), requestPath)
             .as(BodyCodec.buffer())
             .timeout(120000)

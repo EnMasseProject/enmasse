@@ -17,19 +17,19 @@ import org.junit.jupiter.api.Tag;
 @Tag(TestTag.ISOLATED_IOT)
 public interface ITestIoTIsolated extends ITestIoTBase, ITestBase {
 
-    IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
+    IsolatedIoTManager ISOLATED_IOT_MANAGER = IsolatedIoTManager.getInstance();
 
     default AmqpClientFactory getAmqpClientFactory() {
-        return isolatedIoTManager.getAmqpClientFactory();
+        return ISOLATED_IOT_MANAGER.getAmqpClientFactory();
     }
 
     default MqttClientFactory getMqttClientFactory() {
-        return isolatedIoTManager.getMqttClientFactory();
+        return ISOLATED_IOT_MANAGER.getMqttClientFactory();
     }
 
     @Override
     default ResourceManager getResourceManager() {
-        return isolatedIoTManager;
+        return ISOLATED_IOT_MANAGER;
     }
 
     @Override

@@ -7,19 +7,18 @@ package io.enmasse.systemtest.iot;
 
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfig;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfigBuilder;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
 public final class DefaultDeviceRegistry {
 
-    private static final Kubernetes kubernetes = Kubernetes.getInstance();
+    private static final Kubernetes KUBERNETES = Kubernetes.getInstance();
 
     private DefaultDeviceRegistry() {
     }
 
     public static DeviceRegistryServiceConfig newInfinispanBased() throws Exception {
-        var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getInfraNamespace());
+        var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(KUBERNETES.getInfraNamespace());
         return new DeviceRegistryServiceConfigBuilder()
                 .withNewInfinispan()
                 .withNewServer()

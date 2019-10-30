@@ -33,8 +33,8 @@ public class SharedIoTManager extends ResourceManager {
 
     private static final Logger LOGGER = CustomLogger.getLogger();
     private static SharedIoTManager instance;
-    protected AmqpClientFactory amqpClientFactory = null;
-    protected MqttClientFactory mqttClientFactory = null;
+    private AmqpClientFactory amqpClientFactory = null;
+    private MqttClientFactory mqttClientFactory = null;
     private IoTProject sharedIoTProject = null;
     private IoTConfig sharedIoTConfig = null;
     private AmqpClient amqpClient;
@@ -53,38 +53,37 @@ public class SharedIoTManager extends ResourceManager {
     public AddressSpace getSharedAddressSpace() {
         if (sharedIoTProject == null) return null;
         String addSpaceName = sharedIoTProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-        AddressSpace addressSpace = kubernetes.getAddressSpaceClient(sharedIoTProject.getMetadata().getNamespace()).withName(addSpaceName).get();
-        return addressSpace;
+        return KUBERNETES.getAddressSpaceClient(sharedIoTProject.getMetadata().getNamespace()).withName(addSpaceName).get();
     }
 
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
         closeAmqpFactory();
         closeMqttFactory();
-        if (!environment.skipCleanup()) {
+        if (!ENVIRONMENT.skipCleanup()) {
             if (sharedIoTProject != null) {
                 LOGGER.info("Shared IoTProject will be removed");
-                var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
+                var iotProjectApiClient = KUBERNETES.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
                 if (iotProjectApiClient.withName(sharedIoTProject.getMetadata().getName()).get() != null) {
-                    IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedIoTProject);
+                    IoTUtils.deleteIoTProjectAndWait(KUBERNETES, sharedIoTProject);
                     sharedIoTProject = null;
                 } else {
                     LOGGER.info("IoTProject '{}' doesn't exists!", sharedIoTProject.getMetadata().getName());
                 }
             }
             tearDownSharedIoTConfig();
-            SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+            SystemtestsKubernetesApps.deleteInfinispanServer(KUBERNETES.getInfraNamespace());
         } else {
             LOGGER.info("Skip cleanup is set, no cleanup process");
         }
     }
 
-    public void tearDownSharedIoTConfig() throws Exception {
+    private void tearDownSharedIoTConfig() throws Exception {
         if (sharedIoTConfig != null) {
             LOGGER.info("Shared IoTConfig will be removed");
-            var iotConfigApiClient = kubernetes.getIoTConfigClient();
+            var iotConfigApiClient = KUBERNETES.getIoTConfigClient();
             if (iotConfigApiClient.withName(sharedIoTConfig.getMetadata().getName()).get() != null) {
-                IoTUtils.deleteIoTConfigAndWait(kubernetes, sharedIoTConfig);
+                IoTUtils.deleteIoTConfigAndWait(KUBERNETES, sharedIoTConfig);
                 sharedIoTConfig = null;
             } else {
                 LOGGER.info("IoTConfig '{}' doesn't exists!", sharedIoTConfig.getMetadata().getName());
@@ -93,15 +92,15 @@ public class SharedIoTManager extends ResourceManager {
     }
 
     void initFactories(AddressSpace addressSpace, UserCredentials credentials) {
-        amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(), credentials);
-        mqttClientFactory = new MqttClientFactory(getSharedAddressSpace(), credentials);
+        amqpClientFactory = new AmqpClientFactory(addressSpace, credentials);
+        mqttClientFactory = new MqttClientFactory(addressSpace, credentials);
     }
 
     @Override
     public void setup() throws Exception {
-        if (!kubernetes.namespaceExists(IOT_PROJECT_NAMESPACE)) {
+        if (!KUBERNETES.namespaceExists(IOT_PROJECT_NAMESPACE)) {
             LOGGER.info("Namespace {} doesn't exists and will be created.", IOT_PROJECT_NAMESPACE);
-            kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
+            KUBERNETES.createNamespace(IOT_PROJECT_NAMESPACE);
         }
 
         UserCredentials credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
@@ -111,7 +110,8 @@ public class SharedIoTManager extends ResourceManager {
         }
 
         if (sharedIoTProject == null) {
-            sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project", defaultAddSpaceIdentifier, IOT_PROJECT_NAMESPACE, addressSpacePlan);
+            sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project",
+                    defaultAddSpaceIdentifier, IOT_PROJECT_NAMESPACE, addressSpacePlan);
             createIoTProject(sharedIoTProject);
         }
         initFactories(getSharedAddressSpace(), credentials);
@@ -124,7 +124,7 @@ public class SharedIoTManager extends ResourceManager {
         sharedIoTConfig = new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withNewServices()
@@ -181,14 +181,14 @@ public class SharedIoTManager extends ResourceManager {
         return amqpClient;
     }
 
-    public void closeAmqpFactory() throws Exception {
+    private void closeAmqpFactory() throws Exception {
         if (amqpClientFactory != null) {
             amqpClientFactory.close();
             amqpClientFactory = null;
         }
     }
 
-    public void closeMqttFactory() {
+    private void closeMqttFactory() {
         if (mqttClientFactory != null) {
             mqttClientFactory.close();
             mqttClientFactory = null;

@@ -20,31 +20,31 @@ import org.junit.jupiter.api.Tag;
 @Tag(TestTag.SHARED_IOT)
 public interface ITestIoTShared extends ITestBase, ITestIoTBase {
 
-    SharedIoTManager sharedIoTResourceManager = SharedIoTManager.getInstance();
+    SharedIoTManager SHARED_IOT_MANAGER = SharedIoTManager.getInstance();
 
     default AddressSpace getSharedAddressSpace() {
-        return sharedIoTResourceManager.getSharedAddressSpace();
+        return SHARED_IOT_MANAGER.getSharedAddressSpace();
     }
 
     default AmqpClientFactory getAmqpClientFactory() {
-        return sharedIoTResourceManager.getAmqpClientFactory();
+        return SHARED_IOT_MANAGER.getAmqpClientFactory();
     }
 
     default MqttClientFactory getMqttClientFactory() {
-        return sharedIoTResourceManager.getMqttClientFactory();
+        return SHARED_IOT_MANAGER.getMqttClientFactory();
     }
 
     default IoTProject getSharedIoTProject() {
-        return sharedIoTResourceManager.getSharedIoTProject();
+        return SHARED_IOT_MANAGER.getSharedIoTProject();
     }
 
     default IoTConfig getSharedIoTConfig() {
-        return sharedIoTResourceManager.getSharedIoTConfig();
+        return SHARED_IOT_MANAGER.getSharedIoTConfig();
     }
 
     @Override
     default ResourceManager getResourceManager() {
-        return sharedIoTResourceManager;
+        return SHARED_IOT_MANAGER;
     }
 
     @Override

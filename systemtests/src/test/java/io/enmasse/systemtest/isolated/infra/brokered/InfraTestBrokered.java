@@ -72,7 +72,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
                 .withName("example-space-plan-brokered")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withAddressSpaceType(AddressSpaceType.BROKERED.toString())
@@ -87,7 +87,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
         exampleAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("example-address-space")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -169,7 +169,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
-        isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
+        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
                 () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? brokerStorage : null, null, adminMemory, null),

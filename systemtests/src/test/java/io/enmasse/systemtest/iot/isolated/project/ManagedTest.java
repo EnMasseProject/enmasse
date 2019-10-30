@@ -60,7 +60,7 @@ class ManagedTest extends TestBase implements ITestIoTIsolated {
         IoTConfig iotConfig = new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withNewServices()
@@ -79,12 +79,12 @@ class ManagedTest extends TestBase implements ITestIoTIsolated {
                 .endSpec()
                 .build();
 
-        isolatedIoTManager.createIoTConfig(iotConfig);
+        ISOLATED_IOT_MANAGER.createIoTConfig(iotConfig);
 
-        this.client = kubernetes.getIoTProjectClient(IOT_PROJECT_NAMESPACE);
-        this.addressClient = kubernetes.getAddressClient(IOT_PROJECT_NAMESPACE);
-        this.addressSpaceClient = kubernetes.getAddressSpaceClient(IOT_PROJECT_NAMESPACE);
-        this.userClient = kubernetes.getUserClient(IOT_PROJECT_NAMESPACE);
+        this.client = KUBERNETES.getIoTProjectClient(IOT_PROJECT_NAMESPACE);
+        this.addressClient = KUBERNETES.getAddressClient(IOT_PROJECT_NAMESPACE);
+        this.addressSpaceClient = KUBERNETES.getAddressSpaceClient(IOT_PROJECT_NAMESPACE);
+        this.userClient = KUBERNETES.getUserClient(IOT_PROJECT_NAMESPACE);
     }
 
     @AfterEach
@@ -92,7 +92,7 @@ class ManagedTest extends TestBase implements ITestIoTIsolated {
         if (context.getExecutionException().isPresent()) { //test failed
             logCollector.collectHttpAdapterQdrProxyState();
         }
-        SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+        SystemtestsKubernetesApps.deleteInfinispanServer(KUBERNETES.getInfraNamespace());
     }
 
     @Test
@@ -100,7 +100,7 @@ class ManagedTest extends TestBase implements ITestIoTIsolated {
 
         var project = IoTUtils.getBasicIoTProjectObject("iot1", "as1",
                 IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
-        isolatedIoTManager.createIoTProject(project);
+        ISOLATED_IOT_MANAGER.createIoTProject(project);
 
         assertManagedResources(Assertions::assertNotNull, project, "as1");
 
@@ -135,7 +135,7 @@ class ManagedTest extends TestBase implements ITestIoTIsolated {
         // wait until the project and address space become ready
 
         log.info("For for project to become ready again");
-        IoTUtils.waitForIoTProjectReady(kubernetes, project);
+        IoTUtils.waitForIoTProjectReady(KUBERNETES, project);
 
         // assert existence
 

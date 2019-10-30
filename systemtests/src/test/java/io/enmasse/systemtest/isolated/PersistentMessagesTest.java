@@ -49,7 +49,7 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("brokered-persistent")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.BROKERED.toString())
@@ -83,7 +83,7 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("standard-persistent")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
@@ -165,10 +165,10 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
         resourcesManager.setAddresses(address);
 
         // Wait for the first console pod to be terminated
-        TestUtils.waitForConsoleRollingUpdate(kubernetes.getInfraNamespace());
-        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
+        TestUtils.waitForConsoleRollingUpdate(KUBERNETES.getInfraNamespace());
+        TestUtils.waitUntilDeployed(KUBERNETES.getInfraNamespace());
 
-        int podCount = kubernetes.listPods().size();
+        int podCount = KUBERNETES.listPods().size();
         clientUtils.sendDurableMessages(resourcesManager, addSpace, address, credentials, messagesBatch);
         restartBrokers(podCount);
 
@@ -181,7 +181,7 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
     private void doTestTopicPersistentMessages(AddressSpace addSpace, Address topic, Address subscription) throws Exception {
         resourcesManager.setAddresses(topic, subscription);
 
-        int podCount = kubernetes.listPods().size();
+        int podCount = KUBERNETES.listPods().size();
 
         AmqpClient client = resourcesManager.getAmqpClientFactory().createTopicClient(addSpace);
         client.getConnectOptions().setCredentials(credentials);
@@ -204,12 +204,12 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
 
     private void restartBrokers(int podCount) throws Exception {
         Map<String, String> labelSelector = Collections.singletonMap("role", "broker");
-        List<String> uids = kubernetes.listPods(kubernetes.getInfraNamespace(), labelSelector).stream().map(pod -> pod.getMetadata().getUid()).collect(Collectors.toList());
+        List<String> uids = KUBERNETES.listPods(KUBERNETES.getInfraNamespace(), labelSelector).stream().map(pod -> pod.getMetadata().getUid()).collect(Collectors.toList());
 
-        kubernetes.deletePod(kubernetes.getInfraNamespace(), labelSelector);
+        KUBERNETES.deletePod(KUBERNETES.getInfraNamespace(), labelSelector);
 
         waitForPodsToTerminate(uids);
-        TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), podCount, new TimeoutBudget(10, TimeUnit.MINUTES));
+        TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), podCount, new TimeoutBudget(10, TimeUnit.MINUTES));
         log.info("Broker pods restarted");
     }
 

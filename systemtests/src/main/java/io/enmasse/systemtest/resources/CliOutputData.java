@@ -65,10 +65,10 @@ public class CliOutputData {
         ADDRESS
     }
 
-    public static abstract class CliDataRow {
-        protected String name;
-        protected String type;
-        protected String age;
+    public static class CliDataRow {
+        private String name;
+        private String type;
+        private String age;
 
         String[] splitData(String data) {
             return data.trim().split("\\s{2,}");
@@ -85,6 +85,18 @@ public class CliOutputData {
         public String getAge() {
             return age;
         }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public void setAge(String age) {
+            this.age = age;
+        }
     }
 
     public static class AddressSpaceRow extends CliDataRow {
@@ -95,12 +107,12 @@ public class CliOutputData {
 
         AddressSpaceRow(String data) {
             String[] parsedData = splitData(data);
-            this.name = parsedData[0];
-            this.type = parsedData[1];
+            setName(parsedData[0]);
+            setType(parsedData[1]);
             this.plan = parsedData[2];
             this.ready = Boolean.parseBoolean(parsedData[3]);
             this.phase = parsedData[4];
-            this.age = parsedData[5];
+            setAge(parsedData[5]);
             try {
                 this.status = parsedData[6];
             } catch (Exception ignored) {
@@ -135,14 +147,14 @@ public class CliOutputData {
 
         AddressRow(String data) {
             String[] parsedData = splitData(data);
-            this.name = parsedData[0];
+            setName(parsedData[0]);
             this.address = parsedData[1];
             this.addressSpace = parsedData[2];
-            this.type = parsedData[3];
+            setType(parsedData[3]);
             this.plan = parsedData[4];
             this.ready = Boolean.parseBoolean(parsedData[5]);
             this.phase = parsedData[6];
-            this.age = parsedData[7];
+            setAge(parsedData[7]);
             try {
                 this.status = parsedData[8];
             } catch (Exception ignored) {
@@ -180,10 +192,10 @@ public class CliOutputData {
 
         UserRow(String data) {
             String[] parsedData = splitData(data);
-            this.name = parsedData[0];
+            setName(parsedData[0]);
             this.username = parsedData[1];
-            this.type = parsedData[2];
-            this.age = parsedData[3];
+            setType(parsedData[2]);
+            setAge(parsedData[3]);
         }
 
         public String getUsername() {

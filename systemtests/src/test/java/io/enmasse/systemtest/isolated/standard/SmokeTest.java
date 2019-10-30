@@ -67,7 +67,7 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
         addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("smoke-space-standard")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())

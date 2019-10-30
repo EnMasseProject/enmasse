@@ -109,7 +109,7 @@ public abstract class Kubernetes {
     private static Kubernetes instance;
     protected final Environment environment;
     protected final KubernetesClient client;
-    protected final String infraNamespace;
+    final String infraNamespace;
     protected static KubeCluster cluster;
 
     protected Kubernetes(String infraNamespace, Supplier<KubernetesClient> clientSupplier) {

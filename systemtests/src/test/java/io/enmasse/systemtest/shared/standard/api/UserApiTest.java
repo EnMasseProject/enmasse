@@ -126,20 +126,20 @@ class UserApiTest extends TestBase implements ITestSharedStandard {
         try {
             resourcesManager.createUserServiceAccount(getSharedAddressSpace(), serviceAccount);
             UserCredentials messagingUser = new UserCredentials("@@serviceaccount@@",
-                    kubernetes.getServiceaccountToken(serviceAccount.getUsername(), environment.namespace()));
+                    KUBERNETES.getServiceaccountToken(serviceAccount.getUsername(), environment.namespace()));
             LOGGER.info("username: {}, password: {}", messagingUser.getUsername(), messagingUser.getPassword());
 
             getClientUtils().assertCanConnect(getSharedAddressSpace(), messagingUser, Collections.singletonList(queue), resourcesManager);
 
             //delete user
             assertThat("User deleting failed using oc cmd",
-                    KubeCMDClient.deleteUser(kubernetes.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), serviceAccount.getUsername()).getRetCode(), is(true));
+                    KubeCMDClient.deleteUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), serviceAccount.getUsername()).getRetCode(), is(true));
             assertThat("User is still present",
-                    KubeCMDClient.getUser(kubernetes.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), serviceAccount.getUsername()).getRetCode(), is(false));
+                    KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), serviceAccount.getUsername()).getRetCode(), is(false));
 
             getClientUtils().assertCannotConnect(getSharedAddressSpace(), messagingUser, Collections.singletonList(queue), resourcesManager);
         } finally {
-            kubernetes.deleteServiceAccount("test-service-account", environment.namespace());
+            KUBERNETES.deleteServiceAccount("test-service-account", environment.namespace());
         }
     }
 

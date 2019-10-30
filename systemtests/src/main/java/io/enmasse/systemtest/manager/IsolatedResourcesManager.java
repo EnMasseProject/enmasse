@@ -30,23 +30,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class IsolatedResourcesManager extends ResourceManager {
+public final class IsolatedResourcesManager extends ResourceManager {
 
     private static IsolatedResourcesManager managerInstance = null;
-    private static Logger LOGGER;
-    protected List<AddressSpace> currentAddressSpaces;
-    protected AmqpClientFactory amqpClientFactory;
-    protected MqttClientFactory mqttClientFactory;
-    boolean reuseAddressSpace = false;
+    private static final Logger LOGGER = CustomLogger.getLogger();
+    private List<AddressSpace> currentAddressSpaces;
+    private AmqpClientFactory amqpClientFactory;
+    private MqttClientFactory mqttClientFactory;
+    private boolean reuseAddressSpace = false;
     private ArrayList<AddressPlan> addressPlans;
     private ArrayList<AddressSpacePlan> addressSpacePlans;
     private ArrayList<StandardInfraConfig> standardInfraConfigs;
     private ArrayList<BrokeredInfraConfig> brokeredInfraConfigs;
     private ArrayList<AuthenticationService> authServices;
-    private UserCredentials defaultCredentials = environment.getDefaultCredentials();
+    private UserCredentials defaultCredentials = ENVIRONMENT.getDefaultCredentials();
 
     private IsolatedResourcesManager() {
-        LOGGER = CustomLogger.getLogger();
         addressPlans = new ArrayList<>();
         addressSpacePlans = new ArrayList<>();
         standardInfraConfigs = new ArrayList<>();
@@ -71,7 +70,7 @@ public class IsolatedResourcesManager extends ResourceManager {
     }
 
 
-    public void initFactories(AddressSpace addressSpace) {
+    private void initFactories(AddressSpace addressSpace) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(addressSpace, defaultCredentials);
     }
@@ -94,9 +93,9 @@ public class IsolatedResourcesManager extends ResourceManager {
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
         LOGGER.info("Reuse addressspace: " + reuseAddressSpace);
-        LOGGER.info("Environment cleanup: " + environment.skipCleanup());
+        LOGGER.info("Environment cleanup: " + ENVIRONMENT.skipCleanup());
 
-        if (!environment.skipCleanup() && !reuseAddressSpace) {
+        if (!ENVIRONMENT.skipCleanup() && !reuseAddressSpace) {
             for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
                 Kubernetes.getInstance().getAddressSpacePlanClient().withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
@@ -110,20 +109,25 @@ public class IsolatedResourcesManager extends ResourceManager {
             addressPlans.clear();
 
             for (StandardInfraConfig infraConfigDefinition : standardInfraConfigs) {
-                Kubernetes.getInstance().getStandardInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
+                Kubernetes.getInstance().getStandardInfraConfigClient().withName(infraConfigDefinition
+                        .getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("Standardinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
             standardInfraConfigs.clear();
 
             for (BrokeredInfraConfig infraConfigDefinition : brokeredInfraConfigs) {
-                Kubernetes.getInstance().getBrokeredInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
+                Kubernetes.getInstance().getBrokeredInfraConfigClient().withName(infraConfigDefinition
+                        .getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("Brokeredinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
             brokeredInfraConfigs.clear();
 
             for (AuthenticationService authService : authServices) {
-                Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService.getMetadata().getName()).cascading(true).delete();
-                TestUtils.waitForNReplicas(0, false, Map.of("name", authService.getMetadata().getName()), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
+                Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService
+                        .getMetadata().getName()).cascading(true).delete();
+                TestUtils.waitForNReplicas(0, false,
+                        Map.of("name",authService.getMetadata().getName()), Collections.emptyMap(),
+                        new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
                 LOGGER.info("AuthService {} deleted", authService.getMetadata().getName());
             }
             authServices.clear();
@@ -191,16 +195,16 @@ public class IsolatedResourcesManager extends ResourceManager {
     //------------------------------------------------------------------------------------------------
 
     @Override
-    public BrokeredInfraConfig getBrokeredInfraConfig(String name) throws Exception {
+    public BrokeredInfraConfig getBrokeredInfraConfig(String name) {
         return Kubernetes.getInstance().getBrokeredInfraConfigClient().withName(name).get();
     }
 
     @Override
-    public StandardInfraConfig getStandardInfraConfig(String name) throws Exception {
+    public StandardInfraConfig getStandardInfraConfig(String name) {
         return Kubernetes.getInstance().getStandardInfraConfigClient().withName(name).get();
     }
 
-    public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
+    public void createInfraConfig(InfraConfig infraConfigDefinition) {
         if (infraConfigDefinition instanceof StandardInfraConfig) {
             standardInfraConfigs.add((StandardInfraConfig) infraConfigDefinition);
             super.createInfraConfig((StandardInfraConfig) infraConfigDefinition);
@@ -210,37 +214,18 @@ public class IsolatedResourcesManager extends ResourceManager {
         }
     }
 
-    public void removeInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
-        if (infraConfigDefinition instanceof StandardInfraConfig) {
-            super.removeInfraConfig((StandardInfraConfig) infraConfigDefinition);
-            standardInfraConfigs.removeIf(infraId -> infraId.getMetadata().getName().equals(infraConfigDefinition.getMetadata().getName()));
-        } else {
-            super.removeInfraConfig((BrokeredInfraConfig) infraConfigDefinition);
-            brokeredInfraConfigs.removeIf(infraId -> infraId.getMetadata().getName().equals(infraConfigDefinition.getMetadata().getName()));
-        }
-    }
-
     //------------------------------------------------------------------------------------------------
     // Authentication services
     //------------------------------------------------------------------------------------------------
 
     @Override
-    public AuthenticationService getAuthService(String name) throws Exception {
+    public AuthenticationService getAuthService(String name) {
         return Kubernetes.getInstance().getAuthenticationServiceClient().withName(name).get();
     }
 
-    @Override
-    public void replaceAuthService(AuthenticationService authService) throws Exception {
-        replaceAuthService(authService, false);
-    }
-
-    public void replaceAuthService(AuthenticationService authenticationService, boolean replaceExisting) throws Exception {
-        if (replaceExisting) {
-            super.replaceAuthService(authenticationService);
-        } else {
-            super.createAuthService(authenticationService);
-            authServices.add(authenticationService);
-        }
+    public void replaceAuthService(AuthenticationService authenticationService) throws Exception {
+        super.createAuthService(authenticationService);
+        authServices.add(authenticationService);
     }
 
     @Override
@@ -302,7 +287,7 @@ public class IsolatedResourcesManager extends ResourceManager {
     }
 
     public void deleteAddressspacesFromList() throws Exception {
-        if (environment.skipCleanup()) {
+        if (ENVIRONMENT.skipCleanup()) {
             LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
         } else {
             LOGGER.info("All addressspaces will be removed");
@@ -318,7 +303,7 @@ public class IsolatedResourcesManager extends ResourceManager {
     }
 
     public void deleteAddressSpaceCreatedBySC(AddressSpace addressSpace) throws Exception {
-        TestUtils.deleteAddressSpaceCreatedBySC(kubernetes, addressSpace, logCollector);
+        TestUtils.deleteAddressSpaceCreatedBySC(KUBERNETES, addressSpace, LOG_COLLECTOR);
     }
 
     @Override
