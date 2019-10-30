@@ -13,6 +13,8 @@
         <groups></groups>
         <excludeGroups></excludeGroups>
         <skip.tests>true</skip.tests>
+        <checkstyle.config.location>checkstyle.xml</checkstyle.config.location>
+        <checkstyle.suppressions.location>checkstyle-suppressions.xml</checkstyle.suppressions.location>
     </properties>
     <dependencyManagement>
         <dependencies>
