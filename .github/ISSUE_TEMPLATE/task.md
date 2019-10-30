@@ -10,7 +10,10 @@ assignees: ''
 **Description**
 
 <!--
-REMINDER: Add milestones and labels to the task to make it easily identifiable
+REMINDER:
+* Add milestone
+* Add component labels to identify relevant component(s)
+* Add size labels using t-shirt sizes (i.e. size/small, size/medium, size/large) to aid planning
 -->
 
 High level description of the task.
