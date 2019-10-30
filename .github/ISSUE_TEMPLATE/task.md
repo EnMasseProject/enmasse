@@ -1,8 +1,8 @@
 ---
 name: Task
-about: Specific work task in EnMasse
+about: Work item task in EnMasse
 title: ''
-labels: ''
+labels: kind/task
 assignees: ''
 
 ---
@@ -21,4 +21,7 @@ If applicable, links to design docs.
 
 **Tasklist**
 
-Enumerate the sub-tasks required to complete the task.
+Enumerate the sub-tasks required to complete the task:
+
+* [ ] Subtask 1
+* [ ] Subtask 2
