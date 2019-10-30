@@ -534,6 +534,16 @@ public abstract class Kubernetes {
         }
     }
 
+    public void createNamespace(String namespace, Map<String, String> labels) {
+        log.info("Following namespace will be created = {}", namespace);
+        if (!namespaceExists(namespace)) {
+            Namespace ns = new NamespaceBuilder().withNewMetadata().withName(namespace).withLabels(labels).endMetadata().build();
+            client.namespaces().create(ns);
+        } else {
+            log.info("Namespace {} already exists", namespace);
+        }
+    }
+
     public void deleteNamespace(String namespace) throws Exception {
         log.info("Following namespace will be removed - {}", namespace);
         if (namespaceExists(namespace)) {

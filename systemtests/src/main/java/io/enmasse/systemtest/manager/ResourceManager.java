@@ -129,6 +129,7 @@ public abstract class ResourceManager {
         LOGGER.info("AddressSpace plan {} will be created {}", addressSpacePlan.getMetadata().getName(), addressSpacePlan);
         var client = Kubernetes.getInstance().getAddressSpacePlanClient();
         client.create(addressSpacePlan);
+        TestUtils.waitForAddressSpacePlanApplied(addressSpacePlan);
         Thread.sleep(1000);
     }
 

@@ -6,12 +6,18 @@ package io.enmasse.systemtest.clients;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.EndpointStatus;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.ResourceManager;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.vertx.proton.ProtonClientOptions;
@@ -32,6 +38,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -144,5 +151,37 @@ public class ClientUtils {
         ReceiverStatus receiverStatus = amqpClient.recvMessagesWithStatus(address, count);
         assertThat("Incorrect count of messages received from " + address + ". Got " + receiverStatus.getNumReceived(),
                 receiverStatus.getResult().get(timeoutMs, TimeUnit.MILLISECONDS).size(), is(count));
+    }
+
+    public static void preparePolicyClients(AbstractClient sender, AbstractClient receiver, Address dest, AddressSpace addressSpace) {
+        ClientArgumentMap arguments = new ClientArgumentMap();
+        UserCredentials credentials = new UserCredentials("test", "test");
+
+        arguments.put(ClientArgument.USERNAME, credentials.getUsername());
+        arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
+        arguments.put(ClientArgument.BROKER, getInnerMessagingRoute(addressSpace).toString());
+        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
+        arguments.put(ClientArgument.COUNT, "5");
+        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
+        arguments.put(ClientArgument.TIMEOUT, "30");
+        arguments.put(ClientArgument.CONN_SSL, "true");
+        arguments.put(ClientArgument.LOG_MESSAGES, "json");
+
+        sender.setArguments(arguments);
+        arguments.remove(ClientArgument.MSG_CONTENT);
+        receiver.setArguments(arguments);
+    }
+
+    private static Endpoint getInnerMessagingRoute(AddressSpace addressSpace) {
+/*        return new Endpoint(String.format("%s-%s.%s.svc.cluster.local",
+                "messaging", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace),
+                Environment.getInstance().namespace()), 5671);*/
+
+            for (EndpointStatus endpointStatus : addressSpace.getStatus().getEndpointStatuses()) {
+                if (endpointStatus.getName().equals("messaging")) {
+                    return new Endpoint(endpointStatus.getServiceHost(), 5671);
+                }
+            }
+            return null;
     }
 }

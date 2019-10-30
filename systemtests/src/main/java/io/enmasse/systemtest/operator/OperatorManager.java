@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
+import java.util.Collections;
 
 public class OperatorManager {
     private static Logger LOGGER = CustomLogger.getLogger();
@@ -67,7 +68,7 @@ public class OperatorManager {
 
     public void installOperators() {
         LOGGER.info("Installing enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
-        kube.createNamespace(Environment.getInstance().namespace());
+        kube.createNamespace(Environment.getInstance().namespace(), Collections.singletonMap("allowed", "true"));
         KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
     }
 

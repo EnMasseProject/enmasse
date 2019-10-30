@@ -55,6 +55,14 @@ public abstract class AbstractClient {
         this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
 
+    public AbstractClient(ClientType clientType, String podNamespace) throws Exception {
+        this.clientType = clientType;
+        this.podName = SystemtestsKubernetesApps.getMessagingAppPodName(podNamespace);
+        this.podNamespace = podNamespace;
+        this.fillAllowedArgs();
+        this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
+    }
+
     /**
      * Constructor of abstract client
      *
@@ -69,6 +77,14 @@ public abstract class AbstractClient {
         this.podNamespace = SystemtestsKubernetesApps.MESSAGING_PROJECT;
         this.fillAllowedArgs();
         this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
+    }
+
+    public void setPodName(String podName) {
+        this.podName = podName;
+    }
+
+    public void setPodNamespace(String podNamespace) {
+        this.podNamespace = podNamespace;
     }
 
     /**

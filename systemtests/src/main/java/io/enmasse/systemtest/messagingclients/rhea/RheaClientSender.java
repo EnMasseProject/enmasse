@@ -19,6 +19,10 @@ public class RheaClientSender extends AbstractClient {
         super(ClientType.CLI_RHEA_SENDER);
     }
 
+    public RheaClientSender(String namespace) throws Exception {
+        super(ClientType.CLI_RHEA_SENDER, namespace);
+    }
+
     public RheaClientSender(Path logPath) throws Exception {
         super(ClientType.CLI_RHEA_SENDER, logPath);
     }
