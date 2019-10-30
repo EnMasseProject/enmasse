@@ -1,6 +1,10 @@
 ### Type of change
 
+<!--
+
 _Select the type of your PR_
+
+-->
 
 - Bugfix
 - Enhancement / new feature
@@ -9,11 +13,19 @@ _Select the type of your PR_
 
 ### Description
 
+<!--
+
 _Please describe your pull request_
+
+-->
 
 ### Checklist
 
+<!--
+
 _Please go through this checklist and make sure all applicable tasks have been done_
+
+-->
 
 - [ ] Update/write design documentation in `./documentation/design`
 - [ ] Write tests and make sure they pass
