@@ -68,6 +68,7 @@ jobs:
         repo: EnMasseProject/enmasse
 env:
   global:
+  - TEST_MINIKUBE_VERSION=v1.4.0
   - BRANCH=${TRAVIS_BRANCH}
   - PULL_REQUEST=${TRAVIS_PULL_REQUEST}
   - TAG=${TRAVIS_TAG}
