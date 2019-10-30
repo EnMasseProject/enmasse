@@ -243,6 +243,23 @@ public abstract class ResourceManager {
         syncAddressSpaceAndCollectLogs(addressSpace, operationID);
     }
 
+    public void createAddressSpace(AddressSpace... addressSpaces) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
+        for (AddressSpace addressSpace : addressSpaces) {
+            if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
+                LOGGER.info("Address space '{}' doesn't exist and will be created.", addressSpace);
+                kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace);
+            } else {
+                LOGGER.info("Address space '" + addressSpace + "' already exists.");
+            }
+        }
+        for (AddressSpace addressSpace : addressSpaces) {
+            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
+            syncAddressSpaceAndCollectLogs(addressSpace, operationID);
+        }
+    }
+
     public void waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
         LOGGER.info("Waiting for address space ready");
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);

@@ -2,21 +2,22 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.bases.marathon;
+package io.enmasse.systemtest.bases.soak;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.systemtest.SysytemTestsErrorCollector;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.selenium.SeleniumManagement;
-import io.enmasse.systemtest.selenium.SeleniumProvider;
-import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.shared.standard.TopicTest;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -26,23 +27,28 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.enmasse.systemtest.TestTag.MARATHON;
+import static io.enmasse.systemtest.TestTag.SOAK;
 import static org.hamcrest.CoreMatchers.is;
 
-@Tag(MARATHON)
-public abstract class MarathonTestBase extends TestBase {
+@Tag(SOAK)
+public abstract class SoakTestBase extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();
-    private ConsoleWebPage consoleWebPage;
     private SysytemTestsErrorCollector collector = new SysytemTestsErrorCollector();
 
     @BeforeEach
@@ -97,37 +103,6 @@ public abstract class MarathonTestBase extends TestBase {
     //========================================================================================================
     // Tests methods
     //========================================================================================================
-
-    protected void doTestCreateDeleteAddressSpaceLong(Supplier<AddressSpace> supplier) throws Exception {
-        runTestInLoop(30, () -> {
-            UserCredentials cred = new UserCredentials("david", "kornelius");
-            AddressSpace addressSpace = supplier.get();
-            resourcesManager.createAddressSpace(addressSpace);
-            resourcesManager.createOrUpdateUser(addressSpace, cred);
-
-            log.info("Address space created");
-
-            doAddressTest(addressSpace, "test-topic-createdelete-brokered-%d",
-                    "test-queue-createdelete-brokered-%d", cred);
-
-            resourcesManager.deleteAddressSpace(addressSpace);
-            log.info("Address space removed");
-        });
-    }
-
-    protected void doTestCreateDeleteAddressesWithAuthLong(AddressSpace addressSpace) throws Exception {
-        log.info("test testCreateDeleteAddressesWithAuthLong");
-        resourcesManager.createAddressSpace(addressSpace);
-
-        UserCredentials user = new UserCredentials("test-user", "test-user");
-        resourcesManager.createOrUpdateUser(addressSpace, user);
-
-        runTestInLoop(30, () -> {
-            doAddressTest(addressSpace, "test-topic-createdelete-auth-brokered-%d",
-                    "test-queue-createdelete-auth-brokered-%d", user);
-        });
-    }
-
     protected void doTestQueueSendReceiveLong(AddressSpace addressSpace) throws Exception {
         resourcesManager.createAddressSpace(addressSpace);
 
@@ -276,40 +251,6 @@ public abstract class MarathonTestBase extends TestBase {
         });
     }
 
-    protected void doTestCreateDeleteAddressesViaAgentLong(AddressSpace addressSpace, String className, String testName) throws Exception {
-        log.info("testCreateDeleteAddressesViaAgentLong start");
-        resourcesManager.createAddressSpace(addressSpace);
-        log.info("Address space '{}'created", addressSpace);
-        SeleniumManagement.deployFirefoxApp();
-
-        UserCredentials user = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(addressSpace, user);
-
-        int addressCount = 5;
-        ArrayList<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
-
-        runTestInLoop(30, () -> {
-            SeleniumProvider selenium = SeleniumProvider.getInstance();
-            selenium.setupDriver(TestUtils.getFirefoxDriver());
-            consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressSpace, clusterUser);
-            consoleWebPage.openWebConsolePage(user);
-            try {
-                consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
-                consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Address[0]));
-                Thread.sleep(5000);
-                selenium.saveScreenShots(className, testName);
-                selenium.tearDownDrivers();
-            } catch (Exception ex) {
-                selenium.setupDriver(TestUtils.getFirefoxDriver());
-                consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressSpace, clusterUser);
-                consoleWebPage.openWebConsolePage(user);
-                throw new Exception(ex);
-            }
-        });
-        log.info("testCreateDeleteAddressesViaAgentLong finished");
-    }
-
-
     //========================================================================================================
     // Help methods
     //========================================================================================================
@@ -372,4 +313,69 @@ public abstract class MarathonTestBase extends TestBase {
         resourcesManager.deleteAddresses(topicList.toArray(new Address[0]));
         Thread.sleep(15000);
     }
+
+    protected void doTestLoad(AddressSpaceType type, String addressSpacePlans, String addressPlan) throws Exception {
+
+        runTestInLoop(120, () -> {
+            int count = 5;
+            AmqpClient queueClient;
+            Map<Address, AmqpClient> pairs = new HashMap<Address, AmqpClient>();
+
+
+            List<AddressSpace> addressSpaceList = IntStream.range(0, count).mapToObj(i ->
+                    new AddressSpaceBuilder()
+                            .withNewMetadata()
+                            .withName("test-address-space-" + i)
+                            .withNamespace(kubernetes.getInfraNamespace())
+                            .endMetadata()
+                            .withNewSpec()
+                            .withType(type.toString())
+                            .withPlan(addressSpacePlans)
+                            .withNewAuthenticationService()
+                            .withName("standard-authservice")
+                            .endAuthenticationService()
+                            .endSpec()
+                            .build()).collect(Collectors.toList());
+
+            resourcesManager.createAddressSpace(addressSpaceList.toArray(new AddressSpace[0]));
+            List<Address> addresses = new LinkedList<>();
+            for (AddressSpace space : addressSpaceList) {
+                UserCredentials credentials = new UserCredentials("test", "test");
+                resourcesManager.createOrUpdateUser(space, credentials);
+                queueClient = resourcesManager.getAmqpClientFactory().createQueueClient(space);
+                queueClient.getConnectOptions().setCredentials(credentials);
+                clients.add(queueClient);
+
+                for (int i = 0; i < count; i++) {
+                    addresses.add(new AddressBuilder()
+                            .withNewMetadata()
+                            .withNamespace(space.getMetadata().getNamespace())
+                            .withName(AddressUtils.generateAddressMetadataName(space, "test-address-" + i))
+                            .endMetadata()
+                            .withNewSpec()
+                            .withType("queue")
+                            .withAddress("test-address-" + i)
+                            .withPlan(addressPlan)
+                            .endSpec()
+                            .build());
+                    pairs.put(addresses.get(i), queueClient);
+                }
+            }
+            resourcesManager.setAddresses(addresses.toArray(new Address[0]));
+            for (Map.Entry<Address, AmqpClient> pair : pairs.entrySet()) {
+                QueueTest.runQueueTest(pair.getValue(), pair.getKey(), 1024);
+            }
+
+            for (AddressSpace space : addressSpaceList) {
+                resourcesManager.deleteAddressSpace(space);
+            }
+        });
+    }
 }
+
+
+
+
+
+
+

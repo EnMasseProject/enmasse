@@ -2,7 +2,7 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.marathon;
+package io.enmasse.systemtest.soak;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
@@ -10,7 +10,7 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
-import io.enmasse.systemtest.bases.marathon.MarathonTestBase;
+import io.enmasse.systemtest.bases.soak.SoakTestBase;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Tag(TestTag.ISOLATED)
-class RestartTest extends MarathonTestBase implements ITestBaseIsolated {
+class RestartTest extends SoakTestBase implements ITestBaseIsolated {
     private static Logger log = CustomLogger.getLogger();
     private ScheduledExecutorService deleteService;
 
@@ -48,7 +48,7 @@ class RestartTest extends MarathonTestBase implements ITestBaseIsolated {
     }
 
     @Test
-    public void testRandomDeletePods() throws Exception {
+    void testRandomDeletePods() throws Exception {
 
         UserCredentials user = new UserCredentials("test-user", "passsswooooord");
         AddressSpace standard = new AddressSpaceBuilder()
@@ -105,50 +105,6 @@ class RestartTest extends MarathonTestBase implements ITestBaseIsolated {
 
         runTestInLoop(60, () ->
                 assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses));
-    }
-
-    @Test
-    @Disabled("Due to issue #2127")
-    public void testHAqdrouter() throws Exception {
-
-        UserCredentials user = new UserCredentials("test-user", "passsswooooord");
-        AddressSpace standard = new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withName("test-ha-routers")
-                .withNamespace(kubernetes.getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withType(AddressSpaceType.STANDARD.toString())
-                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
-                .withNewAuthenticationService()
-                .withName("standard-authservice")
-                .endAuthenticationService()
-                .endSpec()
-                .build();
-        isolatedResourcesManager.createAddressSpaceList(standard);
-        resourcesManager.createOrUpdateUser(standard, user);
-
-        List<Address> standardAddresses = getAllStandardAddresses(standard);
-
-        resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));
-
-        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
-
-        //set up restart scheduler
-        deleteService.scheduleAtFixedRate(() -> {
-            log.info("............................................................");
-            log.info("............................................................");
-            log.info("...........Scheduler will delete one of qdrouter............");
-            List<Pod> qdrouters = kubernetes.listPods().stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList());
-            Pod qdrouter = qdrouters.get(new Random(System.currentTimeMillis()).nextInt(qdrouters.size()) % qdrouters.size());
-            kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
-            log.info("............................................................");
-            log.info("............................................................");
-            log.info("............................................................");
-        }, 5, 75, TimeUnit.SECONDS);
-
-        runTestInLoop(30, () ->
-                getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager));
     }
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,

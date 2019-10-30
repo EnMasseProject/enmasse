@@ -2,53 +2,18 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.marathon;
+package io.enmasse.systemtest.soak;
 
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.bases.marathon.MarathonTestBase;
+import io.enmasse.systemtest.bases.soak.SoakTestBase;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
-class StandardMarathonTest extends MarathonTestBase implements ITestIsolatedStandard {
-
-    @Test
-    void testCreateDeleteAddressSpaceLong() throws Exception {
-        doTestCreateDeleteAddressSpaceLong(() ->
-                new AddressSpaceBuilder()
-                        .withNewMetadata()
-                        .withName("test-create-delete-addr-space")
-                        .withNamespace(kubernetes.getInfraNamespace())
-                        .endMetadata()
-                        .withNewSpec()
-                        .withType(AddressSpaceType.STANDARD.toString())
-                        .withPlan(AddressSpacePlans.STANDARD_MEDIUM)
-                        .withNewAuthenticationService()
-                        .withName("standard-authservice")
-                        .endAuthenticationService()
-                        .endSpec()
-                        .build());
-    }
-
-    @Test
-    void testCreateDeleteAddressesWithAuthLong() throws Exception {
-        doTestCreateDeleteAddressesWithAuthLong(
-                new AddressSpaceBuilder()
-                        .withNewMetadata()
-                        .withName("test-create-delete-addresses")
-                        .withNamespace(kubernetes.getInfraNamespace())
-                        .endMetadata()
-                        .withNewSpec()
-                        .withType(AddressSpaceType.STANDARD.toString())
-                        .withPlan(AddressSpacePlans.STANDARD_MEDIUM)
-                        .withNewAuthenticationService()
-                        .withName("standard-authservice")
-                        .endAuthenticationService()
-                        .endSpec()
-                        .build());
-    }
+class StandardSoakTest extends SoakTestBase implements ITestIsolatedStandard {
 
     @Test
     void testQueueSendReceiveLong() throws Exception {
@@ -105,21 +70,7 @@ class StandardMarathonTest extends MarathonTestBase implements ITestIsolatedStan
     }
 
     @Test
-    void testCreateDeleteAddressesViaAgentLong(TestInfo info) throws Exception {
-        doTestCreateDeleteAddressesViaAgentLong(
-                new AddressSpaceBuilder()
-                        .withNewMetadata()
-                        .withName("standard-marathon-web-console")
-                        .withNamespace(kubernetes.getInfraNamespace())
-                        .endMetadata()
-                        .withNewSpec()
-                        .withType(AddressSpaceType.STANDARD.toString())
-                        .withPlan(AddressSpacePlans.STANDARD_MEDIUM)
-                        .withNewAuthenticationService()
-                        .withName("standard-authservice")
-                        .endAuthenticationService()
-                        .endSpec()
-                        .build(),
-                info.getTestClass().get().getName(), info.getTestMethod().get().getName());
+    void testTestLoadLong() throws Exception {
+        doTestLoad(AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_MEDIUM, DestinationPlan.STANDARD_SMALL_QUEUE);
     }
 }
