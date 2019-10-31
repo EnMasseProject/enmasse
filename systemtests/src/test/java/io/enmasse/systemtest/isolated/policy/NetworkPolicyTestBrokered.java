@@ -17,24 +17,18 @@ import io.enmasse.admin.model.v1.BrokeredInfraConfigSpecAdminBuilder;
 import io.enmasse.admin.model.v1.BrokeredInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecAdminBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
-import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.LabelSelector;
@@ -94,7 +88,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         RheaClientSender allowedClientSender = new RheaClientSender(allowedSpace);
         RheaClientReceiver allowedClientReceiver = new RheaClientReceiver(allowedSpace);
 
-        ClientUtils.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
+        MessagingUtils.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
 
         assertTrue(allowedClientSender.run(), "Sender failed, expected return code 0");
         assertTrue(allowedClientReceiver.run(), "Receiver failed, expected return code 0");
@@ -135,7 +129,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         RheaClientSender allowedClientSender = new RheaClientSender(allowedSpace);
         RheaClientReceiver allowedClientReceiver = new RheaClientReceiver(allowedSpace);
 
-        MESSAGING_UTILS.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
+        MessagingUtils.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
 
         assertTrue(allowedClientSender.run(), "Sender failed, expected return code 0");
         assertTrue(allowedClientReceiver.run(), "Receiver failed, expected return code 0");

@@ -908,7 +908,7 @@ public class TestUtils {
                         addressSpacePlan.getMetadata().getNamespace()).list().getItems().stream()
                         .anyMatch(schema -> schema.getSpec().getPlans().stream()
                                 .anyMatch(plan -> plan.getName().contains(addressSpacePlan.getMetadata().getName()))),
-                new TimeoutBudget(5, TimeUnit.MINUTES));
+                new TimeoutBudget(15, TimeUnit.MINUTES));
     }
 
     @FunctionalInterface

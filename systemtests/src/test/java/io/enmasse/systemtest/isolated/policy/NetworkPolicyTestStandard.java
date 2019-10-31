@@ -21,15 +21,14 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.LabelSelector;
@@ -60,10 +59,10 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
 
     @AfterEach
     void clearNamespaces() throws Exception {
-        kubernetes.deleteNamespace(blockedSpace);
-        TestUtils.waitForNamespaceDeleted(kubernetes, blockedSpace);
-        kubernetes.deleteNamespace(allowedSpace);
-        TestUtils.waitForNamespaceDeleted(kubernetes, allowedSpace);
+        KUBERNETES.deleteNamespace(blockedSpace);
+        TestUtils.waitForNamespaceDeleted(KUBERNETES, blockedSpace);
+        KUBERNETES.deleteNamespace(allowedSpace);
+        TestUtils.waitForNamespaceDeleted(KUBERNETES, allowedSpace);
     }
 
     @Test
@@ -91,7 +90,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
         RheaClientSender allowedClientSender = new RheaClientSender(allowedSpace);
         RheaClientReceiver allowedClientReceiver = new RheaClientReceiver(allowedSpace);
 
-        ClientUtils.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
+        MessagingUtils.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
 
         assertTrue(allowedClientSender.run(), "Sender failed, expected return code 0");
         assertTrue(allowedClientReceiver.run(), "Receiver failed, expected return code 0");
@@ -106,7 +105,6 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
 
         assertFalse(blockedClientSender.run(), "Sender was successful, expected return code -1");
         assertFalse(blockedClientReceiver.run(), "Receiver was successful, expected return code -1");
-
     }
 
     @Test
@@ -132,7 +130,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
         RheaClientSender allowedClientSender = new RheaClientSender(allowedSpace);
         RheaClientReceiver allowedClientReceiver = new RheaClientReceiver(allowedSpace);
 
-        ClientUtils.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
+        MessagingUtils.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
 
         assertTrue(allowedClientSender.run(), "Sender failed, expected return code 0");
         assertTrue(allowedClientReceiver.run(), "Receiver failed, expected return code 0");
@@ -158,7 +156,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
         StandardInfraConfig standardInfraConfig = new StandardInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test-network-policy-infra")
-                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withNewNetworkPolicy()
@@ -191,7 +189,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
                         .build())
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createInfraConfig(standardInfraConfig);
+        ISOLATED_RESOURCES_MANAGER.createInfraConfig(standardInfraConfig);
         return standardInfraConfig;
     }
 
@@ -199,7 +197,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
                 .withName("testinomino")
-                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withAddressSpaceType(AddressSpaceType.STANDARD.toString())
@@ -214,7 +212,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
                         .stream().map(addressPlan1 -> addressPlan1.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpacePlan(exampleSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(exampleSpacePlan);
         return exampleSpacePlan;
     }
 
@@ -222,7 +220,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
         AddressPlan exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-standard", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0)));
 
-        isolatedResourcesManager.createAddressPlan(exampleAddressPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(exampleAddressPlan);
         return exampleAddressPlan;
     }
 
@@ -230,7 +228,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
         AddressSpace exampleAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("example-address-space")
-                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .withLabels(Collections.singletonMap("allowed", "true"))
                 .endMetadata()
                 .withNewSpec()
@@ -242,8 +240,8 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.createAddressSpace(exampleAddressSpace);
-        isolatedResourcesManager.createOrUpdateUser(exampleAddressSpace, credentials);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpace(exampleAddressSpace);
+        ISOLATED_RESOURCES_MANAGER.createOrUpdateUser(exampleAddressSpace, credentials);
         return exampleAddressSpace;
     }
 
@@ -260,7 +258,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.setAddresses(dest);
+        ISOLATED_RESOURCES_MANAGER.setAddresses(dest);
         return dest;
     }
 }
