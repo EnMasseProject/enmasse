@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
   Split,
   SplitItem,
@@ -11,8 +11,18 @@ import {
   Title,
   CardBody,
   Flex,
-  FlexItem
-} from "@patternfly/react-core";
+  FlexItem,
+} from '@patternfly/react-core';
+import { css, StyleSheet } from '@patternfly/react-styles';
+
+const styles = StyleSheet.create({
+  flex_right_border: {
+    paddingRight: '1em',
+    borderRight: '0.1em solid',
+    borderRightColor: 'lightgrey',
+  },
+});
+
 export interface IAddressDetailHeaderProps {
   type: string;
   name: string;
@@ -36,19 +46,21 @@ export const AddressDetailHeader: React.FunctionComponent<
     <DropdownItem
       key="download"
       aria-label="download"
-      onClick={() => onEdit(name)}>
+      onClick={() => onEdit(name)}
+    >
       Edit
     </DropdownItem>,
     <DropdownItem
       key="delete"
       aria-label="delete"
-      onClick={() => onDelete(name)}>
+      onClick={() => onDelete(name)}
+    >
       Delete
-    </DropdownItem>
+    </DropdownItem>,
   ];
   return (
     <Card>
-       <CardHeader>
+      <CardHeader>
         <Split gutter="md">
           <SplitItem>
             <Title headingLevel="h1" size="4xl">
@@ -68,22 +80,16 @@ export const AddressDetailHeader: React.FunctionComponent<
           </SplitItem>
         </Split>
       </CardHeader>
-    <CardBody>
-      <Flex>
-      <FlexItem
-            style={{
-              paddingRight: '1em',
-              borderRight: '0.1em solid',
-              borderRightColor: 'lightgrey',
-            }}
-          >
+      <CardBody>
+        <Flex>
+          <FlexItem className={css(styles.flex_right_border)}>
             <b>{plan}</b>
           </FlexItem>
           <FlexItem>
             Stored in <b>{shards}</b> Shard
           </FlexItem>
-          </Flex>
-    </CardBody>
+        </Flex>
+      </CardBody>
     </Card>
   );
 };

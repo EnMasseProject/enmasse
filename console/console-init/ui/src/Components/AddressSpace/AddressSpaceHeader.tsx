@@ -13,7 +13,15 @@ import {
   CardHeader,
   CardBody,
 } from '@patternfly/react-core';
+import { css, StyleSheet } from '@patternfly/react-styles';
 
+const styles = StyleSheet.create({
+  flex_right_border: {
+    paddingRight: '1em',
+    borderRight: '0.1em solid',
+    borderRightColor: 'lightgrey',
+  },
+});
 export interface AddressSpace {
   name: string;
   namespace: string;
@@ -77,22 +85,10 @@ export const AddressSpaceHeader: React.FunctionComponent<AddressSpace> = ({
       </CardHeader>
       <CardBody>
         <Flex>
-          <FlexItem
-            style={{
-              paddingRight: '1em',
-              borderRight: '0.1em solid',
-              borderRightColor: 'lightgrey',
-            }}
-          >
+          <FlexItem className={css(styles.flex_right_border)}>
             in namespace <b>{namespace}</b>
           </FlexItem>
-          <FlexItem
-            style={{
-              paddingRight: '1em',
-              borderRight: '0.1em solid',
-              borderRightColor: 'lightgrey',
-            }}
-          >
+          <FlexItem className={css(styles.flex_right_border)}>
             <b>{type}</b>
           </FlexItem>
           <FlexItem>

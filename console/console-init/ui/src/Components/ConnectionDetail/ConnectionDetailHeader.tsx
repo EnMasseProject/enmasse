@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { Title, Flex, FlexItem, Card, CardHeader, CardBody } from '@patternfly/react-core';
+import {
+  Title,
+  Flex,
+  FlexItem,
+  Card,
+  CardHeader,
+  CardBody,
+} from '@patternfly/react-core';
 import {
   LockIcon,
   LockOpenIcon,
@@ -8,6 +15,12 @@ import {
 } from '@patternfly/react-icons';
 import { ConnectionDetail } from './ConnectionDetail';
 import { MessagesDetail } from './MessagesDetail';
+import { css, StyleSheet } from '@patternfly/react-styles';
+const styles = StyleSheet.create({
+  expandable: {
+    color: 'rgb(0, 102, 204)',
+  },
+});
 export interface ConnectionHeaderDetailProps {
   hostname: string;
   containerId: string;
@@ -52,66 +65,67 @@ export const ConnectionDetailHeader: React.FunctionComponent<
   return (
     <Card>
       <CardHeader>
-      <Title headingLevel="h1" size="4xl">
-        {hostname}
-      </Title>
+        <Title headingLevel="h1" size="4xl">
+          {hostname}
+        </Title>
       </CardHeader>
       <CardBody>
-      <Flex>
-        <FlexItem>
-          in container <b>{containerId}</b>
-        </FlexItem>
-        <FlexItem>
-          {protocol} {generateIcons()}
-        </FlexItem>
-        {!isMobileView ? (
-          <FlexItem
-            onClick={() => {
-              setIsHidden(!isHidden);
-            }}
-            style={{ color: 'rgb(0, 102, 204)' }}
-          >
-            {' '}
-            {isHidden ? (
-              <>
-                see more details <AngleDownIcon color="black" />
-              </>
-            ) : (
-              <>
-                hide details
-                <AngleUpIcon color="black" />
-              </>
-            )}
+        <Flex>
+          <FlexItem>
+            in container <b>{containerId}</b>
           </FlexItem>
-        ) : (
-          ''
-        )}
-      </Flex>
-      <Flex
-        breakpointMods={[
-          { modifier: 'column', breakpoint: 'sm' },
-          { modifier: 'row', breakpoint: 'lg' },
-        ]}
-      >
-        {isMobileView || !isHidden ? (
-          <>
-            <ConnectionDetail
-              product={product}
-              version={version}
-              jvm={platform}
-              os={os}
-              isMobileView={isMobileView}
-            />
-            <MessagesDetail
-              messagesIn={messagesIn}
-              messagesOut={messagesOut}
-              isMobileView={isMobileView}
-            />
-          </>
-        ) : (
-          ''
-        )}
-      </Flex>
+          <FlexItem>
+            {protocol} {generateIcons()}
+          </FlexItem>
+          {!isMobileView ? (
+            <FlexItem
+              onClick={() => {
+                setIsHidden(!isHidden);
+              }}
+              className={css(styles.expandable)}
+              // style={{ color: 'rgb(0, 102, 204)' }}
+            >
+              {' '}
+              {isHidden ? (
+                <>
+                  see more details <AngleDownIcon color="black" />
+                </>
+              ) : (
+                <>
+                  hide details
+                  <AngleUpIcon color="black" />
+                </>
+              )}
+            </FlexItem>
+          ) : (
+            ''
+          )}
+        </Flex>
+        <Flex
+          breakpointMods={[
+            { modifier: 'column', breakpoint: 'sm' },
+            { modifier: 'row', breakpoint: 'lg' },
+          ]}
+        >
+          {isMobileView || !isHidden ? (
+            <>
+              <ConnectionDetail
+                product={product}
+                version={version}
+                jvm={platform}
+                os={os}
+                isMobileView={isMobileView}
+              />
+              <MessagesDetail
+                messagesIn={messagesIn}
+                messagesOut={messagesOut}
+                isMobileView={isMobileView}
+              />
+            </>
+          ) : (
+            ''
+          )}
+        </Flex>
       </CardBody>
     </Card>
   );
