@@ -53,7 +53,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         List<String> msgs = TestUtils.generateMessages(msgCount);
         Future<List<Message>> recvMessages = client.recvMessages(dest.getSpec().getAddress(), msgCount);
         long timeoutMs = msgCount * ClientUtils.ESTIMATE_MAX_MS_PER_MESSAGE;
-        log.info("Start sending with " + timeoutMs + " ms timeout");
+        log.info("Start  sending with " + timeoutMs + " ms timeout");
         assertThat("Wrong count of messages sent",
                 client.sendMessages(dest.getSpec().getAddress(), msgs).get(timeoutMs, TimeUnit.MILLISECONDS), is(msgs.size()));
         log.info("Start receiving with " + timeoutMs + " ms timeout");

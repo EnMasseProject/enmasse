@@ -10,6 +10,7 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -20,6 +21,8 @@ import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -33,6 +36,7 @@ import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.DoneableDeployment;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressBackend;
@@ -61,6 +65,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -82,9 +87,14 @@ public class SystemtestsKubernetesApps {
     private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
 
     public static String getMessagingAppPodName() throws Exception {
-        TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
+        return getMessagingAppPodName(MESSAGING_PROJECT);
+    }
+
+    public static String getMessagingAppPodName(String namespace) throws Exception {
+        TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
                 pod.getStatus().getContainerStatuses().get(0).getReady()).count() == 1, new TimeoutBudget(1, TimeUnit.MINUTES));
-        return Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
+
+        return Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
                 pod.getStatus().getContainerStatuses().get(0).getReady()).findAny().get().getMetadata().getName();
     }
 
@@ -95,6 +105,22 @@ public class SystemtestsKubernetesApps {
         Kubernetes.getInstance().createDeploymentFromResource(MESSAGING_PROJECT, getMessagingAppDeploymentResource());
         TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), MESSAGING_PROJECT, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
         return getMessagingAppPodName();
+    }
+
+    public static String deployMessagingClientApp(String namespace) throws Exception {
+        if (!Kubernetes.getInstance().namespaceExists(namespace)) {
+            if (namespace.equals("allowed-namespace")) {
+                Namespace allowedNamespace = new NamespaceBuilder().withNewMetadata()
+                        .withName("allowed-namespace").addToLabels("allowed", "true").endMetadata().build();
+                Kubernetes.getInstance().getClient().namespaces().create(allowedNamespace);
+            } else {
+                Kubernetes.getInstance().createNamespace(namespace);
+            }
+
+        }
+        Kubernetes.getInstance().createDeploymentFromResource(namespace, getMessagingAppDeploymentResource(namespace));
+        TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), namespace, 1, new TimeoutBudget(5, TimeUnit.MINUTES));
+        return getMessagingAppPodName(namespace);
     }
 
 
@@ -481,20 +507,54 @@ public class SystemtestsKubernetesApps {
                 .endSelector()
                 .withReplicas(1)
                 .withNewTemplate()
-                .withNewMetadata()
-                .addToLabels("app", MESSAGING_CLIENTS)
-                .endMetadata()
-                .withNewSpec()
-                .addNewContainer()
-                .withName(MESSAGING_CLIENTS)
-                .withImage("quay.io/enmasse/systemtests-clients:latest")
-                .withCommand("sleep")
-                .withArgs("infinity")
-                .endContainer()
+                    .withNewMetadata()
+                    .addToLabels("app", MESSAGING_CLIENTS)
+                    .endMetadata()
+                    .withNewSpec()
+                    .addNewContainer()
+                    .withName(MESSAGING_CLIENTS)
+                    .withImage("quay.io/enmasse/systemtests-clients:latest")
+                    .withCommand("sleep")
+                    .withArgs("infinity")
+                    .endContainer()
+                    .endSpec()
+                    .endTemplate()
                 .endSpec()
+                .build();
+    }
+
+    private static Deployment getMessagingAppDeploymentResource(String namespace) {
+        return new DeploymentBuilder(getMessagingAppDeploymentResource())
+                .editMetadata()
+                .withName(namespace)
+                .endMetadata()
+                .editSpec()
+                .withNewSelector()
+                .addToMatchLabels("app", namespace)
+                .endSelector()
+                .editTemplate()
+                .withNewMetadata()
+                .addToLabels("app", namespace)
+                .endMetadata()
                 .endTemplate()
                 .endSpec()
                 .build();
+
+       /* return new DoneableDeployment(getMessagingAppDeploymentResource())
+            .editMetadata()
+                .withName(namespace)
+            .endMetadata()
+            .editSpec()
+             .withNewSelector()
+             .addToMatchLabels("app", namespace)
+             .endSelector()
+             .editTemplate()
+             .withNewMetadata()
+             .addToLabels("app", namespace)
+             .endMetadata()
+             .endTemplate()
+             .endSpec()
+             .done();*/
     }
 
     private static Service getSystemtestsServiceResource(String appName, int port) {

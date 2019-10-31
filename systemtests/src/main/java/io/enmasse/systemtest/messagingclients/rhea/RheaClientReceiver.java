@@ -18,6 +18,10 @@ public class RheaClientReceiver extends AbstractClient {
         super(ClientType.CLI_RHEA_RECEIVER);
     }
 
+    public RheaClientReceiver(String namespace) throws Exception {
+        super(ClientType.CLI_RHEA_RECEIVER, namespace);
+    }
+
     public RheaClientReceiver(Path logPath) throws Exception {
         super(ClientType.CLI_RHEA_RECEIVER, logPath);
     }

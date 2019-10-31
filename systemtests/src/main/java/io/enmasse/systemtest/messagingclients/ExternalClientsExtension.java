@@ -38,8 +38,6 @@ public class ExternalClientsExtension implements BeforeTestExecutionCallback, Af
             Path path = JunitCallbackListener.getPath(extensionContext.getTestMethod().get(), extensionContext.getTestClass().get());
             SystemtestsKubernetesApps.collectMessagingClientAppLogs(path);
         }
-
-
         if (!isFullClass) {
             SystemtestsKubernetesApps.deleteMessagingClientApp();
         }

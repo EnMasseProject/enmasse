@@ -8,9 +8,11 @@ package io.enmasse.systemtest.utils;
 import com.google.common.io.BaseEncoding;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceSchema;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -25,6 +27,7 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.vertx.core.VertxException;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.function.ThrowingSupplier;
@@ -800,6 +803,14 @@ public class TestUtils {
                 return false;
             }
         }, new TimeoutBudget(5, TimeUnit.MINUTES));
+    }
+
+    public static void waitForAddressSpacePlanApplied(AddressSpacePlan addressSpacePlan) throws Exception {
+        TestUtils.waitUntilCondition(String.format("Address space plan %s is applied", addressSpacePlan.getMetadata().getName()),
+                waitPhase -> Kubernetes.getInstance().getSchemaClient().inNamespace(addressSpacePlan.getMetadata().getNamespace()).list().getItems().stream()
+                        .anyMatch(schema -> schema.getSpec().getPlans().stream()
+                                .anyMatch(plan -> plan.getName().contains(addressSpacePlan.getMetadata().getName()))),
+                new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
     @FunctionalInterface
