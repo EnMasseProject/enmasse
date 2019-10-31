@@ -38,8 +38,8 @@ public class Exec {
     private Path logPath;
     private boolean appendLineSeparator;
     private static final Pattern PATH_SPLITTER = Pattern.compile(System.getProperty("path.separator"));
-    protected static final Object lock = new Object();
-    protected static final Environment env = Environment.getInstance();
+    private static final Object LOCK = new Object();
+    protected static final Environment ENV = Environment.getInstance();
 
     public Exec() {
         this.appendLineSeparator = true;
@@ -218,7 +218,7 @@ public class Exec {
         try {
             Exec executor = new Exec(appendLineSeparator);
             int ret = executor.exec(command, timeout);
-            synchronized (lock) {
+            synchronized (LOCK) {
                 if (logToOutput) {
                     log.info("Return code: {}", ret);
                     if (!executor.getStdOut().equals("")) {

@@ -32,7 +32,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
     private final String uuid;
     private Watch watch;
 
-    public LogCollector(Kubernetes kubernetes, File logDir, String uuid) {
+    LogCollector(Kubernetes kubernetes, File logDir, String uuid) {
         this.kubernetes = kubernetes;
         this.logDir = logDir;
         this.uuid = uuid;
@@ -46,6 +46,9 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
             case MODIFIED:
             case ADDED:
                 executorService.execute(() -> collectLogs(pod));
+                break;
+            default:
+                CustomLogger.getLogger().error("Not supported action");
                 break;
         }
     }
@@ -65,7 +68,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
         while (!"Running".equals(pod.getStatus().getPhase())) {
             try {
                 Thread.sleep(1000);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignored) {
 
             }
             pod = kubernetes.getPod(pod.getMetadata().getName());
@@ -77,7 +80,8 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
                 FileOutputStream outputFileStream = new FileOutputStream(outputFile);
 
                 synchronized (logWatches) {
-                    logWatches.put(pod.getMetadata().getName(), kubernetes.watchPodLog(pod.getMetadata().getName(), container.getName(), outputFileStream));
+                    logWatches.put(pod.getMetadata().getName(), kubernetes.watchPodLog(
+                            pod.getMetadata().getName(), container.getName(), outputFileStream));
                 }
             } catch (Exception e) {
                 log.info("Unable to save log for " + pod.getMetadata().getName() + "." + container.getName());
@@ -86,7 +90,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         watch.close();
         executorService.shutdown();
         synchronized (logWatches) {

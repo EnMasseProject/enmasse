@@ -32,7 +32,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class AmqpClient implements AutoCloseable {
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     private final Collection<Vertx> clients = new ConcurrentHashSet<>();
 
@@ -50,7 +50,7 @@ public class AmqpClient implements AutoCloseable {
      */
     private static void closeVertxAndWait(final Iterable<Vertx> vertx) throws Exception {
 
-        log.info("Start closing vertx instances");
+        LOGGER.info("Start closing vertx instances");
 
         // gather all vertx futures
         @SuppressWarnings("rawtypes") final List<io.vertx.core.Future> futures = new LinkedList<>();
@@ -71,7 +71,7 @@ public class AmqpClient implements AutoCloseable {
                 await.completeExceptionally(ar.cause());
             }
 
-            log.info("Close of all vertx instances completed", ar.cause());
+            LOGGER.info("Close of all vertx instances completed", ar.cause());
         });
 
         await.get(10, TimeUnit.SECONDS);
@@ -192,7 +192,9 @@ public class AmqpClient implements AutoCloseable {
         clients.add(vertx);
         String containerId = "systemtest-sender-" + address;
         CompletableFuture<Void> connectPromise = new CompletableFuture<>();
-        vertx.deployVerticle(new Sender(options, new LinkOptions(options.getTerminusFactory().getSource(address), options.getTerminusFactory().getTarget(address), Optional.empty()), messages, predicate, connectPromise, resultPromise, containerId));
+        vertx.deployVerticle(new Sender(options, new LinkOptions(options.getTerminusFactory().getSource(address),
+                options.getTerminusFactory().getTarget(address), Optional.empty()), messages,
+                predicate, connectPromise, resultPromise, containerId));
 
         try {
             connectPromise.get(2, TimeUnit.MINUTES);
@@ -209,7 +211,9 @@ public class AmqpClient implements AutoCloseable {
         clients.add(vertx);
         String containerId = "systemtest-sender-" + address;
         CompletableFuture<Void> connectPromise = new CompletableFuture<>();
-        vertx.deployVerticle(new SingleSender(options, new LinkOptions(options.getTerminusFactory().getSource(address), options.getTerminusFactory().getTarget(address), Optional.empty()), connectPromise, resultPromise, containerId, message));
+        vertx.deployVerticle(new SingleSender(options, new LinkOptions(options.getTerminusFactory().getSource(address),
+                options.getTerminusFactory().getTarget(address), Optional.empty()),
+                connectPromise, resultPromise, containerId, message));
 
         try {
             connectPromise.get(2, TimeUnit.MINUTES);

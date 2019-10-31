@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SuppressWarnings("unused")
 public class ConsoleWebPage implements IWebPage {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private SeleniumProvider selenium;
     private String consoleRoute;
     private AddressSpace defaultAddressSpace;
@@ -50,20 +50,21 @@ public class ConsoleWebPage implements IWebPage {
     private UserCredentials credentials;
     private GlobalConsolePage globalConsole;
 
-    public ConsoleWebPage(SeleniumProvider selenium, AddressSpace defaultAddressSpace) throws Exception {
+    public ConsoleWebPage(SeleniumProvider selenium, AddressSpace defaultAddressSpace) {
         this.selenium = selenium;
         this.defaultAddressSpace = defaultAddressSpace;
         this.globalConsole = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), null);
     }
 
-    public ConsoleWebPage(SeleniumProvider selenium, AddressSpace defaultAddressSpace, UserCredentials credentials) throws Exception {
+    public ConsoleWebPage(SeleniumProvider selenium, AddressSpace defaultAddressSpace, UserCredentials credentials) {
         this.selenium = selenium;
         this.defaultAddressSpace = defaultAddressSpace;
         this.credentials = credentials;
         this.globalConsole = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), credentials);
     }
 
-    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressSpace defaultAddressSpace, UserCredentials credentials) throws Exception {
+    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute,
+                          AddressSpace defaultAddressSpace, UserCredentials credentials) {
         this(selenium, defaultAddressSpace);
         this.consoleRoute = consoleRoute;
         this.credentials = credentials;
@@ -74,27 +75,30 @@ public class ConsoleWebPage implements IWebPage {
     // Getters and finders of elements and data
     //================================================================================================
 
-    private WebElement getNavigateMenu() throws Exception {
+    private WebElement getNavigateMenu() {
         try {
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(5)).until(ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(5)).until(
+                    ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
         } catch (Exception ex) {
             selenium.refreshPage();
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(5)).until(ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(5)).until(
+                    ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
         }
         return selenium.getDriver().findElement(By.className("nav-pf-vertical"));
     }
 
     private WebElement getLeftMenuItemWebConsole(String itemText) throws Exception {
-        log.info("Getting navigation menu items");
+        LOGGER.info("Getting navigation menu items");
         List<WebElement> items = getNavigateMenu()
                 .findElement(By.className("list-group"))
                 .findElements(ByAngular.repeater("item in items"));
         assertNotNull(items, "Console failed, does not contain left menu items");
         WebElement returnedItem = null;
         for (WebElement item : items) {
-            log.info("Got item: " + item.getText());
-            if (item.getText().equals(itemText))
+            LOGGER.info("Got item: " + item.getText());
+            if (item.getText().equals(itemText)) {
                 returnedItem = item;
+            }
         }
         return returnedItem;
     }
@@ -103,22 +107,23 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(ByAngular.buttonText("Create")));
     }
 
-    public WebElement getRemoveButton() throws Exception {
+    private WebElement getRemoveButton() throws Exception {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(ByAngular.buttonText("Delete")));
     }
 
-    public WebElement getKekabButton() throws Exception {
+    private WebElement getKekabButton() throws Exception {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("_kebab")));
     }
 
-    public WebElement getPurgeButton() throws Exception {
+    private WebElement getPurgeButton() throws Exception {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(By.xpath("//a[contains(text(), 'Purge')]")));
     }
 
     public void assertDialogPresent(String id) {
         int timeout = 30;
         try {
-            WebElement dialog = selenium.getDriverWait().withTimeout(Duration.ofSeconds(timeout)).until(ExpectedConditions.visibilityOfElementLocated(By.id(id)));
+            WebElement dialog = selenium.getDriverWait().withTimeout(Duration.ofSeconds(timeout))
+                    .until(ExpectedConditions.visibilityOfElementLocated(By.id(id)));
             assertNotNull(dialog);
         } catch (TimeoutException e) {
             selenium.takeScreenShot();
@@ -209,7 +214,7 @@ public class ConsoleWebPage implements IWebPage {
             if (subEl.size() > 0) {
                 List<WebElement> liElements = subEl.get(0).findElements(By.tagName("li"));
                 liElements.forEach(liEl -> {
-                    log.info("Got item: {}",
+                    LOGGER.info("Got item: {}",
                             liEl.findElement(By.tagName("a")).findElement(By.tagName("span")).getText());
                 });
                 return liElements;
@@ -280,7 +285,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getLogoutHref() throws Exception {
-        log.info("Getting logout link");
+        LOGGER.info("Getting logout link");
         return getUserDropDown().findElement(By.id("globalconsole"));
     }
 
@@ -305,7 +310,7 @@ public class ConsoleWebPage implements IWebPage {
         List<AddressWebItem> addressItems = new ArrayList<>();
         for (WebElement element : elements) {
             AddressWebItem item = new AddressWebItem(element);
-            log.info(String.format("Got address: %s", item.toString()));
+            LOGGER.info(String.format("Got address: %s", item.toString()));
             addressItems.add(item);
         }
         return addressItems;
@@ -334,7 +339,7 @@ public class ConsoleWebPage implements IWebPage {
         for (WebElement element : elements) {
             if (!element.getAttribute("class").contains("disabled")) {
                 ConnectionWebItem item = new ConnectionWebItem(element);
-                log.info(String.format("Got connection: %s", item.toString()));
+                LOGGER.info(String.format("Got connection: %s", item.toString()));
                 connectionItems.add(item);
             }
         }
@@ -349,14 +354,14 @@ public class ConsoleWebPage implements IWebPage {
         int timeout = 120000;
         long endTime = System.currentTimeMillis() + timeout;
         while (connectionItems.size() != expectedCount && endTime > System.currentTimeMillis()) {
-            log.info("Awaiting {}/{} active connections items", connectionItems.size(), expectedCount);
+            LOGGER.info("Awaiting {}/{} active connections items", connectionItems.size(), expectedCount);
             WebElement content = getContentContainer();
             List<WebElement> elements = content.findElements(By.className("list-group-item"));
             connectionItems.clear();
             for (WebElement element : elements) {
                 if (!element.getAttribute("class").contains("disabled")) {
                     ConnectionWebItem item = new ConnectionWebItem(element);
-                    log.info("Got connection: {}", item);
+                    LOGGER.info("Got connection: {}", item);
                     connectionItems.add(item);
                 }
             }
@@ -400,7 +405,7 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.className("wizard-pf-steps-indicator"));
     }
 
-    public WebElement getAddressModalPageByNumber(Integer pageNumber) throws Exception {
+    private WebElement getAddressModalPageByNumber(Integer pageNumber) throws Exception {
         return getAddressModalPageNumbers().findElements(By.className("wizard-pf-step-number")).get(pageNumber - 1);  //zero indexed
     }
 
@@ -412,15 +417,16 @@ public class ConsoleWebPage implements IWebPage {
         openWebConsolePage(credentials);
     }
 
-    public void openWebConsolePage(UserCredentials credentials) throws Exception {
-        log.info("Opening console web page");
+    private void openWebConsolePage(UserCredentials credentials) throws Exception {
+        LOGGER.info("Opening console web page");
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
         if (Kubernetes.getInstance().getAuthenticationServiceClient().withName(defaultAddressSpace.getSpec()
                 .getAuthenticationService().getName()).get().getSpec().getType().equals(AuthenticationServiceType.standard)) {
-            if (!login(credentials.getUsername(), credentials.getPassword()))
+            if (!login(credentials.getUsername(), credentials.getPassword())) {
                 throw new IllegalAccessException("Cannot login");
+            }
         }
         checkReachableWebPage();
     }
@@ -430,31 +436,32 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Addresses"));
         toolbarType = ToolbarType.ADDRESSES;
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
-        log.info("Addresses page opened");
+        LOGGER.info("Addresses page opened");
     }
 
     public void openConnectionsPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Connections"));
         toolbarType = ToolbarType.CONNECTIONS;
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
-        log.info("Connections page opened");
+        LOGGER.info("Connections page opened");
     }
 
     public void clickOnCreateButton() throws Exception {
         selenium.clickOnItem(getCreateButton());
     }
 
-    public void clickOnRemoveButton() throws Exception {
+    private void clickOnRemoveButton() throws Exception {
         selenium.clickOnItem(getRemoveButton());
     }
 
-    public void clickOnPurgeButton() throws Exception {
+    private void clickOnPurgeButton() throws Exception {
         selenium.clickOnItem(getKekabButton(), "Kebab menu button");
         selenium.clickOnItem(getPurgeButton());
     }
 
-    public void confirmPurge() throws Exception {
-        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("purge-confirmation-modal")).findElement(ByAngular.buttonText("Purge"))));
+    private void confirmPurge() throws Exception {
+        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(
+                By.id("purge-confirmation-modal")).findElement(ByAngular.buttonText("Purge"))));
     }
 
     public void next() throws Exception {
@@ -487,7 +494,7 @@ public class ConsoleWebPage implements IWebPage {
      * switch type of sorting Name/Senders/Receivers
      */
     private void switchSort(SortType sortType) throws Exception {
-        log.info("Switch sorting to: " + sortType.toString());
+        LOGGER.info("Switch sorting to: " + sortType.toString());
         switchFilterOrSort(sortType, getSortSwitch(), getSortDropDown());
     }
 
@@ -495,7 +502,7 @@ public class ConsoleWebPage implements IWebPage {
      * switch type of filtering Name/Type
      */
     private void switchFilter(FilterType filterType) throws Exception {
-        log.info("Switch filtering to: " + filterType.toString());
+        LOGGER.info("Switch filtering to: " + filterType.toString());
         switchFilterOrSort(filterType, getFilterSwitch(), getFilterDropDown());
     }
 
@@ -530,7 +537,7 @@ public class ConsoleWebPage implements IWebPage {
      * @throws Exception
      */
     public void addAddressesFilter(FilterType filterType, String filterValue) throws Exception {
-        log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
+        LOGGER.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
         switchFilter(filterType);
         switch (filterType) {
             case TYPE:
@@ -554,7 +561,7 @@ public class ConsoleWebPage implements IWebPage {
      * @throws Exception
      */
     public void addConnectionsFilter(FilterType filterType, String filterValue) throws Exception {
-        log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
+        LOGGER.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
         switchFilter(filterType);
         switch (filterType) {
             case CONTAINER:
@@ -604,7 +611,7 @@ public class ConsoleWebPage implements IWebPage {
      * remove filter element by (Name: Value)
      */
     private void removeFilter(FilterType filterType, String filterName) throws Exception {
-        log.info("Removing filter: " + filterName);
+        LOGGER.info("Removing filter: " + filterName);
         String filterText = String.format("%s: %s", filterType.toString().toLowerCase(), filterName);
         List<WebElement> filters = getFilterResultsToolbar().findElements(ByAngular.repeater("filter in config.appliedFilters"));
         for (WebElement filter : filters) {
@@ -640,7 +647,7 @@ public class ConsoleWebPage implements IWebPage {
      * remove all filters elements
      */
     public void clearAllFilters() throws Exception {
-        log.info("Removing all filters");
+        LOGGER.info("Removing all filters");
         WebElement clearAllButton = getFilterResultsToolbar().findElement(By.className("clear-filters"));
         selenium.clickOnItem(clearAllButton);
     }
@@ -649,7 +656,7 @@ public class ConsoleWebPage implements IWebPage {
      * Sort address items
      */
     public void sortItems(SortType sortType, boolean asc) throws Exception {
-        log.info("Sorting");
+        LOGGER.info("Sorting");
         switchSort(sortType);
         if (asc && !isSortAsc()) {
             selenium.clickOnItem(getAscDescButton(), "Asc");
@@ -675,7 +682,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     public void createAddressWebConsole(Address destination, boolean waitForReady) throws Exception {
-        log.info("Create address using web console");
+        LOGGER.info("Create address using web console");
 
         //get addresses item from left panel view
         openAddressesPageWebConsole();
@@ -684,14 +691,16 @@ public class ConsoleWebPage implements IWebPage {
         clickOnCreateButton();
 
         //fill address name
-        selenium.fillInputItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("new-name"))), destination.getSpec().getAddress());
+        selenium.fillInputItem(selenium.getWebElement(() -> selenium.getDriver().findElement(
+                By.id("new-name"))), destination.getSpec().getAddress());
 
         //select address type
-        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getSpec().getType()))), "Radio button " + destination.getSpec().getType());
+        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(
+                By.id(destination.getSpec().getType()))), "Radio button " + destination.getSpec().getType());
 
         //if address type is subscription, fill in the topic dropdown box
         if (destination.getSpec().getType().equals(AddressType.SUBSCRIPTION.toString())) {
-            log.info("Selecting topic to attach subscription to");
+            LOGGER.info("Selecting topic to attach subscription to");
             WebElement topicDropDown = getSubscriptionComboBox();
             selenium.clickOnItem(topicDropDown);
             Select combobox = new Select(topicDropDown);
@@ -702,7 +711,8 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(nextButton);
 
         //select address plan
-        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getSpec().getPlan()))), "Radio button " + destination.getSpec().getPlan());
+        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(
+                By.id(destination.getSpec().getPlan()))), "Radio button " + destination.getSpec().getPlan());
 
         selenium.clickOnItem(nextButton);
         selenium.clickOnItem(nextButton);
@@ -711,8 +721,9 @@ public class ConsoleWebPage implements IWebPage {
 
         assertNotNull(items, String.format("Console failed, does not contain created address item : %s", destination));
 
-        if (waitForReady)
+        if (waitForReady) {
             AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), destination);
+        }
     }
 
     /**
@@ -725,7 +736,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     public void deleteAddressWebConsole(Address destination) throws Exception {
-        log.info("Remove address using web console");
+        LOGGER.info("Remove address using web console");
 
         //open addresses
         openAddressesPageWebConsole();
@@ -752,12 +763,12 @@ public class ConsoleWebPage implements IWebPage {
         confirmPurge();
     }
 
-    public boolean login() throws Exception {
-        return login(credentials);
+    void login() throws Exception {
+        login(credentials);
     }
 
-    public boolean login(UserCredentials credentials) throws Exception {
-        return login(credentials.getUsername(), credentials.getPassword());
+    public void login(UserCredentials credentials) throws Exception {
+        login(credentials.getUsername(), credentials.getPassword());
     }
 
     public void logout() throws Exception {
@@ -765,10 +776,10 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getLogoutHref(), "Return to global console");
     }
 
-    public boolean login(String username, String password) throws Exception {
+    private boolean login(String username, String password) throws Exception {
         try {
             getNavigateMenu();
-            log.info("User is already logged");
+            LOGGER.info("User is already logged");
             return true;
         } catch (Exception ex) {
             OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
@@ -779,6 +790,7 @@ public class ConsoleWebPage implements IWebPage {
 
     @Override
     public void checkReachableWebPage() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60))
+                .until(ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
     }
 }

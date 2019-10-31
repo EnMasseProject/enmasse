@@ -14,23 +14,24 @@ import org.slf4j.Logger;
 
 public class RheaWebPage implements IWebPage {
 
-    private static final String webPageTitle = "cli-rhea client";
-    private static Logger log = CustomLogger.getLogger();
+    private static final String WEB_PAGE_TITLE = "cli-rhea client";
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private SeleniumProvider selenium;
 
     public RheaWebPage(SeleniumProvider selenium) {
         this.selenium = selenium;
     }
 
-    public void openRheaWebPage() {
-        log.info("Opening rhea web page");
+    private void openRheaWebPage() {
+        LOGGER.info("Opening rhea web page");
         selenium.getDriver().get("file:///opt/rhea/rhea.html");
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
         checkReachableWebPage();
     }
 
-    public void sendReceiveMessages(String server, String address, int count, UserCredentials credentials, AddressSpaceType addressSpaceType) throws Exception {
+    public void sendReceiveMessages(String server, String address, int count,
+                                    UserCredentials credentials, AddressSpaceType addressSpaceType) {
         openRheaWebPage();
         String wsProtocol = (addressSpaceType == AddressSpaceType.STANDARD) ? "binary" : "amqp";
         String command = String.format("connect_to_enmasse(\"wss://%s\", \"%s\", \"%s\", \"%s\", \"%s\", ['%s'])",
@@ -44,6 +45,6 @@ public class RheaWebPage implements IWebPage {
 
     @Override
     public void checkReachableWebPage() {
-        checkTitle(selenium, webPageTitle);
+        checkTitle(selenium, WEB_PAGE_TITLE);
     }
 }

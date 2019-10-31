@@ -8,11 +8,9 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
@@ -24,10 +22,6 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.TestUtils;
-import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.vertx.proton.ProtonClientOptions;
@@ -66,7 +60,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MessagingUtils {
     private static Logger LOGGER = CustomLogger.getLogger();
-    private AddressSpaceUtils addressSpaceUtils = new AddressSpaceUtils();
     public static final long ESTIMATE_MAX_MS_PER_MESSAGE = 200;
 
     public void sendDurableMessages(ResourceManager resourceManager, AddressSpace addressSpace, Address destination,
@@ -107,11 +100,14 @@ public class MessagingUtils {
         AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
         ReceiverStatus receiverStatus = client.recvMessagesWithStatus(dest.getSpec().getAddress(), count);
-        assertThat("Cannot receive durable messages from " + dest + ". Got " + receiverStatus.getNumReceived(), receiverStatus.getResult().get(1, TimeUnit.MINUTES).size(), is(count));
+        assertThat("Cannot receive durable messages from " + dest + ". Got " + receiverStatus.getNumReceived(),
+                receiverStatus.getResult().get(1, TimeUnit.MINUTES).size(), is(count));
         client.close();
     }
 
-    private boolean canConnectWithAmqpAddress(ResourceManager resourceManager, AddressSpace addressSpace, UserCredentials credentials, AddressType addressType, String address, boolean defaultValue) throws Exception {
+    private boolean canConnectWithAmqpAddress(ResourceManager resourceManager, AddressSpace addressSpace,
+                                              UserCredentials credentials, AddressType addressType,
+                                              String address, boolean defaultValue) throws Exception {
         Set<AddressType> brokeredAddressTypes = new HashSet<>(Arrays.asList(AddressType.QUEUE, AddressType.TOPIC));
         if (AddressSpaceUtils.isBrokered(addressSpace) && !brokeredAddressTypes.contains(addressType)) {
             return defaultValue;
@@ -135,7 +131,9 @@ public class MessagingUtils {
                     cause = ex.getCause();
                 }
 
-                if (cause instanceof AuthenticationException || cause instanceof SaslSystemException || cause instanceof SecurityException || cause instanceof UnauthorizedAccessException || cause instanceof MechanismMismatchException) {
+                if (cause instanceof AuthenticationException || cause instanceof SaslSystemException ||
+                        cause instanceof SecurityException || cause instanceof UnauthorizedAccessException ||
+                        cause instanceof MechanismMismatchException) {
                     LOGGER.info("canConnectWithAmqpAddress {} ({}): {}", address, addressType, ex.getMessage());
                     return false;
                 } else {
@@ -146,23 +144,29 @@ public class MessagingUtils {
         }
     }
 
-    public void assertCanConnect(AddressSpace addressSpace, UserCredentials credentials, List<Address> destinations, ResourceManager resourceManager) throws Exception {
+    public void assertCanConnect(AddressSpace addressSpace, UserCredentials credentials, List<Address> destinations,
+                                 ResourceManager resourceManager) throws Exception {
         for (Address destination : destinations) {
-            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getSpec().getAddress(), credentials);
+            String message = String.format("Client failed, cannot connect to %s under user %s",
+                    destination.getSpec().getAddress(), credentials);
             AddressType addressType = AddressType.getEnum(destination.getSpec().getType());
-            Assertions.assertTrue(canConnectWithAmqpAddress(resourceManager, addressSpace, credentials, addressType, destination.getSpec().getAddress(), true), message);
+            Assertions.assertTrue(canConnectWithAmqpAddress(resourceManager, addressSpace, credentials,
+                    addressType, destination.getSpec().getAddress(), true), message);
         }
     }
 
-    public void assertCannotConnect(AddressSpace addressSpace, UserCredentials credentials, List<Address> destinations, ResourceManager resourceManager) throws Exception {
+    public void assertCannotConnect(AddressSpace addressSpace, UserCredentials credentials,
+                                    List<Address> destinations, ResourceManager resourceManager) throws Exception {
         for (Address destination : destinations) {
             String message = String.format("Client failed, can connect to %s under user %s", destination.getSpec().getAddress(), credentials);
             AddressType addressType = AddressType.getEnum(destination.getSpec().getType());
-            Assertions.assertFalse(canConnectWithAmqpAddress(resourceManager, addressSpace, credentials, addressType, destination.getSpec().getAddress(), false), message);
+            Assertions.assertFalse(canConnectWithAmqpAddress(resourceManager, addressSpace, credentials,
+                    addressType, destination.getSpec().getAddress(), false), message);
         }
     }
 
-    public static void doMessaging(ResourceManager manager, List<Address> dest, List<UserCredentials> users, String destNamePrefix, int customerIndex, int messageCount) throws Exception {
+    public static void doMessaging(ResourceManager manager, List<Address> dest, List<UserCredentials> users,
+                                   String destNamePrefix, int customerIndex, int messageCount) throws Exception {
         ArrayList<AmqpClient> clients = new ArrayList<>(users.size());
         String sufix = new AddressSpaceUtils().isBrokered(manager.getSharedAddressSpace()) ? "#" : "*";
         users.forEach((user) -> {
@@ -245,7 +249,8 @@ public class MessagingUtils {
     /**
      * attach senders to destinations (for N-th destination is attached N+1 senders)
      */
-    public static List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Address> destinations, int timeout, UserCredentials defaultCredentials) throws Exception {
+    public static List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Address> destinations,
+                                                     int timeout, UserCredentials defaultCredentials) throws Exception {
         List<AbstractClient> senders = new ArrayList<>();
 
         ClientArgumentMap arguments = new ClientArgumentMap();
@@ -279,7 +284,8 @@ public class MessagingUtils {
     /**
      * attach receivers to destinations (for N-th destination is attached N+1 senders)
      */
-    public static List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations, int timeout, UserCredentials userCredentials) throws Exception {
+    public static List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations,
+                                                       int timeout, UserCredentials userCredentials) throws Exception {
         List<AbstractClient> receivers = new ArrayList<>();
 
         ClientArgumentMap arguments = new ClientArgumentMap();
@@ -381,7 +387,8 @@ public class MessagingUtils {
             return m;
         }).collect(Collectors.toList());
 
-        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), 1);
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client,
+                dest.getSpec().getAddress(), messages.size(), 1);
         List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
 
         int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);

@@ -51,7 +51,8 @@ public class AddressSpaceUtils {
     }
 
     public static boolean existAddressSpace(String namespace, String addressSpaceName) {
-        LOGGER.info("Following addressspaces are deployed {} in namespace {}", Kubernetes.getInstance().getAddressSpaceClient(namespace).list().getItems().stream()
+        LOGGER.info("Following addressspaces are deployed {} in namespace {}",
+                Kubernetes.getInstance().getAddressSpaceClient(namespace).list().getItems().stream()
                 .map(addressSpace -> addressSpace.getMetadata().getName()).collect(Collectors.toList()), namespace);
         return Kubernetes.getInstance().getAddressSpaceClient(namespace).list().getItems().stream()
                 .map(addressSpace -> addressSpace.getMetadata().getName()).collect(Collectors.toList()).contains(addressSpaceName);
@@ -66,7 +67,8 @@ public class AddressSpaceUtils {
     }
 
     private static boolean matchAddressSpacePlan(AddressSpace received, AddressSpace expected) {
-        return received != null && received.getMetadata().getAnnotations().get("enmasse.io/applied-plan").equals(expected.getSpec().getPlan());
+        return received != null && received.getMetadata().getAnnotations()
+                .get("enmasse.io/applied-plan").equals(expected.getSpec().getPlan());
     }
 
     public static AddressSpace waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
@@ -86,12 +88,15 @@ public class AddressSpaceUtils {
                 Thread.sleep(10000);
             }
             LOGGER.info("Waiting until Address space: '{}' messages {} will be in ready state", name,
-                    (clientAddressSpace != null && clientAddressSpace.getStatus() != null) ? clientAddressSpace.getStatus().getMessages() : null);
+                    (clientAddressSpace != null && clientAddressSpace.getStatus() != null) ?
+                            clientAddressSpace.getStatus().getMessages() : null);
         }
 
         if (!isReady) {
-            String status = (clientAddressSpace != null && clientAddressSpace.getStatus() != null) ? clientAddressSpace.getStatus().toString() : null;
-            throw new IllegalStateException(String.format("Address Space %s is not in Ready state within timeout: %s", name, status));
+            String status = (clientAddressSpace != null && clientAddressSpace.getStatus() != null) ?
+                    clientAddressSpace.getStatus().toString() : null;
+            throw new IllegalStateException(String.format("Address Space %s is not in Ready state within timeout:" +
+                    "%s", name, status));
         }
         LOGGER.info("Address space {} is ready for use", clientAddressSpace);
         return clientAddressSpace;
@@ -103,7 +108,8 @@ public class AddressSpaceUtils {
 
         boolean isPlanApplied = false;
         while (budget.timeLeft() >= 0 && !isPlanApplied) {
-            addressSpaceObject = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
+            addressSpaceObject = Kubernetes.getInstance().getAddressSpaceClient(
+                    addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
             isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
             if (!isPlanApplied) {
                 Thread.sleep(2000);
@@ -114,7 +120,8 @@ public class AddressSpaceUtils {
         }
         isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
         if (!isPlanApplied) {
-            String jsonStatus = addressSpaceObject != null ? addressSpaceObject.getMetadata().getAnnotations().get("enmasse.io/applied-plan") : "";
+            String jsonStatus = addressSpaceObject != null ? addressSpaceObject
+                    .getMetadata().getAnnotations().get("enmasse.io/applied-plan") : "";
             throw new IllegalStateException("Address Space " + addressSpace + " contains wrong plan: " + jsonStatus);
         }
         LOGGER.info("Address plan {} successfully applied", addressSpace.getSpec().getPlan());
@@ -133,7 +140,8 @@ public class AddressSpaceUtils {
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpace");
-        Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).cascading(true).delete();
+        Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace())
+                .withName(addressSpace.getMetadata().getName()).cascading(true).delete();
     }
 
     public static void deleteAllAddressSpaces(GlobalLogCollector logCollector) throws Exception {
@@ -151,14 +159,22 @@ public class AddressSpaceUtils {
         Kubernetes kube = Kubernetes.getInstance();
         LOGGER.info("Waiting for AddressSpace {} to be deleted", addressSpace.getMetadata().getName());
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
-        waitForItems(addressSpace, budget, () -> kube.listPods(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kube.listConfigMaps(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kube.listServices(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kube.listSecrets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kube.listDeployments(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kube.listStatefulSets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kube.listServiceAccounts(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kube.listPersistentVolumeClaims(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () ->
+                kube.listPods(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () ->
+                kube.listConfigMaps(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () ->
+                kube.listServices(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () ->
+                kube.listSecrets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () ->
+                kube.listDeployments(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () ->
+                kube.listStatefulSets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () ->
+                kube.listServiceAccounts(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () ->
+                kube.listPersistentVolumeClaims(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
     }
 
     private static <T> void waitForItems(AddressSpace addressSpace, TimeoutBudget budget, Callable<List<T>> callable) throws Exception {
@@ -172,7 +188,8 @@ public class AddressSpaceUtils {
         }
         resources = callable.call();
         if (resources != null && resources.size() > 0) {
-            throw new TimeoutException("Timed out waiting for address space " + addressSpace.getMetadata().getName() + " to disappear. Resources left: " + resources);
+            throw new TimeoutException("Timed out waiting for address space " +
+                    addressSpace.getMetadata().getName() + " to disappear. Resources left: " + resources);
         }
     }
 
@@ -261,12 +278,14 @@ public class AddressSpaceUtils {
             if (!isReady) {
                 Thread.sleep(10000);
             }
-            LOGGER.info("Waiting until connectors of address space: '{}' messages {} will be in ready state", name, getConnectorStatuses(clientAddressSpace));
+            LOGGER.info("Waiting until connectors of address space: '{}' messages {} will be in ready state",
+                    name, getConnectorStatuses(clientAddressSpace));
         }
         clientAddressSpace = client.withName(name).get();
         isReady = areAddressSpaceConnectorsReady(clientAddressSpace);
         if (!isReady) {
-            throw new IllegalStateException(String.format("Connectors of Address Space %s are not in Ready state within timeout: %s", name, getConnectorStatuses(clientAddressSpace)));
+            throw new IllegalStateException(String.format("Connectors of Address Space %s are not in Ready state" +
+                    "within timeout: %s", name, getConnectorStatuses(clientAddressSpace)));
         }
         LOGGER.info("Connectors of address space {} are ready for use", name);
     }

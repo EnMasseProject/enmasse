@@ -23,7 +23,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class AmqpClientFactory {
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private final AddressSpace defaultAddressSpace;
     private final String defaultUsername;
     private final String defaultPassword;
@@ -40,7 +40,7 @@ public class AmqpClientFactory {
         for (final AmqpClient client : clients) {
             client.close();
         }
-        log.info("Closed {} clients", clients.size());
+        LOGGER.info("Closed {} clients", clients.size());
         clients.clear();
     }
 
@@ -74,24 +74,22 @@ public class AmqpClientFactory {
                 return createTopicClient(addressSpace);
             case MULTICAST:
                 return createBroadcastClient(addressSpace);
+            default:
+                throw new IllegalArgumentException("Unknown type " + addressType);
         }
-        throw new IllegalArgumentException("Unknown type " + addressType);
     }
 
     public AmqpClient createBroadcastClient(AddressSpace addressSpace) throws Exception {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_MOST_ONCE, addressSpace);
     }
 
-    public AmqpClient createBroadcastClient() throws Exception {
-        return createBroadcastClient(defaultAddressSpace);
-    }
-
-    public AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, AddressSpace addressSpace) throws Exception {
+    private AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, AddressSpace addressSpace) {
         assertNotNull(addressSpace, "Address space is null");
         Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "messaging");
         if (messagingEndpoint == null) {
             String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "messaging");
-            messagingEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+            messagingEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" +
+                    AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
         }
         Endpoint clientEndpoint;
         ProtonClientOptions clientOptions = new ProtonClientOptions();
@@ -105,16 +103,12 @@ public class AmqpClientFactory {
             clientEndpoint = new Endpoint("localhost", 443);
             clientOptions.setSniServerName(messagingEndpoint.getHost());
         }
-        log.info("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
+        LOGGER.info("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
 
         return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
     }
 
-    protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonQoS qos) {
-        return createClient(terminusFactory, endpoint, new ProtonClientOptions(), qos);
-    }
-
-    protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonClientOptions protonOptions, ProtonQoS qos) {
+    private AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonClientOptions protonOptions, ProtonQoS qos) {
         AmqpConnectOptions connectOptions = new AmqpConnectOptions()
                 .setTerminusFactory(terminusFactory)
                 .setEndpoint(endpoint)

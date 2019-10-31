@@ -11,7 +11,6 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
 
-import java.net.HttpURLConnection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +20,7 @@ public class OpenshiftCertValidatorApiClient extends ApiClient {
 
 
     public OpenshiftCertValidatorApiClient(Kubernetes kubernetes, Endpoint endpoint) {
-        super(kubernetes, () -> endpoint, "");
+        super(kubernetes, () -> endpoint);
     }
 
     @Override
@@ -43,7 +42,7 @@ public class OpenshiftCertValidatorApiClient extends ApiClient {
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)
                 .sendJson(request,
-                        ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error testing openshift-cert-validator"));
+                        ar -> responseHandler(ar, responsePromise, "Error testing openshift-cert-validator"));
         return responsePromise.get(150000, TimeUnit.SECONDS);
 
     }

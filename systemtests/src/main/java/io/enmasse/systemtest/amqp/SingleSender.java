@@ -31,11 +31,11 @@ public class SingleSender extends AbstractSender<List<ProtonDelivery>> {
      */
     private String state = "initialized";
 
-    public SingleSender(final AmqpConnectOptions clientOptions,
-                        final LinkOptions linkOptions,
-                        final CompletableFuture<Void> connectPromise,
-                        final CompletableFuture<List<ProtonDelivery>> resultPromise,
-                        final String containerId, final Message message) {
+    SingleSender(final AmqpConnectOptions clientOptions,
+                 final LinkOptions linkOptions,
+                 final CompletableFuture<Void> connectPromise,
+                 final CompletableFuture<List<ProtonDelivery>> resultPromise,
+                 final String containerId, final Message message) {
 
         super(clientOptions, linkOptions, connectPromise, resultPromise, containerId);
 
@@ -70,6 +70,9 @@ public class SingleSender extends AbstractSender<List<ProtonDelivery>> {
                     }
                 });
                 this.state = "message sent";
+                break;
+            default:
+                this.state = "message not sent";
                 break;
         }
     }

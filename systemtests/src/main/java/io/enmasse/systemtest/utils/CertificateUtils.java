@@ -82,11 +82,13 @@ public class CertificateUtils {
             File p12Store = File.createTempFile("keystore", "p12");
             // create p12 keystore
             Exec.execute(Arrays.asList("openssl", "pkcs12", "-export", "-passout", "pass:123456",
-                    "-in", brokerCrt.getAbsolutePath(), "-inkey", brokerKey.getAbsolutePath(), "-name", "broker", "-out", p12Store.getAbsolutePath()));
+                    "-in", brokerCrt.getAbsolutePath(), "-inkey", brokerKey.getAbsolutePath(),
+                    "-name", "broker", "-out", p12Store.getAbsolutePath()));
 
             brokerKeystore.delete();
             Exec.execute(Arrays.asList("keytool", "-importkeystore", "-srcstorepass", "123456",
-                    "-deststorepass", "123456", "-destkeystore", brokerKeystore.getAbsolutePath(), "-srckeystore", p12Store.getAbsolutePath(), "-srcstoretype", "PKCS12"));
+                    "-deststorepass", "123456", "-destkeystore", brokerKeystore.getAbsolutePath(),
+                    "-srckeystore", p12Store.getAbsolutePath(), "-srcstoretype", "PKCS12"));
 
             // Generate truststore with client cert
             String client = UUID.randomUUID().toString();
@@ -101,11 +103,13 @@ public class CertificateUtils {
             File truststoreP12 = File.createTempFile("truststorestore", "p12");
             // create p12 keystore
             Exec.execute(Arrays.asList("openssl", "pkcs12", "-export", "-passout", "pass:123456",
-                    "-in", clientCrt.getAbsolutePath(), "-inkey", clientKey.getAbsolutePath(), "-name", "client", "-out", truststoreP12.getAbsolutePath()));
+                    "-in", clientCrt.getAbsolutePath(), "-inkey", clientKey.getAbsolutePath(), "-name",
+                    "client", "-out", truststoreP12.getAbsolutePath()));
 
             brokerTrustStore.delete();
             Exec.execute(Arrays.asList("keytool", "-importkeystore", "-srcstorepass", "123456",
-                    "-deststorepass", "123456", "-destkeystore", brokerTrustStore.getAbsolutePath(), "-srckeystore", truststoreP12.getAbsolutePath(), "-srcstoretype", "PKCS12"));
+                    "-deststorepass", "123456", "-destkeystore", brokerTrustStore.getAbsolutePath(),
+                    "-srckeystore", truststoreP12.getAbsolutePath(), "-srcstoretype", "PKCS12"));
 
             try {
                 //return ca.crt keystore and truststore

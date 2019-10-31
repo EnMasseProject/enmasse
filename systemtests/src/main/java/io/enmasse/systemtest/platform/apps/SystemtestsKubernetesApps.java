@@ -10,7 +10,6 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -36,7 +35,6 @@ import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.apps.DoneableDeployment;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressBackend;
@@ -65,7 +63,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -75,22 +72,22 @@ import java.util.function.Function;
 public class SystemtestsKubernetesApps {
     private static Logger log = CustomLogger.getLogger();
 
-    public static final String MESSAGING_CLIENTS = "systemtests-clients";
-    public static final String SELENIUM_FIREFOX = "selenium-firefox";
-    public static final String SELENIUM_CHROME = "selenium-chrome";
+    private static final String MESSAGING_CLIENTS = "systemtests-clients";
+    private static final String SELENIUM_FIREFOX = "selenium-firefox";
+    private static final String SELENIUM_CHROME = "selenium-chrome";
     public static final String SELENIUM_PROJECT = "systemtests-selenium";
     public static final String MESSAGING_PROJECT = "systemtests-clients";
-    public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
+    private static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
     public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
-    public static final String INFINISPAN_SERVER = "infinispan";
+    private static final String INFINISPAN_SERVER = "infinispan";
     private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
 
-    public static String getMessagingAppPodName() throws Exception {
+    public static String getMessagingAppPodName() {
         return getMessagingAppPodName(MESSAGING_PROJECT);
     }
 
-    public static String getMessagingAppPodName(String namespace) throws Exception {
+    public static String getMessagingAppPodName(String namespace) {
         TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
                 pod.getStatus().getContainerStatuses().get(0).getReady()).count() == 1, new TimeoutBudget(1, TimeUnit.MINUTES));
 
@@ -98,16 +95,16 @@ public class SystemtestsKubernetesApps {
                 pod.getStatus().getContainerStatuses().get(0).getReady()).findAny().get().getMetadata().getName();
     }
 
-    public static String deployMessagingClientApp() throws Exception {
+    public static void deployMessagingClientApp() throws Exception {
         if (!Kubernetes.getInstance().namespaceExists(MESSAGING_PROJECT)) {
             Kubernetes.getInstance().createNamespace(MESSAGING_PROJECT);
         }
         Kubernetes.getInstance().createDeploymentFromResource(MESSAGING_PROJECT, getMessagingAppDeploymentResource());
         TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), MESSAGING_PROJECT, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
-        return getMessagingAppPodName();
+        getMessagingAppPodName();
     }
 
-    public static String deployMessagingClientApp(String namespace) throws Exception {
+    public static void deployMessagingClientApp(String namespace) throws Exception {
         if (!Kubernetes.getInstance().namespaceExists(namespace)) {
             if (namespace.equals("allowed-namespace")) {
                 Namespace allowedNamespace = new NamespaceBuilder().withNewMetadata()
@@ -120,7 +117,7 @@ public class SystemtestsKubernetesApps {
         }
         Kubernetes.getInstance().createDeploymentFromResource(namespace, getMessagingAppDeploymentResource(namespace));
         TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), namespace, 1, new TimeoutBudget(5, TimeUnit.MINUTES));
-        return getMessagingAppPodName(namespace);
+        getMessagingAppPodName(namespace);
     }
 
 
@@ -185,14 +182,14 @@ public class SystemtestsKubernetesApps {
         Thread.sleep(5000);
     }
 
-    public static void deleteFirefoxSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {
+    public static void deleteFirefoxSeleniumApp(String namespace, Kubernetes kubeClient) {
         kubeClient.deleteDeployment(namespace, SELENIUM_FIREFOX);
         kubeClient.deleteService(namespace, SELENIUM_FIREFOX);
         kubeClient.deleteIngress(namespace, SELENIUM_FIREFOX);
         kubeClient.deleteConfigmap(namespace, SELENIUM_CONFIG_MAP);
     }
 
-    public static void deleteChromeSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {
+    public static void deleteChromeSeleniumApp(String namespace, Kubernetes kubeClient) {
         kubeClient.deleteDeployment(namespace, SELENIUM_CHROME);
         kubeClient.deleteService(namespace, SELENIUM_CHROME);
         kubeClient.deleteIngress(namespace, SELENIUM_CHROME);

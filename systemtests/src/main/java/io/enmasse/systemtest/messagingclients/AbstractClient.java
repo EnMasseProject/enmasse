@@ -28,10 +28,10 @@ import java.util.concurrent.Future;
  * Class represent abstract client which keeps common features of client
  */
 public abstract class AbstractClient {
-    private static Logger log = CustomLogger.getLogger();
-    private final Object lock = new Object();
-    private final int DEFAULT_ASYNC_TIMEOUT = 120000;
-    private final int DEFAULT_SYNC_TIMEOUT = 60000;
+    private static final Logger LOGGER = CustomLogger.getLogger();
+    private static final Object LOCK = new Object();
+    private static final int DEFAULT_ASYNC_TIMEOUT = 120000;
+    private static final int DEFAULT_SYNC_TIMEOUT = 60000;
     protected ArrayList<ClientArgument> allowedArgs = new ArrayList<>();
     private Exec executor;
     private ClientType clientType;
@@ -47,7 +47,7 @@ public abstract class AbstractClient {
      *
      * @param clientType type of client
      */
-    public AbstractClient(ClientType clientType) throws Exception {
+    public AbstractClient(ClientType clientType) {
         this.clientType = clientType;
         this.podName = SystemtestsKubernetesApps.getMessagingAppPodName();
         this.podNamespace = SystemtestsKubernetesApps.MESSAGING_PROJECT;
@@ -55,7 +55,7 @@ public abstract class AbstractClient {
         this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
 
-    public AbstractClient(ClientType clientType, String podNamespace) throws Exception {
+    public AbstractClient(ClientType clientType, String podNamespace) {
         this.clientType = clientType;
         this.podName = SystemtestsKubernetesApps.getMessagingAppPodName(podNamespace);
         this.podNamespace = podNamespace;
@@ -69,7 +69,7 @@ public abstract class AbstractClient {
      * @param clientType type of client
      * @param logPath    path where logs will be stored
      */
-    public AbstractClient(ClientType clientType, Path logPath) throws Exception {
+    public AbstractClient(ClientType clientType, Path logPath) {
         this.clientType = clientType;
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSSS");
         this.logPath = Paths.get(logPath.toString(), clientType.toString() + "_" + dateFormat.format(new Date()));
@@ -77,14 +77,6 @@ public abstract class AbstractClient {
         this.podNamespace = SystemtestsKubernetesApps.MESSAGING_PROJECT;
         this.fillAllowedArgs();
         this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
-    }
-
-    public void setPodName(String podName) {
-        this.podName = podName;
-    }
-
-    public void setPodNamespace(String podNamespace) {
-        this.podNamespace = podNamespace;
     }
 
     /**
@@ -101,14 +93,14 @@ public abstract class AbstractClient {
      *
      * @return type of client
      */
-    public ClientType getClientType() {
+    ClientType getClientType() {
         return clientType;
     }
 
     /**
-     * @param clientType
+     * @param clientType client type
      */
-    public void setClientType(ClientType clientType) {
+    protected void setClientType(ClientType clientType) {
         this.clientType = clientType;
         this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
@@ -116,7 +108,7 @@ public abstract class AbstractClient {
     /**
      * Get all client arguments
      *
-     * @return
+     * @return list of arguments
      */
     public ArrayList<String> getArguments() {
         return arguments;
@@ -137,15 +129,11 @@ public abstract class AbstractClient {
                     arguments.add(value);
                 }
             } else {
-                log.warn(String.format("Argument '%s' is not allowed for '%s'",
+                LOGGER.warn(String.format("Argument '%s' is not allowed for '%s'",
                         arg.command(),
                         this.getClass().getSimpleName()));
             }
         }
-    }
-
-    public List<String> getExecutable() {
-        return this.executable;
     }
 
     public String getStdOut() {
@@ -199,15 +187,15 @@ public abstract class AbstractClient {
         try {
             executor = new Exec(logPath);
             int ret = executor.exec(prepareCommand(), timeout);
-            synchronized (lock) {
-                log.info("{} {} Return code - {}", this.getClass().getName(), clientType, ret);
+            synchronized (LOCK) {
+                LOGGER.info("{} {} Return code - {}", this.getClass().getName(), clientType, ret);
                 if (logToOutput) {
-                    log.info("{} {} stdout : {}", this.getClass().getName(), clientType, executor.getStdOut());
+                    LOGGER.info("{} {} stdout : {}", this.getClass().getName(), clientType, executor.getStdOut());
                     if (ret == 0) {
                         parseToJson(executor.getStdOut());
                     } else {
                         if (!executor.getStdErr().isEmpty()) {
-                            log.error("{} {} stderr : {}", this.getClass().getName(), clientType, executor.getStdErr());
+                            LOGGER.error("{} {} stderr : {}", this.getClass().getName(), clientType, executor.getStdErr());
                         }
                     }
                 }
@@ -305,7 +293,7 @@ public abstract class AbstractClient {
         try {
             executor.stop();
         } catch (Exception ex) {
-            log.warn("Client stop raise exception: " + ex.getMessage());
+            LOGGER.warn("Client stop raise exception: " + ex.getMessage());
         }
     }
 
@@ -321,7 +309,7 @@ public abstract class AbstractClient {
                     try {
                         messages.add(new JsonObject(line));
                     } catch (Exception ignored) {
-                        log.warn("{} - Failed to parse client output '{}' as JSON", clientType, line);
+                        LOGGER.warn("{} - Failed to parse client output '{}' as JSON", clientType, line);
                     }
                 }
             }
@@ -411,7 +399,8 @@ public abstract class AbstractClient {
                 args.put(ClientArgument.BROKER, "ssl://" + args.getValues(ClientArgument.BROKER).get(0));
             }
             args.put(ClientArgument.CONN_SSL_TRUST_ALL, "true");
-            args.put(ClientArgument.CONN_SSL_VERIFY_HOST, (clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER || clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER) ? "true" : "false");
+            args.put(ClientArgument.CONN_SSL_VERIFY_HOST, (clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER ||
+                    clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER) ? "true" : "false");
             args.put(ClientArgument.CONN_AUTH_MECHANISM, "PLAIN");
         }
         args.remove(ClientArgument.CONN_SSL);

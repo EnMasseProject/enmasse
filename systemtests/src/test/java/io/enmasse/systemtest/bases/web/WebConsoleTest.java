@@ -28,6 +28,7 @@ import io.enmasse.systemtest.selenium.resources.SortType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.apache.qpid.proton.TimeoutException;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.openqa.selenium.By;
@@ -41,7 +42,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -58,7 +58,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class WebConsoleTest extends TestBase implements ITestBaseShared {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     SeleniumProvider selenium = SeleniumProvider.getInstance();
     private List<AbstractClient> clientsList;
 
@@ -79,7 +79,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestCreateDeleteAddress(Address... destinations) throws Exception {
         Kubernetes.getInstance().getAddressClient().inNamespace(getSharedAddressSpace().getMetadata().
-                getNamespace()).list().getItems().forEach(address -> log.warn("Add from list: " + address));
+                getNamespace()).list().getItems().forEach(address -> LOGGER.warn("Add from list: " + address));
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
         consoleWebPage.openWebConsolePage();
@@ -88,6 +88,27 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
             consoleWebPage.deleteAddressWebConsole(dest);
         }
         TestUtils.assertWaitForValue(0, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(20, TimeUnit.SECONDS));
+    }
+
+    protected void doTestPurgeMessages(Address address) throws Exception {
+        List<String> msgs = IntStream.range(0, 1000).mapToObj(i -> "msgs:" + i).collect(Collectors.toList());
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
+                getSharedAddressSpace(), clusterUser);
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.createAddressesWebConsole(address);
+        AmqpClient client = getAmqpClientFactory().createQueueClient();
+
+        Future<Integer> sendResult = client.sendMessages(address.getSpec().getAddress(), msgs);
+        assertThat("Wrong count of messages sent", sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
+
+        Future<List<Message>> recvResult = client.recvMessages(address.getSpec().getAddress(), msgs.size() / 2);
+        assertThat("Wrong count of messages receiver", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size() / 2));
+
+        consoleWebPage.openAddressesPageWebConsole();
+        consoleWebPage.purgeAddress(address);
+
+        Future<List<Message>> recvResult2 = client.recvMessages(address.getSpec().getAddress(), msgs.size() / 2);
+        assertThrows(TimeoutException.class, () -> recvResult2.get(20, TimeUnit.SECONDS), "Purge does not work, address contains messages");
     }
 
     protected void doTestCreateDeleteDurableSubscription(Address... destinations) throws Exception {
@@ -101,7 +122,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
             //create topic
             consoleWebPage.createAddressWebConsole(dest);
             AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), dest);
-            log.info("Address topic: " + dest);
+            LOGGER.info("Address topic: " + dest);
             //create subscription
             Address subscription = new AddressBuilder()
                     .withNewMetadata()
@@ -117,10 +138,10 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
                     .build();
             consoleWebPage.createAddressWebConsole(subscription);
             AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), subscription);
-            log.info("Subscription add: " + subscription);
+            LOGGER.info("Subscription add: " + subscription);
 
             Kubernetes.getInstance().getAddressClient().inNamespace(getSharedAddressSpace().getMetadata().
-                    getNamespace()).list().getItems().forEach(address -> log.warn("Add from list: " + address));
+                    getNamespace()).list().getItems().forEach(address -> LOGGER.warn("Add from list: " + address));
 
             TestUtils.assertWaitForValue(2, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(120, TimeUnit.SECONDS));
 
@@ -148,7 +169,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestFilterAddressesByType() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -182,7 +203,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestFilterAddressesByName() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -268,7 +289,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         consoleWebPage.deleteAddressWebConsole(destQueue);
         items = consoleWebPage.getAddressItems();
         assertEquals(0, items.size());
-        log.info("filtered address has been deleted and no longer present in filter");
+        LOGGER.info("filtered address has been deleted and no longer present in filter");
 
         consoleWebPage.clearAllFilters();
         items = consoleWebPage.getAddressItems();
@@ -277,7 +298,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestFilterAddressWithRegexSymbols() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -321,7 +342,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
     protected void doTestRegexAlertBehavesConsistently() throws Exception {
         String subText = "*";
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -348,7 +369,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortAddressesByName() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -365,7 +386,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortAddressesByClients() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -407,7 +428,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortConnectionsBySenders() throws Exception {
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -433,9 +454,9 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
             if (!pass) {
                 clientsList.forEach(c -> {
                     c.stop();
-                    log.info("=======================================");
-                    log.info("stderr {}", c.getStdErr());
-                    log.info("stdout {}", c.getStdOut());
+                    LOGGER.info("=======================================");
+                    LOGGER.info("stderr {}", c.getStdErr());
+                    LOGGER.info("stdout {}", c.getStdOut());
                 });
                 clientsList.clear();
             }
@@ -445,7 +466,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortConnectionsByReceivers() throws Exception {
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -752,7 +773,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), credentials);
         consoleWebPage.openWebConsolePage();
-        log.info("User {} successfully authenticated", credentials);
+        LOGGER.info("User {} successfully authenticated", credentials);
 
         if (userAllowed) {
             consoleWebPage.openAddressesPageWebConsole();
@@ -799,7 +820,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
                         .withPlan(getDefaultPlan(AddressType.TOPIC))
                         .endSpec()
                         .build();
-                log.info("Creating topic for subscription");
+                LOGGER.info("Creating topic for subscription");
                 consoleWebPage.createAddressWebConsole(dest_topic);
                 dest = new AddressBuilder()
                         .withNewMetadata()

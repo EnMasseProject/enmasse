@@ -63,10 +63,10 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
 
     @AfterEach
     void clearNamespaces() throws Exception {
-        kubernetes.deleteNamespace(blockedSpace);
-        TestUtils.waitForNamespaceDeleted(kubernetes, blockedSpace);
-        kubernetes.deleteNamespace(allowedSpace);
-        TestUtils.waitForNamespaceDeleted(kubernetes, allowedSpace);
+        KUBERNETES.deleteNamespace(blockedSpace);
+        TestUtils.waitForNamespaceDeleted(KUBERNETES, blockedSpace);
+        KUBERNETES.deleteNamespace(allowedSpace);
+        TestUtils.waitForNamespaceDeleted(KUBERNETES, allowedSpace);
     }
 
     @Test
@@ -135,7 +135,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         RheaClientSender allowedClientSender = new RheaClientSender(allowedSpace);
         RheaClientReceiver allowedClientReceiver = new RheaClientReceiver(allowedSpace);
 
-        ClientUtils.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
+        MESSAGING_UTILS.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
 
         assertTrue(allowedClientSender.run(), "Sender failed, expected return code 0");
         assertTrue(allowedClientReceiver.run(), "Receiver failed, expected return code 0");
@@ -187,7 +187,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
                         .build())
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createInfraConfig(brokeredInfraConfig);
+        ISOLATED_RESOURCES_MANAGER.createInfraConfig(brokeredInfraConfig);
         return brokeredInfraConfig;
     }
 
@@ -195,7 +195,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
                 .withName("example-space-plan-brokered")
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withAddressSpaceType(AddressSpaceType.BROKERED.toString())
@@ -207,7 +207,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
                         .stream().map(addressPlan1 -> addressPlan1.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpacePlan(exampleSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(exampleSpacePlan);
         return exampleSpacePlan;
     }
 
@@ -215,7 +215,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         AddressPlan exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-brokered", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0)));
 
-        isolatedResourcesManager.createAddressPlan(exampleAddressPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(exampleAddressPlan);
         return exampleAddressPlan;
     }
 
@@ -223,7 +223,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         AddressSpace exampleAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("brokered-address-space")
-                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .withNamespace(KUBERNETES.getInstance().getInfraNamespace())
                 .withLabels(Collections.singletonMap("allowed", "true"))
                 .endMetadata()
                 .withNewSpec()
@@ -235,8 +235,8 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.createAddressSpace(exampleAddressSpace);
-        isolatedResourcesManager.createOrUpdateUser(exampleAddressSpace, credentials);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpace(exampleAddressSpace);
+        ISOLATED_RESOURCES_MANAGER.createOrUpdateUser(exampleAddressSpace, credentials);
         return exampleAddressSpace;
     }
 
@@ -253,7 +253,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.setAddresses(dest);
+        ISOLATED_RESOURCES_MANAGER.setAddresses(dest);
         return dest;
     }
 }

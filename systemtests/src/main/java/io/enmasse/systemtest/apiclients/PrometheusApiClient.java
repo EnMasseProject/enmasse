@@ -11,7 +11,6 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
 
-import java.net.HttpURLConnection;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class PrometheusApiClient extends ApiClient {
 
     public PrometheusApiClient(Kubernetes kubernetes, Endpoint endpoint) {
-        super(kubernetes, () -> endpoint, "");
+        super(kubernetes, () -> endpoint);
     }
 
     @Override
@@ -41,7 +40,7 @@ public class PrometheusApiClient extends ApiClient {
                 .bearerTokenAuthentication(kubernetes.getApiToken())
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)
-                .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error getting prometheus rules"));
+                .send(ar -> responseHandler(ar, responsePromise, "Error getting prometheus rules"));
         return responsePromise.get(150000, TimeUnit.SECONDS);
     }
 
@@ -53,7 +52,7 @@ public class PrometheusApiClient extends ApiClient {
                 .bearerTokenAuthentication(kubernetes.getApiToken())
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)
-                .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error doing prometheus query " + uri));
+                .send(ar -> responseHandler(ar, responsePromise, "Error doing prometheus query " + uri));
         return responsePromise.get(150000, TimeUnit.SECONDS);
     }
 
@@ -67,7 +66,7 @@ public class PrometheusApiClient extends ApiClient {
                 .bearerTokenAuthentication(kubernetes.getApiToken())
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)
-                .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error doing prometheus range query " + uri));
+                .send(ar -> responseHandler(ar, responsePromise, "Error doing prometheus range query " + uri));
         return responsePromise.get(150000, TimeUnit.SECONDS);
     }
 

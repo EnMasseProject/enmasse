@@ -39,6 +39,7 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -60,7 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private SeleniumProvider selenium = SeleniumProvider.getInstance();
     private MessagingUtils clientUtils = getClientUtils();
 
@@ -762,7 +763,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         // Dump address/broker assignment to help understand occasional test failure.
         KUBERNETES.getAddressClient().list().getItems().forEach(q -> {
             Address a = KUBERNETES.getAddressClient(messagePersistAddressSpace.getMetadata().getNamespace()).withName(q.getMetadata().getName()).get();
-            log.info("Address {} => {}", q.getMetadata().getName(), a.getStatus().getBrokerStatuses());
+            LOGGER.info("Address {} => {}", q.getMetadata().getName(), a.getStatus().getBrokerStatuses());
         });
 
         //send 500 messages to each queue
@@ -784,7 +785,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 () -> assertThat("Incorrect count of messages sent", sendResult4.get(1, TimeUnit.MINUTES), is(msgs.size())));
 
         //remove addresses from first pod and wait for scale down
-        log.info("Deleting beta addresses");
+        LOGGER.info("Deleting beta addresses");
         resourcesManager.deleteAddresses(queue1, queue2);
 
         try {
@@ -792,7 +793,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         } finally {
             KUBERNETES.getAddressClient().list().getItems().forEach(q -> {
                 Address a = KUBERNETES.getAddressClient(messagePersistAddressSpace.getMetadata().getNamespace()).withName(q.getMetadata().getName()).get();
-                log.info("Address {} => {}", q.getMetadata().getName(), a.getStatus().getBrokerStatuses());
+                LOGGER.info("Address {} => {}", q.getMetadata().getName(), a.getStatus().getBrokerStatuses());
             });
         }
 
@@ -1144,7 +1145,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
             throws Exception {
         var client = KUBERNETES.getAddressClient(addressSpace.getMetadata().getNamespace());
 
-        log.info("Try to create {} addresses, and make sure that {} addresses will be not created",
+        LOGGER.info("Try to create {} addresses, and make sure that {} addresses will be not created",
                 Arrays.toString(allowedDest.stream().map(address -> address.getMetadata().getName()).toArray(String[]::new)),
                 Arrays.toString(notAllowedDest.stream().map(address -> address.getMetadata().getName()).toArray(String[]::new)));
 
@@ -1155,7 +1156,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         }
 
         for (Address address : getAddresses) {
-            log.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
+            LOGGER.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
             String assertMessage = String.format("Address from allowed %s is not ready", address.getMetadata().getName());
             assertEquals(Phase.Active, address.getStatus().getPhase(), assertMessage);
         }
@@ -1177,7 +1178,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
             }
 
             for (Address address : getAddresses) {
-                log.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
+                LOGGER.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
                 String assertMessage = String.format("Address from notAllowed %s is ready", address.getMetadata().getName());
                 assertEquals(Phase.Pending, address.getStatus().getPhase(), assertMessage);
                 assertTrue(address.getStatus().getMessages().contains("Quota exceeded"), "No status message is present");

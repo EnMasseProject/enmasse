@@ -23,13 +23,14 @@ import java.util.function.Predicate;
 
 public class Receiver extends ClientHandlerBase<List<Message>> {
 
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private ProtonReceiver receiver;
     private final List<Message> messages = new ArrayList<>();
     private final AtomicInteger messageCount = new AtomicInteger();
     private final Predicate<Message> done;
 
-    public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, LinkOptions linkOptions, CompletableFuture<Void> connectPromise, CompletableFuture<List<Message>> resultPromise, String containerId) {
+    Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, LinkOptions linkOptions,
+             CompletableFuture<Void> connectPromise, CompletableFuture<List<Message>> resultPromise, String containerId) {
         super(clientOptions, linkOptions, connectPromise, resultPromise, containerId);
         this.done = done;
     }
@@ -56,7 +57,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         });
         receiver.openHandler(result -> {
             if (result.succeeded()) {
-                log.info("Receiver link '{}' opened, granting credits", source.getAddress());
+                LOGGER.info("Receiver link '{}' opened, granting credits", source.getAddress());
                 receiver.flow(1);
                 connectPromise.complete(null);
             } else {
@@ -67,7 +68,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         receiver.closeHandler(closed -> {
             if (receiver.getRemoteCondition() != null && LinkError.REDIRECT.equals(receiver.getRemoteCondition().getCondition())) {
                 String relocated = (String) receiver.getRemoteCondition().getInfo().get("address");
-                log.info("Receiver link redirected to '{}'", relocated);
+                LOGGER.info("Receiver link redirected to '{}'", relocated);
                 Source newSource = linkOptions.getSource();
                 newSource.setAddress(relocated);
                 String newLinkName = linkOptions.getLinkName().orElse(UUID.randomUUID().toString());

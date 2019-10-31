@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import java.util.List;
 
 public class ProvisionedServiceItem {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private SeleniumProvider selenium;
     private WebElement serviceItem;
     private String id;
@@ -22,10 +22,6 @@ public class ProvisionedServiceItem {
         this.selenium = selenium;
         this.serviceItem = selenium.getDriver().findElement(By.tagName("service-instance-row")).findElement(By.className("provisioned-service"));
         this.id = serviceItem.findElement(By.className("list-row-longname")).getText();
-    }
-
-    public WebElement getServiceItem() {
-        return serviceItem;
     }
 
     public String getId() {
@@ -40,8 +36,9 @@ public class ProvisionedServiceItem {
         selenium.clickOnItem(getServiceActions(), "Provisioned service actions");
         List<WebElement> actions = getServiceActions().findElement(By.className("dropdown-menu-right")).findElements(By.tagName("li"));
         for (WebElement action : actions) {
-            if (action.findElement(By.tagName("a")).getText().equals(item))
+            if (action.findElement(By.tagName("a")).getText().equals(item)) {
                 return action;
+            }
         }
         return null;
     }
@@ -56,7 +53,7 @@ public class ProvisionedServiceItem {
 
     private List<WebElement> getServiceBindings() {
         List<WebElement> bindings = serviceItem.findElement(By.tagName("service-instance-bindings")).findElements(By.tagName("service-binding"));
-        bindings.forEach(item -> log.info("Got binding: {}", item.findElement(By.tagName("h3")).getText()));
+        bindings.forEach(item -> LOGGER.info("Got binding: {}", item.findElement(By.tagName("h3")).getText()));
         return bindings;
     }
 

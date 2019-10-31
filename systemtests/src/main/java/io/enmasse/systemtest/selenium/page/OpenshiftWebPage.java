@@ -30,10 +30,10 @@ public class OpenshiftWebPage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();
 
-    SeleniumProvider selenium;
-    String ocRoute;
-    UserCredentials credentials;
-    OpenshiftLoginWebPage loginPage;
+    private SeleniumProvider selenium;
+    private String ocRoute;
+    private UserCredentials credentials;
+    private OpenshiftLoginWebPage loginPage;
 
     public OpenshiftWebPage(SeleniumProvider selenium, String ocRoute, UserCredentials credentials) {
         this.selenium = selenium;
@@ -54,19 +54,19 @@ public class OpenshiftWebPage implements IWebPage {
         return element.findElement(By.className("services-item-name")).getAttribute("title");
     }
 
-    public WebElement getServiceFromCatalog(String name) throws Exception {
+    private WebElement getServiceFromCatalog(String name) throws Exception {
         List<WebElement> services = getServicesFromCatalog();
         Optional<WebElement> first = services.stream()
                 .filter(item -> name.equals(getTitleFromService(item)))
                 .findFirst();
 
-        if (!first.isPresent()) {
+        if (first.isEmpty()) {
             throw new NoSuchElementException(String.format("Failed to find service %s from catalog", name));
         }
         return first.get();
     }
 
-    public List<WebElement> getServicesFromCatalog() throws Exception {
+    private List<WebElement> getServicesFromCatalog() throws Exception {
         List<WebElement> services = getCatalog().findElements(By.className("services-item"));
         services.forEach(item -> log.info("Got service item from catalog: {}", getTitleFromService(item)));
         return services;
@@ -126,11 +126,11 @@ public class OpenshiftWebPage implements IWebPage {
         return new ProvisionedServiceItem(selenium);
     }
 
-    private void fillReceiveAddresses(String text) throws Exception {
+    private void fillReceiveAddresses(String text) {
         selenium.fillInputItem(selenium.getDriver().findElement(By.id("receiveAddresses")), text);
     }
 
-    private void fillSendAddresses(String text) throws Exception {
+    private void fillSendAddresses(String text) {
         selenium.fillInputItem(selenium.getDriver().findElement(By.id("sendAddresses")), text);
     }
 
@@ -157,8 +157,9 @@ public class OpenshiftWebPage implements IWebPage {
             } catch (Exception ex) {
                 log.info("User is not logged");
             }
-            if (!login())
+            if (!login()) {
                 throw new IllegalAccessException(loginPage.getAlertMessage());
+            }
         }
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         if (!waitUntilConsolePage()) {
@@ -166,11 +167,11 @@ public class OpenshiftWebPage implements IWebPage {
         }
     }
 
-    private boolean login() throws Exception {
+    private boolean login() {
         return loginPage.login(credentials.getUsername(), credentials.getPassword());
     }
 
-    private void logout() throws Exception {
+    private void logout() {
         WebElement userDropdown = selenium.getDriver().findElement(By.className("navbar-right")).findElement(By.id("user-dropdown"));
         selenium.clickOnItem(userDropdown, "User dropdown navigation");
         WebElement logout = selenium.getDriver().findElement(By.className("navbar-right")).findElement(By.cssSelector("a[ng-href='logout']"));
@@ -188,7 +189,8 @@ public class OpenshiftWebPage implements IWebPage {
 
     private boolean waitUntilConsolePage() {
         try {
-            selenium.getDriverWait().until(ExpectedConditions.visibilityOfElementLocated(By.className("services-no-sub-categories")));
+            selenium.getDriverWait().until(
+                    ExpectedConditions.visibilityOfElementLocated(By.className("services-no-sub-categories")));
             return true;
         } catch (Exception ex) {
             return false;
@@ -196,7 +198,8 @@ public class OpenshiftWebPage implements IWebPage {
     }
 
     private void waitForRedirectToService() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.presenceOfElementLocated(By.tagName("service-instance-row")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(
+                ExpectedConditions.presenceOfElementLocated(By.tagName("service-instance-row")));
     }
 
     private void waitUntilServiceIsReady() throws Exception {
@@ -218,41 +221,42 @@ public class OpenshiftWebPage implements IWebPage {
         selenium.clickOnItem(getServiceFromCatalog("EnMasse (brokered)"));
     }
 
-    public void clickOnCreateStandard() throws Exception {
+    private void clickOnCreateStandard() throws Exception {
         selenium.clickOnItem(getServiceFromCatalog("EnMasse (standard)"));
     }
 
-    public void next() throws Exception {
+    public void next() {
         selenium.clickOnItem(getNextButton());
     }
 
-    public void back() throws Exception {
+    public void back() {
         selenium.clickOnItem(getBackButton());
     }
 
-    private void clickOnAddToProjectDropdown() throws Exception {
+    private void clickOnAddToProjectDropdown() {
         selenium.clickOnItem(getAddToProjectDropDown(), "Add to project dropdown");
     }
 
-    public String provisionAddressSpaceViaSC(AddressSpace addressSpace) throws Exception {
+    public void provisionAddressSpaceViaSC(AddressSpace addressSpace) throws Exception {
         log.info("Service for addressSpace {} will be provisioned", addressSpace);
         openOpenshiftPage();
         String projectName = addressSpace.getMetadata().getNamespace();
         if (addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString())) {
             createAddressSpaceBrokered(addressSpace.getMetadata().getName(), projectName);
         } else {
-            createAddressSpaceStandard(addressSpace.getMetadata().getName(), projectName, AddressSpacePlans.STANDARD_MEDIUM);
+            createAddressSpaceStandard(addressSpace.getMetadata().getName(), projectName);
         }
         try {
-            selenium.clickOnItem(getModalWindow().findElement(By.cssSelector(String.format("a[ng-href='project/%s']", projectName))), "Project overview");
+            selenium.clickOnItem(getModalWindow().findElement(
+                    By.cssSelector(String.format("a[ng-href='project/%s']", projectName))), "Project overview");
         } catch (org.openqa.selenium.NoSuchElementException ex) {
-            selenium.clickOnItem(getModalWindow().findElement(By.cssSelector(String.format("a[ng-href='project/%s/overview']", projectName))), "Project overview");
+            selenium.clickOnItem(getModalWindow().findElement(
+                    By.cssSelector(String.format("a[ng-href='project/%s/overview']", projectName))), "Project overview");
         }
         waitForRedirectToService();
         String serviceId = getProvisionedServiceItem().getId();
         waitUntilServiceIsReady();
         AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-        return serviceId;
     }
 
     public void deprovisionAddressSpace(String namespace) throws Exception {
@@ -277,10 +281,10 @@ public class OpenshiftWebPage implements IWebPage {
         next();
     }
 
-    private void createAddressSpaceStandard(String name, String projectName, String plan) throws Exception {
+    private void createAddressSpaceStandard(String name, String projectName) throws Exception {
         clickOnCreateStandard();
         next();
-        selectPlanInStandard(plan);
+        selectPlanInStandard();
         next();
         selectProjectInWizard(projectName);
         selenium.fillInputItem(getModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("name")),
@@ -291,16 +295,16 @@ public class OpenshiftWebPage implements IWebPage {
         next();
     }
 
-    private void selectPlanInStandard(String plan) throws Exception {
+    private void selectPlanInStandard() {
         List<WebElement> plansItems = getModalWindow().findElements(By.className("plan-name"));
         for (WebElement element : plansItems) {
-            if (element.getText().equals(plan.toLowerCase())) {
+            if (element.getText().equals(AddressSpacePlans.STANDARD_MEDIUM.toLowerCase())) {
                 selenium.clickOnItem(element);
             }
         }
     }
 
-    private void selectProjectInWizard(String projectName) throws Exception {
+    private void selectProjectInWizard(String projectName) {
         WebElement project = null;
         boolean noProjectAvailable = false;
         try {
@@ -320,20 +324,23 @@ public class OpenshiftWebPage implements IWebPage {
             }
             selenium.fillInputItem(getModalWindow().findElement(By.tagName("select-project")).findElement(By.id("name")),
                     projectName);
-            selenium.fillInputItem(getModalWindow().findElement(By.tagName("select-project")).findElement(By.id("displayName")),
+            selenium.fillInputItem(getModalWindow().findElement(
+                    By.tagName("select-project")).findElement(By.id("displayName")),
                     projectName);
         }
     }
 
-    public void clickOnShowAllProjects() throws Exception {
-        selenium.clickOnItem(selenium.getDriver().findElement(By.className("projects-view-all")), "Show all projects");
+    private void clickOnShowAllProjects() {
+        selenium.clickOnItem(selenium.getDriver().findElement(
+                By.className("projects-view-all")), "Show all projects");
     }
 
     public String createBinding(AddressSpace addressSpace, String receiveAddress, String sendAddresses) throws Exception {
         log.info("Binding in namespace {} will be created", addressSpace.getMetadata().getNamespace());
         openOpenshiftPage();
         clickOnShowAllProjects();
-        selenium.clickOnItem(getProjectListItem(addressSpace.getMetadata().getNamespace()), addressSpace.getMetadata().getNamespace());
+        selenium.clickOnItem(getProjectListItem(
+                addressSpace.getMetadata().getNamespace()), addressSpace.getMetadata().getNamespace());
         waitForRedirectToService();
         selenium.clickOnItem(getProvisionedServiceItem().getServiceActionCreateBinding(), "Create Binding");
         next();
@@ -345,7 +352,8 @@ public class OpenshiftWebPage implements IWebPage {
         }
         next();
         waitUntilBindingIsReady();
-        String bindingId = getModalWindow().findElement(By.className("results-message")).findElement(By.tagName("strong")).getText();
+        String bindingId = getModalWindow().findElement(
+                By.className("results-message")).findElement(By.tagName("strong")).getText();
         next();
         return bindingId;
     }
@@ -383,7 +391,8 @@ public class OpenshiftWebPage implements IWebPage {
     public ConsoleWebPage clickOnDashboard(AddressSpace addressSpace) throws Exception {
         openOpenshiftPage();
         clickOnShowAllProjects();
-        selenium.clickOnItem(getProjectListItem(addressSpace.getMetadata().getNamespace()), addressSpace.getMetadata().getNamespace());
+        selenium.clickOnItem(getProjectListItem(addressSpace.getMetadata().getNamespace()),
+                addressSpace.getMetadata().getNamespace());
         waitForRedirectToService();
         ProvisionedServiceItem serviceItem = getProvisionedServiceItem();
         serviceItem.collapseServiceItem();
@@ -395,6 +404,7 @@ public class OpenshiftWebPage implements IWebPage {
 
     @Override
     public void checkReachableWebPage() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.presenceOfElementLocated(By.className("navbar-pf-vertical")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(
+                ExpectedConditions.presenceOfElementLocated(By.className("navbar-pf-vertical")));
     }
 }

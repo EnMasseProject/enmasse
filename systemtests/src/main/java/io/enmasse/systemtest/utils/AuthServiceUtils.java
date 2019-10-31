@@ -27,8 +27,11 @@ public class AuthServiceUtils {
         return createStandardAuthServiceObject(name, persistent, "5Gi", true, name);
     }
 
-    public static AuthenticationService createStandardAuthServiceObject(String name, String host, int port, String type, String database, String credentialsSecret) {
-        return new DoneableAuthenticationService(createStandardAuthServiceObject(name, false, "5Gi", true, name))
+    public static AuthenticationService createStandardAuthServiceObject(String name, String host, int port,
+                                                                        String type, String database,
+                                                                        String credentialsSecret) {
+        return new DoneableAuthenticationService(createStandardAuthServiceObject(name,
+                false, "5Gi", true, name))
                 .editSpec()
                 .editStandard()
                 .addToAdditionalProperties("datasource",
@@ -38,7 +41,9 @@ public class AuthServiceUtils {
                 .done();
     }
 
-    public static AuthenticationService createStandardAuthServiceObject(String name, boolean persistent, String volumeSize, boolean deleteClaim, String claimName) {
+    public static AuthenticationService createStandardAuthServiceObject(String name, boolean persistent,
+                                                                        String volumeSize, boolean deleteClaim,
+                                                                        String claimName) {
         return createAuthService(name, AuthenticationServiceType.standard)
                 .editSpec()
                 .withNewStandard()
@@ -49,7 +54,9 @@ public class AuthServiceUtils {
                 .done();
     }
 
-    public static AuthenticationService createExternalAuthServiceObject(String name, String host, int port, String realm, SecretReference caCertSecret, SecretReference clientCertSecret) {
+    public static AuthenticationService createExternalAuthServiceObject(String name, String host, int port,
+                                                                        String realm, SecretReference caCertSecret,
+                                                                        SecretReference clientCertSecret) {
         return createAuthService(name, AuthenticationServiceType.external)
             .editSpec()
             .addToAdditionalProperties("realm", realm)
@@ -93,7 +100,8 @@ public class AuthServiceUtils {
         return resources;
     }
 
-    private static Map<String, Object> createDatasource(String host, int port, String type, String database, String credentialsSecret) {
+    private static Map<String, Object> createDatasource(String host, int port,
+                                                        String type, String database, String credentialsSecret) {
         Map<String, Object> datasource = new HashMap<>();
         datasource.put("type", type);
         datasource.put("host", host);

@@ -17,17 +17,17 @@ import java.util.function.Predicate;
 
 class Sender extends AbstractSender<Integer> {
 
-    protected final Iterator<Message> messageQueue;
+    private final Iterator<Message> messageQueue;
     protected final Predicate<Message> predicate;
     private final AtomicInteger numSent = new AtomicInteger(0);
 
-    public Sender(AmqpConnectOptions clientOptions,
-                  LinkOptions linkOptions,
-                  Iterable<Message> messages,
-                  final Predicate<Message> predicate,
-                  CompletableFuture<Void> connectPromise,
-                  CompletableFuture<Integer> resultPromise,
-                  String containerId) {
+    Sender(AmqpConnectOptions clientOptions,
+           LinkOptions linkOptions,
+           Iterable<Message> messages,
+           final Predicate<Message> predicate,
+           CompletableFuture<Void> connectPromise,
+           CompletableFuture<Integer> resultPromise,
+           String containerId) {
         super(clientOptions, linkOptions, connectPromise, resultPromise, containerId);
         this.messageQueue = messages.iterator();
         this.predicate = predicate;
@@ -66,8 +66,10 @@ class Sender extends AbstractSender<Integer> {
                             sendNext(connection, sender);
                         }
                     } else {
-                        resultPromise.completeExceptionally(new IllegalStateException("Message not accepted (remote state: " + protonDelivery.getRemoteState() + ") after " + numSent.get() + " messages sent"));
-                        connectPromise.completeExceptionally(new IllegalStateException("Message not accepted (remote state: " + protonDelivery.getRemoteState() + ") after " + numSent.get() + " messages sent"));
+                        resultPromise.completeExceptionally(new IllegalStateException("Message not accepted (remote state: " +
+                                protonDelivery.getRemoteState() + ") after " + numSent.get() + " messages sent"));
+                        connectPromise.completeExceptionally(new IllegalStateException("Message not accepted (remote state: " +
+                                protonDelivery.getRemoteState() + ") after " + numSent.get() + " messages sent"));
                         connection.close();
                     }
                 });

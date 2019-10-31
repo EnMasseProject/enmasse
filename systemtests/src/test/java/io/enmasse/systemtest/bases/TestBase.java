@@ -15,6 +15,15 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.broker.BrokerManagement;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageType;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.platform.KubeCMDClient;
@@ -56,11 +65,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 
 import javax.jms.DeliveryMode;
-import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.naming.NamingException;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -79,11 +86,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static junit.framework.TestCase.fail;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Base class for all tests
@@ -91,6 +98,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @ExtendWith(JunitCallbackListener.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class TestBase implements ITestBase, ITestSeparator {
+    private static Logger LOGGER = CustomLogger.getLogger();
     /**
      * The constant clusterUser.
      */
@@ -374,7 +382,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      *
      * @param destinations the destinations
      */
-    protected void waitForDestinationsReady(Address... destinations) {
+    protected void waitForDestinationsReady(Address... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         AddressUtils.waitForDestinationsReady(budget, destinations);
     }
@@ -424,18 +432,18 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @param range        the range
      * @return the array list
      */
-    protected ArrayList<Address> generateQueueTopicList(AddressSpace addressspace, IntStream range) {
+    protected ArrayList<Address> generateQueueTopicList(AddressSpace addressspace, String infix, IntStream range) {
         ArrayList<Address> addresses = new ArrayList<>();
         range.forEach(i -> {
             if (i % 2 == 0) {
                 addresses.add(new AddressBuilder()
                         .withNewMetadata()
                         .withNamespace(addressspace.getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(addressspace, String.format("topic-%s-%d", "via-web", i)))
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, String.format("topic-%s-%d", infix, i)))
                         .endMetadata()
                         .withNewSpec()
                         .withType("topic")
-                        .withAddress(String.format("topic-%s-%d", "via-web", i))
+                        .withAddress(String.format("topic-%s-%d", infix, i))
                         .withPlan(getDefaultPlan(AddressType.TOPIC))
                         .endSpec()
                         .build());
@@ -443,11 +451,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 addresses.add(new AddressBuilder()
                         .withNewMetadata()
                         .withNamespace(addressspace.getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(addressspace, String.format("queue-%s-%d", "via-web", i)))
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, String.format("queue-%s-%d", infix, i)))
                         .endMetadata()
                         .withNewSpec()
                         .withType("queue")
-                        .withAddress(String.format("queue-%s-%d", "via-web", i))
+                        .withAddress(String.format("queue-%s-%d", infix, i))
                         .withPlan(getDefaultPlan(AddressType.QUEUE))
                         .endSpec()
                         .build());
@@ -1032,8 +1040,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     /**
      * Assert sorted.
-     *
      * @param <T>        the type parameter
+     *
      * @param message    the message
      * @param list       the list
      * @param reverse    the reverse

@@ -19,12 +19,12 @@ import java.util.Objects;
 
 public class Openshift4WebPage implements IWebPage {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
-    SeleniumProvider selenium;
-    String ocRoute;
-    UserCredentials credentials;
-    OpenshiftLoginWebPage loginPage;
+    private SeleniumProvider selenium;
+    private String ocRoute;
+    private UserCredentials credentials;
+    private OpenshiftLoginWebPage loginPage;
 
     public Openshift4WebPage(SeleniumProvider selenium, String ocRoute, UserCredentials credentials) {
         this.selenium = selenium;
@@ -52,17 +52,20 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     private WebElement getNamespaceBar() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.className("co-namespace-bar")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(
+                By.className("co-namespace-bar")));
         return selenium.getDriver().findElement(By.className("co-namespace-bar"));
     }
 
     private WebElement getDropdownButton() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.className("caret")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(
+                By.className("caret")));
         return getNamespaceBar().findElement(By.className("caret"));
     }
 
     private WebElement getContentWindow() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.id("content")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(
+                By.id("content")));
         return selenium.getDriver().findElement(By.id("content"));
     }
 
@@ -89,7 +92,8 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     private WebElement getTopMenuResources() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//ul[@class='co-m-horizontal-nav__menu-secondary']")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//ul[@class='co-m-horizontal-nav__menu-secondary']")));
         return getContentWindow().findElement(By.xpath("//ul[@class='co-m-horizontal-nav__menu-secondary']"));
     }
 
@@ -109,19 +113,22 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     private WebElement getSaveChangesButton() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.id("save-changes")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(
+                By.id("save-changes")));
         return getContentWindow().findElement(By.id("save-changes"));
     }
 
     private WebElement getCatalogPage() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.className("co-catalog-page")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(
+                By.className("co-catalog-page")));
         return getContentWindow().findElement(By.className("co-catalog-page"));
     }
 
     private WebElement getCatalogItem(String name) {
         List<WebElement> items = getCatalogPage().findElements(By.className("catalog-tile-pf"));
         for (WebElement item : items) {
-            String itemText = item.findElement(By.className("catalog-tile-pf-body")).findElement(By.className("catalog-tile-pf-title")).getText();
+            String itemText = item.findElement(By.className("catalog-tile-pf-body")).findElement(
+                    By.className("catalog-tile-pf-title")).getText();
             if (name.toLowerCase().equals(itemText.toLowerCase())) {
                 return item;
             }
@@ -130,17 +137,20 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     private WebElement getInstallOperatorModalView() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.className("modal-content")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(
+                By.className("modal-content")));
         return selenium.getDriver().findElement(By.className("modal-content"));
     }
 
     private WebElement getInstallButton() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.className("btn")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(
+                By.className("btn")));
         return getInstallOperatorModalView().findElement(By.className("btn"));
     }
 
     private WebElement getSubscribeButton() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//button[contains(text(), 'Subscribe')]")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//button[contains(text(), 'Subscribe')]")));
         return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Subscribe')]"));
     }
 
@@ -154,7 +164,7 @@ public class Openshift4WebPage implements IWebPage {
     //================================================================================================
 
     public void openOpenshiftPage() throws Exception {
-        log.info("Opening openshift web page on route {}", ocRoute);
+        LOGGER.info("Opening openshift web page on route {}", ocRoute);
         selenium.getDriver().get(ocRoute);
         if (waitUntilLoginPage()) {
             selenium.getAngularDriver().waitForAngularRequestsToFinish();
@@ -162,10 +172,11 @@ public class Openshift4WebPage implements IWebPage {
             try {
                 logout();
             } catch (Exception ex) {
-                log.info("User is not logged");
+                LOGGER.info("User is not logged");
             }
-            if (!login())
+            if (!login()) {
                 throw new IllegalAccessException(loginPage.getAlertMessage());
+            }
         }
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         if (!waitUntilConsolePage()) {
@@ -173,14 +184,16 @@ public class Openshift4WebPage implements IWebPage {
         }
     }
 
-    private boolean login() throws Exception {
+    private boolean login() {
         return loginPage.login(credentials.getUsername(), credentials.getPassword());
     }
 
-    private void logout() throws Exception {
-        WebElement userDropdown = selenium.getDriver().findElement(By.className("navbar-right")).findElement(By.id("user-dropdown"));
+    private void logout() {
+        WebElement userDropdown = selenium.getDriver().findElement(
+                By.className("navbar-right")).findElement(By.id("user-dropdown"));
         selenium.clickOnItem(userDropdown, "User dropdown navigation");
-        WebElement logout = selenium.getDriver().findElement(By.className("navbar-right")).findElement(By.cssSelector("a[ng-href='logout']"));
+        WebElement logout = selenium.getDriver().findElement(
+                By.className("navbar-right")).findElement(By.cssSelector("a[ng-href='logout']"));
         selenium.clickOnItem(logout, "Log out");
     }
 
@@ -207,7 +220,7 @@ public class Openshift4WebPage implements IWebPage {
         selenium.clickOnItem(getNavItem("Installed Operators"), "Installed Operators");
     }
 
-    public void openOperatorHub() {
+    private void openOperatorHub() {
         selenium.clickOnItem(getNavItem("Catalog"), "Catalog");
         selenium.clickOnItem(getNavItem("OperatorHub"), "OperatorHub");
     }
@@ -220,10 +233,11 @@ public class Openshift4WebPage implements IWebPage {
 
     public void selectOperator(String operatorName) {
         WebElement operator = getInstalledOperatorItem(operatorName);
-        selenium.clickOnItem(Objects.requireNonNull(operator).findElement(By.xpath("//h1[@class='co-clusterserviceversion-logo__name__clusterserviceversion']")));
+        selenium.clickOnItem(Objects.requireNonNull(operator).findElement(
+                By.xpath("//h1[@class='co-clusterserviceversion-logo__name__clusterserviceversion']")));
     }
 
-    public void selectTopMenuResourceItem(String name) {
+    private void selectTopMenuResourceItem(String name) {
         selenium.clickOnItem(getTopMenuResourceItem(name), name);
     }
 
@@ -231,13 +245,6 @@ public class Openshift4WebPage implements IWebPage {
         selectTopMenuResourceItem(resourceName);
         selenium.clickOnItem(selenium.getWebElement(this::getCreateYamlButton));
         selenium.clickOnItem(selenium.getWebElement(this::getSaveChangesButton));
-    }
-
-    public void createCustomResourceItem(String resourceName, String data) {
-        selectTopMenuResourceItem(resourceName);
-        selenium.clickOnItem(getCreateYamlButton());
-        fillCustomResource(data);
-        selenium.clickOnItem(getSaveChangesButton());
     }
 
     public void installFromCatalog(String name) {
@@ -254,12 +261,9 @@ public class Openshift4WebPage implements IWebPage {
         selenium.clickOnItem(getUninstallButton());
     }
 
-    public void fillCustomResource(String data) {
-        selenium.fillInputItem(getContentWindow().findElement(By.className("yaml-editor")).findElement(By.className("ace_text-input")), data);
-    }
-
     @Override
     public void checkReachableWebPage() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.presenceOfElementLocated(By.id("app")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(
+                ExpectedConditions.presenceOfElementLocated(By.id("app")));
     }
 }

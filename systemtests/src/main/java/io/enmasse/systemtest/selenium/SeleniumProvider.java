@@ -11,7 +11,6 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.selenium.resources.WebItem;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
@@ -40,14 +39,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SeleniumProvider {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private static SeleniumProvider instance;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS");
     private WebDriver driver;
     private NgWebDriver angularDriver;
     private WebDriverWait driverWait;
     private Map<Date, File> browserScreenshots = new HashMap<>();
-    private String webconsoleFolder = "selenium_tests";
 
     private SeleniumProvider() {
     }
@@ -59,7 +57,7 @@ public class SeleniumProvider {
         return instance;
     }
 
-    public void onFailed(ExtensionContext extensionContext) {
+    void onFailed(ExtensionContext extensionContext) {
         String getTestClassName = extensionContext.getTestClass().get().getName();
         String getTestMethodName = extensionContext.getTestMethod().get().getName();
         Path webConsolePath = getWebConsolePath(Environment.getInstance().testLogDir(), getTestClassName, getTestMethodName);
@@ -71,20 +69,15 @@ public class SeleniumProvider {
 
     private void saveBrowserLog(Path path) {
         try {
-            log.info("Saving browser console log...");
+            LOGGER.info("Saving browser console log...");
             Files.createDirectories(path);
             File consoleLog = new File(path.toString(), "browser_console.log");
             StringBuilder logEntries = formatedBrowserLogs();
             Files.write(Paths.get(consoleLog.getPath()), logEntries.toString().getBytes());
-            log.info("Browser console log saved successfully : {}", consoleLog);
+            LOGGER.info("Browser console log saved successfully : {}", consoleLog);
         } catch (Exception ex) {
-            log.warn("Cannot save browser log: " + ex.getMessage());
+            LOGGER.warn("Cannot save browser log: " + ex.getMessage());
         }
-    }
-
-    public void saveScreenShots(String className, String methodName) {
-        Path webConsolePath = getWebConsolePath(Environment.getInstance().testLogDir(), className, methodName);
-        saveScreenShots(webConsolePath, className, methodName);
     }
 
     private void saveScreenShots(Path path, String className, String methodName) {
@@ -95,11 +88,9 @@ public class SeleniumProvider {
                 FileUtils.copyFile(browserScreenshots.get(key), new File(Paths.get(path.toString(),
                         String.format("%s.%s_%s.png", className, methodName, dateFormat.format(key))).toString()));
             }
-            log.info("Screenshots stored");
+            LOGGER.info("Screenshots stored");
         } catch (Exception ex) {
-            log.warn("Cannot save screenshots: " + ex.getMessage());
-        } finally {
-            //tearDownDrivers();
+            LOGGER.warn("Cannot save screenshots: " + ex.getMessage());
         }
     }
 
@@ -112,14 +103,14 @@ public class SeleniumProvider {
 
 
     public void tearDownDrivers() {
-        log.info("Tear down selenium web drivers");
+        LOGGER.info("Tear down selenium web drivers");
         if (driver != null) {
             try {
                 driver.quit();
             } catch (Exception ex) {
-                log.warn("Raise warning on quit: " + ex.getMessage());
+                LOGGER.warn("Raise warning on quit: " + ex.getMessage());
             }
-            log.info("Driver is closed");
+            LOGGER.info("Driver is closed");
             driver = null;
             angularDriver = null;
             driverWait = null;
@@ -157,17 +148,17 @@ public class SeleniumProvider {
 
     public void takeScreenShot() {
         try {
-            log.info("Taking screenshot");
+            LOGGER.info("Taking screenshot");
             browserScreenshots.put(new Date(), ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE));
         } catch (Exception ex) {
-            log.warn("Cannot take screenshot: {}", ex.getMessage());
+            LOGGER.warn("Cannot take screenshot: {}", ex.getMessage());
         }
     }
 
-    public void clearScreenShots() {
+    void clearScreenShots() {
         if (browserScreenshots != null) {
             browserScreenshots.clear();
-            log.info("Screenshots cleared");
+            LOGGER.info("Screenshots cleared");
         }
     }
 
@@ -182,7 +173,7 @@ public class SeleniumProvider {
     public void executeJavaScript(String script, String textToLog, Object... arguments) {
         takeScreenShot();
         assertNotNull(script, "Selenium provider failed, script to execute is null");
-        log.info("Execute script: " + (textToLog == null ? script : textToLog));
+        LOGGER.info("Execute script: " + (textToLog == null ? script : textToLog));
         ((JavascriptExecutor) driver).executeScript(script, arguments);
         angularDriver.waitForAngularRequestsToFinish();
         takeScreenShot();
@@ -192,17 +183,17 @@ public class SeleniumProvider {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
         logCheckboxValue(element);
-        log.info("Click on element: {}", (textToLog == null ? element.getText() : textToLog));
+        LOGGER.info("Click on element: {}", (textToLog == null ? element.getText() : textToLog));
         element.click();
         angularDriver.waitForAngularRequestsToFinish();
         takeScreenShot();
     }
 
-    public void clearInput(WebElement element) {
+    private void clearInput(WebElement element) {
         element.sendKeys(Keys.chord(Keys.CONTROL, "a"));
         element.sendKeys(Keys.BACK_SPACE);
         angularDriver.waitForAngularRequestsToFinish();
-        log.info("Cleared input");
+        LOGGER.info("Cleared input");
     }
 
 
@@ -212,7 +203,7 @@ public class SeleniumProvider {
         clearInput(element);
         element.sendKeys(text);
         angularDriver.waitForAngularRequestsToFinish();
-        log.info("Filled input with text: " + text);
+        LOGGER.info("Filled input with text: " + text);
         takeScreenShot();
     }
 
@@ -221,16 +212,16 @@ public class SeleniumProvider {
         assertNotNull(element, "Selenium provider failed, element is null");
         element.sendKeys(Keys.RETURN);
         angularDriver.waitForAngularRequestsToFinish();
-        log.info("Enter pressed");
+        LOGGER.info("Enter pressed");
         takeScreenShot();
     }
 
     public void refreshPage() {
         takeScreenShot();
-        log.info("Web page is going to be refreshed");
+        LOGGER.info("Web page is going to be refreshed");
         driver.navigate().refresh();
         angularDriver.waitForAngularRequestsToFinish();
-        log.info("Web page successfully refreshed");
+        LOGGER.info("Web page successfully refreshed");
         takeScreenShot();
     }
 
@@ -241,36 +232,32 @@ public class SeleniumProvider {
             try {
                 result = webElement.get();
                 if (result == null) {
-                    log.warn("Element was not found, go to next iteration: {}", i);
+                    LOGGER.warn("Element was not found, go to next iteration: {}", i);
                 } else if (result instanceof WebElement) {
                     if (((WebElement) result).isEnabled()) {
                         break;
                     }
-                    log.warn("Element was found, but it is not enabled, go to next iteration: {}", i);
+                    LOGGER.warn("Element was found, but it is not enabled, go to next iteration: {}", i);
                 } else if (result instanceof List) {
                     if (((List<?>) result).size() == count) {
                         break;
                     }
-                    log.warn("Elements were not found, go to next iteration: {}", i);
+                    LOGGER.warn("Elements were not found, go to next iteration: {}", i);
                 }
             } catch (Exception ex) {
-                log.warn("Element was not found, go to next iteration: {}", i);
+                LOGGER.warn("Element was not found, go to next iteration: {}", i);
             }
             Thread.sleep(1000);
         }
         return result;
     }
 
-    public WebElement getInputByName(String inputName) {
-        return this.getDriver().findElement(By.cssSelector(String.format("input[name='%s']", inputName)));
-    }
-
     public WebElement getWebElement(Supplier<WebElement> webElement) throws Exception {
         return getElement(webElement, 30, 0);
     }
 
-    public WebElement getWebElement(Supplier<WebElement> webElement, int attempts) throws Exception {
-        return getElement(webElement, attempts, 0);
+    public void getWebElement(Supplier<WebElement> webElement, int attempts) throws Exception {
+        getElement(webElement, attempts, 0);
     }
 
     public List<WebElement> getWebElements(Supplier<List<WebElement>> webElements, int count) throws Exception {
@@ -286,6 +273,7 @@ public class SeleniumProvider {
     }
 
     private Path getWebConsolePath(String target, String className, String methodName) {
+        String webconsoleFolder = "selenium_tests";
         return Paths.get(
                 target,
                 webconsoleFolder,
@@ -294,7 +282,7 @@ public class SeleniumProvider {
     }
 
     private <T extends WebItem> T waitUntilItem(int timeInSeconds, Supplier<T> item, boolean present) throws Exception {
-        log.info( "Waiting for element {} present", present ? "to be" : "not to be");
+        LOGGER.info( "Waiting for element {} present", present ? "to be" : "not to be");
         int attempts = 0;
         T result = null;
         while (attempts++ < timeInSeconds) {
@@ -306,7 +294,7 @@ public class SeleniumProvider {
                     }
                 } catch (Exception ignored) {
                 } finally {
-                    log.info("Element not present, go to next iteration: " + attempts);
+                    LOGGER.info("Element not present, go to next iteration: " + attempts);
                 }
             } else {
                 try {
@@ -315,29 +303,31 @@ public class SeleniumProvider {
                     }
                 } catch (Exception ignored) {
                 } finally {
-                    log.info("Element still present, go to next iteration: " + attempts);
+                    LOGGER.info("Element still present, go to next iteration: " + attempts);
                 }
             }
             Thread.sleep(1000);
         }
-        log.info("End of waiting");
+        LOGGER.info("End of waiting");
         return result;
     }
 
     public void waitUntilPropertyPresent(int timeoutInSeconds, int expectedValue, Supplier<Integer> item) throws
             Exception {
-        log.info("Waiting until data will be present");
+        LOGGER.info("Waiting until data will be present");
         int attempts = 0;
         Integer actual = null;
         while (attempts < timeoutInSeconds) {
             actual = item.get();
-            if (expectedValue == actual)
+            if (expectedValue == actual) {
                 break;
+            }
             Thread.sleep(1000);
             attempts++;
         }
-        log.info("End of waiting");
-        assertEquals(expectedValue, actual, String.format("Property does not have expected value %d after timeout %ds.", expectedValue, timeoutInSeconds));
+        LOGGER.info("End of waiting");
+        assertEquals(expectedValue, actual, String.format("Property does not have expected value" +
+                "%d after timeout %ds.", expectedValue, timeoutInSeconds));
     }
 
     //================================================================================================
@@ -348,13 +338,13 @@ public class SeleniumProvider {
         if (getCheckboxValue(element) != check) {
             clickOnItem(element);
         } else {
-            log.info("Checkbox already {}", check ? "checked" : "unchecked");
+            LOGGER.info("Checkbox already {}", check ? "checked" : "unchecked");
         }
     }
 
-    public boolean getCheckboxValue(WebElement element) {
+    private boolean getCheckboxValue(WebElement element) {
         if (isCheckbox(element)) {
-            return Boolean.valueOf(element.getAttribute("checked"));
+            return Boolean.parseBoolean(element.getAttribute("checked"));
         }
         throw new IllegalStateException("Requested element is not of type 'checkbox'");
     }
@@ -366,7 +356,7 @@ public class SeleniumProvider {
 
     private void logCheckboxValue(WebElement element) {
         if (isCheckbox(element)) {
-            log.info("Checkbox value before click is checked='{}'", element.getAttribute("checked"));
+            LOGGER.info("Checkbox value before click is checked='{}'", element.getAttribute("checked"));
         }
     }
 

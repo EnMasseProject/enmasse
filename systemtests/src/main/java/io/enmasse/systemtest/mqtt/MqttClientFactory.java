@@ -55,10 +55,11 @@ public class MqttClientFactory {
 
     private static final Logger LOGGER = CustomLogger.getLogger();
 
-    private final String SERVER_URI_TEMPLATE = "tcp://%s:%s";
-    private final String TLS_SERVER_URI_TEMPLATE = "ssl://%s:%s";
+    private static final String SERVER_URI_TEMPLATE = "tcp://%s:%s";
+    private static final String TLS_SERVER_URI_TEMPLATE = "ssl://%s:%s";
 
-    private final Set<AutoCloseable> connectedClients = new CopyOnWriteArraySet<>(); // using a copy-on-write set allows to mutate the set while traversing it
+    // using a copy-on-write set allows to mutate the set while traversing it
+    private final Set<AutoCloseable> connectedClients = new CopyOnWriteArraySet<>();
 
     private final AddressSpace defaultAddressSpace;
     private final String username;

@@ -31,7 +31,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 public class GlobalLogCollector {
-    private final static Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private final Map<String, LogCollector> collectorMap = new HashMap<>();
     private final Kubernetes kubernetes;
     private final File logDir;
@@ -48,13 +48,15 @@ public class GlobalLogCollector {
     }
 
 
-    public synchronized void startCollecting(AddressSpace addressSpace) throws Exception {
-        log.info("Start collecting logs for address space {}", addressSpace.getMetadata().getName());
-        collectorMap.put(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), new LogCollector(kubernetes, new File(logDir, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)), AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)));
+    public synchronized void startCollecting(AddressSpace addressSpace) {
+        LOGGER.info("Start collecting logs for address space {}", addressSpace.getMetadata().getName());
+        collectorMap.put(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace),
+                new LogCollector(kubernetes, new File(logDir, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)),
+                        AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)));
     }
 
     public synchronized void stopCollecting(String namespace) throws Exception {
-        log.info("Stop collecting logs for pods in namespace {}", namespace);
+        LOGGER.info("Stop collecting logs for pods in namespace {}", namespace);
         LogCollector collector = collectorMap.get(namespace);
         if (collector != null) {
             collector.close();
@@ -67,11 +69,11 @@ public class GlobalLogCollector {
     }
 
     public void collectConfigMaps(String operation) {
-        log.info("Collecting configmaps for namespace {}", namespace);
+        LOGGER.info("Collecting configmaps for namespace {}", namespace);
         kubernetes.getAllConfigMaps(namespace).getItems().forEach(configMap -> {
             try {
                 Path confMapFile = resolveLogFile(configMap.getMetadata().getName() + "." + operation + ".configmap");
-                log.info("config map '{}' will be archived with path: '{}'", configMap.getMetadata().getName(), confMapFile);
+                LOGGER.info("config map '{}' will be archived with path: '{}'", configMap.getMetadata().getName(), confMapFile);
                 if (!Files.exists(confMapFile)) {
                     try (BufferedWriter bf = Files.newBufferedWriter(confMapFile)) {
                         bf.write(configMap.toString());
@@ -87,11 +89,11 @@ public class GlobalLogCollector {
      * Collect logs from terminated pods in namespace
      */
     public void collectLogsTerminatedPods() {
-        log.info("Store logs from all terminated pods in namespace '{}'", namespace);
+        LOGGER.info("Store logs from all terminated pods in namespace '{}'", namespace);
         kubernetes.getLogsOfTerminatedPods(namespace).forEach((podName, podLogTerminated) -> {
             try {
                 Path podLog = resolveLogFile(namespace + "." + podName + ".terminated.log");
-                log.info("log of terminated '{}' pod will be archived with path: '{}'", podName, podLog);
+                LOGGER.info("log of terminated '{}' pod will be archived with path: '{}'", podName, podLog);
                 try (BufferedWriter bf = Files.newBufferedWriter(podLog)) {
                     bf.write(podLogTerminated);
                 }
@@ -102,12 +104,13 @@ public class GlobalLogCollector {
     }
 
     public void collectLogsOfPodsByLabels(String namespace, String discriminator, Map<String, String> labels) {
-        log.info("Store logs from all pods in namespace '{}' matching labels {}", namespace, labels);
+        LOGGER.info("Store logs from all pods in namespace '{}' matching labels {}", namespace, labels);
         kubernetes.getLogsByLables(namespace, labels).forEach((podName, podLogs) -> {
             try {
-                String filename = discriminator == null ? String.format("%s.%s.log", namespace, podName) : String.format("%s.%s.%s.log", namespace, discriminator, podName);
+                String filename = discriminator == null ? String.format("%s.%s.log", namespace, podName) :
+                        String.format("%s.%s.%s.log", namespace, discriminator, podName);
                 Path podLog = resolveLogFile(filename);
-                log.info("log of '{}' pod will be archived with path: '{}'", podName, podLog);
+                LOGGER.info("log of '{}' pod will be archived with path: '{}'", podName, podLog);
                 try (BufferedWriter bf = Files.newBufferedWriter(podLog)) {
                     bf.write(podLogs);
                 }
@@ -118,12 +121,12 @@ public class GlobalLogCollector {
     }
 
     public void collectLogsOfPodsInNamespace(String namespace) {
-        log.info("Store logs from all pods in namespace '{}'", namespace);
+        LOGGER.info("Store logs from all pods in namespace '{}'", namespace);
         kubernetes.getLogsOfAllPods(namespace).forEach((podName, podLogs) -> {
             try {
                 String filename = String.format("%s.%s.log", namespace, podName);
                 Path podLog = resolveLogFile(filename);
-                log.info("log of '{}' pod will be archived with path: '{}'", podName, podLog);
+                LOGGER.info("log of '{}' pod will be archived with path: '{}'", podName, podLog);
                 try (BufferedWriter bf = Files.newBufferedWriter(podLog)) {
                     bf.write(podLogs);
                 }
@@ -139,14 +142,14 @@ public class GlobalLogCollector {
 
     public void collectEvents(String namespace) {
         long timestamp = System.currentTimeMillis();
-        log.info("Collecting events in {}", namespace);
+        LOGGER.info("Collecting events in {}", namespace);
         ExecutionResultData result = KubeCMDClient.getEvents(namespace);
         try {
             Path eventLog = resolveLogFile(namespace + ".events." + timestamp);
             try (BufferedWriter writer = Files.newBufferedWriter(eventLog)) {
                 writer.write(result.getStdOut());
             } catch (Exception e) {
-                log.error("Error collecting events for {}", namespace, e);
+                LOGGER.error("Error collecting events for {}", namespace, e);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -154,7 +157,7 @@ public class GlobalLogCollector {
     }
 
     public void collectHttpAdapterQdrProxyState() {
-        log.info("Collecting qdr-proxy router state in namespace {}", namespace);
+        LOGGER.info("Collecting qdr-proxy router state in namespace {}", namespace);
         collectRouterState("httpAdapterQdrProxyState", System.currentTimeMillis(),
                 kubernetes.listPods(Map.of("component", "iot", "name", "iot-http-adapter")).stream(),
                 Optional.of("qdr-proxy"),
@@ -162,7 +165,7 @@ public class GlobalLogCollector {
     }
 
     public void collectMqttAdapterQdrProxyState() {
-        log.info("Collecting qdr-proxy router state in namespace {}", namespace);
+        LOGGER.info("Collecting qdr-proxy router state in namespace {}", namespace);
         collectRouterState("mqttAdapterQdrProxyState", System.currentTimeMillis(),
                 kubernetes.listPods(Map.of("component", "iot", "name", "iot-mqtt-adapter")).stream(),
                 Optional.of("qdr-proxy"),
@@ -170,7 +173,7 @@ public class GlobalLogCollector {
     }
 
     public void collectRouterState(String operation) {
-        log.info("Collecting router state in namespace {}", namespace);
+        LOGGER.info("Collecting router state in namespace {}", namespace);
         collectRouterState(operation, System.currentTimeMillis(),
                 kubernetes.listPods(Collections.singletonMap("capability", "router")).stream(),
                 Optional.of("router"),
@@ -181,14 +184,22 @@ public class GlobalLogCollector {
                                     BiFunction<String, String[], String[]> saslMechanismArgsCmdProvider) {
         podsStream.filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .forEach(pod -> {
-                    collectRouterInfo(pod, container, "." + operation + ".autolinks." + timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=autoLink"}));
-                    collectRouterInfo(pod, container, "." + operation + ".links." + timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=link"}));
-                    collectRouterInfo(pod, container, "." + operation + ".connections." + timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=connection"}));
-                    collectRouterInfo(pod, container, "." + operation + ".qdstat_a." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-a"}));
-                    collectRouterInfo(pod, container, "." + operation + ".qdstat_l." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-l"}));
-                    collectRouterInfo(pod, container, "." + operation + ".qdstat_n." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-n"}));
-                    collectRouterInfo(pod, container, "." + operation + ".qdstat_c." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-c"}));
-                    collectRouterInfo(pod, container, "." + operation + ".qdstat_linkroutes." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"--linkroutes"}));
+                    collectRouterInfo(pod, container, "." + operation + ".autolinks." +
+                            timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=autoLink"}));
+                    collectRouterInfo(pod, container, "." + operation + ".links." +
+                            timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=link"}));
+                    collectRouterInfo(pod, container, "." + operation + ".connections." +
+                            timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=connection"}));
+                    collectRouterInfo(pod, container, "." + operation + ".qdstat_a." +
+                            timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-a"}));
+                    collectRouterInfo(pod, container, "." + operation + ".qdstat_l." +
+                            timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-l"}));
+                    collectRouterInfo(pod, container, "." + operation + ".qdstat_n." +
+                            timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-n"}));
+                    collectRouterInfo(pod, container, "." + operation + ".qdstat_c." +
+                            timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-c"}));
+                    collectRouterInfo(pod, container, "." + operation + ".qdstat_linkroutes." +
+                            timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"--linkroutes"}));
                 });
     }
 
@@ -219,19 +230,19 @@ public class GlobalLogCollector {
                 command).getStdOut();
         try {
             Path routerAutoLinks = resolveLogFile(pod.getMetadata().getName() + filesuffix);
-            log.info("router info '{}' pod will be archived with path: '{}'", pod.getMetadata().getName(), routerAutoLinks);
+            LOGGER.info("router info '{}' pod will be archived with path: '{}'", pod.getMetadata().getName(), routerAutoLinks);
             if (!Files.exists(routerAutoLinks)) {
                 try (BufferedWriter bf = Files.newBufferedWriter(routerAutoLinks)) {
                     bf.write(output);
                 }
             }
         } catch (IOException e) {
-            log.warn("Error collecting router state", e);
+            LOGGER.warn("Error collecting router state", e);
         }
     }
 
     public void collectApiServerJmapLog() {
-        log.info("Collecting jmap from api server");
+        LOGGER.info("Collecting jmap from api server");
         kubernetes.listPods(Collections.singletonMap("component", "api-server")).forEach(this::collectJmap);
     }
 
@@ -242,10 +253,12 @@ public class GlobalLogCollector {
                 Optional.empty(),
                 "api-server", "jmap", "-dump:live,format=b,file=/tmp/dump.bin", "1");
         try {
-            Path jmapLog = resolveLogFile(pod.getMetadata().getName() + ".dump." + Instant.now().toString().replace(":", "_") + ".bin");
-            KubeCMDClient.copyPodContent(pod.getMetadata().getName(), "/tmp/dump.bin", jmapLog.toAbsolutePath().toString());
+            Path jmapLog = resolveLogFile(pod.getMetadata().getName() + ".dump." +
+                    Instant.now().toString().replace(":", "_") + ".bin");
+            KubeCMDClient.copyPodContent(pod.getMetadata().getName(), "/tmp/dump.bin",
+                    jmapLog.toAbsolutePath().toString());
         } catch (Exception e) {
-            log.warn("Error collecting jmap state", e);
+            LOGGER.warn("Error collecting jmap state", e);
         }
     }
 

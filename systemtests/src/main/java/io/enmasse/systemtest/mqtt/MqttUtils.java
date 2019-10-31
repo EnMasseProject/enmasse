@@ -26,7 +26,8 @@ public class MqttUtils {
 
     private static Logger log = CustomLogger.getLogger();
 
-    public static <T> int awaitAndReturnCode(List<CompletableFuture<T>> futures, int timeout, TimeUnit timeUnit) throws InterruptedException, ExecutionException {
+    public static <T> int awaitAndReturnCode(List<CompletableFuture<T>> futures, int timeout, TimeUnit timeUnit)
+            throws InterruptedException, ExecutionException {
         CompletableFuture<Void> future = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         try {
             future.get(timeout, timeUnit);
@@ -36,8 +37,8 @@ public class MqttUtils {
         }
     }
 
-    public static List<CompletableFuture<Void>> publish(IMqttClient client, String address, List<MqttMessage> messages) throws MqttException {
-
+    public static List<CompletableFuture<Void>> publish(IMqttClient client, String address, List<MqttMessage> messages)
+            throws MqttException {
         List<CompletableFuture<Void>> futures = Stream.generate(CompletableFuture<Void>::new)
                 .limit(messages.size())
                 .collect(Collectors.toList());
@@ -50,7 +51,8 @@ public class MqttUtils {
         return futures;
     }
 
-    public static List<CompletableFuture<MqttMessage>> subscribeAndReceiveMessages(IMqttClient client, String address, int size, int qos) throws MqttException {
+    public static List<CompletableFuture<MqttMessage>>subscribeAndReceiveMessages(IMqttClient client,
+                                                              String address, int size, int qos) throws MqttException {
         List<CompletableFuture<MqttMessage>> receiveFutures = Stream.generate(CompletableFuture<MqttMessage>::new)
                 .limit(size)
                 .collect(Collectors.toList());

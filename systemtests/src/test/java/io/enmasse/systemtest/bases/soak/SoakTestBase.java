@@ -8,15 +8,13 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.systemtest.SysytemTestsErrorCollector;
+import io.enmasse.systemtest.SystemTestsErrorCollector;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.shared.standard.TopicTest;
@@ -27,7 +25,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -35,10 +32,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -49,7 +44,7 @@ import static org.hamcrest.CoreMatchers.is;
 public abstract class SoakTestBase extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();
-    private SysytemTestsErrorCollector collector = new SysytemTestsErrorCollector();
+    private SystemTestsErrorCollector collector = new SystemTestsErrorCollector();
 
     @BeforeEach
     void setupMarathonTests() {
@@ -326,7 +321,7 @@ public abstract class SoakTestBase extends TestBase {
                     new AddressSpaceBuilder()
                             .withNewMetadata()
                             .withName("test-address-space-" + i)
-                            .withNamespace(kubernetes.getInfraNamespace())
+                            .withNamespace(KUBERNETES.getInfraNamespace())
                             .endMetadata()
                             .withNewSpec()
                             .withType(type.toString())

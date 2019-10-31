@@ -25,10 +25,10 @@ public class GlobalConsolePage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();
 
-    SeleniumProvider selenium;
-    String ocRoute;
-    UserCredentials credentials;
-    OpenshiftLoginWebPage loginPage;
+    private SeleniumProvider selenium;
+    private String ocRoute;
+    private UserCredentials credentials;
+    private OpenshiftLoginWebPage loginPage;
 
     public GlobalConsolePage(SeleniumProvider selenium, String ocRoute, UserCredentials credentials) {
         this.selenium = selenium;
@@ -133,8 +133,9 @@ public class GlobalConsolePage implements IWebPage {
             } catch (Exception ex) {
                 log.info("User is not logged");
             }
-            if (!login())
+            if (!login()) {
                 throw new IllegalAccessException(loginPage.getAlertMessage());
+            }
         }
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         if (!waitUntilConsolePage()) {
@@ -176,7 +177,8 @@ public class GlobalConsolePage implements IWebPage {
         selenium.clickOnItem(getCreateButton());
         selectNamespace(addressSpace.getMetadata().getNamespace());
         selenium.fillInputItem(getAddressSpaceNameInput(), addressSpace.getMetadata().getName());
-        selenium.clickOnItem(addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString().toLowerCase()) ? getBrokeredRadioButton() : getStandardRadioButton(),
+        selenium.clickOnItem(addressSpace.getSpec().getType().equals(
+                AddressSpaceType.BROKERED.toString().toLowerCase()) ? getBrokeredRadioButton() : getStandardRadioButton(),
                 addressSpace.getSpec().getType());
         selectPlan(addressSpace.getSpec().getPlan());
         selectAuthService(addressSpace.getSpec().getAuthenticationService().getName());
@@ -233,8 +235,9 @@ public class GlobalConsolePage implements IWebPage {
         AddressSpaceWebItem returnedElement = null;
         List<AddressSpaceWebItem> addressWebItems = getAddressSpaceItems();
         for (AddressSpaceWebItem item : addressWebItems) {
-            if (item.getName().equals(as.getMetadata().getName()) && item.getNamespace().equals(as.getMetadata().getNamespace()))
+            if (item.getName().equals(as.getMetadata().getName()) && item.getNamespace().equals(as.getMetadata().getNamespace())) {
                 returnedElement = item;
+            }
         }
         return returnedElement;
     }

@@ -38,16 +38,8 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         this.isReady = AddressStatus.READY == this.status;
     }
 
-    public WebElement getAddressItem() {
-        return webItem;
-    }
-
     public WebElement getCheckBox() {
         return checkBox;
-    }
-
-    public boolean getIsReady() {
-        return isReady;
     }
 
     public String getName() {
@@ -90,16 +82,17 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
     private AddressStatus setStatus() {
         WebElement statusElement = this.webItem.findElement(By.className("list-view-pf-left"));
         String iconStatus = statusElement.findElement(By.className("fa")).getAttribute("class");
-        if (iconStatus.contains("pficon-ok"))
+        if (iconStatus.contains("pficon-ok")) {
             return AddressStatus.READY;
-        if (iconStatus.contains("pficon-error-circle-o"))
+        } else if (iconStatus.contains("pficon-error-circle-o")) {
             return AddressStatus.ERROR;
-        if (iconStatus.contains("fa-spinner"))
+        } else if (iconStatus.contains("fa-spinner")) {
             return AddressStatus.PENDING;
-        if (iconStatus.contains("pficon-warning-triangle-o"))
+        } else if (iconStatus.contains("pficon-warning-triangle-o")) {
             return AddressStatus.WARNING;
-
-        return AddressStatus.UNKNOWN;
+        } else {
+            return AddressStatus.UNKNOWN;
+        }
     }
 
     private void setTypeAndPlan() {
@@ -116,7 +109,8 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
 
     @Override
     public String toString() {
-        return String.format("name: %s, status: %s, type: %s, plan: %s, senders: %d, receivers: %d, Messages In: %d, Messages Out: %d, Messages stored: %d",
+        return String.format("name: %s, status: %s, type: %s, plan: %s, senders: %d, receivers: %d," +
+                        "Messages In: %d, Messages Out: %d, Messages stored: %d",
                 this.name,
                 this.status,
                 this.type,

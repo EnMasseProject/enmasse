@@ -25,7 +25,9 @@ import java.util.stream.Collectors;
 
 public class PlanUtils {
 
-    public static AddressSpacePlan createAddressSpacePlanObject(String name, String infraConfigName, AddressSpaceType type, List<ResourceAllowance> resources, List<AddressPlan> addressPlans) {
+    public static AddressSpacePlan createAddressSpacePlanObject(String name, String infraConfigName,
+                                                                AddressSpaceType type, List<ResourceAllowance> resources,
+                                                                List<AddressPlan> addressPlans) {
         return new AddressSpacePlanBuilder()
                 .withNewMetadata()
                 .withName(name)

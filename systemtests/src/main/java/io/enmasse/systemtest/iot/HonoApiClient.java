@@ -31,7 +31,7 @@ public abstract class HonoApiClient extends ApiClient {
     private static final Logger LOGGER = CustomLogger.getLogger();
 
     HonoApiClient(final Kubernetes kubernetes, final Supplier<Endpoint> endpointSupplier) {
-        super(kubernetes, endpointSupplier, "");
+        super(kubernetes, endpointSupplier);
     }
 
     @Override

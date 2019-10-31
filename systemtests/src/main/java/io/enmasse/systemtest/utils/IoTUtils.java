@@ -75,25 +75,30 @@ public class IoTUtils {
         }
         if (!isReady) {
             String jsonStatus = config != null && config.getStatus() != null ? config.getStatus().getPhase() : "";
-            throw new IllegalStateException("IoTConfig " + Objects.requireNonNull(config).getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
+            throw new IllegalStateException("IoTConfig " + Objects.requireNonNull(config).getMetadata().getName() +
+                    " is not in Ready state within timeout: " + jsonStatus);
         }
 
         String[] expectedDeployments = getExpectedDeploymentsNames(config);
 
-        TestUtils.waitUntilCondition("IoT Config to deploy", (phase) -> allDeploymentsPresent(kubernetes, expectedDeployments), budget);
+        TestUtils.waitUntilCondition("IoT Config to deploy", (phase) ->
+                allDeploymentsPresent(kubernetes, expectedDeployments), budget);
         TestUtils.waitForNReplicas(expectedDeployments.length, IOT_LABELS, budget);
     }
 
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception {
-        log.info("Deleting IoTConfig: {} in namespace: {}", config.getMetadata().getName(), config.getMetadata().getNamespace());
+        log.info("Deleting IoTConfig: {} in namespace: {}",
+                config.getMetadata().getName(), config.getMetadata().getNamespace());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
-        kubernetes.getIoTConfigClient(config.getMetadata().getNamespace()).withName(config.getMetadata().getName()).cascading(true).delete();
+        kubernetes.getIoTConfigClient(config.getMetadata().getNamespace())
+                .withName(config.getMetadata().getName()).cascading(true).delete();
         waitForIoTConfigDeleted();
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
     private static void waitForIoTConfigDeleted() throws Exception {
-        TestUtils.waitForNReplicas(0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
+        TestUtils.waitForNReplicas(0, false, IOT_LABELS,
+                Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
     }
 
     private static boolean allDeploymentsPresent(Kubernetes kubernetes, String[] expectedDeployments) {
@@ -116,8 +121,10 @@ public class IoTUtils {
         return expectedDeployments.toArray(String[]::new);
     }
 
-    private static void addIfEnabled(Collection<String> adapters, IoTConfig config, Function<AdaptersConfig, AdapterConfig> adapterGetter, String name) {
-        Optional<Boolean> enabled = Optional.ofNullable(config.getSpec().getAdapters()).map(adapterGetter).map(AdapterConfig::getEnabled);
+    private static void addIfEnabled(Collection<String> adapters, IoTConfig config,
+                                     Function<AdaptersConfig, AdapterConfig> adapterGetter, String name) {
+        Optional<Boolean> enabled = Optional.ofNullable(config.getSpec().getAdapters())
+                .map(adapterGetter).map(AdapterConfig::getEnabled);
         if (enabled.orElse(true)) {
             adapters.add(name);
             log.info("{} is enabled", name);
@@ -139,8 +146,10 @@ public class IoTUtils {
             }
         }
         if (!isReady) {
-            String jsonStatus = project.getStatus() != null ? project.getStatus().toString() : "Project doesn't have status";
-            throw new IllegalStateException("IoTProject " + project.getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
+            String jsonStatus = project.getStatus() != null ? project.getStatus().toString() :
+                    "Project doesn't have status";
+            throw new IllegalStateException("IoTProject " + project.getMetadata().getName() +
+                    " is not in Ready state within timeout: " + jsonStatus);
         }
 
         if (project.getSpec().getDownstreamStrategy() != null
@@ -148,8 +157,10 @@ public class IoTUtils {
                 && project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace() != null
                 && project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName() != null
         ) {
-            var addressSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-            var addressSpace = Kubernetes.getInstance().getAddressSpaceClient(project.getMetadata().getNamespace()).withName(addressSpaceName).get();
+            var addressSpaceName = project.getSpec().getDownstreamStrategy()
+                    .getManagedStrategy().getAddressSpace().getName();
+            var addressSpace = Kubernetes.getInstance().getAddressSpaceClient(
+                    project.getMetadata().getNamespace()).withName(addressSpaceName).get();
             Objects.requireNonNull(addressSpace, () -> String.format("Unable to find addressSpace: %s", addressSpaceName));
             AddressSpaceUtils.waitForAddressSpaceReady(addressSpace, budget);
         }
@@ -157,8 +168,10 @@ public class IoTUtils {
 
     private static void waitForIoTProjectDeleted(Kubernetes kubernetes, IoTProject project) throws Exception {
         if (project.getSpec().getDownstreamStrategy().getManagedStrategy() != null) {
-            String addressSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-            AddressSpace addressSpace = kubernetes.getAddressSpaceClient(project.getMetadata().getNamespace()).withName(addressSpaceName).get();
+            String addressSpaceName = project.getSpec().getDownstreamStrategy()
+                    .getManagedStrategy().getAddressSpace().getName();
+            AddressSpace addressSpace = kubernetes.getAddressSpaceClient(
+                    project.getMetadata().getNamespace()).withName(addressSpaceName).get();
             if (addressSpace != null) {
                 AddressSpaceUtils.waitForAddressSpaceDeleted(addressSpace);
             }
@@ -172,13 +185,15 @@ public class IoTUtils {
     public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {
         log.info("Deleting IoTProject: {}", project.getMetadata().getName());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
-        kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).cascading(true).delete();
+        kubernetes.getIoTProjectClient(project.getMetadata()
+                .getNamespace()).withName(project.getMetadata().getName()).cascading(true).delete();
         IoTUtils.waitForIoTProjectDeleted(kubernetes, project);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
     private static void syncIoTProject(Kubernetes kubernetes, IoTProject project) {
-        IoTProject result = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).get();
+        IoTProject result = kubernetes.getIoTProjectClient(project.getMetadata()
+                .getNamespace()).withName(project.getMetadata().getName()).get();
         project.setMetadata(result.getMetadata());
         project.setSpec(result.getSpec());
         project.setStatus(result.getStatus());
@@ -191,7 +206,8 @@ public class IoTUtils {
         config.setStatus(result.getStatus());
     }
 
-    public static IoTProject getBasicIoTProjectObject(String name, String addressSpaceName, String namespace, String addressSpacePlan) {
+    public static IoTProject getBasicIoTProjectObject(String name, String addressSpaceName,
+                                                      String namespace, String addressSpacePlan) {
         return new IoTProjectBuilder()
                 .withNewMetadata()
                 .withName(name)
@@ -259,19 +275,21 @@ public class IoTUtils {
     public static void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) {
         JsonObject json = new JsonObject(Map.of("a", "b"));
         String message = "First successful " + type.name().toLowerCase() + " message";
+
         TestUtils.waitUntilCondition(message, (phase) -> {
+            HttpResponse response;
             try {
                 switch (type) {
-                    case EVENT: {
-                        var response = adapterClient.sendEvent(json, any());
+                    case EVENT:
+                        response = adapterClient.sendEvent(json, any());
                         logResponseIfLastTryFailed(phase, response, message);
                         return response.statusCode() == HTTP_ACCEPTED;
-                    }
-                    case TELEMETRY: {
-                        var response = adapterClient.sendTelemetry(json, any());
+
+                    case TELEMETRY:
+                        response = adapterClient.sendTelemetry(json, any());
                         logResponseIfLastTryFailed(phase, response, message);
                         return response.statusCode() == HTTP_ACCEPTED;
-                    }
+
                     default:
                         return true;
                 }
@@ -285,17 +303,21 @@ public class IoTUtils {
 
     private static void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
         if (phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
-            log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
+            log.error("expected-code: {}, response-code: {}, body: {}, op: {}",
+                    HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
         }
     }
 
     public static void assertCorrectRegistryType(final String type) {
-        final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
+        final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments()
+                .inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
         assertNotNull(deployment);
         assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.type"));
     }
 
-    public static void checkCredentials(String authId, String password, boolean authFail, Endpoint httpAdapterEndpoint, AmqpClient iotAmqpClient, IoTProject ioTProject) throws Exception {
+    public static void checkCredentials(String authId, String password, boolean authFail,
+                                        Endpoint httpAdapterEndpoint, AmqpClient iotAmqpClient,
+                                        IoTProject ioTProject) throws Exception {
         String tenantID = getTenantId(ioTProject);
         try (var httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId, tenantID, password)) {
 
@@ -334,7 +356,7 @@ public class IoTUtils {
         }
     }
 
-    public static void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
+    public static void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) {
         waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
     }
 }

@@ -55,12 +55,16 @@ public class TestInfo {
                 if (test.getSource().isPresent() && test.getSource().get() instanceof MethodSource) {
                     MethodSource testSource = (MethodSource) test.getSource().get();
                     try {
-                        Optional<Method> testMethod = ReflectionUtils.findMethod(Class.forName(testSource.getClassName()), testSource.getMethodName(), testSource.getMethodParameterTypes());
+                        Optional<Method> testMethod = ReflectionUtils.findMethod(
+                                Class.forName(testSource.getClassName()), testSource.getMethodName(),
+                                testSource.getMethodParameterTypes());
                         MethodBasedExtensionContext extensionContext = new MethodBasedExtensionContext(testMethod);
                         if (testMethod.isPresent()) {
                             Optional<Disabled> disabled = AnnotationSupport.findAnnotation(testMethod.get(), Disabled.class);
-                            ConditionEvaluationResult kubernetesDisabled = new AssumeKubernetesCondition().evaluateExecutionCondition(extensionContext);
-                            ConditionEvaluationResult openshiftDisabled = new AssumeOpenshiftCondition().evaluateExecutionCondition(extensionContext);
+                            ConditionEvaluationResult kubernetesDisabled = new AssumeKubernetesCondition()
+                                    .evaluateExecutionCondition(extensionContext);
+                            ConditionEvaluationResult openshiftDisabled = new AssumeOpenshiftCondition()
+                                    .evaluateExecutionCondition(extensionContext);
                             if (disabled.isPresent() || kubernetesDisabled.isDisabled() || openshiftDisabled.isDisabled()) {
                                 LOGGER.debug("Test {}.{} is disabled", testSource.getClassName(), testSource.getMethodName());
                             } else {

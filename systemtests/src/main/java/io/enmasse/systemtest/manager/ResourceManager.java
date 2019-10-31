@@ -242,7 +242,7 @@ public abstract class ResourceManager {
         for (AddressSpace addressSpace : addressSpaces) {
             if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
                 LOGGER.info("Address space '{}' doesn't exist and will be created.", addressSpace);
-                kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace);
+                KUBERNETES.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace);
             } else {
                 LOGGER.info("Address space '" + addressSpace + "' already exists.");
             }

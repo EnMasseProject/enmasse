@@ -95,34 +95,34 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             ensurePersistentAuthService(authServiceName);
         }
 
-        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "brokered", "brokered", "brokered-single-broker", authServiceName, getApiVersion());
+        createAddressSpaceCMD(KUBERNETES.getInfraNamespace(), "brokered", "brokered", "brokered-single-broker", authServiceName, getApiVersion());
         Thread.sleep(30_000);
         resourcesManager.waitForAddressSpaceReady(resourcesManager.getAddressSpace("brokered"));
 
-        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited-with-mqtt", authServiceName, getApiVersion());
+        createAddressSpaceCMD(KUBERNETES.getInfraNamespace(), "standard", "standard", "standard-unlimited-with-mqtt", authServiceName, getApiVersion());
         Thread.sleep(30_000);
         resourcesManager.waitForAddressSpaceReady(resourcesManager.getAddressSpace("standard"));
 
-        createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "brokered", getApiVersion());
-        createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "standard", getApiVersion());
+        createUserCMD(KUBERNETES.getInfraNamespace(), "test-brokered", "brokered", getApiVersion());
+        createUserCMD(KUBERNETES.getInfraNamespace(), "test-standard", "standard", getApiVersion());
         Thread.sleep(30_000);
 
-        createAddressCMD(kubernetes.getInfraNamespace(), "brokered-queue", "brokered-queue", "brokered", "queue", "brokered-queue", getApiVersion());
-        createAddressCMD(kubernetes.getInfraNamespace(), "brokered-topic", "brokered-topic", "brokered", "topic", "brokered-topic", getApiVersion());
+        createAddressCMD(KUBERNETES.getInfraNamespace(), "brokered-queue", "brokered-queue", "brokered", "queue", "brokered-queue", getApiVersion());
+        createAddressCMD(KUBERNETES.getInfraNamespace(), "brokered-topic", "brokered-topic", "brokered", "topic", "brokered-topic", getApiVersion());
         Thread.sleep(30_000);
         waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("brokered")).toArray(new Address[0]));
 
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-xlarge", "standard-queue-xlarge", "standard", "queue", "standard-xlarge-queue", getApiVersion());
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-small", "standard-queue-small", "standard", "queue", "standard-small-queue", getApiVersion());
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-topic", "standard-topic", "standard", "topic", "standard-small-topic", getApiVersion());
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-anycast", "standard-anycast", "standard", "anycast", "standard-small-anycast", getApiVersion());
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", getApiVersion());
+        createAddressCMD(KUBERNETES.getInfraNamespace(), "standard-queue-xlarge", "standard-queue-xlarge", "standard", "queue", "standard-xlarge-queue", getApiVersion());
+        createAddressCMD(KUBERNETES.getInfraNamespace(), "standard-queue-small", "standard-queue-small", "standard", "queue", "standard-small-queue", getApiVersion());
+        createAddressCMD(KUBERNETES.getInfraNamespace(), "standard-topic", "standard-topic", "standard", "topic", "standard-small-topic", getApiVersion());
+        createAddressCMD(KUBERNETES.getInfraNamespace(), "standard-anycast", "standard-anycast", "standard", "anycast", "standard-small-anycast", getApiVersion());
+        createAddressCMD(KUBERNETES.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", getApiVersion());
         Thread.sleep(30_000);
         waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("standard")).toArray(new Address[0]));
 
-        assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue", "pepa", MESSAGE_COUNT, true));
-        assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small", "pepa", MESSAGE_COUNT, true));
-        assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", "pepa", MESSAGE_COUNT, true));
+        assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue"));
+        assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small"));
+        assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge"));
 
         if (isAnsible) {
             installEnmasseAnsible(Paths.get(Environment.getInstance().getUpgradeTemplates()), true);
@@ -149,9 +149,9 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
         if (!startVersion.equals("1.0")) {
 
-            assertTrue(receiveMessages("brokered", new RheaClientReceiver(), new UserCredentials("test-brokered", "test"), "brokered-queue", MESSAGE_COUNT, true));
-            assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-small", MESSAGE_COUNT, true));
-            assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", MESSAGE_COUNT, true));
+            assertTrue(receiveMessages("brokered", new RheaClientReceiver(), new UserCredentials("test-brokered", "test"), "brokered-queue"));
+            assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-small"));
+            assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge"));
         } else {
             if (!KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), "brokered", "test-brokered").getRetCode()) {
                 createUserCMD(KUBERNETES.getInfraNamespace(), "test-brokered", "brokered", "v1alpha1");
@@ -161,9 +161,9 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             }
             Thread.sleep(30_000);
 
-            assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue", "pepa", MESSAGE_COUNT, true));
-            assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small", "pepa", MESSAGE_COUNT, true));
-            assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", "pepa", MESSAGE_COUNT, true));
+            assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue"));
+            assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small"));
+            assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge"));
         }
     }
 

@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 
 public class TimeMeasuringSystem {
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private static TimeMeasuringSystem instance;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS");
     private Map<String, Map<String, Map<String, MeasureRecord>>> measuringMap;
@@ -107,9 +107,9 @@ public class TimeMeasuringSystem {
         String id = createOperationsID(operation);
         try {
             addRecord(id, new MeasureRecord(System.currentTimeMillis()));
-            log.info("Start time of operation {} is correctly stored", id);
+            LOGGER.info("Start time of operation {} is correctly stored", id);
         } catch (Exception ex) {
-            log.warn("Start time of operation {} is not set due to exception", id);
+            LOGGER.warn("Start time of operation {} is not set due to exception", id);
         }
         return id;
     }
@@ -120,9 +120,9 @@ public class TimeMeasuringSystem {
         }
         try {
             measuringMap.get(testClass).get(testName).get(id).setEndTime(System.currentTimeMillis());
-            log.info("End time of operation {} is correctly stored", id);
+            LOGGER.info("End time of operation {} is correctly stored", id);
         } catch (Exception ex) {
-            log.warn("End time of operation {} is not set due to exception", id);
+            LOGGER.warn("End time of operation {} is not set due to exception", id);
         }
     }
 
@@ -136,14 +136,14 @@ public class TimeMeasuringSystem {
 
     private void printResults() {
         measuringMap.forEach((testClassID, testClassRecords) -> {
-            log.info("================================================");
-            log.info("================================================");
-            log.info(testClassID);
+            LOGGER.info("================================================");
+            LOGGER.info("================================================");
+            LOGGER.info(testClassID);
             testClassRecords.forEach((testID, testRecord) -> {
-                log.info("---------------------------------------------");
-                log.info(testID);
+                LOGGER.info("---------------------------------------------");
+                LOGGER.info(testID);
                 testRecord.forEach((operationID, record) -> {
-                    log.info("Operation id: {} duration: {} started: {} ended: {}",
+                    LOGGER.info("Operation id: {} duration: {} started: {} ended: {}",
                             operationID,
                             record.getDurationReadable(),
                             record.getStartTimeHumanReadable(),
@@ -163,7 +163,7 @@ public class TimeMeasuringSystem {
             Files.write(Paths.get(logPath.toString(),
                     String.format("%s-%s.json", name, dateFormat.format(timestamp))), json.getBytes());
         } catch (Exception ex) {
-            log.warn("Cannot save output of time measuring: " + ex.getMessage());
+            LOGGER.warn("Cannot save output of time measuring: " + ex.getMessage());
         }
 
     }
@@ -199,7 +199,7 @@ public class TimeMeasuringSystem {
                 loadedData.put(csvData.get(0)[i], Long.parseLong(csvData.get(1)[i]));
             }
         } catch (Exception ex) {
-            log.warn("Cannot load data from previous csv file");
+            LOGGER.warn("Cannot load data from previous csv file");
         }
 
         try {
@@ -216,7 +216,7 @@ public class TimeMeasuringSystem {
                 writer.newLine();
             }
         } catch (IOException ex) {
-            log.warn("Cannot save output of time measuring: " + ex.getMessage());
+            LOGGER.warn("Cannot save output of time measuring: " + ex.getMessage());
         }
     }
 

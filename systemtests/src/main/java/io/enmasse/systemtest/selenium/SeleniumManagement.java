@@ -4,11 +4,9 @@
  */
 package io.enmasse.systemtest.selenium;
 
-
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -21,6 +19,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps.*;
+
 public class SeleniumManagement {
     private static Logger log = CustomLogger.getLogger();
 
@@ -28,7 +28,8 @@ public class SeleniumManagement {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy firefox deployment");
         try {
-            SystemtestsKubernetesApps.deployFirefoxSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
+            deployFirefoxSeleniumApp(
+                    SELENIUM_PROJECT, Kubernetes.getInstance());
         } catch (Exception e) {
             log.error("Deployment of firefox app failed", e);
             throw e;
@@ -37,11 +38,12 @@ public class SeleniumManagement {
         }
     }
 
-    public static void deployChromeApp() throws Exception {
+    static void deployChromeApp() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy chrome deployment");
         try {
-            SystemtestsKubernetesApps.deployChromeSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
+            deployChromeSeleniumApp(
+                    SELENIUM_PROJECT, Kubernetes.getInstance());
         } catch (Exception e) {
             log.error("Deployment of chrome app failed", e);
             throw e;
@@ -52,36 +54,39 @@ public class SeleniumManagement {
 
     public static void removeFirefoxApp() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_SELENIUM_CONTAINER);
-        SystemtestsKubernetesApps.deleteFirefoxSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
-        Kubernetes.getInstance().deleteNamespace(SystemtestsKubernetesApps.SELENIUM_PROJECT);
+        deleteFirefoxSeleniumApp(
+                SELENIUM_PROJECT, Kubernetes.getInstance());
+        Kubernetes.getInstance().deleteNamespace(SELENIUM_PROJECT);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void collectAppLogs(Path path) {
+    static void collectAppLogs(Path path) {
         try {
             Files.createDirectories(path);
-            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path.toFile(), SystemtestsKubernetesApps.SELENIUM_PROJECT);
-            collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.SELENIUM_PROJECT);
+            GlobalLogCollector collector = new GlobalLogCollector(
+                    Kubernetes.getInstance(), path.toFile(), SELENIUM_PROJECT);
+            collector.collectLogsOfPodsInNamespace(SELENIUM_PROJECT);
         } catch (Exception e) {
-            log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.SELENIUM_PROJECT);
+            log.error("Failed to collect pod logs from namespace : {}", SELENIUM_PROJECT);
         }
     }
 
-    public static void removeChromeApp() throws Exception {
+    static void removeChromeApp() {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_SELENIUM_CONTAINER);
-        SystemtestsKubernetesApps.deleteChromeSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
+        deleteChromeSeleniumApp(SELENIUM_PROJECT, Kubernetes.getInstance());
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void restartSeleniumApp() {
-        List<String> beforeRestart = Kubernetes.getInstance().listPods(SystemtestsKubernetesApps.SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
+    static void restartSeleniumApp() {
+        List<String> beforeRestart = Kubernetes.getInstance().listPods(SELENIUM_PROJECT).stream()
+                .map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
         int attempts = 5;
         for (int i = 1; i <= attempts; i++) {
-            SystemtestsKubernetesApps.deleteSeleniumPod(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
+            deleteSeleniumPod(SELENIUM_PROJECT, Kubernetes.getInstance());
             try {
                 TestUtils.waitUntilCondition("Selenium pods ready", (phase) -> {
                             List<String> current = TestUtils.listReadyPods(Kubernetes.getInstance(),
-                                    SystemtestsKubernetesApps.SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
+                                    SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
                             current.removeAll(beforeRestart);
                             log.info("Following pods are in ready state {}", current);
                             return current.size() == beforeRestart.size();

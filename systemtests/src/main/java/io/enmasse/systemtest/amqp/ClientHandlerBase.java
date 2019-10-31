@@ -17,15 +17,16 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
-    private static final Logger log = CustomLogger.getLogger();
-    private static final Symbol unauthorizedAccess = Symbol.getSymbol("amqp:unauthorized-access");
-    protected final AmqpConnectOptions clientOptions;
-    protected final LinkOptions linkOptions;
-    protected final CompletableFuture<Void> connectPromise;
-    protected final CompletableFuture<T> resultPromise;
+    private static final Logger LOGGER = CustomLogger.getLogger();
+    private static final Symbol UNAUTHORIZED_ACCESS = Symbol.getSymbol("amqp:unauthorized-access");
+    final AmqpConnectOptions clientOptions;
+    final LinkOptions linkOptions;
+    final CompletableFuture<Void> connectPromise;
+    final CompletableFuture<T> resultPromise;
     private final String containerId;
 
-    public ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<Void> connectPromise, CompletableFuture<T> resultPromise, String containerId) {
+    ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions,
+                      CompletableFuture<Void> connectPromise, CompletableFuture<T> resultPromise, String containerId) {
         this.clientOptions = clientOptions;
         this.linkOptions = linkOptions;
         this.connectPromise = connectPromise;
@@ -35,11 +36,12 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
     @Override
     public void start() {
-        log.info("Starting verticle: {}", this);
+        LOGGER.info("Starting verticle: {}", this);
 
         ProtonClient client = ProtonClient.create(vertx);
         Endpoint endpoint = clientOptions.getEndpoint();
-        client.connect(clientOptions.getProtonClientOptions(), endpoint.getHost(), endpoint.getPort(), clientOptions.getUsername(), clientOptions.getPassword(), connection -> {
+        client.connect(clientOptions.getProtonClientOptions(), endpoint.getHost(),
+                endpoint.getPort(), clientOptions.getUsername(), clientOptions.getPassword(), connection -> {
             if (connection.succeeded()) {
                 ProtonConnection conn = connection.result();
                 conn.setContainer(containerId);
@@ -63,7 +65,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
                 conn.disconnectHandler(result -> connectionDisconnected(conn));
                 conn.open();
             } else {
-                log.info("Connection to " + endpoint.getHost() + ":" + endpoint.getPort() + " failed: " + connection.cause().getMessage());
+                LOGGER.info("Connection to " + endpoint.getHost() + ":" + endpoint.getPort() + " failed: " + connection.cause().getMessage());
                 resultPromise.completeExceptionally(connection.cause());
                 connectPromise.completeExceptionally(connection.cause());
             }
@@ -71,8 +73,8 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
     }
 
     @Override
-    public void stop() throws Exception {
-        log.info("Stopping verticle: {}", this);
+    public void stop() {
+        LOGGER.info("Stopping verticle: {}", this);
     }
 
     protected abstract void connectionOpened(ProtonConnection conn);
@@ -81,13 +83,13 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
     protected abstract void connectionDisconnected(ProtonConnection conn);
 
-    protected void handleError(ProtonConnection connection, ErrorCondition error) {
+    void handleError(ProtonConnection connection, ErrorCondition error) {
         if (error == null || error.getCondition() == null) {
-            log.info("{}: link closed without error", containerId);
+            LOGGER.info("{}: link closed without error", containerId);
         } else {
-            log.info("{}: link closed with error {}", containerId, error);
+            LOGGER.info("{}: link closed with error {}", containerId, error);
             connection.close();
-            if (unauthorizedAccess.equals(error.getCondition()) || error.getDescription().contains("not authorized")) {
+            if (UNAUTHORIZED_ACCESS.equals(error.getCondition()) || error.getDescription().contains("not authorized")) {
                 resultPromise.completeExceptionally(new UnauthorizedAccessException(error.getDescription()));
                 connectPromise.completeExceptionally(new UnauthorizedAccessException(error.getDescription()));
             } else {

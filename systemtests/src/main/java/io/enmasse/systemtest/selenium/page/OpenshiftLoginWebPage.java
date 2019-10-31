@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.selenium.page;
 
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
@@ -17,11 +16,11 @@ import java.time.Duration;
 
 public class OpenshiftLoginWebPage implements IWebPage {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     SeleniumProvider selenium;
 
-    public OpenshiftLoginWebPage(SeleniumProvider selenium) {
+    OpenshiftLoginWebPage(SeleniumProvider selenium) {
         this.selenium = selenium;
     }
 
@@ -45,7 +44,7 @@ public class OpenshiftLoginWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.partialLinkText("htpasswd"));
     }
 
-    public String getAlertMessage() {
+    String getAlertMessage() {
         return getAlertContainer().findElement(By.className("kc-feedback-text")).getText();
     }
 
@@ -58,9 +57,9 @@ public class OpenshiftLoginWebPage implements IWebPage {
         }
     }
 
-    public boolean login(String username, String password) throws Exception {
+    boolean login(String username, String password) {
         checkReachableWebPage();
-        log.info("Try to login with credentials {} : {}", username, password);
+        LOGGER.info("Try to login with credentials {} : {}", username, password);
         selenium.fillInputItem(getUsernameTextInput(), username);
         selenium.fillInputItem(getPasswordTextInput(), password);
         selenium.clickOnItem(getLoginButton(), "Log in");

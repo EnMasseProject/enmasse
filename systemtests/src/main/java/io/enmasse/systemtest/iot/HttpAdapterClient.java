@@ -39,7 +39,7 @@ public class HttpAdapterClient extends ApiClient {
     private static final Logger LOGGER = CustomLogger.getLogger();
 
     public HttpAdapterClient(Kubernetes kubernetes, Endpoint endpoint, String deviceAuthId, String tenantId, String password) {
-        super(kubernetes, () -> endpoint, "");
+        super(kubernetes, () -> endpoint);
         this.authzString = getBasicAuth(deviceAuthId + "@" + tenantId, password);
     }
 

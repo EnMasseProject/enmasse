@@ -9,10 +9,8 @@ import com.google.common.collect.Ordering;
 import com.google.common.io.BaseEncoding;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceSchema;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
-import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -28,7 +26,6 @@ import io.enmasse.systemtest.time.WaitPhase;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.vertx.core.VertxException;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
@@ -64,14 +61,14 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
-
-/**
- * The type Test utils.
- */
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
+/**
+ * The type Test utils.
+ */
 
 public class TestUtils {
 
@@ -100,7 +97,8 @@ public class TestUtils {
      * @param budget           the budget
      * @throws InterruptedException the interrupted exception
      */
-    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForNReplicas(int expectedReplicas,Map<String, String> labelSelector,
+                                        TimeoutBudget budget) throws InterruptedException {
         waitForNReplicas(expectedReplicas, labelSelector, Collections.emptyMap(), budget);
     }
 
@@ -117,7 +115,8 @@ public class TestUtils {
      */
     public static void waitForNBrokerReplicas(AddressSpace addressSpace, int expectedReplicas, boolean readyRequired,
                                               Address destination, TimeoutBudget budget, long checkInterval) throws Exception {
-        Address address = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace()).withName(destination.getMetadata().getName()).get();
+        Address address = Kubernetes.getInstance().getAddressClient(
+                addressSpace.getMetadata().getNamespace()).withName(destination.getMetadata().getName()).get();
         Map<String, String> labels = new HashMap<>();
         labels.put("role", "broker");
         labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
@@ -144,7 +143,8 @@ public class TestUtils {
      * @param budget           the budget
      * @throws Exception the exception
      */
-    public static void waitForNBrokerReplicas(AddressSpace addressSpace, int expectedReplicas, Address destination, TimeoutBudget budget) throws Exception {
+    public static void waitForNBrokerReplicas(AddressSpace addressSpace, int expectedReplicas,
+                                              Address destination, TimeoutBudget budget) throws Exception {
         waitForNBrokerReplicas(addressSpace, expectedReplicas, true, destination, budget, 5000);
     }
 
@@ -161,7 +161,8 @@ public class TestUtils {
      * @throws InterruptedException the interrupted exception
      */
     public static void waitForNReplicas(int expectedReplicas, boolean readyRequired,
-                                        Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+                                        Map<String, String> labelSelector, Map<String, String> annotationSelector,
+                                        TimeoutBudget budget, long checkInterval) throws InterruptedException {
         int actualReplicas;
         do {
             final List<Pod> pods;
@@ -189,7 +190,8 @@ public class TestUtils {
         // finished successfully
     }
 
-    private static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
+    private static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector,
+                                         Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
         waitForNReplicas(expectedReplicas, true, labelSelector, annotationSelector, budget, 5000);
 
     }
@@ -227,7 +229,8 @@ public class TestUtils {
 
         if (!nonReadyContainers.isEmpty()) {
             if (doLog) {
-                LOGGER.info("POD {} non-ready containers: [{}]", pod.getMetadata().getName(), String.join(", ", nonReadyContainers));
+                LOGGER.info("POD {} non-ready containers: [{}]", pod.getMetadata().getName(),
+                        String.join(", ", nonReadyContainers));
             }
             return false;
         }
@@ -244,7 +247,8 @@ public class TestUtils {
      * @param budget      timeout budget - this method throws Exception when timeout is reached
      * @throws InterruptedException the interrupted exception
      */
-    public static void waitForExpectedReadyPods(Kubernetes client, String namespace, int numExpected, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForExpectedReadyPods(Kubernetes client, String namespace, int numExpected,
+                                                TimeoutBudget budget) throws InterruptedException {
         boolean shouldRetry;
         do {
             LOGGER.info("Waiting for expected ready pods: {}", numExpected);
@@ -292,7 +296,8 @@ public class TestUtils {
      * @return list
      */
     public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace){
-        return kubernetes.listPods(Collections.singletonMap("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace))).stream()
+        return kubernetes.listPods(Collections.singletonMap("infraUuid",
+                AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace))).stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
@@ -513,7 +518,8 @@ public class TestUtils {
      * @param logCollector the log collector
      * @throws Exception the exception
      */
-    public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
+    public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace,
+                                                     GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents();
         logCollector.collectApiServerJmapLog();
@@ -607,7 +613,8 @@ public class TestUtils {
      * @param condition the condition
      * @param budget    the budget
      */
-    public static void waitUntilCondition(final String forWhat, final Predicate<WaitPhase> condition, final TimeoutBudget budget) {
+    public static void waitUntilCondition(final String forWhat, final Predicate<WaitPhase> condition,
+                                          final TimeoutBudget budget) {
 
         Objects.requireNonNull(condition);
         Objects.requireNonNull(budget);
@@ -642,12 +649,12 @@ public class TestUtils {
      * @param timeoutMessageSupplier The supplier of a timeout message.
      * @throws AssertionFailedError In case the timeout expired
      */
-    public static void waitUntilConditionOrFail(final BooleanSupplier condition, final Duration timeout, final Duration delay, final Supplier<String> timeoutMessageSupplier) {
+    public static void waitUntilConditionOrFail(final BooleanSupplier condition,
+                                                final Duration timeout, final Duration delay,
+                                                final Supplier<String> timeoutMessageSupplier) {
 
         Objects.requireNonNull(timeoutMessageSupplier);
-
         waitUntilConditionOrThrow(condition, timeout, delay, () -> new AssertionFailedError(timeoutMessageSupplier.get()));
-
     }
 
     /**
@@ -660,8 +667,9 @@ public class TestUtils {
      * @param exceptionSupplier The supplier of the exception to throw.
      * @throws X x
      */
-    private static <X extends Throwable> void waitUntilConditionOrThrow(final BooleanSupplier condition, final Duration timeout,
-                                                                        final Duration delay, final Supplier<X> exceptionSupplier) throws X {
+    private static <X extends Throwable> void waitUntilConditionOrThrow(final BooleanSupplier condition,
+                                                                        final Duration timeout, final Duration delay,
+                                                                        final Supplier<X> exceptionSupplier) throws X {
 
         Objects.requireNonNull(exceptionSupplier);
 
@@ -682,7 +690,9 @@ public class TestUtils {
      * @param timeoutHandler The handler to call in case of the timeout.
      * @throws X the x
      */
-    public static <X extends Throwable> void waitUntilCondition(final BooleanSupplier condition, final Duration timeout, final Duration delay, final TimeoutHandler<X> timeoutHandler) throws X {
+    public static <X extends Throwable> void waitUntilCondition(final BooleanSupplier condition,
+                                                                final Duration timeout, final Duration delay,
+                                                                final TimeoutHandler<X> timeoutHandler) throws X {
 
         Objects.requireNonNull(timeoutHandler);
 
@@ -746,11 +756,17 @@ public class TestUtils {
      * @param name                   the name
      * @param currentResourceVersion the current resource version
      */
-    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String namespace, final String name, final String currentResourceVersion) {
-        waitForChangedResourceVersion(budget, currentResourceVersion, () -> Kubernetes.getInstance().getAddressSpaceClient(namespace).withName(name).get().getMetadata().getResourceVersion());
+    public static void waitForChangedResourceVersion(final TimeoutBudget budget,
+                                                     final String namespace, final String name,
+                                                     final String currentResourceVersion) {
+        waitForChangedResourceVersion(budget, currentResourceVersion, () ->
+                Kubernetes.getInstance().getAddressSpaceClient(namespace).withName(name)
+                        .get().getMetadata().getResourceVersion());
     }
 
-    private static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion) {
+    private static void waitForChangedResourceVersion(final TimeoutBudget budget,
+                                                      final String currentResourceVersion,
+                                                      final ThrowingSupplier<String> provideNewResourceVersion) {
         Objects.requireNonNull(currentResourceVersion, "'currentResourceVersion' must not be null");
 
         waitUntilCondition("Resource version to change away from: " + currentResourceVersion, phase -> {
@@ -800,14 +816,16 @@ public class TestUtils {
                     List<ContainerStatus> initContainers = pod.getStatus().getInitContainerStatuses();
                     for (ContainerStatus s : initContainers) {
                         if (!s.getReady()) {
-                            LOGGER.info("Pod {} is in ready state, init container is not in ready state", pod.getMetadata().getName());
+                            LOGGER.info("Pod {} is in ready state, init container is not in ready state",
+                                    pod.getMetadata().getName());
                             return false;
                         }
                     }
                     List<ContainerStatus> containers = pod.getStatus().getContainerStatuses();
                     for (ContainerStatus s : containers) {
                         if (!s.getReady()) {
-                            LOGGER.info("Pod {} is in ready state, container {} is not in ready state", pod.getMetadata().getName(), s.getName());
+                            LOGGER.info("Pod {} is in ready state, container {} is not in ready state",
+                                    pod.getMetadata().getName(), s.getName());
                             return false;
                         }
                     }
@@ -848,14 +866,22 @@ public class TestUtils {
         var authServiceClient = kube.getAuthenticationServiceClient(namespace);
         var consoleClient = kube.getConsoleServiceClient(namespace);
 
-        brInfraConfigClient.list().getItems().forEach(cr -> brInfraConfigClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        stInfraConfigClient.list().getItems().forEach(cr -> stInfraConfigClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        addressSpaceClient.list().getItems().forEach(cr -> addressSpaceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        addressClient.list().getItems().forEach(cr -> addressClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        addrSpacePlanClient.list().getItems().forEach(cr -> addrSpacePlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        addPlanClient.list().getItems().forEach(cr -> addPlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        authServiceClient.list().getItems().forEach(cr -> authServiceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        consoleClient.list().getItems().forEach(cr -> consoleClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        brInfraConfigClient.list().getItems().forEach(cr ->
+                brInfraConfigClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        stInfraConfigClient.list().getItems().forEach(cr ->
+                stInfraConfigClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addressSpaceClient.list().getItems().forEach(cr ->
+                addressSpaceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addressClient.list().getItems().forEach(cr ->
+                addressClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addrSpacePlanClient.list().getItems().forEach(cr ->
+                addrSpacePlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addPlanClient.list().getItems().forEach(cr ->
+                addPlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        authServiceClient.list().getItems().forEach(cr ->
+                authServiceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        consoleClient.list().getItems().forEach(cr ->
+                consoleClient.withName(cr.getMetadata().getName()).cascading(true).delete());
     }
 
     /**
@@ -867,7 +893,8 @@ public class TestUtils {
     public static void waitForPodReady(String name, String namespace) {
         TestUtils.waitUntilCondition(format("Pod is ready %s", name), waitPhase -> {
             try {
-                Pod pod = Kubernetes.getInstance().listPods(namespace).stream().filter(p -> p.getMetadata().getName().contains(name)).findFirst().get();
+                Pod pod = Kubernetes.getInstance().listPods(namespace).stream().filter(
+                        p -> p.getMetadata().getName().contains(name)).findFirst().get();
                 return TestUtils.isPodReady(pod, true);
             } catch (Exception ex) {
                 return false;
@@ -875,9 +902,10 @@ public class TestUtils {
         }, new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
-    public static void waitForSchemaInSync(AddressSpacePlan addressSpacePlan) throws Exception {
+    public static void waitForSchemaInSync(AddressSpacePlan addressSpacePlan) {
         TestUtils.waitUntilCondition(String.format("Address space plan %s is applied", addressSpacePlan.getMetadata().getName()),
-                waitPhase -> Kubernetes.getInstance().getSchemaClient().inNamespace(addressSpacePlan.getMetadata().getNamespace()).list().getItems().stream()
+                waitPhase -> Kubernetes.getInstance().getSchemaClient().inNamespace(
+                        addressSpacePlan.getMetadata().getNamespace()).list().getItems().stream()
                         .anyMatch(schema -> schema.getSpec().getPlans().stream()
                                 .anyMatch(plan -> plan.getName().contains(addressSpacePlan.getMetadata().getName()))),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
@@ -902,40 +930,46 @@ public class TestUtils {
     /**
      * body for rest api tests
      */
-    public static void runRestApiTest(ResourceManager manager, AddressSpace addressSpace, Address d1, Address d2) throws Exception {
+    public static void runRestApiTest(ResourceManager manager,
+                                      AddressSpace addressSpace, Address d1, Address d2) throws Exception {
         List<String> destinationsNames = Arrays.asList(d1.getSpec().getAddress(), d2.getSpec().getAddress());
         manager.setAddresses(d1);
         manager.appendAddresses(d2);
 
         //d1, d2
-        List<String> response = AddressUtils.getAddresses(addressSpace).stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList());
+        List<String> response = AddressUtils.getAddresses(addressSpace).stream().map(
+                address -> address.getSpec().getAddress()).collect(Collectors.toList());
         assertThat("Rest api does not return all addresses", response, is(destinationsNames));
-        log.info("addresses {} successfully created", Arrays.toString(destinationsNames.toArray()));
+        LOGGER.info("addresses {} successfully created", Arrays.toString(destinationsNames.toArray()));
 
         //get specific address d2
-        Address res = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace()).withName(d2.getMetadata().getName()).get();
-        assertThat("Rest api does not return specific address", res.getSpec().getAddress(), is(d2.getSpec().getAddress()));
+        Address res = Kubernetes.getInstance().getAddressClient(
+                addressSpace.getMetadata().getNamespace()).withName(d2.getMetadata().getName()).get();
+        assertThat("Rest api does not return specific address",
+                res.getSpec().getAddress(), is(d2.getSpec().getAddress()));
 
         manager.deleteAddresses(d1);
 
         //d2
-        response = AddressUtils.getAddresses(addressSpace).stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList());
-        assertThat("Rest api does not return right addresses", response, is(destinationsNames.subList(1, 2)));
-        log.info("address {} successfully deleted", d1.getSpec().getAddress());
+        response = AddressUtils.getAddresses(addressSpace).stream().map(
+                address -> address.getSpec().getAddress()).collect(Collectors.toList());
+        assertThat("Rest api does not return right addresses", response,
+                is(destinationsNames.subList(1, 2)));
+        LOGGER.info("address {} successfully deleted", d1.getSpec().getAddress());
 
         manager.deleteAddresses(d2);
 
         //empty
         List<Address> listRes = AddressUtils.getAddresses(addressSpace);
         assertThat("Rest api returns addresses", listRes, is(Collections.emptyList()));
-        log.info("addresses {} successfully deleted", d2.getSpec().getAddress());
+        LOGGER.info("addresses {} successfully deleted", d2.getSpec().getAddress());
 
         manager.setAddresses(d1, d2);
         manager.deleteAddresses(d1, d2);
 
         listRes = AddressUtils.getAddresses(addressSpace);
         assertThat("Rest api returns addresses", listRes, is(Collections.emptyList()));
-        log.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));
+        LOGGER.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));
     }
 
     //================================================================================================
@@ -950,7 +984,7 @@ public class TestUtils {
     }
 
     public static <T extends Comparable<T>> void assertSorted(String message, Iterable<T> list, boolean reverse) {
-        log.info("Assert sort reverse: " + reverse);
+        LOGGER.info("Assert sort reverse: " + reverse);
         if (!reverse) {
             assertTrue(Ordering.natural().isOrdered(list), message);
         } else {
@@ -959,7 +993,7 @@ public class TestUtils {
     }
 
     public static <T> void assertSorted(String message, Iterable<T> list, boolean reverse, Comparator<T> comparator) {
-        log.info("Assert sort reverse: " + reverse);
+        LOGGER.info("Assert sort reverse: " + reverse);
         if (!reverse) {
             assertTrue(Ordering.from(comparator).isOrdered(list), message);
         } else {
@@ -969,7 +1003,7 @@ public class TestUtils {
 
     public static <T> void assertWaitForValue(T expected, Callable<T> fn, TimeoutBudget budget) throws Exception {
         T got = null;
-        log.info("waiting for expected value '{}' ...", expected);
+        LOGGER.info("waiting for expected value '{}' ...", expected);
         while (budget.timeLeft() >= 0) {
             got = fn.call();
             if (Objects.equals(expected, got)) {
@@ -977,6 +1011,6 @@ public class TestUtils {
             }
             Thread.sleep(100);
         }
-        fail(String.format("Incorrect result value! expected: '%s', got: '%s'", expected, Objects.requireNonNull(got)));
+        fail(format("Incorrect result value! expected: '%s', got: '%s'", expected, Objects.requireNonNull(got)));
     }
 }

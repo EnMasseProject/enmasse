@@ -66,34 +66,43 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void installOperators() {
+    private void installOperators() {
         LOGGER.info("Installing enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
         kube.createNamespace(Environment.getInstance().namespace(), Collections.singletonMap("allowed", "true"));
-        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
     }
 
-    public void installExamplePlans() {
+    private void installExamplePlans() {
         LOGGER.info("Installing enmasse example role from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
     }
 
-    public void installExampleRoles() {
+    private void installExampleRoles() {
         LOGGER.info("Installing enmasse roles from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-roles"));
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-roles"));
     }
 
-    public void installExampleAuthServices() throws Exception {
+    private void installExampleAuthServices() {
         LOGGER.info("Installing enmasse example auth services from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-authservices", "standard-authservice.yaml"));
-        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-authservices", "none-authservice.yaml"));
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components",
+                        "example-authservices", "standard-authservice.yaml"));
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components",
+                        "example-authservices", "none-authservice.yaml"));
         TestUtils.waitForPodReady("standard-authservice", kube.getInfraNamespace());
         TestUtils.waitForPodReady("none-authservice", kube.getInfraNamespace());
     }
 
-    public void installServiceCatalog() {
+    private void installServiceCatalog() {
         LOGGER.info("Installing enmasse service catalog from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "service-broker"));
-        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "service-broker"));
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
     }
 
     public void installIoTOperator() throws Exception {
@@ -101,41 +110,52 @@ public class OperatorManager {
         LOGGER.info("                Enmasse IoT operator install");
         LOGGER.info("***********************************************************");
         LOGGER.info("Installing enmasse IoT operator from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
         LOGGER.info("***********************************************************");
 
     }
 
-    public void removeOperators() {
+    private void removeOperators() {
         LOGGER.info("Delete enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
     }
 
-    public void removeExamplePlans() {
+    private void removeExamplePlans() {
         LOGGER.info("Delete enmasse example role from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
     }
 
-    public void removeExampleRoles() {
+    private void removeExampleRoles() {
         LOGGER.info("Delete enmasse roles from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-roles"));
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-roles"));
     }
 
-    public void removeExampleAuthServices() {
+    private void removeExampleAuthServices() {
         LOGGER.info("Delete enmasse example auth services from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-authservices", "standard-authservice.yaml"));
-        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-authservices", "none-authservice.yaml"));
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components",
+                        "example-authservices", "standard-authservice.yaml"));
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components",
+                        "example-authservices", "none-authservice.yaml"));
     }
 
-    public void removeServiceCatalog() {
+    private void removeServiceCatalog() {
         LOGGER.info("Delete enmasse service catalog from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "service-broker"));
-        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "service-broker"));
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
     }
 
     public void removeIoTOperator() {
         LOGGER.info("Delete enmasse IoT operator from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(),
+                Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
     }
 
     public void clean() throws Exception {
@@ -148,7 +168,7 @@ public class OperatorManager {
         kube.deleteNamespace(Environment.getInstance().namespace());
     }
 
-    public void waithUntilOperatorReady() throws Exception {
+    private void waithUntilOperatorReady() throws Exception {
         Thread.sleep(5000);
         TestUtils.waitUntilDeployed(Environment.getInstance().namespace());
 
@@ -158,7 +178,7 @@ public class OperatorManager {
         }
     }
 
-    private void awaitConsoleReadiness() throws Exception {
+    private void awaitConsoleReadiness() {
         final String serviceName = "console";
 
         TestUtils.waitUntilCondition("global console readiness", waitPhase -> {
@@ -185,7 +205,8 @@ public class OperatorManager {
 
     public boolean isEnmasseBundleDeployed() {
         return kube.namespaceExists(kube.getInfraNamespace())
-                && kube.listPods(kube.getInfraNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("enmasse-operator")).count() == 1;
+                && kube.listPods(kube.getInfraNamespace()).stream().filter(pod ->
+                pod.getMetadata().getName().contains("enmasse-operator")).count() == 1;
     }
 
     public boolean isIoTOperatorDeployed() {

@@ -14,9 +14,10 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractSender<T> extends ClientHandlerBase<T> {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
-    public AbstractSender(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<Void> connectPromise, CompletableFuture<T> resultPromise, String containerId) {
+    AbstractSender(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<Void> connectPromise,
+                   CompletableFuture<T> resultPromise, String containerId) {
         super(clientOptions, linkOptions, connectPromise, resultPromise, containerId);
     }
 
@@ -31,7 +32,7 @@ public abstract class AbstractSender<T> extends ClientHandlerBase<T> {
         sender.setQoS(clientOptions.getQos());
         sender.openHandler(result -> {
             if (result.succeeded()) {
-                log.info("Sender link '" + sender.getTarget().getAddress() + "' opened, sending messages");
+                LOGGER.info("Sender link '" + sender.getTarget().getAddress() + "' opened, sending messages");
                 connectPromise.complete(null);
                 sendMessages(connection, sender);
             } else {

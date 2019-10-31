@@ -12,11 +12,12 @@ import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class SeleniumChromeExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback, BeforeAllCallback, AfterAllCallback {
+public class SeleniumChromeExtension implements BeforeTestExecutionCallback,
+        AfterTestExecutionCallback, BeforeAllCallback, AfterAllCallback {
     private boolean isFullClass = false;
 
     @Override
-    public void afterAll(ExtensionContext extensionContext) throws Exception {
+    public void afterAll(ExtensionContext extensionContext) {
         SeleniumProvider.getInstance().tearDownDrivers();
         SeleniumManagement.removeChromeApp();
         isFullClass = false;
@@ -29,7 +30,7 @@ public class SeleniumChromeExtension implements BeforeTestExecutionCallback, Aft
     }
 
     @Override
-    public void afterTestExecution(ExtensionContext extensionContext) throws Exception {
+    public void afterTestExecution(ExtensionContext extensionContext) {
         if (extensionContext.getExecutionException().isPresent() || Environment.getInstance().storeScreenshots()) {
             SeleniumProvider.getInstance().onFailed(extensionContext);
         }
@@ -46,9 +47,10 @@ public class SeleniumChromeExtension implements BeforeTestExecutionCallback, Aft
         if (!isFullClass) {
             SeleniumManagement.deployChromeApp();
         }
-        if (SeleniumProvider.getInstance().getDriver() == null)
+        if (SeleniumProvider.getInstance().getDriver() == null) {
             SeleniumProvider.getInstance().setupDriver(TestUtils.getChromeDriver());
-        else
+        } else {
             SeleniumProvider.getInstance().clearScreenShots();
+        }
     }
 }

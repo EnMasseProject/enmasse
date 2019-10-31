@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 
 public interface KubeCluster {
-
+    Logger LOGGER = CustomLogger.getLogger();
     boolean isAvailable();
 
     boolean isClusterUp();
@@ -18,8 +18,6 @@ public interface KubeCluster {
     String getKubeCmd();
 
     static KubeCluster detect() {
-        final Logger LOGGER = CustomLogger.getLogger();
-
         KubeCluster[] clusters = new KubeCluster[]{new MinikubeCluster(), new OpenShiftCluster()};
         KubeCluster cluster = null;
         for (KubeCluster kc : clusters) {

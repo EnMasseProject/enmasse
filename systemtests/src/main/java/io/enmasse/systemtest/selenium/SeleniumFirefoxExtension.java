@@ -12,7 +12,8 @@ import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class SeleniumFirefoxExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback, BeforeAllCallback, AfterAllCallback {
+public class SeleniumFirefoxExtension implements BeforeTestExecutionCallback,
+        AfterTestExecutionCallback, BeforeAllCallback, AfterAllCallback {
     private boolean isFullClass = false;
 
     @Override
@@ -46,9 +47,10 @@ public class SeleniumFirefoxExtension implements BeforeTestExecutionCallback, Af
         if (!isFullClass) {
             SeleniumManagement.deployFirefoxApp();
         }
-        if (SeleniumProvider.getInstance().getDriver() == null)
+        if (SeleniumProvider.getInstance().getDriver() == null) {
             SeleniumProvider.getInstance().setupDriver(TestUtils.getFirefoxDriver());
-        else
+        } else {
             SeleniumProvider.getInstance().clearScreenShots();
+        }
     }
 }
