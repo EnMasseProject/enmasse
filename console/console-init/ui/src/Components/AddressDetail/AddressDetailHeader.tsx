@@ -1,35 +1,30 @@
-import * as React from 'react';
+import * as React from "react";
 import {
-  Dropdown,
-  DropdownPosition,
-  KebabToggle,
-  DropdownItem,
-  Title,
-  Flex,
-  FlexItem,
   Split,
   SplitItem,
+  Dropdown,
+  DropdownItem,
+  DropdownPosition,
+  KebabToggle,
   Card,
   CardHeader,
+  Title,
   CardBody,
-} from '@patternfly/react-core';
-
-export interface AddressSpace {
-  name: string;
-  namespace: string;
-  createdOn: string;
+  Flex,
+  FlexItem
+} from "@patternfly/react-core";
+export interface IAddressDetailHeaderProps {
   type: string;
-  onDownload: (name: string) => void;
+  name: string;
+  plan: string;
+  shards: number;
+  onEdit: (name: string) => void;
   onDelete: (name: string) => void;
 }
-export const AddressSpaceHeader: React.FunctionComponent<AddressSpace> = ({
-  name,
-  namespace,
-  createdOn,
-  type,
-  onDownload,
-  onDelete,
-}) => {
+
+export const AddressDetailHeader: React.FunctionComponent<
+  IAddressDetailHeaderProps
+> = ({ type, name, plan, shards, onEdit, onDelete }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const onSelect = (result: any) => {
     setIsOpen(!isOpen);
@@ -41,21 +36,19 @@ export const AddressSpaceHeader: React.FunctionComponent<AddressSpace> = ({
     <DropdownItem
       key="download"
       aria-label="download"
-      onClick={() => onDownload(name)}
-    >
-      Download Certificate
+      onClick={() => onEdit(name)}>
+      Edit
     </DropdownItem>,
     <DropdownItem
       key="delete"
       aria-label="delete"
-      onClick={() => onDelete(name)}
-    >
+      onClick={() => onDelete(name)}>
       Delete
-    </DropdownItem>,
+    </DropdownItem>
   ];
   return (
     <Card>
-      <CardHeader>
+       <CardHeader>
         <Split gutter="md">
           <SplitItem>
             <Title headingLevel="h1" size="4xl">
@@ -75,31 +68,22 @@ export const AddressSpaceHeader: React.FunctionComponent<AddressSpace> = ({
           </SplitItem>
         </Split>
       </CardHeader>
-      <CardBody>
-        <Flex>
-          <FlexItem
+    <CardBody>
+      <Flex>
+      <FlexItem
             style={{
               paddingRight: '1em',
               borderRight: '0.1em solid',
               borderRightColor: 'lightgrey',
             }}
           >
-            in namespace <b>{namespace}</b>
-          </FlexItem>
-          <FlexItem
-            style={{
-              paddingRight: '1em',
-              borderRight: '0.1em solid',
-              borderRightColor: 'lightgrey',
-            }}
-          >
-            <b>{type}</b>
+            <b>{plan}</b>
           </FlexItem>
           <FlexItem>
-            Created <b>{createdOn}</b>
+            Stored in <b>{shards}</b> Shard
           </FlexItem>
-        </Flex>
-      </CardBody>
+          </Flex>
+    </CardBody>
     </Card>
   );
 };

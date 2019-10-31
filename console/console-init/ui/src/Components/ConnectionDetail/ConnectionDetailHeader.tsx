@@ -1,19 +1,13 @@
-import * as React from "react";
-import {
-  PageSection,
-  PageSectionVariants,
-  Split,
-  SplitItem,
-  GridItem,
-  Grid
-} from "@patternfly/react-core";
+import * as React from 'react';
+import { Title, Flex, FlexItem, Card, CardHeader, CardBody } from '@patternfly/react-core';
 import {
   LockIcon,
   LockOpenIcon,
   AngleDownIcon,
-  AngleUpIcon
-} from "@patternfly/react-icons";
-import "./ConnectionDetail.css";
+  AngleUpIcon,
+} from '@patternfly/react-icons';
+import { ConnectionDetail } from './ConnectionDetail';
+import { MessagesDetail } from './MessagesDetail';
 export interface ConnectionHeaderDetailProps {
   hostname: string;
   containerId: string;
@@ -36,97 +30,89 @@ export const ConnectionDetailHeader: React.FunctionComponent<
   platform,
   os,
   messagesIn,
-  messagesOut
+  messagesOut,
 }) => {
   const generateIcons = () => {
     switch (protocol) {
-      case "AMQP":
+      case 'AMQP':
         return <LockIcon />;
       default:
         return <LockOpenIcon />;
     }
   };
   const [isHidden, setIsHidden] = React.useState(true);
+  const [isMobileView, setIsMobileView] = React.useState(false);
+  window.addEventListener('resize', () => {
+    if (window.innerWidth < 992) {
+      setIsMobileView(true);
+    } else {
+      setIsMobileView(false);
+    }
+  });
   return (
-    <PageSection variant={PageSectionVariants.light}>
-      <Grid>
-        <GridItem rowSpan={12} className="connection_detail_split_m_height">
-          {hostname}
-        </GridItem>
-        <GridItem rowSpan={12}>
-          <Split>
-            <SplitItem className="connection_detail_split_m_MarginRight">
-              in container <b>{containerId}</b>
-            </SplitItem>
-            <SplitItem className="connection_detail_split_m_gutter_MarginRight"></SplitItem>
-            <SplitItem className="connection_detail_split_m_MarginRight">
-              {protocol} {generateIcons()}
-            </SplitItem>
-            <SplitItem
-              className="connection_detail_split_m_dropdown"
-              onClick={() => setIsHidden(!isHidden)}>
-              {isHidden ? (
-                <>
-                  See more details <AngleDownIcon color="black" />
-                </>
-              ) : (
-                <>
-                  Hide Details <AngleUpIcon color="black" />
-                </>
-              )}
-            </SplitItem>
-          </Split>
-        </GridItem>
-        {isHidden ? (
-          ""
+    <Card>
+      <CardHeader>
+      <Title headingLevel="h1" size="4xl">
+        {hostname}
+      </Title>
+      </CardHeader>
+      <CardBody>
+      <Flex>
+        <FlexItem>
+          in container <b>{containerId}</b>
+        </FlexItem>
+        <FlexItem>
+          {protocol} {generateIcons()}
+        </FlexItem>
+        {!isMobileView ? (
+          <FlexItem
+            onClick={() => {
+              setIsHidden(!isHidden);
+            }}
+            style={{ color: 'rgb(0, 102, 204)' }}
+          >
+            {' '}
+            {isHidden ? (
+              <>
+                see more details <AngleDownIcon color="black" />
+              </>
+            ) : (
+              <>
+                hide details
+                <AngleUpIcon color="black" />
+              </>
+            )}
+          </FlexItem>
         ) : (
-          <>
-            <Split>
-              {/* <Grid> */}
-                {/* <GridItem rowSpan={8}> */}
-                  <SplitItem>
-                    <Grid>
-                      <GridItem rowSpan={12}>
-                        <Split>
-                          <SplitItem className="connection_detail_split_m_MarginRight">
-                            <b>Product</b> {product}
-                          </SplitItem>
-                          <SplitItem className="connection_detail_split_m_MarginRight">
-                            <b>Version</b> {version}
-                          </SplitItem>
-                        </Split>
-                      </GridItem>
-                      <GridItem rowSpan={12}>
-                        <Split>
-                          <SplitItem className="connection_detail_split_m_MarginRight">
-                            <b>Platform JVM : </b> {platform}
-                          </SplitItem>
-                          <SplitItem className="connection_detail_split_m_MarginRight">
-                            <b>OS:</b> {os}
-                          </SplitItem>
-                        </Split>
-                      </GridItem>
-                    </Grid>
-                  </SplitItem>
-                {/* </GridItem> */}
-                <SplitItem className="connection_detail_split_m_large_gutter_MarginRight"></SplitItem>
-                {/* <GridItem rowSpan={3}> */}
-                <SplitItem className="connection_detail_split_m_MeassageItem">
-                  {messagesIn || messagesIn === 0 ? messagesIn : "-"}
-                  <br />
-                  Messages in
-                </SplitItem>
-                <SplitItem className="connection_detail_split_m_MeassageItem">
-                  {messagesOut || messagesOut === 0 ? messagesOut : "-"}
-                  <br />
-                  Messages out
-                </SplitItem>
-                {/* </GridItem> */}
-              {/* </Grid> */}
-            </Split>
-          </>
+          ''
         )}
-      </Grid>
-    </PageSection>
+      </Flex>
+      <Flex
+        breakpointMods={[
+          { modifier: 'column', breakpoint: 'sm' },
+          { modifier: 'row', breakpoint: 'lg' },
+        ]}
+      >
+        {isMobileView || !isHidden ? (
+          <>
+            <ConnectionDetail
+              product={product}
+              version={version}
+              jvm={platform}
+              os={os}
+              isMobileView={isMobileView}
+            />
+            <MessagesDetail
+              messagesIn={messagesIn}
+              messagesOut={messagesOut}
+              isMobileView={isMobileView}
+            />
+          </>
+        ) : (
+          ''
+        )}
+      </Flex>
+      </CardBody>
+    </Card>
   );
 };

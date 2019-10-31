@@ -10,7 +10,7 @@ const stories = storiesOf("Address Space", module);
 stories.addDecorator(withKnobs);
 
 stories.add("Address Space Header", () => (
-  <MemoryRouter><br/><br/>
+  <MemoryRouter>
     <AddressSpaceHeader
       name={text("Name of Address Space", "jBoss")}
       namespace={text("Name space of Address Space", "deveops_jbosstest1")}
