@@ -55,9 +55,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 
 import javax.jms.DeliveryMode;
+import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.naming.NamingException;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -675,12 +677,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         LOGGER.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));
     }
 
-    protected void sendReceiveLargeMessage(JmsProvider jmsProvider, int sizeInMB, Address dest, int count) throws Exception {
-        sendReceiveLargeMessage(jmsProvider, sizeInMB, dest, count, DeliveryMode.NON_PERSISTENT);
+    protected void sendReceiveLargeMessageQueue(JmsProvider jmsProvider, double sizeInMB, Address dest, int count) throws Exception {
+        sendReceiveLargeMessageQueue(jmsProvider, sizeInMB, dest, count, DeliveryMode.NON_PERSISTENT);
     }
 
-    protected void sendReceiveLargeMessage(JmsProvider jmsProvider, int sizeInMB, Address dest, int count, int mode) throws Exception {
-        int size = sizeInMB * 1024 * 1024;
+    protected void sendReceiveLargeMessageQueue(JmsProvider jmsProvider, double sizeInMB, Address dest, int count, int mode) throws Exception {
+        int size = (int) (sizeInMB * 1024 * 1024);
 
         Session session = jmsProvider.getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
         javax.jms.Queue testQueue = (javax.jms.Queue) jmsProvider.getDestination(dest.getSpec().getAddress());
@@ -688,6 +690,32 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
         MessageProducer sender = session.createProducer(testQueue);
         MessageConsumer receiver = session.createConsumer(testQueue);
+
+        sendReceiveLargeMessage(jmsProvider, sender, receiver, sizeInMB, mode, count, messages);
+
+    }
+
+    protected void sendReceiveLargeMessageTopic(JmsProvider jmsProvider, double sizeInMB, Address dest, int count) throws Exception {
+        sendReceiveLargeMessageTopic(jmsProvider, sizeInMB, dest, count, DeliveryMode.NON_PERSISTENT);
+    }
+
+    protected void sendReceiveLargeMessageTopic(JmsProvider jmsProvider, double sizeInMB, Address dest, int count, int mode) throws Exception {
+        int size = (int) (sizeInMB * 1024 * 1024);
+
+        Session session = jmsProvider.getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
+        javax.jms.Topic testTopic = (javax.jms.Topic) jmsProvider.getDestination(dest.getSpec().getAddress());
+        List<javax.jms.Message> messages = jmsProvider.generateMessages(session, count, size);
+
+        MessageProducer sender = session.createProducer(testTopic);
+        MessageConsumer receiver = session.createConsumer(testTopic);
+
+        sendReceiveLargeMessage(jmsProvider, sender, receiver, sizeInMB, mode, count, messages);
+        session.close();
+        sender.close();
+        receiver.close();
+    }
+
+    private void sendReceiveLargeMessage(JmsProvider jmsProvider, MessageProducer sender, MessageConsumer receiver, double sizeInMB, int mode, int count, List<javax.jms.Message> messages) {
         List<javax.jms.Message> recvd;
 
         jmsProvider.sendMessages(sender, messages, mode, javax.jms.Message.DEFAULT_PRIORITY, javax.jms.Message.DEFAULT_TIME_TO_LIVE);
