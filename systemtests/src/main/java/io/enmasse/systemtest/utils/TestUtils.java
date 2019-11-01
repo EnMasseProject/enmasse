@@ -8,17 +8,28 @@ package io.enmasse.systemtest.utils;
 import com.google.common.collect.Ordering;
 import com.google.common.io.BaseEncoding;
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.broker.BrokerManagement;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
+import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.selenium.SeleniumManagement;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -35,6 +46,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
+import java.io.Console;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
@@ -88,6 +100,7 @@ public class TestUtils {
 
     private static final Random R = new Random();
     private static Logger LOGGER = CustomLogger.getLogger();
+    private static final Kubernetes KUBERNETES = Kubernetes.getInstance();
 
     /**
      * Wait for n replicas.
@@ -195,6 +208,157 @@ public class TestUtils {
         waitForNReplicas(expectedReplicas, true, labelSelector, annotationSelector, budget, 5000);
 
     }
+
+    /**
+     * Wait for subscribers console.
+     *
+     * @param addressSpace the address space
+     * @param destination  the destination
+     * @throws Exception the exception
+     */
+    public static void waitForSubscribersConsole(AddressSpace addressSpace, Address destination) throws Exception {
+        int budget = 60; //seconds
+        waitForSubscribersConsole(addressSpace, destination, budget);
+    }
+
+    /**
+     * wait for expected count of subscribers on topic (check via console)
+     *
+     * @param budget timeout budget in seconds
+     */
+    private static void waitForSubscribersConsole(AddressSpace addressSpace, Address destination, int budget) throws Exception {
+        final UserCredentials clusterUser = new UserCredentials(KubeCMDClient.getOCUser());
+
+        SeleniumProvider selenium = null;
+        try {
+            SeleniumManagement.deployFirefoxApp();
+            selenium = ConsoleUtils.getFirefoxSeleniumProvider();
+            ConsoleWebPage console = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(addressSpace), addressSpace, clusterUser);
+            console.openWebConsolePage();
+            console.openAddressesPageWebConsole();
+
+            selenium.waitUntilPropertyPresent(budget, 2, () -> console.getAddressItem(destination).getReceiversCount());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if (selenium != null) {
+                selenium.tearDownDrivers();
+            }
+            SeleniumManagement.removeFirefoxApp();
+        }
+    }
+
+    /**
+     * wait for expected count of subscribers on topic
+     *
+     * @param brokerManagement the broker management
+     * @param addressSpace     the address space
+     * @param topic            name of topic
+     * @throws Exception the exception
+     */
+    public static void waitForSubscribers(BrokerManagement brokerManagement, AddressSpace addressSpace, String topic, String plan) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        waitForSubscribers(brokerManagement, addressSpace, topic, budget, plan);
+    }
+
+    private static void waitForSubscribers(BrokerManagement brokerManagement, AddressSpace addressSpace, String topic, TimeoutBudget budget, String plan) throws Exception {
+        IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
+        AmqpClient queueClient = null;
+        try {
+            queueClient = isolatedResourcesManager.getAmqpClientFactory().createQueueClient(addressSpace);
+            queueClient.setConnectOptions(queueClient.getConnectOptions().setCredentials(Environment.getInstance().getManagementCredentials()));
+            String replyQueueName = "reply-queue";
+            Address replyQueue = new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(addressSpace.getMetadata().getNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(addressSpace, replyQueueName))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("queue")
+                    .withAddress(replyQueueName)
+                    .withPlan(plan)
+                    .endSpec()
+                    .build();
+            isolatedResourcesManager.appendAddresses(replyQueue);
+
+            boolean done = false;
+            int actualSubscribers;
+            do {
+                actualSubscribers = MessagingUtils.getSubscriberCount(brokerManagement, queueClient, replyQueue, topic);
+                LOGGER.info("Have " + actualSubscribers + " subscribers. Expecting " + 2);
+                if (actualSubscribers != 2) {
+                    Thread.sleep(1000);
+                } else {
+                    done = true;
+                }
+            } while (budget.timeLeft() >= 0 && !done);
+            if (!done) {
+                throw new RuntimeException("Only " + actualSubscribers + " out of " + 2 + " subscribed before timeout");
+            }
+        } finally {
+            Objects.requireNonNull(queueClient).close();
+        }
+    }
+
+    private static void waitForBrokerReplicas(AddressSpace addressSpace, Address destination,
+                                       int expectedReplicas, TimeoutBudget budget) throws Exception {
+        TestUtils.waitForNBrokerReplicas(addressSpace, expectedReplicas, true, destination, budget, 5000);
+    }
+
+    /**
+     * Wait for broker replicas.
+     *
+     * @param addressSpace     the address space
+     * @param destination      the destination
+     * @param expectedReplicas the expected replicas
+     * @throws Exception the exception
+     */
+    public static void waitForBrokerReplicas(AddressSpace addressSpace, Address destination, int expectedReplicas) throws
+            Exception {
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        waitForBrokerReplicas(addressSpace, destination, expectedReplicas, budget);
+    }
+
+    /**
+     * Wait for router replicas.
+     *
+     * @param addressSpace     the address space
+     * @param expectedReplicas the expected replicas
+     * @throws Exception the exception
+     */
+    protected void waitForRouterReplicas(AddressSpace addressSpace, int expectedReplicas) throws
+            Exception {
+        TimeoutBudget budget = new TimeoutBudget(3, TimeUnit.MINUTES);
+        Map<String, String> labels = new HashMap<>();
+        labels.put("name", "qdrouterd");
+        labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+        TestUtils.waitForNReplicas(expectedReplicas, labels, budget);
+    }
+
+    /**
+     * Wait for pods to terminate.
+     *
+     * @param uids the uids
+     * @throws Exception the exception
+     */
+    protected void waitForPodsToTerminate(List<String> uids) throws Exception {
+        LOGGER.info("Waiting for following pods to be deleted {}", uids);
+        TestUtils.assertWaitForValue(true, () -> (KUBERNETES.listPods(KUBERNETES.getInfraNamespace()).stream()
+                .noneMatch(pod -> uids.contains(pod.getMetadata().getUid()))), new TimeoutBudget(2, TimeUnit.MINUTES));
+    }
+
+    /**
+     * Wait for destinations are in isReady=true state within default timeout (10 MINUTE)
+     *
+     * @param destinations the destinations
+     */
+    protected void waitForDestinationsReady(Address... destinations) {
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        AddressUtils.waitForDestinationsReady(budget, destinations);
+    }
+
+
+
 
     /**
      * Check ready status of all pods in list
@@ -975,11 +1139,11 @@ public class TestUtils {
     //================================================================================================
     //==================================== Asserts methods ===========================================
     //================================================================================================
-    public static <T extends Comparable<T>> void assertSorted(String message, Iterable<T> list) throws Exception {
+    public static <T extends Comparable<T>> void assertSorted(String message, Iterable<T> list) {
         assertSorted(message, list, false);
     }
 
-    public static <T> void assertSorted(String message, Iterable<T> list, Comparator<T> comparator) throws Exception {
+    public static <T> void assertSorted(String message, Iterable<T> list, Comparator<T> comparator) {
         assertSorted(message, list, false, comparator);
     }
 
@@ -1013,4 +1177,19 @@ public class TestUtils {
         }
         fail(format("Incorrect result value! expected: '%s', got: '%s'", expected, Objects.requireNonNull(got)));
     }
+
+    /**
+     * Log with separator.
+     *
+     * @param logger   the logger
+     * @param messages the messages
+     */
+    public static void logWithSeparator(Logger logger, String... messages) {
+        logger.info("--------------------------------------------------------------------------------");
+        for (String message : messages) {
+            logger.info(message);
+        }
+    }
+
+
 }

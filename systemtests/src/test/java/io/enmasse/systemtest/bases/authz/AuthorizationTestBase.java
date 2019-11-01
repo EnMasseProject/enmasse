@@ -17,6 +17,7 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
@@ -217,8 +218,9 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
     }
 
     protected void doTestSendAuthzWithWIldcards() throws Exception {
-        List<Address> addresses = getAddressesWildcard(getSharedAddressSpace());
-        List<User> users = createUsersWildcard(getSharedAddressSpace(), Operation.send);
+        List<Address> addresses = AddressUtils.getAddressesWildcard(getSharedAddressSpace(), getDefaultPlan(AddressType.QUEUE),
+                getDefaultPlan(AddressType.TOPIC));
+        List<User> users = UserUtils.createUsersWildcard(getSharedAddressSpace(), Operation.send);
 
         resourcesManager.setAddresses(addresses.toArray(new Address[0]));
 
@@ -231,8 +233,9 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
     }
 
     protected void doTestReceiveAuthzWithWIldcards() throws Exception {
-        List<Address> addresses = getAddressesWildcard(getSharedAddressSpace());
-        List<User> users = createUsersWildcard(getSharedAddressSpace(), Operation.recv);
+        List<Address> addresses = AddressUtils.getAddressesWildcard(getSharedAddressSpace(), getDefaultPlan(AddressType.QUEUE),
+                getDefaultPlan(AddressType.TOPIC));
+        List<User> users = UserUtils.createUsersWildcard(getSharedAddressSpace(), Operation.recv);
 
         resourcesManager.setAddresses(addresses.toArray(new Address[0]));
 
@@ -333,25 +336,25 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
     }
 
     private boolean canSend(Address destination, UserCredentials credentials) throws Exception {
-        logWithSeparator(log,
+        TestUtils.logWithSeparator(log,
                 String.format("Try send message under user %s from %s %s", credentials, destination.getSpec().getType(), destination.getSpec().getAddress()),
                 String.format("***** Try to open sender client under user %s", credentials),
                 String.format("***** Try to open receiver client under user %s", defaultCredentials));
         AmqpClient sender = createClient(destination, credentials);
         AmqpClient receiver = createClient(destination, defaultCredentials);
-        logWithSeparator(log);
+        TestUtils.logWithSeparator(log);
         return canAuth(sender, receiver, destination, true);
     }
 
     private boolean canReceive(Address destination, UserCredentials credentials) throws Exception {
-        logWithSeparator(log,
+        TestUtils.logWithSeparator(log,
                 String.format("Try receive message under user %s from %s %s", credentials, destination.getSpec().getType(), destination.getSpec().getAddress()),
                 String.format("***** Try to open sender client under user %s", defaultCredentials),
                 String.format("***** Try to open receiver client under user %s", credentials));
 
         AmqpClient sender = createClient(destination, defaultCredentials);
         AmqpClient receiver = createClient(destination, credentials);
-        logWithSeparator(log);
+        TestUtils.logWithSeparator(log);
         return canAuth(sender, receiver, destination, false);
     }
 

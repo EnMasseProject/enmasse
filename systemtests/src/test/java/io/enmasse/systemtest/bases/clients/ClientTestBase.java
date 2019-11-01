@@ -21,12 +21,14 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.function.Executable;
 
@@ -163,9 +165,10 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> rec2Result = receiver2.runAsync();
 
         if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress());
+            TestUtils.waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(),
+                    getDefaultPlan(AddressType.QUEUE));
         } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), dest);
+            TestUtils.waitForSubscribersConsole(getSharedAddressSpace(), dest);
         }
 
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
@@ -220,9 +223,10 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> recResult2 = subscriber2.runAsync();
 
         if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress());
+            TestUtils.waitForSubscribers(artemisManagement, getSharedAddressSpace(),
+                    dest.getSpec().getAddress(), getDefaultPlan(AddressType.TOPIC));
         } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), dest);
+            TestUtils.waitForSubscribersConsole(getSharedAddressSpace(), dest);
         }
 
         assertAll(
@@ -445,9 +449,10 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> result2 = subscriber2.runAsync();
 
         if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), topic.getSpec().getAddress());
+            TestUtils.waitForSubscribers(artemisManagement, getSharedAddressSpace(),
+                    topic.getSpec().getAddress(), getDefaultPlan(AddressType.TOPIC));
         } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), topic);
+            TestUtils.waitForSubscribersConsole(getSharedAddressSpace(), topic);
         }
 
         assertTrue(sender.run(), "Sender failed, expected return code 0");

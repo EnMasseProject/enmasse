@@ -11,6 +11,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestBaseShared;
+import io.enmasse.systemtest.utils.ConsoleUtils;
 import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
@@ -31,6 +32,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.TimeoutException;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -92,7 +94,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestPurgeMessages(Address address) throws Exception {
         List<String> msgs = IntStream.range(0, 1000).mapToObj(i -> "msgs:" + i).collect(Collectors.toList());
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
+        consoleWebPage = new ConsoleWebPage(selenium, ConsoleUtils.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressesWebConsole(address);
@@ -169,7 +171,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestFilterAddressesByType() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = AddressUtils.generateQueueTopicList(getSharedAddressSpace(),
+                IntStream.range(0, addressCount), getDefaultPlan(AddressType.QUEUE), getDefaultPlan(AddressType.TOPIC));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -203,7 +206,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestFilterAddressesByName() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = AddressUtils.generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount),
+                getDefaultPlan(AddressType.QUEUE), getDefaultPlan(AddressType.TOPIC));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -298,7 +302,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestFilterAddressWithRegexSymbols() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = AddressUtils.generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount),
+                getDefaultPlan(AddressType.QUEUE), getDefaultPlan(AddressType.TOPIC));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -342,7 +347,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
     protected void doTestRegexAlertBehavesConsistently() throws Exception {
         String subText = "*";
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = AddressUtils.generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount),
+                getDefaultPlan(AddressType.QUEUE), getDefaultPlan(AddressType.TOPIC));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -369,7 +375,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortAddressesByName() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = AddressUtils.generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount),
+                getDefaultPlan(AddressType.QUEUE), getDefaultPlan(AddressType.TOPIC));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -377,7 +384,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
 
         consoleWebPage.sortItems(SortType.NAME, true);
-        assertSorted(consoleWebPage.getAddressItems());
+        TestUtils.assertSorted(consoleWebPage.getAddressItems());
         TestUtils.assertSorted("Console failed, items are not sorted by name asc", consoleWebPage.getAddressItems());
 
         consoleWebPage.sortItems(SortType.NAME, false);
@@ -386,7 +393,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortAddressesByClients() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = AddressUtils.generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount),
+                getDefaultPlan(AddressType.QUEUE), getDefaultPlan(AddressType.TOPIC));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -428,7 +436,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortConnectionsBySenders() throws Exception {
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = AddressUtils.generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount),
+                getDefaultPlan(AddressType.QUEUE), getDefaultPlan(AddressType.TOPIC));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -466,7 +475,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortConnectionsByReceivers() throws Exception {
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = AddressUtils.generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount),
+                getDefaultPlan(AddressType.QUEUE), getDefaultPlan(AddressType.TOPIC));
 
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -586,7 +596,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestFilterConnectionsByHostname() throws Exception {
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = AddressUtils.generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount),
+                getDefaultPlan(AddressType.QUEUE), getDefaultPlan(AddressType.TOPIC));
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
         consoleWebPage.openWebConsolePage();
@@ -609,7 +620,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortConnectionsByHostname() throws Exception {
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = AddressUtils.generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount),
+                getDefaultPlan(AddressType.QUEUE), getDefaultPlan(AddressType.TOPIC));
         consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
         consoleWebPage.openWebConsolePage();

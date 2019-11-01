@@ -15,6 +15,7 @@ import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -59,7 +60,7 @@ class PlansTest extends TestBase implements ITestSharedStandard {
 
         double requiredCredit = PlanUtils.getRequiredCreditFromAddressResource("broker", weakQueuePlan);
         int replicasCount = (int) (destCount * requiredCredit);
-        waitForBrokerReplicas(getSharedAddressSpace(), dest.get(0), replicasCount);
+        TestUtils.waitForBrokerReplicas(getSharedAddressSpace(), dest.get(0), replicasCount);
 
         List<Address> standardAddresses = KUBERNETES.getAddressClient().inAnyNamespace().list().getItems(); //get all addresses
         for (int i = 0; i < destCount; i++) {

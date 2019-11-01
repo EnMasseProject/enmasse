@@ -15,7 +15,9 @@ import io.enmasse.address.model.AddressStatus;
 import io.enmasse.address.model.AddressStatusForwarder;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
@@ -29,6 +31,7 @@ import io.fabric8.kubernetes.client.dsl.FilterWatchListMultiDeletable;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,6 +41,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class AddressUtils {
@@ -96,7 +100,7 @@ public class AddressUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void setAddresses(TimeoutBudget budget, boolean wait, Address... addresses) throws Exception {
+    public static void setAddresses(TimeoutBudget budget, boolean wait, Address... addresses) {
         LOGGER.info("Addresses {} will be created", new Object[]{addresses});
         String operationID = TimeMeasuringSystem.startOperation(addresses.length > 0 ?
                 SystemtestsOperation.CREATE_ADDRESS : SystemtestsOperation.DELETE_ADDRESS);
@@ -104,13 +108,13 @@ public class AddressUtils {
         waitForAddresses(operationID, budget, wait, addresses);
     }
 
-    public static void appendAddresses(TimeoutBudget budget, boolean wait, Address... addresses) throws Exception {
+    public static void appendAddresses(TimeoutBudget budget, boolean wait, Address... addresses) {
         LOGGER.info("Addresses {} will be appended", new Object[]{addresses});
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
         waitForAddresses(operationID, budget, wait, addresses);
     }
 
-    private static void waitForAddresses(String operationID, TimeoutBudget budget, Boolean wait, Address... addresses) throws Exception {
+    private static void waitForAddresses(String operationID, TimeoutBudget budget, Boolean wait, Address... addresses) {
         for (Address address : addresses) {
             address = Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).create(address);
             LOGGER.info("Address {} created", address.getMetadata().getName());
@@ -183,12 +187,12 @@ public class AddressUtils {
         }
     }
 
-    public static void waitForDestinationsReady(Address... destinations) throws Exception {
+    public static void waitForDestinationsReady(Address... destinations) {
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         waitForDestinationsReady(budget, destinations);
     }
 
-    public static void waitForDestinationsReady(TimeoutBudget budget, Address... destinations) throws Exception {
+    public static void waitForDestinationsReady(TimeoutBudget budget, Address... destinations) {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_READY);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations),
                 addressList -> checkAddressesMatching(addressList, AddressUtils::isAddressReady, destinations));
@@ -383,5 +387,100 @@ public class AddressUtils {
                         .withPlan(DestinationPlan.BROKERED_TOPIC)
                         .endSpec()
                         .build());
+    }
+    /**
+     * Gets addresses wildcard.
+     *
+     * @param addressspace the addressspace
+     * @return the addresses wildcard
+     */
+    public static List<Address> getAddressesWildcard(AddressSpace addressspace, String addressPlanQueue, String addressPlanTopic) {
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressspace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressspace, "queue/1234"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue/1234")
+                .withPlan(addressPlanQueue)
+                .endSpec()
+                .build();
+
+        Address queue2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressspace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressspace, "queue/ABCD"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue/ABCD")
+                .withPlan(addressPlanQueue)
+                .endSpec()
+                .build();
+
+        Address topic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressspace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressspace, "topic/2345"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("topic/2345")
+                .withPlan(addressPlanTopic)
+                .endSpec()
+                .build();
+
+        Address topic2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressspace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressspace, "topic/ABCD"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("topic/ABCD")
+                .withPlan(addressPlanTopic)
+                .endSpec()
+                .build();
+
+        return Arrays.asList(queue, queue2, topic, topic2);
+    }
+    /**
+     * Generate queue topic list array list.
+     *
+     * @param addressspace the addressspace
+     * @param range        the range
+     * @return the array list
+     */
+    public static ArrayList<Address> generateQueueTopicList(AddressSpace addressspace, IntStream range, String addressPlanQueue, String addressPlanTopic) {
+        ArrayList<Address> addresses = new ArrayList<>();
+        range.forEach(i -> {
+            if (i % 2 == 0) {
+                addresses.add(new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, String.format("topic-%s-%d", "via-web", i)))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress(String.format("topic-%s-%d", "via-web", i))
+                        .withPlan(addressPlanTopic)
+                        .endSpec()
+                        .build());
+            } else {
+                addresses.add(new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, String.format("queue-%s-%d", "via-web", i)))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress(String.format("queue-%s-%d", "via-web", i))
+                        .withPlan(addressPlanQueue)
+                        .endSpec()
+                        .build());
+            }
+        });
+        return addresses;
     }
 }

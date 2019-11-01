@@ -134,7 +134,7 @@ public class AddressSpaceUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static void deleteAddressSpace(AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
+    private static void deleteAddressSpace(AddressSpace addressSpace, GlobalLogCollector logCollector) {
         logCollector.collectEvents();
         logCollector.collectApiServerJmapLog();
         logCollector.collectLogsTerminatedPods();
@@ -250,7 +250,7 @@ public class AddressSpaceUtils {
         return addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString());
     }
 
-    public static void waitForAddressSpaceConnectorsNotReady(AddressSpace addressSpace) throws Exception {
+    public static void waitForAddressSpaceConnectorsNotReady(AddressSpace addressSpace) {
         TestUtils.waitUntilCondition("Connectors report not ready", phase -> {
             try {
                 AddressSpaceUtils.waitForAddressSpaceConnectorsReady(addressSpace, new TimeoutBudget(20, TimeUnit.SECONDS));

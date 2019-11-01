@@ -5,15 +5,23 @@
 package io.enmasse.systemtest.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
+import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.user.model.v1.DoneableUser;
+import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthenticationType;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.enmasse.user.model.v1.UserBuilder;
 import io.vertx.core.json.JsonObject;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class UserUtils {
@@ -46,5 +54,65 @@ public class UserUtils {
 
     public static UserCredentials getCredentialsFromUser(User user) {
         return new UserCredentials(user.getSpec().getUsername(), base64ToPassword(user.getSpec().getAuthentication().getPassword()));
+    }
+
+    /**
+     * create users and groups for wildcard authz tests
+     *
+     * @param addressSpace the address space
+     * @param operation    the operation
+     * @return the list
+     */
+    public static List<User> createUsersWildcard(AddressSpace addressSpace, Operation operation) {
+        List<User> users = new ArrayList<>();
+        users.add(UserUtils.createUserResource(new UserCredentials("user1", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("*")
+                        .withOperations(operation)
+                        .build()))
+                .endSpec()
+                .done());
+
+        users.add(UserUtils.createUserResource(new UserCredentials("user2", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("queue/*")
+                        .withOperations(operation)
+                        .build()))
+                .endSpec()
+                .done());
+
+        users.add(UserUtils.createUserResource(new UserCredentials("user3", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("topic/*")
+                        .withOperations(operation)
+                        .build()))
+                .endSpec()
+                .done());
+
+        users.add(UserUtils.createUserResource(new UserCredentials("user4", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("queueA*")
+                        .withOperations(operation)
+                        .build()))
+                .endSpec()
+                .done());
+
+        users.add(UserUtils.createUserResource(new UserCredentials("user5", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("topicA*")
+                        .withOperations(operation)
+                        .build()))
+                .endSpec()
+                .done());
+
+        for (User user : users) {
+            IsolatedResourcesManager.getInstance().createOrUpdateUser(addressSpace, user);
+        }
+        return users;
     }
 }

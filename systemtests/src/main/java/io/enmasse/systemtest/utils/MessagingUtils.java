@@ -12,6 +12,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
+import io.enmasse.systemtest.broker.BrokerManagement;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
@@ -53,6 +54,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -170,7 +172,7 @@ public class MessagingUtils {
     public static void doMessaging(ResourceManager manager, List<Address> dest, List<UserCredentials> users,
                                    String destNamePrefix, int customerIndex, int messageCount) throws Exception {
         ArrayList<AmqpClient> clients = new ArrayList<>(users.size());
-        String sufix = new AddressSpaceUtils().isBrokered(manager.getSharedAddressSpace()) ? "#" : "*";
+        String sufix = AddressSpaceUtils.isBrokered(manager.getSharedAddressSpace()) ? "#" : "*";
         users.forEach((user) -> {
             try {
                 manager.createOrUpdateUser(manager.getSharedAddressSpace(),
@@ -427,5 +429,70 @@ public class MessagingUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * Simple mqtt send receive.
+     *
+     * @param dest   the dest
+     * @param client the client
+     * @throws Exception the exception
+     */
+    public static void simpleMQTTSendReceive(Address dest, IMqttClient client) throws Exception {
+        List<MqttMessage> messages = IntStream.range(0, 10).boxed().map(i -> {
+            MqttMessage m = new MqttMessage();
+            m.setPayload(String.format("mqtt-simple-send-receive-%s", i).getBytes(StandardCharsets.UTF_8));
+            m.setQos(1);
+            return m;
+        }).collect(Collectors.toList());
+
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), 1);
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
+
+        int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages published",
+                publishCount, Matchers.is(messages.size()));
+
+        int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages received",
+                receivedCount, Matchers.is(messages.size()));
+    }
+
+    /**
+     * get count of subscribers subscribed to 'topic'
+     *
+     * @param queueClient queue client with admin permissions
+     * @param replyQueue  queue for answer is required
+     * @param topic       topic name
+     * @return subscriberCount
+     * @throws Exception ex
+     */
+    public static int getSubscriberCount(BrokerManagement brokerManagement, AmqpClient queueClient, Address
+            replyQueue, String topic) throws Exception {
+        List<String> queueNames = getBrokerQueueNames(brokerManagement, queueClient, replyQueue, topic);
+
+        AtomicInteger subscriberCount = new AtomicInteger(0);
+        queueNames.forEach((String queue) -> {
+            try {
+                subscriberCount.addAndGet(brokerManagement.getSubscriberCount(queueClient, replyQueue, queue));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        return subscriberCount.get();
+    }
+
+    /**
+     * return list of queue names created for subscribers
+     *
+     * @param queueClient queue client with admin permissions
+     * @param replyQueue  queue for answer is required
+     * @param topic       topic name
+     * @return List filed with queue names
+     * @throws Exception ex
+     */
+    private static List<String> getBrokerQueueNames(BrokerManagement brokerManagement, AmqpClient
+            queueClient, Address replyQueue, String topic) throws Exception {
+        return brokerManagement.getQueueNames(queueClient, replyQueue, topic);
     }
 }
