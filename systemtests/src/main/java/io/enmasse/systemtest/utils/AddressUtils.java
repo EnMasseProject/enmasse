@@ -238,7 +238,7 @@ public class AddressUtils {
         Map<String, Address> notMatchingAddresses = new HashMap<>();
         for (Address destination : destinations) {
             Optional<Address> lookupAddressResult = addressList.stream()
-                    .filter(addr -> addr.getMetadata().getName().equals(destination.getMetadata().getName()))
+                    .filter(addr -> addr.getMetadata().getName().contains(destination.getMetadata().getName()))
                     .findFirst();
             if (lookupAddressResult.isEmpty()) {
                 notMatchingAddresses.put(destination.getSpec().getAddress(), null);
