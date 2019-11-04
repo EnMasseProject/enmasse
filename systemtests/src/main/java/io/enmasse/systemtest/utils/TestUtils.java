@@ -22,7 +22,6 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
-import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -46,7 +45,6 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
-import java.io.Console;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
@@ -261,7 +259,8 @@ public class TestUtils {
         waitForSubscribers(brokerManagement, addressSpace, topic, budget, plan);
     }
 
-    private static void waitForSubscribers(BrokerManagement brokerManagement, AddressSpace addressSpace, String topic, TimeoutBudget budget, String plan) throws Exception {
+    private static void waitForSubscribers(BrokerManagement brokerManagement, AddressSpace addressSpace, String topic,
+                                           TimeoutBudget budget, String plan) throws Exception {
         IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
         AmqpClient queueClient = null;
         try {

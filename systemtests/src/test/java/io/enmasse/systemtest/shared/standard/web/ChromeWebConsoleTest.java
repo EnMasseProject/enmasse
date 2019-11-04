@@ -270,13 +270,14 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedStandard
 
     @Test()
     void testCannotOpenConsolePage() {
-        assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage(new UserCredentials("noexistuser", "pepaPa555"), false));
+        assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage(
+                new UserCredentials("noexistuser", "pepaPa555"), false));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(clusterUser, true);
+        doTestCanOpenConsolePage(CLUSTER_USER, true);
     }
 
     @Test
@@ -292,7 +293,8 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedStandard
                 new AddressBuilder()
                         .withNewMetadata()
                         .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "queue10charhere-10charhere-10charhere-10charhere-10charhere-1"))
+                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(),
+                                "queue10charhere-10charhere-10charhere-10charhere-10charhere-1"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("queue")
@@ -303,7 +305,8 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedStandard
                 new AddressBuilder()
                         .withNewMetadata()
                         .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "queue10charhere-10charhere-10charhere-10charhere-10charhere.1"))
+                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(),
+                                "queue10charhere-10charhere-10charhere-10charhere-10charhere.1"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("queue")

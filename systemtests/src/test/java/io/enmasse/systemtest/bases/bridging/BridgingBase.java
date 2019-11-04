@@ -4,16 +4,16 @@
  */
 package io.enmasse.systemtest.bases.bridging;
 
-import java.util.Base64;
-
-import io.enmasse.address.model.*;
-import io.enmasse.systemtest.platform.Kubernetes;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.AddressSpaceSpecConnectorAddressRuleBuilder;
+import io.enmasse.address.model.AddressSpaceSpecConnectorBuilder;
+import io.enmasse.address.model.AddressSpaceSpecConnectorCredentials;
+import io.enmasse.address.model.AddressSpaceSpecConnectorCredentialsBuilder;
+import io.enmasse.address.model.AddressSpaceSpecConnectorEndpointBuilder;
+import io.enmasse.address.model.AddressSpaceSpecConnectorTls;
+import io.enmasse.address.model.AddressSpaceSpecConnectorTlsBuilder;
+import io.enmasse.address.model.StringOrSecretSelectorBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
@@ -24,12 +24,20 @@ import io.enmasse.systemtest.certs.BrokerCertBundle;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
+import java.util.Base64;
 
 public abstract class BridgingBase extends TestBase implements ITestIsolatedStandard {
 
@@ -64,8 +72,8 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
     @AfterEach
     void undeployBroker(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectLogsOfPodsInNamespace(remoteBrokerNamespace);
-            logCollector.collectEvents(remoteBrokerNamespace);
+            LOG_COLLECTOR.collectLogsOfPodsInNamespace(remoteBrokerNamespace);
+            LOG_COLLECTOR.collectEvents(remoteBrokerNamespace);
         }
         SystemtestsKubernetesApps.deleteAMQBroker(remoteBrokerNamespace, remoteBrokerName);
     }
@@ -80,8 +88,10 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
         SystemtestsKubernetesApps.scaleUpDeployment(remoteBrokerNamespace, remoteBrokerName);
     }
 
-    protected AddressSpace createAddressSpace(String name, String addressRule, AddressSpaceSpecConnectorTls tlsSettings, AddressSpaceSpecConnectorCredentials credentials) throws Exception {
-        var endpoint = tlsSettings != null ? tlsSettings.getClientCert() != null ? remoteBrokerEndpointMutualTLS : remoteBrokerEndpointSSL : remoteBrokerEndpoint;
+    protected AddressSpace createAddressSpace(String name, String addressRule, AddressSpaceSpecConnectorTls tlsSettings,
+                                              AddressSpaceSpecConnectorCredentials credentials) throws Exception {
+        var endpoint = tlsSettings != null ? tlsSettings.getClientCert() != null
+                ? remoteBrokerEndpointMutualTLS : remoteBrokerEndpointSSL : remoteBrokerEndpoint;
         var connectorBuilder = new AddressSpaceSpecConnectorBuilder()
                 .withName(REMOTE_NAME)
                 .addToEndpointHosts(new AddressSpaceSpecConnectorEndpointBuilder()

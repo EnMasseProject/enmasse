@@ -78,7 +78,8 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
         IoTProject project = IoTUtils.getBasicIoTProjectObject("iot-project-managed", addressSpaceName,
                 IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
-        LOGGER.warn("NAMESPACE EXISTS? {}, {}", project.getMetadata().getNamespace(), kubernetes.namespaceExists(project.getMetadata().getNamespace()));
+        LOGGER.warn("NAMESPACE EXISTS? {}, {}", project.getMetadata().getNamespace(),
+                kubernetes.namespaceExists(project.getMetadata().getNamespace()));
         ISOLATED_IOT_MANAGER.createIoTProject(project);// waiting until ready
         var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         IoTProject created = iotProjectApiClient.withName(project.getMetadata().getName()).get();
@@ -101,8 +102,10 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
     private void assertManaged(IoTProject project) {
         //address space s
-        AddressSpace addressSpace = ISOLATED_IOT_MANAGER.getAddressSpace(IOT_PROJECT_NAMESPACE, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
-        assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(), addressSpace.getMetadata().getName());
+        AddressSpace addressSpace = ISOLATED_IOT_MANAGER.getAddressSpace(IOT_PROJECT_NAMESPACE, project.getSpec()
+                .getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(),
+                addressSpace.getMetadata().getName());
         assertEquals(AddressSpaceType.STANDARD.toString(), addressSpace.getSpec().getType());
         assertEquals(AddressSpacePlans.STANDARD_SMALL, addressSpace.getSpec().getPlan());
 
@@ -154,7 +157,8 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
         assertThat(authorizations, containsInAnyOrder(
                 asList(
-                        assertAdapterAuthorization( of(send), expandAddresses(addressSuffix, IOT_ADDRESS_TELEMETRY, IOT_ADDRESS_EVENT, IOT_ADDRESS_COMMAND_RESPONSE)),
+                        assertAdapterAuthorization( of(send), expandAddresses(addressSuffix, IOT_ADDRESS_TELEMETRY,
+                                IOT_ADDRESS_EVENT, IOT_ADDRESS_COMMAND_RESPONSE)),
                         assertAdapterAuthorization( of(recv), expandAddresses(addressSuffix, IOT_ADDRESS_COMMAND)),
                         assertAdapterAuthorization( of(recv, send), expandAddresses(addressSuffix, IOT_ADDRESS_CONTROL)))));
     }

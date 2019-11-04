@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class InfraTestBase extends TestBase implements ITestBase {
 
-    private static final List<String> resizingStorageProvisioners = Arrays.asList("kubernetes.io/aws-ebs", "kubernetes.io/gce-pd",
+    private static final List<String> RESIZING_STORAGE_PROVISIONERS = Arrays.asList("kubernetes.io/aws-ebs", "kubernetes.io/gce-pd",
             "kubernetes.io/azure-file", "kubernetes.io/azure-disk", "kubernetes.io/glusterfs", "kubernetes.io/cinder",
             "kubernetes.io/portworx-volume", "kubernetes.io/rbd");
     private static final Logger LOGGER = CustomLogger.getLogger();
@@ -160,7 +160,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
         String brokerStorageClassName = brokerVolumeClaim.getSpec().getStorageClassName();
         if (brokerStorageClassName != null) {
             StorageClass brokerStorageClass = KUBERNETES.getStorageClass(brokerStorageClassName);
-            if (resizingStorageProvisioners.contains(brokerStorageClass.getProvisioner())) {
+            if (RESIZING_STORAGE_PROVISIONERS.contains(brokerStorageClass.getProvisioner())) {
                 if (brokerStorageClass.getAllowVolumeExpansion() != null && brokerStorageClass.getAllowVolumeExpansion()) {
                     LOGGER.info("Testing broker volume resize because of {}:{}", brokerStorageClassName, brokerStorageClass.getProvisioner());
                     return true;

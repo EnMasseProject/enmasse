@@ -69,7 +69,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         resourcesManager.deleteAddressSpace(brokered);
         TestUtils.waitForNamespaceDeleted(KUBERNETES, brokered.getMetadata().getName());
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), "-a");
+            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(ENVIRONMENT.namespace(), "-a");
             return allAddresses.getStdOut() + allAddresses.getStdErr();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
@@ -102,7 +102,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         assertThat(resourcesManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_UNLIMITED));
 
         // Patch back to small plan
-        assertTrue(patchCR(standard.getKind().toLowerCase(), standard.getMetadata().getName(), "{\"spec\":{\"plan\":\"" + AddressSpacePlans.STANDARD_SMALL + "\"}}").getRetCode());
+        assertTrue(patchCR(standard.getKind().toLowerCase(), standard.getMetadata().getName(),
+                "{\"spec\":{\"plan\":\"" + AddressSpacePlans.STANDARD_SMALL + "\"}}").getRetCode());
         standard = resourcesManager.getAddressSpace(standard.getMetadata().getName());
         resourcesManager.waitForAddressSpaceReady(standard);
         resourcesManager.waitForAddressSpacePlanApplied(standard);
@@ -126,15 +127,15 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 .build();
         resourcesManager.createAddressSpace(brokered);
 
-        ExecutionResultData addressSpaces = KubeCMDClient.getAddressSpace(environment.namespace(), brokered.getMetadata().getName());
+        ExecutionResultData addressSpaces = KubeCMDClient.getAddressSpace(ENVIRONMENT.namespace(), brokered.getMetadata().getName());
         String output = addressSpaces.getStdOut();
         assertTrue(output.contains(brokered.getMetadata().getName()),
                 String.format("Get all addressspaces should contains '%s'; but contains only: %s",
                         brokered.getMetadata().getName(), output));
 
-        KubeCMDClient.deleteAddressSpace(environment.namespace(), brokered.getMetadata().getName());
+        KubeCMDClient.deleteAddressSpace(ENVIRONMENT.namespace(), brokered.getMetadata().getName());
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), "-a");
+            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(ENVIRONMENT.namespace(), "-a");
             return allAddresses.getStdErr();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
@@ -172,8 +173,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
             }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
         } finally {
-            KubeCMDClient.loginUser(environment.getApiToken());
-            KubeCMDClient.switchProject(environment.namespace());
+            KubeCMDClient.loginUser(ENVIRONMENT.getApiToken());
+            KubeCMDClient.switchProject(ENVIRONMENT.namespace());
             KUBERNETES.deleteNamespace(namespace);
         }
     }
@@ -262,8 +263,10 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                     .done();
 
             //create user
-            assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(brokered.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
-            assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(standard.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
+            assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(
+                    brokered.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
+            assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(
+                    standard.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
 
             data = new CliOutputData(KubeCMDClient.getUser(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.USER);
@@ -365,8 +368,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
             }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
         } finally {
-            KubeCMDClient.loginUser(environment.getApiToken());
-            KubeCMDClient.switchProject(environment.namespace());
+            KubeCMDClient.loginUser(ENVIRONMENT.getApiToken());
+            KubeCMDClient.switchProject(ENVIRONMENT.namespace());
             KUBERNETES.deleteNamespace(namespace);
         }
     }
@@ -393,8 +396,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             assertThat(KubeCMDClient.createCR(addressSpacePayloadJson.toString()).getRetCode(), is(false));
         } finally {
-            KubeCMDClient.loginUser(environment.getApiToken());
-            KubeCMDClient.switchProject(environment.namespace());
+            KubeCMDClient.loginUser(ENVIRONMENT.getApiToken());
+            KubeCMDClient.switchProject(ENVIRONMENT.namespace());
         }
     }
 }

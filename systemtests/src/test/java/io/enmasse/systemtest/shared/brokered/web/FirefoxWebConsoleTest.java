@@ -172,7 +172,7 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedBrokere
 
     @Test
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(clusterUser, true);
+        doTestCanOpenConsolePage(CLUSTER_USER, true);
     }
 
     @Test
@@ -214,7 +214,8 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedBrokere
                 new AddressBuilder()
                         .withNewMetadata()
                         .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "queue10charhere-10charhere-10charhere-10charhere-10charhere-1"))
+                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(),
+                                "queue10charhere-10charhere-10charhere-10charhere-10charhere-1"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("queue")
@@ -225,7 +226,8 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedBrokere
                 new AddressBuilder()
                         .withNewMetadata()
                         .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "queue10charhere-10charhere-10charhere-10charhere-10charhere.1"))
+                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(),
+                                "queue10charhere-10charhere-10charhere-10charhere-10charhere.1"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("queue")

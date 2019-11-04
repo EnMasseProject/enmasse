@@ -150,9 +150,12 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
 
     private StandardInfraConfig prepareConfig(NetworkPolicyPeer networkPolicyPeer) {
 
-        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
-        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
-        PodTemplateSpec routerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "router"), "myrouternode", "router");
+        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"),
+                "mybrokernode", "broker");
+        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"),
+                "myadminnode", "admin");
+        PodTemplateSpec routerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "router"),
+                "myrouternode", "router");
         StandardInfraConfig standardInfraConfig = new StandardInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test-network-policy-infra")

@@ -73,7 +73,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .withName("kornys")
                 .endMetadata()
                 .withNewSpec()
-                .withVersion(environment.enmasseVersion())
+                .withVersion(ENVIRONMENT.enmasseVersion())
                 .withBroker(new StandardInfraConfigSpecBrokerBuilder()
                         .withAddressFullPolicy("FAIL")
                         .withNewResources()
@@ -93,8 +93,10 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         resourcesManager.createInfraConfig(infra);
 
         //define and create address plans
-        List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 0.0));
-        List<ResourceRequest> addressResourcesTopic = Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0));
+        List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 1.0),
+                new ResourceRequest("router", 0.0));
+        List<ResourceRequest> addressResourcesTopic = Arrays.asList(new ResourceRequest("broker", 1.0),
+                new ResourceRequest("router", 1.0));
         AddressPlan weakQueuePlan = PlanUtils.createAddressPlanObject("standard-queue-weak", AddressType.QUEUE, addressResourcesQueue);
         AddressPlan weakTopicPlan = PlanUtils.createAddressPlanObject("standard-topic-weak", AddressType.TOPIC, addressResourcesTopic);
 
@@ -108,7 +110,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 new ResourceAllowance("aggregate", 10.0));
         List<AddressPlan> addressPlans = Arrays.asList(weakQueuePlan, weakTopicPlan);
 
-        AddressSpacePlan weakSpacePlan = PlanUtils.createAddressSpacePlanObject("weak-plan", infra.getMetadata().getName(), AddressSpaceType.STANDARD, resources, addressPlans);
+        AddressSpacePlan weakSpacePlan = PlanUtils.createAddressSpacePlanObject("weak-plan", infra.getMetadata().getName(),
+                AddressSpaceType.STANDARD, resources, addressPlans);
         resourcesManager.createAddressSpacePlan(weakSpacePlan);
 
         //create address space plan with new plan
@@ -153,8 +156,10 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         resourcesManager.setAddresses(weakQueueDest, weakTopicDest);
 
         //get destinations
-        Address getWeakQueue = KUBERNETES.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(weakQueueDest.getMetadata().getName()).get();
-        Address getWeakTopic = KUBERNETES.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(weakTopicDest.getMetadata().getName()).get();
+        Address getWeakQueue = KUBERNETES.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(
+                weakQueueDest.getMetadata().getName()).get();
+        Address getWeakTopic = KUBERNETES.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(
+                weakTopicDest.getMetadata().getName()).get();
 
         String assertMessage = "Queue plan wasn't set properly";
         assertAll("Both destination should contain right addressPlan",
@@ -533,7 +538,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .addToResourceLimits("broker", 2.0)
                 .addToResourceLimits("router", 2.0)
                 .addToResourceLimits("aggregate", 12.0)
-                .addToAddressPlans(simpleQueue.getMetadata().getName(), partitionedQueue.getMetadata().getName(), manyPartitionedQueue.getMetadata().getName())
+                .addToAddressPlans(simpleQueue.getMetadata().getName(), partitionedQueue.getMetadata().getName(),
+                        manyPartitionedQueue.getMetadata().getName())
                 .endSpec()
                 .build();
 
@@ -608,7 +614,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
     @Test
     void testScalePooledBrokers() throws Exception {
         //define and create address plans
-        List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.99), new ResourceRequest("router", 0.0));
+        List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.99),
+                new ResourceRequest("router", 0.0));
         AddressPlan xlQueuePlan = PlanUtils.createAddressPlanObject("pooled-xl-queue", AddressType.QUEUE, addressResourcesQueue);
         ISOLATED_RESOURCES_MANAGER.createAddressPlan(xlQueuePlan);
 
@@ -676,12 +683,16 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
     @Test
     void testMessagePersistenceAfterAutoScale() throws Exception {
         //define and create address plans
-        List<ResourceRequest> addressResourcesQueueAlpha = Arrays.asList(new ResourceRequest("broker", 0.3), new ResourceRequest("router", 0));
-        List<ResourceRequest> addressResourcesQueueBeta = Arrays.asList(new ResourceRequest("broker", 0.6), new ResourceRequest("router", 0));
+        List<ResourceRequest> addressResourcesQueueAlpha = Arrays.asList(new ResourceRequest("broker", 0.3),
+                new ResourceRequest("router", 0));
+        List<ResourceRequest> addressResourcesQueueBeta = Arrays.asList(new ResourceRequest("broker", 0.6),
+                new ResourceRequest("router", 0));
 
-        AddressPlan queuePlanAlpha = PlanUtils.createAddressPlanObject("pooled-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueAlpha);
+        AddressPlan queuePlanAlpha = PlanUtils.createAddressPlanObject("pooled-standard-queue-alpha",
+                AddressType.QUEUE, addressResourcesQueueAlpha);
         ISOLATED_RESOURCES_MANAGER.createAddressPlan(queuePlanAlpha);
-        AddressPlan queuePlanBeta = PlanUtils.createAddressPlanObject("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueueBeta);
+        AddressPlan queuePlanBeta = PlanUtils.createAddressPlanObject("pooled-standard-queue-beta",
+                AddressType.QUEUE, addressResourcesQueueBeta);
         ISOLATED_RESOURCES_MANAGER.createAddressPlan(queuePlanBeta);
 
 
@@ -763,7 +774,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
 
         // Dump address/broker assignment to help understand occasional test failure.
         KUBERNETES.getAddressClient().list().getItems().forEach(q -> {
-            Address a = KUBERNETES.getAddressClient(messagePersistAddressSpace.getMetadata().getNamespace()).withName(q.getMetadata().getName()).get();
+            Address a = KUBERNETES.getAddressClient(messagePersistAddressSpace.getMetadata()
+                    .getNamespace()).withName(q.getMetadata().getName()).get();
             LOGGER.info("Address {} => {}", q.getMetadata().getName(), a.getStatus().getBrokerStatuses());
         });
 
@@ -793,7 +805,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
             TestUtils.waitForNBrokerReplicas(messagePersistAddressSpace, 1, queue4, new TimeoutBudget(5, TimeUnit.MINUTES));
         } finally {
             KUBERNETES.getAddressClient().list().getItems().forEach(q -> {
-                Address a = KUBERNETES.getAddressClient(messagePersistAddressSpace.getMetadata().getNamespace()).withName(q.getMetadata().getName()).get();
+                Address a = KUBERNETES.getAddressClient(messagePersistAddressSpace.getMetadata()
+                        .getNamespace()).withName(q.getMetadata().getName()).get();
                 LOGGER.info("Address {} => {}", q.getMetadata().getName(), a.getStatus().getBrokerStatuses());
             });
         }
@@ -1055,7 +1068,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         assertEquals(beforeAddressSpacePlan.getMetadata().getName(),
                 replaced.getMetadata().getAnnotations().get("enmasse.io/applied-plan"));
         assertEquals(String.format("Unable to apply plan [%s] to address space %s:%s: quota exceeded for resource broker",
-                afterQueuePlan.getMetadata().getName(), environment.namespace(), replaced.getMetadata().getName()),
+                afterQueuePlan.getMetadata().getName(), ENVIRONMENT.namespace(), replaced.getMetadata().getName()),
                 replaced.getStatus().getMessages().get(0));
     }
 
@@ -1157,7 +1170,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         }
 
         for (Address address : getAddresses) {
-            LOGGER.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
+            LOGGER.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(),
+                    address.getSpec().getPlan(), address.getStatus().getPhase());
             String assertMessage = String.format("Address from allowed %s is not ready", address.getMetadata().getName());
             assertEquals(Phase.Active, address.getStatus().getPhase(), assertMessage);
         }
@@ -1179,14 +1193,15 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
             }
 
             for (Address address : getAddresses) {
-                LOGGER.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
+                LOGGER.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(),
+                        address.getSpec().getPlan(), address.getStatus().getPhase());
                 String assertMessage = String.format("Address from notAllowed %s is ready", address.getMetadata().getName());
                 assertEquals(Phase.Pending, address.getStatus().getPhase(), assertMessage);
                 assertTrue(address.getStatus().getMessages().contains("Quota exceeded"), "No status message is present");
             }
         }
 
-        ConsoleWebPage page = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(addressSpace), addressSpace, clusterUser);
+        ConsoleWebPage page = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(addressSpace), addressSpace, CLUSTER_USER);
         page.openWebConsolePage();
         page.openAddressesPageWebConsole();
 

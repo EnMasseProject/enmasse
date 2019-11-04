@@ -81,7 +81,7 @@ class ForwardersTest extends BridgingBase {
         UserCredentials localUser = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(space, localUser);
 
-        doTestSendToForwarder(space, forwarder, localUser, REMOTE_QUEUE1, 5);
+        doTestSendToForwarder(space, forwarder, localUser, 5);
 
         //make broker unavailable
         scaleDownBroker();
@@ -119,7 +119,8 @@ class ForwardersTest extends BridgingBase {
 
         var receivedInRemote = clientToRemote.recvMessages(REMOTE_QUEUE1, messagesBatch);
 
-        assertThat("Wrong count of messages received from remote queue: " + REMOTE_QUEUE1, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertThat("Wrong count of messages received from remote queue: "
+                + REMOTE_QUEUE1, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
     }
 
     @Test
@@ -203,7 +204,8 @@ class ForwardersTest extends BridgingBase {
 
         //receive in special global_dlq address in local broker
         var receivedInDLQ = localClient.recvMessages("!!GLOBAL_DLQ", messagesBatch);
-        assertThat("Wrong count of messages received !!GLOBAL_DLQ address after address is full in remote broker", receivedInDLQ.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertThat("Wrong count of messages received !!GLOBAL_DLQ address after address is full in remote broker",
+                receivedInDLQ.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
 
     }
 
@@ -233,7 +235,7 @@ class ForwardersTest extends BridgingBase {
 
         int messagesBatch = 20;
 
-        doTestSendToForwarder(space, forwarder, localUser, REMOTE_QUEUE1, messagesBatch);
+        doTestSendToForwarder(space, forwarder, localUser, messagesBatch);
     }
 
     private void doTestForwarderIn(AddressSpaceSpecConnectorTls tlsSettings, AddressSpaceSpecConnectorCredentials credentials) throws Exception {
@@ -262,10 +264,10 @@ class ForwardersTest extends BridgingBase {
 
         int messagesBatch = 20;
 
-        doTestReceiveInForwarder(space, forwarder, localUser, REMOTE_QUEUE1, messagesBatch);
+        doTestReceiveInForwarder(space, forwarder, localUser, messagesBatch);
     }
 
-    private void doTestSendToForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String remoteAddress, int messagesBatch) throws Exception {
+    private void doTestSendToForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, int messagesBatch) throws Exception {
         //send to address with forwarder
 
         AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
@@ -277,17 +279,18 @@ class ForwardersTest extends BridgingBase {
 
         AmqpClient clientToRemote = createClientToRemoteBroker();
 
-        var receivedInRemote = clientToRemote.recvMessages(remoteAddress, messagesBatch);
+        var receivedInRemote = clientToRemote.recvMessages(ForwardersTest.REMOTE_QUEUE1, messagesBatch);
 
-        assertThat("Wrong count of messages received from remote queue: " + remoteAddress, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertThat("Wrong count of messages received from remote queue: "
+                + ForwardersTest.REMOTE_QUEUE1, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
     }
 
-    private void doTestReceiveInForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String remoteAddress, int messagesBatch) throws Exception {
+    private void doTestReceiveInForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, int messagesBatch) throws Exception {
         //send to remote broker
 
         AmqpClient clientToRemote = createClientToRemoteBroker();
 
-        clientToRemote.sendMessages(remoteAddress, TestUtils.generateMessages(messagesBatch));
+        clientToRemote.sendMessages(ForwardersTest.REMOTE_QUEUE1, TestUtils.generateMessages(messagesBatch));
 
         //receive in address with forwarder
 
@@ -296,7 +299,8 @@ class ForwardersTest extends BridgingBase {
 
         var receivedInRemote = localClient.recvMessages(forwarder.getSpec().getAddress(), messagesBatch);
 
-        assertThat("Wrong count of messages received in local address: " + forwarder.getSpec().getAddress(), receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertThat("Wrong count of messages received in local address: "
+                + forwarder.getSpec().getAddress(), receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
     }
 
 

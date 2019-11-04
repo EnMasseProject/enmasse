@@ -4,13 +4,11 @@
  */
 package io.enmasse.systemtest.bases;
 
-import io.enmasse.systemtest.utils.MessagingUtils;
-import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.Kubernetes;
-import org.slf4j.Logger;
+import io.enmasse.systemtest.utils.MessagingUtils;
 
 public interface ITestBase {
     MessagingUtils MESSAGING_UTILS = new MessagingUtils();

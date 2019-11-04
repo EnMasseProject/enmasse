@@ -99,7 +99,7 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
             LOGGER.info("..........Scheduler will pick pod and delete them...........");
             List<Pod> pods = KUBERNETES.listPods();
             int podNum = new Random(System.currentTimeMillis()).nextInt(pods.size() - 1);
-            KUBERNETES.deletePod(environment.namespace(), pods.get(podNum).getMetadata().getName());
+            KUBERNETES.deletePod(ENVIRONMENT.namespace(), pods.get(podNum).getMetadata().getName());
             LOGGER.info("............................................................");
             LOGGER.info("............................................................");
             LOGGER.info("............................................................");
@@ -141,9 +141,10 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
             LOGGER.info("............................................................");
             LOGGER.info("............................................................");
             LOGGER.info("...........Scheduler will delete one of qdrouter............");
-            List<Pod> qdrouters = KUBERNETES.listPods().stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList());
+            List<Pod> qdrouters = KUBERNETES.listPods().stream().filter(pod
+                    -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList());
             Pod qdrouter = qdrouters.get(new Random(System.currentTimeMillis()).nextInt(qdrouters.size()) % qdrouters.size());
-            KUBERNETES.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
+            KUBERNETES.deletePod(ENVIRONMENT.namespace(), qdrouter.getMetadata().getName());
             LOGGER.info("............................................................");
             LOGGER.info("............................................................");
             LOGGER.info("............................................................");
@@ -158,8 +159,10 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
         LOGGER.info("Check if system works");
         TestUtils.runUntilPass(60, () -> resourcesManager.getAddressSpace(brokered.getMetadata().getName()));
         TestUtils.runUntilPass(60, () -> resourcesManager.getAddressSpace(standard.getMetadata().getName()));
-        TestUtils.runUntilPass(60, () -> resourcesManager.createOrUpdateUser(brokered, new UserCredentials("jenda", "cenda")));
-        TestUtils.runUntilPass(60, () -> resourcesManager.createOrUpdateUser(standard, new UserCredentials("jura", "fura")));
+        TestUtils.runUntilPass(60, () -> resourcesManager.createOrUpdateUser(brokered,
+                new UserCredentials("jenda", "cenda")));
+        TestUtils.runUntilPass(60, () -> resourcesManager.createOrUpdateUser(standard,
+                new UserCredentials("jura", "fura")));
         TestUtils.runUntilPass(60, () -> {
             getClientUtils().assertCanConnect(brokered, existingUser, brAddresses, resourcesManager);
             return true;

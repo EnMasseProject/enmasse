@@ -28,7 +28,6 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.function.Executable;
 
@@ -61,7 +60,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         clients = new ArrayList<>();
         String clientFolder = "clients_tests";
         logPath = Paths.get(
-                environment.testLogDir(),
+                ENVIRONMENT.testLogDir(),
                 clientFolder,
                 info.getTestClass().get().getName(),
                 info.getTestMethod().get().getName());
@@ -135,8 +134,8 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 String.format("Expected %d received messages", expectedMsgCount));
     }
 
-    protected void doRoundRobinReceiverTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient receiver, AbstractClient receiver2)
-            throws Exception {
+    protected void doRoundRobinReceiverTest(ArtemisManagement artemisManagement, AbstractClient sender,
+                                            AbstractClient receiver, AbstractClient receiver2) throws Exception {
         clients.addAll(Arrays.asList(sender, receiver, receiver2));
         int expectedMsgCount = 10;
 
@@ -191,8 +190,8 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                         String.format("Expected %d sent messages", expectedMsgCount / 2)));
     }
 
-    protected void doTopicSubscribeTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2,
-                                        boolean hasTopicPrefix) throws Exception {
+    protected void doTopicSubscribeTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient subscriber,
+                                        AbstractClient subscriber2, boolean hasTopicPrefix) throws Exception {
         clients.addAll(Arrays.asList(sender, subscriber, subscriber2));
         int expectedMsgCount = 10;
 
@@ -243,9 +242,9 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                         String.format("Expected %d received messages", expectedMsgCount)));
     }
 
-    protected void doMessageBrowseTest(AbstractClient sender, AbstractClient receiver_browse, AbstractClient receiver_receive)
+    protected void doMessageBrowseTest(AbstractClient sender, AbstractClient receiverBrowse, AbstractClient receiverReceive)
             throws Exception {
-        clients.addAll(Arrays.asList(sender, receiver_browse, receiver_receive));
+        clients.addAll(Arrays.asList(sender, receiverBrowse, receiverReceive));
         int expectedMsgCount = 10;
 
         Address dest = new AddressBuilder()
@@ -270,21 +269,21 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         arguments.remove(ClientArgument.MSG_CONTENT);
 
         arguments.put(ClientArgument.RECV_BROWSE, "true");
-        receiver_browse.setArguments(arguments);
+        receiverBrowse.setArguments(arguments);
 
         arguments.put(ClientArgument.RECV_BROWSE, "false");
-        receiver_receive.setArguments(arguments);
+        receiverReceive.setArguments(arguments);
 
         assertAll(
                 () -> assertTrue(sender.run(), "Sender failed, expected return code 0"),
                 () -> assertEquals(expectedMsgCount, sender.getMessages().size(),
                         String.format("Expected %d sent messages", expectedMsgCount)));
         assertAll(
-                () -> assertTrue(receiver_browse.run(), "Browse receiver failed, expected return code 0"),
-                () -> assertTrue(receiver_receive.run(), "Receiver failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, receiver_browse.getMessages().size(),
+                () -> assertTrue(receiverBrowse.run(), "Browse receiver failed, expected return code 0"),
+                () -> assertTrue(receiverReceive.run(), "Receiver failed, expected return code 0"),
+                () -> assertEquals(expectedMsgCount, receiverBrowse.getMessages().size(),
                         String.format("Expected %d browsed messages", expectedMsgCount)),
-                () -> assertEquals(expectedMsgCount, receiver_receive.getMessages().size(),
+                () -> assertEquals(expectedMsgCount, receiverReceive.getMessages().size(),
                         String.format("Expected %d received messages", expectedMsgCount)));
     }
 

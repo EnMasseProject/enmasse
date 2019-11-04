@@ -33,7 +33,8 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
 
     @Test
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
-        doTopicSubscribeTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath), false);
+        doTopicSubscribeTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath),
+                new RheaClientReceiver(logPath), false);
     }
 
     @Test

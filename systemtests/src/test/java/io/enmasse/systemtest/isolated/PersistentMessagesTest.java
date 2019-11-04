@@ -205,7 +205,8 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
 
     private void restartBrokers(int podCount) throws Exception {
         Map<String, String> labelSelector = Collections.singletonMap("role", "broker");
-        List<String> uids = KUBERNETES.listPods(KUBERNETES.getInfraNamespace(), labelSelector).stream().map(pod -> pod.getMetadata().getUid()).collect(Collectors.toList());
+        List<String> uids = KUBERNETES.listPods(KUBERNETES.getInfraNamespace(), labelSelector).stream()
+                .map(pod -> pod.getMetadata().getUid()).collect(Collectors.toList());
 
         KUBERNETES.deletePod(KUBERNETES.getInfraNamespace(), labelSelector);
 

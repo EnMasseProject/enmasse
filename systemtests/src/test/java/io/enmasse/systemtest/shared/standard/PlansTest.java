@@ -12,14 +12,12 @@ import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
-import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;

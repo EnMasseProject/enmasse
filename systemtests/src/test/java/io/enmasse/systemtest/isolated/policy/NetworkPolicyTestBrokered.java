@@ -22,7 +22,6 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
 import io.enmasse.systemtest.condition.OpenShift;
-import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -40,7 +39,6 @@ import io.fabric8.kubernetes.api.model.networking.NetworkPolicyPeer;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyPeerBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -153,8 +151,10 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
 
     private BrokeredInfraConfig prepareConfig(NetworkPolicyPeer networkPolicyPeer) {
 
-        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
-        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
+        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"),
+                "mybrokernode", "broker");
+        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"),
+                "myadminnode", "admin");
         BrokeredInfraConfig brokeredInfraConfig = new BrokeredInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test-infra-3-brokered")

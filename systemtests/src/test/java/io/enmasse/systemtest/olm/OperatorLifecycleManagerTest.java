@@ -47,9 +47,9 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @SeleniumFirefox
     @Order(1)
     void installOperator() throws Exception {
-        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), KUBERNETES.getOCConsoleRoute(), clusterUser);
+        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), KUBERNETES.getOCConsoleRoute(), CLUSTER_USER);
         page.openOpenshiftPage();
-        page.installFromCatalog(environment.getAppName());
+        page.installFromCatalog(ENVIRONMENT.getAppName());
         Thread.sleep(30_000);
         TestUtils.waitUntilDeployed(infraNamespace);
     }
@@ -58,11 +58,11 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @SeleniumFirefox
     @Order(2)
     void testCreateExampleResources() throws Exception {
-        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), KUBERNETES.getOCConsoleRoute(), clusterUser);
+        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), KUBERNETES.getOCConsoleRoute(), CLUSTER_USER);
         page.openOpenshiftPage();
         page.openInstalledOperators();
         page.selectNamespaceFromBar(infraNamespace);
-        page.selectOperator(environment.getAppName());
+        page.selectOperator(ENVIRONMENT.getAppName());
         page.createExampleResourceItem("standardinfraconfig");
         page.createExampleResourceItem("brokeredinfraconfig");
         page.createExampleResourceItem("addressplan");
@@ -85,7 +85,8 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     void testBasicMessagingAfterOlmInstallation() throws Exception {
         AddressSpace exampleSpace = KUBERNETES.getAddressSpaceClient(infraNamespace).withName("myspace").get();
         Address exampleAddress = KUBERNETES.getAddressClient(infraNamespace).withName("myspace.myqueue").get();
-        getClientUtils().assertCanConnect(exampleSpace, new UserCredentials("user", "enmasse"), Collections.singletonList(exampleAddress), resourcesManager);
+        getClientUtils().assertCanConnect(exampleSpace, new UserCredentials("user", "enmasse"),
+                Collections.singletonList(exampleAddress), resourcesManager);
     }
 
     @Test
@@ -93,9 +94,9 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @Order(4)
     void uninstallOperator() throws Exception {
         TestUtils.cleanAllEnmasseResourcesFromNamespace(infraNamespace);
-        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), KUBERNETES.getOCConsoleRoute(), clusterUser);
+        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), KUBERNETES.getOCConsoleRoute(), CLUSTER_USER);
         page.openOpenshiftPage();
-        page.uninstallFromCatalog(environment.getAppName());
+        page.uninstallFromCatalog(ENVIRONMENT.getAppName());
         KUBERNETES.getConsoleServiceClient(infraNamespace).withPropagationPolicy("Background").delete();
     }
 

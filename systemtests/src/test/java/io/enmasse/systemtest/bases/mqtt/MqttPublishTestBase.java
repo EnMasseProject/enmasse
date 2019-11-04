@@ -132,7 +132,8 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
             client.connect();
 
 
-            List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), subscriberQos);
+            List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils
+                    .subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), subscriberQos);
             List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
 
             int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);

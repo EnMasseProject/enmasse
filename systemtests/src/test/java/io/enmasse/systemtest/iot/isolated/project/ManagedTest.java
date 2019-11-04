@@ -89,7 +89,7 @@ class ManagedTest extends TestBase implements ITestIoTIsolated {
     @AfterEach
     void cleanEnv(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectHttpAdapterQdrProxyState();
+            LOG_COLLECTOR.collectHttpAdapterQdrProxyState();
         }
         SystemtestsKubernetesApps.deleteInfinispanServer(KUBERNETES.getInfraNamespace());
     }
@@ -127,7 +127,8 @@ class ManagedTest extends TestBase implements ITestIoTIsolated {
         // otherwise io.enmasse.systemtest.utils.IoTUtils.waitForIoTProjectReady(Kubernetes, IoTProject) will fail
 
         waitUntilConditionOrFail(
-                addressSpaceExists(project.getMetadata().getNamespace(), project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName()),
+                addressSpaceExists(project.getMetadata().getNamespace(), project.getSpec()
+                        .getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName()),
                 ofMinutes(5), ofSeconds(10),
                 () -> "Expected address space to be created");
 
@@ -153,7 +154,8 @@ class ManagedTest extends TestBase implements ITestIoTIsolated {
         }
     }
 
-    private static void assertObject(final BiConsumer<Object,String> assertor, final String message, final MixedOperation<?, ?, ?, ?> client, final String name) {
+    private static void assertObject(final BiConsumer<Object,String> assertor, final String message,
+                                     final MixedOperation<?, ?, ?, ?> client, final String name) {
         var object = client.withName(name).get();
         assertor.accept(object, message);
     }

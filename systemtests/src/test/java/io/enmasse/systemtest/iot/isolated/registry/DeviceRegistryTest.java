@@ -94,8 +94,10 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         this.randomDeviceId = UUID.randomUUID().toString();
 
         UserCredentials credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        ISOLATED_IOT_MANAGER.createOrUpdateUser(ISOLATED_IOT_MANAGER.getAddressSpace(IOT_PROJECT_NAMESPACE, DEVICE_REGISTRY_TEST_ADDRESSSPACE), credentials);
-        AmqpClientFactory iotAmqpClientFactory = new AmqpClientFactory(resourcesManager.getAddressSpace(IOT_PROJECT_NAMESPACE, DEVICE_REGISTRY_TEST_ADDRESSSPACE), credentials);
+        ISOLATED_IOT_MANAGER.createOrUpdateUser(
+                ISOLATED_IOT_MANAGER.getAddressSpace(IOT_PROJECT_NAMESPACE, DEVICE_REGISTRY_TEST_ADDRESSSPACE), credentials);
+        AmqpClientFactory iotAmqpClientFactory = new AmqpClientFactory(
+                resourcesManager.getAddressSpace(IOT_PROJECT_NAMESPACE, DEVICE_REGISTRY_TEST_ADDRESSSPACE), credentials);
         this.amqpClient = iotAmqpClientFactory.createQueueClient();
 
     }

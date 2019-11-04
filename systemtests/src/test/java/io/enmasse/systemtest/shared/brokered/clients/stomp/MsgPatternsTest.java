@@ -26,7 +26,8 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     @Test
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
         getArguments().put(ClientArgument.DEST_TYPE, "MULTICAST");
-        doTopicSubscribeTest(artemisManagement, new StompClientSender(logPath), new StompClientReceiver(logPath), new StompClientReceiver(logPath), false);
+        doTopicSubscribeTest(artemisManagement, new StompClientSender(logPath),
+                new StompClientReceiver(logPath), new StompClientReceiver(logPath), false);
     }
 
     @Test

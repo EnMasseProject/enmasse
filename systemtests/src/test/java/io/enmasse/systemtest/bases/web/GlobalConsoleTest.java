@@ -43,14 +43,14 @@ public abstract class GlobalConsoleTest extends TestBase {
     //============================================================================================
 
     protected void doTestOpen() throws Exception {
-        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), CLUSTER_USER);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.logout();
     }
 
     protected void doTestCreateAddressSpace(AddressSpace addressSpace) throws Exception {
         ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(addressSpace);
-        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), CLUSTER_USER);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
         waitUntilAddressSpaceActive(addressSpace);
@@ -59,7 +59,7 @@ public abstract class GlobalConsoleTest extends TestBase {
 
     protected void doTestConnectToAddressSpaceConsole(AddressSpace addressSpace) throws Exception {
         ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(addressSpace);
-        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), CLUSTER_USER);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
         ConsoleWebPage console = globalConsolePage.openAddressSpaceConsolePage(addressSpace);
@@ -86,7 +86,7 @@ public abstract class GlobalConsoleTest extends TestBase {
                 .build();
         ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(addressSpace);
 
-        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), CLUSTER_USER);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
         waitUntilAddressSpaceActive(addressSpace);
@@ -109,7 +109,7 @@ public abstract class GlobalConsoleTest extends TestBase {
 
         ISOLATED_RESOURCES_MANAGER.createAddressSpace(addressSpace);
 
-        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), CLUSTER_USER);
         globalConsolePage.openGlobalConsolePage();
         waitUntilAddressSpaceActive(addressSpace);
         globalConsolePage.deleteAddressSpace(addressSpace);
@@ -143,8 +143,8 @@ public abstract class GlobalConsoleTest extends TestBase {
             globalConsolePage.deleteAddressSpace(addressSpace);
 
         } finally {
-            KubeCMDClient.loginUser(environment.getApiToken());
-            KubeCMDClient.switchProject(environment.namespace());
+            KubeCMDClient.loginUser(ENVIRONMENT.getApiToken());
+            KubeCMDClient.switchProject(ENVIRONMENT.namespace());
             KUBERNETES.deleteNamespace(namespace);
         }
     }
@@ -164,7 +164,7 @@ public abstract class GlobalConsoleTest extends TestBase {
                 .endSpec()
                 .build();
         ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(addressSpace);
-        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), CLUSTER_USER);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
         waitUntilAddressSpaceActive(addressSpace);
@@ -227,7 +227,7 @@ public abstract class GlobalConsoleTest extends TestBase {
                 selenium,
                 KUBERNETES.getConsoleRoute(addressSpace),
                 addressSpace,
-                clusterUser);
+                CLUSTER_USER);
         console.openWebConsolePage();
         console.openAddressesPageWebConsole();
     }

@@ -23,12 +23,14 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
 
     @Test
     void testRoundRobinReceiver(ArtemisManagement artemisManagement) throws Exception {
-        doRoundRobinReceiverTest(artemisManagement, new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
+        doRoundRobinReceiverTest(artemisManagement, new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(),
+                new ArtemisJMSClientReceiver());
     }
 
     @Test
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
-        doTopicSubscribeTest(artemisManagement, new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver(), true);
+        doTopicSubscribeTest(artemisManagement, new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(),
+                new ArtemisJMSClientReceiver(), true);
     }
 
     @Test

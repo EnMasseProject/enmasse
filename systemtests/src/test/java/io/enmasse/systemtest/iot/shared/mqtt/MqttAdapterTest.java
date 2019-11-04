@@ -124,7 +124,8 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
                 .endSpec()
                 .done();
 
-        AddressSpace addressSpace = resourcesManager.getAddressSpace(IOT_PROJECT_NAMESPACE, getSharedIoTProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = resourcesManager.getAddressSpace(IOT_PROJECT_NAMESPACE, getSharedIoTProject().getSpec().getDownstreamStrategy()
+                .getManagedStrategy().getAddressSpace().getName());
         resourcesManager.createOrUpdateUser(addressSpace, businessApplicationUser);
 
         businessApplicationClient = getAmqpClientFactory().createQueueClient(addressSpace);
@@ -137,7 +138,7 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
     @AfterEach
     void cleanEnv(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectMqttAdapterQdrProxyState();
+            LOG_COLLECTOR.collectMqttAdapterQdrProxyState();
         }
         credentialsClient.deleteAllCredentials(SHARED_IOT_MANAGER.getTenantId(), deviceId);
         registryClient.deleteDeviceRegistration(SHARED_IOT_MANAGER.getTenantId(), deviceId);

@@ -31,16 +31,16 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * The constant clusterUser.
      */
-    protected static final UserCredentials clusterUser = new UserCredentials(KubeCMDClient.getOCUser());
+    protected static final UserCredentials CLUSTER_USER = new UserCredentials(KubeCMDClient.getOCUser());
     /**
      * The constant environment.
      */
-    protected static final Environment environment = Environment.getInstance();
+    protected static final Environment ENVIRONMENT = Environment.getInstance();
     /**
      * The constant logCollector.
      */
-    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(KUBERNETES,
-            new File(environment.testLogDir()));
+    protected static final GlobalLogCollector LOG_COLLECTOR = new GlobalLogCollector(KUBERNETES,
+            new File(ENVIRONMENT.testLogDir()));
     /**
      * The Resources manager.
      */
@@ -60,7 +60,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         LOGGER.info("Test init");
         resourcesManager = getResourceManager();
         if (TestInfo.getInstance().isTestShared()) {
-            defaultCredentials = environment.getSharedDefaultCredentials();
+            defaultCredentials = ENVIRONMENT.getSharedDefaultCredentials();
             resourcesManager.setAddressSpacePlan(getDefaultAddressSpacePlan());
             resourcesManager.setAddressSpaceType(getAddressSpaceType().toString());
             resourcesManager.setDefaultAddSpaceIdentifier(getDefaultAddrSpaceIdentifier());
@@ -68,7 +68,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 resourcesManager.setup();
             }
         } else {
-            defaultCredentials = environment.getDefaultCredentials();
+            defaultCredentials = ENVIRONMENT.getDefaultCredentials();
             resourcesManager.setup();
         }
     }

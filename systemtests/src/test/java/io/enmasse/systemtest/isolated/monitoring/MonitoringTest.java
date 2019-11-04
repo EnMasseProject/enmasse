@@ -42,17 +42,20 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     private static final int TIMEOUT_QUERY_RESULT_MINUTES = 3;
     private static final String ENMASSE_ADDRESS_SPACES_NOT_READY = "enmasse_address_space_status_not_ready";
     private static final String ENMASSE_ADDRESS_SPACES_READY = "enmasse_address_space_status_ready";
-    private Path templatesDir = Paths.get(environment.getTemplatesPath());
+    private Path templatesDir = Paths.get(ENVIRONMENT.getTemplatesPath());
     private PrometheusApiClient prometheusApiClient;
 
     @BeforeEach
     void installMonitoring() throws Exception {
-        KubeCMDClient.createNamespace(environment.getMonitoringNamespace());
-        KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
+        KubeCMDClient.createNamespace(ENVIRONMENT.getMonitoringNamespace());
+        KubeCMDClient.applyFromFile(ENVIRONMENT.getMonitoringNamespace(),
+                Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
         waitForMonitoringResources();
-        KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-deployment"));
+        KubeCMDClient.applyFromFile(ENVIRONMENT.getMonitoringNamespace(),
+                Paths.get(templatesDir.toString(), "install", "components", "monitoring-deployment"));
         Thread.sleep(30_000);
-        TestUtils.waitForExpectedReadyPods(KUBERNETES, environment.getMonitoringNamespace(), 6, new TimeoutBudget(3, TimeUnit.MINUTES));
+        TestUtils.waitForExpectedReadyPods(KUBERNETES,
+                ENVIRONMENT.getMonitoringNamespace(), 6, new TimeoutBudget(3, TimeUnit.MINUTES));
 
         Kubernetes.getInstance().getClient().namespaces()
                 .withName(KUBERNETES.getInfraNamespace())
@@ -64,7 +67,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         KubeCMDClient.switchProject(KUBERNETES.getInfraNamespace());
         KubeCMDClient.applyFromFile(KUBERNETES.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
 
-        Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
+        Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", ENVIRONMENT.getMonitoringNamespace());
         this.prometheusApiClient = new PrometheusApiClient(KUBERNETES, prometheusEndpoint);
 
         waitUntilPrometheusReady();
@@ -74,7 +77,8 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     private void waitForMonitoringResources() {
         LOGGER.info("Waiting for monitoring resources to be installed");
         TestUtils.waitUntilCondition("Monitoring resources installed", phase -> {
-            String permissions = KubeCMDClient.checkPermission("create", "prometheus", environment.getMonitoringNamespace(), "application-monitoring-operator").getStdOut();
+            String permissions = KubeCMDClient.checkPermission("create", "prometheus",
+                    ENVIRONMENT.getMonitoringNamespace(), "application-monitoring-operator").getStdOut();
             return permissions.trim().equals("yes");
         }, new TimeoutBudget(3, TimeUnit.MINUTES));
 
@@ -112,28 +116,30 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     @AfterEach
     void uninstallMonitoring(ExtensionContext context) {
         if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectLogsOfPodsInNamespace(environment.getMonitoringNamespace());
-            logCollector.collectEvents(environment.getMonitoringNamespace());
+            LOG_COLLECTOR.collectLogsOfPodsInNamespace(ENVIRONMENT.getMonitoringNamespace());
+            LOG_COLLECTOR.collectEvents(ENVIRONMENT.getMonitoringNamespace());
         }
         KubeCMDClient.switchProject(KUBERNETES.getInfraNamespace());
         KubeCMDClient.deleteFromFile(KUBERNETES.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
-        KubeCMDClient.switchProject(environment.getMonitoringNamespace());
+        KubeCMDClient.switchProject(ENVIRONMENT.getMonitoringNamespace());
         deleteMonitoringInfra();
-        KubeCMDClient.deleteNamespace(environment.getMonitoringNamespace());
+        KubeCMDClient.deleteNamespace(ENVIRONMENT.getMonitoringNamespace());
         KubeCMDClient.switchProject(KUBERNETES.getInfraNamespace());
     }
 
     private void deleteMonitoringInfra() {
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "blackboxtargets.applicationmonitoring.integreatly.org");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanadashboards.integreatly.org");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanadatasources.integreatly.org");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanas.integreatly.org");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "applicationmonitorings.applicationmonitoring.integreatly.org");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "alertmanagers.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "podmonitors.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "prometheuses.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "prometheusrules.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "servicemonitors.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(ENVIRONMENT.getMonitoringNamespace(),
+                "crd", "blackboxtargets.applicationmonitoring.integreatly.org");
+        KubeCMDClient.deleteResource(ENVIRONMENT.getMonitoringNamespace(), "crd", "grafanadashboards.integreatly.org");
+        KubeCMDClient.deleteResource(ENVIRONMENT.getMonitoringNamespace(), "crd", "grafanadatasources.integreatly.org");
+        KubeCMDClient.deleteResource(ENVIRONMENT.getMonitoringNamespace(), "crd", "grafanas.integreatly.org");
+        KubeCMDClient.deleteResource(ENVIRONMENT.getMonitoringNamespace(),
+                "crd", "applicationmonitorings.applicationmonitoring.integreatly.org");
+        KubeCMDClient.deleteResource(ENVIRONMENT.getMonitoringNamespace(), "crd", "alertmanagers.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(ENVIRONMENT.getMonitoringNamespace(), "crd", "podmonitors.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(ENVIRONMENT.getMonitoringNamespace(), "crd", "prometheuses.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(ENVIRONMENT.getMonitoringNamespace(), "crd", "prometheusrules.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(ENVIRONMENT.getMonitoringNamespace(), "crd", "servicemonitors.monitoring.coreos.com");
     }
 
     @Test
@@ -163,10 +169,12 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         validateAddressSpaceQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, addressSpaceName, "0");
 
         //tests address spaces ready goes from 0 to 1
-        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, startTs, addressSpaceName, range -> Ordering.natural().isOrdered(range));
+        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, startTs, addressSpaceName, range
+                -> Ordering.natural().isOrdered(range));
 
         //tests address spaces not ready goes from 1 to 0
-        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, startTs, addressSpaceName, range -> Ordering.natural().reverse().isOrdered(range));
+        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, startTs, addressSpaceName, range
+                -> Ordering.natural().reverse().isOrdered(range));
     }
 
     private void validateAddressSpaceQueryWaiting(String query, String addressSpace, String expectedValue) {
@@ -210,12 +218,16 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         throw new Exception("Unexpected query result " + queryResult.encodePrettily());
     }
 
-    private void validateAddressSpaceRangeQuery(String query, Instant start, String addressSpace, Predicate<List<String>> rangeValidator) throws Exception {
-        JsonObject queryResult = prometheusApiClient.doRangeQuery(query, String.valueOf(start.getEpochSecond()), String.valueOf(Instant.now().getEpochSecond()));
+    private void validateAddressSpaceRangeQuery(String query, Instant start,
+                                                String addressSpace, Predicate<List<String>> rangeValidator) throws Exception {
+
+        JsonObject queryResult = prometheusApiClient.doRangeQuery(query, String.valueOf(start.getEpochSecond()),
+                String.valueOf(Instant.now().getEpochSecond()));
         basicQueryResultValidation(query, queryResult);
         boolean validateResult = metricQueryResultValidation(queryResult, addressSpace, jsonResult -> {
             JsonArray valuesArray = jsonResult.getJsonArray("values", new JsonArray());
-            return rangeValidator.test(valuesArray.stream().map(obj -> (JsonArray) obj).map(array -> array.getString(1)).collect(Collectors.toList()));
+            return rangeValidator.test(valuesArray.stream().map(obj
+                    -> (JsonArray) obj).map(array -> array.getString(1)).collect(Collectors.toList()));
         });
         if (validateResult) {
             return;

@@ -36,11 +36,9 @@
          <property name="max" value="150"/>
       </module>
       <module name="MethodLength">
-         <property name="max" value="150"/>
+         <property name="max" value="200"/>
          <property name="countEmpty" value="false"/>
       </module>
-      <module name="ParameterNumber"/>
-
       <!-- Modifier Checks                                    -->
       <!-- See http://checkstyle.sf.net/config_modifier.html -->
       <module name="ModifierOrder"/>

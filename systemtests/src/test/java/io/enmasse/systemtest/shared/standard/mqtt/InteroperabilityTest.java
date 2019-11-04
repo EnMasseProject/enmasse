@@ -101,7 +101,8 @@ class InteroperabilityTest extends TestBase implements ITestSharedWithMqtt {
         IMqttClient mqttClient = getMqttClientFactory().create();
         mqttClient.connect();
 
-        List<CompletableFuture<MqttMessage>> receivedFutures = MqttUtils.subscribeAndReceiveMessages(mqttClient, mqttTopic.getSpec().getAddress(), messages.size(), 1);
+        List<CompletableFuture<MqttMessage>> receivedFutures = MqttUtils.subscribeAndReceiveMessages(mqttClient,
+                mqttTopic.getSpec().getAddress(), messages.size(), 1);
 
         AmqpClient amqpClient = getAmqpClientFactory().createTopicClient();
 

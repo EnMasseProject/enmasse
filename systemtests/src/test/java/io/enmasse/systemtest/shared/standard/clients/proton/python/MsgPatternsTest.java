@@ -24,7 +24,8 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
 
     @Test
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
-        doTopicSubscribeTest(artemisManagement, new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
+        doTopicSubscribeTest(artemisManagement, new PythonClientSender(logPath), new PythonClientReceiver(logPath),
+                new PythonClientReceiver(logPath), false);
     }
 
     @Test

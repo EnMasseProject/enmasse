@@ -64,14 +64,18 @@ class UserApiTest extends TestBase implements ITestSharedBrokered {
 
         //create user
         assertThat(KubeCMDClient.createCR(KUBERNETES.getInfraNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
-        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(),
+                cred.getUsername()).getRetCode(), is(true));
 
         //patch user
-        assertThat(KubeCMDClient.patchCR(User.KIND.toLowerCase(), getSharedAddressSpace().getMetadata().getName() + "." + cred.getUsername(), "{\"spec\":{\"authentication\":{\"password\":\"aGVp\"}}}").getRetCode(), is(true));
+        assertThat(KubeCMDClient.patchCR(User.KIND.toLowerCase(), getSharedAddressSpace().getMetadata().getName() + "."
+                + cred.getUsername(), "{\"spec\":{\"authentication\":{\"password\":\"aGVp\"}}}").getRetCode(), is(true));
 
         //delete user
-        assertThat(KubeCMDClient.deleteUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(true));
-        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(false));
+        assertThat(KubeCMDClient.deleteUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(),
+                cred.getUsername()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(),
+                cred.getUsername()).getRetCode(), is(false));
     }
 
     @Test
@@ -87,14 +91,16 @@ class UserApiTest extends TestBase implements ITestSharedBrokered {
                 .done();
 
         JsonObject userDefinitionPayload = UserUtils.userToJson(getSharedAddressSpace().getMetadata().getName(), testUser);
-        userDefinitionPayload.getJsonObject("spec").getJsonArray("authorization").getJsonObject(0).getJsonArray("operations").add("unknown");
+        userDefinitionPayload.getJsonObject("spec").getJsonArray("authorization")
+                .getJsonObject(0).getJsonArray("operations").add("unknown");
         users.put(getSharedAddressSpace(), testUser);
 
         //create user
         ExecutionResultData createUserResponse = KubeCMDClient.createCR(KUBERNETES.getInfraNamespace(), userDefinitionPayload.toString());
         assertThat(createUserResponse.getRetCode(), is(false));
         assertTrue(createUserResponse.getStdErr().contains("value not one of declared Enum instance names: [send, view, recv, manage]"));
-        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(false));
+        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(),
+                cred.getUsername()).getRetCode(), is(false));
 
         User testUser2 = UserUtils.createUserResource(cred)
                 .editSpec()
@@ -111,7 +117,8 @@ class UserApiTest extends TestBase implements ITestSharedBrokered {
         ExecutionResultData createUserResponse2 = KubeCMDClient.createCR(KUBERNETES.getInfraNamespace(), userDefinitionPayload2.toString());
         assertThat(createUserResponse2.getRetCode(), is(false));
         assertTrue(createUserResponse2.getStdErr().contains(String.format("The name of the object (.%s) is not valid", cred.getUsername())));
-        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(false));
+        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(),
+                cred.getUsername()).getRetCode(), is(false));
     }
 
     @Test
@@ -131,7 +138,8 @@ class UserApiTest extends TestBase implements ITestSharedBrokered {
 
         //create user
         assertThat(KubeCMDClient.createCR(KUBERNETES.getInfraNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
-        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(),
+                cred.getUsername()).getRetCode(), is(true));
 
         testUser = new DoneableUser(testUser)
                 .editSpec()
@@ -145,13 +153,17 @@ class UserApiTest extends TestBase implements ITestSharedBrokered {
 
         //update user
         assertThat(KubeCMDClient.updateCR(KUBERNETES.getInfraNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
-        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(true));
-        assertTrue(resourcesManager.getUser(getSharedAddressSpace(), testUser.getSpec().getUsername()).toString().contains(Operation.recv.toString()));
+        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(),
+                cred.getUsername()).getRetCode(), is(true));
+        assertTrue(resourcesManager.getUser(getSharedAddressSpace(),
+                testUser.getSpec().getUsername()).toString().contains(Operation.recv.toString()));
 
 
         //delete user
-        assertThat(KubeCMDClient.deleteUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(true));
-        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(false));
+        assertThat(KubeCMDClient.deleteUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(),
+                cred.getUsername()).getRetCode(), is(true));
+        assertThat(KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(),
+                cred.getUsername()).getRetCode(), is(false));
     }
 
     @Test
@@ -166,7 +178,8 @@ class UserApiTest extends TestBase implements ITestSharedBrokered {
         users.put(getSharedAddressSpace(), testUser2);
 
         assertThrows(KubernetesClientException.class, () ->
-                KUBERNETES.getUserClient(getSharedAddressSpace().getMetadata().getNamespace()).create(resourcesManager.getUser(getSharedAddressSpace(), testUser.getSpec().getUsername())));
+                KUBERNETES.getUserClient(getSharedAddressSpace().getMetadata().getNamespace()).create(
+                        resourcesManager.getUser(getSharedAddressSpace(), testUser.getSpec().getUsername())));
     }
 
     @Test

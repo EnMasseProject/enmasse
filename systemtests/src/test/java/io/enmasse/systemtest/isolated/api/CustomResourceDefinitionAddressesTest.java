@@ -86,7 +86,7 @@ class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIso
                 .endSpec()
                 .build();
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(brokered), brokered, clusterUser);
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(brokered), brokered, CLUSTER_USER);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.createAddressWebConsole(dest1, false);
@@ -99,13 +99,14 @@ class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIso
         assertNotNull(addressFromConsole, "Didn't receive address from api server");
 
         // Patch new label
-        assertTrue(KubeCMDClient.patchCR(Address.KIND.toLowerCase(), addressFromConsole.getMetadata().getName(), "{\"metadata\":{\"annotations\":{\"mylabel\":\"myvalue\"}}}").getRetCode());
-
-        KubeCMDClient.deleteAddress(environment.namespace(), addressFromConsole.getMetadata().getName());
-        KubeCMDClient.deleteAddress(environment.namespace(), dest2.getMetadata().getName());
+        assertTrue(KubeCMDClient.patchCR(Address.KIND.toLowerCase(), addressFromConsole.getMetadata().getName(),
+                "{\"metadata\":{\"annotations\":{\"mylabel\":\"myvalue\"}}}").getRetCode());
+        
+        KubeCMDClient.deleteAddress(ENVIRONMENT.namespace(), addressFromConsole.getMetadata().getName());
+        KubeCMDClient.deleteAddress(ENVIRONMENT.namespace(), dest2.getMetadata().getName());
 
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData allAddresses = KubeCMDClient.getAddress(environment.namespace(), "-a");
+            ExecutionResultData allAddresses = KubeCMDClient.getAddress(ENVIRONMENT.namespace(), "-a");
             return allAddresses.getStdErr() + allAddresses.getStdOut();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
@@ -162,7 +163,7 @@ class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIso
 
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), dest1, dest2);
 
-        result = KubeCMDClient.getAddress(environment.namespace(), "-a");
+        result = KubeCMDClient.getAddress(ENVIRONMENT.namespace(), "-a");
         output = result.getStdOut().trim();
 
         assertTrue(output.contains(Objects.requireNonNull(dest1.getMetadata().getName())),
@@ -172,14 +173,14 @@ class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIso
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
                         dest2.getMetadata().getName(), output));
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(brokered), brokered, clusterUser);
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(brokered), brokered, CLUSTER_USER);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.deleteAddressWebConsole(dest1);
         resourcesManager.deleteAddresses(dest2);
 
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData addresses = KubeCMDClient.getAddress(environment.namespace(), "-a");
+            ExecutionResultData addresses = KubeCMDClient.getAddress(ENVIRONMENT.namespace(), "-a");
             return addresses.getStdOut() + addresses.getStdErr();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }

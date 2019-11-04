@@ -16,8 +16,8 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -31,7 +31,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 
 import javax.jms.Connection;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -241,7 +240,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
 
     }
 
-    private void assertAppProperty(AmqpClient client, String linkName, Map<String, Object> appProperties, String selector, Address dest) throws Exception {
+    private void assertAppProperty(AmqpClient client, String linkName, Map<String, Object> appProperties,
+                                   String selector, Address dest) throws Exception {
         LOGGER.info("Application property selector: " + selector);
         int msgsCount = 10;
         List<Message> listOfMessages = new ArrayList<>();

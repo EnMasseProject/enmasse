@@ -92,7 +92,8 @@ class ConnectorsTest extends BridgingBase {
                 .endSpec()
                 .build();
         resourcesManager.createAddressSpace(space);
-        Assertions.assertThrows(IllegalStateException.class, () -> AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space, new TimeoutBudget(1, TimeUnit.MINUTES)));
+        Assertions.assertThrows(IllegalStateException.class, ()
+                -> AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space, new TimeoutBudget(1, TimeUnit.MINUTES)));
     }
 
     @Test
@@ -248,7 +249,8 @@ class ConnectorsTest extends BridgingBase {
         sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);
     }
 
-    private void sendToConnectorReceiveInBroker(AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
+    private void sendToConnectorReceiveInBroker(AddressSpace space, UserCredentials localUser,
+                                                String[] remoteQueues, int messagesBatch) throws Exception {
         //send through connector
         AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
@@ -263,11 +265,14 @@ class ConnectorsTest extends BridgingBase {
 
         for(String remoteQueue : remoteQueues) {
             var receivedFromQueue = clientToRemote.recvMessages(remoteQueue, messagesBatch);
-            assertThat("Wrong count of messages received from queue: "+remoteQueue, receivedFromQueue.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+            assertThat("Wrong count of messages received from queue: "
+                            + remoteQueue, receivedFromQueue.get(1, TimeUnit.MINUTES).size(),
+                    is(messagesBatch));
         }
     }
 
-    private void sendToBrokerReceiveInConnector(AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
+    private void sendToBrokerReceiveInConnector(AddressSpace space, UserCredentials localUser,
+                                                String[] remoteQueues, int messagesBatch) throws Exception {
         //send to remote broker
         AmqpClient clientToRemote = createClientToRemoteBroker();
 
@@ -282,7 +287,9 @@ class ConnectorsTest extends BridgingBase {
         for(String remoteQueue : remoteQueues) {
             String connectorQueue = getRemoteName(remoteQueue);
             var receivedFromQueue = localClient.recvMessages(connectorQueue, messagesBatch);
-            assertThat("Wrong count of messages received from connector queue: "+connectorQueue, receivedFromQueue.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+            assertThat("Wrong count of messages received from connector queue: " +
+                            connectorQueue, receivedFromQueue.get(1, TimeUnit.MINUTES).size()
+                    , is(messagesBatch));
         }
     }
 

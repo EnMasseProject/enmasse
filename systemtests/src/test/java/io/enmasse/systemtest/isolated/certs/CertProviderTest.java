@@ -83,7 +83,8 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 createEndpoint("messaging", spec, null, "amqps"),
                 createEndpoint("mqtt", spec, null, "secure-mqtt"));
 
-        String caCert = new String(Base64.getDecoder().decode(resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getStatus().getCaCert()));
+        String caCert = new String(Base64.getDecoder().decode(
+                resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getStatus().getCaCert()));
 
         testCertProvider(caCert, caCert);
     }
@@ -121,7 +122,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     @Test
     @OpenShift
     void testCertBundle() throws Exception {
-        String domain = environment.kubernetesDomain();
+        String domain = ENVIRONMENT.kubernetesDomain();
         String messagingHost = String.format("messaging.%s", domain);
         String mqttHost = String.format("mqtt.%s", domain);
         CertBundle messagingCert = CertificateUtils.createCertBundle(messagingHost);
@@ -150,7 +151,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     @Test
     @OpenShift
     void testConsoleCertBundle() throws Exception {
-        String domain = environment.kubernetesDomain();
+        String domain = ENVIRONMENT.kubernetesDomain();
         String consoleHost = String.format("space-console.%s", domain);
         CertBundle certBundle = CertificateUtils.createCertBundle(consoleHost);
 
@@ -193,21 +194,25 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         boolean testSucceeded = false;
         try {
             SystemtestsKubernetesApps.deployOpenshiftCertValidator(appNamespace, KUBERNETES);
-            try (var client = new OpenshiftCertValidatorApiClient(KUBERNETES, SystemtestsKubernetesApps.getOpenshiftCertValidatorEndpoint(appNamespace, KUBERNETES))) {
+            try (var client = new OpenshiftCertValidatorApiClient(KUBERNETES,
+                    SystemtestsKubernetesApps.getOpenshiftCertValidatorEndpoint(appNamespace, KUBERNETES))) {
 
                 JsonObject request = new JsonObject();
                 request.put("username", user.getUsername());
                 request.put("password", user.getPassword());
 
-                Endpoint messagingEndpoint = KUBERNETES.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "amqps");
+                Endpoint messagingEndpoint = KUBERNETES.getEndpoint("messaging-"
+                        + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), ENVIRONMENT.namespace(), "amqps");
                 request.put("messagingHost", messagingEndpoint.getHost());
                 request.put("messagingPort", messagingEndpoint.getPort());
 
-                Endpoint mqttEndpoint = KUBERNETES.getEndpoint("mqtt-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "secure-mqtt");
+                Endpoint mqttEndpoint = KUBERNETES.getEndpoint("mqtt-"
+                        + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), ENVIRONMENT.namespace(), "secure-mqtt");
                 request.put("mqttHost", mqttEndpoint.getHost());
                 request.put("mqttPort", Integer.toString(mqttEndpoint.getPort()));
 
-                Endpoint consoleEndpoint = KUBERNETES.getEndpoint("console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "https");
+                Endpoint consoleEndpoint = KUBERNETES.getEndpoint("console-"
+                        + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), ENVIRONMENT.namespace(), "https");
                 request.put("consoleHost", consoleEndpoint.getHost());
                 request.put("consolePort", consoleEndpoint.getPort());
 
@@ -242,7 +247,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
             }
         } finally {
             if (!testSucceeded) {
-                logCollector.collectLogsOfPodsByLabels(appNamespace,
+                LOG_COLLECTOR.collectLogsOfPodsByLabels(appNamespace,
                         null, Collections.singletonMap("app", SystemtestsKubernetesApps.OPENSHIFT_CERT_VALIDATOR));
             }
             SystemtestsKubernetesApps.deleteOpenshiftCertValidator(appNamespace, KUBERNETES);

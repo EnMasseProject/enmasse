@@ -151,7 +151,8 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         // send the reply to the command
 
         TestUtils.runUntilPass(5, () -> {
-            this.httpClient.send(COMMAND_RESPONSE, "/" + responseId, new JsonObject().put("data", "command-response"), is(HTTP_ACCEPTED), request -> request.putHeader("hono-cmd-status", "202" /* accepted */), Duration.ofSeconds(5));
+            this.httpClient.send(COMMAND_RESPONSE, "/" + responseId, new JsonObject().put("data", "command-response"),
+                    is(HTTP_ACCEPTED), request -> request.putHeader("hono-cmd-status", "202" /* accepted */), Duration.ofSeconds(5));
         });
 
         assertCloudTelemetryMessage(f1);
@@ -164,7 +165,8 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         var responseMsg = responses.get(0);
         assertThat(responseMsg.getCorrelationId(), Is.is(reqId));
         assertThat(responseMsg.getBody(), instanceOf(Data.class));
-        assertThat(new JsonObject(Buffer.buffer(((Data) responseMsg.getBody()).getValue().getArray())), Is.is(new JsonObject().put("data", "command-response")));
+        assertThat(new JsonObject(Buffer.buffer(((Data) responseMsg.getBody()).getValue().getArray())),
+                Is.is(new JsonObject().put("data", "command-response")));
         assertThat(responseMsg.getApplicationProperties().getValue().get("status"), Is.is(202) /* accepted */);
 
     }
@@ -175,7 +177,8 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
         LOGGER.info("Send telemetry with TTD - ttd: {}", this.ttd);
 
-        var response = TestUtils.runUntilPass(5, () -> this.httpClient.send(TELEMETRY, null, is(HTTP_OK /* OK for command responses */), request -> {
+        var response = TestUtils.runUntilPass(5, () -> this.httpClient.send(TELEMETRY,
+                null, is(HTTP_OK /* OK for command responses */), request -> {
             // set "time to disconnect"
             request.putHeader("hono-ttd", Integer.toString(this.ttd));
         }, Duration.ofSeconds(this.ttd + 5)));
@@ -186,11 +189,13 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
     }
 
-    private Future<List<Message>> setupMessagingReceiver(final AtomicReference<Future<List<ProtonDelivery>>> sentFuture, final Consumer<Message> messageCustomizer) {
+    private Future<List<Message>> setupMessagingReceiver(final AtomicReference<Future<List<ProtonDelivery>>> sentFuture,
+                                                         final Consumer<Message> messageCustomizer) {
 
         // setup telemetry consumer
 
-        return SHARED_IOT_MANAGER.getAmqpClient().recvMessages(new QueueTerminusFactory().getSource("telemetry/" + SHARED_IOT_MANAGER.getTenantId()), msg -> {
+        return SHARED_IOT_MANAGER.getAmqpClient().recvMessages(new QueueTerminusFactory().getSource("telemetry/" +
+                SHARED_IOT_MANAGER.getTenantId()), msg -> {
 
             LOGGER.info("Received message: {}", msg);
 
@@ -219,11 +224,13 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
             // send request command
 
             LOGGER.info("Sending out command message");
-            var f2 = SHARED_IOT_MANAGER.getAmqpClient().sendMessage("control/" + SHARED_IOT_MANAGER.getTenantId() + "/" + deviceId, commandMessage)
+            var f2 = SHARED_IOT_MANAGER.getAmqpClient().sendMessage("control/" + SHARED_IOT_MANAGER.getTenantId()
+                    + "/" + deviceId, commandMessage)
                     .whenComplete((res, err) -> {
                         String strres = null;
                         if (res != null) {
-                            strres = res.stream().map(ProtonDelivery::getRemoteState).map(Object::toString).collect(Collectors.joining(", "));
+                            strres = res.stream().map(ProtonDelivery::getRemoteState).map(Object::toString)
+                                    .collect(Collectors.joining(", "));
                         }
                         LOGGER.info("Message result - res: {}, err:", // no need for final {}, as this is an exception
                                 strres, err);
@@ -271,7 +278,8 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
     }
 
-    private void assertCommandMessageDeliveries(Future<List<ProtonDelivery>> messageFuture) throws InterruptedException, ExecutionException, TimeoutException {
+    private void assertCommandMessageDeliveries(Future<List<ProtonDelivery>> messageFuture) throws InterruptedException,
+            ExecutionException, TimeoutException {
 
         assertThat(messageFuture, notNullValue());
 

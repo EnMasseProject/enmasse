@@ -53,15 +53,18 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     @Test
     @Tag(ACCEPTANCE)
     void testCreateInfra() throws Exception {
-        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
-        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
-        PodTemplateSpec routerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "router"), "myrouternode", "router");
+        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"),
+                "mybrokernode", "broker");
+        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"),
+                "myadminnode", "admin");
+        PodTemplateSpec routerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "router"),
+                "myrouternode", "router");
         testInfra = new StandardInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test-infra-1-standard")
                 .endMetadata()
                 .withNewSpec()
-                .withVersion(environment.enmasseVersion())
+                .withVersion(ENVIRONMENT.enmasseVersion())
                 .withBroker(new StandardInfraConfigSpecBrokerBuilder()
                         .withAddressFullPolicy("FAIL")
                         .withNewResources()
@@ -103,7 +106,8 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .withResourceLimits(Stream.of(
                         new ResourceAllowance("broker", 3.0),
                         new ResourceAllowance("router", 3.0),
-                        new ResourceAllowance("aggregate", 5.0)).collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                        new ResourceAllowance("aggregate", 5.0))
+                        .collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
                 .withAddressPlans(Stream.of(exampleAddressPlan).map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
@@ -137,7 +141,8 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build());
 
-        assertInfra("512Mi", "1Gi", brokerTemplateSpec, 1, "256Mi", routerTemplateSpec, "512Mi", adminTemplateSpec);
+        assertInfra("512Mi", "1Gi", brokerTemplateSpec, 1, "256Mi",
+                routerTemplateSpec, "512Mi", adminTemplateSpec);
     }
 
     @Test
@@ -160,7 +165,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .withName("test-infra-2-standard")
                 .endMetadata()
                 .withNewSpec()
-                .withVersion(environment.enmasseVersion())
+                .withVersion(ENVIRONMENT.enmasseVersion())
                 .withBroker(new StandardInfraConfigSpecBrokerBuilder()
                         .withAddressFullPolicy("FAIL")
                         .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
@@ -190,13 +195,15 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .withResourceLimits(Stream.of(
                         new ResourceAllowance("broker", 3.0),
                         new ResourceAllowance("router", 3.0),
-                        new ResourceAllowance("aggregate", 5.0)).collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                        new ResourceAllowance("aggregate", 5.0))
+                        .collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
                 .withAddressPlans(Stream.of(exampleAddressPlan).map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
+        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace)
+                .editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
         ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
@@ -219,7 +226,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .withName("test-infra-3-standard")
                 .endMetadata()
                 .withNewSpec()
-                .withVersion(environment.enmasseVersion())
+                .withVersion(ENVIRONMENT.enmasseVersion())
                 .withBroker(new StandardInfraConfigSpecBrokerBuilder()
                         .withAddressFullPolicy("FAIL")
                         .withNewResources()
@@ -260,7 +267,9 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         assertEquals(expectedRouter.getPolicy(), actualRouter.getPolicy());
     }
 
-    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, int routerReplicas, String routermemory, PodTemplateSpec routerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec) {
+    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec,
+                                int routerReplicas, String routermemory, PodTemplateSpec routerTemplateSpec,
+                                String adminMemory, PodTemplateSpec adminTemplateSpec) {
         LOGGER.info("Checking router infra");
         List<Pod> routerPods = TestUtils.listRouterPods(KUBERNETES, exampleAddressSpace);
         assertEquals(routerReplicas, routerPods.size(), "incorrect number of routers");

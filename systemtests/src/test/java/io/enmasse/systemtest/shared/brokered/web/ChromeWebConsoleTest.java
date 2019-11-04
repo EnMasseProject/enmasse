@@ -182,7 +182,7 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedBrokered
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(clusterUser, true);
+        doTestCanOpenConsolePage(CLUSTER_USER, true);
     }
 
     @Test
@@ -197,7 +197,8 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedBrokered
         doTestCreateAddressWithSymbolsAt61stCharIndex(
                 new AddressBuilder()
                         .withNewMetadata()
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "queue10charhere-10charhere-10charhere-10charhere-10charhere-1"))
+                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(),
+                                "queue10charhere-10charhere-10charhere-10charhere-10charhere-1"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("queue")
@@ -207,7 +208,8 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedBrokered
                         .build(),
                 new AddressBuilder()
                         .withNewMetadata()
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "queue10charhere-10charhere-10charhere-10charhere-10charhere.1"))
+                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(),
+                                "queue10charhere-10charhere-10charhere-10charhere-10charhere.1"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("queue")

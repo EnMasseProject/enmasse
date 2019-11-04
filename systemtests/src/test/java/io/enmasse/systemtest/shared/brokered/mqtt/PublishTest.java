@@ -43,7 +43,8 @@ public class PublishTest extends MqttPublishTestBase implements ITestSharedBroke
         Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(getSharedAddressSpace(), "messaging");
         if (messagingEndpoint == null) {
             String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(getSharedAddressSpace(), "messaging");
-            messagingEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(getSharedAddressSpace()));
+            messagingEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-"
+                    + AddressSpaceUtils.getAddressSpaceInfraUuid(getSharedAddressSpace()));
         }
         mqttClientBuilder.endpoint(messagingEndpoint);
     }

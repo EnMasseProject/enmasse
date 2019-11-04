@@ -28,7 +28,8 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
 
     @Test
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
-        doTopicSubscribeTest(artemisManagement, new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath), true);
+        doTopicSubscribeTest(artemisManagement, new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath),
+                new ProtonJMSClientReceiver(logPath), true);
     }
 
     @Test

@@ -122,7 +122,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     void cleanEnv(ExtensionContext context) throws Exception {
 
         if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectHttpAdapterQdrProxyState();
+            LOG_COLLECTOR.collectHttpAdapterQdrProxyState();
         }
 
         for (IoTProjectTestContext ctx : projects) {
@@ -224,7 +224,8 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         mqttOptions.setAutomaticReconnect(true);
         mqttOptions.setConnectionTimeout(60);
         mqttOptions.setHttpsHostnameVerificationEnabled(false);
-        IMqttClient mqttAdapterClient = new MqttClientFactory(null, new UserCredentials(ctx.getDeviceAuthId() + "@" + tenant, ctx.getDevicePassword()))
+        IMqttClient mqttAdapterClient = new MqttClientFactory(null,
+                new UserCredentials(ctx.getDeviceAuthId() + "@" + tenant, ctx.getDevicePassword()))
                 .build()
                 .clientId(ctx.getDeviceId())
                 .endpoint(KUBERNETES.getExternalEndpoint("iot-mqtt-adapter"))

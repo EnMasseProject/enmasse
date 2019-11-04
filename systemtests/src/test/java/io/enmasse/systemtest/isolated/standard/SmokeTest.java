@@ -194,7 +194,8 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
         IMqttClient client = getMqttClientFactory().create();
         client.connect();
 
-        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, mqttTopic.getSpec().getAddress(), messages.size(), 1);
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client,
+                mqttTopic.getSpec().getAddress(), messages.size(), 1);
         List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, mqttTopic.getSpec().getAddress(), messages);
 
         int numberSent = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);

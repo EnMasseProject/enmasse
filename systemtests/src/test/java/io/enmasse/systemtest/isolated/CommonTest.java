@@ -324,7 +324,8 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             LOGGER.info("Restarting {}", label.labelValue);
             KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
             Thread.sleep(30_000);
-            TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+            TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(),
+                    runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
         }
 
@@ -362,9 +363,12 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         String qdRouterName = TestUtils.listRunningPods(KUBERNETES, standard).stream()
                 .filter(pod -> pod.getMetadata().getName().contains("qdrouter"))
                 .collect(Collectors.toList()).get(0).getMetadata().getName();
-        assertTrue(KubeCMDClient.runQDstat(KUBERNETES.getInfraNamespace(), qdRouterName, "-c", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
-        assertTrue(KubeCMDClient.runQDstat(KUBERNETES.getInfraNamespace(), qdRouterName, "-a", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
-        assertTrue(KubeCMDClient.runQDstat(KUBERNETES.getInfraNamespace(), qdRouterName, "-l", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(KUBERNETES.getInfraNamespace(), qdRouterName,
+                "-c", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(KUBERNETES.getInfraNamespace(), qdRouterName,
+                "-a", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(KUBERNETES.getInfraNamespace(), qdRouterName,
+                "-l", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
     }
 
     @Test
@@ -466,7 +470,8 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         resourcesManager.createOrUpdateUser(standard, new UserCredentials("jura", "fura"));
     }
 
-    private void doMessagingDuringRestart(Label label, int runningPodsBefore, UserCredentials user, AddressSpace space, Address addr) throws Exception {
+    private void doMessagingDuringRestart(Label label, int runningPodsBefore,
+                                          UserCredentials user, AddressSpace space, Address addr) throws Exception {
         long sleepMillis = 500;
         LOGGER.info("Starting messaging");
         AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
@@ -500,7 +505,8 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         LOGGER.info("Restarting {}", label.labelValue);
         KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
         Thread.sleep(30_000);
-        TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+        TestUtils.waitForExpectedReadyPods(KUBERNETES,
+                KUBERNETES.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
         if (stopSend.isCompletedExceptionally()) {
             stopSend.get();
         }

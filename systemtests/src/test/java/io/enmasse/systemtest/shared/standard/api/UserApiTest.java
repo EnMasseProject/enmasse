@@ -126,20 +126,22 @@ class UserApiTest extends TestBase implements ITestSharedStandard {
         try {
             resourcesManager.createUserServiceAccount(getSharedAddressSpace(), serviceAccount);
             UserCredentials messagingUser = new UserCredentials("@@serviceaccount@@",
-                    KUBERNETES.getServiceaccountToken(serviceAccount.getUsername(), environment.namespace()));
+                    KUBERNETES.getServiceaccountToken(serviceAccount.getUsername(), ENVIRONMENT.namespace()));
             LOGGER.info("username: {}, password: {}", messagingUser.getUsername(), messagingUser.getPassword());
 
             getClientUtils().assertCanConnect(getSharedAddressSpace(), messagingUser, Collections.singletonList(queue), resourcesManager);
 
             //delete user
             assertThat("User deleting failed using oc cmd",
-                    KubeCMDClient.deleteUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), serviceAccount.getUsername()).getRetCode(), is(true));
+                    KubeCMDClient.deleteUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(),
+                            serviceAccount.getUsername()).getRetCode(), is(true));
             assertThat("User is still present",
-                    KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), serviceAccount.getUsername()).getRetCode(), is(false));
+                    KubeCMDClient.getUser(KUBERNETES.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(),
+                            serviceAccount.getUsername()).getRetCode(), is(false));
 
             getClientUtils().assertCannotConnect(getSharedAddressSpace(), messagingUser, Collections.singletonList(queue), resourcesManager);
         } finally {
-            KUBERNETES.deleteServiceAccount("test-service-account", environment.namespace());
+            KUBERNETES.deleteServiceAccount("test-service-account", ENVIRONMENT.namespace());
         }
     }
 
@@ -147,7 +149,8 @@ class UserApiTest extends TestBase implements ITestSharedStandard {
     void testSetAnnotations() {
 
         var client = Kubernetes.getInstance().getClient();
-        var userCrd = client.customResources(UserCrd.messagingUser(), User.class, UserList.class, DoneableUser.class).inNamespace(getSharedAddressSpace().getMetadata().getNamespace());
+        var userCrd = client.customResources(UserCrd.messagingUser(), User.class, UserList.class, DoneableUser.class)
+                .inNamespace(getSharedAddressSpace().getMetadata().getNamespace());
 
         var name = getSharedAddressSpace().getMetadata().getName()+ ".foo";
         var user = new UserBuilder()

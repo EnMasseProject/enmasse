@@ -263,7 +263,7 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedStandar
 
     @Test
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(clusterUser, true);
+        doTestCanOpenConsolePage(CLUSTER_USER, true);
     }
 
     @Test

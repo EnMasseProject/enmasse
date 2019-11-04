@@ -396,7 +396,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
     }
 
     private AmqpClient createClient(Address dest, UserCredentials credentials) throws Exception {
-        AmqpClient client = null;
+        AmqpClient client;
 
         switch (dest.getSpec().getType()) {
             case "queue":
@@ -408,6 +408,9 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                 break;
             case "multicast":
                 client = getAmqpClientFactory().createBroadcastClient(getSharedAddressSpace());
+                break;
+            default:
+                client = null;
                 break;
         }
 

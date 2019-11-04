@@ -145,7 +145,8 @@ public abstract class SoakTestBase extends TestBase {
 
             //attach senders
             for (int i = 0; i < senderCount; i++) {
-                collector.checkThat(client.sendMessages(queueList.get(i).getSpec().getAddress(), msgBatch).get(2, TimeUnit.MINUTES), is(msgBatch.size()));
+                collector.checkThat(client.sendMessages(queueList.get(i).getSpec()
+                        .getAddress(), msgBatch).get(2, TimeUnit.MINUTES), is(msgBatch.size()));
             }
 
             //check received messages
@@ -191,7 +192,8 @@ public abstract class SoakTestBase extends TestBase {
         runTestInLoop(30, () -> {
             LOGGER.info("Start test loop basic auth tests");
             getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(queue, topic), resourcesManager);
-            getClientUtils().assertCannotConnect(addressSpace, new UserCredentials("nobody", "nobody"), Arrays.asList(queue, topic), resourcesManager);
+            getClientUtils().assertCannotConnect(addressSpace,
+                    new UserCredentials("nobody", "nobody"), Arrays.asList(queue, topic), resourcesManager);
         });
         LOGGER.info("testAuthSendReceiveLong finished");
     }
@@ -237,7 +239,8 @@ public abstract class SoakTestBase extends TestBase {
 
             //attach producers
             for (int i = 0; i < topicCount; i++) {
-                collector.checkThat(client.sendMessages(topicList.get(i).getSpec().getAddress(), msgBatch).get(2, TimeUnit.MINUTES), is(msgBatch.size()));
+                collector.checkThat(client.sendMessages(topicList.get(i).getSpec()
+                        .getAddress(), msgBatch).get(2, TimeUnit.MINUTES), is(msgBatch.size()));
             }
 
             //check received messages

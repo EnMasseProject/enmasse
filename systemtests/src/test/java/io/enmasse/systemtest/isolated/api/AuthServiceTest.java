@@ -51,7 +51,8 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
         resourcesManager.createAuthService(standardAuth);
         resourcesManager.removeAuthService(standardAuth);
-        TestUtils.waitForNReplicas(0, false, Map.of("name", "test-standard-authservice"), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
+        TestUtils.waitForNReplicas(0, false, Map.of("name", "test-standard-authservice"),
+                Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
     }
 
     @Test
@@ -181,7 +182,8 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     @Test
     @Tag(ACCEPTANCE)
     void testAuthenticateAgainstMultipleAuthServices() throws Exception {
-        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-eph", false);
+        AuthenticationService standardAuth =
+                AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-eph", false);
         resourcesManager.createAuthService(standardAuth);
         LOGGER.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
@@ -287,14 +289,17 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.setAddresses(queue);
 
-        getClientUtils().assertCanConnect(addressSpace, new UserCredentials("test-user1", "password"), Collections.singletonList(queue), resourcesManager);
-        getClientUtils().assertCanConnect(addressSpace, new UserCredentials("test-user2", "password"), Collections.singletonList(queue), resourcesManager);
+        getClientUtils().assertCanConnect(addressSpace, new UserCredentials("test-user1", "password"),
+                Collections.singletonList(queue), resourcesManager);
+        getClientUtils().assertCanConnect(addressSpace, new UserCredentials("test-user2", "password"),
+                Collections.singletonList(queue), resourcesManager);
     }
 
     @Test
     @Disabled("Does not work in current state of auth services")
     void testAuthServiceWithoutDeletingClaim() throws Exception {
-        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-claim", true, "1Gi", false, "test-claim");
+        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-claim",
+                true, "1Gi", false, "test-claim");
         resourcesManager.createAuthService(standardAuth);
         LOGGER.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 

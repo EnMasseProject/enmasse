@@ -19,19 +19,25 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps.*;
+import static io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps.SELENIUM_PROJECT;
+import static io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps.deleteChromeSeleniumApp;
+import static io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps.deleteFirefoxSeleniumApp;
+import static io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps.deleteSeleniumPod;
+import static io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps.deployChromeSeleniumApp;
+import static io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps.deployFirefoxSeleniumApp;
+
 
 public class SeleniumManagement {
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     public static void deployFirefoxApp() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_SELENIUM_CONTAINER);
-        log.info("Deploy firefox deployment");
+        LOGGER.info("Deploy firefox deployment");
         try {
             deployFirefoxSeleniumApp(
                     SELENIUM_PROJECT, Kubernetes.getInstance());
         } catch (Exception e) {
-            log.error("Deployment of firefox app failed", e);
+            LOGGER.error("Deployment of firefox app failed", e);
             throw e;
         } finally {
             TimeMeasuringSystem.stopOperation(operationID);
@@ -40,12 +46,12 @@ public class SeleniumManagement {
 
     static void deployChromeApp() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_SELENIUM_CONTAINER);
-        log.info("Deploy chrome deployment");
+        LOGGER.info("Deploy chrome deployment");
         try {
             deployChromeSeleniumApp(
                     SELENIUM_PROJECT, Kubernetes.getInstance());
         } catch (Exception e) {
-            log.error("Deployment of chrome app failed", e);
+            LOGGER.error("Deployment of chrome app failed", e);
             throw e;
         } finally {
             TimeMeasuringSystem.stopOperation(operationID);
@@ -67,7 +73,7 @@ public class SeleniumManagement {
                     Kubernetes.getInstance(), path.toFile(), SELENIUM_PROJECT);
             collector.collectLogsOfPodsInNamespace(SELENIUM_PROJECT);
         } catch (Exception e) {
-            log.error("Failed to collect pod logs from namespace : {}", SELENIUM_PROJECT);
+            LOGGER.error("Failed to collect pod logs from namespace : {}", SELENIUM_PROJECT);
         }
     }
 
@@ -88,13 +94,13 @@ public class SeleniumManagement {
                             List<String> current = TestUtils.listReadyPods(Kubernetes.getInstance(),
                                     SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
                             current.removeAll(beforeRestart);
-                            log.info("Following pods are in ready state {}", current);
+                            LOGGER.info("Following pods are in ready state {}", current);
                             return current.size() == beforeRestart.size();
                         },
                         new TimeoutBudget(1, TimeUnit.MINUTES));
                 break;
             } catch (Exception ex) {
-                log.warn("Selenium application was not redeployed correctly, try it again {}/{}", i, attempts);
+                LOGGER.warn("Selenium application was not redeployed correctly, try it again {}/{}", i, attempts);
             }
         }
     }

@@ -16,7 +16,6 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.bases.soak.SoakTestBase;
-import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.shared.standard.QueueTest;
@@ -25,7 +24,6 @@ import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,8 +34,8 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
 
     @AfterEach
     void tearDown() {
-        logCollector.collectRouterState("planMarathonTearDown");
-        logCollector.collectConfigMaps("plansMarathonTearDown");
+        LOG_COLLECTOR.collectRouterState("planMarathonTearDown");
+        LOG_COLLECTOR.collectConfigMaps("plansMarathonTearDown");
     }
 
     @Test

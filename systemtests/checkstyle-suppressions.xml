@@ -11,4 +11,7 @@
     <suppress checks="LineLength"
               files="src/main/java/io/enmasse/systemtest/platform/apps/SystemtestsKubernetesApps.java"
               lines="1-1000"/>
+    <suppress checks="MethodLength"
+              files="src/test/java/io/enmasse/systemtest/isolated/api/CustomResourceDefinitionAddressSpacesTest.java"
+              lines="1-1000"/>
 </suppressions>

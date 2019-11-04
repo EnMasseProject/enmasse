@@ -51,7 +51,7 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
         return new Endpoint(String.format("%s-%s.%s.svc.cluster.local",
                 (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) && mqtt) ? "mqtt" : "messaging",
                 AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace),
-                environment.namespace()),
+                ENVIRONMENT.namespace()),
                 websocket && addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? 443 : port);
     }
 
@@ -113,7 +113,8 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("basic-mqtt" + ClientType.getAddressName(sender))
-                .withPlan(getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? DestinationPlan.STANDARD_LARGE_TOPIC : getDefaultPlan(AddressType.TOPIC))
+                .withPlan(getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString())
+                        ? DestinationPlan.STANDARD_LARGE_TOPIC : getDefaultPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
 

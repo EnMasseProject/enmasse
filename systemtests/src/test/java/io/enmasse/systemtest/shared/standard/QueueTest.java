@@ -11,7 +11,6 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
-import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -20,6 +19,7 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.Count;
 import io.enmasse.systemtest.utils.JmsProvider;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -75,7 +75,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         try {
             actual = numSent.get(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (TimeoutException t) {
-            logCollector.collectRouterState("runQueueTestSend");
+            LOG_COLLECTOR.collectRouterState("runQueueTestSend");
             fail("Sending messages timed out after sending " + predicate.actual());
         }
         assertThat("Wrong count of messages sent", actual, is(msgs.size()));
@@ -87,7 +87,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         try {
             actual = received.get(timeoutMs, TimeUnit.MILLISECONDS).size();
         } catch (TimeoutException t) {
-            logCollector.collectRouterState("runQueueTestRecv");
+            LOG_COLLECTOR.collectRouterState("runQueueTestRecv");
             fail("Receiving messages timed out after " + predicate.actual() + " msgs received");
         }
 
@@ -352,7 +352,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         final int numReceivedAfterScaledPhase1 = numReceivedAfterScaled / 2;
         final int numReceivedAfterScaledPhase2 = numReceivedAfterScaled - numReceivedAfterScaledPhase1;
 
-        List<Future<Integer>> sent = prefixes.stream().map(prefix -> client.sendMessages(before.getSpec().getAddress(), TestUtils.generateMessages(prefix, numMessages))).collect(Collectors.toList());
+        List<Future<Integer>> sent = prefixes.stream().map(prefix -> client.sendMessages(before.getSpec().getAddress(),
+                TestUtils.generateMessages(prefix, numMessages))).collect(Collectors.toList());
 
         assertAll("All sender should send all messages",
                 () -> assertThat("Wrong count of messages sent: sender0",
@@ -370,7 +371,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
 
         resourcesManager.replaceAddress(after);
         CustomLogger.getLogger().info(String.format("Now scaling from '%s' to '%s'", before.getSpec().getPlan(), after.getSpec().getPlan()));
-        logCollector.collectLogsOfPodsByLabels(KUBERNETES.getInfraNamespace(), before.getSpec().getPlan(), Collections.singletonMap("role", "broker"));
+        LOG_COLLECTOR.collectLogsOfPodsByLabels(KUBERNETES.getInfraNamespace(), before.getSpec().getPlan(),
+                Collections.singletonMap("role", "broker"));
         resourcesManager.replaceAddress(after);
         // Receive messages sent before address was replaced
         assertReceive("after replace", numReceivedAfterScaledPhase1, after, client);
@@ -381,18 +383,21 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         assertReceive("after replace, second batch", numReceivedAfterScaledPhase2, after, client);
 
         // Ensure send and receive works after address was replaced
-        assertThat("Wrong count of messages sent before awaiting drain", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(0), numMessages)).get(150, TimeUnit.SECONDS), is(numMessages));
+        assertThat("Wrong count of messages sent before awaiting drain", client.sendMessages(after.getSpec().getAddress(),
+                TestUtils.generateMessages(prefixes.get(0), numMessages)).get(150, TimeUnit.SECONDS), is(numMessages));
         assertReceive("before awaiting drain", numMessages, after, client);
 
         // Ensure there are no brokers in Draining state
         AddressUtils.waitForBrokersDrained(new TimeoutBudget(4, TimeUnit.MINUTES), after);
 
         // Ensure send and receive works after all brokers are drained
-        assertThat("Wrong count of messages sent after awaiting drain", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(1), numMessages)).get(150, TimeUnit.SECONDS), is(numMessages));
+        assertThat("Wrong count of messages sent after awaiting drain", client.sendMessages(after.getSpec().getAddress(),
+                TestUtils.generateMessages(prefixes.get(1), numMessages)).get(150, TimeUnit.SECONDS), is(numMessages));
         assertReceive("after awaiting drain", numMessages, after, client);
     }
 
-    private void assertReceive(String phase, int expected, Address addr, AmqpClient client) throws InterruptedException, ExecutionException, TimeoutException {
+    private void assertReceive(String phase, int expected, Address addr, AmqpClient client)
+            throws InterruptedException, ExecutionException, TimeoutException {
         try {
             Future<List<Message>> listFuture = client.recvMessages(addr.getSpec().getAddress(), expected);
             int actual = listFuture.get(150, TimeUnit.SECONDS).size();
@@ -426,7 +431,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 destinations[destI] = new AddressBuilder()
                         .withNewMetadata()
                         .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), String.format("%s.%s.%s", destNamePrefix, i, destI)))
+                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(),
+                                String.format("%s.%s.%s", destNamePrefix, i, destI)))
                         .endMetadata()
                         .withNewSpec()
                         .withType("queue")
@@ -438,8 +444,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
 
             //run async: append addresses; create users; send/receive messages
             final int customerIndex = i;
-            company.put(CompletableFuture.runAsync(() ->
-            {
+            company.put(CompletableFuture.runAsync(() -> {
                 try {
                     int messageCount = 43;
                     resourcesManager.appendAddresses(false, destinations);

@@ -320,9 +320,11 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        Context context1 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context1 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(),
+                defaultCredentials, addressTopic);
         Connection connection1 = jmsProvider.createConnection(context1);
-        Context context2 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context2 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(),
+                defaultCredentials, addressTopic);
         Connection connection2 = jmsProvider.createConnection(context2);
         connection1.start();
         connection2.start();
@@ -379,9 +381,11 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        Context context1 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context1 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(),
+                defaultCredentials, addressTopic);
         Connection connection1 = jmsProvider.createConnection(context1);
-        Context context2 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context2 = jmsProvider.createContextForShared(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(),
+                defaultCredentials, addressTopic);
         Connection connection2 = jmsProvider.createConnection(context2);
         connection1.start();
         connection2.start();

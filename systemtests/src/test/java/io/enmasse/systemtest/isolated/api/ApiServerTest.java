@@ -270,7 +270,8 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
         Address longname = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(addrSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(addrSpace, addrSpace.getMetadata().getName() + ".myaddressnameisalsoverylonginfact." + uuid))
+                .withName(AddressUtils.generateAddressMetadataName(addrSpace,
+                        addrSpace.getMetadata().getName() + ".myaddressnameisalsoverylonginfact." + uuid))
                 .withUid(uuid)
                 .endMetadata()
                 .withNewSpec()
@@ -441,8 +442,8 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
             resourcesManager.deleteAddressSpace(addrSpace);
         } finally {
-            KubeCMDClient.loginUser(environment.getApiToken());
-            KubeCMDClient.switchProject(environment.namespace());
+            KubeCMDClient.loginUser(ENVIRONMENT.getApiToken());
+            KubeCMDClient.switchProject(ENVIRONMENT.namespace());
             KUBERNETES.deleteNamespace(namespace);
         }
     }
@@ -507,7 +508,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
         String rolebindingname = "testgroupbinding";
         String groupName = "foogroup";
         try {
-            KubeCMDClient.loginUser(environment.getApiToken());
+            KubeCMDClient.loginUser(ENVIRONMENT.getApiToken());
 
             KubeCMDClient.createNamespace(namespace);
 
@@ -559,8 +560,8 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             if (KUBERNETES.getClient().rbac().clusterRoleBindings().withName(rolebindingname).get() != null) {
                 KUBERNETES.getClient().rbac().clusterRoleBindings().withName(rolebindingname).cascading(true).delete();
             }
-            KubeCMDClient.loginUser(environment.getApiToken());
-            KubeCMDClient.switchProject(environment.namespace());
+            KubeCMDClient.loginUser(ENVIRONMENT.getApiToken());
+            KubeCMDClient.switchProject(ENVIRONMENT.namespace());
             KUBERNETES.deleteNamespace(namespace);
         }
 

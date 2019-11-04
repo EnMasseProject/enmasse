@@ -450,7 +450,8 @@ public class AddressUtils {
      * @param range        the range
      * @return the array list
      */
-    public static ArrayList<Address> generateQueueTopicList(AddressSpace addressspace, IntStream range, String addressPlanQueue, String addressPlanTopic) {
+    public static ArrayList<Address> generateQueueTopicList(AddressSpace addressspace, IntStream range,
+                                                            String addressPlanQueue, String addressPlanTopic) {
         ArrayList<Address> addresses = new ArrayList<>();
         range.forEach(i -> {
             if (i % 2 == 0) {

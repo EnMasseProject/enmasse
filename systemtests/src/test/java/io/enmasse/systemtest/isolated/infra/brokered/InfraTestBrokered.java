@@ -38,14 +38,16 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
 
     @Test
     void testCreateInfra() throws Exception {
-        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
-        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
+        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"),
+                "mybrokernode", "broker");
+        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"),
+                "myadminnode", "admin");
         testInfra = new BrokeredInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test-infra-3-brokered")
                 .endMetadata()
                 .withNewSpec()
-                .withVersion(environment.enmasseVersion())
+                .withVersion(ENVIRONMENT.enmasseVersion())
                 .withBroker(new BrokeredInfraConfigSpecBrokerBuilder()
                         .withAddressFullPolicy("FAIL")
                         .withNewResources()
@@ -78,7 +80,8 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                 .withAddressSpaceType(AddressSpaceType.BROKERED.toString())
                 .withShortDescription("Custom systemtests defined address space plan")
                 .withInfraConfigRef(testInfra.getMetadata().getName())
-                .withResourceLimits(Stream.of(new ResourceAllowance("broker", 3.0)).collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withResourceLimits(Stream.of(new ResourceAllowance("broker", 3.0)).collect(Collectors.toMap(
+                        ResourceAllowance::getName, ResourceAllowance::getMax)))
                 .withAddressPlans(Stream.of(exampleAddressPlan).map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
@@ -135,7 +138,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                 .withName("test-infra-2-brokered")
                 .endMetadata()
                 .withNewSpec()
-                .withVersion(environment.enmasseVersion())
+                .withVersion(ENVIRONMENT.enmasseVersion())
                 .withBroker(new BrokeredInfraConfigSpecBrokerBuilder()
                         .withAddressFullPolicy("FAIL")
                         .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
@@ -162,17 +165,20 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                 .withAddressSpaceType(AddressSpaceType.BROKERED.toString())
                 .withShortDescription("Custom systemtests defined address space plan")
                 .withInfraConfigRef(infra.getMetadata().getName())
-                .withResourceLimits(Stream.of(new ResourceAllowance("broker", 3.0)).collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withResourceLimits(Stream.of(new ResourceAllowance("broker", 3.0)).collect(
+                        Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
                 .withAddressPlans(Stream.of(exampleAddressPlan).map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
+        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec()
+                .withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
         ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
-                () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? brokerStorage : null, null, adminMemory, null),
+                () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? brokerStorage : null,
+                        null, adminMemory, null),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
@@ -183,7 +189,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                 .withName("test-infra-1-brokered")
                 .endMetadata()
                 .withNewSpec()
-                .withVersion(environment.enmasseVersion())
+                .withVersion(ENVIRONMENT.enmasseVersion())
                 .withBroker(new BrokeredInfraConfigSpecBrokerBuilder()
                         .withAddressFullPolicy("FAIL")
                         .withNewResources()
@@ -217,7 +223,8 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
 
     }
 
-    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec) {
+    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec,
+                                String adminMemory, PodTemplateSpec adminTemplateSpec) {
         assertAdminConsole(adminMemory, adminTemplateSpec);
         assertBroker(brokerMemory, brokerStorage, brokerTemplateSpec);
         return true;

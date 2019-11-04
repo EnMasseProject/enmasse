@@ -394,7 +394,8 @@ public class MessagingUtils {
         receiver.close();
     }
 
-    private static void sendReceiveLargeMessage(JmsProvider jmsProvider, MessageProducer sender, MessageConsumer receiver, double sizeInMB, int mode, int count, List<javax.jms.Message> messages) {
+    private static void sendReceiveLargeMessage(JmsProvider jmsProvider, MessageProducer sender,MessageConsumer receiver,
+                                                double sizeInMB, int mode, int count, List<javax.jms.Message> messages) {
         List<javax.jms.Message> recvd;
 
         jmsProvider.sendMessages(sender, messages, mode, javax.jms.Message.DEFAULT_PRIORITY, javax.jms.Message.DEFAULT_TIME_TO_LIVE);
@@ -472,7 +473,8 @@ public class MessagingUtils {
             return m;
         }).collect(Collectors.toList());
 
-        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), 1);
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client,
+                dest.getSpec().getAddress(), messages.size(), 1);
         List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
 
         int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
