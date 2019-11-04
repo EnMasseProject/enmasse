@@ -16,5 +16,5 @@
     "noEmit": true,
     "jsx": "react"
   },
-  "include": ["src", "stories"]
+  "include": ["src", "stories", "_test_/Messages.test.tsxsx"]
 }
