@@ -5,7 +5,8 @@ describe("Messages", () => {
     // Arrange
     const props = {
       comment: "React Testing Library is great",
-      author: "Luke Ghenco"
+      author: "Luke Ghenco",
+      name: "John Doe"
     };
   });
 });
