@@ -24,7 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 
 public class ArtemisManagement extends BrokerManagement {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     public ArtemisManagement() {
         managementAddress = "activemq.management";
@@ -44,7 +44,7 @@ public class ArtemisManagement extends BrokerManagement {
         requestMessage.setBody(new AmqpValue("[]"));
         Future<Integer> sent = queueClient.sendMessages(managementAddress, requestMessage);
         assertThat(String.format("Sender failed, expected %d messages", 1), sent.get(30, TimeUnit.SECONDS), is(1));
-        log.info("request sent");
+        LOGGER.info("request sent");
 
         Future<List<Message>> received = queueClient.recvMessages(replyQueue.getSpec().getAddress(), 1);
         assertThat(String.format("Receiver failed, expected %d messages", 1),
@@ -52,7 +52,7 @@ public class ArtemisManagement extends BrokerManagement {
 
 
         AmqpValue val = (AmqpValue) received.get().get(0).getBody();
-        log.info("answer received: " + val.toString());
+        LOGGER.info("answer received: " + val.toString());
         String queues = val.getValue().toString();
         queues = queues.replaceAll("[\\[\\]\"]", "");
 
@@ -74,7 +74,7 @@ public class ArtemisManagement extends BrokerManagement {
         Future<Integer> sent = queueClient.sendMessages(managementAddress, requestMessage);
         assertThat(String.format("Sender failed, expected %d messages", 1),
                 sent.get(30, TimeUnit.SECONDS), is(1));
-        log.info("request sent");
+        LOGGER.info("request sent");
 
         Future<List<Message>> received = queueClient.recvMessages(replyQueue.getSpec().getAddress(), 1);
         assertThat(String.format("Receiver failed, expected %d messages", 1),
@@ -82,7 +82,7 @@ public class ArtemisManagement extends BrokerManagement {
 
 
         AmqpValue val = (AmqpValue) received.get().get(0).getBody();
-        log.info("answer received: " + val.toString());
+        LOGGER.info("answer received: " + val.toString());
         String count = val.getValue().toString().replaceAll("[\\[\\]\"]", "");
 
         return Integer.parseInt(count);

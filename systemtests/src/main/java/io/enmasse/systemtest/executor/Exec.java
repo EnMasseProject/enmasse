@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  * Class provide execution of external command
  */
 public class Exec {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private Process process;
     private String stdOut;
     private String stdErr;
@@ -108,7 +108,7 @@ public class Exec {
      * @throws ExecutionException
      */
     public int exec(List<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
-        log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
+        LOGGER.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
         ProcessBuilder builder = new ProcessBuilder();
         builder.command(commands);
         builder.directory(new File(System.getProperty("user.dir")));
@@ -184,7 +184,7 @@ public class Exec {
                 Files.write(Paths.get(logPath.toString(), "stdOutput.log"), stdOut.getBytes());
                 Files.write(Paths.get(logPath.toString(), "stdError.log"), stdErr.getBytes());
             } catch (Exception ex) {
-                log.warn("Cannot save output of execution", ex);
+                LOGGER.warn("Cannot save output of execution", ex);
             }
         }
     }
@@ -220,12 +220,12 @@ public class Exec {
             int ret = executor.exec(command, timeout);
             synchronized (LOCK) {
                 if (logToOutput) {
-                    log.info("Return code: {}", ret);
+                    LOGGER.info("Return code: {}", ret);
                     if (!executor.getStdOut().equals("")) {
-                        log.info("stdout: \n{}", executor.getStdOut());
+                        LOGGER.info("stdout: \n{}", executor.getStdOut());
                     }
                     if (!executor.getStdErr().equals("")) {
-                        log.info("stderr: \n{}", executor.getStdErr());
+                        LOGGER.info("stderr: \n{}", executor.getStdErr());
                     }
                 }
             }
@@ -270,7 +270,7 @@ public class Exec {
             return CompletableFuture.supplyAsync(() -> {
                 Scanner scanner = new Scanner(is);
                 try {
-                    log.debug("Reading stream {}", is);
+                    LOGGER.debug("Reading stream {}", is);
                     while (scanner.hasNextLine()) {
                         data.append(scanner.nextLine());
                         if (appendLineSeparator) {

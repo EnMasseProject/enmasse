@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class Predicates {
+
     private Predicates() {
     }
 

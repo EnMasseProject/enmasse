@@ -9,7 +9,7 @@ import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 
 public class OpenwireJMSClientReceiver extends ProtonJMSClientReceiver {
-    public OpenwireJMSClientReceiver() throws Exception {
+    public OpenwireJMSClientReceiver() {
         this.setClientType(ClientType.CLI_JAVA_OPENWIRE_JMS_RECEIVER);
     }
 

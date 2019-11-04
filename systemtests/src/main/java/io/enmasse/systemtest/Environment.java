@@ -35,7 +35,7 @@ public class Environment {
     private static final String APP_NAME_ENV = "APP_NAME";
     private static final String SKIP_SAVE_STATE = "SKIP_SAVE_STATE";
     private static final String SKIP_DEPLOY_INFINISPAN = "SKIP_DEPLOY_INFINISPAN";
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private static Environment instance;
     private final String namespace = System.getenv().getOrDefault(K8S_NAMESPACE_ENV, "enmasse-infra");
     private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
@@ -84,15 +84,15 @@ public class Environment {
             url = config.getMasterUrl();
         }
         String debugFormat = "{}:{}";
-        log.info(debugFormat, TEST_LOG_DIR_ENV, testLogDir);
-        log.info(debugFormat, K8S_NAMESPACE_ENV, namespace);
-        log.info(debugFormat, K8S_API_URL_ENV, url);
-        log.info(debugFormat, K8S_API_TOKEN_ENV, token);
-        log.info(debugFormat, ENMASSE_VERSION_SYSTEM_PROPERTY, enmasseVersion);
-        log.info(debugFormat, SKIP_CLEANUP_ENV, skipCleanup);
-        log.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
-        log.info(debugFormat, APP_NAME_ENV, appName);
-        log.info(debugFormat, TEMPLATES_PATH, templatesPath);
+        LOGGER.info(debugFormat, TEST_LOG_DIR_ENV, testLogDir);
+        LOGGER.info(debugFormat, K8S_NAMESPACE_ENV, namespace);
+        LOGGER.info(debugFormat, K8S_API_URL_ENV, url);
+        LOGGER.info(debugFormat, K8S_API_TOKEN_ENV, token);
+        LOGGER.info(debugFormat, ENMASSE_VERSION_SYSTEM_PROPERTY, enmasseVersion);
+        LOGGER.info(debugFormat, SKIP_CLEANUP_ENV, skipCleanup);
+        LOGGER.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
+        LOGGER.info(debugFormat, APP_NAME_ENV, appName);
+        LOGGER.info(debugFormat, TEMPLATES_PATH, templatesPath);
     }
 
     public static synchronized Environment getInstance() {

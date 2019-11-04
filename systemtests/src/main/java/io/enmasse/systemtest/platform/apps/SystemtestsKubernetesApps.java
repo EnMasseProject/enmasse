@@ -70,7 +70,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class SystemtestsKubernetesApps {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     private static final String MESSAGING_CLIENTS = "systemtests-clients";
     private static final String SELENIUM_FIREFOX = "selenium-firefox";
@@ -127,7 +127,7 @@ public class SystemtestsKubernetesApps {
             GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path.toFile(), SystemtestsKubernetesApps.MESSAGING_PROJECT);
             collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.MESSAGING_PROJECT);
         } catch (Exception e) {
-            log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.MESSAGING_PROJECT);
+            LOGGER.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.MESSAGING_PROJECT);
         }
     }
 
@@ -287,7 +287,7 @@ public class SystemtestsKubernetesApps {
                 .withName(INFINISPAN_SERVER)
                 .get() != null) {
 
-            log.info("Infinispan server will be removed");
+            LOGGER.info("Infinispan server will be removed");
 
             deleteDirectories(namespaceReplacer(namespace),
                     INFINISPAN_EXAMPLE_BASE.resolve("common"),
@@ -408,24 +408,24 @@ public class SystemtestsKubernetesApps {
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
 
-        log.info("Loading resources from: {}", path);
+        LOGGER.info("Loading resources from: {}", path);
 
         Files.walkFileTree(path, new SimpleFileVisitor<>() {
             public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
 
-                log.debug("Found: {}", file);
+                LOGGER.debug("Found: {}", file);
 
                 if (!Files.isRegularFile(file)) {
-                    log.debug("File is not a regular file: {}", file);
+                    LOGGER.debug("File is not a regular file: {}", file);
                     return FileVisitResult.CONTINUE;
                 }
 
                 if (!file.getFileName().toString().endsWith(".yaml")) {
-                    log.info("Skipping file: does not end with '.yaml': {}", file);
+                    LOGGER.info("Skipping file: does not end with '.yaml': {}", file);
                     return FileVisitResult.CONTINUE;
                 }
 
-                log.info("Processing: {}", file);
+                LOGGER.info("Processing: {}", file);
 
                 try (InputStream f = Files.newInputStream(file)) {
 

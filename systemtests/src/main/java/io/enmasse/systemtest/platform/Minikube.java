@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class Minikube extends Kubernetes {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     protected Minikube(String globalNamespace) {
         super(globalNamespace, () -> {
@@ -93,7 +93,7 @@ public class Minikube extends Kubernetes {
             externalName += "-external";
         }
         Endpoint endpoint = new Endpoint(getIp(namespace, externalName), Integer.parseInt(getPort(namespace, externalName)));
-        log.info("Minikube external endpoint - " + endpoint.toString());
+        LOGGER.info("Minikube external endpoint - " + endpoint.toString());
         return endpoint;
     }
 

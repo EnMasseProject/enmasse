@@ -24,7 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class MqttUtils {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     public static <T> int awaitAndReturnCode(List<CompletableFuture<T>> futures, int timeout, TimeUnit timeUnit)
             throws InterruptedException, ExecutionException {
@@ -60,7 +60,7 @@ public class MqttUtils {
         Iterator<CompletableFuture<MqttMessage>> resultItr = receiveFutures.iterator();
         client.subscribe(address, qos, (t, m) -> {
             assertThat("Unexpected message", resultItr.hasNext(), is(true));
-            log.debug("Received expected message: {}, Topic: {}", m, t);
+            LOGGER.debug("Received expected message: {}, Topic: {}", m, t);
             resultItr.next().complete(m);
         });
         return receiveFutures;

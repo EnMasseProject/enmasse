@@ -9,7 +9,7 @@ import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 
 public class ArtemisJMSClientReceiver extends ProtonJMSClientReceiver {
-    public ArtemisJMSClientReceiver() throws Exception {
+    public ArtemisJMSClientReceiver() {
         this.setClientType(ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER);
     }
 

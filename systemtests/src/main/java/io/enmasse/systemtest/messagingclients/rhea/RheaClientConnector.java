@@ -15,11 +15,11 @@ import java.util.List;
 
 
 public class RheaClientConnector extends AbstractClient {
-    public RheaClientConnector() throws Exception {
+    public RheaClientConnector() {
         super(ClientType.CLI_RHEA_CONNECTOR);
     }
 
-    public RheaClientConnector(Path logPath) throws Exception {
+    public RheaClientConnector(Path logPath) {
         super(ClientType.CLI_RHEA_CONNECTOR, logPath);
     }
 

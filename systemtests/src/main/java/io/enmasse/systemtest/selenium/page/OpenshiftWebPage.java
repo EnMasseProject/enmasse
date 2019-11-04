@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 public class OpenshiftWebPage implements IWebPage {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     private SeleniumProvider selenium;
     private String ocRoute;
@@ -68,7 +68,7 @@ public class OpenshiftWebPage implements IWebPage {
 
     private List<WebElement> getServicesFromCatalog() throws Exception {
         List<WebElement> services = getCatalog().findElements(By.className("services-item"));
-        services.forEach(item -> log.info("Got service item from catalog: {}", getTitleFromService(item)));
+        services.forEach(item -> LOGGER.info("Got service item from catalog: {}", getTitleFromService(item)));
         return services;
     }
 
@@ -98,7 +98,7 @@ public class OpenshiftWebPage implements IWebPage {
         List<WebElement> dropdownItems = getAddToProjectDropDown()
                 .findElement(By.className("dropdown-menu")).findElements(By.className("ui-select-choices-row"));
         for (WebElement el : dropdownItems) {
-            log.info("Got add to project choice: {}", getTextFromAddToProjectDropDownItem(el));
+            LOGGER.info("Got add to project choice: {}", getTextFromAddToProjectDropDownItem(el));
         }
         return dropdownItems;
     }
@@ -147,7 +147,7 @@ public class OpenshiftWebPage implements IWebPage {
     //================================================================================================
 
     public void openOpenshiftPage() throws Exception {
-        log.info("Opening openshift web page on route {}", ocRoute);
+        LOGGER.info("Opening openshift web page on route {}", ocRoute);
         selenium.getDriver().get(ocRoute);
         if (waitUntilLoginPage()) {
             selenium.getAngularDriver().waitForAngularRequestsToFinish();
@@ -155,7 +155,7 @@ public class OpenshiftWebPage implements IWebPage {
             try {
                 logout();
             } catch (Exception ex) {
-                log.info("User is not logged");
+                LOGGER.info("User is not logged");
             }
             if (!login()) {
                 throw new IllegalAccessException(loginPage.getAlertMessage());
@@ -204,7 +204,7 @@ public class OpenshiftWebPage implements IWebPage {
 
     private void waitUntilServiceIsReady() throws Exception {
         getProvisionedServiceItem().expandServiceItem();
-        log.info("Waiting until provisioned service will be completed");
+        LOGGER.info("Waiting until provisioned service will be completed");
         selenium.takeScreenShot();
         selenium.getDriverWait().withTimeout(Duration.ofMinutes(5)).until(ExpectedConditions.numberOfElementsToBe(By.className("alert-info"), 0));
         selenium.takeScreenShot();
@@ -238,7 +238,7 @@ public class OpenshiftWebPage implements IWebPage {
     }
 
     public void provisionAddressSpaceViaSC(AddressSpace addressSpace) throws Exception {
-        log.info("Service for addressSpace {} will be provisioned", addressSpace);
+        LOGGER.info("Service for addressSpace {} will be provisioned", addressSpace);
         openOpenshiftPage();
         String projectName = addressSpace.getMetadata().getNamespace();
         if (addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString())) {
@@ -260,7 +260,7 @@ public class OpenshiftWebPage implements IWebPage {
     }
 
     public void deprovisionAddressSpace(String namespace) throws Exception {
-        log.info("Service in namespace {} wil be deprovisioned", namespace);
+        LOGGER.info("Service in namespace {} wil be deprovisioned", namespace);
         openOpenshiftPage();
         clickOnShowAllProjects();
         selenium.clickOnItem(getProjectListItem(namespace), namespace);
@@ -311,14 +311,14 @@ public class OpenshiftWebPage implements IWebPage {
             clickOnAddToProjectDropdown();
             project = getItemFromAddToProjectDropDown(projectName);
         } catch (Exception ex) {
-            log.info("No project is available, creating new");
+            LOGGER.info("No project is available, creating new");
             noProjectAvailable = true;
         }
         if (project != null) {
-            log.info("Project is present address space will be added into it: {}", projectName);
+            LOGGER.info("Project is present address space will be added into it: {}", projectName);
             selenium.clickOnItem(project);
         } else {
-            log.info("Project is not present address space will be added into new");
+            LOGGER.info("Project is not present address space will be added into new");
             if (!noProjectAvailable) {
                 selenium.clickOnItem(getItemFromAddToProjectDropDown("Create Project"));
             }
@@ -336,7 +336,7 @@ public class OpenshiftWebPage implements IWebPage {
     }
 
     public String createBinding(AddressSpace addressSpace, String receiveAddress, String sendAddresses) throws Exception {
-        log.info("Binding in namespace {} will be created", addressSpace.getMetadata().getNamespace());
+        LOGGER.info("Binding in namespace {} will be created", addressSpace.getMetadata().getNamespace());
         openOpenshiftPage();
         clickOnShowAllProjects();
         selenium.clickOnItem(getProjectListItem(
@@ -360,7 +360,7 @@ public class OpenshiftWebPage implements IWebPage {
 
     public void removeBinding(AddressSpace addressSpace, String bindingID) throws Exception {
         String namespace = addressSpace.getMetadata().getNamespace();
-        log.info("Binding {} in namespace {} will be removed", bindingID, namespace);
+        LOGGER.info("Binding {} in namespace {} will be removed", bindingID, namespace);
         openOpenshiftPage();
         clickOnShowAllProjects();
         selenium.clickOnItem(getProjectListItem(namespace), namespace);
@@ -384,7 +384,7 @@ public class OpenshiftWebPage implements IWebPage {
         selenium.clickOnItem(serviceItem.getViewSecretBindingButton(binding), "View Secret");
         selenium.clickOnItem(getRevealSecretButton(), "Reveal Secret");
         BindingSecretData secretData = getBindingSecretData();
-        log.info(secretData.toString());
+        LOGGER.info(secretData.toString());
         return secretData;
     }
 

@@ -9,7 +9,7 @@ import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 
 public class PahoMQTTClientReceiver extends ProtonJMSClientReceiver {
-    public PahoMQTTClientReceiver() throws Exception {
+    public PahoMQTTClientReceiver() {
         this.setClientType(ClientType.CLI_JAVA_PAHO_MQTT_RECEIVER);
     }
 

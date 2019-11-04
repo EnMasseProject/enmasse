@@ -105,7 +105,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public abstract class Kubernetes {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private static Kubernetes instance;
     protected final Environment environment;
     protected final KubernetesClient client;
@@ -134,7 +134,7 @@ public abstract class Kubernetes {
             try {
                 cluster = KubeCluster.detect();
             } catch (NoClusterException ex) {
-                log.error(ex.getMessage());
+                LOGGER.error(ex.getMessage());
             }
             if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
                 instance = new Minikube(Environment.getInstance().namespace());
@@ -354,7 +354,7 @@ public abstract class Kubernetes {
     public String getConsoleRoute(AddressSpace addressSpace) {
         Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
         String consoleRoute = String.format("https://%s", consoleEndpoint.toString());
-        log.info(consoleRoute);
+        LOGGER.info(consoleRoute);
         return consoleRoute;
     }
 
@@ -392,7 +392,7 @@ public abstract class Kubernetes {
         Map<String, String> terminatedPodsLogs = new HashMap<>();
         client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
             pod.getStatus().getContainerStatuses().forEach(containerStatus -> {
-                log.info("pod:'{}', container:'{}' : restart count '{}'",
+                LOGGER.info("pod:'{}', container:'{}' : restart count '{}'",
                         pod.getMetadata().getName(),
                         containerStatus.getName(),
                         containerStatus.getRestartCount());
@@ -407,7 +407,7 @@ public abstract class Kubernetes {
                                 name,
                                 log);
                     } catch (Exception e) {
-                        log.warn("Failed to gather terminated log for {} with termination count {} (ignored)", name, containerStatus.getRestartCount());
+                        LOGGER.warn("Failed to gather terminated log for {} with termination count {} (ignored)", name, containerStatus.getRestartCount());
                     }
                 }
             });
@@ -427,7 +427,7 @@ public abstract class Kubernetes {
         Map<String, String> logs = new HashMap<>();
         try {
             if (pods == null || pods.isEmpty()) {
-                log.info("No pods to get logs");
+                LOGGER.info("No pods to get logs");
                 return logs;
             }
             pods.forEach(pod -> {
@@ -440,7 +440,7 @@ public abstract class Kubernetes {
                 });
             });
         } catch (Exception e) {
-            log.error("Error getting logs of pods", e);
+            LOGGER.error("Error getting logs of pods", e);
         }
         return logs;
     }
@@ -577,34 +577,34 @@ public abstract class Kubernetes {
     }
 
     public void createNamespace(String namespace) {
-        log.info("Following namespace will be created = {}", namespace);
+        LOGGER.info("Following namespace will be created = {}", namespace);
         if (!namespaceExists(namespace)) {
             Namespace ns = new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build();
             client.namespaces().create(ns);
         } else {
-            log.info("Namespace {} already exists", namespace);
+            LOGGER.info("Namespace {} already exists", namespace);
         }
     }
 
     public void createNamespace(String namespace, Map<String, String> labels) {
-        log.info("Following namespace will be created = {}", namespace);
+        LOGGER.info("Following namespace will be created = {}", namespace);
         if (!namespaceExists(namespace)) {
             Namespace ns = new NamespaceBuilder().withNewMetadata().withName(namespace).withLabels(labels).endMetadata().build();
             client.namespaces().create(ns);
         } else {
-            log.info("Namespace {} already exists", namespace);
+            LOGGER.info("Namespace {} already exists", namespace);
         }
     }
 
     public void deleteNamespace(String namespace) throws Exception {
-        log.info("Following namespace will be removed - {}", namespace);
+        LOGGER.info("Following namespace will be removed - {}", namespace);
         if (namespaceExists(namespace)) {
             client.namespaces().withName(namespace).cascading(true).delete();
 
             TestUtils.waitUntilCondition("Namespace will be deleted", phase ->
                     !namespaceExists(namespace), new TimeoutBudget(5, TimeUnit.MINUTES));
         } else {
-            log.info("Namespace {} already removed", namespace);
+            LOGGER.info("Namespace {} already removed", namespace);
         }
     }
 
@@ -614,7 +614,7 @@ public abstract class Kubernetes {
     }
 
     public void deletePod(String namespace, Map<String, String> labels) {
-        log.info("Delete pods with labels: {}", labels.toString());
+        LOGGER.info("Delete pods with labels: {}", labels.toString());
         client.pods().inNamespace(namespace).withLabels(labels).withPropagationPolicy("Background").delete();
     }
 
@@ -630,7 +630,7 @@ public abstract class Kubernetes {
         Pod podRes = client.pods().inNamespace(namespace).create((Pod) resource);
         Pod result = client.pods().inNamespace(namespace)
                 .withName(podRes.getMetadata().getName()).waitUntilReady(5, TimeUnit.SECONDS);
-        log.info("Pod created {}", result.getMetadata().getName());
+        LOGGER.info("Pod created {}", result.getMetadata().getName());
     }
 
     /***
@@ -641,7 +641,7 @@ public abstract class Kubernetes {
      */
     public void deletePod(String namespace, String podName) {
         client.pods().inNamespace(namespace).withName(podName).cascading(true).delete();
-        log.info("Pod {} removed", podName);
+        LOGGER.info("Pod {} removed", podName);
     }
 
     /***
@@ -665,9 +665,9 @@ public abstract class Kubernetes {
             Deployment depRes = client.apps().deployments().inNamespace(namespace).create(resources);
             Deployment result = client.apps().deployments().inNamespace(namespace)
                     .withName(depRes.getMetadata().getName()).waitUntilReady(2, TimeUnit.MINUTES);
-            log.info("Deployment {} created", result.getMetadata().getName());
+            LOGGER.info("Deployment {} created", result.getMetadata().getName());
         } else {
-            log.info("Deployment {} already exists", resources.getMetadata().getName());
+            LOGGER.info("Deployment {} already exists", resources.getMetadata().getName());
         }
     }
 
@@ -681,9 +681,9 @@ public abstract class Kubernetes {
     public void createServiceFromResource(String namespace, Service resources) {
         if (!serviceExists(namespace, resources.getMetadata().getName())) {
             Service serRes = client.services().inNamespace(namespace).create(resources);
-            log.info("Service {} created", serRes.getMetadata().getName());
+            LOGGER.info("Service {} created", serRes.getMetadata().getName());
         } else {
-            log.info("Service {} already exists", resources.getMetadata().getName());
+            LOGGER.info("Service {} already exists", resources.getMetadata().getName());
         }
     }
 
@@ -696,9 +696,9 @@ public abstract class Kubernetes {
     public void createIngressFromResource(String namespace, Ingress resources) {
         if (!ingressExists(namespace, resources.getMetadata().getName())) {
             Ingress serRes = client.extensions().ingresses().inNamespace(namespace).create(resources);
-            log.info("Ingress {} created", serRes.getMetadata().getName());
+            LOGGER.info("Ingress {} created", serRes.getMetadata().getName());
         } else {
-            log.info("Ingress {} already exists", resources.getMetadata().getName());
+            LOGGER.info("Ingress {} already exists", resources.getMetadata().getName());
         }
     }
 
@@ -710,7 +710,7 @@ public abstract class Kubernetes {
      */
     public void deleteIngress(String namespace, String ingressName) {
         client.extensions().ingresses().inNamespace(namespace).withName(ingressName).cascading(true).delete();
-        log.info("Ingress {} deleted", ingressName);
+        LOGGER.info("Ingress {} deleted", ingressName);
     }
 
     /**
@@ -745,9 +745,9 @@ public abstract class Kubernetes {
     public void createConfigmapFromResource(String namespace, ConfigMap resources) {
         if (!configmapExists(namespace, resources.getMetadata().getName())) {
             client.configMaps().inNamespace(namespace).create(resources);
-            log.info("Configmap {} in namespace {} created", resources.getMetadata().getName(), namespace);
+            LOGGER.info("Configmap {} in namespace {} created", resources.getMetadata().getName(), namespace);
         } else {
-            log.info("Configmap {} in namespace {} already exists", resources.getMetadata().getName(), namespace);
+            LOGGER.info("Configmap {} in namespace {} already exists", resources.getMetadata().getName(), namespace);
         }
     }
 
@@ -759,7 +759,7 @@ public abstract class Kubernetes {
      */
     public void deleteConfigmap(String namespace, String configmapName) {
         client.configMaps().inNamespace(namespace).withName(configmapName).cascading(true).delete();
-        log.info("Configmap {} in namespace {} deleted", configmapName, namespace);
+        LOGGER.info("Configmap {} in namespace {} deleted", configmapName, namespace);
     }
 
     /**
@@ -781,7 +781,7 @@ public abstract class Kubernetes {
      */
     public void deleteDeployment(String namespace, String appName) {
         client.apps().deployments().inNamespace(namespace).withName(appName).cascading(true).delete();
-        log.info("Deployment {} removed", appName);
+        LOGGER.info("Deployment {} removed", appName);
     }
 
     /***
@@ -802,7 +802,7 @@ public abstract class Kubernetes {
      */
     public void deleteService(String namespace, String serviceName) {
         client.services().inNamespace(namespace).withName(serviceName).cascading(true).delete();
-        log.info("Service {} removed", serviceName);
+        LOGGER.info("Service {} removed", serviceName);
     }
 
     /**
@@ -842,7 +842,7 @@ public abstract class Kubernetes {
      * @throws Exception when pod is not ready in timeout
      */
     public void waitUntilPodIsReady(Pod pod) throws InterruptedException {
-        log.info("Waiting until pod: {} is ready", pod.getMetadata().getName());
+        LOGGER.info("Waiting until pod: {} is ready", pod.getMetadata().getName());
         client.resource(pod).inNamespace(pod.getMetadata().getNamespace()).waitUntilReady(5, TimeUnit.MINUTES);
     }
 
@@ -865,7 +865,7 @@ public abstract class Kubernetes {
      */
     public String runOnPod(Pod pod, String container, String... command) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        log.info("Running command on pod {}: {}", pod.getMetadata().getName(), command);
+        LOGGER.info("Running command on pod {}: {}", pod.getMetadata().getName(), command);
         CompletableFuture<String> data = new CompletableFuture<>();
         try (ExecWatch execWatch = client.pods().inNamespace(pod.getMetadata().getNamespace())
                 .withName(pod.getMetadata().getName()).inContainer(container)
@@ -874,7 +874,7 @@ public abstract class Kubernetes {
                 .usingListener(new ExecListener() {
                     @Override
                     public void onOpen(Response response) {
-                        log.info("Reading data...");
+                        LOGGER.info("Reading data...");
                     }
 
                     @Override
@@ -889,7 +889,7 @@ public abstract class Kubernetes {
                 }).exec(command)) {
             return data.get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
-            log.warn("Exception running command {} on pod: {} with exception {}", command, pod.getMetadata().getName(), e);
+            LOGGER.warn("Exception running command {} on pod: {} with exception {}", command, pod.getMetadata().getName(), e);
             return "";
         }
     }
@@ -906,7 +906,7 @@ public abstract class Kubernetes {
      * @return full name
      */
     public String createServiceAccount(String name, String namespace) {
-        log.info("Create serviceaccount {} in namespace {}", name, namespace);
+        LOGGER.info("Create serviceaccount {} in namespace {}", name, namespace);
         client.serviceAccounts().inNamespace(namespace)
                 .create(new ServiceAccountBuilder().withNewMetadata().withName(name).endMetadata().build());
         return "system:serviceaccount:" + namespace + ":" + name;
@@ -920,7 +920,7 @@ public abstract class Kubernetes {
      * @return full name
      */
     public String deleteServiceAccount(String name, String namespace) {
-        log.info("Delete serviceaccount {} from namespace {}", name, namespace);
+        LOGGER.info("Delete serviceaccount {} from namespace {}", name, namespace);
         client.serviceAccounts().inNamespace(namespace).withName(name).cascading(true).delete();
         return "system:serviceaccount:" + namespace + ":" + name;
     }
@@ -947,9 +947,9 @@ public abstract class Kubernetes {
     public void createPvc(String namespace, PersistentVolumeClaim resources) {
         if (!pvcExists(namespace, resources.getMetadata().getName())) {
             PersistentVolumeClaim serRes = client.persistentVolumeClaims().inNamespace(namespace).create(resources);
-            log.info("PVC {} created", serRes.getMetadata().getName());
+            LOGGER.info("PVC {} created", serRes.getMetadata().getName());
         } else {
-            log.info("PVC {} already exists", resources.getMetadata().getName());
+            LOGGER.info("PVC {} already exists", resources.getMetadata().getName());
         }
     }
 
@@ -961,7 +961,7 @@ public abstract class Kubernetes {
      */
     public void deletePvc(String namespace, String pvcName) {
         client.persistentVolumeClaims().inNamespace(namespace).withName(pvcName).delete();
-        log.info("PVC {} deleted", pvcName);
+        LOGGER.info("PVC {} deleted", pvcName);
     }
 
     /**
@@ -985,9 +985,9 @@ public abstract class Kubernetes {
     public void createSecret(String namespace, Secret resources) {
         if (!secretExists(namespace, resources.getMetadata().getName())) {
             Secret serRes = client.secrets().inNamespace(namespace).create(resources);
-            log.info("Secret {} created", serRes.getMetadata().getName());
+            LOGGER.info("Secret {} created", serRes.getMetadata().getName());
         } else {
-            log.info("Secret {} already exists", resources.getMetadata().getName());
+            LOGGER.info("Secret {} already exists", resources.getMetadata().getName());
         }
     }
 
@@ -999,7 +999,7 @@ public abstract class Kubernetes {
      */
     public void deleteSecret(String namespace, String secret) {
         client.secrets().inNamespace(namespace).withName(secret).cascading(true).delete();
-        log.info("Secret {} deleted", secret);
+        LOGGER.info("Secret {} deleted", secret);
     }
 
     /**

@@ -14,11 +14,11 @@ import java.util.Arrays;
 import java.util.List;
 
 public class StompClientReceiver extends AbstractClient {
-    public StompClientReceiver() throws Exception {
+    public StompClientReceiver() {
         super(ClientType.CLI_STOMP_RECEIVER);
     }
 
-    public StompClientReceiver(Path logPath) throws Exception {
+    public StompClientReceiver(Path logPath) {
         super(ClientType.CLI_STOMP_RECEIVER, logPath);
     }
 

@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
  * Collects logs from all EnMasse components and saves them to a file
  */
 public class LogCollector implements Watcher<Pod>, AutoCloseable {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private final File logDir;
     private final Kubernetes kubernetes;
     private final Map<String, LogWatch> logWatches = new HashMap<>();
@@ -56,7 +56,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
     @Override
     public void onClose(KubernetesClientException cause) {
         if (cause != null) {
-            log.info("LogCollector closed with message: " + cause.getMessage() + ", reconnecting");
+            LOGGER.info("LogCollector closed with message: " + cause.getMessage() + ", reconnecting");
             watch = kubernetes.watchPods(uuid, this);
         }
     }
@@ -73,7 +73,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
             }
             pod = kubernetes.getPod(pod.getMetadata().getName());
         }
-        log.info("Collecting logs for pod {} with uuid {}", pod.getMetadata().getName(), uuid);
+        LOGGER.info("Collecting logs for pod {} with uuid {}", pod.getMetadata().getName(), uuid);
         for (Container container : pod.getSpec().getContainers()) {
             try {
                 File outputFile = new File(logDir, pod.getMetadata().getName() + "." + container.getName());
@@ -84,7 +84,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
                             pod.getMetadata().getName(), container.getName(), outputFileStream));
                 }
             } catch (Exception e) {
-                log.info("Unable to save log for " + pod.getMetadata().getName() + "." + container.getName());
+                LOGGER.info("Unable to save log for " + pod.getMetadata().getName() + "." + container.getName());
             }
         }
     }

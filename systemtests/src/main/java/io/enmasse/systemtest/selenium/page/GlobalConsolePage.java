@@ -23,7 +23,7 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class GlobalConsolePage implements IWebPage {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     private SeleniumProvider selenium;
     private String ocRoute;
@@ -123,7 +123,7 @@ public class GlobalConsolePage implements IWebPage {
     //================================================================================================
 
     public void openGlobalConsolePage() throws Exception {
-        log.info("Opening global console on route {}", ocRoute);
+        LOGGER.info("Opening global console on route {}", ocRoute);
         selenium.getDriver().get(ocRoute);
         if (waitUntilLoginPage()) {
             selenium.getAngularDriver().waitForAngularRequestsToFinish();
@@ -131,7 +131,7 @@ public class GlobalConsolePage implements IWebPage {
             try {
                 logout();
             } catch (Exception ex) {
-                log.info("User is not logged");
+                LOGGER.info("User is not logged");
             }
             if (!login()) {
                 throw new IllegalAccessException(loginPage.getAlertMessage());
@@ -154,7 +154,7 @@ public class GlobalConsolePage implements IWebPage {
             WebElement logout = selenium.getDriver().findElement(By.id("dd-menuitem-logout"));
             selenium.clickOnItem(logout, "Log out");
         } catch (Exception ex) {
-            log.info("Unable to logout, user is not logged in");
+            LOGGER.info("Unable to logout, user is not logged in");
         }
     }
 
@@ -225,7 +225,7 @@ public class GlobalConsolePage implements IWebPage {
         List<AddressSpaceWebItem> addressItems = new ArrayList<>();
         for (WebElement element : elements) {
             AddressSpaceWebItem item = new AddressSpaceWebItem(element);
-            log.info(String.format("Got addressSpace: %s", item.toString()));
+            LOGGER.info(String.format("Got addressSpace: %s", item.toString()));
             addressItems.add(item);
         }
         return addressItems;
