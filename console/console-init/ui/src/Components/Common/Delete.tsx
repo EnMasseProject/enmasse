@@ -20,7 +20,7 @@ export const Delete: React.FunctionComponent<IDeleteProps> = ({
   };
   return (
     <Modal
-      isSmall
+      isSmall={true}
       title={header}
       isOpen={isOpen}
       onClose={handleModalToggle}
@@ -32,7 +32,7 @@ export const Delete: React.FunctionComponent<IDeleteProps> = ({
           Cancel
         </Button>,
       ]}
-      isFooterLeftAligned
+      isFooterLeftAligned={true}
     >
       <b>{name}</b>
       <br />
