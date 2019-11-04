@@ -1,7 +1,7 @@
 import * as React from "react";
 import { MemoryRouter } from "react-router";
 import { storiesOf } from "@storybook/react";
-import { ConnectionList, IConnection } from "../src/Components/ConnectionList";
+import { ConnectionList, IConnection } from "../src/Components/AddressSpace/ConnectionList";
 
 const stories = storiesOf("Console", module);
 
