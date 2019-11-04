@@ -15,6 +15,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.utils.IoTUtils;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.service.management.credentials.PasswordCredential;
@@ -23,6 +24,7 @@ import org.eclipse.hono.service.management.device.Device;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -38,9 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Tag(SMOKE)
 abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
-
+    private static Logger LOGGER = CustomLogger.getLogger();
     private static final String DEVICE_REGISTRY_TEST_ADDRESSSPACE = "device-registry-test-addrspace";
-
     private static final String DEVICE_REGISTRY_TEST_PROJECT = "device-registry-test-project";
 
 

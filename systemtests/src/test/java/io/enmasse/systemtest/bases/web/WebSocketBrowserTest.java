@@ -20,7 +20,7 @@ public abstract class WebSocketBrowserTest extends TestBase implements ITestBase
     private RheaWebPage rheaWebPage;
 
     @BeforeEach
-    public void setUpWebConsoleTests() throws Exception {
+    public void setUpWebConsoleTests() {
         rheaWebPage = new RheaWebPage(SeleniumProvider.getInstance());
         resourcesManager.deleteAddresses(getSharedAddressSpace());
     }

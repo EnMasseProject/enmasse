@@ -49,9 +49,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 @Tag(UPGRADE)
 @ExternalClients
 class UpgradeTest extends TestBase implements ITestIsolatedStandard {
-
+    private static Logger LOGGER = CustomLogger.getLogger();
     private static final int MESSAGE_COUNT = 50;
-    private static Logger log = CustomLogger.getLogger();
     private static String productName;
     private static String startVersion;
 
@@ -110,7 +109,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         createAddressCMD(KUBERNETES.getInfraNamespace(), "brokered-queue", "brokered-queue", "brokered", "queue", "brokered-queue", getApiVersion());
         createAddressCMD(KUBERNETES.getInfraNamespace(), "brokered-topic", "brokered-topic", "brokered", "topic", "brokered-topic", getApiVersion());
         Thread.sleep(30_000);
-        waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("brokered")).toArray(new Address[0]));
+        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("brokered")).toArray(new Address[0]));
 
         createAddressCMD(KUBERNETES.getInfraNamespace(), "standard-queue-xlarge", "standard-queue-xlarge", "standard", "queue", "standard-xlarge-queue", getApiVersion());
         createAddressCMD(KUBERNETES.getInfraNamespace(), "standard-queue-small", "standard-queue-small", "standard", "queue", "standard-small-queue", getApiVersion());
@@ -118,7 +117,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         createAddressCMD(KUBERNETES.getInfraNamespace(), "standard-anycast", "standard-anycast", "standard", "anycast", "standard-small-anycast", getApiVersion());
         createAddressCMD(KUBERNETES.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", getApiVersion());
         Thread.sleep(30_000);
-        waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("standard")).toArray(new Address[0]));
+        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("standard")).toArray(new Address[0]));
 
         assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue"));
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small"));
@@ -144,8 +143,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES),AddressUtils.getAddresses(standard).toArray(new Address[0]));
 
         List<User> items = KUBERNETES.getUserClient().list().getItems();
-        log.info("After upgrade {} user(s)", items.size());
-        items.forEach(u -> log.info("User {}", u.getSpec().getUsername()));
+        LOGGER.info("After upgrade {} user(s)", items.size());
+        items.forEach(u -> LOGGER.info("User {}", u.getSpec().getUsername()));
 
         if (!startVersion.equals("1.0")) {
 
@@ -172,28 +171,28 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private void createAddressSpaceCMD(String namespace, String name, String type, String plan, String authService, String apiVersion) {
-        log.info("Creating addressspace {} in namespace {}", name, namespace);
+        LOGGER.info("Creating addressspace {} in namespace {}", name, namespace);
         Path scriptPath = Paths.get(System.getProperty("user.dir"), "scripts", "create_address_space.sh");
         List<String> cmd = Arrays.asList("/bin/bash", "-c", scriptPath.toString() + " " + namespace + " " + name + " " + type + " " + plan + " " + authService + " " + apiVersion);
         assertTrue(Exec.execute(cmd, 10_000, true).getRetCode(), "AddressSpace not created");
     }
 
     private void createUserCMD(String namespace, String userName, String addressSpace, String apiVersion) {
-        log.info("Creating user {} in namespace {}", userName, namespace);
+        LOGGER.info("Creating user {} in namespace {}", userName, namespace);
         Path scriptPath = Paths.get(System.getProperty("user.dir"), "scripts", "create_user.sh");
         List<String> cmd = Arrays.asList("/bin/bash", "-c", scriptPath.toString() + " " + userName + " " + "test" + " " + namespace + " " + addressSpace + " " + apiVersion);
         assertTrue(Exec.execute(cmd, 20_000, true).getRetCode(), "User not created");
     }
 
     private void createAddressCMD(String namespace, String name, String address, String addressSpace, String type, String plan, String apiVersion) {
-        log.info("Creating address {} in namespace {}", name, namespace);
+        LOGGER.info("Creating address {} in namespace {}", name, namespace);
         Path scriptPath = Paths.get(System.getProperty("user.dir"), "scripts", "create_address.sh");
         List<String> cmd = Arrays.asList("/bin/bash", "-c", scriptPath.toString() + " " + namespace + " " + addressSpace + " " + name + " " + address + " " + type + " " + plan + " " + apiVersion);
         assertTrue(Exec.execute(cmd, 20_000, true).getRetCode(), "Address not created");
     }
 
     private void uninstallEnmasse(Path templateDir) {
-        log.info("Application will be removed");
+        LOGGER.info("Application will be removed");
         Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", "systemtests.inventory");
         Path ansiblePlaybook = Paths.get(templateDir.toString(), "ansible", "playbooks", "openshift", "uninstall.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
@@ -202,7 +201,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private void installEnmasseBundle(Path templateDir, String version) throws Exception {
-        log.info("Application will be deployed using bundle version {}", version);
+        LOGGER.info("Application will be deployed using bundle version {}", version);
         KubeCMDClient.createNamespace(KUBERNETES.getInfraNamespace());
         KubeCMDClient.switchProject(KUBERNETES.getInfraNamespace());
         if (version.startsWith("0.26") || version.equals("1.0")) {
@@ -227,14 +226,14 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private void installEnmasseAnsible(Path templatePaths, boolean upgrade) throws Exception {
-        log.info("Application will be installed using ansible");
+        LOGGER.info("Application will be installed using ansible");
         Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", "systemtests.inventory");
         Path ansiblePlaybook = Paths.get(templatePaths.toString(), "ansible", "playbooks", "openshift", "deploy_all.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
                 "--extra-vars", String.format("namespace=%s authentication_services=[\"standard\"]", KUBERNETES.getInfraNamespace()));
 
         assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Deployment of new version of enmasse failed");
-        log.info("Sleep after {}", upgrade ? "upgrade" : "install");
+        LOGGER.info("Sleep after {}", upgrade ? "upgrade" : "install");
         Thread.sleep(60_000);
 
         if (upgrade) {
@@ -250,37 +249,37 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         Path imageEnvDir = Paths.get(makefileDir.toString(), "imageenv.txt");
 
         String images = Files.readString(imageEnvDir);
-        log.info("Expected images: {}", images);
+        LOGGER.info("Expected images: {}", images);
 
         TestUtils.waitUntilCondition("Images are updated", (phase) -> {
             AtomicBoolean ready = new AtomicBoolean(true);
-            log.info("=======================================================");
+            LOGGER.info("=======================================================");
             KUBERNETES.listPods().forEach(pod -> {
                 pod.getSpec().getContainers().forEach(container -> {
-                    log.info("Pod {}, current container {}", pod.getMetadata().getName(), container.getImage());
-                    log.info("Comparing: {}", container.getImage()
+                    LOGGER.info("Pod {}, current container {}", pod.getMetadata().getName(), container.getImage());
+                    LOGGER.info("Comparing: {}", container.getImage()
                             .replaceAll("^.*/", "")
                             .replace("enmasse-controller-manager", "controller-manager"));
                     if (!images.contains(container.getImage()
                             .replaceAll("^.*/", "")
                             .replace("enmasse-controller-manager", "controller-manager")) && !container.getImage().contains("postgresql")) {
-                        log.warn("Container is not upgraded");
+                        LOGGER.warn("Container is not upgraded");
                         ready.set(false);
                     } else {
-                        log.info("Container is upgraded");
+                        LOGGER.info("Container is upgraded");
                     }
                 });
                 pod.getSpec().getInitContainers().forEach(initContainer -> {
-                    log.info("Pod {}, current initContainer {}", pod.getMetadata().getName(), initContainer.getImage());
+                    LOGGER.info("Pod {}, current initContainer {}", pod.getMetadata().getName(), initContainer.getImage());
                     if (!images.contains(initContainer.getImage()
                             .replaceAll("^.*/", ""))) {
-                        log.warn("Init container is not upgraded");
+                        LOGGER.warn("Init container is not upgraded");
                         ready.set(false);
                     } else {
-                        log.info("InitContainer is upgraded");
+                        LOGGER.info("InitContainer is upgraded");
                     }
                 });
-                log.info("*********************************************");
+                LOGGER.info("*********************************************");
             });
             return ready.get();
         }, new TimeoutBudget(5, TimeUnit.MINUTES));
@@ -326,13 +325,13 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
             AuthenticationServiceSpecStandardStorage storage = authService.getSpec().getStandard().getStorage();
             if (storage == null || !AuthenticationServiceSpecStandardType.persistent_claim.equals(storage.getType())) {
-                log.info("Installed auth service {} does not use persistent claim, recreating it ", authServiceName);
+                LOGGER.info("Installed auth service {} does not use persistent claim, recreating it ", authServiceName);
                 resourcesManager.removeAuthService(authService);
 
                 AuthenticationService replacement = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, true);
                 KUBERNETES.getAuthenticationServiceClient().create(replacement);
 
-                log.info("Replacement auth service : {}", replacement);
+                LOGGER.info("Replacement auth service : {}", replacement);
 
                 Thread.sleep(30_000);
                 TestUtils.waitUntilDeployed(KUBERNETES.getInfraNamespace());

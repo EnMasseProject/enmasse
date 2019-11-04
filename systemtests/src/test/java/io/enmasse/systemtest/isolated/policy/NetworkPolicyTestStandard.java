@@ -44,6 +44,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -203,13 +204,13 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
                 .withAddressSpaceType(AddressSpaceType.STANDARD.toString())
                 .withShortDescription("Custom systemtests defined address space plan")
                 .withInfraConfigRef(standardInfraConfig.getMetadata().getName())
-                .withResourceLimits(Arrays.asList(
+                .withResourceLimits(Stream.of(
                         new ResourceAllowance("broker", 3.0),
                         new ResourceAllowance("router", 3.0),
                         new ResourceAllowance("aggregate", 5.0))
-                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
-                .withAddressPlans(Collections.singletonList(addressPlan)
-                        .stream().map(addressPlan1 -> addressPlan1.getMetadata().getName()).collect(Collectors.toList()))
+                        .collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Stream.of(addressPlan).map(addressPlan1 -> addressPlan1.getMetadata().getName())
+                        .collect(Collectors.toList()))
                 .endSpec()
                 .build();
         ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(exampleSpacePlan);

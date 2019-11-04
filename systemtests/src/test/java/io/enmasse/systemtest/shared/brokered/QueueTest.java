@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 class QueueTest extends TestBase implements ITestSharedBrokered {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private Connection connection;
 
     @AfterEach
@@ -175,7 +175,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
         //send messages and commit
         jmsProvider.sendMessages(sender, listMsgs);
         session.commit();
-        log.info("messages sent commit");
+        LOGGER.info("messages sent commit");
 
         //receive commit messages
         recvd = jmsProvider.receiveMessages(receiver, count, 1000);
@@ -183,22 +183,22 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
             assertNotNull(message, "No message received");
         }
         session.commit();
-        log.info("messages received commit");
+        LOGGER.info("messages received commit");
 
         //send messages rollback
         jmsProvider.sendMessages(sender, listMsgs);
         session.rollback();
-        log.info("messages sent rollback");
+        LOGGER.info("messages sent rollback");
 
         //check if queue is empty
         javax.jms.Message received = receiver.receive(1000);
         assertNull(received, "Queue should be empty");
-        log.info("queue is empty");
+        LOGGER.info("queue is empty");
 
         //send messages
         jmsProvider.sendMessages(sender, listMsgs);
         session.commit();
-        log.info("messages sent commit");
+        LOGGER.info("messages sent commit");
 
         //receive messages rollback
         recvd.clear();
@@ -207,7 +207,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
             assertNotNull(message, "No message received");
         }
         session.rollback();
-        log.info("messages received rollback");
+        LOGGER.info("messages received rollback");
 
         //receive messages
         recvd.clear();
@@ -216,7 +216,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
             assertNotNull(message, "No message received");
         }
         session.commit();
-        log.info("messages received commit");
+        LOGGER.info("messages received commit");
 
         sender.close();
         receiver.close();
@@ -254,22 +254,22 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
         List<javax.jms.Message> listMsgs = jmsProvider.generateMessages(session, count);
 
         jmsProvider.sendMessages(sender, listMsgs);
-        log.info("{} messages sent", count);
+        LOGGER.info("{} messages sent", count);
 
         recvd = jmsProvider.receiveMessages(receiver, batch, 1000);
         assertThat("Wrong count of received messages", recvd.size(), Matchers.is(batch));
-        log.info("{} messages received", batch);
+        LOGGER.info("{} messages received", batch);
 
         recvd2 = jmsProvider.receiveMessages(receiver, count - batch, 1000);
         assertThat("Wrong count of received messages", recvd2.size(), Matchers.is(count - batch));
-        log.info("{} messages received", count - batch);
+        LOGGER.info("{} messages received", count - batch);
 
         jmsProvider.sendMessages(sender, listMsgs);
-        log.info("{} messages sent", count);
+        LOGGER.info("{} messages sent", count);
 
         recvd = jmsProvider.receiveMessages(receiver, count, 1000);
         assertThat("Wrong count of received messages", recvd.size(), Matchers.is(count));
-        log.info("{} messages received", count);
+        LOGGER.info("{} messages received", count);
         sender.close();
         receiver.close();
     }
@@ -293,12 +293,12 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 "jmsCliId", addressQueue);
         connection.start();
 
-        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1, DeliveryMode.PERSISTENT);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1, DeliveryMode.PERSISTENT);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1, DeliveryMode.PERSISTENT);
         connection.stop();
         connection.close();
     }

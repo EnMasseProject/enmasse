@@ -39,9 +39,8 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
 class ForwardersTest extends BridgingBase {
-
-    private static Logger log = CustomLogger.getLogger();
     private static final String REMOTE_QUEUE1 = "queue1";
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     @Test
     @Tag(ACCEPTANCE)
@@ -123,22 +122,22 @@ class ForwardersTest extends BridgingBase {
     }
 
     @Test
-    public void testForwarderTLSOut() throws Exception {
+    void testForwarderTLSOut() throws Exception {
         doTestForwarderOut(defaultTls(), defaultCredentials());
     }
 
     @Test
-    public void testForwarderMutualTLSOut() throws Exception {
+    void testForwarderMutualTLSOut() throws Exception {
         doTestForwarderOut(defaultMutualTls(), null);
     }
 
     @Test
-    public void testForwarderTLSIn() throws Exception {
+    void testForwarderTLSIn() throws Exception {
         doTestForwarderIn(defaultTls(), defaultCredentials());
     }
 
     @Test
-    public void testForwarderMutualTLSIn() throws Exception {
+    void testForwarderMutualTLSIn() throws Exception {
         doTestForwarderIn(defaultMutualTls(), null);
     }
 
@@ -190,7 +189,7 @@ class ForwardersTest extends BridgingBase {
                 }
             } catch (Exception e) {
                 full = true;
-                log.info("broker is full");
+                LOGGER.info("broker is full");
             }
         } while(!full);
 

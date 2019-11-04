@@ -24,8 +24,8 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.model.address.AddressStatus;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -61,9 +61,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
-    private static Logger LOGGER = CustomLogger.getLogger();
     private SeleniumProvider selenium = SeleniumProvider.getInstance();
     private MessagingUtils clientUtils = getClientUtils();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     @Test
     void testCreateAddressSpacePlan() throws Exception {
@@ -571,21 +571,21 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         resourcesManager.appendAddresses(address);
-        waitForBrokerReplicas(partitioned, address, 1);
+        TestUtils.waitForBrokerReplicas(partitioned, address, 1);
         new MessagingUtils().assertCanConnect(partitioned, cred, Collections.singletonList(address), resourcesManager);
 
         // Increase number of partitions and expect broker to be created
         address.getSpec().setPlan(partitionedQueue.getMetadata().getName());
         resourcesManager.replaceAddress(address);
 
-        waitForBrokerReplicas(partitioned, address, 1);
+        TestUtils.waitForBrokerReplicas(partitioned, address, 1);
         new MessagingUtils().assertCanConnect(partitioned, cred, Collections.singletonList(address), resourcesManager);
 
 
         // Decrease number of partitions and expect broker to disappear
         address.getSpec().setPlan(simpleQueue.getMetadata().getName());
         resourcesManager.replaceAddress(address);
-        waitForBrokerReplicas(partitioned, address, 1);
+        TestUtils. waitForBrokerReplicas(partitioned, address, 1);
         new MessagingUtils().assertCanConnect(partitioned, cred, Collections.singletonList(address), resourcesManager);
 
         // Increase to too many partitions
@@ -659,14 +659,14 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
 
         resourcesManager.setAddresses(dest.toArray(new Address[0]));
         for (Address destination : dest) {
-            waitForBrokerReplicas(manyAddressesSpace, destination, 1);
+            TestUtils.waitForBrokerReplicas(manyAddressesSpace, destination, 1);
         }
 
         new MessagingUtils().assertCanConnect(manyAddressesSpace, cred, dest, resourcesManager);
 
         resourcesManager.deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
         for (Address destination : dest.subList(toDeleteCount, destCount)) {
-            waitForBrokerReplicas(manyAddressesSpace, destination, 1);
+            TestUtils.waitForBrokerReplicas(manyAddressesSpace, destination, 1);
         }
 
         new MessagingUtils().assertCanConnect(manyAddressesSpace, cred, dest.subList(toDeleteCount, destCount), resourcesManager);

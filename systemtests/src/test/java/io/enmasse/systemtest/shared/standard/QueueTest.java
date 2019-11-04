@@ -27,6 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -54,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 public class QueueTest extends TestBase implements ITestSharedStandard {
+    private static Logger LOGGER = CustomLogger.getLogger();
     private Connection connection;
 
     public static void runQueueTest(AmqpClient client, Address dest) throws InterruptedException, ExecutionException {
@@ -474,12 +476,12 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 "jmsCliId", addressQueue);
         connection.start();
 
-        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1, DeliveryMode.PERSISTENT);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1, DeliveryMode.PERSISTENT);
+        MessagingUtils.sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1, DeliveryMode.PERSISTENT);
         connection.stop();
         connection.close();
     }

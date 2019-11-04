@@ -317,7 +317,7 @@ public abstract class Kubernetes {
 
     public abstract Endpoint getKeycloakEndpoint();
 
-    public Endpoint getMessagingRoute(AddressSpace addressSpace) throws Exception {
+    public Endpoint getMessagingRoute(AddressSpace addressSpace) {
         Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "messaging");
         if (messagingEndpoint == null) {
             String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));

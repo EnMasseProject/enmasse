@@ -22,6 +22,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
 import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -39,11 +40,13 @@ import io.fabric8.kubernetes.api.model.networking.NetworkPolicyPeer;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyPeerBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -195,10 +198,10 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
                 .withAddressSpaceType(AddressSpaceType.BROKERED.toString())
                 .withShortDescription("Custom systemtests defined address space plan")
                 .withInfraConfigRef(brokeredInfraConfig.getMetadata().getName())
-                .withResourceLimits(Collections.singletonList(new ResourceAllowance("broker", 3.0))
-                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
-                .withAddressPlans(Collections.singletonList(addressPlan)
-                        .stream().map(addressPlan1 -> addressPlan1.getMetadata().getName()).collect(Collectors.toList()))
+                .withResourceLimits(Stream.of(new ResourceAllowance("broker", 3.0))
+                        .collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Stream.of(addressPlan).map(addressPlan1 -> addressPlan1.getMetadata().getName())
+                        .collect(Collectors.toList()))
                 .endSpec()
                 .build();
         ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(exampleSpacePlan);
@@ -217,7 +220,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         AddressSpace exampleAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("brokered-address-space")
-                .withNamespace(KUBERNETES.getInstance().getInfraNamespace())
+                .withNamespace(KUBERNETES.getInfraNamespace())
                 .withLabels(Collections.singletonMap("allowed", "true"))
                 .endMetadata()
                 .withNewSpec()

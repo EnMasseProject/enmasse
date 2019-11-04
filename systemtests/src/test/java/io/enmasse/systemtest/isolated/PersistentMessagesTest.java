@@ -39,7 +39,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private MessagingUtils clientUtils = new MessagingUtils();
     private UserCredentials credentials = new UserCredentials("test", "test");
 
@@ -186,7 +186,7 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
         AmqpClient client = resourcesManager.getAmqpClientFactory().createTopicClient(addSpace);
         client.getConnectOptions().setCredentials(credentials);
 
-        log.info("Subscribe first receiver");
+        LOGGER.info("Subscribe first receiver");
         Future<List<Message>> recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), 30);
         clientUtils.sendDurableMessages(resourcesManager, addSpace, topic, credentials, 30);
         assertThat("Wrong messages received: ", recvResults.get(1, TimeUnit.MINUTES).size(), is(30));
@@ -197,7 +197,7 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
         // Seems that the service/route can sometimes not be immediately available despite the pod being Ready.
         assertConnectable(addSpace, credentials);
 
-        log.info("Subscribe receiver again");
+        LOGGER.info("Subscribe receiver again");
         recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), 30);
         assertThat("Wrong messages received: batch2", recvResults.get(1, TimeUnit.MINUTES).size(), is(30));
     }
@@ -208,9 +208,9 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
 
         KUBERNETES.deletePod(KUBERNETES.getInfraNamespace(), labelSelector);
 
-        waitForPodsToTerminate(uids);
+        TestUtils.waitForPodsToTerminate(uids);
         TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), podCount, new TimeoutBudget(10, TimeUnit.MINUTES));
-        log.info("Broker pods restarted");
+        LOGGER.info("Broker pods restarted");
     }
 
     private void assertConnectable(AddressSpace space, UserCredentials user) throws Exception {
@@ -219,10 +219,10 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
         do {
             try {
                 clientUtils.connectAddressSpace(resourcesManager, space, user);
-                log.info("Successfully connected to address space : {}", name);
+                LOGGER.info("Successfully connected to address space : {}", name);
                 return;
             } catch (IOException e) {
-                log.info("Failed to connect to address space: {} - {}", name, e.getMessage());
+                LOGGER.info("Failed to connect to address space: {} - {}", name, e.getMessage());
             }
             Thread.sleep(1000);
         } while (!budget.timeoutExpired());

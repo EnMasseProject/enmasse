@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SeleniumFirefox
-public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedStandard {
+class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedStandard {
 
     @Test
     void testCreateDeleteQueue() throws Exception {

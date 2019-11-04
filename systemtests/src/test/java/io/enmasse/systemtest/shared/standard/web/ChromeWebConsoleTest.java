@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(NON_PR)
 @SeleniumChrome
-public class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedStandard {
+class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedStandard {
 
     @Test
     void testCreateDeleteQueue() throws Exception {

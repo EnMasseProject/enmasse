@@ -212,7 +212,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    void testReadInfra() throws Exception {
+    void testReadInfra() {
         testInfra = new StandardInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test-infra-3-standard")

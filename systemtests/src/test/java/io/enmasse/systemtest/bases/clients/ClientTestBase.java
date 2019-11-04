@@ -51,7 +51,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
     private ClientArgumentMap arguments = new ClientArgumentMap();
     private List<AbstractClient> clients;
 
-    public ClientArgumentMap getArguments() {
+    protected ClientArgumentMap getArguments() {
         return arguments;
     }
 

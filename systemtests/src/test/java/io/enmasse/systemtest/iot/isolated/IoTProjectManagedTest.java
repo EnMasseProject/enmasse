@@ -11,6 +11,7 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -26,6 +27,7 @@ import io.fabric8.kubernetes.api.model.OwnerReference;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.List;
@@ -50,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag(TestTag.SMOKE)
 class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
     private Kubernetes kubernetes = Kubernetes.getInstance();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     @Test
     @Tag(ACCEPTANCE)

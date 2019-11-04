@@ -46,13 +46,11 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 class ManagedTest extends TestBase implements ITestIoTIsolated {
-
-    private static final Logger log = CustomLogger.getLogger();
-
     private MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> client;
     private MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> addressClient;
     private MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>> addressSpaceClient;
     private MixedOperation<User, UserList, DoneableUser, Resource<User, DoneableUser>> userClient;
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     @BeforeEach
     void initClients() throws Exception {
@@ -120,7 +118,7 @@ class ManagedTest extends TestBase implements ITestIoTIsolated {
 
         // update the project
 
-        log.info("Update project namespace");
+        LOGGER.info("Update project namespace");
         client.createOrReplace(project);
 
         // immediately after the change, the project is still ready but the new
@@ -134,7 +132,7 @@ class ManagedTest extends TestBase implements ITestIoTIsolated {
 
         // wait until the project and address space become ready
 
-        log.info("For for project to become ready again");
+        LOGGER.info("For for project to become ready again");
         IoTUtils.waitForIoTProjectReady(KUBERNETES, project);
 
         // assert existence

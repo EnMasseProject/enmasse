@@ -65,7 +65,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     private AddressSpace addressSpace;
     private UserCredentials user;
@@ -218,7 +218,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 int retry = 0;
                 while (!timeout.timeoutExpired()) {
                     try {
-                        log.info("Making request to openshift-cert-validator {}", request);
+                        LOGGER.info("Making request to openshift-cert-validator {}", request);
                         JsonObject response = client.test(request);
                         if (response.containsKey("error")) {
                             if (retry < maxRetries) {
@@ -233,10 +233,10 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                     } catch (Exception e) {
                         lastException = e;
                     }
-                    log.debug("next iteration, remaining time: {}", timeout.timeLeft());
+                    LOGGER.debug("next iteration, remaining time: {}", timeout.timeLeft());
                     Thread.sleep(5000);
                 }
-                log.error("Timeout expired");
+                LOGGER.error("Timeout expired");
                 if (lastException != null) {
                     throw lastException;
                 }
@@ -316,7 +316,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
         QueueTest.runQueueTest(amqpClient, queue, 5);
         mqttClient.connect();
-        simpleMQTTSendReceive(topic, mqttClient);
+        MessagingUtils.simpleMQTTSendReceive(topic, mqttClient);
         mqttClient.disconnect();
     }
 
@@ -332,11 +332,11 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         Endpoint consoleEndpoint = KUBERNETES.getConsoleEndpoint(addressSpace);
         CompletableFuture<Optional<Throwable>> promise = new CompletableFuture<>();
         webClient.get(consoleEndpoint.getPort(), consoleEndpoint.getHost(), "").ssl(true).send(ar -> {
-            log.info("get console " + ar.toString());
+            LOGGER.info("get console " + ar.toString());
             if (ar.succeeded()) {
                 promise.complete(Optional.empty());
             } else {
-                log.info("Exception in get console", ar.cause());
+                LOGGER.info("Exception in get console", ar.cause());
                 promise.complete(Optional.of(ar.cause()));
             }
         });

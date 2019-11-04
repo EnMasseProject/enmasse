@@ -13,12 +13,12 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
-import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(ISOLATED)
 class CommonTest extends TestBase implements ITestBaseIsolated {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     @Test
     void testAccessLogs() throws Exception {
@@ -100,7 +100,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         KUBERNETES.listPods().forEach(pod -> KUBERNETES.getContainersFromPod(pod.getMetadata().getName()).forEach(container -> {
             String podName = pod.getMetadata().getName();
             String containerName = container.getName();
-            log.info("Getting log from pod: {}, for container: {}", podName, containerName);
+            LOGGER.info("Getting LOGGER from pod: {}, for container: {}", podName, containerName);
             String podlog = KUBERNETES.getLog(podName, containerName);
 
             // Retry - diagnostic code to help understand a sporadic Ci failure.
@@ -110,7 +110,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                log.info("(Retry) Getting log from pod: {}, for container: {}", podName, containerName);
+                LOGGER.info("(Retry) Getting LOGGER from pod: {}, for container: {}", podName, containerName);
                 podlog = KUBERNETES.getLog(podName, containerName);
             }
 
@@ -121,8 +121,10 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         }));
 
         if (!podsContainersWithNoLog.isEmpty()) {
-            String podContainerNames = podsContainersWithNoLog.stream().map(e -> String.format("%s-%s", e.getKey(), e.getValue())).collect(Collectors.joining(","));
-            fail(String.format("%d pod container(s) had unexpectedly empty logs : %s ", podsContainersWithNoLog.size(), podContainerNames));
+            String podContainerNames = podsContainersWithNoLog.stream().map(e ->
+                    String.format("%s-%s", e.getKey(), e.getValue())).collect(Collectors.joining(","));
+            fail(String.format("%d pod container(s) had unexpectedly empty logs : %s ",
+                    podsContainersWithNoLog.size(), podContainerNames));
         }
     }
 
@@ -178,26 +180,28 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
         getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
 
-        log.info("------------------------------------------------------------");
-        log.info("------------------- Start with restating -------------------");
-        log.info("------------------------------------------------------------");
+        LOGGER.info("------------------------------------------------------------");
+        LOGGER.info("------------------- Start with restating -------------------");
+        LOGGER.info("------------------------------------------------------------");
 
         List<Pod> pods = KUBERNETES.listPods();
         int runningPodsBefore = pods.size();
-        log.info("Number of running pods before restarting any: {}", runningPodsBefore);
+        LOGGER.info("Number of running pods before restarting any: {}", runningPodsBefore);
         try {
             for (Label label : labels) {
-                log.info("Restarting {}", label.labelValue);
+                LOGGER.info("Restarting {}", label.labelValue);
                 KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
                 Thread.sleep(30_000);
-                TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+                TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(),
+                        runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
                 assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
             }
 
-            log.info("Restarting whole enmasse");
+            LOGGER.info("Restarting whole enmasse");
             KubeCMDClient.deletePodByLabel("app", KUBERNETES.getEnmasseAppLabel());
             Thread.sleep(180_000);
-            TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+            TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(),
+                    runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
             AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
                     standardAddresses.toArray(new Address[0]));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
@@ -210,7 +214,8 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         } finally {
             // Ensure that EnMasse's API services are finished re-registering (after api-server restart) before ending
             // the test otherwise test clean-up will fail.
-            assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s", CoreCrd.VERSION, CoreCrd.GROUP)).getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
+            TestUtils.assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s", CoreCrd.VERSION, CoreCrd.GROUP))
+                    .getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
         }
     }
 
@@ -296,7 +301,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
         getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
 
-        log.info("Sending messages before admin pod restart");
+        LOGGER.info("Sending messages before admin pod restart");
 
         for (Address addr : brokeredAddresses) {
             getClientUtils().sendDurableMessages(resourcesManager, brokered, addr, user, 15);
@@ -306,23 +311,23 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             getClientUtils().sendDurableMessages(resourcesManager, standard, addr, user, 15);
         }
 
-        log.info("------------------------------------------------------------");
-        log.info("------------------- Start with restating -------------------");
-        log.info("------------------------------------------------------------");
+        LOGGER.info("------------------------------------------------------------");
+        LOGGER.info("------------------- Start with restating -------------------");
+        LOGGER.info("------------------------------------------------------------");
 
         List<Pod> pods = KUBERNETES.listPods();
         int runningPodsBefore = pods.size();
-        log.info("Number of running pods before restarting any: {}", runningPodsBefore);
+        LOGGER.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
         for (Label label : labels) {
-            log.info("Restarting {}", label.labelValue);
+            LOGGER.info("Restarting {}", label.labelValue);
             KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
             Thread.sleep(30_000);
             TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
         }
 
-        log.info("Receiving messages after admin pod restart");
+        LOGGER.info("Receiving messages after admin pod restart");
 
         for (Address addr : brokeredAddresses) {
             getClientUtils().receiveDurableMessages(resourcesManager, brokered, addr, user, 15);
@@ -409,17 +414,17 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
         getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
 
-        log.info("------------------------------------------------------------");
-        log.info("------------------- Start with restating -------------------");
-        log.info("------------------------------------------------------------");
+        LOGGER.info("------------------------------------------------------------");
+        LOGGER.info("------------------- Start with restating -------------------");
+        LOGGER.info("------------------------------------------------------------");
 
         List<Pod> pods = KUBERNETES.listPods();
         int runningPodsBefore = pods.size();
-        log.info("Number of running pods before restarting any: {}", runningPodsBefore);
+        LOGGER.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
         try {
             for (Address addr : brokeredAddresses) {
-                log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), brokered.getMetadata().getName());
+                LOGGER.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), brokered.getMetadata().getName());
                 for (Label label : labels) {
                     getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
                     doMessagingDuringRestart(label, runningPodsBefore, user, brokered, addr);
@@ -428,7 +433,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             }
 
             for (Address addr : standardAddresses) {
-                log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), standard.getMetadata().getName());
+                LOGGER.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), standard.getMetadata().getName());
                 for (Label label : labels) {
                     getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
                     doMessagingDuringRestart(label, runningPodsBefore, user, standard, addr);
@@ -439,7 +444,8 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         } finally {
             // Ensure that EnMasse's API services are finished re-registering (after api-server restart) before ending
             // the test otherwise test clean-up will fail.
-            assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s", CoreCrd.VERSION, CoreCrd.GROUP)).getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
+            TestUtils.assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s",
+                    CoreCrd.VERSION, CoreCrd.GROUP)).getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
         }
 
     }
@@ -450,7 +456,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
                                    List<Address> brAddresses, List<Address> stAddresses) throws Exception {
-        log.info("Check if system works");
+        LOGGER.info("Check if system works");
         getClientUtils().assertCanConnect(standard, existingUser, stAddresses, resourcesManager);
         getClientUtils().assertCanConnect(brokered, existingUser, brAddresses, resourcesManager);
         resourcesManager.getAddressSpace(brokered.getMetadata().getName());
@@ -461,7 +467,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
     private void doMessagingDuringRestart(Label label, int runningPodsBefore, UserCredentials user, AddressSpace space, Address addr) throws Exception {
         long sleepMillis = 500;
-        log.info("Starting messaging");
+        LOGGER.info("Starting messaging");
         AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
         AmqpClient client = getAmqpClientFactory().createAddressClient(space, addressType);
         client.getConnectOptions().setCredentials(user);
@@ -469,7 +475,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         var stopSend = new CompletableFuture<>();
 
         var recvFut = client.recvMessagesWithStatus(addr.getSpec().getAddress(), msg -> {
-            log.info("Message received");
+            LOGGER.info("Message received");
             return false;
         });
 
@@ -483,14 +489,14 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                     try {
                         Thread.sleep(sleepMillis);
                     } catch (InterruptedException e) {
-                        log.error("Error waiting between sends", e);
+                        LOGGER.error("Error waiting between sends", e);
                         stopSend.completeExceptionally(e);
                         return true;
                     }
                     return false;
                 });
 
-        log.info("Restarting {}", label.labelValue);
+        LOGGER.info("Restarting {}", label.labelValue);
         KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
         Thread.sleep(30_000);
         TestUtils.waitForExpectedReadyPods(KUBERNETES, KUBERNETES.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
@@ -501,7 +507,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         try {
             Thread.sleep(sleepMillis);
         } catch (InterruptedException e) {
-            log.error("Error waiting between stop sender and receiver", e);
+            LOGGER.error("Error waiting between stop sender and receiver", e);
         }
         recvFut.closeGracefully();
 

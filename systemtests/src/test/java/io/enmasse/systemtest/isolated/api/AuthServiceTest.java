@@ -38,8 +38,7 @@ import java.util.concurrent.TimeUnit;
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
 class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
-
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     @AfterEach
     void tearDown() {
@@ -59,7 +58,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     void testCustomAuthServiceStandard() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
         resourcesManager.createAuthService(standardAuth);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+        LOGGER.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -132,7 +131,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 invalidCert);
         // Can't wait for it because it doesn't actually spin up any pod
         resourcesManager.createAuthService(externalAuth, false);
-        log.info(externalAuth.toString());
+        LOGGER.info(externalAuth.toString());
 
         SecretReference validCert = new SecretReference();
         validCert.setName("standard-authservice-cert");
@@ -183,7 +182,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     void testAuthenticateAgainstMultipleAuthServices() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-eph", false);
         resourcesManager.createAuthService(standardAuth);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+        LOGGER.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -256,7 +255,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     void testCustomAuthServiceNone() throws Exception {
         AuthenticationService noneAuth = AuthServiceUtils.createNoneAuthServiceObject("test-none-authservice");
         resourcesManager.createAuthService(noneAuth);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(noneAuth.getMetadata().getName())).toString());
+        LOGGER.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(noneAuth.getMetadata().getName())).toString());
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -296,7 +295,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     void testAuthServiceWithoutDeletingClaim() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-claim", true, "1Gi", false, "test-claim");
         resourcesManager.createAuthService(standardAuth);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+        LOGGER.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -344,7 +343,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-postgres",
                 endpoint.getHost(), endpoint.getPort(), "postgresql", "postgresdb", SystemtestsKubernetesApps.POSTGRES_APP);
         resourcesManager.createAuthService(standardAuth);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+        LOGGER.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()

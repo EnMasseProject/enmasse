@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Tests related to publish messages via MQTT
  */
-public class SessionTest extends TestBase implements ITestSharedWithMqtt {
+class SessionTest extends TestBase implements ITestSharedWithMqtt {
 
     private static final String MQTT_TOPIC = "mytopic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";

@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SeleniumFirefox
 @OpenShift(version = 3)
 class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private SeleniumProvider selenium = SeleniumProvider.getInstance();
     private List<AddressSpace> provisionedServices = new ArrayList<>();
     private UserCredentials ocTestUser = Credentials.userCredentials();
@@ -69,7 +69,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
             });
             provisionedServices.clear();
         } else {
-            log.warn("Remove address spaces in tear down - SKIPPED!");
+            LOGGER.warn("Remove address spaces in tear down - SKIPPED!");
         }
     }
 
@@ -201,14 +201,14 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         getClientUtils().assertCanConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic), resourcesManager);
         getClientUtils().assertCannotConnect(brokered, restricted.getCredentials(), Arrays.asList(queue, topic), resourcesManager);
 
-        log.info("Remove binding and check if client cannot connect");
+        LOGGER.info("Remove binding and check if client cannot connect");
         ocPage.removeBinding(brokered, bindingID);
 
         long end = System.currentTimeMillis() + 30_000;
         String username = credentials.getCredentials().getUsername();
         while (resourcesManager.userExist(brokered, username) && end > System.currentTimeMillis()) {
             Thread.sleep(5_000);
-            log.info("Still awaiting user {} to be removed.", username);
+            LOGGER.info("Still awaiting user {} to be removed.", username);
         }
 
         getClientUtils().assertCannotConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic), resourcesManager);
@@ -392,14 +392,14 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         WebElement errorLog = selenium.getWebElement(() ->
                 selenium.getDriver().findElement(By.id("peerLostErrorDialogLabel")));
         assertTrue(errorLog.isDisplayed());
-        log.info("error banner is displayed showing addr space is deleted");
+        LOGGER.info("error banner is displayed showing addr space is deleted");
 
         //refresh page, console is no longer available
         selenium.refreshPage();
         WebElement errorPageText = selenium.getWebElement(() ->
                 selenium.getDriver().findElement(By.className("alert-info")));
         assertTrue(errorPageText.isDisplayed());
-        log.info("application is not available page is displayed");
+        LOGGER.info("application is not available page is displayed");
 
     }
 }

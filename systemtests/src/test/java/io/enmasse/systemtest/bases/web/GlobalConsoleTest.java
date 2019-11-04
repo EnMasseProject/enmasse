@@ -33,8 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class GlobalConsoleTest extends TestBase {
     private static final IsolatedResourcesManager ISOLATED_RESOURCES_MANAGER = IsolatedResourcesManager.getInstance();
-    private static Logger log = CustomLogger.getLogger();
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
+    private static Logger LOGGER = CustomLogger.getLogger();
+    private SeleniumProvider selenium = SeleniumProvider.getInstance();
     private GlobalConsolePage globalConsolePage;
 
     //============================================================================================
@@ -182,7 +182,7 @@ public abstract class GlobalConsoleTest extends TestBase {
         Boolean active = Optional.ofNullable(selenium.waitUntilItemPresent(60, () -> globalConsolePage.getAddressSpaceItem(addressSpace)))
                 .map(webItem -> webItem.getStatus().contains("Active"))
                 .orElseGet(() -> {
-                    log.error("AddressSpaceWebItem {} not present", name);
+                    LOGGER.error("AddressSpaceWebItem {} not present", name);
                     return false;
                 });
         assertTrue(active, String.format("Address space %s not marked active in UI within timeout", name));
@@ -216,8 +216,8 @@ public abstract class GlobalConsoleTest extends TestBase {
                 .endSpec()
                 .build();
         ISOLATED_RESOURCES_MANAGER.createAddressSpace(addressSpace);
-        log.warn("Addressspace::     " + addressSpace);
-        log.warn("Finding: " + endpointPrefix + "console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+        LOGGER.warn("Addressspace::     " + addressSpace);
+        LOGGER.warn("Finding: " + endpointPrefix + "console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
 
         //try to get all external endpoints
         KUBERNETES.getExternalEndpoint(endpointPrefix + "console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));

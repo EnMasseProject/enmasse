@@ -15,7 +15,6 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
@@ -42,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class AuthorizationTestBase extends TestBase implements ITestBaseShared {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     private Address queue;
     private Address topic;
@@ -258,7 +257,8 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                 .collect(Collectors.toList());
 
         UserCredentials credentials = UserUtils.getCredentialsFromUser(user);
-        if (addresses.stream().filter(address -> destination.getSpec().getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
+        if (addresses.stream().anyMatch(address -> destination.getSpec().getAddress().contains(address.replace("*",
+                "")))) {
             assertTrue(canSend(destination, credentials),
                     String.format("Authz failed, user %s cannot send message to destination %s", credentials,
                             destination.getSpec().getAddress()));
@@ -276,7 +276,8 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                 .collect(Collectors.toList());
 
         UserCredentials credentials = UserUtils.getCredentialsFromUser(user);
-        if (addresses.stream().filter(address -> destination.getSpec().getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
+        if (addresses.stream().anyMatch(address -> destination.getSpec().getAddress().contains(address.replace("*",
+                "")))) {
             assertTrue(canReceive(destination, credentials),
                     String.format("Authz failed, user %s cannot receive message from destination %s", credentials,
                             destination.getSpec().getAddress()));
@@ -288,7 +289,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
     }
 
     private void assertSend(UserCredentials credentials) throws Exception {
-        log.info("Testing if client is authorized to send messages");
+        LOGGER.info("Testing if client is authorized to send messages");
         String message = String.format("Authz failed, user %s cannot send message", credentials);
         assertTrue(canSend(queue, credentials), message);
         assertTrue(canSend(topic, credentials), message);
@@ -300,7 +301,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
     }
 
     private void assertCannotSend(UserCredentials credentials) throws Exception {
-        log.info("Testing if client is NOT authorized to send messages");
+        LOGGER.info("Testing if client is NOT authorized to send messages");
         String message = String.format("Authz failed, user %s can send message", credentials);
         assertFalse(canSend(queue, credentials), message);
         assertFalse(canSend(topic, credentials), message);
@@ -312,7 +313,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
     }
 
     private void assertReceive(UserCredentials credentials) throws Exception {
-        log.info("Testing if client is authorized to receive messages");
+        LOGGER.info("Testing if client is authorized to receive messages");
         String message = String.format("Authz failed, user %s cannot receive message", credentials);
         assertTrue(canReceive(queue, credentials), message);
         assertTrue(canReceive(topic, credentials), message);
@@ -324,7 +325,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
     }
 
     private void assertCannotReceive(UserCredentials credentials) throws Exception {
-        log.info("Testing if client is NOT authorized to receive messages");
+        LOGGER.info("Testing if client is NOT authorized to receive messages");
         String message = String.format("Authz failed, user %s can receive message", credentials);
         assertFalse(canReceive(queue, credentials), message);
         assertFalse(canReceive(topic, credentials), message);
@@ -336,36 +337,38 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
     }
 
     private boolean canSend(Address destination, UserCredentials credentials) throws Exception {
-        TestUtils.logWithSeparator(log,
-                String.format("Try send message under user %s from %s %s", credentials, destination.getSpec().getType(), destination.getSpec().getAddress()),
+        TestUtils.logWithSeparator(LOGGER,
+                String.format("Try send message under user %s from %s %s", credentials,
+                        destination.getSpec().getType(), destination.getSpec().getAddress()),
                 String.format("***** Try to open sender client under user %s", credentials),
                 String.format("***** Try to open receiver client under user %s", defaultCredentials));
         AmqpClient sender = createClient(destination, credentials);
         AmqpClient receiver = createClient(destination, defaultCredentials);
-        TestUtils.logWithSeparator(log);
+        TestUtils.logWithSeparator(LOGGER);
         return canAuth(sender, receiver, destination, true);
     }
 
     private boolean canReceive(Address destination, UserCredentials credentials) throws Exception {
-        TestUtils.logWithSeparator(log,
-                String.format("Try receive message under user %s from %s %s", credentials, destination.getSpec().getType(), destination.getSpec().getAddress()),
+        TestUtils.logWithSeparator(LOGGER,
+                String.format("Try receive message under user %s from %s %s", credentials,
+                        destination.getSpec().getType(), destination.getSpec().getAddress()),
                 String.format("***** Try to open sender client under user %s", defaultCredentials),
                 String.format("***** Try to open receiver client under user %s", credentials));
 
         AmqpClient sender = createClient(destination, defaultCredentials);
         AmqpClient receiver = createClient(destination, credentials);
-        TestUtils.logWithSeparator(log);
+        TestUtils.logWithSeparator(LOGGER);
         return canAuth(sender, receiver, destination, false);
     }
 
     private boolean canAuth(AmqpClient sender, AmqpClient receiver, Address destination, boolean checkSender) throws Exception {
-        try {
+        try (sender; receiver) {
             Future<List<Message>> received = receiver.recvMessages(destination.getSpec().getAddress(), 1);
             Future<Integer> sent = sender.sendMessages(destination.getSpec().getAddress(), Collections.singletonList("msg1"));
 
             if (checkSender) {
                 int numSent = sent.get(1, TimeUnit.MINUTES);
-                log.info("Sent {}", numSent);
+                LOGGER.info("Sent {}", numSent);
                 int numReceived = received.get(1, TimeUnit.MINUTES).size();
                 return numSent == numReceived;
             } else {
@@ -379,16 +382,16 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                 cause = ex.getCause();
             }
 
-            if (cause instanceof SecurityException || cause instanceof SaslSystemException || cause instanceof AuthenticationException || cause instanceof UnauthorizedAccessException) {
-                log.info("canAuth {} ({}): {}", destination.getSpec().getAddress(), destination.getSpec().getType(), ex.getMessage());
+            if (cause instanceof SecurityException || cause instanceof SaslSystemException ||
+                    cause instanceof AuthenticationException || cause instanceof UnauthorizedAccessException) {
+                LOGGER.info("canAuth {} ({}): {}", destination.getSpec().getAddress(),
+                        destination.getSpec().getType(), ex.getMessage());
                 return false;
             } else {
-                log.warn("canAuth {} ({}) exception", destination.getSpec().getAddress(), destination.getSpec().getType(), ex);
+                LOGGER.warn("canAuth {} ({}) exception", destination.getSpec().getAddress(),
+                        destination.getSpec().getType(), ex);
                 throw ex;
             }
-        } finally {
-            sender.close();
-            receiver.close();
         }
     }
 

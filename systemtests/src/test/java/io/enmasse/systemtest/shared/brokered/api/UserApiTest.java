@@ -32,9 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserApiTest extends TestBase implements ITestSharedBrokered {
-
+    private static Logger LOGGER = CustomLogger.getLogger();
     private Map<AddressSpace, User> users = new HashMap<>();
-    private static final Logger LOGGER = CustomLogger.getLogger();
 
     @AfterEach
     void cleanUsers() {

@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
-import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;

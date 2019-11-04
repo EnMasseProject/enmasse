@@ -33,19 +33,19 @@ import io.vertx.proton.ProtonQoS;
 
 public abstract class BridgingBase extends TestBase implements ITestIsolatedStandard {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     protected static final String REMOTE_NAME = "remote1";
 
-    protected final String remoteBrokerName = "amq-broker";
+    private final String remoteBrokerName = "amq-broker";
     protected final String remoteBrokerNamespace = "systemtests-external-broker";
     protected final String remoteBrokerUsername = "test-user";
     protected final String remoteBrokerPassword = "test-password";
-    protected Endpoint clientBrokerEndpoint;
+    private Endpoint clientBrokerEndpoint;
     protected Endpoint remoteBrokerEndpoint;
-    protected Endpoint remoteBrokerEndpointSSL;
-    protected Endpoint remoteBrokerEndpointMutualTLS;
-    protected BrokerCertBundle certBundle;
+    private Endpoint remoteBrokerEndpointSSL;
+    private Endpoint remoteBrokerEndpointMutualTLS;
+    private BrokerCertBundle certBundle;
 
     @BeforeEach
     void deployBroker() throws Exception {
@@ -56,9 +56,9 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
         remoteBrokerEndpointSSL = new Endpoint(serviceName, 5671);
         remoteBrokerEndpointMutualTLS = new Endpoint(serviceName, 55671);
         clientBrokerEndpoint = Kubernetes.getInstance().getExternalEndpoint(remoteBrokerName, remoteBrokerNamespace);
-        log.info("Broker endpoint: {}", remoteBrokerEndpoint);
-        log.info("Broker SSL endpoint: {}", remoteBrokerEndpointSSL);
-        log.info("Client broker endpoint: {}", clientBrokerEndpoint);
+        LOGGER.info("Broker endpoint: {}", remoteBrokerEndpoint);
+        LOGGER.info("Broker SSL endpoint: {}", remoteBrokerEndpointSSL);
+        LOGGER.info("Client broker endpoint: {}", clientBrokerEndpoint);
     }
 
     @AfterEach
@@ -71,12 +71,12 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
     }
 
     protected void scaleDownBroker() throws Exception {
-        log.info("Scaling down broker");
+        LOGGER.info("Scaling down broker");
         SystemtestsKubernetesApps.scaleDownDeployment(remoteBrokerNamespace, remoteBrokerName);
     }
 
     protected void scaleUpBroker() throws Exception {
-        log.info("Scaling up broker");
+        LOGGER.info("Scaling up broker");
         SystemtestsKubernetesApps.scaleUpDeployment(remoteBrokerNamespace, remoteBrokerName);
     }
 
@@ -98,7 +98,7 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
         }
 
         //only set credentials when mutual tls isn't configured
-        if ( tlsSettings == null || (tlsSettings != null && tlsSettings.getClientCert() == null) ) {
+        if (tlsSettings == null || tlsSettings.getClientCert() == null) {
             if (credentials == null) {
                 Assertions.fail("Connector wrongly configured, missing connector credentials");
             }

@@ -177,7 +177,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
     }
 
     @Test
-    void testReadInfra() throws Exception {
+    void testReadInfra() {
         testInfra = new BrokeredInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test-infra-1-brokered")

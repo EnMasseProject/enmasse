@@ -78,8 +78,6 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
 
     @Test
     void testMultipleReceivers() throws Exception {
-
-
         Address dest = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(addressSpace.getMetadata().getNamespace())
@@ -151,7 +149,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
         }
         resourcesManager.setAddresses(dest.toArray(new Address[0]));
 
-        waitForRouterReplicas(addressSpace, 3);
+        TestUtils.waitForRouterReplicas(addressSpace, 3);
 
         resourcesManager.createOrUpdateUser(addressSpace, userCredentials);
         ISOLATED_RESOURCES_MANAGER.initFactories(addressSpace, userCredentials);
@@ -166,7 +164,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
         //remove part of destinations
         int removeCount = 120;
         resourcesManager.deleteAddresses(dest.subList(0, removeCount).toArray(new Address[0]));
-        waitForRouterReplicas(addressSpace, 2);
+        TestUtils.waitForRouterReplicas(addressSpace, 2);
 
         //simple send/receive
         for (int i = removeCount; i < destCount; i = i + 3) {
@@ -175,6 +173,6 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
 
         //remove all destinations
         resourcesManager.setAddresses();
-        waitForRouterReplicas(addressSpace, 2);
+        TestUtils.waitForRouterReplicas(addressSpace, 2);
     }
 }

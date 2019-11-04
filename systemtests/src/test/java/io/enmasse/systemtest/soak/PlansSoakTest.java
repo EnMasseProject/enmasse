@@ -16,13 +16,16 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.bases.soak.SoakTestBase;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +35,7 @@ import java.util.List;
 class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
 
     @AfterEach
-    void tearDown() throws Exception {
+    void tearDown() {
         logCollector.collectRouterState("planMarathonTearDown");
         logCollector.collectConfigMaps("plansMarathonTearDown");
     }
@@ -93,7 +96,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
         resourcesManager.setAddresses(dest.toArray(new Address[0]));
 
         for (int i = 0; i < destCount; i += 1000) {
-            waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
+            TestUtils.waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
         }
 
         AmqpClient queueClient = getAmqpClientFactory().createQueueClient(manyAddressesSpace);
@@ -104,7 +107,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
 
         ISOLATED_RESOURCES_MANAGER.deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
         for (int i = toDeleteCount; i < destCount; i += 1000) {
-            waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
+            TestUtils.waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
         }
 
         for (int i = toDeleteCount; i < destCount; i += 50) {

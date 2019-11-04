@@ -37,11 +37,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 class MonitoringTest extends TestBase implements ITestIsolatedStandard {
-
+    private static Logger LOGGER = CustomLogger.getLogger();
     private static final int TIMEOUT_QUERY_RESULT_MINUTES = 3;
     private static final String ENMASSE_ADDRESS_SPACES_NOT_READY = "enmasse_address_space_status_not_ready";
     private static final String ENMASSE_ADDRESS_SPACES_READY = "enmasse_address_space_status_ready";
-    private static Logger log = CustomLogger.getLogger();
     private Path templatesDir = Paths.get(environment.getTemplatesPath());
     private PrometheusApiClient prometheusApiClient;
 
@@ -72,7 +71,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private void waitForMonitoringResources() {
-        log.info("Waiting for monitoring resources to be installed");
+        LOGGER.info("Waiting for monitoring resources to be installed");
         TestUtils.waitUntilCondition("Monitoring resources installed", phase -> {
             String permissions = KubeCMDClient.checkPermission("create", "prometheus", environment.getMonitoringNamespace(), "application-monitoring-operator").getStdOut();
             return permissions.trim().equals("yes");
@@ -97,11 +96,11 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                     }
                 }
                 if (phase == WaitPhase.LAST_TRY) {
-                    log.info("Prometheus rules obtained : {}", rules.encodePrettily());
+                    LOGGER.info("Prometheus rules obtained : {}", rules.encodePrettily());
                 }
             } catch (Exception e) {
                 if (phase == WaitPhase.LAST_TRY) {
-                    log.error("Waiting for prometheus to be ready", e);
+                    LOGGER.error("Waiting for prometheus to be ready", e);
                 }
             }
             return false;
@@ -176,7 +175,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 return true;
             } catch (Exception e) {
                 if (phase == WaitPhase.LAST_TRY) {
-                    log.error("Exception waiting for query " + query, e);
+                    LOGGER.error("Exception waiting for query " + query, e);
                 }
                 return false;
             }
@@ -190,7 +189,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 return true;
             } catch (Exception e) {
                 if (phase == WaitPhase.LAST_TRY) {
-                    log.error("Exception waiting for range query " + query, e);
+                    LOGGER.error("Exception waiting for range query " + query, e);
                 }
                 return false;
             }

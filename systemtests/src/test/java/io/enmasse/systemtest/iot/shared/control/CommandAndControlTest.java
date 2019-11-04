@@ -57,9 +57,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
 class CommandAndControlTest extends TestBase implements ITestIoTShared {
-
-    private static Logger log = CustomLogger.getLogger();
-
+    private static Logger LOGGER = CustomLogger.getLogger();
     private Endpoint httpAdapterEndpoint;
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;
@@ -174,14 +172,14 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
         // consumer link should be ready now ... send telemetry with "ttd"
 
-        log.info("Send telemetry with TTD - ttd: {}", this.ttd);
+        LOGGER.info("Send telemetry with TTD - ttd: {}", this.ttd);
 
         var response = TestUtils.runUntilPass(5, () -> this.httpClient.send(TELEMETRY, null, is(HTTP_OK /* OK for command responses */), request -> {
             // set "time to disconnect"
             request.putHeader("hono-ttd", Integer.toString(this.ttd));
         }, Duration.ofSeconds(this.ttd + 5)));
 
-        log.info("Telemetry response: {}: {}", response.statusCode(), response.bodyAsString());
+        LOGGER.info("Telemetry response: {}: {}", response.statusCode(), response.bodyAsString());
 
         return response;
 
@@ -193,7 +191,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
         return SHARED_IOT_MANAGER.getAmqpClient().recvMessages(new QueueTerminusFactory().getSource("telemetry/" + SHARED_IOT_MANAGER.getTenantId()), msg -> {
 
-            log.info("Received message: {}", msg);
+            LOGGER.info("Received message: {}", msg);
 
             var ttdValue = msg.getApplicationProperties().getValue().get("ttd");
 
@@ -219,18 +217,18 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
             // send request command
 
-            log.info("Sending out command message");
+            LOGGER.info("Sending out command message");
             var f2 = SHARED_IOT_MANAGER.getAmqpClient().sendMessage("control/" + SHARED_IOT_MANAGER.getTenantId() + "/" + deviceId, commandMessage)
                     .whenComplete((res, err) -> {
                         String strres = null;
                         if (res != null) {
                             strres = res.stream().map(ProtonDelivery::getRemoteState).map(Object::toString).collect(Collectors.joining(", "));
                         }
-                        log.info("Message result - res: {}, err:", // no need for final {}, as this is an exception
+                        LOGGER.info("Message result - res: {}, err:", // no need for final {}, as this is an exception
                                 strres, err);
                     });
             sentFuture.set(f2);
-            log.info("Message underway");
+            LOGGER.info("Message underway");
 
             // stop listening for more messages
 
@@ -258,7 +256,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         var m1 = f1.get(10, TimeUnit.SECONDS);
 
         // dump messages
-        m1.forEach(m -> log.info("Message: {}", m));
+        m1.forEach(m -> LOGGER.info("Message: {}", m));
 
         // we expect two messages, the "test" message and the actual one
         assertThat(m1, hasSize(2));

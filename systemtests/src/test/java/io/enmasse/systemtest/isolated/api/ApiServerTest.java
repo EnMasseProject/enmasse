@@ -34,6 +34,7 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBindingBuilder;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
@@ -68,7 +69,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ApiServerTest extends TestBase implements ITestIsolatedStandard {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     private static <T> Set<String> toStrings(final Collection<T> items, final Function<T, String> converter) {
         Objects.requireNonNull(converter);
@@ -97,17 +98,17 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
         resourcesManager.createAddressSpacePlan(addressSpacePlan);
 
         AddressSpaceSchemaList schemaData = KUBERNETES.getSchemaClient().list();
-        log.info("Check if schema object is not null");
+        LOGGER.info("Check if schema object is not null");
         assertThat(schemaData.getItems().size(), not(0));
 
-        log.info("Check if the 'standard' address space type is found");
+        LOGGER.info("Check if the 'standard' address space type is found");
         AddressSpaceSchema standardSchema = findTypeWithName(schemaData);
         assertNotNull(standardSchema);
 
-        log.info("Check if the 'standard' address space has plans");
+        LOGGER.info("Check if the 'standard' address space has plans");
         assertThat(standardSchema.getSpec().getPlans(), notNullValue());
 
-        log.info("Check if schema object contains new address space plan");
+        LOGGER.info("Check if schema object contains new address space plan");
         assertTrue(standardSchema.getSpec().getPlans()
                 .stream()
                 .map(AddressSpacePlanDescription::getName)
@@ -118,7 +119,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .findFirst().orElse(null);
         assertNotNull(addressType);
 
-        log.info("Check if schema contains new address plans");
+        LOGGER.info("Check if schema contains new address plans");
         assertTrue(addressType.getPlans().stream()
                 .filter(s -> s.getName().equals("test-schema-rest-api-addr-plan"))
                 .map(AddressPlanDescription::getName)
@@ -152,7 +153,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.createAddressSpace(addressSpace);
 
-        logWithSeparator(log, "Check if uuid is propagated");
+        TestUtils.logWithSeparator(LOGGER, "Check if uuid is propagated");
         String uuid = "4bfe49c2-60b5-11e7-a5d0-507b9def37d9";
         Address dest1 = new AddressBuilder()
                 .withNewMetadata()
@@ -304,7 +305,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             KUBERNETES.createNamespace(namespace1);
             KUBERNETES.createNamespace(namespace2);
 
-            log.info("--------------- Address space part -------------------");
+            LOGGER.info("--------------- Address space part -------------------");
 
             AddressSpace brokered = new AddressSpaceBuilder()
                     .withNewMetadata()
@@ -338,7 +339,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             assertThat("Get all address spaces does not contain 2 address spaces",
                     KUBERNETES.getAddressSpaceClient().inAnyNamespace().list().getItems().size(), is(2));
 
-            log.info("------------------ Address part ----------------------");
+            LOGGER.info("------------------ Address part ----------------------");
 
             Address brokeredQueue = new AddressBuilder()
                     .withNewMetadata()
@@ -392,7 +393,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             assertThat("Get all addresses does not contain 4 addresses",
                     KUBERNETES.getAddressClient().inAnyNamespace().list().getItems().size(), is(4));
 
-            log.info("-------------------- User part -----------------------");
+            LOGGER.info("-------------------- User part -----------------------");
 
 
             UserCredentials cred = new UserCredentials("pepa", "novak");

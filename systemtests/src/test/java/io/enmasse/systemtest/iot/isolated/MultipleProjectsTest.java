@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit;
 
 @Tag(TestTag.SMOKE)
 class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;
 
@@ -235,12 +235,12 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
                 return true;
             } catch (MqttException mqttException) {
                 if (phase == WaitPhase.LAST_TRY) {
-                    log.error("Error waiting to connect mqtt adapter", mqttException);
+                    LOGGER.error("Error waiting to connect mqtt adapter", mqttException);
                 }
                 return false;
             }
         }, new TimeoutBudget(1, TimeUnit.MINUTES));
-        log.info("Connection to mqtt adapter succeeded");
+        LOGGER.info("Connection to mqtt adapter succeeded");
         ctx.setMqttAdapterClient(mqttAdapterClient);
     }
 

@@ -15,6 +15,7 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
@@ -46,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 class TopicTest extends TestBase implements ITestSharedBrokered {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private Connection connection;
 
     @AfterEach
@@ -434,13 +435,13 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
 
-        sendReceiveLargeMessageTopic(jmsProvider, 1, addressTopic, 1);
-        sendReceiveLargeMessageTopic(jmsProvider, 0.5, addressTopic, 1);
-        sendReceiveLargeMessageTopic(jmsProvider, 0.25, addressTopic, 1);
+        MessagingUtils.sendReceiveLargeMessageTopic(jmsProvider, 1, addressTopic, 1);
+        MessagingUtils.sendReceiveLargeMessageTopic(jmsProvider, 0.5, addressTopic, 1);
+        MessagingUtils.sendReceiveLargeMessageTopic(jmsProvider, 0.25, addressTopic, 1);
         connection.stop();
         connection.close();
     }

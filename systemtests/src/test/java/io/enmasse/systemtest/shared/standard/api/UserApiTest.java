@@ -12,8 +12,8 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
-import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -46,9 +46,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserApiTest extends TestBase implements ITestSharedStandard {
-
+    private static Logger LOGGER = CustomLogger.getLogger();
     private Map<AddressSpace, User> users = new HashMap<>();
-    private Logger LOGGER = CustomLogger.getLogger();
 
     @AfterEach
     void cleanUsers() {

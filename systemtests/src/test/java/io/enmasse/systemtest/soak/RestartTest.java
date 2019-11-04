@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 @Tag(TestTag.ISOLATED)
 class RestartTest extends SoakTestBase implements ITestBaseIsolated {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private ScheduledExecutorService deleteService;
 
     @BeforeEach
@@ -93,15 +93,15 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
 
         //set up restart scheduler
         deleteService.scheduleAtFixedRate(() -> {
-            log.info("............................................................");
-            log.info("............................................................");
-            log.info("..........Scheduler will pick pod and delete them...........");
+            LOGGER.info("............................................................");
+            LOGGER.info("............................................................");
+            LOGGER.info("..........Scheduler will pick pod and delete them...........");
             List<Pod> pods = KUBERNETES.listPods();
             int podNum = new Random(System.currentTimeMillis()).nextInt(pods.size() - 1);
             KUBERNETES.deletePod(environment.namespace(), pods.get(podNum).getMetadata().getName());
-            log.info("............................................................");
-            log.info("............................................................");
-            log.info("............................................................");
+            LOGGER.info("............................................................");
+            LOGGER.info("............................................................");
+            LOGGER.info("............................................................");
         }, 5, 25, TimeUnit.SECONDS);
 
         runTestInLoop(60, () ->
@@ -137,15 +137,15 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
 
         //set up restart scheduler
         deleteService.scheduleAtFixedRate(() -> {
-            log.info("............................................................");
-            log.info("............................................................");
-            log.info("...........Scheduler will delete one of qdrouter............");
+            LOGGER.info("............................................................");
+            LOGGER.info("............................................................");
+            LOGGER.info("...........Scheduler will delete one of qdrouter............");
             List<Pod> qdrouters = KUBERNETES.listPods().stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList());
             Pod qdrouter = qdrouters.get(new Random(System.currentTimeMillis()).nextInt(qdrouters.size()) % qdrouters.size());
             KUBERNETES.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
-            log.info("............................................................");
-            log.info("............................................................");
-            log.info("............................................................");
+            LOGGER.info("............................................................");
+            LOGGER.info("............................................................");
+            LOGGER.info("............................................................");
         }, 5, 75, TimeUnit.SECONDS);
 
         runTestInLoop(30, () ->
@@ -154,7 +154,7 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
                                    List<Address> brAddresses, List<Address> stAddresses) throws Exception {
-        log.info("Check if system works");
+        LOGGER.info("Check if system works");
         TestUtils.runUntilPass(60, () -> resourcesManager.getAddressSpace(brokered.getMetadata().getName()));
         TestUtils.runUntilPass(60, () -> resourcesManager.getAddressSpace(standard.getMetadata().getName()));
         TestUtils.runUntilPass(60, () -> resourcesManager.createOrUpdateUser(brokered, new UserCredentials("jenda", "cenda")));

@@ -48,7 +48,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 public class TopicTest extends TestBase implements ITestSharedStandard {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     private static void runTopicTest(AmqpClient client, Address dest)
             throws InterruptedException, ExecutionException, TimeoutException {
@@ -60,10 +60,10 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         List<String> msgs = TestUtils.generateMessages(msgCount);
         Future<List<Message>> recvMessages = client.recvMessages(dest.getSpec().getAddress(), msgCount);
         long timeoutMs = msgCount * MessagingUtils.ESTIMATE_MAX_MS_PER_MESSAGE;
-        log.info("Start sending with " + timeoutMs + " ms timeout");
+        LOGGER.info("Start sending with " + timeoutMs + " ms timeout");
         assertThat("Wrong count of messages sent",
                 client.sendMessages(dest.getSpec().getAddress(), msgs).get(timeoutMs, TimeUnit.MILLISECONDS), is(msgs.size()));
-        log.info("Start receiving with " + timeoutMs + " ms timeout");
+        LOGGER.info("Start receiving with " + timeoutMs + " ms timeout");
         assertThat("Wrong count of messages received",
                 recvMessages.get(timeoutMs, TimeUnit.MILLISECONDS).size(), is(msgs.size()));
     }
@@ -241,7 +241,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     }
 
     private void assertAppProperty(AmqpClient client, String linkName, Map<String, Object> appProperties, String selector, Address dest) throws Exception {
-        log.info("Application property selector: " + selector);
+        LOGGER.info("Application property selector: " + selector);
         int msgsCount = 10;
         List<Message> listOfMessages = new ArrayList<>();
         for (int i = 0; i < msgsCount; i++) {
@@ -369,20 +369,20 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         AmqpClient client = getAmqpClientFactory().createTopicClient();
         List<String> batch1 = Arrays.asList("one", "two", "three");
 
-        log.info("Receiving first batch");
+        LOGGER.info("Receiving first batch");
         Future<List<Message>> recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), batch1.size());
 
-        log.info("Sending first batch");
+        LOGGER.info("Sending first batch");
         assertThat("Wrong count of messages sent: batch1",
                 client.sendMessages(topic.getSpec().getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
         assertThat("Wrong messages received: batch1", MessagingUtils.extractBodyAsString(recvResults), is(batch1));
 
-        log.info("Sending second batch");
+        LOGGER.info("Sending second batch");
         List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
         assertThat("Wrong messages sent: batch2",
                 client.sendMessages(topic.getSpec().getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
 
-        log.info("Receiving second batch");
+        LOGGER.info("Receiving second batch");
         recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), batch2.size());
         assertThat("Wrong messages received: batch2", MessagingUtils.extractBodyAsString(recvResults), is(batch2));
     }
@@ -429,24 +429,24 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         AmqpClient client = getAmqpClientFactory().createTopicClient();
         List<String> batch1 = Arrays.asList("one", "two", "three");
 
-        log.info("Receiving first batch");
+        LOGGER.info("Receiving first batch");
         Future<List<Message>> recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription1), batch1.size());
 
-        log.info("Sending first batch");
+        LOGGER.info("Sending first batch");
         assertThat("Wrong count of messages sent: batch1",
                 client.sendMessages(topic.getSpec().getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
         assertThat("Wrong messages received: batch1", MessagingUtils.extractBodyAsString(recvResults), is(batch1));
 
-        log.info("Sending second batch");
+        LOGGER.info("Sending second batch");
         List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
         assertThat("Wrong count of messages sent: batch2",
                 client.sendMessages(topic.getSpec().getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
 
-        log.info("Receiving second batch");
+        LOGGER.info("Receiving second batch");
         recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription1), batch2.size());
         assertThat("Wrong messages received: batch2", MessagingUtils.extractBodyAsString(recvResults), is(batch2));
 
-        log.info("Receiving messages from second subscription");
+        LOGGER.info("Receiving messages from second subscription");
         List<String> allmessages = new ArrayList<>(batch1);
         allmessages.addAll(batch2);
         AmqpClient client2 = getAmqpClientFactory().createTopicClient();
@@ -484,15 +484,15 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         AmqpClient client = getAmqpClientFactory().createTopicClient();
         List<String> batch1 = Arrays.asList("one", "two", "three");
 
-        log.info("Sending first batch");
+        LOGGER.info("Sending first batch");
         assertThat("Wrong count of messages sent: batch1",
                 client.sendMessages(topic.getSpec().getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
 
-        log.info("Receiving first batch");
+        LOGGER.info("Receiving first batch");
         Future<List<Message>> recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription1), batch1.size());
         assertThat("Wrong messages received: batch1", MessagingUtils.extractBodyAsString(recvResults), is(batch1));
 
-        log.info("Creating second subscription");
+        LOGGER.info("Creating second subscription");
         Address subscription2 = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
@@ -507,16 +507,16 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         resourcesManager.appendAddresses(subscription2);
 
-        log.info("Sending second batch");
+        LOGGER.info("Sending second batch");
         List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
 
         assertThat("Wrong count of messages sent: batch2",
                 client.sendMessages(topic.getSpec().getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
-        log.info("Receiving second batch");
+        LOGGER.info("Receiving second batch");
         recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription1), batch2.size());
         assertThat("Wrong messages received: batch2", MessagingUtils.extractBodyAsString(recvResults), is(batch2));
 
-        log.info("Receiving messages from second subscription");
+        LOGGER.info("Receiving messages from second subscription");
         AmqpClient client2 = getAmqpClientFactory().createTopicClient();
         recvResults = client2.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription2), batch2.size());
         assertThat("Wrong messages received for second subscription", MessagingUtils.extractBodyAsString(recvResults), is(batch2));
@@ -584,13 +584,13 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        Connection connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        Connection connection = jmsProvider.createConnection(KUBERNETES.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
 
-        sendReceiveLargeMessageTopic(jmsProvider, 1, addressTopic, 1);
-        sendReceiveLargeMessageTopic(jmsProvider, 0.5, addressTopic, 1);
-        sendReceiveLargeMessageTopic(jmsProvider, 0.25, addressTopic, 1);
+        MessagingUtils.sendReceiveLargeMessageTopic(jmsProvider, 1, addressTopic, 1);
+        MessagingUtils.sendReceiveLargeMessageTopic(jmsProvider, 0.5, addressTopic, 1);
+        MessagingUtils.sendReceiveLargeMessageTopic(jmsProvider, 0.25, addressTopic, 1);
 
         connection.stop();
         connection.close();

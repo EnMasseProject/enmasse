@@ -326,7 +326,7 @@ public class TestUtils {
      * @param expectedReplicas the expected replicas
      * @throws Exception the exception
      */
-    protected void waitForRouterReplicas(AddressSpace addressSpace, int expectedReplicas) throws
+    public static void waitForRouterReplicas(AddressSpace addressSpace, int expectedReplicas) throws
             Exception {
         TimeoutBudget budget = new TimeoutBudget(3, TimeUnit.MINUTES);
         Map<String, String> labels = new HashMap<>();
@@ -341,7 +341,7 @@ public class TestUtils {
      * @param uids the uids
      * @throws Exception the exception
      */
-    protected void waitForPodsToTerminate(List<String> uids) throws Exception {
+    public static void waitForPodsToTerminate(List<String> uids) throws Exception {
         LOGGER.info("Waiting for following pods to be deleted {}", uids);
         TestUtils.assertWaitForValue(true, () -> (KUBERNETES.listPods(KUBERNETES.getInfraNamespace()).stream()
                 .noneMatch(pod -> uids.contains(pod.getMetadata().getUid()))), new TimeoutBudget(2, TimeUnit.MINUTES));

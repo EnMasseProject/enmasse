@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class MqttPublishTestBase extends TestBase implements ITestBaseShared {
 
     private static final String MYTOPIC = "mytopic";
-    private static final Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     public void testPublishQoS0() throws Exception {
         List<MqttMessage> messages = Stream.generate(MqttMessage::new).limit(3).collect(Collectors.toList());
@@ -128,7 +128,7 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
         IMqttClient client = clientBuilder.create();
 
         try {
-            log.info("Connecting");
+            LOGGER.info("Connecting");
             client.connect();
 
 
@@ -143,7 +143,7 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
             assertThat("Incorrect count of messages received",
                     receivedCount, is(messages.size()));
         } finally {
-            log.info("Disconnecting");
+            LOGGER.info("Disconnecting");
             if (client != null) {
                 client.disconnect();
             }

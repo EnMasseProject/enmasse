@@ -32,7 +32,6 @@ import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.TimeoutException;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -61,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class WebConsoleTest extends TestBase implements ITestBaseShared {
     private static Logger LOGGER = CustomLogger.getLogger();
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
+    private SeleniumProvider selenium = SeleniumProvider.getInstance();
     private List<AbstractClient> clientsList;
 
 
@@ -384,7 +383,6 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
 
         consoleWebPage.sortItems(SortType.NAME, true);
-        TestUtils.assertSorted(consoleWebPage.getAddressItems());
         TestUtils.assertSorted("Console failed, items are not sorted by name asc", consoleWebPage.getAddressItems());
 
         consoleWebPage.sortItems(SortType.NAME, false);

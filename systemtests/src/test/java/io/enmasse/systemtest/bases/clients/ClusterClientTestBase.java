@@ -35,14 +35,14 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
     private ClientArgumentMap arguments = new ClientArgumentMap();
 
     @BeforeEach
-    public void setUpClientBase() throws Exception {
+    public void setUpClientBase() {
         arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());
         arguments.put(ClientArgument.LOG_MESSAGES, "json");
         arguments.put(ClientArgument.CONN_SSL, "true");
     }
 
-    private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket, boolean ssl, boolean mqtt) throws Exception {
+    private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket, boolean ssl, boolean mqtt) {
         int port = ssl ? 5671 : 5672;
         if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) && mqtt) {
             port = ssl ? 8883 : 1883;

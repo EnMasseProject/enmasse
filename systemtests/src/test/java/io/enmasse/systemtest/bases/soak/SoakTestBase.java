@@ -42,7 +42,7 @@ import static org.hamcrest.CoreMatchers.is;
 
 @Tag(SOAK)
 public abstract class SoakTestBase extends TestBase {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();
     private SystemTestsErrorCollector collector = new SystemTestsErrorCollector();
 
@@ -56,25 +56,25 @@ public abstract class SoakTestBase extends TestBase {
     //========================================================================================================
 
     protected void runTestInLoop(int durationMinutes, ThrowableRunner test) throws Exception {
-        log.info(String.format("Starting test running for %d minutes at %s",
+        LOGGER.info(String.format("Starting test running for %d minutes at %s",
                 durationMinutes, new Date().toString()));
         int fails = 0;
         int limit = 10;
         int i = 0;
         for (long stop = System.nanoTime() + TimeUnit.MINUTES.toNanos(durationMinutes); stop > System.nanoTime(); ) {
             try {
-                log.info("*********************************** Test run {} ***********************************", ++i);
+                LOGGER.info("*********************************** Test run {} ***********************************", ++i);
                 test.run();
                 fails = 0;
             } catch (Exception ex) {
-                log.warn("Test run {} failed with: {}", i, ex.getMessage());
+                LOGGER.warn("Test run {} failed with: {}", i, ex.getMessage());
                 collector.addError(ex);
                 if (++fails >= limit) {
                     throw new IllegalStateException(String.format("Test failed: %d times in a row: %s", fails, collector.toString()));
                 }
             } finally {
                 closeClients();
-                log.info("***********************************************************************************");
+                LOGGER.info("***********************************************************************************");
                 Thread.sleep(60_000);
             }
         }
@@ -87,7 +87,7 @@ public abstract class SoakTestBase extends TestBase {
         for (AmqpClient client : clients) {
             try {
                 client.close();
-                log.info("Client is closed.");
+                LOGGER.info("Client is closed.");
             } catch (Exception ex) {
                 collector.addError(ex);
             }
@@ -155,9 +155,9 @@ public abstract class SoakTestBase extends TestBase {
     }
 
     protected void doTestAuthSendReceiveLong(AddressSpace addressSpace) throws Exception {
-        log.info("testAuthSendReceiveLong start");
+        LOGGER.info("testAuthSendReceiveLong start");
         resourcesManager.createAddressSpace(addressSpace);
-        log.info("Address space '{}'created", addressSpace);
+        LOGGER.info("Address space '{}'created", addressSpace);
 
         Address queue = new AddressBuilder()
                 .withNewMetadata()
@@ -182,17 +182,17 @@ public abstract class SoakTestBase extends TestBase {
                 .endSpec()
                 .build();
         resourcesManager.setAddresses(queue, topic);
-        log.info("Addresses '{}', '{}' created", queue.getSpec().getAddress(), topic.getSpec().getAddress());
+        LOGGER.info("Addresses '{}', '{}' created", queue.getSpec().getAddress(), topic.getSpec().getAddress());
 
         UserCredentials user = new UserCredentials("test-user", "test-user");
         resourcesManager.createOrUpdateUser(addressSpace, user);
 
         runTestInLoop(30, () -> {
-            log.info("Start test loop basic auth tests");
+            LOGGER.info("Start test loop basic auth tests");
             getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(queue, topic), resourcesManager);
             getClientUtils().assertCannotConnect(addressSpace, new UserCredentials("nobody", "nobody"), Arrays.asList(queue, topic), resourcesManager);
         });
-        log.info("testAuthSendReceiveLong finished");
+        LOGGER.info("testAuthSendReceiveLong finished");
     }
 
     protected void doTestTopicPubSubLong(AddressSpace addressSpace) throws Exception {

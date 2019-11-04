@@ -53,7 +53,7 @@ import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
  */
 class MqttAdapterTest extends TestBase implements ITestIoTShared {
 
-    private static final Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private final String deviceId = TestUtils.randomCharacters(23 /* max client ID length */);
     private final String deviceAuthId = UUID.randomUUID().toString();
     private final String devicePassword = UUID.randomUUID().toString();
@@ -103,13 +103,13 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
                 return true;
             } catch (MqttException mqttException) {
                 if (phase == WaitPhase.LAST_TRY) {
-                    log.error("Error waiting to connect mqtt adapter", mqttException);
+                    LOGGER.error("Error waiting to connect mqtt adapter", mqttException);
                 }
                 return false;
             }
         }, new TimeoutBudget(1, TimeUnit.MINUTES));
 
-        log.info("Connection to mqtt adapter succeeded");
+        LOGGER.info("Connection to mqtt adapter succeeded");
 
         User businessApplicationUser = UserUtils.createUserResource(new UserCredentials(businessApplicationUsername, businessApplicationPassword))
                 .editSpec()

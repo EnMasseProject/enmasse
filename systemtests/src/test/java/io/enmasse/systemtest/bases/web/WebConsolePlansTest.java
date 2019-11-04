@@ -34,11 +34,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class WebConsolePlansTest extends TestBase implements ITestIsolatedStandard {
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
-    private ConsoleWebPage consoleWebPage;
+    private SeleniumProvider selenium = SeleniumProvider.getInstance();
 
     @AfterEach
-    public void tearDownDrivers() throws Exception {
+    public void tearDownDrivers() {
         selenium.tearDownDrivers();
     }
 
@@ -96,7 +95,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ITestIsola
         ISOLATED_RESOURCES_MANAGER.createOrUpdateUser(consoleAddrSpace, user);
 
         //create addresses
-        consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);
+        ConsoleWebPage consoleWebPage = new ConsoleWebPage(selenium, KUBERNETES.getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         Address q1 = new AddressBuilder()
                 .withNewMetadata()

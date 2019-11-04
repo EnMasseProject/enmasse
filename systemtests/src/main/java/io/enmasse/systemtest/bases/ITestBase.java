@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 
 public interface ITestBase {
     MessagingUtils MESSAGING_UTILS = new MessagingUtils();
-    Logger LOGGER = CustomLogger.getLogger();
     Kubernetes KUBERNETES = Kubernetes.getInstance();
     default MessagingUtils getClientUtils() {
         return MESSAGING_UTILS;

@@ -37,7 +37,7 @@ import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 class HttpAdapterTest extends TestBase implements ITestIoTShared {
 
     @SuppressWarnings("unused")
-    private static final Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
     private final String deviceId = UUID.randomUUID().toString();
     private final String deviceAuthId = UUID.randomUUID().toString();
     private final String devicePassword = UUID.randomUUID().toString();
