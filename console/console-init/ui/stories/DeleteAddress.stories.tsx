@@ -4,7 +4,6 @@ import { storiesOf } from "@storybook/react";
 import { Button } from "@patternfly/react-core";
 import { Delete } from "src/Components/Common/Delete";
 import { text } from "@storybook/addon-knobs";
-import { CreateAddressSpace } from "src/Components/CreateAddressSpace/CreateAddressSpace";
 
 const stories = storiesOf("Address", module);
 
