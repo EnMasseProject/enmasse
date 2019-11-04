@@ -55,7 +55,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 public class QueueTest extends TestBase implements ITestSharedStandard {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private Connection connection;
 
     public static void runQueueTest(AmqpClient client, Address dest) throws InterruptedException, ExecutionException {

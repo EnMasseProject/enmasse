@@ -48,7 +48,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SeleniumFirefox
 @OpenShift(version = 3)
 class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private SeleniumProvider selenium = SeleniumProvider.getInstance();
     private List<AddressSpace> provisionedServices = new ArrayList<>();
     private UserCredentials ocTestUser = Credentials.userCredentials();

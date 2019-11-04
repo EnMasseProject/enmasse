@@ -48,7 +48,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 public class TopicTest extends TestBase implements ITestSharedStandard {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     private static void runTopicTest(AmqpClient client, Address dest)
             throws InterruptedException, ExecutionException, TimeoutException {

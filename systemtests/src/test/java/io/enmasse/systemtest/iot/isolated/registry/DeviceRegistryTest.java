@@ -40,7 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Tag(SMOKE)
 abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private static final String DEVICE_REGISTRY_TEST_ADDRESSSPACE = "device-registry-test-addrspace";
     private static final String DEVICE_REGISTRY_TEST_PROJECT = "device-registry-test-project";
 

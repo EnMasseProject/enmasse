@@ -29,6 +29,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class PlansTest extends TestBase implements ITestSharedStandard {
+
     @Test
     @Disabled("test disabled because feature for appending address-plan is not implemented yet, issue: #904")
     void testAppendAddressPlan() throws Exception {

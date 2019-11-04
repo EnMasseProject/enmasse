@@ -42,7 +42,8 @@ import static org.hamcrest.CoreMatchers.is;
 
 @Tag(SOAK)
 public abstract class SoakTestBase extends TestBase {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private ArrayList<AmqpClient> clients = new ArrayList<>();
     private SystemTestsErrorCollector collector = new SystemTestsErrorCollector();
 

@@ -51,8 +51,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(TestTag.SMOKE)
 class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
+
     private Kubernetes kubernetes = Kubernetes.getInstance();
-    private static Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     @Test
     @Tag(ACCEPTANCE)

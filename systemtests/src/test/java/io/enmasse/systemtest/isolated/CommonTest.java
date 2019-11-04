@@ -48,7 +48,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(ISOLATED)
 class CommonTest extends TestBase implements ITestBaseIsolated {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     @Test
     void testAccessLogs() throws Exception {

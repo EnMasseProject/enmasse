@@ -37,7 +37,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 class MonitoringTest extends TestBase implements ITestIsolatedStandard {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private static final int TIMEOUT_QUERY_RESULT_MINUTES = 3;
     private static final String ENMASSE_ADDRESS_SPACES_NOT_READY = "enmasse_address_space_status_not_ready";
     private static final String ENMASSE_ADDRESS_SPACES_READY = "enmasse_address_space_status_ready";

@@ -38,7 +38,8 @@ import static java.util.Collections.singletonMap;
 @Tag(SMOKE)
 @Kubernetes
 class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private static final String NAMESPACE = Environment.getInstance().namespace();
     private static IoTConfig config;
     private io.enmasse.systemtest.platform.Kubernetes client = io.enmasse.systemtest.platform.Kubernetes.getInstance();

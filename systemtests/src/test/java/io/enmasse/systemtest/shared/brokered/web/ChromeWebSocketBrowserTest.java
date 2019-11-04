@@ -19,7 +19,6 @@ import static io.enmasse.systemtest.TestTag.NON_PR;
 @SeleniumChrome
 class ChromeWebSocketBrowserTest extends WebSocketBrowserTest implements ITestSharedBrokered {
 
-
     @Test
     void testWebSocketSendReceiveQueue() throws Exception {
         doWebSocketSendReceive(new AddressBuilder()

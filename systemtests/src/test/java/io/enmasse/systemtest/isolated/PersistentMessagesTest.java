@@ -39,7 +39,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private MessagingUtils clientUtils = new MessagingUtils();
     private UserCredentials credentials = new UserCredentials("test", "test");
 

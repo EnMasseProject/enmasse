@@ -47,7 +47,8 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 class TopicTest extends TestBase implements ITestSharedBrokered {
-    private static Logger LOGGER = CustomLogger.getLogger();
+    
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private Connection connection;
 
     @AfterEach
@@ -170,10 +171,10 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
         subscriber1.setMessageListener(myListener);
 
         jmsProvider.sendMessages(messageProducer, listMsgs);
-        log.info("messages sent");
+        LOGGER.info("messages sent");
 
         assertThat("Wrong count of messages received", received.get(30, TimeUnit.SECONDS).size(), is(count));
-        log.info("messages received");
+        LOGGER.info("messages received");
 
         subscriber1.close();
         messageProducer.close();
@@ -210,39 +211,39 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
         String batchPrefix = "First";
         List<javax.jms.Message> listMsgs = jmsProvider.generateMessages(session, batchPrefix, count);
         jmsProvider.sendMessages(messageProducer, listMsgs);
-        log.info("First batch messages sent");
+        LOGGER.info("First batch messages sent");
 
         List<javax.jms.Message> recvd1 = jmsProvider.receiveMessages(subscriber1, count);
         List<javax.jms.Message> recvd2 = jmsProvider.receiveMessages(subscriber2, count);
 
         assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count));
         jmsProvider.assertMessageContent(recvd1, batchPrefix);
-        log.info(sub1ID + " :First batch messages received");
+        LOGGER.info(sub1ID + " :First batch messages received");
 
         assertThat("Wrong count of messages received: by " + sub2ID, recvd2.size(), is(count));
         jmsProvider.assertMessageContent(recvd2, batchPrefix);
-        log.info(sub2ID + " :First batch messages received");
+        LOGGER.info(sub2ID + " :First batch messages received");
 
         subscriber1.close();
-        log.info(sub1ID + " : closed");
+        LOGGER.info(sub1ID + " : closed");
 
         batchPrefix = "Second";
         listMsgs = jmsProvider.generateMessages(session, batchPrefix, count);
         jmsProvider.sendMessages(messageProducer, listMsgs);
-        log.info("Second batch messages sent");
+        LOGGER.info("Second batch messages sent");
 
         recvd2 = jmsProvider.receiveMessages(subscriber2, count);
         assertThat("Wrong count of messages received: by " + sub2ID, recvd2.size(), is(count));
         jmsProvider.assertMessageContent(recvd2, batchPrefix);
-        log.info(sub2ID + " :Second batch messages received");
+        LOGGER.info(sub2ID + " :Second batch messages received");
 
         subscriber1 = session.createDurableSubscriber(testTopic, sub1ID);
-        log.info(sub1ID + " :connected");
+        LOGGER.info(sub1ID + " :connected");
 
         recvd1 = jmsProvider.receiveMessages(subscriber1, count);
         assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count));
         jmsProvider.assertMessageContent(recvd1, batchPrefix);
-        log.info(sub1ID + " :Second batch messages received");
+        LOGGER.info(sub1ID + " :Second batch messages received");
 
         subscriber1.close();
         subscriber2.close();
@@ -283,15 +284,15 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
         List<javax.jms.Message> listMsgs = jmsProvider.generateMessages(session, count);
         jmsProvider.sendMessages(messageProducer, listMsgs);
         session.commit();
-        log.info("messages sent");
+        LOGGER.info("messages sent");
 
         List<javax.jms.Message> recvd1 = jmsProvider.receiveMessages(subscriber1, count);
         session.commit();
         List<javax.jms.Message> recvd2 = jmsProvider.receiveMessages(subscriber2, count);
         session.commit();
 
-        log.info(sub1ID + " :messages received");
-        log.info(sub2ID + " :messages received");
+        LOGGER.info(sub1ID + " :messages received");
+        LOGGER.info(sub2ID + " :messages received");
 
         assertAll(
                 () -> assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count)),
@@ -341,12 +342,12 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
         int count = 10;
         List<javax.jms.Message> listMsgs = jmsProvider.generateMessages(session, count);
         jmsProvider.sendMessages(messageProducer, listMsgs);
-        log.info("messages sent");
+        LOGGER.info("messages sent");
 
         List<javax.jms.Message> recvd1 = jmsProvider.receiveMessages(subscriber1, count, 1);
         List<javax.jms.Message> recvd2 = jmsProvider.receiveMessages(subscriber2, count, 1);
 
-        log.info(subID + " :messages received");
+        LOGGER.info(subID + " :messages received");
 
         assertThat("Wrong count of messages received: by both receivers",
                 recvd1.size() + recvd2.size(), is(2 * count));
@@ -400,14 +401,14 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
         List<javax.jms.Message> listMsgs = jmsProvider.generateMessages(session, count);
         List<CompletableFuture<List<javax.jms.Message>>> results = jmsProvider.receiveMessagesAsync(count, subscriber1, subscriber2, subscriber3);
         jmsProvider.sendMessages(messageProducer, listMsgs);
-        log.info("messages sent");
+        LOGGER.info("messages sent");
 
         assertThat("Each message should be received only by one consumer",
                 results.get(0).get(20, TimeUnit.SECONDS).size() +
                         results.get(1).get(20, TimeUnit.SECONDS).size() +
                         results.get(2).get(20, TimeUnit.SECONDS).size(),
                 is(count));
-        log.info("messages received");
+        LOGGER.info("messages received");
 
         connection1.stop();
         connection2.stop();

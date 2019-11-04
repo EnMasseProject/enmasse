@@ -33,7 +33,8 @@ import java.util.stream.Collectors;
 
 @Tag(TestTag.ISOLATED)
 class RestartTest extends SoakTestBase implements ITestBaseIsolated {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private ScheduledExecutorService deleteService;
 
     @BeforeEach

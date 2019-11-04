@@ -26,7 +26,8 @@ import java.io.File;
 @ExtendWith(JunitCallbackListener.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class TestBase implements ITestBase, ITestSeparator {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     /**
      * The constant clusterUser.
      */

@@ -39,8 +39,9 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
 class ForwardersTest extends BridgingBase {
+
     private static final String REMOTE_QUEUE1 = "queue1";
-    private static Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     @Test
     @Tag(ACCEPTANCE)

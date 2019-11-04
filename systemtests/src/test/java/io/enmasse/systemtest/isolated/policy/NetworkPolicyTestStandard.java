@@ -53,7 +53,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @OpenShift(version = 4)
 class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandard {
 
-
     private UserCredentials credentials = new UserCredentials("test", "test");
     private String blockedSpace = "blocked-namespace";
     private String allowedSpace = "allowed-namespace";

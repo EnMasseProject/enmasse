@@ -41,7 +41,7 @@ public class ConsoleUtils {
     /**
      * selenium provider with Firefox webdriver
      */
-    public static SeleniumProvider getFirefoxSeleniumProvider() throws Exception {
+    static SeleniumProvider getFirefoxSeleniumProvider() throws Exception {
         SeleniumProvider seleniumProvider = SeleniumProvider.getInstance();
         seleniumProvider.setupDriver(TestUtils.getFirefoxDriver());
         return seleniumProvider;

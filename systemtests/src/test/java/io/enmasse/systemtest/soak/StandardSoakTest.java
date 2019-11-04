@@ -16,6 +16,7 @@ import org.junit.jupiter.api.TestInfo;
 import org.slf4j.Logger;
 
 class StandardSoakTest extends SoakTestBase implements ITestIsolatedStandard {
+
     @Test
     void testQueueSendReceiveLong() throws Exception {
         doTestQueueSendReceiveLong(

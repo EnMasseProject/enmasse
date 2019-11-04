@@ -61,9 +61,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
+
     private SeleniumProvider selenium = SeleniumProvider.getInstance();
     private MessagingUtils clientUtils = getClientUtils();
-    private static Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     @Test
     void testCreateAddressSpacePlan() throws Exception {

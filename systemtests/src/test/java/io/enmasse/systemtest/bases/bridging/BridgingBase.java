@@ -33,7 +33,7 @@ import io.vertx.proton.ProtonQoS;
 
 public abstract class BridgingBase extends TestBase implements ITestIsolatedStandard {
 
-    private static Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     protected static final String REMOTE_NAME = "remote1";
 

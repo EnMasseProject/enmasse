@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 public class JmsProvider {
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private Context context;
     private Connection connection;
 
@@ -168,7 +168,7 @@ public class JmsProvider {
             resultsList.add(new CompletableFuture<>());
             receivedResList.add(new ArrayList<>());
             MessageListener myListener = message -> {
-                log.info("Mesages received" + message + " count: " + totalCount.get());
+                LOGGER.info("Mesages received" + message + " count: " + totalCount.get());
                 receivedResList.get(index).add(message);
                 if (totalCount.decrementAndGet() == 0) {
                     for (int j = 0; j < consumer.length; j++) {

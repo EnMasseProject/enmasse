@@ -47,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExternalClients
 public abstract class ClientTestBase extends TestBase implements ITestBaseShared {
+
     protected Path logPath = null;
     private ClientArgumentMap arguments = new ClientArgumentMap();
     private List<AbstractClient> clients;

@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class MqttPublishTestBase extends TestBase implements ITestBaseShared {
 
     private static final String MYTOPIC = "mytopic";
-    private static Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     public void testPublishQoS0() throws Exception {
         List<MqttMessage> messages = Stream.generate(MqttMessage::new).limit(3).collect(Collectors.toList());

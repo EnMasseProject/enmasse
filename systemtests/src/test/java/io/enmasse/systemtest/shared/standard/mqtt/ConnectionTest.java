@@ -24,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class ConnectionTest extends TestBase implements ITestSharedWithMqtt {
+
     private static final String CLIENT_ID = "my_client_id";
     private static final String MQTT_TOPIC = "mytopic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";

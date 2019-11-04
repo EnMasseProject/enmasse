@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExternalClients
 public abstract class ClusterClientTestBase extends TestBase implements ITestBaseShared {
+
     private ClientArgumentMap arguments = new ClientArgumentMap();
 
     @BeforeEach

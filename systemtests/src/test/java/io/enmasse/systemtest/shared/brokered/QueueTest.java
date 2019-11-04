@@ -47,7 +47,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 class QueueTest extends TestBase implements ITestSharedBrokered {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private Connection connection;
 
     @AfterEach

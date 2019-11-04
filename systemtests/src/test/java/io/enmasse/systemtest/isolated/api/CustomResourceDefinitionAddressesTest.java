@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SeleniumFirefox
 class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIsolatedStandard {
+
     private SeleniumProvider selenium = SeleniumProvider.getInstance();
     private AddressSpace brokered;
 

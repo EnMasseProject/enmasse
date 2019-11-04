@@ -49,7 +49,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 @Tag(UPGRADE)
 @ExternalClients
 class UpgradeTest extends TestBase implements ITestIsolatedStandard {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private static final int MESSAGE_COUNT = 50;
     private static String productName;
     private static String startVersion;

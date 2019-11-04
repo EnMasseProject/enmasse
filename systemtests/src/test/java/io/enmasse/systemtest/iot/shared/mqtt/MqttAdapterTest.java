@@ -53,7 +53,7 @@ import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
  */
 class MqttAdapterTest extends TestBase implements ITestIoTShared {
 
-    private static Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private final String deviceId = TestUtils.randomCharacters(23 /* max client ID length */);
     private final String deviceAuthId = UUID.randomUUID().toString();
     private final String devicePassword = UUID.randomUUID().toString();

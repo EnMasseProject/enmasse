@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 @SeleniumFirefox
 class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestSharedStandard {
 
-
     @Test
     void testWebSocketSendReceiveQueue() throws Exception {
         doWebSocketSendReceive(new AddressBuilder()

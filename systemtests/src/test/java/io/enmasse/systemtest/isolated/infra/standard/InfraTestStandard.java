@@ -47,7 +47,8 @@ import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
-    private static Logger log = CustomLogger.getLogger();
+    
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     @Test
     @Tag(ACCEPTANCE)
@@ -260,7 +261,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     }
 
     private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, int routerReplicas, String routermemory, PodTemplateSpec routerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec) {
-        log.info("Checking router infra");
+        LOGGER.info("Checking router infra");
         List<Pod> routerPods = TestUtils.listRouterPods(KUBERNETES, exampleAddressSpace);
         assertEquals(routerReplicas, routerPods.size(), "incorrect number of routers");
 

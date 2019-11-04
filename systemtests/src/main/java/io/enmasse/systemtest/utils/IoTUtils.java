@@ -59,7 +59,7 @@ public class IoTUtils {
 
 
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
@@ -69,7 +69,7 @@ public class IoTUtils {
             config = iotConfigClient.withName(config.getMetadata().getName()).get();
             isReady = config.getStatus() != null && config.getStatus().isInitialized();
             if (!isReady) {
-                log.info("Waiting until IoTConfig: '{}' will be in ready state", config.getMetadata().getName());
+                LOGGER.info("Waiting until IoTConfig: '{}' will be in ready state", config.getMetadata().getName());
                 Thread.sleep(10000);
             }
         }
@@ -87,7 +87,7 @@ public class IoTUtils {
     }
 
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception {
-        log.info("Deleting IoTConfig: {} in namespace: {}",
+        LOGGER.info("Deleting IoTConfig: {} in namespace: {}",
                 config.getMetadata().getName(), config.getMetadata().getNamespace());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
         kubernetes.getIoTConfigClient(config.getMetadata().getNamespace())
@@ -127,9 +127,9 @@ public class IoTUtils {
                 .map(adapterGetter).map(AdapterConfig::getEnabled);
         if (enabled.orElse(true)) {
             adapters.add(name);
-            log.info("{} is enabled", name);
+            LOGGER.info("{} is enabled", name);
         } else {
-            log.info("{} is disabled", name);
+            LOGGER.info("{} is disabled", name);
         }
     }
 
@@ -141,7 +141,7 @@ public class IoTUtils {
             project = iotProjectClient.withName(project.getMetadata().getName()).get();
             isReady = project.getStatus() != null && project.getStatus().isReady();
             if (!isReady) {
-                log.info("Waiting until IoTProject: '{}' will be in ready state", project.getMetadata().getName());
+                LOGGER.info("Waiting until IoTProject: '{}' will be in ready state", project.getMetadata().getName());
                 Thread.sleep(10000);
             }
         }
@@ -183,7 +183,7 @@ public class IoTUtils {
     }
 
     public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {
-        log.info("Deleting IoTProject: {}", project.getMetadata().getName());
+        LOGGER.info("Deleting IoTProject: {}", project.getMetadata().getName());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
         kubernetes.getIoTProjectClient(project.getMetadata()
                 .getNamespace()).withName(project.getMetadata().getName()).cascading(true).delete();
@@ -242,9 +242,9 @@ public class IoTUtils {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_CONFIG);
         var iotConfigApiClient = kubernetes.getIoTConfigClient();
         if (iotConfigApiClient.withName(config.getMetadata().getName()).get() != null) {
-            log.info("iot config {} already exists", config.getMetadata().getName());
+            LOGGER.info("iot config {} already exists", config.getMetadata().getName());
         } else {
-            log.info("iot config {} will be created", config.getMetadata().getName());
+            LOGGER.info("iot config {} will be created", config.getMetadata().getName());
             iotConfigApiClient.create(config);
         }
         IoTUtils.waitForIoTConfigReady(kubernetes, config);
@@ -257,9 +257,9 @@ public class IoTUtils {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_PROJECT);
         var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         if (iotProjectApiClient.withName(project.getMetadata().getName()).get() != null) {
-            log.info("iot project {} already exists", project.getMetadata().getName());
+            LOGGER.info("iot project {} already exists", project.getMetadata().getName());
         } else {
-            log.info("iot project {} will be created", project.getMetadata().getName());
+            LOGGER.info("iot project {} will be created", project.getMetadata().getName());
             iotProjectApiClient.create(project);
         }
         IoTUtils.waitForIoTProjectReady(kubernetes, project);
@@ -272,38 +272,29 @@ public class IoTUtils {
         return String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
     }
 
-    public static void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) {
+    private static void waitForFirstSuccess(HttpAdapterClient adapterClient) {
         JsonObject json = new JsonObject(Map.of("a", "b"));
-        String message = "First successful " + type.name().toLowerCase() + " message";
+        String message = "First successful " + MessageType.TELEMETRY.name().toLowerCase() + " message";
 
         TestUtils.waitUntilCondition(message, (phase) -> {
             HttpResponse response;
             try {
-                switch (type) {
-                    case EVENT:
-                        response = adapterClient.sendEvent(json, any());
-                        logResponseIfLastTryFailed(phase, response, message);
-                        return response.statusCode() == HTTP_ACCEPTED;
 
-                    case TELEMETRY:
-                        response = adapterClient.sendTelemetry(json, any());
-                        logResponseIfLastTryFailed(phase, response, message);
-                        return response.statusCode() == HTTP_ACCEPTED;
+                response = adapterClient.sendTelemetry(json, any());
+                logResponseIfLastTryFailed(phase, response, message);
+                return response.statusCode() == HTTP_ACCEPTED;
 
-                    default:
-                        return true;
-                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }, new TimeoutBudget(3, TimeUnit.MINUTES));
 
-        log.info("First {} message accepted", type.name().toLowerCase());
+        LOGGER.info("First {} message accepted", MessageType.TELEMETRY.name().toLowerCase());
     }
 
     private static void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
         if (phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
-            log.error("expected-code: {}, response-code: {}, body: {}, op: {}",
+            LOGGER.error("expected-code: {}, response-code: {}, body: {}, op: {}",
                     HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
         }
     }
@@ -357,6 +348,6 @@ public class IoTUtils {
     }
 
     public static void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) {
-        waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
+        waitForFirstSuccess(adapterClient);
     }
 }

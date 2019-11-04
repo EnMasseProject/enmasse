@@ -69,7 +69,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ApiServerTest extends TestBase implements ITestIsolatedStandard {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     private static <T> Set<String> toStrings(final Collection<T> items, final Function<T, String> converter) {
         Objects.requireNonNull(converter);

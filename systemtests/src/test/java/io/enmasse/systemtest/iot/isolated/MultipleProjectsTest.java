@@ -57,7 +57,8 @@ import java.util.concurrent.TimeUnit;
 
 @Tag(TestTag.SMOKE)
 class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;
 

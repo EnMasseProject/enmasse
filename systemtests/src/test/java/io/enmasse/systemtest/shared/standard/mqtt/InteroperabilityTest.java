@@ -36,6 +36,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * Tests related to interoperability mqtt with amqp
  */
 class InteroperabilityTest extends TestBase implements ITestSharedWithMqtt {
+
     private static final String MQTT_AMQP_TOPIC = "mqtt-amqp-topic";
     private static final String AMQP_MQTT_TOPIC = "amqp-mqtt-topic";
 

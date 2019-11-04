@@ -36,13 +36,13 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
     private static final List<String> resizingStorageProvisioners = Arrays.asList("kubernetes.io/aws-ebs", "kubernetes.io/gce-pd",
             "kubernetes.io/azure-file", "kubernetes.io/azure-disk", "kubernetes.io/glusterfs", "kubernetes.io/cinder",
             "kubernetes.io/portworx-volume", "kubernetes.io/rbd");
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
     protected InfraConfig testInfra;
     protected AddressPlan exampleAddressPlan;
     protected AddressSpace exampleAddressSpace;
 
     protected void assertBroker(String brokerMemory, String brokerStorage, PodTemplateSpec templateSpec) {
-        log.info("Checking broker infra");
+        LOGGER.info("Checking broker infra");
         List<Pod> brokerPods = TestUtils.listBrokerPods(KUBERNETES, exampleAddressSpace);
         assertEquals(1, brokerPods.size());
 
@@ -103,7 +103,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
     }
 
     protected void assertAdminConsole(String adminMemory, PodTemplateSpec templateSpec) {
-        log.info("Checking admin console infra");
+        LOGGER.info("Checking admin console infra");
         List<Pod> adminPods = TestUtils.listAdminConsolePods(KUBERNETES, exampleAddressSpace);
         assertEquals(1, adminPods.size());
 
@@ -123,20 +123,20 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
     }
 
     protected void waitUntilInfraReady(Supplier<Boolean> assertCall, TimeoutBudget timeout) throws InterruptedException {
-        log.info("Start waiting for infra ready");
+        LOGGER.info("Start waiting for infra ready");
         AssertionFailedError lastException = null;
         while (!timeout.timeoutExpired()) {
             try {
                 assertCall.get();
-                log.info("assert infra ready succeed");
+                LOGGER.info("assert infra ready succeed");
                 return;
             } catch (AssertionFailedError e) {
                 lastException = e;
             }
-            log.debug("next iteration, remaining time: {}", timeout.timeLeft());
+            LOGGER.debug("next iteration, remaining time: {}", timeout.timeLeft());
             Thread.sleep(5000);
         }
-        log.error("Timeout assert infra expired");
+        LOGGER.error("Timeout assert infra expired");
         if (lastException != null) {
             throw lastException;
         }
@@ -162,16 +162,16 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
             StorageClass brokerStorageClass = KUBERNETES.getStorageClass(brokerStorageClassName);
             if (resizingStorageProvisioners.contains(brokerStorageClass.getProvisioner())) {
                 if (brokerStorageClass.getAllowVolumeExpansion() != null && brokerStorageClass.getAllowVolumeExpansion()) {
-                    log.info("Testing broker volume resize because of {}:{}", brokerStorageClassName, brokerStorageClass.getProvisioner());
+                    LOGGER.info("Testing broker volume resize because of {}:{}", brokerStorageClassName, brokerStorageClass.getProvisioner());
                     return true;
                 } else {
-                    log.info("Skipping broker volume resize due to allowVolumeExpansion in StorageClass {} disabled", brokerStorageClassName);
+                    LOGGER.info("Skipping broker volume resize due to allowVolumeExpansion in StorageClass {} disabled", brokerStorageClassName);
                 }
             } else {
-                log.info("Skipping broker volume resize due to provisioner: {}", brokerStorageClass.getProvisioner());
+                LOGGER.info("Skipping broker volume resize due to provisioner: {}", brokerStorageClass.getProvisioner());
             }
         } else {
-            log.info("Skipping broker volume resize due to missing StorageClass name in PVC {}", brokerVolumeClaim.getMetadata().getName());
+            LOGGER.info("Skipping broker volume resize due to missing StorageClass name in PVC {}", brokerVolumeClaim.getMetadata().getName());
         }
         return false;
     }

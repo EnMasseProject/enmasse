@@ -34,6 +34,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class WebConsolePlansTest extends TestBase implements ITestIsolatedStandard {
+
     private SeleniumProvider selenium = SeleniumProvider.getInstance();
 
     @AfterEach

@@ -46,11 +46,12 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 class ManagedTest extends TestBase implements ITestIoTIsolated {
+
     private MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> client;
     private MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> addressClient;
     private MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>> addressSpaceClient;
     private MixedOperation<User, UserList, DoneableUser, Resource<User, DoneableUser>> userClient;
-    private static Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     @BeforeEach
     void initClients() throws Exception {

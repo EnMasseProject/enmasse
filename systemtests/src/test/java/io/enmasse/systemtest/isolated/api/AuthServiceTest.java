@@ -38,7 +38,8 @@ import java.util.concurrent.TimeUnit;
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
 class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
-    private static Logger LOGGER = CustomLogger.getLogger();
+
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     @AfterEach
     void tearDown() {

@@ -63,7 +63,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MessagingUtils {
-    private static Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
     public static final long ESTIMATE_MAX_MS_PER_MESSAGE = 200;
 
     public void sendDurableMessages(ResourceManager resourceManager, AddressSpace addressSpace, Address destination,
@@ -493,7 +493,7 @@ public class MessagingUtils {
      * @return subscriberCount
      * @throws Exception ex
      */
-    public static int getSubscriberCount(BrokerManagement brokerManagement, AmqpClient queueClient, Address
+    static int getSubscriberCount(BrokerManagement brokerManagement, AmqpClient queueClient, Address
             replyQueue, String topic) throws Exception {
         List<String> queueNames = getBrokerQueueNames(brokerManagement, queueClient, replyQueue, topic);
 

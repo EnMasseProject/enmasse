@@ -31,6 +31,7 @@ import static io.enmasse.systemtest.TestTag.OLM;
 @Tag(OLM)
 @OpenShift(version = 4)
 class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStandard {
+
     private final String infraNamespace = "openshift-operators";
 
     @AfterAll

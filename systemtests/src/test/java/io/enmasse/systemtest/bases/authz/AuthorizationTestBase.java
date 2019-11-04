@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class AuthorizationTestBase extends TestBase implements ITestBaseShared {
 
-    private static Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     private Address queue;
     private Address topic;

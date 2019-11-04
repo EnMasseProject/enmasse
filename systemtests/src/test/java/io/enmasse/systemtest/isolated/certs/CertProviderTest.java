@@ -65,8 +65,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
-    private static Logger LOGGER = CustomLogger.getLogger();
-
+    private static final Logger LOGGER = CustomLogger.getLogger();
     private AddressSpace addressSpace;
     private UserCredentials user;
     private Address queue;
