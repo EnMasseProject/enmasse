@@ -172,7 +172,7 @@ public class IoTUtils {
     public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {
         log.info("Deleting IoTProject: {}", project.getMetadata().getName());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
-        kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).delete();
+        kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).cascading(true).delete();
         IoTUtils.waitForIoTProjectDeleted(kubernetes, project);
         TimeMeasuringSystem.stopOperation(operationID);
     }

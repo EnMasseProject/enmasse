@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.platform;
 
-import io.enmasse.address.model.TlsTermination;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -145,7 +144,7 @@ public class OpenShift extends Kubernetes {
     @Override
     public void deleteExternalEndpoint(String namespace, String name) {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
-        openShift.routes().inNamespace(namespace).withName(name).delete();
+        openShift.routes().inNamespace(namespace).withName(name).cascading(true).delete();
     }
 
 }

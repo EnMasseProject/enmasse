@@ -166,7 +166,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void delete(KubernetesList resources) {
-        client.lists().delete(resources);
+        resources.getItems().forEach( resource -> client.resource(resource).cascading(true).delete());
     }
 
     @Override
