@@ -2,8 +2,9 @@ import * as React from "react";
 import { MemoryRouter } from "react-router";
 import { storiesOf } from "@storybook/react";
 import { ConnectionList, IConnection } from "../src/Components/AddressSpace/ConnectionList";
+import {  EmptyConnection } from "src/Components/Common/EmptyConnection";
 
-const stories = storiesOf("Console", module);
+const stories = storiesOf("Connection", module);
 
 const rows: IConnection[] = [
   {
@@ -43,3 +44,9 @@ stories.add("Connection List", () => (
     <ConnectionList rows={rows} />
   </MemoryRouter>
 ));
+
+stories.add("Empty Connection List",()=>(
+  <MemoryRouter>
+    <EmptyConnection />
+  </MemoryRouter>
+))

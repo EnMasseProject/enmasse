@@ -5,6 +5,7 @@ import { AddressList, IAddress } from "../src/Components/AddressSpace/AddressLis
 import { action } from "@storybook/addon-actions";
 import { select, withKnobs } from "@storybook/addon-knobs";
 import {AddressListFilter} from "../src/Components/AddressSpace/AddressListFilter";
+import { EmptyAddress } from "src/Components/Common/EmptyAddress";
 
 const stories = storiesOf("Console", module);
 stories.addDecorator(withKnobs);
@@ -86,3 +87,9 @@ stories.add("Address List Filter Component", () => {
     </MemoryRouter>
   );
 });
+
+stories.add("Empty Address",()=>(
+  <MemoryRouter>
+    <EmptyAddress/>
+  </MemoryRouter>
+))
