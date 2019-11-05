@@ -805,7 +805,7 @@ public class TestUtils {
         }, new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
-    public static void waitForAddressSpacePlanApplied(AddressSpacePlan addressSpacePlan) throws Exception {
+    public static void waitForSchemaInSync(AddressSpacePlan addressSpacePlan) throws Exception {
         TestUtils.waitUntilCondition(String.format("Address space plan %s is applied", addressSpacePlan.getMetadata().getName()),
                 waitPhase -> Kubernetes.getInstance().getSchemaClient().inNamespace(addressSpacePlan.getMetadata().getNamespace()).list().getItems().stream()
                         .anyMatch(schema -> schema.getSpec().getPlans().stream()

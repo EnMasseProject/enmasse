@@ -173,7 +173,6 @@ public class IsolatedResourcesManager extends ResourceManager {
     public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
         addressSpacePlans.add(addressSpacePlan);
         super.createAddressSpacePlan(addressSpacePlan);
-        TestUtils.waitForAddressSpacePlanApplied(addressSpacePlan);
     }
 
     @Override
