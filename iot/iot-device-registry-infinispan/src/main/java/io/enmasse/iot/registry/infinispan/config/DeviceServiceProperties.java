@@ -10,7 +10,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
+import io.enmasse.iot.infinispan.config.InfinispanProperties;
 
 @Configuration
 @ConfigurationProperties(InfinispanProperties.CONFIG_BASE + ".registry.device")

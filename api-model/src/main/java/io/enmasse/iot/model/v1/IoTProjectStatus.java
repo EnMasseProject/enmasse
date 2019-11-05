@@ -34,6 +34,7 @@ public class IoTProjectStatus {
     private String tenantName;
     private ExternalDownstreamStrategy downstreamEndpoint;
     private List<ProjectCondition> conditions;
+    private String phase;
 
     public boolean isReady() {
         return ready;
@@ -65,6 +66,14 @@ public class IoTProjectStatus {
 
     public void setConditions(List<ProjectCondition> conditions) {
         this.conditions = conditions;
+    }
+
+    public String getPhase() {
+     return phase;
+    }
+
+    public void setPhase(String phase) {
+        this.phase = phase;
     }
 
 }

@@ -42,7 +42,9 @@ func applyNoneAuthServiceDefaults(ctx context.Context, client client.Client, sch
 
 func applyNoneAuthServiceDeployment(authservice *adminv1beta1.AuthenticationService, deployment *appsv1.Deployment) error {
 	install.ApplyDeploymentDefaults(deployment, "none-authservice", authservice.Name)
-	if err := install.ApplyContainerWithError(deployment, "none-authservice", func(container *corev1.Container) error {
+
+	if err := install.ApplyDeploymentContainerWithError(deployment, "none-authservice", func(container *corev1.Container) error {
+
 		if err := install.ApplyContainerImage(container, "none-authservice", authservice.Spec.None.Image); err != nil {
 			return err
 		}

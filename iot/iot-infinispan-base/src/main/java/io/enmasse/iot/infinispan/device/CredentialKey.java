@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.service.base.infinispan.device;
+package io.enmasse.iot.infinispan.device;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -14,7 +14,7 @@ import org.infinispan.protostream.annotations.ProtoMessage;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 
-import io.enmasse.iot.service.base.infinispan.tenant.TenantHandle;
+import io.enmasse.iot.infinispan.tenant.TenantHandle;
 
 /**
  * A custom class to be used as key in the backend key-value storage.

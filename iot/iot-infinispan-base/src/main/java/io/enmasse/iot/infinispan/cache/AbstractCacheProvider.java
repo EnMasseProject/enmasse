@@ -3,7 +3,10 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.service.base.infinispan.cache;
+package io.enmasse.iot.infinispan.cache;
+
+import java.util.Optional;
+import java.util.function.Supplier;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -16,9 +19,9 @@ import org.infinispan.configuration.cache.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
+import io.enmasse.iot.infinispan.config.InfinispanProperties;
 
-public abstract class AbstractCacheProvider implements AutoCloseable {
+public abstract class AbstractCacheProvider {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractCacheProvider.class);
 
@@ -68,12 +71,10 @@ public abstract class AbstractCacheProvider implements AutoCloseable {
 
     @PreDestroy
     public void stop() throws Exception {
-        this.remoteCacheManager.close();
-    }
-
-    @Override
-    public void close() throws Exception {
-        stop();
+        if (this.remoteCacheManager != null) {
+            this.remoteCacheManager.close();
+            this.remoteCacheManager = null;
+        }
     }
 
     /**
@@ -88,20 +89,25 @@ public abstract class AbstractCacheProvider implements AutoCloseable {
         return host.replaceAll("\\.$", "");
     }
 
-    protected <K, V> RemoteCache<K, V> getOrCreateCache(final String cacheName, final Configuration configuration) {
+    protected <K, V> Optional<RemoteCache<K, V>> getCache(final String cacheName) {
+        return Optional.ofNullable(this.remoteCacheManager.getCache(cacheName));
+    }
 
-        log.debug("CacheConfig - {}\n{}", cacheName, configuration.toXMLString(cacheName));
+    protected <K, V> RemoteCache<K, V> getOrCreateCache(final String cacheName, final Supplier<Configuration> configurationSupplier) {
 
         if (this.properties.isTryCreate()) {
+
+            final Configuration configuration = configurationSupplier.get();
+            log.debug("CacheConfig - {}\n{}", cacheName, configuration.toXMLString(cacheName));
             return this.remoteCacheManager
                     .administration()
                     .getOrCreateCache(cacheName, configuration);
+
         } else {
-            final RemoteCache<K,V> result = this.remoteCacheManager.getCache(cacheName);
-            if (result == null) {
-                throw new IllegalStateException(String.format("Cache '%s' not found, and not requested to create", cacheName));
-            }
-            return result;
+
+            return this.<K,V>getCache(cacheName)
+                    .orElseThrow(() -> new IllegalStateException(String.format("Cache '%s' not found, and not requested to create", cacheName)));
+
         }
 
     }

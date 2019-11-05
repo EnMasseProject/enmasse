@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.service.base.infinispan.device;
+package io.enmasse.iot.infinispan.device;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class DeviceInformation implements Serializable {
      * <br>
      * Although this information is redundant, it is required for indexing.
      */
-    @ProtoDoc("@Field(index=Index.YES)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO)")
     @ProtoField(number = 1, required = true)
     protected String tenantId;
 
@@ -63,7 +63,7 @@ public class DeviceInformation implements Serializable {
     /**
      * The credentials, in our internal encoding.
      */
-    @ProtoDoc("@Field(index=Index.YES)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO)")
     @ProtoField(number = 5, collectionImplementation = ArrayList.class)
     protected List<DeviceCredential> credentials;
 

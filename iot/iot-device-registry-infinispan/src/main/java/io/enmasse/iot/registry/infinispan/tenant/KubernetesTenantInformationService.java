@@ -5,8 +5,8 @@
 
 package io.enmasse.iot.registry.infinispan.tenant;
 
-import io.enmasse.iot.service.base.infinispan.tenant.TenantHandle;
-import static io.enmasse.iot.service.base.infinispan.tenant.TenantHandle.of;
+import io.enmasse.iot.infinispan.tenant.TenantHandle;
+import static io.enmasse.iot.infinispan.tenant.TenantHandle.of;
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;

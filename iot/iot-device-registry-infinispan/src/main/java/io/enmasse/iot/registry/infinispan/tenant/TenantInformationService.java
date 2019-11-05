@@ -5,7 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.tenant;
 
-import io.enmasse.iot.service.base.infinispan.tenant.TenantHandle;
+import io.enmasse.iot.infinispan.tenant.TenantHandle;
 import java.util.concurrent.CompletableFuture;
 
 import io.opentracing.Span;

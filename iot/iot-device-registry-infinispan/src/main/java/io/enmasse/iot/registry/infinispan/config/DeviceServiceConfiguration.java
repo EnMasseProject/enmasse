@@ -93,4 +93,5 @@ public class DeviceServiceConfiguration {
     public HonoPasswordEncoder passwordEncoder(DeviceServiceProperties deviceServiceProperties) {
         return new SpringBasedHonoPasswordEncoder(deviceServiceProperties.getMaxBcryptIterations());
     }
+
 }

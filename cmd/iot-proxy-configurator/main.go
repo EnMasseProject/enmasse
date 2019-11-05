@@ -49,11 +49,11 @@ func main() {
 	if ephermalCertBase != "" {
 		fi, err := os.Stat(ephermalCertBase)
 		if err != nil {
-			log.Error(err, "Ephermal certificate base is configured, but unable to access: %v", err.Error())
+			log.Error(err, "Ephemeral certificate base is configured, but unable to access: %v", err.Error())
 			os.Exit(1)
 		}
 		if !fi.IsDir() {
-			log.Info("Ephermal certificate base is configured, but is not a directory")
+			log.Info("Ephemeral certificate base is configured, but is not a directory")
 			os.Exit(1)
 		}
 	}

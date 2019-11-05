@@ -27,6 +27,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -163,6 +164,14 @@ public class IoTUtils {
                 AddressSpaceUtils.waitForAddressSpaceDeleted(addressSpace);
             }
         }
+        var client = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
+        TestUtils.waitUntilConditionOrFail(() -> {
+            var updated = client.withName(project.getMetadata().getName()).get();
+            if (updated != null) {
+                log.info("IoTProject {}/{} still exists -> {}", project.getMetadata().getNamespace(), project.getMetadata().getName(), project.getStatus().getPhase());
+            }
+            return updated == null;
+        }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "IoT project failed to delete in time");
     }
 
     public static boolean isIoTInstalled(Kubernetes kubernetes) {

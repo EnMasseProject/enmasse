@@ -64,15 +64,15 @@ func NewConfigurator(
 	// listen for events on the project resource
 	projectInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			log.V(2).Info("Add", "object", obj)
+			log.Info("Add", "object", obj)
 			controller.enqueueProject(obj)
 		},
 		UpdateFunc: func(old, new interface{}) {
-			log.V(2).Info("Update", "old", old, "new", new)
+			log.Info("Update", "old", old, "new", new)
 			controller.enqueueProject(new)
 		},
 		DeleteFunc: func(obj interface{}) {
-			log.V(2).Info("Deleted", "object", obj)
+			log.Info("Deleted", "object", obj)
 			controller.enqueueProject(obj)
 		},
 	})
@@ -83,7 +83,6 @@ func NewConfigurator(
 func (c *Configurator) enqueueProject(obj interface{}) {
 	if key, err := cache.MetaNamespaceKeyFunc(obj); err != nil {
 		runtime.HandleError(err)
-		return
 	} else {
 		c.workqueue.AddRateLimited(key)
 	}
@@ -160,13 +159,14 @@ func (c *Configurator) processNextWorkItem() bool {
 
 		if err := c.syncHandler(key); err != nil {
 			c.workqueue.AddRateLimited(key)
+			log.Error(err, "Error syncing project", "key", key)
 			return fmt.Errorf("error syncing '%v': %v, requeuing", key, err.Error())
 		}
 
 		// handled successfully, drop from work queue
 
 		c.workqueue.Forget(obj)
-		log.Info("Successfully synced", "key", key)
+		log.V(2).Info("Successfully synced", "key", key)
 
 		return nil
 	}(obj)
@@ -190,6 +190,7 @@ func (c *Configurator) syncHandler(key string) error {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		runtime.HandleError(fmt.Errorf("invalid resource key: %v", key))
+		// don't re-queue, so error must be "nil"
 		return nil
 	}
 
@@ -206,7 +207,7 @@ func (c *Configurator) syncHandler(key string) error {
 			log.Info("Item got deleted. Deleting configuration.")
 
 			// if something went wrong deleting, then returning
-			// and error will re-queue the item
+			// an error will re-queue the item
 
 			return c.deleteProject(&metav1.ObjectMeta{
 				Namespace: namespace,

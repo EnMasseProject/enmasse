@@ -147,7 +147,7 @@ func (r *ReconcileAddressSpaceController) ensureDeployment(ctx context.Context, 
 
 func ApplyDeployment(deployment *appsv1.Deployment) error {
 	install.ApplyDeploymentDefaults(deployment, "address-space-controller", deployment.Name)
-	err := install.ApplyContainerWithError(deployment, "address-space-controller", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "address-space-controller", func(container *corev1.Container) error {
 		install.ApplyContainerImage(container, "address-space-controller", nil)
 		install.ApplyHttpProbe(container.LivenessProbe, 30, "/healthz", 8080)
 		install.ApplyHttpProbe(container.ReadinessProbe, 30, "/healthz", 8080)

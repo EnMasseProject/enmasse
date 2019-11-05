@@ -8,9 +8,11 @@ package iotproject
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
 
+	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -24,6 +26,7 @@ import (
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -34,7 +37,7 @@ var finalizers = []finalizer.Finalizer{
 		Deconstruct: deconstructResources,
 	},
 	{
-		Name: 		 "iot.enmasse.io/deviceRegistryCleanup",
+		Name:        "iot.enmasse.io/deviceRegistryCleanup",
 		Deconstruct: cleanupDeviceRegistry,
 	},
 }
@@ -152,11 +155,51 @@ func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result
 		return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports IoTProject")
 	}
 
-	job := createIotTenantCleanerJob(ctx, project)
+	config, err := getIoTConfigInstance(ctx.Context, ctx.Reader)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 
-	// get jobsClient from context client
-	jobsClient := ctx.Client
-	result1, err1 := jobsClient.Create(job)
+	// check for device registry type
 
-	return reconcile.Result{}, nil
+	if config.Spec.ServicesConfig.DeviceRegistry.Infinispan == nil {
+		// not required ... complete
+		return reconcile.Result{}, nil
+	}
+
+	// process
+
+	job, err := createIoTTenantCleanerJob(ctx, project, config)
+
+	// failed to create job
+
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// eval job status
+
+	if isComplete(job) {
+		// done
+		err := deleteJob(ctx, job)
+		// remove finalizer
+		return reconcile.Result{}, err
+	} else if isFailed(job) {
+		// restart
+		err := deleteJob(ctx, job)
+		// keep finalizer
+		log.Info("Re-queue: tenant cleanup job failed")
+		return reconcile.Result{Requeue: true}, err
+	} else {
+		// wait
+		return reconcile.Result{RequeueAfter: time.Minute}, nil
+	}
+
+}
+
+func deleteJob(ctx finalizer.DeconstructorContext, job *batchv1.Job) error {
+	p := metav1.DeletePropagationBackground
+	return install.DeleteIgnoreNotFound(ctx.Context, ctx.Client, job, &client.DeleteOptions{
+		PropagationPolicy: &p,
+	})
 }

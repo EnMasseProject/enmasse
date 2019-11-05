@@ -3,10 +3,12 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.service.base.infinispan.config;
+package io.enmasse.iot.infinispan.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import com.google.common.base.MoreObjects;
 
 @Configuration
 @ConfigurationProperties(InfinispanProperties.CONFIG_BASE + ".registry.infinispan")
@@ -135,5 +137,22 @@ public class InfinispanProperties {
 
     public String getDevicesCacheName() {
         return devicesCacheName;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("host", this.host)
+                .add("port", this.port)
+                .add("username", this.username)
+                .add("useTls", this.useTls)
+                .add("saslRealm", this.saslRealm)
+                .add("saslServername", this.saslServerName)
+                .add("trustStorePath", this.trustStorePath)
+                .add("tryCreate", this.tryCreate)
+                .add("adapterCredentialsCacheName", this.adapterCredentialsCacheName)
+                .add("devicesCacheName", this.devicesCacheName)
+                .add("deviceStatesCacheName", this.deviceStatesCacheName)
+                .toString();
     }
 }

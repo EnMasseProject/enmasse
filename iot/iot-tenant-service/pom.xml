@@ -38,6 +38,12 @@
     </dependency>
 
     <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-utils</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>kubernetes-client</artifactId>
     </dependency>

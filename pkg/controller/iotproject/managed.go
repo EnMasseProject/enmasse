@@ -132,7 +132,7 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 		return rc.Result()
 	}
 
-	project.Status.Phase = "Configuring"
+	project.Status.Phase = PhaseConfiguring
 
 	// reconcile address space
 
@@ -205,8 +205,6 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 		project.Status.Managed = &iotv1alpha1.ManagedStatus{}
 	}
 
-	//
-
 	changed := false
 
 	// eval address space
@@ -236,6 +234,7 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 			// clear out address space, will re-set in the next iteration
 
 			project.Status.Managed.AddressSpace = ""
+			log.Info("Re-queue: Address space changed")
 			changed = true
 
 		}
@@ -277,6 +276,7 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 
 		// re-queue right now to ensure the password is stored
 
+		log.Info("Re-queue: adapter password changed")
 		changed = true
 
 	}
@@ -300,8 +300,7 @@ func (r *ReconcileIoTProject) reconcileAddressSpace(ctx context.Context, project
 
 	var retryDelay time.Duration = 0
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, addressSpace, func() error {
-		log.V(2).Info("Reconcile address space", "AddressSpace", addressSpace)
+	rc, err := controllerutil.CreateOrUpdate(ctx, r.client, addressSpace, func() error {
 
 		managedStatus.remainingReady[resourceTypeAddressSpace] = addressSpace.Status.IsReady
 
@@ -309,10 +308,15 @@ func (r *ReconcileIoTProject) reconcileAddressSpace(ctx context.Context, project
 		if !addressSpace.Status.IsReady {
 			// delay for 30 seconds
 			retryDelay = 30 * time.Second
+			log.Info("Re-queue: Address space not ready")
 		}
 
 		return r.reconcileManagedAddressSpace(project, strategy, addressSpace)
 	})
+
+	if rc != controllerutil.OperationResultNone {
+		log.V(2).Info("Created/updated address space", "op", rc, "AddressSpace", addressSpace)
+	}
 
 	if err == nil {
 		managedStatus.remainingCreated[resourceTypeAddressSpace] = true
@@ -369,8 +373,6 @@ func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project
 	addressName := util.AddressName(project, addressBaseName)
 	addressMetaName := util.EncodeAddressSpaceAsMetaName(strategy.AddressSpace.Name, addressName)
 
-	log.Info("Creating/updating address", "basename", addressBaseName, "name", addressName, "metaname", addressMetaName)
-
 	stateKey := "Address|" + addressName
 	managedStatus.remainingCreated[stateKey] = false
 
@@ -381,11 +383,15 @@ func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project
 		},
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, address, func() error {
+	rc, err := controllerutil.CreateOrUpdate(ctx, r.client, address, func() error {
 		managedStatus.remainingReady[stateKey] = address.Status.IsReady
 
 		return r.reconcileAddress(project, strategy, addressName, plan, typeName, address)
 	})
+
+	if rc != controllerutil.OperationResultNone {
+		log.Info("Created/updated address", "op", rc, "basename", addressBaseName, "name", addressName, "metaname", addressMetaName)
+	}
 
 	if err == nil {
 		managedStatus.remainingCreated[stateKey] = true

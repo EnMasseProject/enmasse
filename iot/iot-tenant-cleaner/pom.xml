@@ -8,7 +8,7 @@
   <parent>
     <groupId>io.enmasse</groupId>
     <artifactId>iot-application-base</artifactId>
-    <version>0.30-SNAPSHOT</version>
+    <version>0.31-SNAPSHOT</version>
     <relativePath>../iot-application-base</relativePath>
   </parent>
 
@@ -29,10 +29,19 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>iot-service-base</artifactId>
+      <artifactId>iot-infinispan-base</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>iot-utils</artifactId>
       <version>${project.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.infinispan</groupId>
+      <artifactId>infinispan-core</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.infinispan</groupId>
       <artifactId>infinispan-query-dsl</artifactId>
@@ -40,12 +49,16 @@
     <dependency>
       <groupId>org.infinispan</groupId>
       <artifactId>infinispan-client-hotrod</artifactId>
-      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.infinispan</groupId>
+      <artifactId>infinispan-remote-query-client</artifactId>
     </dependency>
 
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
 

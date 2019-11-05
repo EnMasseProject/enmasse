@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.service.base.infinispan.device;
+package io.enmasse.iot.infinispan.device;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +24,10 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 @ProtoMessage
 public class DeviceCredential {
 
-    @ProtoDoc("@Field(index=Index.YES)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO)")
     @ProtoField(number = 1, required = true)
     protected String authId;
-    @ProtoDoc("@Field(index=Index.YES)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO)")
     @ProtoField(number = 2, required = true)
     protected String type;
 

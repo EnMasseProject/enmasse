@@ -3,7 +3,9 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.service.base.infinispan.cache;
+package io.enmasse.iot.infinispan.cache;
+
+import java.util.Optional;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -21,10 +23,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
-import io.enmasse.iot.service.base.infinispan.device.DeviceCredential;
-import io.enmasse.iot.service.base.infinispan.device.DeviceInformation;
-import io.enmasse.iot.service.base.infinispan.device.DeviceKey;
+import io.enmasse.iot.infinispan.config.InfinispanProperties;
+import io.enmasse.iot.infinispan.device.CredentialKey;
+import io.enmasse.iot.infinispan.device.DeviceCredential;
+import io.enmasse.iot.infinispan.device.DeviceInformation;
+import io.enmasse.iot.infinispan.device.DeviceKey;
 
 @Component
 public class DeviceManagementCacheProvider extends AbstractCacheProvider {
@@ -33,7 +36,7 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
     private static final Logger log = LoggerFactory.getLogger(DeviceManagementCacheProvider.class);
 
     @Autowired
-    public DeviceManagementCacheProvider(final InfinispanProperties properties) throws Exception {
+    public DeviceManagementCacheProvider(final InfinispanProperties properties) {
         super(properties);
     }
 
@@ -57,11 +60,13 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
                 .addClass(DeviceInformation.class)
                 .addClass(DeviceCredential.class)
 
+                .addClass(CredentialKey.class)
+
                 .packageName("io.enmasse.iot.registry.infinispan.data")
                 .fileName(GENERATED_PROTOBUF_FILE_NAME)
                 .build(serCtx);
 
-        log.debug("Generated protobuf schema - {}", generatedSchema);
+        log.info("Generated protobuf schema - {}", generatedSchema);
 
         remoteCacheManager
                 .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
@@ -69,7 +74,7 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
 
     }
 
-    public org.infinispan.configuration.cache.Configuration buildConfiguration() {
+    public org.infinispan.configuration.cache.Configuration buildDeviceManagementConfiguration() {
         return new org.infinispan.configuration.cache.ConfigurationBuilder()
 
                 .indexing()
@@ -102,8 +107,35 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
                 .build();
     }
 
-    public RemoteCache<DeviceKey, DeviceInformation> getDeviceManagementCache() {
-        return getOrCreateCache(properties.getDevicesCacheName(), buildConfiguration());
+    public RemoteCache<DeviceKey, DeviceInformation> getOrCreateDeviceManagementCache() {
+        return getOrCreateCache(properties.getDevicesCacheName(), this::buildDeviceManagementConfiguration);
     }
+
+    public Optional<RemoteCache<DeviceKey, DeviceInformation>> getDeviceManagementCache() {
+        return getCache(properties.getDevicesCacheName());
+    }
+
+    public org.infinispan.configuration.cache.Configuration buildAdapterCredentialsConfiguration() {
+        return new org.infinispan.configuration.cache.ConfigurationBuilder()
+
+                .indexing()
+                .index(Index.NONE)
+
+                .clustering()
+                .cacheMode(CacheMode.DIST_SYNC)
+                .hash()
+                .numOwners(1)
+
+                .build();
+    }
+
+    public RemoteCache<CredentialKey, String> getOrCreateAdapterCredentialsCache() {
+        return getOrCreateCache(properties.getAdapterCredentialsCacheName(), this::buildAdapterCredentialsConfiguration);
+    }
+
+    public Optional<RemoteCache<CredentialKey, String>> getAdapterCredentialsCache() {
+        return getCache(properties.getAdapterCredentialsCacheName());
+    }
+
 
 }
