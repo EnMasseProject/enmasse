@@ -427,7 +427,7 @@ func InitFlags(flagset *flag.FlagSet) {
 	flagset.BoolVar(&logging.toStderr, "logtostderr", logging.toStderr, "log to standard error instead of files")
 	flagset.BoolVar(&logging.alsoToStderr, "alsologtostderr", logging.alsoToStderr, "log to standard error as well as files")
 	flagset.Var(&logging.verbosity, "v", "number for the log level verbosity")
-	flagset.BoolVar(&logging.skipHeaders, "add_dir_header", logging.addDirHeader, "If true, adds the file directory to the header")
+	flagset.BoolVar(&logging.addDirHeader, "add_dir_header", logging.addDirHeader, "If true, adds the file directory to the header")
 	flagset.BoolVar(&logging.skipHeaders, "skip_headers", logging.skipHeaders, "If true, avoid header prefixes in the log messages")
 	flagset.BoolVar(&logging.skipLogHeaders, "skip_log_headers", logging.skipLogHeaders, "If true, avoid headers when opening log files")
 	flagset.Var(&logging.stderrThreshold, "stderrthreshold", "logs at or above this threshold go to stderr")
@@ -484,7 +484,7 @@ type loggingT struct {
 	logDir string
 
 	// If non-empty, specifies the path of the file to write logs. mutually exclusive
-	// with the log-dir option.
+	// with the log_dir option.
 	logFile string
 
 	// When logFile is specified, this limiter makes sure the logFile won't exceeds a certain size. When exceeds, the
@@ -766,7 +766,7 @@ func (rb *redirectBuffer) Write(bytes []byte) (n int, err error) {
 }
 
 // SetLogger will set the backing logr implementation for klog.
-// If set, all log lines will be supressed from the regular Output, and
+// If set, all log lines will be suppressed from the regular Output, and
 // redirected to the logr implementation.
 // All log lines include the 'severity', 'file' and 'line' values attached as
 // structured logging values.
