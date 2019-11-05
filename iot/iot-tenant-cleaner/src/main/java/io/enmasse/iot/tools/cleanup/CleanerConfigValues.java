@@ -6,26 +6,24 @@
 package io.enmasse.iot.tools.cleanup;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 
 import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CleanerConfigValues {
 
-    @JsonProperty("iotProject")
     private String tenantId;
 
-    private int deletionChuckSize = 100000;
+    private int deletionChuckSize = 100_000;
 
     private String host;
     private int port = 11222;
     private String username;
     private String password;
 
-    @JsonProperty("saslServerName")
     private String saslServer;
     private String saslRealm;
 
@@ -93,51 +91,69 @@ public class CleanerConfigValues {
         this.deletionChuckSize = deletionChuckSize;
     }
 
-    public String verify(){
-
-        ArrayList<String> missingValues = new ArrayList<>();
-
-        if (getTenantId() == null) {
-            missingValues.add("iotProject ");
-        }
-        if (getHost() == null) {
-            missingValues.add("host");
-        }
-        if (getUsername() == null) {
-            missingValues.add("username");
-        }
-        if (getPassword() == null) {
-            missingValues.add("password");
-        }
-        if (getSaslServer() == null) {
-            missingValues.add("saslServer");
-        }
-        if (getSaslRealm() == null) {
-            missingValues.add("saslRealm");
-        }
-        if (getDeletionChuckSize() <= 0) {
-            missingValues.add("deletionChunkSize cannot be 0 or negative.");
-        }
-
-        if (!missingValues.isEmpty()){
-            final String message = "Missing configuration value(s): ";
-            return message + String.join(", ", missingValues);
-        } else {
-            return null;
-        }
+    private static RuntimeException missingField(final String fieldName) {
+        return new IllegalArgumentException(String.format("'%s' is missing in configuration", fieldName));
     }
 
-    public static InfinispanProperties createInfinispanProperties(CleanerConfigValues config) {
+    public CleanerConfigValues verify() throws RuntimeException {
 
-        InfinispanProperties infinispanProperties = new InfinispanProperties();
+        final LinkedList<RuntimeException> result = new LinkedList<>();
 
-        infinispanProperties.setHost(config.getHost());
-        infinispanProperties.setPort(config.getPort());
-        infinispanProperties.setUsername(config.getUsername());
-        infinispanProperties.setPassword(config.getPassword());
-        infinispanProperties.setSaslServerName(config.getSaslServer());
-        infinispanProperties.setSaslRealm(config.getSaslRealm());
+        if (getTenantId() == null) {
+            result.add(missingField("tenantId"));
+        }
+        if (getHost() == null) {
+            result.add(missingField("host"));
+        }
+        if (getUsername() == null) {
+            result.add(missingField("username"));
+        }
+        if (getPassword() == null) {
+            result.add(missingField("password"));
+        }
+        if (getSaslServer() == null) {
+            result.add(missingField("saslServer"));
+        }
+        if (getSaslRealm() == null) {
+            result.add(missingField("saslRealm"));
+        }
+        if (getDeletionChuckSize() <= 0) {
+            result.add(new IllegalArgumentException(String.format("'deletionChunkSize' must be greater than zero (is: %s)", getDeletionChuckSize())));
+        }
+
+        final RuntimeException e = result.pollFirst();
+        if ( e != null ) {
+            result.forEach(e::addSuppressed);
+            throw e;
+        }
+
+        return this;
+    }
+
+    public InfinispanProperties createInfinispanProperties() {
+
+        final InfinispanProperties infinispanProperties = new InfinispanProperties();
+
+        infinispanProperties.setHost(getHost());
+        infinispanProperties.setPort(getPort());
+        infinispanProperties.setUsername(getUsername());
+        infinispanProperties.setPassword(getPassword());
+        infinispanProperties.setSaslServerName(getSaslServer());
+        infinispanProperties.setSaslRealm(getSaslRealm());
 
         return infinispanProperties;
+    }
+
+    public String toString () {
+        return MoreObjects.toStringHelper(this)
+                .add("tenantId", this.tenantId)
+                .add("host", this.host)
+                .add("port", this.port)
+                .add("username", this.username)
+                .add("saslRealm", this.saslRealm)
+                .add("saslServer", this.saslServer)
+                .add("deletionChunkSize", this.deletionChuckSize)
+                .toString()
+                ;
     }
 }
