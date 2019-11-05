@@ -13,7 +13,7 @@ import org.springframework.boot.convert.DurationUnit;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.enmasse.iot.service.base.ServiceBase;
+import io.enmasse.iot.utils.ConfigBase;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -35,7 +35,7 @@ public class RestEndpointConfiguration {
      */
     @Qualifier(Constants.QUALIFIER_REST)
     @Bean
-    @ConfigurationProperties(ServiceBase.CONFIG_BASE + ".registry.rest")
+    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".registry.rest")
     public ServiceConfigProperties restProperties() {
         final ServiceConfigProperties props = new ServiceConfigProperties();
         return props;

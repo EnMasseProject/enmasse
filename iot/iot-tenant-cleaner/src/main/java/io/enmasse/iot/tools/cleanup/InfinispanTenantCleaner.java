@@ -5,52 +5,45 @@
 
 package io.enmasse.iot.tools.cleanup;
 
-import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
-import org.infinispan.query.dsl.Expression;
-import org.infinispan.query.dsl.QueryBuilder;
+import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.iot.service.base.infinispan.cache.DeviceConnectionCacheProvider;
-import io.enmasse.iot.service.base.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.service.base.infinispan.devcon.DeviceConnectionKey;
-import io.enmasse.iot.service.base.infinispan.device.DeviceInformation;
-import io.enmasse.iot.service.base.infinispan.device.DeviceKey;
-import io.enmasse.iot.service.base.infinispan.tenant.TenantHandle;
-import io.enmasse.iot.service.base.utils.MoreFutures;
-import io.vertx.config.ConfigRetriever;
-import io.vertx.config.ConfigRetrieverOptions;
-import io.vertx.config.ConfigStoreOptions;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
+import com.google.common.collect.Lists;
+
+import io.enmasse.iot.infinispan.cache.DeviceConnectionCacheProvider;
+import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.infinispan.devcon.DeviceConnectionKey;
+import io.enmasse.iot.infinispan.device.DeviceInformation;
+import io.enmasse.iot.infinispan.device.DeviceKey;
+import io.enmasse.iot.infinispan.tenant.TenantHandle;
+import io.enmasse.iot.tools.cleanup.config.CleanerConfig;
 
 public class InfinispanTenantCleaner implements AutoCloseable {
 
+    private interface Closer {
+        void close() throws Exception;
+    }
+
     private static final Logger log = LoggerFactory.getLogger(InfinispanTenantCleaner.class);
 
-    private final Vertx vertx;
-    private final Optional<Path> pathToConfig;
+    private CleanerConfig config;
 
-    private RemoteCache<DeviceKey, DeviceInformation> devicesCache;
-    private RemoteCache<DeviceConnectionKey, String> devicesConnectionCache;
+    public InfinispanTenantCleaner(final CleanerConfig config) {
+        this.config = config;
+    }
 
-    private DeviceManagementCacheProvider mgmtProvider;
-    private DeviceConnectionCacheProvider deviceconProvider;
-
-    public InfinispanTenantCleaner(final Optional<Path> pathToConfig) {
-        Objects.requireNonNull(pathToConfig);
-        this.vertx = Vertx.vertx();
-        this.pathToConfig = pathToConfig;
+    @Override
+    public void close() throws Exception {
     }
 
     /**
@@ -63,106 +56,116 @@ public class InfinispanTenantCleaner implements AutoCloseable {
      */
     public void run() throws Exception {
 
-        var config = configure().get(30, TimeUnit.SECONDS);
-        var infinispanProperties = config.createInfinispanProperties();
+        final var mgmtProvider = new DeviceManagementCacheProvider(config.getInfinispan());
+        final var deviceconProvider = new DeviceConnectionCacheProvider(config.getInfinispan());
 
-        this.mgmtProvider = new DeviceManagementCacheProvider(infinispanProperties);
-        this.mgmtProvider.start();
-        this.devicesCache = mgmtProvider.getDeviceManagementCache();
+        final LinkedList<Closer> cleanup = new LinkedList<>();
 
-        this.deviceconProvider = new DeviceConnectionCacheProvider(infinispanProperties);
-        this.deviceconProvider.start();
-        this.devicesConnectionCache = deviceconProvider.getDeviceStateCache();
+        try {
 
-        final String tenantIdToClean = config.getTenantId();
+            mgmtProvider.start();
+            cleanup.add(mgmtProvider::stop);
+            final var devicesCache = mgmtProvider.getOrCreateDeviceManagementCache();
+            cleanup.add(devicesCache::stop);
+
+            deviceconProvider.start();
+            cleanup.add(deviceconProvider::stop);
+            final var devicesConnectionCache = deviceconProvider.getDeviceStateCache().orElse(null);
+            cleanup.add(devicesConnectionCache::stop);
+
+            performCleanup(config, devicesCache, devicesConnectionCache);
+
+        } finally {
+
+            for (final Closer c : Lists.reverse(cleanup)) {
+                try {
+                    c.close();
+                } catch (Exception e) {
+                }
+            }
+
+        }
+    }
+
+    private static <T> T measure(final String operation, final Supplier<T> s) {
+        final Instant start = Instant.now();
+        final T result = s.get();
+        final Duration duration = Duration.between(start, Instant.now());
+        log.debug("{} - {}", operation, duration);
+        return result;
+    }
+
+    private void performCleanup(
+            final CleanerConfig config,
+            final RemoteCache<DeviceKey, DeviceInformation> devicesCache,
+            final RemoteCache<DeviceConnectionKey, String> devicesConnectionCache) {
+
+        final String tenantId = config.getTenantId();
 
         // Query and delete entries in devicesCache
-        final QueryFactory queryFactory = Search.getQueryFactory(this.devicesCache);
-        final QueryBuilder query = queryFactory.from(DeviceInformation.class)
-                .select(Expression.property("deviceId"))
-                .having("tenantId")
-                .eq(tenantIdToClean)
-                .maxResults(config.getDeletionChuckSize());
+        final Query query = createQuery(config, devicesCache, tenantId);
 
-        log.info("Start deleting tenant information: {}", config);
+        log.info("Start deleting tenant data: {}", config);
 
-        List<Object[]> matches;
+        long count = 0;
+        int len;
+        long remaining;
         do {
-            matches = query.build().list();
-
-            matches.forEach(queryResult -> {
-
-                final String deviceId = (String) queryResult[0];
-
-                // delete device connection entry first
-
-                final DeviceConnectionKey conKey = new DeviceConnectionKey(tenantIdToClean, deviceId);
-                this.devicesConnectionCache.remove(conKey);
-
-                // delete device registration second
-
-                final DeviceKey regKey = DeviceKey
-                        .deviceKey(TenantHandle.of(tenantIdToClean, tenantIdToClean), deviceId);
-                this.devicesCache.remove(regKey);
-
+            final List<DeviceInformation> result = measure("List", () -> query.list());
+            log.debug("List: {}", result);
+            measure("Delete", () -> {
+                result.forEach(entry -> {
+                    log.debug("result: {}", entry);
+                    deleteDevice(devicesCache, devicesConnectionCache, tenantId, entry.getDeviceId());
+                });
+                return null;
             });
 
-            log.info("Deleted {} entries", matches.size());
+            len = result.size();
+            count += len;
 
-        } while (matches.size() > 0);
+            // get the total remaining entries
+            remaining = query.getResultSize();
+            // reset query
+            query.startOffset(0);
 
-        log.info("Removed tenant from system");
+            log.info("Deleted {} entries in this iteration. Total remaining: {}.", len, remaining);
+
+        } while (remaining > 0);
+
+        log.info("Removed tenant ({}) from system (total: {}).", tenantId, count);
     }
 
-    public void close() throws Exception {
-        // Stop the cache managers and release all resources
-        if (this.deviceconProvider != null) {
-            this.deviceconProvider.stop();
-        }
-        if (this.mgmtProvider != null) {
-            this.mgmtProvider.stop();
-        }
-        if (this.vertx != null) {
-            this.vertx.close();
-        }
+    private Query createQuery(final CleanerConfig config, final RemoteCache<DeviceKey, DeviceInformation> devicesCache, final String tenantId) {
+
+        // don't select only the ID field due to ISPN-11013
+
+        final QueryFactory queryFactory = Search.getQueryFactory(devicesCache);
+        final Query query = queryFactory.from(DeviceInformation.class)
+                .having("tenantId")
+                .eq(tenantId)
+                .maxResults(config.getDeletionChunkSize())
+                .build();
+
+        return query;
     }
 
-    private CompletableFuture<CleanerConfigValues> configure() {
+    private void deleteDevice(final RemoteCache<DeviceKey, DeviceInformation> devicesCache, final RemoteCache<DeviceConnectionKey, String> devicesConnectionCache,
+            final String tenantIdToClean, final String deviceId) {
 
-        var options = new ConfigRetrieverOptions();
+        // delete device connection entry first
 
-        // add path if present
+        if (devicesConnectionCache != null) {
+            final DeviceConnectionKey conKey = new DeviceConnectionKey(tenantIdToClean, deviceId);
+            devicesConnectionCache.remove(conKey);
+        }
 
-        this.pathToConfig.ifPresent(path -> {
-            options.addStore(new ConfigStoreOptions()
-                    .setType("file")
-                    .setFormat("yaml")
-                    .setConfig(new JsonObject().put("path", path.toAbsolutePath().toString()))
-                    .setOptional(true));
-        });
+        // delete device registration second
 
-        // add env vars
+        final DeviceKey regKey = DeviceKey
+                .deviceKey(TenantHandle.of(tenantIdToClean, tenantIdToClean), deviceId);
 
-        options.addStore(new ConfigStoreOptions()
-                .setType("env"));
-
-        // create config retriever
-
-        final ConfigRetriever retriever = ConfigRetriever.create(this.vertx, options);
-
-        // set up futures
-
-        final Future<JsonObject> configured = Future.future();
-        retriever.getConfig(configured);
-
-        // fetch config
-
-        var result = configured
-                .map(json -> json.mapTo(CleanerConfigValues.class))
-                .map(CleanerConfigValues::verify);
-
-        // return result
-
-        return MoreFutures.map(result);
+        devicesCache.remove(regKey);
     }
+
 }

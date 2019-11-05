@@ -5,8 +5,8 @@
 
 package io.enmasse.iot.registry.infinispan.device;
 
-import static io.enmasse.iot.service.base.infinispan.device.DeviceKey.deviceKey;
-import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
+import static io.enmasse.iot.infinispan.device.DeviceKey.deviceKey;
+import static io.enmasse.iot.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import java.util.List;
@@ -19,11 +19,10 @@ import org.eclipse.hono.service.management.credentials.CredentialsManagementServ
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.enmasse.iot.service.base.infinispan.cache.AdapterCredentialsCacheProvider;
-import io.enmasse.iot.service.base.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.service.base.infinispan.device.CredentialKey;
-import io.enmasse.iot.service.base.infinispan.device.DeviceInformation;
-import io.enmasse.iot.service.base.infinispan.device.DeviceKey;
+import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.infinispan.device.CredentialKey;
+import io.enmasse.iot.infinispan.device.DeviceInformation;
+import io.enmasse.iot.infinispan.device.DeviceKey;
 import io.enmasse.iot.registry.infinispan.tenant.TenantInformationService;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
@@ -43,9 +42,9 @@ public abstract class AbstractCredentialsManagementService implements Credential
     protected TenantInformationService tenantInformationService;
 
     @Autowired
-    public AbstractCredentialsManagementService(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider) {
-        this.adapterCache = adapterProvider.getAdapterCredentialsCache();
-        this.managementCache = managementProvider.getDeviceManagementCache();
+    public AbstractCredentialsManagementService(final DeviceManagementCacheProvider cacheProvider) {
+        this.adapterCache = cacheProvider.getOrCreateAdapterCredentialsCache();
+        this.managementCache = cacheProvider.getOrCreateDeviceManagementCache();
     }
 
     public void setTenantInformationService(final TenantInformationService tenantInformationService) {

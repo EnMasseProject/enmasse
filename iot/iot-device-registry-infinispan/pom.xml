@@ -24,7 +24,15 @@
 
     <dependency>
       <groupId>io.enmasse</groupId>
+      <artifactId>iot-infinispan-base</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
       <artifactId>iot-service-base</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-utils</artifactId>
     </dependency>
 
     <dependency>

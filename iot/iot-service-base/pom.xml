@@ -7,27 +7,32 @@
 
   <parent>
     <groupId>io.enmasse</groupId>
-    <artifactId>iot-application-base</artifactId>
+    <artifactId>iot</artifactId>
     <version>0.31-SNAPSHOT</version>
-    <relativePath>../iot-application-base</relativePath>
   </parent>
 
   <artifactId>iot-service-base</artifactId>
 
   <dependencies>
+
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-utils</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.eclipse.hono</groupId>
       <artifactId>hono-service-base</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-logging</artifactId>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter</artifactId>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-health-check</artifactId>
     </dependency>
 
     <dependency>
@@ -38,30 +43,6 @@
     <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>kubernetes-client</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-validation</artifactId>
-      <version>${spring.boot.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-client-hotrod</artifactId>
-      <optional>true</optional>
-    </dependency>
-
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-core</artifactId>
-      <optional>true</optional>
-    </dependency>
-
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-remote-query-client</artifactId>
-      <optional>true</optional>
     </dependency>
 
     <!-- testing -->

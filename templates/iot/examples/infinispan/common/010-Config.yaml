@@ -86,7 +86,7 @@ data:
                           <named-formatter name="COLOR-PATTERN"/>
                       </formatter>
                   </console-handler>
-                  <periodic-rotating-file-handler name="FILE" autoflush="true">
+                  <periodic-rotating-file-handler name="FILE" autoflush="false">
                       <formatter>
                           <named-formatter name="PATTERN"/>
                       </formatter>
@@ -94,7 +94,7 @@ data:
                       <suffix value=".yyyy-MM-dd"/>
                       <append value="true"/>
                   </periodic-rotating-file-handler>
-                  <size-rotating-file-handler name="HR-ACCESS-FILE" autoflush="true">
+                  <size-rotating-file-handler name="HR-ACCESS-FILE" autoflush="false">
                       <formatter>
                           <named-formatter name="ACCESS-LOG"/>
                       </formatter>
@@ -103,7 +103,7 @@ data:
                       <rotate-size value="10M"/>
                       <max-backup-index value="10"/>
                   </size-rotating-file-handler>
-                  <size-rotating-file-handler name="REST-ACCESS-FILE" autoflush="true">
+                  <size-rotating-file-handler name="REST-ACCESS-FILE" autoflush="false">
                       <formatter>
                           <named-formatter name="ACCESS-LOG"/>
                       </formatter>
@@ -157,19 +157,6 @@ data:
               </subsystem>
               <subsystem xmlns="urn:jboss:domain:datasources:5.0">
                   <datasources>
-                      <datasource jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS" enabled="true" use-java-context="true">
-                          <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url>
-                          <driver>h2</driver>
-                          <security>
-                              <user-name>sa</user-name>
-                              <password>sa</password>
-                          </security>
-                      </datasource>
-                      <drivers>
-                          <driver name="h2" module="com.h2database.h2">
-                              <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
-                          </driver>
-                      </drivers>
                   </datasources>
               </subsystem>
               <subsystem xmlns="urn:wildfly:elytron:4.0" final-providers="combined-providers" disallowed-providers="OracleUcrypto">
@@ -274,6 +261,7 @@ data:
                       <global-state
                             enable="true"
                             persistent-location="global-data"/>
+                            <!--
                       <distributed-cache-configuration name="transactional">
                           <transaction mode="NON_XA" locking="PESSIMISTIC"/>
                       </distributed-cache-configuration>
@@ -316,30 +304,28 @@ data:
                               <write-behind modification-queue-size="1024" thread-pool-size="1"/>
                           </string-keyed-jdbc-store>
                       </distributed-cache-configuration>
+                       -->
                       <distributed-cache name="default"/>
-
                         <replicated-cache name="LuceneIndexesLocking">
                             <indexing index="NONE" />
                         </replicated-cache>
                         
                         <replicated-cache name="LuceneIndexesMetadata">
                             <indexing index="NONE" />
-                            <rocksdb-store shared="false" fetch-state="true" passivation="false" preload="true" />
                         </replicated-cache>
                         
                         <distributed-cache name="LuceneIndexesData">
                             <indexing index="NONE" />
-                            <rocksdb-store shared="false" fetch-state="true" passivation="false" preload="true" />
                         </distributed-cache>
 
-                       <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="devices">
-                           <locking isolation="READ_COMMITTED"/>
-                           <indexing index="PRIMARY_OWNER">
+                       <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="devices" segments="10">
+                           <transaction mode="NONE"/>
+                           <locking isolation="NONE"/>
+                           <indexing index="LOCAL">
                                <property name="default.indexmanager">
                                    org.infinispan.query.indexmanager.InfinispanIndexManager
                                </property>
                            </indexing>
-                          <rocksdb-store shared="false" fetch-state="true" passivation="false" preload="true" />
                        </distributed-cache>
 
                        <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="adapterCredentials">
