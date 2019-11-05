@@ -109,7 +109,12 @@ public class AddressSpaceUtils {
 
         boolean isPlanApplied = false;
         while (budget.timeLeft() >= 0 && !isPlanApplied) {
-            addressSpaceObject = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
+            addressSpaceObject =
+                    (addressSpace.getMetadata().getName().equals("")
+                            ? Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata()
+                                    .getNamespace()).withName(addressSpace.getMetadata().getName()).get()
+                            : Kubernetes.getInstance().getAddressSpaceClient().withName(addressSpace.getMetadata().getName()).get());
+
             isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
             if (!isPlanApplied) {
                 Thread.sleep(2000);
