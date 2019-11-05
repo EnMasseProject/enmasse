@@ -181,7 +181,7 @@ public class AddressUtils {
                 .map(address -> address.getMetadata().getNamespace())
                 .distinct()
                 .collect(Collectors.toList());
-        if (namespaces.size() > 1) {
+        if (namespaces.size() != 1) {
             return Kubernetes.getInstance().getAddressClient().inAnyNamespace();
         } else {
             return Kubernetes.getInstance().getAddressClient(namespaces.get(0));

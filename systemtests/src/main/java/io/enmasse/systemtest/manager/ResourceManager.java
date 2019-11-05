@@ -127,9 +127,12 @@ public abstract class ResourceManager {
 
     public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
         LOGGER.info("AddressSpace plan {} will be created {}", addressSpacePlan.getMetadata().getName(), addressSpacePlan);
+        if (addressSpacePlan.getMetadata().getNamespace() == null || addressSpacePlan.getMetadata().getNamespace().equals("")) {
+            addressSpacePlan.getMetadata().setNamespace(Kubernetes.getInstance().getInfraNamespace());
+        }
         var client = Kubernetes.getInstance().getAddressSpacePlanClient();
         client.create(addressSpacePlan);
-        TestUtils.waitForAddressSpacePlanApplied(addressSpacePlan);
+        TestUtils.waitForSchemaInSync(addressSpacePlan);
         Thread.sleep(1000);
     }
 
