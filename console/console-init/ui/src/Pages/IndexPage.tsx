@@ -1,8 +1,11 @@
 import React from "react";
 import { useA11yRouteChange, useDocumentTitle } from "use-patternfly";
 import { PageSection, Button, Modal } from "@patternfly/react-core";
-import { AddressList, IAddress } from "src/Components/AddressList";
-import { ConnectionList, IConnection } from "src/Components/ConnectionList";
+import { AddressList, IAddress } from "src/Components/AddressSpace/AddressList";
+import {
+  ConnectionList,
+  IConnection
+} from "src/Components/AddressSpace/ConnectionList";
 import { EditAddress } from "src/Pages/EditAddressPage";
 
 const addressRows: IAddress[] = [

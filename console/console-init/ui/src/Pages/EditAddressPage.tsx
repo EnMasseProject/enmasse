@@ -6,7 +6,7 @@ import {
   FormSelect,
   FormSelectOption
 } from "@patternfly/react-core";
-import { IAddress } from "../Components/AddressList";
+import { IAddress } from "../Components/AddressSpace/AddressList";
 
 interface IEditAddressProps {
   address: IAddress;
