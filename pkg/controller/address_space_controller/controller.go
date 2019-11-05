@@ -145,9 +145,8 @@ func (r *ReconcileAddressSpaceController) ensureDeployment(ctx context.Context, 
 		Version: "v1",
 	})
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func(existing runtime.Object) error {
-		dep := existing.(*appsv1.Deployment)
-		return ApplyDeployment(dep)
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func() error {
+		return ApplyDeployment(deployment)
 	})
 
 	return reconcile.Result{}, err
@@ -239,9 +238,8 @@ func (r *ReconcileAddressSpaceController) ensureService(ctx context.Context, req
 		},
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func(existing runtime.Object) error {
-		dep := existing.(*corev1.Service)
-		return applyService(dep)
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
+		return applyService(service)
 	})
 
 	return reconcile.Result{}, err

@@ -1,4 +1,4 @@
-# Developer guide
+# Ansible Developer Guide for Operator SDK
 
 This document provides some useful information and tips for a developer
 creating an operator powered by Ansible.
@@ -25,10 +25,10 @@ Fedora/Centos:
 $ sudo dnf install ansible
 ```
 
-In addition to Ansible, a user must install the [Openshift Restclient
+In addition to Ansible, a user must install the [OpenShift Restclient
 Python][openshift_restclient_python] package. This can be installed from pip:
 ```bash
-$ pip install openshift
+$ pip3 install openshift
 ```
 
 ### Testing the k8s Ansible modules locally
@@ -38,17 +38,17 @@ local machine as opposed to running/rebuilding the operator each time. To do
 this, initialize a new project:
 ```bash
 $ operator-sdk new --type ansible --kind Foo --api-version foo.example.com/v1alpha1 foo-operator
-Create foo-operator/tmp/init/galaxy-init.sh 
-Create foo-operator/tmp/build/Dockerfile 
-Create foo-operator/tmp/build/test-framework/Dockerfile 
-Create foo-operator/tmp/build/go-test.sh 
+Create foo-operator/tmp/init/galaxy-init.sh
+Create foo-operator/tmp/build/Dockerfile
+Create foo-operator/tmp/build/test-framework/Dockerfile
+Create foo-operator/tmp/build/go-test.sh
 Rendering Ansible Galaxy role [foo-operator/roles/Foo]...
 Cleaning up foo-operator/tmp/init
-Create foo-operator/watches.yaml 
-Create foo-operator/deploy/rbac.yaml 
-Create foo-operator/deploy/crd.yaml 
-Create foo-operator/deploy/cr.yaml 
-Create foo-operator/deploy/operator.yaml 
+Create foo-operator/watches.yaml
+Create foo-operator/deploy/rbac.yaml
+Create foo-operator/deploy/crd.yaml
+Create foo-operator/deploy/cr.yaml
+Create foo-operator/deploy/operator.yaml
 Run git init ...
 Initialized empty Git repository in /home/dymurray/go/src/github.com/dymurray/opsdk/foo-operator/.git/
 Run git init done
@@ -76,7 +76,7 @@ Modify `roles/Foo/defaults/main.yml` to set `state` to `present` by default.
 state: present
 ```
 
-Create an Ansible playbook `playbook.yaml` in the top-level directory which
+Create an Ansible playbook `playbook.yml` in the top-level directory which
 includes role `Foo`:
 ```yaml
 ---
@@ -87,7 +87,7 @@ includes role `Foo`:
 
 Run the playbook:
 ```bash
-$ ansible-playbook playbook.yaml
+$ ansible-playbook playbook.yml
  [WARNING]: provided hosts list is empty, only localhost is available. Note that the implicit localhost does not match 'all'
 
 
@@ -161,8 +161,8 @@ mandatory fields:
 **spec**:  This is the key-value list of variables which are passed to Ansible.
 This field is optional and will be empty by default.
 
-**annotations**: Kubernetes specific annotations to be appened to the CR. See
-the below section for Ansible Operator specifc annotations.
+**annotations**: Kubernetes specific annotations to be appended to the CR. See
+the below section for Ansible Operator specific annotations.
 
 #### Ansible Operator annotations
 This is the list of CR annotations which will modify the behavior of the operator:
@@ -188,7 +188,7 @@ Once a developer is comfortable working with the above workflow, it will be
 beneficial to test the logic inside of an operator. To accomplish this, we can
 use `operator-sdk up local` from the top-level directory of our project. The
 `up local` command reads from `./watches.yaml` and uses `~/.kube/config` to
-communicate with a kubernetes cluster just as the `k8s` modules do. This
+communicate with a Kubernetes cluster just as the `k8s` modules do. This
 section assumes the developer has read the [Ansible Operator user
 guide][ansible_operator_user_guide] and has the proper dependencies installed.
 
@@ -207,11 +207,11 @@ directory and simply comment out the existing line:
   role: /home/user/foo-operator/Foo
 ```
 
-Create a Custom Resource Definiton (CRD) and proper Role-Based Access Control
-(RBAC) definitions for resource Foo. `operator-sdk` autogenerates these files
+Create a Custom Resource Definition (CRD) and proper Role-Based Access Control
+(RBAC) definitions for resource Foo. `operator-sdk` auto-generates these files
 inside of the `deploy` folder:
 ```bash
-$ kubectl create -f deploy/crds/foo_v1alpha1_foo_crd.yaml
+$ kubectl create -f deploy/crds/foo.example.com_foos_crd.yaml
 $ kubectl create -f deploy/service_account.yaml
 $ kubectl create -f deploy/role.yaml
 $ kubectl create -f deploy/role_binding.yaml
@@ -220,12 +220,12 @@ $ kubectl create -f deploy/role_binding.yaml
 Run the `up local` command:
 ```bash
 $ operator-sdk up local
-INFO[0000] Go Version: go1.10.3                         
-INFO[0000] Go OS/Arch: linux/amd64                      
-INFO[0000] operator-sdk Version: 0.0.6+git              
+INFO[0000] Go Version: go1.10.3
+INFO[0000] Go OS/Arch: linux/amd64
+INFO[0000] operator-sdk Version: 0.0.6+git
 INFO[0000] Starting to serve on 127.0.0.1:8888
-         
-INFO[0000] Watching foo.example.com/v1alpha1, Foo, default 
+
+INFO[0000] Watching foo.example.com/v1alpha1, Foo, default
 ```
 
 Now that the operator is watching resource `Foo` for events, the creation of a
@@ -297,7 +297,7 @@ deployment image in this file needs to be modified from the placeholder
 $ sed -i 's|REPLACE_IMAGE|quay.io/example/foo-operator:v0.0.1|g' deploy/operator.yaml
 ```
 
-**Note**  
+**Note**
 If you are performing these steps on OSX, use the following command:
 ```
 $ sed -i "" 's|REPLACE_IMAGE|quay.io/example/foo-operator:v0.0.1|g' deploy/operator.yaml
@@ -306,7 +306,7 @@ $ sed -i "" 's|REPLACE_IMAGE|quay.io/example/foo-operator:v0.0.1|g' deploy/opera
 Deploy the foo-operator:
 
 ```sh
-$ kubectl create -f deploy/crds/foo_v1alpha1_foo_crd.yaml # if CRD doesn't exist already
+$ kubectl create -f deploy/crds/foo.example.com_foos_crd.yaml # if CRD doesn't exist already
 $ kubectl create -f deploy/service_account.yaml
 $ kubectl create -f deploy/role.yaml
 $ kubectl create -f deploy/role_binding.yaml
@@ -320,6 +320,21 @@ $ kubectl get deployment
 NAME                     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 foo-operator       1         1         1            1           1m
 ```
+
+#### Viewing the Ansible logs
+
+The `foo-operator` deployment creates a Pod with two containers, `operator` and `ansible`.
+The `ansible` container exists only to expose the standard Ansible stdout logs that most Ansible
+users will be familiar with. In order to see the logs from a particular container, you can run
+
+```sh
+kubectl logs deployment/foo-operator -c ansible
+kubectl logs deployment/foo-operator -c operator
+```
+
+The `ansible` logs contain all of the information about the Ansible run and will make it much easier to debug issues within your Ansible tasks,
+whereas the `operator` logs will contain much more detailed information about the Ansible Operator's internals and interface with Kubernetes.
+
 
 ## Custom Resource Status Management
 The operator will automatically update the CR's `status` subresource with
@@ -375,6 +390,31 @@ can be used as shown:
       foo: bar
 ```
 
+### Ansible Operator Conditions
+The Ansible Operator has a set of conditions which it will use as it performs
+its reconciliation procedure. There are only a few main conditions:
+
+* Running - the Ansible Operator is currently running the Ansible for
+  reconciliation.
+
+* Successful - if the run has finished and there were no errors, the Ansible
+  Operator will be marked as Successful. It will then wait for the next
+  reconciliation action, either the reconcile period, dependent watches triggers
+  or the resource is updated.
+
+* Failed - if there is any error during the reconciliation run, the Ansible
+  Operator will be marked as Failed with the error message from the error that
+  caused this condition. The error message is the raw output from the Ansible
+  run for reconciliation. If the failure is intermittent, often times the
+  situation can be resolved when the Operator reruns the reconciliation loop.
+
+Please look over the following sections for help debugging an Ansible Operator:
+
+
+* [View the Ansible logs](../user-guide.md#view-the-ansible-logs)
+* [Additional Ansible debug](../user-guide.md#additional-ansible-debug)
+* [Testing Ansible Operators with Molecule](testing_guide.md#testing-ansible-operators-with-molecule)
+
 ### Using k8s_status Ansible module with `up local`
 This section covers the required steps to using the `k8s_status` Ansible module
 with `operator-sdk up local`. If you are unfamiliar with managing status from
@@ -429,6 +469,9 @@ The structure passed to Ansible as extra vars is:
   "new_parameter": "newParam",
   "_app_example_com_database": {
      <Full CRD>
+   },
+  "_app_example_com_database_spec": {
+     <Full CRD .spec>
    },
 }
 ```

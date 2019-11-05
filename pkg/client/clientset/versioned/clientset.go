@@ -22,17 +22,9 @@ type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	AdminV1beta1() adminv1beta1.AdminV1beta1Interface
 	AdminV1beta2() adminv1beta2.AdminV1beta2Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Admin() adminv1beta2.AdminV1beta2Interface
 	EnmasseV1beta1() enmassev1beta1.EnmasseV1beta1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Enmasse() enmassev1beta1.EnmasseV1beta1Interface
 	IotV1alpha1() iotv1alpha1.IotV1alpha1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Iot() iotv1alpha1.IotV1alpha1Interface
 	UserV1beta1() userv1beta1.UserV1beta1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	User() userv1beta1.UserV1beta1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -56,20 +48,8 @@ func (c *Clientset) AdminV1beta2() adminv1beta2.AdminV1beta2Interface {
 	return c.adminV1beta2
 }
 
-// Deprecated: Admin retrieves the default version of AdminClient.
-// Please explicitly pick a version.
-func (c *Clientset) Admin() adminv1beta2.AdminV1beta2Interface {
-	return c.adminV1beta2
-}
-
 // EnmasseV1beta1 retrieves the EnmasseV1beta1Client
 func (c *Clientset) EnmasseV1beta1() enmassev1beta1.EnmasseV1beta1Interface {
-	return c.enmasseV1beta1
-}
-
-// Deprecated: Enmasse retrieves the default version of EnmasseClient.
-// Please explicitly pick a version.
-func (c *Clientset) Enmasse() enmassev1beta1.EnmasseV1beta1Interface {
 	return c.enmasseV1beta1
 }
 
@@ -78,20 +58,8 @@ func (c *Clientset) IotV1alpha1() iotv1alpha1.IotV1alpha1Interface {
 	return c.iotV1alpha1
 }
 
-// Deprecated: Iot retrieves the default version of IotClient.
-// Please explicitly pick a version.
-func (c *Clientset) Iot() iotv1alpha1.IotV1alpha1Interface {
-	return c.iotV1alpha1
-}
-
 // UserV1beta1 retrieves the UserV1beta1Client
 func (c *Clientset) UserV1beta1() userv1beta1.UserV1beta1Interface {
-	return c.userV1beta1
-}
-
-// Deprecated: User retrieves the default version of UserClient.
-// Please explicitly pick a version.
-func (c *Clientset) User() userv1beta1.UserV1beta1Interface {
 	return c.userV1beta1
 }
 

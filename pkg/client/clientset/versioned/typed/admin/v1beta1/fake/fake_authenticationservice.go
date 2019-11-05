@@ -120,7 +120,7 @@ func (c *FakeAuthenticationServices) DeleteCollection(options *v1.DeleteOptions,
 // Patch applies the patch and returns the patched authenticationService.
 func (c *FakeAuthenticationServices) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.AuthenticationService, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(authenticationservicesResource, c.ns, name, data, subresources...), &v1beta1.AuthenticationService{})
+		Invokes(testing.NewPatchSubresourceAction(authenticationservicesResource, c.ns, name, pt, data, subresources...), &v1beta1.AuthenticationService{})
 
 	if obj == nil {
 		return nil, err

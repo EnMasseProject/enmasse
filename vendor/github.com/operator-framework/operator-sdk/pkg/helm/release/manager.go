@@ -25,8 +25,9 @@ import (
 	yaml "gopkg.in/yaml.v2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	apitypes "k8s.io/apimachinery/pkg/types"
-	"k8s.io/cli-runtime/pkg/genericclioptions/resource"
+	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
 	"k8s.io/helm/pkg/chartutil"
 	"k8s.io/helm/pkg/kube"
@@ -36,6 +37,7 @@ import (
 	"k8s.io/helm/pkg/storage"
 	"k8s.io/helm/pkg/tiller"
 
+	"github.com/mattbaird/jsonpatch"
 	"github.com/operator-framework/operator-sdk/pkg/helm/internal/types"
 )
 
@@ -92,10 +94,6 @@ func (m manager) IsUpdateRequired() bool {
 // Sync ensures the Helm storage backend is in sync with the status of the
 // custom resource.
 func (m *manager) Sync(ctx context.Context) error {
-	if err := m.syncReleaseStatus(*m.status); err != nil {
-		return fmt.Errorf("failed to sync release status to storage backend: %s", err)
-	}
-
 	// Get release history for this release name
 	releases, err := m.storageBackend.History(m.releaseName)
 	if err != nil && !notFoundErr(err) {
@@ -145,26 +143,8 @@ func (m *manager) Sync(ctx context.Context) error {
 	return nil
 }
 
-func (m manager) syncReleaseStatus(status types.HelmAppStatus) error {
-	if status.Release == nil {
-		return nil
-	}
-
-	name := status.Release.GetName()
-	version := status.Release.GetVersion()
-	_, err := m.storageBackend.Get(name, version)
-	if err == nil {
-		return nil
-	}
-
-	if !notFoundErr(err) {
-		return err
-	}
-	return m.storageBackend.Create(status.Release)
-}
-
 func notFoundErr(err error) bool {
-	return strings.Contains(err.Error(), "not found")
+	return err != nil && strings.Contains(err.Error(), "not found")
 }
 
 func (m manager) loadChartAndConfig() (*cpb.Chart, *cpb.Config, error) {
@@ -246,15 +226,24 @@ func installRelease(ctx context.Context, tiller *tiller.ReleaseServer, namespace
 		// Workaround for helm/helm#3338
 		if releaseResponse.GetRelease() != nil {
 			uninstallReq := &services.UninstallReleaseRequest{
-				Name:  releaseResponse.GetRelease().GetName(),
+				Name:  name,
 				Purge: true,
 			}
 			_, uninstallErr := tiller.UninstallRelease(ctx, uninstallReq)
-			if uninstallErr != nil {
-				return nil, fmt.Errorf("failed to roll back failed installation: %s: %s", uninstallErr, err)
+
+			// In certain cases, InstallRelease will return a partial release in
+			// the response even when it doesn't record the release in its release
+			// store (e.g. when there is an error rendering the release manifest).
+			// In that case the rollback will fail with a not found error because
+			// there was nothing to rollback.
+			//
+			// Only log a message about a rollback failure if the failure was caused
+			// by something other than the release not being found.
+			if uninstallErr != nil && !notFoundErr(uninstallErr) {
+				return nil, fmt.Errorf("failed installation (%s) and failed rollback (%s)", err, uninstallErr)
 			}
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to install release: %s", err)
 	}
 	return releaseResponse.GetRelease(), nil
 }
@@ -280,12 +269,18 @@ func updateRelease(ctx context.Context, tiller *tiller.ReleaseServer, name strin
 				Name:  name,
 				Force: true,
 			}
+
+			// As of Helm 2.13, if UpdateRelease returns a non-nil release, that
+			// means the release was also recorded in the release store.
+			// Therefore, we should perform the rollback when we have a non-nil
+			// release. Any rollback error here would be unexpected, so always
+			// log both the update and rollback errors.
 			_, rollbackErr := tiller.RollbackRelease(ctx, rollbackReq)
 			if rollbackErr != nil {
-				return nil, fmt.Errorf("failed to roll back failed update: %s: %s", rollbackErr, err)
+				return nil, fmt.Errorf("failed update (%s) and failed rollback (%s)", err, rollbackErr)
 			}
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to update release: %s", err)
 	}
 	return releaseResponse.GetRelease(), nil
 }
@@ -311,25 +306,68 @@ func reconcileRelease(ctx context.Context, tillerKubeClient *kube.Client, namesp
 			*r = *r.Context(ctx)
 		})
 		helper := resource.NewHelper(expectedClient, expected.Mapping)
-		_, err = helper.Create(expected.Namespace, true, expected.Object, &metav1.CreateOptions{})
-		if err == nil {
+
+		existing, err := helper.Get(expected.Namespace, expected.Name, false)
+		if apierrors.IsNotFound(err) {
+			if _, err := helper.Create(expected.Namespace, true, expected.Object, &metav1.CreateOptions{}); err != nil {
+				return fmt.Errorf("create error: %s", err)
+			}
 			return nil
-		}
-		if !apierrors.IsAlreadyExists(err) {
-			return fmt.Errorf("create error: %s", err)
+		} else if err != nil {
+			return err
 		}
 
-		patch, err := json.Marshal(expected.Object)
+		patch, err := generatePatch(existing, expected.Object)
 		if err != nil {
 			return fmt.Errorf("failed to marshal JSON patch: %s", err)
 		}
 
-		_, err = helper.Patch(expected.Namespace, expected.Name, apitypes.MergePatchType, patch, &metav1.UpdateOptions{})
+		if patch == nil {
+			return nil
+		}
+
+		_, err = helper.Patch(expected.Namespace, expected.Name, apitypes.JSONPatchType, patch, &metav1.PatchOptions{})
 		if err != nil {
 			return fmt.Errorf("patch error: %s", err)
 		}
 		return nil
 	})
+}
+
+func generatePatch(existing, expected runtime.Object) ([]byte, error) {
+	existingJSON, err := json.Marshal(existing)
+	if err != nil {
+		return nil, err
+	}
+	expectedJSON, err := json.Marshal(expected)
+	if err != nil {
+		return nil, err
+	}
+
+	ops, err := jsonpatch.CreatePatch(existingJSON, expectedJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	// We ignore the "remove" operations from the full patch because they are
+	// fields added by Kubernetes or by the user after the existing release
+	// resource has been applied. The goal for this patch is to make sure that
+	// the fields managed by the Helm chart are applied.
+	patchOps := make([]jsonpatch.JsonPatchOperation, 0)
+	for _, op := range ops {
+		if op.Operation != "remove" {
+			patchOps = append(patchOps, op)
+		}
+	}
+
+	// If there are no patch operations, return nil. Callers are expected
+	// to check for a nil response and skip the patch operation to avoid
+	// unnecessary chatter with the API server.
+	if len(patchOps) == 0 {
+		return nil, nil
+	}
+
+	return json.Marshal(patchOps)
 }
 
 // UninstallRelease performs a Helm release uninstall.

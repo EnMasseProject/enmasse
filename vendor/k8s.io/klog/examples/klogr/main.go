@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
-	"k8s.io/klog/v2"
-	"k8s.io/klog/v2/klogr"
+	"k8s.io/klog"
+	"k8s.io/klog/klogr"
 )
 
 type myError struct {
@@ -16,7 +16,6 @@ func (e myError) Error() string {
 }
 
 func main() {
-	klog.InitFlags(nil)
 	flag.Set("v", "3")
 	flag.Parse()
 	log := klogr.New().WithName("MyName").WithValues("user", "you")

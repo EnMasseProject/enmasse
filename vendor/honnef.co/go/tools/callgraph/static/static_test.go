@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//lint:file-ignore SA1019 go/callgraph's test suite is built around the deprecated go/loader. We'll leave fixing that to upstream.
-
 package static_test
 
 import (
@@ -13,10 +11,10 @@ import (
 	"sort"
 	"testing"
 
-	"golang.org/x/tools/go/loader"
 	"honnef.co/go/tools/callgraph"
 	"honnef.co/go/tools/callgraph/static"
-	"honnef.co/go/tools/ir/irutil"
+	"golang.org/x/tools/go/loader"
+	"honnef.co/go/tools/ssa/ssautil"
 )
 
 const input = `package P
@@ -29,7 +27,7 @@ type I interface{f()}
 func f() {
 	p := func() {}
 	g()
-	p() // IR constant propagation => static
+	p() // SSA constant propagation => static
 
 	if unknown {
 		p = h
@@ -64,7 +62,7 @@ func TestStatic(t *testing.T) {
 
 	P := iprog.Created[0].Pkg
 
-	prog := irutil.CreateProgram(iprog, 0)
+	prog := ssautil.CreateProgram(iprog, 0)
 	prog.Build()
 
 	cg := static.CallGraph(prog)

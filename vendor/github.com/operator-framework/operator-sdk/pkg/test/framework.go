@@ -17,10 +17,12 @@ package test
 import (
 	goctx "context"
 	"fmt"
-	"net"
 	"os"
 	"sync"
 	"time"
+
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	k8sInternal "github.com/operator-framework/operator-sdk/internal/util/k8sutil"
 
@@ -28,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/discovery/cached"
+	cached "k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/kubernetes"
 	cgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -66,30 +68,10 @@ func setup(kubeconfigPath, namespacedManPath *string, localOperator bool) error 
 	}
 	var err error
 	var kubeconfig *rest.Config
-	if *kubeconfigPath == "incluster" {
-		// Work around https://github.com/kubernetes/kubernetes/issues/40973
-		if len(os.Getenv("KUBERNETES_SERVICE_HOST")) == 0 {
-			addrs, err := net.LookupHost("kubernetes.default.svc")
-			if err != nil {
-				return fmt.Errorf("failed to get service host: %v", err)
-			}
-			os.Setenv("KUBERNETES_SERVICE_HOST", addrs[0])
-		}
-		if len(os.Getenv("KUBERNETES_SERVICE_PORT")) == 0 {
-			os.Setenv("KUBERNETES_SERVICE_PORT", "443")
-		}
-		kubeconfig, err = rest.InClusterConfig()
-		*singleNamespace = true
-		namespace = os.Getenv(TestNamespaceEnv)
-		if len(namespace) == 0 {
-			return fmt.Errorf("test namespace env not set")
-		}
-	} else {
-		var kcNamespace string
-		kubeconfig, kcNamespace, err = k8sInternal.GetKubeconfigAndNamespace(*kubeconfigPath)
-		if *singleNamespace && namespace == "" {
-			namespace = kcNamespace
-		}
+	var kcNamespace string
+	kubeconfig, kcNamespace, err = k8sInternal.GetKubeconfigAndNamespace(*kubeconfigPath)
+	if *singleNamespace && namespace == "" {
+		namespace = kcNamespace
 	}
 	if err != nil {
 		return fmt.Errorf("failed to build the kubeconfig: %v", err)
@@ -99,8 +81,12 @@ func setup(kubeconfigPath, namespacedManPath *string, localOperator bool) error 
 		return fmt.Errorf("failed to build the kubeclient: %v", err)
 	}
 	scheme := runtime.NewScheme()
-	cgoscheme.AddToScheme(scheme)
-	extscheme.AddToScheme(scheme)
+	if err := cgoscheme.AddToScheme(scheme); err != nil {
+		return fmt.Errorf("failed to add cgo scheme to runtime scheme: (%v)", err)
+	}
+	if err := extscheme.AddToScheme(scheme); err != nil {
+		return fmt.Errorf("failed to add api extensions scheme to runtime scheme: (%v)", err)
+	}
 	cachedDiscoveryClient := cached.NewMemCacheClient(kubeclient.Discovery())
 	restMapper = restmapper.NewDeferredDiscoveryRESTMapper(cachedDiscoveryClient)
 	restMapper.Reset()
@@ -128,12 +114,7 @@ type addToSchemeFunc func(*runtime.Scheme) error
 // the addToScheme function (located in the register.go file of their operator
 // project) and the List struct for their custom resource. For example, for a
 // memcached operator, the list stuct may look like:
-// &MemcachedList{
-//	TypeMeta: metav1.TypeMeta{
-//		Kind: "Memcached",
-//		APIVersion: "cache.example.com/v1alpha1",
-//		},
-//	}
+// &MemcachedList{}
 // The List object is needed because the CRD has not always been fully registered
 // by the time this function is called. If the CRD takes more than 5 seconds to
 // become ready, this function throws an error
@@ -151,9 +132,9 @@ func AddToFrameworkScheme(addToScheme addToSchemeFunc, obj runtime.Object) error
 	}
 	err = wait.PollImmediate(time.Second, time.Second*10, func() (done bool, err error) {
 		if *singleNamespace {
-			err = dynClient.List(goctx.TODO(), &dynclient.ListOptions{Namespace: Global.Namespace}, obj)
+			err = dynClient.List(goctx.TODO(), obj, dynclient.InNamespace(Global.Namespace))
 		} else {
-			err = dynClient.List(goctx.TODO(), &dynclient.ListOptions{Namespace: "default"}, obj)
+			err = dynClient.List(goctx.TODO(), obj, dynclient.InNamespace("default"))
 		}
 		if err != nil {
 			restMapper.Reset()

@@ -371,6 +371,7 @@ func testDiscriminatorHTTPHeader(t testing.TB) {
 	var scenarios = []struct {
 		input  map[string]string
 		output Format
+		err    error
 	}{
 		{
 			input:  map[string]string{"Content-Type": `application/vnd.google.protobuf; proto="io.prometheus.client.MetricFamily"; encoding="delimited"`},

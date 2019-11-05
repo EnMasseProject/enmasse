@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/prometheus/procfs/internal/fs"
-	"github.com/prometheus/procfs/internal/util"
 )
 
 // Proc provides information about a running process.
@@ -122,7 +121,13 @@ func (fs FS) AllProcs() (Procs, error) {
 
 // CmdLine returns the command line of a process.
 func (p Proc) CmdLine() ([]string, error) {
-	data, err := util.ReadFileNoStat(p.path("cmdline"))
+	f, err := os.Open(p.path("cmdline"))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	data, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +141,13 @@ func (p Proc) CmdLine() ([]string, error) {
 
 // Comm returns the command name of a process.
 func (p Proc) Comm() (string, error) {
-	data, err := util.ReadFileNoStat(p.path("comm"))
+	f, err := os.Open(p.path("comm"))
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	data, err := ioutil.ReadAll(f)
 	if err != nil {
 		return "", err
 	}

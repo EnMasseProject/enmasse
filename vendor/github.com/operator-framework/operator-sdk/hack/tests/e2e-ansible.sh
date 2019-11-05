@@ -1,105 +1,193 @@
 #!/usr/bin/env bash
 
+set -eux
+
 source hack/lib/test_lib.sh
+source hack/lib/image_lib.sh
+
+# ansible proxy test require a running cluster; run during e2e instead
+go test -count=1 ./pkg/ansible/proxy/...
 
 DEST_IMAGE="quay.io/example/memcached-operator:v0.0.2"
+ROOTDIR="$(pwd)"
+TMPDIR="$(mktemp -d)"
+trap_add 'rm -rf $TMPDIR' EXIT
 
-set -ex
+deploy_operator() {
+    kubectl create -f "$OPERATORDIR/deploy/service_account.yaml"
+    kubectl create -f "$OPERATORDIR/deploy/role.yaml"
+    kubectl create -f "$OPERATORDIR/deploy/role_binding.yaml"
+    kubectl create -f "$OPERATORDIR/deploy/crds/ansible.example.com_memcacheds_crd.yaml"
+    kubectl create -f "$OPERATORDIR/deploy/crds/ansible.example.com_foos_crd.yaml"
+    kubectl create -f "$OPERATORDIR/deploy/operator.yaml"
+}
 
-# switch to the "default" namespace if on openshift, to match the minikube test
-if which oc 2>/dev/null; then oc project default; fi
+remove_operator() {
+    kubectl delete --ignore-not-found=true -f "$OPERATORDIR/deploy/service_account.yaml"
+    kubectl delete --ignore-not-found=true -f "$OPERATORDIR/deploy/role.yaml"
+    kubectl delete --ignore-not-found=true -f "$OPERATORDIR/deploy/role_binding.yaml"
+    kubectl delete --ignore-not-found=true -f "$OPERATORDIR/deploy/crds/ansible.example.com_memcacheds_crd.yaml"
+    kubectl delete --ignore-not-found=true -f "$OPERATORDIR/deploy/crds/ansible.example.com_foos_crd.yaml"
+    kubectl delete --ignore-not-found=true -f "$OPERATORDIR/deploy/operator.yaml"
+}
 
-# build operator binary and base image
-go build -o test/ansible-operator/ansible-operator test/ansible-operator/cmd/ansible-operator/main.go
-pushd test/ansible-operator
-docker build -t quay.io/water-hole/ansible-operator .
-popd
+test_operator() {
+    # kind has an issue with certain image registries (ex. redhat's), so use a
+    # different test pod image.
+    local metrics_test_image="fedora:latest"
 
-# Make a test directory for Ansible tests so we avoid using default GOPATH.
-# Save test directory so we can delete it on exit.
-ANSIBLE_TEST_DIR="$(mktemp -d)"
-trap_add 'rm -rf $ANSIBLE_TEST_DIR' EXIT
-cp -a test/ansible-* "$ANSIBLE_TEST_DIR"
-pushd "$ANSIBLE_TEST_DIR"
+    # wait for operator pod to run
+    if ! timeout 1m kubectl rollout status deployment/memcached-operator;
+    then
+        echo FAIL: operator failed to run
+        kubectl logs deployment/memcached-operator -c operator
+        kubectl logs deployment/memcached-operator -c ansible
+        exit 1
+    fi
 
-# Ansible tests should not run in a Golang environment.
-unset GOPATH GOROOT
+    # verify that metrics service was created
+    if ! timeout 20s bash -c -- "until kubectl get service/memcached-operator-metrics > /dev/null 2>&1; do sleep 1; done";
+    then
+        echo "Failed to get metrics service"
+        kubectl logs deployment/memcached-operator
+        exit 1
+    fi
+
+    # verify that the metrics endpoint exists
+    if ! timeout 1m bash -c -- "until kubectl run --attach --rm --restart=Never test-metrics --image=$metrics_test_image -- curl -sfo /dev/null http://memcached-operator-metrics:8383/metrics; do sleep 1; done";
+    then
+        echo "Failed to verify that metrics endpoint exists"
+        kubectl logs deployment/memcached-operator
+        exit 1
+    fi
+
+    # verify that the operator metrics endpoint exists
+    if ! timeout 1m bash -c -- "until kubectl run --attach --rm --restart=Never test-metrics --image=$metrics_test_image -- curl -sfo /dev/null http://memcached-operator-metrics:8686/metrics; do sleep 1; done";
+    then
+        echo "Failed to verify that metrics endpoint exists"
+        kubectl logs deployment/memcached-operator
+        exit 1
+    fi
+
+    # create CR
+    kubectl create -f deploy/crds/ansible.example.com_v1alpha1_memcached_cr.yaml
+    if ! timeout 20s bash -c -- 'until kubectl get deployment -l app=memcached | grep memcached; do sleep 1; done';
+    then
+        echo FAIL: operator failed to create memcached Deployment
+        kubectl logs deployment/memcached-operator -c operator
+        kubectl logs deployment/memcached-operator -c ansible
+        exit 1
+    fi
+
+    # verify that metrics reflect cr creation
+    if ! bash -c -- "kubectl run --attach --rm --restart=Never test-metrics --image=$metrics_test_image -- curl http://memcached-operator-metrics:8686/metrics | grep example-memcached";
+    then
+        echo "Failed to verify custom resource metrics"
+        kubectl logs deployment/memcached-operator
+        exit 1
+    fi
+    memcached_deployment=$(kubectl get deployment -l app=memcached -o jsonpath="{..metadata.name}")
+    if ! timeout 1m kubectl rollout status deployment/${memcached_deployment};
+    then
+        echo FAIL: memcached Deployment failed rollout
+        kubectl logs deployment/${memcached_deployment}
+        exit 1
+    fi
+
+
+    # make a configmap that the finalizer should remove
+    kubectl create configmap deleteme
+    trap_add 'kubectl delete --ignore-not-found configmap deleteme' EXIT
+
+    kubectl delete -f ${OPERATORDIR}/deploy/crds/ansible.example.com_v1alpha1_memcached_cr.yaml --wait=true
+    # if the finalizer did not delete the configmap...
+    if kubectl get configmap deleteme 2> /dev/null;
+    then
+        echo FAIL: the finalizer did not delete the configmap
+        kubectl logs deployment/memcached-operator -c operator
+        kubectl logs deployment/memcached-operator -c ansible
+        exit 1
+    fi
+
+    # The deployment should get garbage collected, so we expect to fail getting the deployment.
+    if ! timeout 20s bash -c -- "while kubectl get deployment ${memcached_deployment} 2> /dev/null; do sleep 1; done";
+    then
+        echo FAIL: memcached Deployment did not get garbage collected
+        kubectl logs deployment/memcached-operator -c operator
+        kubectl logs deployment/memcached-operator -c ansible
+        exit 1
+    fi
+
+    # Ensure that no errors appear in the log
+    if kubectl logs deployment/memcached-operator -c operator | grep -i error;
+    then
+        echo FAIL: the operator log includes errors
+        kubectl logs deployment/memcached-operator -c operator
+        kubectl logs deployment/memcached-operator -c ansible
+        exit 1
+    fi
+}
 
 # create and build the operator
-operator-sdk new memcached-operator --api-version=ansible.example.com/v1alpha1 --kind=Memcached --type=ansible
-cp ansible-memcached/tasks.yml memcached-operator/roles/Memcached/tasks/main.yml
-cp ansible-memcached/defaults.yml memcached-operator/roles/Memcached/defaults/main.yml
-cp -a ansible-memcached/memfin memcached-operator/roles/
-cat ansible-memcached/watches-finalizer.yaml >> memcached-operator/watches.yaml
+pushd "$TMPDIR"
+operator-sdk new memcached-operator \
+  --api-version=ansible.example.com/v1alpha1 \
+  --kind=Memcached \
+  --type=ansible
+cp "$ROOTDIR/test/ansible-memcached/tasks.yml" memcached-operator/roles/memcached/tasks/main.yml
+cp "$ROOTDIR/test/ansible-memcached/defaults.yml" memcached-operator/roles/memcached/defaults/main.yml
+cp -a "$ROOTDIR/test/ansible-memcached/memfin" memcached-operator/roles/
+cat "$ROOTDIR/test/ansible-memcached/watches-finalizer.yaml" >> memcached-operator/watches.yaml
+# Append Foo kind to watches to test watching multiple Kinds
+cat "$ROOTDIR/test/ansible-memcached/watches-foo-kind.yaml" >> memcached-operator/watches.yaml
 
 pushd memcached-operator
+# Add a second Kind to test watching multiple GVKs
+operator-sdk add crd --kind=Foo --api-version=ansible.example.com/v1alpha1
+sed -i 's|\(FROM quay.io/operator-framework/ansible-operator\)\(:.*\)\?|\1:dev|g' build/Dockerfile
 operator-sdk build "$DEST_IMAGE"
-sed -i "s|REPLACE_IMAGE|$DEST_IMAGE|g" deploy/operator.yaml
-sed -i 's|Always|Never|g' deploy/operator.yaml
+# If using a kind cluster, load the image into all nodes.
+load_image_if_kind "$DEST_IMAGE"
+sed -i "s|{{ REPLACE_IMAGE }}|$DEST_IMAGE|g" deploy/operator.yaml
+sed -i 's|{{ pull_policy.default..Always.. }}|Never|g' deploy/operator.yaml
+# kind has an issue with certain image registries (ex. redhat's), so use a
+# different test pod image.
+METRICS_TEST_IMAGE="fedora:latest"
+docker pull "$METRICS_TEST_IMAGE"
+# If using a kind cluster, load the metrics test image into all nodes.
+load_image_if_kind "$METRICS_TEST_IMAGE"
 
-DIR2="$(pwd)"
-# deploy the operator
-kubectl create -f deploy/service_account.yaml
-trap_add 'kubectl delete -f ${DIR2}/deploy/service_account.yaml' EXIT
-kubectl create -f deploy/role.yaml
-trap_add 'kubectl delete -f ${DIR2}/deploy/role.yaml' EXIT
-kubectl create -f deploy/role_binding.yaml
-trap_add 'kubectl delete -f ${DIR2}/deploy/role_binding.yaml' EXIT
-kubectl create -f deploy/crds/ansible_v1alpha1_memcached_crd.yaml
-trap_add 'kubectl delete -f ${DIR2}/deploy/crds/ansible_v1alpha1_memcached_crd.yaml' EXIT
-kubectl create -f deploy/operator.yaml
-trap_add 'kubectl delete -f ${DIR2}/deploy/operator.yaml' EXIT
+OPERATORDIR="$(pwd)"
 
-# wait for operator pod to run
-if ! timeout 1m kubectl rollout status deployment/memcached-operator;
+deploy_operator
+trap_add 'remove_operator' EXIT
+test_operator
+remove_operator
+
+echo "###"
+echo "### Base image testing passed"
+echo "### Now testing migrate to hybrid operator"
+echo "###"
+
+export GO111MODULE=on
+operator-sdk migrate --repo=github.com/example-inc/memcached-operator
+
+if [[ ! -e build/Dockerfile.sdkold ]];
 then
-    kubectl logs deployment/memcached-operator
+    echo FAIL the old Dockerfile should have been renamed to Dockerfile.sdkold
     exit 1
 fi
 
-# create CR
-kubectl create -f deploy/crds/ansible_v1alpha1_memcached_cr.yaml
-trap_add 'kubectl delete --ignore-not-found -f ${DIR2}/deploy/crds/ansible_v1alpha1_memcached_cr.yaml' EXIT
-if ! timeout 20s bash -c -- 'until kubectl get deployment -l app=memcached | grep memcached; do sleep 1; done';
-then
-    kubectl logs deployment/memcached-operator
-    exit 1
-fi
-memcached_deployment=$(kubectl get deployment -l app=memcached -o jsonpath="{..metadata.name}")
-if ! timeout 1m kubectl rollout status deployment/${memcached_deployment};
-then
-    kubectl logs deployment/${memcached_deployment}
-    exit 1
-fi
+add_go_mod_replace "github.com/operator-framework/operator-sdk" "$ROOTDIR"
+# Build the project to resolve dependency versions in the modfile.
+go build ./...
 
-# make a configmap that the finalizer should remove
-kubectl create configmap deleteme
-trap_add 'kubectl delete --ignore-not-found configmap deleteme' EXIT
+operator-sdk build "$DEST_IMAGE"
+# If using a kind cluster, load the image into all nodes.
+load_image_if_kind "$DEST_IMAGE"
 
-kubectl delete -f ${DIR2}/deploy/crds/ansible_v1alpha1_memcached_cr.yaml --wait=true
-# if the finalizer did not delete the configmap...
-if kubectl get configmap deleteme;
-then
-    echo FAIL: the finalizer did not delete the configmap
-    kubectl logs deployment/memcached-operator
-    exit 1
-fi
-
-# The deployment should get garbage collected, so we expect to fail getting the deployment.
-if ! timeout 20s bash -c -- "while kubectl get deployment ${memcached_deployment}; do sleep 1; done";
-then
-    kubectl logs deployment/memcached-operator
-    exit 1
-fi
-
-
-## TODO enable when this is fixed: https://github.com/operator-framework/operator-sdk/issues/818
-# if kubectl logs deployment/memcached-operator | grep -i error;
-# then
-    # echo FAIL: the operator log includes errors
-    # kubectl logs deployment/memcached-operator
-    # exit 1
-# fi
+deploy_operator
+test_operator
 
 popd
 popd
