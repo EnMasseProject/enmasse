@@ -8,7 +8,7 @@ interface IDeleteProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
-export const Delete: React.FunctionComponent<IDeleteProps> = ({
+export const DeletePrompt: React.FunctionComponent<IDeleteProps> = ({
   header,
   detail,
   name,
