@@ -2,7 +2,6 @@ import * as React from "react";
 import { MemoryRouter } from "react-router";
 import { storiesOf } from "@storybook/react";
 import { LinkList, ILink } from "../src/Components/LinkList";
-import { action } from "@storybook/addon-actions";
 
 const stories = storiesOf("Console", module);
 

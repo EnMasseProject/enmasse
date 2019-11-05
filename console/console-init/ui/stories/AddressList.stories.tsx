@@ -1,10 +1,14 @@
 import * as React from "react";
 import { MemoryRouter } from "react-router";
 import { storiesOf } from "@storybook/react";
-import { AddressList, IAddress } from "../src/Components/AddressList";
+import { AddressList, IAddress } from "../src/Components/AddressSpace/AddressList";
 import { action } from "@storybook/addon-actions";
+import { select, withKnobs } from "@storybook/addon-knobs";
+import {AddressListFilter} from "../src/Components/AddressSpace/AddressListFilter";
+import { EmptyAddress } from "src/Components/Common/EmptyAddress";
 
 const stories = storiesOf("Console", module);
+stories.addDecorator(withKnobs);
 
 const rows: IAddress[] = [
   {
@@ -54,3 +58,38 @@ stories.add("Address List", () => (
     />
   </MemoryRouter>
 ));
+
+stories.add("Address List Filter Component", () => {
+  const [typeValue, setTypeValue] = React.useState("Queue");
+  const [statusValue, setStatusValue] = React.useState("Active");
+  const options = {
+    Name: "Name",
+    Type: "Type",
+    Status: "Status"
+  };
+
+  return (
+    <MemoryRouter>
+      <AddressListFilter
+        onSearch={action("onSearch")}
+        onFilterSelect={action("onFilterSelect")}
+        filterValue={
+          select("Value Of Dropdown", options, "Name") as
+            | "Name"
+            | "Type"
+            | "Status"
+        }
+        onTypeSelect={action("onTypeSelect")}
+        typeValue={typeValue}
+        onStatusSelect={action("onStatusSelect")}
+        statusValue={statusValue}
+      />
+    </MemoryRouter>
+  );
+});
+
+stories.add("Empty Address",()=>(
+  <MemoryRouter>
+    <EmptyAddress/>
+  </MemoryRouter>
+))
