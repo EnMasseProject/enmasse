@@ -5,8 +5,9 @@
 
 package io.enmasse.iot.tools.cleanup;
 
-import io.vertx.core.Future;
 import java.nio.file.Path;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,29 +15,20 @@ public class Application {
 
     private static final Logger log = LoggerFactory.getLogger(Application.class);
 
-    public static void main(String args[]) {
+    public static void main(final String args[]) throws Exception {
 
-        Path configFile = null;
+        final Optional<Path> configFile;
 
-        if (args.length == 1){
-            configFile = Path.of(args[0]);
-            log.debug("config file specified : "+configFile);
+        if (args.length > 1) {
+            configFile = Optional.of(Path.of(args[0]));
+            log.debug("config file specified: {}", configFile);
+        } else {
+            configFile = Optional.empty();
         }
 
-        InfinispanTenantCleaner app = new InfinispanTenantCleaner(configFile);
+        try (InfinispanTenantCleaner app = new InfinispanTenantCleaner(configFile)) {
+            app.run();
+        }
 
-        Future<Void> startPromise = app.configure().compose(config -> {
-                    Future<Void> runFuture = Future.future();
-                    return app.run(runFuture);
-                });
-
-         startPromise.setHandler(res -> {
-             if(res.succeeded()){
-                     System.exit(0);
-            } else {
-                log.error("Failure ",res.cause());
-                System.exit(1);
-            }
-        });
     }
 }
