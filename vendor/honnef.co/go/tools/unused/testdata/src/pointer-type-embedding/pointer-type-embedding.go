@@ -6,7 +6,7 @@ func init() {
 }
 
 type T0 struct {
-	m int // want `m`
+	m int // MATCH /m is unused/
 	n int
 }
 

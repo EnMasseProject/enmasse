@@ -76,7 +76,7 @@ func TestMatcherValidate(t *testing.T) {
 			t.Errorf("%d. Expected error %q but got none", i, c.err)
 			continue
 		}
-		if c.err == "" {
+		if c.err == "" && err != nil {
 			t.Errorf("%d. Expected no error but got %q", i, err)
 			continue
 		}
@@ -227,7 +227,7 @@ func TestSilenceValidate(t *testing.T) {
 			t.Errorf("%d. Expected error %q but got none", i, c.err)
 			continue
 		}
-		if c.err == "" {
+		if c.err == "" && err != nil {
 			t.Errorf("%d. Expected no error but got %q", i, err)
 			continue
 		}

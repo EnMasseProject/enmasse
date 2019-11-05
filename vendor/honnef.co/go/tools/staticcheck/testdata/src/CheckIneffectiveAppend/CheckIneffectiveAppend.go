@@ -4,8 +4,9 @@ import "fmt"
 
 func fn1() {
 	var s []int
-	s = append(s, 1) // want `this result of append is never used`
-	s = append(s, 1) // want `this result of append is never used`
+	s = append(s, 1) // MATCH /this result of append is never used/
+	// MATCH:9 /this value of s is never used/
+	s = append(s, 1) // MATCH /this result of append is never used/
 }
 
 func fn2() (named []int) {
@@ -15,7 +16,8 @@ func fn2() (named []int) {
 
 func fn3() {
 	s := make([]int, 0)
-	s = append(s, 1) // want `this result of append is never used`
+	// MATCH:20 /this value of s is never used/
+	s = append(s, 1) // MATCH /this result of append is never used/
 }
 
 func fn4() []int {
@@ -44,7 +46,8 @@ func fn9() {
 	var s []int
 	s = append(s, 1)
 	fmt.Println(s)
-	s = append(s, 1) // want `this result of append is never used`
+	// MATCH:50 /this value of s is never used/
+	s = append(s, 1) // MATCH /this result of append is never used/
 }
 
 func fn10() {
@@ -56,6 +59,6 @@ func fn10() {
 func fn11() {
 	var s []int
 	for x := 0; x < 10; x++ {
-		s = append(s, 1) // want `this result of append is never used`
+		s = append(s, 1) // MATCH /this result of append is never used/
 	}
 }

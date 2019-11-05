@@ -1,4 +1,17 @@
-# Leader for Life
+# Leader for Life Proposal for Operator SDK
+
+Implementation Owner:
+
+> Status: **implemented**
+>
+> See [leader election documentation](../user-guide.md#leader-election).
+
+- [Background](#background)
+- [Goals](#goals)
+- [Non-Goals](#non-goals)
+- [Solution](#solution)
+  - [Usage](#usage)
+- [Future](#future)
 
 ## Background
 
@@ -32,7 +45,7 @@ life" model, which does not allow for multiple concurrent leaders.
 ## Solution
 
 The "leader for life" approach uses Kubernetes features to detect when a leader
-has disappeared and then automatically remove its lock. 
+has disappeared and then automatically remove its lock.
 
 The approach and a PoC is detailed in [a separate
 repository](https://github.com/mhrivnak/leaderelection). This proposal is to move
@@ -45,7 +58,8 @@ func main() {
     // create a lock named "myapp-lock", retrying every 5 seconds until it succeeds
     err := leader.Become("myapp-lock", 5)
     if err != nil {
-        log.Fatal(err.Error())
+        log.Error(err, "")
+        os.Exit(1)
     }
     ...
     // do whatever else your app does

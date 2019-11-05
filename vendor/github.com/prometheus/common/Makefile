@@ -13,9 +13,14 @@
 
 include Makefile.common
 
+.PHONY: deps
+deps:
+	@echo ">> getting dependencies"
+	GO111MODULE=$(GO111MODULE) $(GO) get $(GOOPTS) -t ./...
+
 .PHONY: test
 test:: deps check_license unused common-test
 
-ifeq (,$(shell echo $(GO_VERSION_NUMBER) | grep -E 'go1\.(7|8|9|10)\.'))
-test:: lint
+ifeq (,$(shell echo $(GO_VERSION_NUMBER) | grep -E 'go1\.(7|8|9)\.'))
+test:: staticcheck
 endif

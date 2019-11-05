@@ -1,20 +1,30 @@
-## Ansible Operator Proposal
+# Ansible based-Operator Proposal for Operator SDK
 
-### Background
+> Status: **implemented**
+> 
+> This proposal has been implemented, please see the [Ansible User Guide for Operator SDK](../ansible/user-guide.md) for current documentation.
 
-Not everyone is a golang developer, and therefore gaining adoption for the operator-sdk is capped by the number of golang developers. Also, tooling for kubernetes in other languages is lacking support for things such as informers,  caches, and listers.  
+- [Background](#background)
+- [Goals](#goals)
+- [New Operator Type](#new-operator-type)
+- [Package Structure](#package-structure)
+- [Commands](#commands)
 
-Operators purpose is to codify the operations of an application on kubernetes. [Ansible](https://www.ansible.com/) is already an industry standard tool for automation and is a good fit for the kind of work that kubernetes operators need to do. Adding the ability for users of the SDK to choose which between ansible and golang to follow will increase the number of potential users, and will grant existing users even more behavior. 
+## Background
 
-### Goals
+Not everyone is a golang developer, and therefore gaining adoption for the operator-sdk is capped by the number of golang developers. Also, tooling for Kubernetes in other languages is lacking support for things such as informers, caches, and listers.
 
-The goal of the Ansible Operator will be to create a fully functional framework for Ansible developers to create operators. It will also expose a library for golang users to use ansible in their operator if they so choose. These two goals in conjunction will allow users to select the best technology for their project or skillset. 
+Operators purpose is to codify the operations of an application on Kubernetes. [Ansible](https://www.ansible.com/) is already an industry standard tool for automation and is a good fit for the kind of work that Kubernetes operators need to do. Adding the ability for users of the SDK to choose which between ansible and golang to follow will increase the number of potential users, and will grant existing users even more behavior.
 
-### New Operator Type
+## Goals
 
-This proposal creates a new type of operator called `ansible`.  The new type is used to tell the tooling to act on that type of operator. 
+The goal of the Ansible Operator will be to create a fully functional framework for Ansible developers to create operators. It will also expose a library for golang users to use ansible in their operator if they so choose. These two goals in conjunction will allow users to select the best technology for their project or skillset.
 
-### Package Structure
+## New Operator Type
+
+This proposal creates a new type of operator called `ansible`.  The new type is used to tell the tooling to act on that type of operator.
+
+## Package Structure
 Packages will be added to the operator-sdk. These packages are designed to be usable by the end user if they choose to and should have a well documented public API. The proposed packages are:
 * /operator-sdk/pkg/ansible/controller
   * Will contain the ansible operator controller.
@@ -27,10 +37,10 @@ Packages will be added to the operator-sdk. These packages are designed to be us
   * NewForWatchers - the method that returns a map of GVK to Runner types based on the watchers file.
   * NewPlaybookRunner - the method that returns a new Runner for a playbook.
   * NewRoleRunner - the method that returns a new Runner for a role.
-  * This contains the events API code and public methods. Implementation should probably be in the internal package. The events API is used for recieving events from ansible runner.
+  * This contains the events API code and public methods. Implementation should probably be in the internal package. The events API is used for receiving events from ansible runner.
 
 * /operator-sdk/pkg/ansible/proxy
-  * This is a reverse proxy for the kubernetes API that is used for owner reference injection.
+  * This is a reverse proxy for the Kubernetes API that is used for owner reference injection.
 * /operator-sdk/pkg/ansible/proxy/kubeconfig
   * Code needed to generate the kubeconfig for the proxy.
 * /operator-sdk/pkg/ansible/events
@@ -38,7 +48,7 @@ Packages will be added to the operator-sdk. These packages are designed to be us
   * Default has only the event logger.
 
 
-### Commands
+## Commands
 We are adding and updating existing commands to accommodate the ansible operator.  Changes to the `cmd` package as well as changes to the generator are needed.
 
 `operator-sdk new <project-name> --type ansible --kind <kind> --api-version <group/version>`  This will be a new generation command under the hood. We will:

@@ -1,11 +1,11 @@
 package: github.com/enmasseproject/enmasse
 import:
   - package: k8s.io/client-go
-    version: ^9
+    version: ^11
   - package: github.com/openshift/client-go
-    version: release-3.11
+    version: release-4.2
   - package: github.com/openshift/api
-    version: release-3.11
+    version: release-4.2
   - package: go.uber.org/multierr
     version: ^1
   - package: go.uber.org/atomic
@@ -16,21 +16,27 @@ import:
     version: ^2
 
   - package: k8s.io/code-generator
-    version: kubernetes-1.12.10
+    version: kubernetes-1.14.8
   - package: k8s.io/apimachinery
-    version: kubernetes-1.12.10
+    version: kubernetes-1.14.8
   - package: k8s.io/api
-    version: kubernetes-1.12.10
+    version: kubernetes-1.14.8
+  - package: k8s.io/kube-aggregator
+    version: kubernetes-1.14.8
   - package: k8s.io/gengo
-    version: ebc107f98eab922ef99d645781b87caca01f4f48
+    version: e500ee069b5c8469a9e278b53cb41bd65404bfd9
   - package: github.com/spf13/pflag
     version: ~1.0
   - package: golang.org/x/tools
     version: release-branch.go1.12
   - package: sigs.k8s.io/controller-runtime
-    version: 0.1.9
+    version: 0.2.2
   - package: github.com/operator-framework/operator-sdk
-    version: ~0.3
+    version: ~0.11
 
   - package: github.com/prometheus/client_golang
     version: ~1.1
+  - package: github.com/prometheus/procfs
+    version: 0.0.5
+  - package: github.com/golang/protobuf
+    version: ~1.3

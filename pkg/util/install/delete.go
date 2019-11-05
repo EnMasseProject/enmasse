@@ -120,7 +120,7 @@ func ProcessOwnedByObject(owner runtime.Object, obj interface{}, controller bool
 }
 
 // Delete object, ignore if it is already gone.
-func DeleteIgnoreNotFound(ctx context.Context, client client.Client, obj runtime.Object, opts ...client.DeleteOptionFunc) error {
+func DeleteIgnoreNotFound(ctx context.Context, client client.Client, obj runtime.Object, opts ...client.DeleteOption) error {
 
 	err := client.Delete(ctx, obj, opts...)
 
@@ -162,7 +162,7 @@ func DeleteItemOperation(ctx context.Context, client client.Client, obj interfac
 // The "obj" provided must by a Kubernetes List type, having an "Items" field
 func BulkProcess(ctx context.Context, client client.Client, list runtime.Object, opts client.ListOptions, evaluator BulkItemEvaluator) (int, error) {
 
-	if err := client.List(ctx, &opts, list); err != nil {
+	if err := client.List(ctx, list, &opts); err != nil {
 		log.Error(err, "Failed to list items to delete")
 		return -1, err
 	}

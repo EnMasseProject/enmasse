@@ -108,7 +108,7 @@ func (c *FakeAddressPlans) DeleteCollection(options *v1.DeleteOptions, listOptio
 // Patch applies the patch and returns the patched addressPlan.
 func (c *FakeAddressPlans) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta2.AddressPlan, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(addressplansResource, c.ns, name, data, subresources...), &v1beta2.AddressPlan{})
+		Invokes(testing.NewPatchSubresourceAction(addressplansResource, c.ns, name, pt, data, subresources...), &v1beta2.AddressPlan{})
 
 	if obj == nil {
 		return nil, err

@@ -21,7 +21,16 @@ NEWLINE="
 "
 head_commit=$(git rev-parse HEAD)
 while read commit_word commit; do
+    if [[ -z ${commit_word} ]]; then
+        # skip terminating blank lines
+        continue
+    fi
     read title
+    if [[ ${title} == "Merge branch '"*"' into release-"* ]]; then
+        # skip temporary merge commits for calculating release notes
+        continue
+    fi
+
     read # skip the blank line
     read prefix body
 
@@ -50,7 +59,7 @@ while read commit_word commit; do
         patch)
             bugfixes="${bugfixes}- ${pr_title} (#${pr_number})${NEWLINE}"
             ;;
-        docs|other)
+        docs|no_release_note|other)
             # skip non-code-changes
             ;;
         unknown)
@@ -64,8 +73,8 @@ done <<<$(git rev-list ${last_tag}..HEAD --merges --pretty=format:%B)
 
 # TODO: sort non merge commits with tags
 
-[[ -n "${breaking}" ]] && printf '\e[1;31mbreaking changes this version\e[0m' >&2
-[[ -n "${unknown}" ]] && printf '\e[1;35munknown changes in this release -- categorize manually\e[0m' >&2
+[[ -n "${breaking}" ]] && printf '\e[1;31mbreaking changes this version\e[0m\n' >&2
+[[ -n "${unknown}" ]] && printf '\e[1;35munknown changes in this release -- categorize manually\e[0m\n' >&2
 
 echo "" >&2
 echo "" >&2

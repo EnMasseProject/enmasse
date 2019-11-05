@@ -16,7 +16,6 @@ import (
 
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Convert projects to reconcile requests
@@ -41,10 +40,9 @@ func (r *ReconcileIoTProject) findIoTProjectsByPredicate(predicate func(project 
 
 	var result []iotv1alpha1.IoTProject
 
-	opts := &client.ListOptions{}
 	list := &iotv1alpha1.IoTProjectList{}
 
-	err := r.client.List(context.TODO(), opts, list)
+	err := r.client.List(context.TODO(), list)
 	if err != nil {
 		return nil, err
 	}

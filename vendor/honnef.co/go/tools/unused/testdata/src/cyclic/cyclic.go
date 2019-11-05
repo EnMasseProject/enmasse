@@ -1,9 +1,9 @@
 package pkg
 
-func a() { // want `a`
+func a() { // MATCH /a is unused/
 	b()
 }
 
-func b() { // want `b`
+func b() { // MATCH /b is unused/
 	a()
 }

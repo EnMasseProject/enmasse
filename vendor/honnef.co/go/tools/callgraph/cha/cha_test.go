@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//lint:file-ignore SA1019 go/callgraph's test suite is built around the deprecated go/loader. We'll leave fixing that to upstream.
-
 // No testdata on Android.
 
 // +build !android
@@ -22,10 +20,10 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/loader"
 	"honnef.co/go/tools/callgraph"
 	"honnef.co/go/tools/callgraph/cha"
-	"honnef.co/go/tools/ir/irutil"
+	"golang.org/x/tools/go/loader"
+	"honnef.co/go/tools/ssa/ssautil"
 )
 
 var inputs = []string{
@@ -78,7 +76,7 @@ func TestCHA(t *testing.T) {
 			continue
 		}
 
-		prog := irutil.CreateProgram(iprog, 0)
+		prog := ssautil.CreateProgram(iprog, 0)
 		mainPkg := prog.Package(iprog.Created[0].Pkg)
 		prog.Build()
 

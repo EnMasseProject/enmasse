@@ -7,6 +7,7 @@ package upgrader
 
 import (
 	"context"
+
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	appsv1 "k8s.io/api/apps/v1"
@@ -86,7 +87,7 @@ func (r *UpgradeAuthenticationService) Reconcile(request reconcile.Request) (rec
 
 	list := &adminv1beta1.AuthenticationServiceList{}
 	opts := &client.ListOptions{}
-	err := r.client.List(ctx, opts, list)
+	err := r.client.List(ctx, list, opts)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

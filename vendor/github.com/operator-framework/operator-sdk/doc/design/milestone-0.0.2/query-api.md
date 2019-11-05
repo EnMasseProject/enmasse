@@ -6,10 +6,10 @@ In order to build a functional operator, the ability to observe state is a must.
 
 ## Background
 
-Client-go provides APIs for querying objects in the standard kubernetes groups via `Get` and `List`.
+Client-go provides APIs for querying objects in the standard Kubernetes groups via `Get` and `List`.
 However, each client is specific to an object’s APIVersion and Kind which makes the API too verbose.
 For example, to get a specific Deployment object:
-- Create a kubernetes clientset that implements kubernetes.Interface.
+- Create a Kubernetes clientset that implements kubernetes.Interface.
 - Call `kubeclient.AppsV1().Deployments("default").Get("name", v1.GetOptions{})`
 
 To retrieve a different object like a Pod, the above API would change to:
@@ -28,7 +28,7 @@ To simplify the retrieval of Kubernetes objects, the SDK can use a dynamic resou
 ### Get()
 
 ```Go
-// Get gets the kubernetes object and then unmarshals the retrieved data into the "into" object.
+// Get gets the Kubernetes object and then unmarshals the retrieved data into the "into" object.
 // "into" is a Kubernetes runtime.Object that must have
 // "Kind" and "APIVersion" specified in its "TypeMeta" field
 // and "Name" and "Namespace" specified in its "ObjectMeta" field.
@@ -37,7 +37,7 @@ To simplify the retrieval of Kubernetes objects, the SDK can use a dynamic resou
 func Get(into sdkTypes.Object, opts ...GetOption) error
 ```
 
-Get() accepts GetOption as variadic functional parameters. In this way, we follow the open-close principle 
+Get() accepts GetOption as variadic functional parameters. In this way, we follow the open-close principle
 which allows us to extend the Get API with unforeseen parameters without modifying the API itself. See the reference section on how the options are implemented.
 
 Example Usage:
@@ -49,14 +49,14 @@ d := &apps_v1.Deployment{
         Kind:       "Deployment",
         APIVersion: "apps/v1",
     }
-    ObjectMeta: metav_1.ObjectMeta{
+    ObjectMeta: meta_v1.ObjectMeta{
         Name:      "example",
         Namespace: "default",
     }
 }
 // Get with default options
 err := sdk.Get(d)
-// Get with custom options 
+// Get with custom options
 o := &meta_v1.GetOptions{ResourceVersion: "0"}
 err := sdk.Get(d, sdk.WithGetOptions(o))
 ```
@@ -64,8 +64,8 @@ err := sdk.Get(d, sdk.WithGetOptions(o))
 ### List()
 
 ```Go
-// List gets a list of kubernetes object and then unmarshals the retrieved data into the "into" object.
-// "namespace" indicates which kubernetes namespace to look for the list of kubernetes objects.
+// List gets a list of Kubernetes object and then unmarshals the retrieved data into the "into" object.
+// "namespace" indicates which Kubernetes namespace to look for the list of Kubernetes objects.
 // "into" is a sdkType.Object that must have
 // "Kind" and "APIVersion" specified in its "TypeMeta" field
 // Those are used to construct the underlying resource client.
@@ -91,13 +91,13 @@ dl := &apps_v1.DeploymentList{
 err = sdk.List("default", dl)
 // List with custom options
 labelSelector := getLabelSelector("app", "dev")
-o := &metav1.ListOptions{LabelSelector: labelSelector}
+o := &meta_v1.ListOptions{LabelSelector: labelSelector}
 err = sdk.List("default", dl, op.WithListOptions(o))
 ```
 
 
 
-## Reference: 
+## Reference:
 
 ### GetOptions:
 

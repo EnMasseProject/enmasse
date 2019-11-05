@@ -4,25 +4,23 @@ import (
 	"go/ast"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"honnef.co/go/tools/code"
-	"honnef.co/go/tools/internal/passes/buildir"
-	"honnef.co/go/tools/ir"
+	"honnef.co/go/tools/lint"
 	. "honnef.co/go/tools/lint/lintdsl"
+	"honnef.co/go/tools/ssa"
 )
 
-func CheckRangeStringRunes(pass *analysis.Pass) (interface{}, error) {
-	for _, fn := range pass.ResultOf[buildir.Analyzer].(*buildir.IR).SrcFuncs {
-		cb := func(node ast.Node) bool {
+func CheckRangeStringRunes(j *lint.Job) {
+	for _, ssafn := range j.Pkg.InitialFunctions {
+		fn := func(node ast.Node) bool {
 			rng, ok := node.(*ast.RangeStmt)
-			if !ok || !code.IsBlank(rng.Key) {
+			if !ok || !IsBlank(rng.Key) {
 				return true
 			}
 
-			v, _ := fn.ValueForExpr(rng.X)
+			v, _ := ssafn.ValueForExpr(rng.X)
 
 			// Check that we're converting from string to []rune
-			val, _ := v.(*ir.Convert)
+			val, _ := v.(*ssa.Convert)
 			if val == nil {
 				return true
 			}
@@ -48,24 +46,23 @@ func CheckRangeStringRunes(pass *analysis.Pass) (interface{}, error) {
 
 			// Expect two refs: one for obtaining the length of the slice,
 			// one for accessing the elements
-			if len(code.FilterDebug(*refs)) != 2 {
+			if len(FilterDebug(*refs)) != 2 {
 				// TODO(dh): right now, we check that only one place
 				// refers to our slice. This will miss cases such as
 				// ranging over the slice twice. Ideally, we'd ensure that
 				// the slice is only used for ranging over (without
 				// accessing the key), but that is harder to do because in
-				// IR form, ranging over a slice looks like an ordinary
+				// SSA form, ranging over a slice looks like an ordinary
 				// loop with index increments and slice accesses. We'd
 				// have to look at the associated AST node to check that
 				// it's a range statement.
 				return true
 			}
 
-			pass.Reportf(rng.Pos(), "should range over string, not []rune(string)")
+			j.Errorf(rng, "should range over string, not []rune(string)")
 
 			return true
 		}
-		Inspect(fn.Source(), cb)
+		Inspect(ssafn.Syntax(), fn)
 	}
-	return nil, nil
 }

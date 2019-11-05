@@ -73,7 +73,6 @@ flycheck_*.el
 *.out
 
 ### Go Patch ###
-/vendor/
 /Godeps/
 
 ### Vim ###
@@ -100,9 +99,11 @@ tags
 # End of https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
 
 # Build artifacts
-build/*
+build
 test/ansible-operator/ansible-operator
 test/helm-operator/helm-operator
+images/scorecard-proxy/scorecard-proxy
 
 # Test artifacts
 pkg/ansible/runner/testdata/valid.yaml
+bin/*

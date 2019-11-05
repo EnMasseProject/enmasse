@@ -10,7 +10,7 @@ import (
 	"sort"
 
 	"github.com/go-logr/logr"
-	"k8s.io/klog/v2"
+	"k8s.io/klog"
 )
 
 // New returns a logr.Logger which is implemented by klog.
@@ -140,16 +140,17 @@ func pretty(value interface{}) string {
 
 func (l klogger) Info(msg string, kvList ...interface{}) {
 	if l.Enabled() {
+		lvlStr := flatten("level", l.level)
 		msgStr := flatten("msg", msg)
 		trimmed := trimDuplicates(l.values, kvList)
 		fixedStr := flatten(trimmed[0]...)
 		userStr := flatten(trimmed[1]...)
-		klog.InfoDepth(framesToCaller(), l.prefix, " ", msgStr, " ", fixedStr, " ", userStr)
+		klog.InfoDepth(framesToCaller(), l.prefix, " ", lvlStr, " ", msgStr, " ", fixedStr, " ", userStr)
 	}
 }
 
 func (l klogger) Enabled() bool {
-	return bool(klog.V(klog.Level(l.level)).Enabled())
+	return bool(klog.V(klog.Level(l.level)))
 }
 
 func (l klogger) Error(err error, msg string, kvList ...interface{}) {

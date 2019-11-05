@@ -27,8 +27,8 @@ type I2 interface {
 
 type t3 struct{}
 type t4 struct {
-	x int // want `x`
-	y int // want `y`
+	x int // MATCH /x is unused/
+	y int // MATCH /y is unused/
 	t3
 }
 
@@ -70,8 +70,3 @@ func (*t10) Foo() {}
 type t11 struct{ t10 }
 
 var _ = t11{}
-
-type i5 interface{}
-type I6 interface {
-	i5
-}

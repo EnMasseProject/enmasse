@@ -1,10 +1,10 @@
 package pkg
 
-type t struct{} // want `t`
+type t struct{} // MATCH /t is unused/
 
 func (t) fragment() {}
 
-func fn() bool { // want `fn`
+func fn() bool { // MATCH /fn is unused/
 	var v interface{} = t{}
 	switch obj := v.(type) {
 	case interface {

@@ -79,12 +79,7 @@ To do this, pass the CRD's `AddToScheme` function and its List type object to th
 [AddToFrameworkScheme][scheme-link] function. For our example memcached-operator, it looks like this:
 
 ```go
-memcachedList := &cachev1alpha1.MemcachedList{
-    TypeMeta: metav1.TypeMeta{
-        Kind:       "Memcached",
-        APIVersion: "cache.example.com/v1alpha1",
-    },
-}
+memcachedList := &cachev1alpha1.MemcachedList{}
 err := framework.AddToFrameworkScheme(apis.AddToScheme, memcachedList)
 if err != nil {
     t.Fatalf("failed to add custom resource scheme to framework: %v", err)
@@ -105,7 +100,7 @@ ctx := framework.NewTestCtx(t)
 defer ctx.Cleanup()
 ```
 
-Now that there is a `TestCtx`, the test's kubernetes resources (specifically the test namespace,
+Now that there is a `TestCtx`, the test's Kubernetes resources (specifically the test namespace,
 Service Account, RBAC, and Operator deployment in `local` testing; just the Operator deployment
 in `cluster` testing) can be initialized:
 
@@ -168,10 +163,6 @@ This is how we can create a custom memcached custom resource with a size of 3:
 ```go
 // create memcached custom resource
 exampleMemcached := &cachev1alpha1.Memcached{
-    TypeMeta: metav1.TypeMeta{
-        Kind:       "Memcached",
-        APIVersion: "cache.example.com/v1alpha1",
-    },
     ObjectMeta: metav1.ObjectMeta{
         Name:      "example-memcached",
         Namespace: namespace,
@@ -228,19 +219,16 @@ functions will automatically be run since they were deferred when the TestCtx wa
 To make running the tests simpler, the `operator-sdk` CLI tool has a `test` subcommand that can configure
 default test settings, such as locations of your global resource manifest file (by default
 `deploy/crd.yaml`) and your namespaced resource manifest file (by default `deploy/service_account.yaml` concatenated with
-`deploy/rbac.yaml` and `deploy/operator.yaml`), and allows the user to configure runtime options. There are 2 ways to use the
-subcommand: local and cluster.
+`deploy/rbac.yaml` and `deploy/operator.yaml`), and allows the user to configure runtime options.
 
-### Local
-
-To run the tests locally, run the `operator-sdk test local` command in your project root and pass the location of the tests
+To run the tests, run the `operator-sdk test local` command in your project root and pass the location of the tests
 as an argument. You can use `--help` to view the other configuration options and use `--go-test-flags` to pass in arguments to `go test`. Here is an example command:
 
 ```shell
 $ operator-sdk test local ./test/e2e --go-test-flags "-v -parallel=2"
 ```
 
-#### Image Flag
+### Image Flag
 
 If you wish to specify a different operator image than specified in your `operator.yaml` file (or a user-specified
 namespaced manifest file), you can use the `--image` flag:
@@ -249,7 +237,7 @@ namespaced manifest file), you can use the `--image` flag:
 $ operator-sdk test local ./test/e2e --image quay.io/example/my-operator:v0.0.2
 ```
 
-#### Namespace Flag
+### Namespace Flag
 
 If you wish to run all the tests in 1 namespace (which also forces `-parallel=1`), you can use the `--namespace` flag:
 
@@ -258,24 +246,25 @@ $ kubectl create namespace operator-test
 $ operator-sdk test local ./test/e2e --namespace operator-test
 ```
 
-#### Up-Local Flag
+### Up-Local Flag
 
 To run the operator itself locally during the tests instead of starting a deployment in the cluster, you can use the
 `--up-local` flag. This mode will still create global resources, but by default will not create any in-cluster namespaced
-resources unless the user specifies one through the `--namespaced-manifest` flag. (Note: the `--up-local` flag requires
-the `--namespace` flag):
+resources unless the user specifies one through the `--namespaced-manifest` flag.
+
+**NOTE**: The `--up-local` flag requires the `--namespace` flag and the command will NOT create the namespace. Then, be sure that you are specifying a valid namespace.
 
 ```shell
 $ kubectl create namespace operator-test
 $ operator-sdk test local ./test/e2e --namespace operator-test --up-local
 ```
 
-#### No-Setup Flag
+### No-Setup Flag
 
 If you would prefer to create the resources yourself and skip resource creation, you can use the `--no-setup` flag:
 ```shell
 $ kubectl create namespace operator-test
-$ kubectl create -f deploy/crds/cache_v1alpha1_memcached_crd.yaml
+$ kubectl create -f deploy/crds/cache.example.com_memcacheds_crd.yaml
 $ kubectl create -f deploy/service_account.yaml --namespace operator-test
 $ kubectl create -f deploy/role.yaml --namespace operator-test
 $ kubectl create -f deploy/role_binding.yaml --namespace operator-test
@@ -285,61 +274,24 @@ $ operator-sdk test local ./test/e2e --namespace operator-test --no-setup
 
 For more documentation on the `operator-sdk test local` command, see the [SDK CLI Reference][sdk-cli-ref] doc.
 
-#### Running Go Test Directly (Not Recommended)
+### Running Go Test Directly (Not Recommended)
 
 For advanced use cases, it is possible to run the tests via `go test` directly. As long as all flags defined
 in [MainEntry][main-entry-link] are declared, the tests will run correctly. Running the tests directly with missing flags
 will result in undefined behavior. This is an example `go test` equivalent to the `operator-sdk test local` example above:
 
 ```shell
-# Combine service_account, rbac, operator manifest into namespaced manifest
+# Combine service_account, role, role_binding, and operator manifests into namespaced manifest
 $ cp deploy/service_account.yaml deploy/namespace-init.yaml
 $ echo -e "\n---\n" >> deploy/namespace-init.yaml
-$ cat deploy/rbac.yaml >> deploy/namespace-init.yaml
+$ cat deploy/role.yaml >> deploy/namespace-init.yaml
+$ echo -e "\n---\n" >> deploy/namespace-init.yaml
+$ cat deploy/role_binding.yaml >> deploy/namespace-init.yaml
 $ echo -e "\n---\n" >> deploy/namespace-init.yaml
 $ cat deploy/operator.yaml >> deploy/namespace-init.yaml
 # Run tests
-$ go test ./test/e2e/... -root=$(pwd) -kubeconfig=$HOME/.kube/config -globalMan deploy/crd.yaml -namespacedMan deploy/namespace-init.yaml -v -parallel=2
+$ go test ./test/e2e/... -root=$(pwd) -kubeconfig=$HOME/.kube/config -globalMan deploy/crds/cache.example.com_apps_crd.yaml -namespacedMan deploy/namespace-init.yaml -v -parallel=2
 ```
-
-### Cluster
-
-Another way to run the tests is from within a kubernetes cluster. To do this, you first need to build an image with
-the testing binary embedded by using the `operator-sdk build` command and using the `--enable-tests` flag to enable tests:
-
-```shell
-$ operator-sdk build quay.io/example/memcached-operator:v0.0.1 --enable-tests
-```
-
-Note that the namespaced yaml must be up to date before running this command. The `build` subcommand will warn you
-if it finds a deployment in the namespaced manifest with an image that doesn't match the argument you provided. The
-`operator-sdk build` command has other flags for configuring the tests that can be viewed with the `--help` flag
-or at the [SDK CLI Reference][sdk-cli-ref].
-
-Once the image is ready, the tests are ready to be run. To run the tests, make sure you have all global resources
-and a namespace with proper rbac configured:
-
-```shell
-$ kubectl create -f deploy/crds/cache_v1alpha1_memcached_crd.yaml
-$ kubectl create namespace memcached-test
-$ kubectl create -f deploy/service_account.yaml -n memcached-test
-$ kubectl create -f deploy/role.yaml -n memcached-test
-$ kubectl create -f deploy/role_binding.yaml -n memcached-test
-```
-
-Once you have your environment properly configured, you can start the tests using the `operator-sdk test cluster` command:
-
-```shell
-$ operator-sdk test cluster quay.io/example/memcached-operator:v0.0.1 --namespace memcached-test --service-account memcached-operator
-
-Example Output:
-Test Successfully Completed
-```
-
-The `test cluster` command will deploy a test pod in the given namespace that will run the e2e tests packaged in the image.
-The tests run sequentially in the namespace (`-parallel=1`), the same as running `operator-sdk test local --namespace <namespace>`.
-The command will wait until the tests succeed (pod phase=`Succeeded`) or fail (pod phase=`Failed`).
-If the tests fail, the command will output the test pod logs which should be the standard go test error logs.
 
 ## Manual Cleanup
 
@@ -372,11 +324,11 @@ $ kubectl delete namespace main-153428703
 Since the CRD is not namespaced, it must be deleted separately. Clean up the CRD created by the tests using the CRD manifest `deploy/crd.yaml`:
 
 ```shell
-$ kubectl delete -f deploy/crds/cache_v1alpha1_memcached_crd.yaml
+$ kubectl delete -f deploy/crds/cache.example.com_memcacheds_crd.yaml
 ```
 
 [memcached-sample]:https://github.com/operator-framework/operator-sdk-samples/tree/master/memcached-operator
-[framework-link]:https://github.com/operator-framework/operator-sdk/blob/master/pkg/test/framework.go#L45
+[framework-link]:https://github.com/operator-framework/operator-sdk/blob/master/pkg/test/framework.go
 [testctx-link]:https://github.com/operator-framework/operator-sdk/blob/master/pkg/test/context.go
 [e2eutil-link]:https://github.com/operator-framework/operator-sdk/tree/master/pkg/test/e2eutil
 [memcached-test-link]:https://github.com/operator-framework/operator-sdk-samples/blob/master/memcached-operator/test/e2e/memcached_test.go

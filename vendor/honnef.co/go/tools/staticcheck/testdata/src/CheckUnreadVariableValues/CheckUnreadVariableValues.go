@@ -2,13 +2,13 @@ package pkg
 
 func fn1() {
 	var x int
-	x = gen() // want `this value of x is never used`
+	x = gen() // MATCH /this value of x is never used/
 	x = gen()
 	println(x)
 
 	var y int
 	if true {
-		y = gen() // want `this value of y is never used`
+		y = gen() // MATCH /this value of y is never used/
 	}
 	y = gen()
 	println(y)
@@ -20,10 +20,13 @@ func gen() int {
 }
 
 func fn2() {
-	x, y := gen(), gen() // want `this value of x is never used` `this value of y is never used`
+	x, y := gen(), gen()
 	x, y = gen(), gen()
 	println(x, y)
 }
+
+// MATCH:23 /this value of x is never used/
+// MATCH:23 /this value of y is never used/
 
 func fn3() {
 	x := uint32(0)
@@ -41,19 +44,24 @@ func gen2() (int, int) {
 }
 
 func fn4() {
-	x, y := gen2() // want `this value of x is never used`
+	x, y := gen2() // MATCH /this value of x is never used/
 	println(y)
-	x, y = gen2() // want `this value of x is never used` `this value of y is never used`
-	x, _ = gen2() // want `this value of x is never used`
+	x, y = gen2()
 	x, y = gen2()
 	println(x, y)
 }
 
+// MATCH:49 /this value of x is never used/
+// MATCH:49 /this value of y is never used/
+
 func fn5(m map[string]string) {
-	v, ok := m[""] // want `this value of v is never used` `this value of ok is never used`
+	v, ok := m[""]
 	v, ok = m[""]
 	println(v, ok)
 }
+
+// MATCH:58 /this value of v is never used/
+// MATCH:58 /this value of ok is never used/
 
 func fn6() {
 	x := gen()
@@ -64,41 +72,8 @@ func fn6() {
 func fn7() {
 	func() {
 		var x int
-		x = gen() // want `this value of x is never used`
+		x = gen() // MATCH /this value of x is never used/
 		x = gen()
 		println(x)
 	}()
-}
-
-func fn() int { println(); return 0 }
-
-var y = func() {
-	v := fn() // want `never used`
-	v = fn()
-	println(v)
-}
-
-func fn8() {
-	x := gen()
-	switch x {
-	}
-
-	y := gen() // want `this value of y is never used`
-	y = gen()
-	switch y {
-	}
-
-	z, _ := gen2()
-	switch z {
-	}
-
-	_, a := gen2()
-	switch a {
-	}
-
-	b, c := gen2() // want `this value of b is never used`
-	println(c)
-	b, c = gen2() // want `this value of c is never used`
-	switch b {
-	}
 }

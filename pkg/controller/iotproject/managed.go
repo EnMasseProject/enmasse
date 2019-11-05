@@ -21,7 +21,6 @@ import (
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -292,20 +291,18 @@ func (r *ReconcileIoTProject) reconcileAddressSpace(ctx context.Context, project
 
 	var retryDelay time.Duration = 0
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, addressSpace, func(existing runtime.Object) error {
-		existingAddressSpace := existing.(*enmassev1beta1.AddressSpace)
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, addressSpace, func() error {
+		log.V(2).Info("Reconcile address space", "AddressSpace", addressSpace)
 
-		log.V(2).Info("Reconcile address space", "AddressSpace", existingAddressSpace)
-
-		managedStatus.remainingReady[resourceTypeAddressSpace] = existingAddressSpace.Status.IsReady
+		managedStatus.remainingReady[resourceTypeAddressSpace] = addressSpace.Status.IsReady
 
 		// if the address space is not ready yet
-		if !existingAddressSpace.Status.IsReady {
+		if !addressSpace.Status.IsReady {
 			// delay for 30 seconds
 			retryDelay = 30 * time.Second
 		}
 
-		return r.reconcileManagedAddressSpace(project, strategy, existingAddressSpace)
+		return r.reconcileManagedAddressSpace(project, strategy, addressSpace)
 	})
 
 	if err == nil {
@@ -331,12 +328,10 @@ func (r *ReconcileIoTProject) reconcileAdapterUser(ctx context.Context, project 
 		},
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, adapterUser, func(existing runtime.Object) error {
-		existingUser := existing.(*userv1beta1.MessagingUser)
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, adapterUser, func() error {
+		log.V(2).Info("Reconcile messaging user", "MessagingUser", adapterUser)
 
-		log.V(2).Info("Reconcile messaging user", "MessagingUser", existingUser)
-
-		return r.reconcileAdapterMessagingUser(project, credentials, existingUser)
+		return r.reconcileAdapterMessagingUser(project, credentials, adapterUser)
 	})
 
 	if err == nil {
@@ -377,12 +372,10 @@ func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project
 		},
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, address, func(existing runtime.Object) error {
-		existingAddress := existing.(*enmassev1beta1.Address)
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, address, func() error {
+		managedStatus.remainingReady[stateKey] = address.Status.IsReady
 
-		managedStatus.remainingReady[stateKey] = existingAddress.Status.IsReady
-
-		return r.reconcileAddress(project, strategy, addressName, plan, typeName, existingAddress)
+		return r.reconcileAddress(project, strategy, addressName, plan, typeName, address)
 	})
 
 	if err == nil {

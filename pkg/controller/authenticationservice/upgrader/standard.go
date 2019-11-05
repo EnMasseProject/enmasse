@@ -14,7 +14,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -185,7 +184,7 @@ func tryUpgradeExistingStandardAuthService(ctx context.Context, r *UpgradeAuthen
 		}
 	}
 
-	_, err = controllerutil.CreateOrUpdate(ctx, r.client, authservice, func(existing runtime.Object) error {
+	_, err = controllerutil.CreateOrUpdate(ctx, r.client, authservice, func() error {
 		return nil
 	})
 
