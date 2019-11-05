@@ -81,7 +81,7 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
 
 	install.DropContainer(deployment, "sigfox-adapter")
-	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-sigfox-adapter", config); err != nil {
 			return err

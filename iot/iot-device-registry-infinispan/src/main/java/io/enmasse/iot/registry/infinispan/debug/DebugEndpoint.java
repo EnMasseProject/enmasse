@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.service.base.ServiceBase;
+import io.enmasse.iot.utils.ConfigBase;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -26,7 +26,7 @@ import io.vertx.ext.web.RoutingContext;
 
 @Component
 @ConditionalOnProperty("debug")
-@ConfigurationProperties(ServiceBase.CONFIG_BASE + ".registry.debug")
+@ConfigurationProperties(ConfigBase.CONFIG_BASE + ".registry.debug")
 public class DebugEndpoint extends AbstractVerticle {
 
     @Autowired

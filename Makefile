@@ -27,6 +27,7 @@ DOCKER_DIRS = \
 	iot/iot-mqtt-adapter \
 	iot/iot-lorawan-adapter \
 	iot/iot-sigfox-adapter \
+	iot/iot-tenant-cleaner \
 
 FULL_BUILD       = true
 

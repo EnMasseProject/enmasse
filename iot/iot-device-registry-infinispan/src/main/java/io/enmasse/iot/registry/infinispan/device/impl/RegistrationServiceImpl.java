@@ -15,9 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.service.base.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.AbstractRegistrationService;
-import io.enmasse.iot.service.base.infinispan.device.DeviceKey;
+import io.enmasse.iot.infinispan.device.DeviceKey;
 import io.opentracing.Span;
 import io.vertx.core.json.JsonObject;
 

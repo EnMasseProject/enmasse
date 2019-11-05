@@ -21,6 +21,7 @@ import io.enmasse.common.model.CustomResources;
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectList;
+import io.enmasse.iot.utils.ConfigBase;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import io.vertx.core.Future;
@@ -40,7 +41,7 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
      */
     private Duration resyncPeriod = DEFAULT_RESYNC_PERIOD;
 
-    @ConfigurationProperties(ServiceBase.CONFIG_BASE + "kubernetes.informer.resyncPeriod")
+    @ConfigurationProperties(ConfigBase.CONFIG_BASE + "kubernetes.informer.resyncPeriod")
     public void setResyncPeriod(final Duration resyncPeriod) {
         this.resyncPeriod = resyncPeriod != null ? resyncPeriod : DEFAULT_RESYNC_PERIOD;
     }

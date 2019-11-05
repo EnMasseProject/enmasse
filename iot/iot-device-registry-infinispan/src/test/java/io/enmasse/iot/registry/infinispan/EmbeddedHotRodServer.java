@@ -18,10 +18,10 @@ import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuild
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.iot.service.base.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.service.base.infinispan.cache.DeviceConnectionCacheProvider;
-import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
-import io.enmasse.iot.service.base.infinispan.devcon.DeviceConnectionKey;
+import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.infinispan.cache.DeviceConnectionCacheProvider;
+import io.enmasse.iot.infinispan.config.InfinispanProperties;
+import io.enmasse.iot.infinispan.devcon.DeviceConnectionKey;
 
 /**
  * This is heavily inspired from Tristan Tarrant's SimpleEmbeddedHotRodServer.
@@ -87,14 +87,14 @@ public class EmbeddedHotRodServer {
     }
 
     public void stop() throws Exception {
-        try (AutoCloseable x1 = this.deviceProvider; AutoCloseable x2 = this.stateProvider) {
+        try {
+            this.deviceProvider.stop();
         } finally {
-            this.defaultCacheManager.stop();
-            this.server.stop();
+            this.stateProvider.stop();
         }
     }
 
     public RemoteCache<DeviceConnectionKey, String> getDeviceStateCache() {
-        return this.stateProvider.getDeviceStateCache();
+        return this.stateProvider.getOrCreateDeviceStateCache();
     }
 }

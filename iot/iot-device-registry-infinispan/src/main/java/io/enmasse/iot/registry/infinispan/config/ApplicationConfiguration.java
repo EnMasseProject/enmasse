@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.enmasse.iot.service.base.ServiceBase;
+import io.enmasse.iot.utils.ConfigBase;
 
 @Configuration
 public class ApplicationConfiguration {
@@ -21,10 +21,9 @@ public class ApplicationConfiguration {
      * @return The properties.
      */
     @Bean
-    @ConfigurationProperties(ServiceBase.CONFIG_BASE + ".app")
+    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".app")
     public ApplicationConfigProperties applicationConfigProperties(){
         return new ApplicationConfigProperties();
     }
-
 
 }

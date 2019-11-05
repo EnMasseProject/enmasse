@@ -81,7 +81,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
 
 	install.DropContainer(deployment, "http-adapter")
-	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-http-adapter", config); err != nil {
 			return err

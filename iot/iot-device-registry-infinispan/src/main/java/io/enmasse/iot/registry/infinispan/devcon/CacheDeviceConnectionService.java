@@ -5,8 +5,8 @@
 
 package io.enmasse.iot.registry.infinispan.devcon;
 
-import io.enmasse.iot.service.base.infinispan.devcon.DeviceConnectionKey;
-import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
+import io.enmasse.iot.infinispan.devcon.DeviceConnectionKey;
+import static io.enmasse.iot.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -18,7 +18,7 @@ import org.eclipse.hono.util.DeviceConnectionResult;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import io.enmasse.iot.service.base.infinispan.cache.DeviceConnectionCacheProvider;
+import io.enmasse.iot.infinispan.cache.DeviceConnectionCacheProvider;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -40,7 +40,7 @@ public class CacheDeviceConnectionService implements DeviceConnectionService {
 
     @Autowired
     protected CacheDeviceConnectionService(final DeviceConnectionCacheProvider provider) {
-        this(provider.getDeviceStateCache());
+        this(provider.getOrCreateDeviceStateCache());
     }
 
     CacheDeviceConnectionService(final RemoteCache<DeviceConnectionKey, String> cache) {

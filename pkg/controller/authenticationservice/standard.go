@@ -112,12 +112,14 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyVolumeMountSimple(container, "keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration", false)
 		install.ApplyVolumeMountSimple(container, "standard-authservice-cert", "/opt/enmasse/cert", false)
 		install.ApplyEnvSimple(container, "KEYCLOAK_CONFIG_FILE", "standalone-"+string(authservice.Spec.Standard.Datasource.Type)+".xml")
+
 		return nil
 	}); err != nil {
 		return err
 	}
 
-	if err := install.ApplyContainerWithError(deployment, "keycloak", func(container *corev1.Container) error {
+	if err := install.ApplyDeploymentContainerWithError(deployment, "keycloak", func(container *corev1.Container) error {
+
 		if err := install.ApplyContainerImage(container, "keycloak", authservice.Spec.Standard.Image); err != nil {
 			return err
 		}
@@ -176,6 +178,7 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyVolumeMountSimple(container, "keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration", false)
 		install.ApplyVolumeMountSimple(container, "keycloak-persistence", "/opt/jboss/keycloak/standalone/data", false)
 		install.ApplyVolumeMountSimple(container, "standard-authservice-cert", "/opt/enmasse/cert", true)
+
 		return nil
 	}); err != nil {
 		return err

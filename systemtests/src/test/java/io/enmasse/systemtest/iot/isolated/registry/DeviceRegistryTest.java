@@ -292,8 +292,8 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
             // second check, the credentials and device should be deleted
 
-            IoTUtils.checkCredentials(authId, newPassword, true, httpAdapterEndpoint, amqpClient, iotProject);
             client.getDeviceRegistration(tenantId, randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+            IoTUtils.checkCredentials(authId, newPassword, true, httpAdapterEndpoint, amqpClient, iotProject);
         }
     }
 

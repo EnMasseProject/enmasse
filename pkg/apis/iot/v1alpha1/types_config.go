@@ -135,7 +135,8 @@ type ExternalInfinispanServer struct {
 	SaslServerName string `json:"saslServerName,omitempty"`
 	SaslRealm      string `json:"saslRealm,omitempty"`
 
-	CacheNames *ExternalCacheNames `json:"cacheNames,omitempty"`
+	CacheNames        *ExternalCacheNames `json:"cacheNames,omitempty"`
+	DeletionChunkSize uint32              `json:"deletionChunkSize"`
 }
 
 type ExternalCacheNames struct {

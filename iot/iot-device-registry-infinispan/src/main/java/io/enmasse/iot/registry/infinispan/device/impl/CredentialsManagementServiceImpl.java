@@ -5,7 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
-import static io.enmasse.iot.service.base.infinispan.device.CredentialKey.credentialKey;
+import static io.enmasse.iot.infinispan.device.CredentialKey.credentialKey;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.fromInternal;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.toInternal;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -37,14 +37,13 @@ import org.eclipse.hono.service.management.credentials.PasswordSecret;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.service.base.infinispan.cache.AdapterCredentialsCacheProvider;
-import io.enmasse.iot.service.base.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsManagementService;
-import io.enmasse.iot.service.base.infinispan.device.CredentialKey;
-import io.enmasse.iot.service.base.infinispan.device.DeviceCredential;
-import io.enmasse.iot.service.base.infinispan.device.DeviceInformation;
-import io.enmasse.iot.service.base.infinispan.device.DeviceKey;
-import io.enmasse.iot.service.base.utils.MoreFutures;
+import io.enmasse.iot.infinispan.device.CredentialKey;
+import io.enmasse.iot.infinispan.device.DeviceCredential;
+import io.enmasse.iot.infinispan.device.DeviceInformation;
+import io.enmasse.iot.infinispan.device.DeviceKey;
+import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 
 @Component
@@ -58,8 +57,8 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     }
 
     @Autowired
-    public CredentialsManagementServiceImpl(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider) {
-        super(managementProvider, adapterProvider);
+    public CredentialsManagementServiceImpl(final DeviceManagementCacheProvider cacheProvider) {
+        super(cacheProvider);
     }
 
     @Override
