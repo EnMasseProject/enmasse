@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/enmasseproject/enmasse/pkg/util/install"
+
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 
 	corev1 "k8s.io/api/core/v1"
@@ -448,7 +450,7 @@ func (r *ReconcileIoTProject) reconcileManagedAddressSpace(project *iotv1alpha1.
 
 	// add ourselves to the list of owners
 
-	if err := r.ensureOwnerIsSet(project, existing); err != nil {
+	if err := install.AddOwnerReference(project, existing, r.scheme); err != nil {
 		return err
 	}
 

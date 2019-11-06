@@ -6,7 +6,11 @@
 package install
 
 import (
+	"fmt"
 	"strconv"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -522,4 +526,42 @@ func ApplyFsGroupOverride(deployment *appsv1.Deployment) error {
 		return nil
 	})
 	return err
+}
+
+// Ensure that an owner is set
+func AddOwnerReference(owner v1.Object, object v1.Object, scheme *runtime.Scheme) error {
+
+	ro, ok := owner.(runtime.Object)
+	if !ok {
+		return fmt.Errorf("is not a %T a runtime.Object, cannot call ensureOwnerIsSet", owner)
+	}
+
+	gvk, err := apiutil.GVKForObject(ro, scheme)
+	if err != nil {
+		return err
+	}
+
+	// create our ref
+	newref := *util.NewOwnerRef(owner, gvk)
+
+	// get existing refs
+	refs := object.GetOwnerReferences()
+
+	found := false
+	for _, ref := range refs {
+		if util.IsSameRef(ref, newref) {
+			found = true
+		}
+	}
+
+	// did we find it?
+	if !found {
+		// no! so append
+		refs = append(refs, newref)
+	}
+
+	// set the new result
+	object.SetOwnerReferences(refs)
+
+	return nil
 }
