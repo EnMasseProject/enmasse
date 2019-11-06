@@ -55,6 +55,11 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 
 ### Running the console-mock
 
+Firsly install the necessary node modules into the tree.
+
+cd ./mock-console-server
+npm install
+
 In a separate terminal window, start
 
 `node mock-console-server/mock-console-server.js`
