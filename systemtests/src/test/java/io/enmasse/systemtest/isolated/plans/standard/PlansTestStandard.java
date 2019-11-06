@@ -35,6 +35,7 @@ import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.shared.standard.TopicTest;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -1046,11 +1047,12 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .build();
         isolatedResourcesManager.replaceAddressSpace(replaced, false);
 
+        String expected = String.format("Unable to apply plan [%s] to address space %s:%s: quota exceeded for resource broker",
+                afterQueuePlan.getMetadata().getName(), environment.namespace(), replaced.getMetadata().getName());
+        replaced = AddressSpaceUtils.waitForAddressSpaceStatusMessage(replaced, expected, new TimeoutBudget(2, TimeUnit.MINUTES));
+
         assertEquals(beforeAddressSpacePlan.getMetadata().getName(),
                 replaced.getMetadata().getAnnotations().get("enmasse.io/applied-plan"));
-        assertEquals(String.format("Unable to apply plan [%s] to address space %s:%s: quota exceeded for resource broker",
-                afterQueuePlan.getMetadata().getName(), environment.namespace(), replaced.getMetadata().getName()),
-                replaced.getStatus().getMessages().get(0));
     }
 
     @Test

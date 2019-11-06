@@ -7,12 +7,18 @@ package io.enmasse.systemtest.operator;
 import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.ConsoleServiceSpec;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.Minikube;
 import io.enmasse.systemtest.platform.OpenShift;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
 
@@ -66,9 +72,20 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void installOperators() {
+    public void installOperators() throws Exception {
         LOGGER.info("Installing enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
         kube.createNamespace(Environment.getInstance().namespace(), Collections.singletonMap("allowed", "true"));
+        if (kube instanceof Minikube) {
+            CertBundle apiServertCert = CertificateUtils.createCertBundle("api-server." + kube.getInfraNamespace() + ".svc.cluster.local");
+            Secret secret = new SecretBuilder()
+                    .editOrNewMetadata()
+                    .withName("api-server-cert")
+                    .endMetadata()
+                    .addToData("tls.key", apiServertCert.getKeyB64())
+                    .addToData("tls.crt", apiServertCert.getCertB64())
+                    .build();
+            kube.createSecret(kube.getInfraNamespace(), secret);
+        }
         KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
     }
 

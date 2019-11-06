@@ -5,7 +5,11 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceList;
+import io.enmasse.address.model.CoreCrd;
+import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.k8s.api.cache.CacheWatcher;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 
 import java.util.Map;
 import java.time.Duration;

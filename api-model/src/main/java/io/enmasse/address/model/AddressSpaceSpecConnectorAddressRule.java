@@ -14,6 +14,7 @@ import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -49,5 +50,19 @@ public class AddressSpaceSpecConnectorAddressRule {
 
     public void setPattern(String pattern) {
         this.pattern = pattern;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AddressSpaceSpecConnectorAddressRule that = (AddressSpaceSpecConnectorAddressRule) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(pattern, that.pattern);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, pattern);
     }
 }

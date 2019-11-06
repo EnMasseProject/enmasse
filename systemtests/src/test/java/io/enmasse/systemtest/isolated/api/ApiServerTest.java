@@ -152,25 +152,6 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.createAddressSpace(addressSpace);
 
-        logWithSeparator(log, "Check if uuid is propagated");
-        String uuid = "4bfe49c2-60b5-11e7-a5d0-507b9def37d9";
-        Address dest1 = new AddressBuilder()
-                .withNewMetadata()
-                .withNamespace(addressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-rest-api-queue"))
-                .withUid(uuid)
-                .endMetadata()
-                .withNewSpec()
-                .withType("queue")
-                .withAddress("test-rest-api-queue")
-                .withPlan(DestinationPlan.BROKERED_QUEUE)
-                .endSpec()
-                .build();
-
-        resourcesManager.setAddresses(dest1);
-        Address dest1AddressObj = kubernetes.getAddressClient().list().getItems().get(0);
-        assertEquals(uuid, dest1AddressObj.getMetadata().getUid(), "Address uuid is not equal");
-
         Address destWithoutAddress = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(addressSpace.getMetadata().getNamespace())
@@ -182,7 +163,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         Throwable exception = assertThrows(KubernetesClientException.class, () -> resourcesManager.setAddresses(destWithoutAddress));
-        assertTrue(exception.getMessage().contains("spec.address: must not be null"), "Incorrect response from server on missing address!");
+        assertTrue(exception.getMessage().contains("spec.address in body is required"), "Incorrect response from server on missing address: '" + exception.getMessage() + "'");
 
         Address destWithoutType = new AddressBuilder()
                 .withNewMetadata()
@@ -195,7 +176,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         exception = assertThrows(KubernetesClientException.class, () -> resourcesManager.setAddresses(destWithoutType));
-        assertTrue(exception.getMessage().contains("spec.type: must not be null"), "Incorrect response from server on missing address!");
+        assertTrue(exception.getMessage().contains("spec.type in body is required"), "Incorrect response from server on missing address: '" + exception.getMessage() + "'");
 
         Address destWithoutPlan = new AddressBuilder()
                 .withNewMetadata()
@@ -208,7 +189,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         exception = assertThrows(KubernetesClientException.class, () -> resourcesManager.setAddresses(destWithoutPlan));
-        assertTrue(exception.getMessage().contains("spec.plan: must not be null"), "Incorrect response from server on missing address!");
+        assertTrue(exception.getMessage().contains("spec.plan in body is required"), "Incorrect response from server on missing address: '" + exception.getMessage() + "'");
     }
 
     @Test
@@ -490,8 +471,17 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .done();
 
-        Exception exception = assertThrows(KubernetesClientException.class, () -> isolatedResourcesManager.replaceAddressSpace(replace));
-        assertTrue(exception.getMessage().contains("Unknown address space plan no-exists"));
+        isolatedResourcesManager.replaceAddressSpace(replace, false, isolatedResourcesManager.getCurrentAddressSpaces());
+        TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
+        AddressSpace space;
+        while (!budget.timeoutExpired()) {
+            space = isolatedResourcesManager.getAddressSpace(replace.getMetadata().getNamespace(), replace.getMetadata().getName());
+            if (space.getStatus().getMessages().contains("Unknown address space plan 'no-exists'")) {
+                break;
+            }
+        }
+        space = isolatedResourcesManager.getAddressSpace(replace.getMetadata().getNamespace(), replace.getMetadata().getName());
+        assertTrue(space.getStatus().getMessages().contains("Unknown address space plan 'no-exists'"));
     }
 
 

@@ -40,9 +40,12 @@ public class StatusController implements Controller {
 
     @Override
     public AddressSpace reconcile(AddressSpace addressSpace) {
-        checkComponentsReady(addressSpace);
-        checkAuthServiceReady(addressSpace);
-        checkExposedEndpoints(addressSpace);
+        if (addressSpace.getStatus().isReady()) {
+            checkComponentsReady(addressSpace);
+            checkAuthServiceReady(addressSpace);
+            checkExposedEndpoints(addressSpace);
+        }
+
         if (addressSpace.getStatus().isReady()) {
             if (addressSpace.getSpec().getPlan().equals(addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN))) {
                 addressSpace.getStatus().setPhase(Phase.Active);

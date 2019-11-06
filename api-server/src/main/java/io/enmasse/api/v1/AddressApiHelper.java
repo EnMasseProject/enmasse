@@ -170,17 +170,7 @@ public class AddressApiHelper {
         return address;
     }
 
-    public static Map<String,String> parseLabelSelector(String labelSelector) {
-        Map<String, String> labels = new HashMap<>();
-        String [] pairs = labelSelector.split(",");
-        for (String pair : pairs) {
-            String elements[] = pair.split("=");
-            if (elements.length > 1) {
-                labels.put(elements[0], elements[1]);
-            }
-        }
-        return labels;
-    }
+
 
     public void deleteAddresses(String namespace) {
         for (AddressSpace addressSpace : addressSpaceApi.listAddressSpaces(namespace)) {

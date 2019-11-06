@@ -6,6 +6,7 @@ package io.enmasse.address.model;
 
 import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.InfraConfig;
+import io.enmasse.model.validation.DefaultValidator;
 
 import java.util.Optional;
 
@@ -28,8 +29,37 @@ public class AddressSpaceResolver {
         return addressSpaceType.findAddressSpacePlan(plan);
     }
 
-    public void validate(AddressSpace addressSpace) {
-        getPlan(getType(addressSpace.getSpec().getType()), addressSpace.getSpec().getPlan());
+    public boolean validate(AddressSpace addressSpace) {
+        if (addressSpace.getSpec().getAuthenticationService() != null && !schema.findAuthenticationService(addressSpace.getSpec().getAuthenticationService().getName()).isPresent()) {
+            addressSpace.getStatus().setReady(false);
+            addressSpace.getStatus().appendMessage("Unknown authentication service '" + addressSpace.getSpec().getAuthenticationService().getName() + "'");
+            return false;
+        }
+
+        AddressSpaceType addressSpaceType = schema.findAddressSpaceType(addressSpace.getSpec().getType()).orElse(null);
+        // This should never happen
+        if (addressSpaceType == null) {
+            addressSpace.getStatus().setReady(false);
+            addressSpace.getStatus().appendMessage("Unknown address space type '" + addressSpace.getSpec().getType() + "'");
+            return false;
+        } else {
+            AddressSpacePlan plan = addressSpaceType.findAddressSpacePlan(addressSpace.getSpec().getPlan()).orElse(null);
+            if (plan == null) {
+                // Don't set status false, as long as applied plan is good
+                addressSpace.getStatus().appendMessage("Unknown address space plan '" + addressSpace.getSpec().getPlan() + "'");
+                return false;
+            }
+        }
+
+        try {
+            DefaultValidator.validate(addressSpace);
+        } catch (Exception e) {
+            addressSpace.getStatus().setReady(false);
+            addressSpace.getStatus().appendMessage("Error validating address space '" + addressSpace.getMetadata().getName() + "' in namespace '" + addressSpace.getMetadata().getNamespace() + "': " + e.getMessage());
+            return false;
+        }
+
+        return true;
     }
 
     public InfraConfig getInfraConfig(String typeName, String planName) {

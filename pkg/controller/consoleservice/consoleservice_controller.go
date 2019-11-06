@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
-	v1beta12 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	enmasse_v1beta1_client "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	oauthv1 "github.com/openshift/api/oauth/v1"
@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	rest "k8s.io/client-go/rest"
 	"net"
 	"net/url"
 	"reflect"
@@ -35,6 +36,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 	"strconv"
+	"time"
 )
 
 const CONSOLE_NAME = "console"
@@ -48,7 +50,7 @@ func Add(mgr manager.Manager) error {
 }
 
 func newReconciler(mgr manager.Manager) *ReconcileConsoleService {
-	return &ReconcileConsoleService{client: mgr.GetClient(), scheme: mgr.GetScheme(), namespace: util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")}
+	return &ReconcileConsoleService{config: mgr.GetConfig(), client: mgr.GetClient(), scheme: mgr.GetScheme(), namespace: util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")}
 }
 
 func add(mgr manager.Manager, r *ReconcileConsoleService) error {
@@ -134,6 +136,7 @@ var _ reconcile.Reconciler = &ReconcileConsoleService{}
 type ReconcileConsoleService struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
+	config    *rest.Config
 	client    client.Client
 	scheme    *runtime.Scheme
 	namespace string
@@ -268,7 +271,8 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 		return newSsoCookieDomain, nil
 	})
 
-	return reconcile.Result{Requeue: requeue}, err
+	// TODO: Remove RequeueAfter once per-address space console is gone
+	return reconcile.Result{Requeue: requeue, RequeueAfter: 10 * time.Second}, err
 }
 
 type UpdateStatusFn func(status *v1beta1.ConsoleServiceStatus) error
@@ -761,44 +765,35 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 		}
 
 		// Redirects for the address space console(s)
-		// We currently list of the underlying configmaps.  We can't list addressspace objects because the read caching
-		// API beneath requires that watch is implemented
-
-		list := &corev1.ConfigMapList{}
-		opts := &client.ListOptions{}
-		_ = opts.SetLabelSelector("type=address-space")
-		err = r.client.List(context.TODO(), opts, list)
+		// Currently we have to create a new client that is able to read address spaces across all namespaces,
+		// as the controller-runtime client is only able to run in single namespace or all namespaces mode.
+		eclient, err := enmasse_v1beta1_client.NewForConfig(r.config)
+		if err != nil {
+			return reconcile.Result{}, nil, err
+		}
+		list, err := eclient.AddressSpaces("").List(metav1.ListOptions{})
 		if err != nil {
 			return reconcile.Result{}, nil, err
 		} else {
 
-			for _, item := range list.Items {
-				if jas, ok := item.Data["config.json"]; ok {
-					space := v1beta12.AddressSpace{}
-					err = json.Unmarshal([]byte(jas), &space)
-					if err == nil {
-						consoleEndpointName := "console"
-						for _, specEndpoints := range space.Spec.Endpoints {
-							if specEndpoints.Service == "console" && specEndpoints.Name != "" {
-								consoleEndpointName = specEndpoints.Name
-								break
-							}
-						}
+			for _, space := range list.Items {
+				consoleEndpointName := "console"
+				for _, specEndpoints := range space.Spec.Endpoints {
+					if specEndpoints.Service == "console" && specEndpoints.Name != "" {
+						consoleEndpointName = specEndpoints.Name
+						break
+					}
+				}
 
-						for _, s := range space.Status.EndpointStatus {
-							if s.Name == consoleEndpointName {
-								for _, p := range s.ExternalPorts {
-									scheme := "http"
-									if p.Name == "https" || p.Port == 443 {
-										scheme = "https"
-									}
-									redirects, err = appendRedirect(scheme, s.ExternalHost, redirects)
-								}
+				for _, s := range space.Status.EndpointStatus {
+					if s.Name == consoleEndpointName {
+						for _, p := range s.ExternalPorts {
+							scheme := "http"
+							if p.Name == "https" || p.Port == 443 {
+								scheme = "https"
 							}
+							redirects, err = appendRedirect(scheme, s.ExternalHost, redirects)
 						}
-					} else {
-						log.Error(err, "Could not unmarshall config.json of config map as an "+
-							"address space, ignoring..", "name", item.Name)
 					}
 				}
 			}

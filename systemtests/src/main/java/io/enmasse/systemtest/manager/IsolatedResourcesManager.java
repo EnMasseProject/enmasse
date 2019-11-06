@@ -258,11 +258,18 @@ public class IsolatedResourcesManager extends ResourceManager {
 
     @Override
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        createAddressSpace(addressSpace, true);
+    }
+
+    @Override
+    public void createAddressSpace(AddressSpace addressSpace, boolean waitForReady) throws Exception {
         if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             currentAddressSpaces.add(addressSpace);
-            super.createAddressSpace(addressSpace);
+            super.createAddressSpace(addressSpace, waitForReady);
         } else {
-            super.waitForAddressSpaceReady(addressSpace);
+            if (waitForReady) {
+                super.waitForAddressSpaceReady(addressSpace);
+            }
         }
     }
 
@@ -294,11 +301,11 @@ public class IsolatedResourcesManager extends ResourceManager {
     }
 
     public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
-        super.replaceAddressSpace(addressSpace, true, currentAddressSpaces);
+        replaceAddressSpace(addressSpace, true);
     }
 
-    public void replaceAddressSpace(AddressSpace addressSpace, boolean replaceExisting) throws Exception {
-        super.replaceAddressSpace(addressSpace, replaceExisting, currentAddressSpaces);
+    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied) throws Exception {
+        super.replaceAddressSpace(addressSpace, waitForPlanApplied, currentAddressSpaces);
     }
 
     public void deleteAddressspacesFromList() throws Exception {

@@ -447,7 +447,7 @@ func ApplyEnvOptionalSecret(container *corev1.Container, name string, secretKey 
 	})
 }
 
-func ApplyEnvConfigMap(container *corev1.Container, name string, configMapKey string, configMapName string) {
+func ApplyEnvConfigMap(container *corev1.Container, name string, configMapKey string, configMapName string, optional *bool) {
 	ApplyEnv(container, name, func(envvar *corev1.EnvVar) {
 		envvar.Value = ""
 		envvar.ValueFrom = &corev1.EnvVarSource{
@@ -456,6 +456,7 @@ func ApplyEnvConfigMap(container *corev1.Container, name string, configMapKey st
 				LocalObjectReference: corev1.LocalObjectReference{
 					Name: configMapName,
 				},
+				Optional: optional,
 			},
 		}
 	})
@@ -479,6 +480,29 @@ func RemoveEnv(container *corev1.Container, name string) {
 			container.Env = append(container.Env[:i], container.Env[i+1:]...)
 			break
 		}
+	}
+}
+
+func ApplyNodeAffinity(template *corev1.PodTemplateSpec, matchKey string) {
+	template.Spec.Affinity = &corev1.Affinity{
+		NodeAffinity: &corev1.NodeAffinity{
+			PreferredDuringSchedulingIgnoredDuringExecution: []corev1.PreferredSchedulingTerm{
+				{
+					Weight: 1,
+					Preference: corev1.NodeSelectorTerm{
+						MatchExpressions: []corev1.NodeSelectorRequirement{
+							{
+								Key:      matchKey,
+								Operator: "In",
+								Values: []string{
+									"true",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

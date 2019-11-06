@@ -12,6 +12,10 @@ public final class CustomResources {
     private CustomResources() {}
 
     public static CustomResourceDefinition createCustomResource(final String group, final String version, final String kind) {
+        return createCustomResource(group, version, kind, "Namespaced");
+    }
+
+    public static CustomResourceDefinition createCustomResource(final String group, final String version, final String kind, final String scope) {
         String singular = kind.toLowerCase();
         String listKind = kind + "List";
         String plural = singular + "s";
@@ -28,7 +32,7 @@ public final class CustomResources {
                         .editOrNewSpec()
                         .withGroup(group)
                         .withVersion(version)
-                        .withScope("Namespaced")
+                        .withScope(scope)
                         .editOrNewNames()
                         .withKind(kind)
                         .withListKind(listKind)

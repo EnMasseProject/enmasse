@@ -74,7 +74,7 @@ public class KubeCMDClient {
 
     public static ExecutionResultData patchCR(String kind, String name, String patchData) {
         log.info("Patching {} {} in {}", kind, name, Environment.getInstance().namespace());
-        return Exec.execute(Arrays.asList(CMD, "patch", "-n", Environment.getInstance().namespace(), kind, name, "-p", patchData), DEFAULT_SYNC_TIMEOUT, true);
+        return Exec.execute(Arrays.asList(CMD, "patch", "--type=merge", "-n", Environment.getInstance().namespace(), kind, name, "-p", patchData), DEFAULT_SYNC_TIMEOUT, true);
     }
 
     public static ExecutionResultData updateCR(String namespace, String definition) throws IOException {

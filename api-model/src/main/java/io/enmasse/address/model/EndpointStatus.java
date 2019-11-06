@@ -7,6 +7,7 @@ package io.enmasse.address.model;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -117,5 +118,23 @@ public class EndpointStatus extends AbstractWithAdditionalProperties  {
                 .append("serviceHost=").append(serviceHost).append(",")
                 .append("servicePorts=").append(servicePorts).append("}")
                 .toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EndpointStatus that = (EndpointStatus) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(cert, that.cert) &&
+                Objects.equals(serviceHost, that.serviceHost) &&
+                Objects.equals(servicePorts, that.servicePorts) &&
+                Objects.equals(externalHost, that.externalHost) &&
+                Objects.equals(externalPorts, that.externalPorts);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, cert, serviceHost, servicePorts, externalHost, externalPorts);
     }
 }

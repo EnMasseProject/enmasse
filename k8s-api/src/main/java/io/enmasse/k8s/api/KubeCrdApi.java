@@ -46,7 +46,11 @@ public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList
 
     @Override
     public LT list(ListOptions listOptions) {
-        return client.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inNamespace(namespace).list();
+        if (namespace != null) {
+            return client.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inNamespace(namespace).list();
+        } else {
+            return client.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inAnyNamespace().list();
+        }
     }
 
     @Override
@@ -54,8 +58,13 @@ public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList
         RequestConfig requestConfig = new RequestConfigBuilder()
                 .withRequestTimeout(listOptions.getTimeoutSeconds())
                 .build();
-        return client.withRequestConfig(requestConfig).call(c ->
-                c.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inNamespace(namespace).withResourceVersion(listOptions.getResourceVersion()).watch(watcher));
+        if (namespace != null) {
+            return client.withRequestConfig(requestConfig).call(c ->
+                    c.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inNamespace(namespace).withResourceVersion(listOptions.getResourceVersion()).watch(watcher));
+        } else {
+            return client.withRequestConfig(requestConfig).call(c ->
+                    c.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inAnyNamespace().withResourceVersion(listOptions.getResourceVersion()).watch(watcher));
+        }
     }
 
     @Override

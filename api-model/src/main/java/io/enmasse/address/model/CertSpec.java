@@ -13,6 +13,8 @@ import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
+import java.util.Objects;
+
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
@@ -73,5 +75,29 @@ public class CertSpec extends AbstractWithAdditionalProperties {
 
     public String getTlsCert() {
         return tlsCert;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CertSpec certSpec = (CertSpec) o;
+        return Objects.equals(provider, certSpec.provider) &&
+                Objects.equals(secretName, certSpec.secretName) &&
+                Objects.equals(tlsKey, certSpec.tlsKey) &&
+                Objects.equals(tlsCert, certSpec.tlsCert);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(provider, secretName, tlsKey, tlsCert);
+    }
+
+    @Override
+    public String toString() {
+        return "CertSpec{" +
+                "provider='" + provider + '\'' +
+                ", secretName='" + secretName + '\'' +
+                '}';
     }
 }

@@ -174,7 +174,7 @@ public abstract class Kubernetes {
 
     public MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace,
             Resource<AddressSpace, DoneableAddressSpace>> getAddressSpaceClient(String namespace) {
-        return (MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>>) client.customResources(CoreCrd.addresseSpaces(), AddressSpace.class, AddressSpaceList.class, DoneableAddressSpace.class).inNamespace(namespace);
+        return (MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>>) client.customResources(CoreCrd.addressSpaces(), AddressSpace.class, AddressSpaceList.class, DoneableAddressSpace.class).inNamespace(namespace);
     }
 
     public MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> getAddressClient() {

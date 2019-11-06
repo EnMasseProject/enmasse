@@ -12,6 +12,7 @@ import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -53,5 +54,19 @@ public class AddressSpaceSpecConnectorEndpoint extends AbstractWithAdditionalPro
                 "host='" + host + '\'' +
                 ", port=" + port +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AddressSpaceSpecConnectorEndpoint endpoint = (AddressSpaceSpecConnectorEndpoint) o;
+        return Objects.equals(host, endpoint.host) &&
+                Objects.equals(port, endpoint.port);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(host, port);
     }
 }

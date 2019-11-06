@@ -106,7 +106,7 @@ public class HttpUserService {
                 if (authenticationServiceMap.get(authenticationService.getMetadata().getName()) == null) {
                     authenticationServiceMap.put(authenticationService.getMetadata().getName(), authenticationService);
                     if (labelSelector != null) {
-                        Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
+                        Map<String, String> labels = parseLabelSelector(labelSelector);
                         userList.getItems().addAll(userApi.listUsersWithLabels(authenticationService, namespace, labels).getItems());
                     } else {
                         userList.getItems().addAll(userApi.listUsers(authenticationService, namespace).getItems());
@@ -443,5 +443,17 @@ public class HttpUserService {
                                 .withResourceVersion(user.getMetadata().getResourceVersion())
                                 .build())))
                 .collect(Collectors.toList());
+    }
+
+    public static Map<String,String> parseLabelSelector(String labelSelector) {
+        Map<String, String> labels = new HashMap<>();
+        String [] pairs = labelSelector.split(",");
+        for (String pair : pairs) {
+            String elements[] = pair.split("=");
+            if (elements.length > 1) {
+                labels.put(elements[0], elements[1]);
+            }
+        }
+        return labels;
     }
 }

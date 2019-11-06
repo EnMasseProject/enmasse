@@ -5,6 +5,9 @@ metadata:
     app: enmasse
   name: enmasse.io:service-broker
 rules:
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "addressspaces", "addressspaces/finalizers", "addresses", "addresses/finalizers", "addressspaceschemas" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
   - apiGroups: [ "authentication.k8s.io" ]
     resources: [ "tokenreviews" ]
     verbs: [ "create" ]

@@ -32,6 +32,8 @@ import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.UserCrd;
 import io.enmasse.user.model.v1.UserList;
 
+import static io.enmasse.api.v1.http.HttpUserService.parseLabelSelector;
+
 @Path(HttpClusterUserService.BASE_URI)
 public class HttpClusterUserService {
 
@@ -77,7 +79,7 @@ public class HttpClusterUserService {
 
             for (AuthenticationService authenticationService : authenticationServiceRegistry.listAuthenticationServices()) {
                 if (labelSelector != null) {
-                    Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
+                    Map<String, String> labels = parseLabelSelector(labelSelector);
                     userList.getItems().addAll(userApi.listAllUsersWithLabels(authenticationService, labels).getItems());
                 } else {
                     userList.getItems().addAll(userApi.listAllUsers(authenticationService).getItems());

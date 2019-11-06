@@ -21,13 +21,15 @@ public final class InfraConfigs {
     private InfraConfigs() {
     }
 
-    public static InfraConfig parseCurrentInfraConfig(final AddressSpace addressSpace) throws IOException {
-        final String config = addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG);
-        if (config == null) {
+    public static InfraConfig parseCurrentInfraConfig(String json) throws IOException {
+        if (json == null) {
             return null;
         }
+        return mapper.readValue(json, InfraConfig.class);
+    }
 
-        return mapper.readValue(config, InfraConfig.class);
+    public static InfraConfig parseCurrentInfraConfig(final AddressSpace addressSpace) throws IOException {
+        return parseCurrentInfraConfig(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
 
     public static void setCurrentInfraConfig(final HasMetadata metadata, InfraConfig infraConfig) throws JsonProcessingException {

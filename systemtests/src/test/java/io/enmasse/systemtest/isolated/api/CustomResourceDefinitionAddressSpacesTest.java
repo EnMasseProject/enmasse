@@ -230,10 +230,9 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                     CliOutputData.CliOutputDataType.ADDRESS_SPACE);
             assertTrue(((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).isReady());
             if (((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).isReady()) {
-                assertThat(((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).getStatus(),
-                        containsString(""));
+                assertEquals("[]", ((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).getStatus());
             } else {
-                assertThat(((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).getStatus(),
+                assertThat(((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).getStatus(),
                         containsString("Following deployments and statefulsets are not ready"));
             }
 
@@ -244,8 +243,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             assertTrue(((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).isReady());
             assertTrue(((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).isReady());
             assertEquals("Active", ((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).getPhase());
-            assertTrue(((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).getStatus().isEmpty());
-
+            assertEquals("[]", ((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).getStatus());
 
             //===========================
             // User part

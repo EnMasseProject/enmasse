@@ -22,14 +22,6 @@ var kubernetes = require('./kubernetes.js');
 var log = require('./log.js').logger();
 var myutils = require('./utils.js');
 
-function extract_address(object) {
-    try {
-        return JSON.parse(object.data['config.json']);
-    } catch (e) {
-        console.error('Failed to parse config.json for address: %s %j', e, object);
-    }
-}
-
 function extract_spec(def) {
     if (def.spec === undefined) {
         console.error('no spec found on %j', def);
@@ -50,8 +42,7 @@ function extract_spec(def) {
     return o;
 }
 
-function extract_address_field(object) {
-    var def = extract_address(object);
+function extract_address_field(def) {
     return def && def.spec ? def.spec.address : undefined;
 }
 
@@ -119,10 +110,6 @@ function address_compare(a, b) {
     return myutils.string_compare(a.address, b.address);
 }
 
-function configmap_compare(a, b) {
-    return myutils.string_compare(a.metadata.name, b.metadata.name);
-}
-
 function by_address(a) {
     return a.address;
 }
@@ -138,18 +125,14 @@ function description(list) {
 
 function AddressSource(config) {
     this.config = config || {};
-    var selector = 'type=address-config';
-    if (config.INFRA_UUID) {
-        selector += ",infraUuid=" + config.INFRA_UUID;
-    }
-    this.selector = selector;
+    this.selector = "";
     events.EventEmitter.call(this);
 }
 
 AddressSource.prototype.start = function(ownerReference) {
-    var options = myutils.merge({selector: this.selector}, this.config);
+    var options = myutils.merge({selector: this.selector, namespace: this.config.ADDRESS_SPACE_NAMESPACE}, this.config);
     this.ownerReference = ownerReference;
-    this.watcher = kubernetes.watch('configmaps', options);
+    this.watcher = kubernetes.watch('addresses', options);
     this.watcher.on('updated', this.updated.bind(this));
     this.readiness = {};
     this.last = {};
@@ -207,42 +190,41 @@ AddressSource.prototype.update_readiness = function (changes) {
 
 AddressSource.prototype.updated = function (objects) {
     log.debug('addresses updated: %j', objects);
-    var addresses = objects.map(extract_address).filter(is_defined).map(extract_spec);
+    var self = this;
+    var addresses = objects.filter(is_defined).filter(function (address) {
+        return (self.config.ADDRESS_SPACE_PREFIX === undefined) || address.metadata.name.startsWith(self.config.ADDRESS_SPACE_PREFIX);
+    }).map(extract_spec);
     var changes = this.get_changes('addresses_defined', addresses, same_address_definition_and_status);
     if (changes) {
         this.update_readiness(changes);
         this.dispatch('addresses_defined', addresses, changes.description);
-        this.dispatch_if_changed('addresses_ready', objects.map(extract_address).filter(ready).map(extract_spec), same_address_definition);
+        this.dispatch_if_changed('addresses_ready', objects.filter(ready).map(extract_spec), same_address_definition);
     }
 };
 
-AddressSource.prototype.get_addressspace_configmap_name = function() {
-    return this.config.ADDRESS_SPACE_NAMESPACE + "." + this.config.ADDRESS_SPACE;
-}
-
 AddressSource.prototype.update_status = function (record, ready) {
     var self = this;
-    function update(configmap) {
-        var def = JSON.parse(configmap.data['config.json']);
-        if (def.status === undefined) {
-            def.status = {};
+    function update(address) {
+        if (address.status === undefined) {
+            address.status = {};
         }
         var updateOwnerRef = false;
-        if (configmap.metadata.ownerReferences === undefined && self.ownerReference !== undefined) {
-            def.metadata.annotations = myutils.merge(def.metadata.annotations, {"enmasse.io/version": self.config.VERSION});
-            configmap.metadata.ownerReferences = [self.ownerReference];
+        if (address.metadata.ownerReferences === undefined && self.ownerReference !== undefined) {
+            address.metadata.annotations = myutils.merge({"enmasse.io/version": self.config.VERSION}, address.metadata.annotations);
+            address.metadata.ownerReferences = [self.ownerReference];
             updateOwnerRef = true;
         }
-        if (def.status.isReady !== ready || updateOwnerRef) {
-            def.status.isReady = ready;
-            def.status.phase = ready ? 'Active' : 'Pending';
-            configmap.data['config.json'] = JSON.stringify(def);
-            return configmap;
+        if (address.status.isReady !== ready || updateOwnerRef) {
+            address.status.isReady = ready;
+            address.status.phase = ready ? 'Active' : 'Pending';
+            return address;
         } else {
             return undefined;
         }
     }
-    return kubernetes.update('configmaps/' + this.get_configmap_name(record.name), update, this.config).then(function (result) {
+    var options = {namespace: this.config.ADDRESS_SPACE_NAMESPACE};
+    Object.assign(options, this.config);
+    return kubernetes.update('addresses/' + record.name, update, options).then(function (result) {
         if (result === 200) {
             record.ready = ready;
             log.info('updated status for %s to %s: %s', record.address, record.ready, result);
@@ -261,6 +243,7 @@ AddressSource.prototype.check_status = function (address_stats) {
     var results = [];
     for (var address in this.readiness) {
         var record = this.readiness[address];
+        console.log("Check status record: " + JSON.stringify(record));
         var stats = address_stats[address];
         if (stats === undefined) {
             log.info('no stats supplied for %s (%s)', address, record.ready);
@@ -281,14 +264,6 @@ AddressSource.prototype.check_status = function (address_stats) {
     return Promise.all(results);
 };
 
-
-AddressSource.prototype.get_configmap_name = function (name) {
-    if (this.config.ADDRESS_SPACE_NAMESPACE) {
-        return this.config.ADDRESS_SPACE_NAMESPACE + "." + name;
-    } else {
-        return name;
-    }
-};
 
 AddressSource.prototype.create_address = function (definition, access_token) {
     var address_name = this.config.ADDRESS_SPACE + "." + myutils.kubernetes_name(definition.address);

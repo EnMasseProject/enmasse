@@ -19,6 +19,7 @@ import io.enmasse.k8s.api.SchemaProvider;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceChanged;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceCreated;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceUpgraded;
@@ -101,7 +101,9 @@ public class CreateController implements Controller {
     public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
         Schema schema = schemaProvider.getSchema();
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
-        addressSpaceResolver.validate(addressSpace);
+        if (!addressSpaceResolver.validate(addressSpace)) {
+            return addressSpace;
+        }
 
         List<EndpointSpec> endpoints = validateEndpoints(addressSpaceResolver, addressSpace);
 
@@ -131,13 +133,20 @@ public class CreateController implements Controller {
         AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace.getSpec().getType());
         AddressSpacePlan addressSpacePlan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace.getSpec().getPlan());
 
+        String appliedPlan = kubernetes.getAppliedPlan(addressSpace);
         InfraConfig desiredInfraConfig = getInfraConfig(addressSpace);
-        InfraConfig currentInfraConfig = parseCurrentInfraConfig(addressSpace);
+        InfraConfig currentInfraConfig = kubernetes.getAppliedInfraConfig(addressSpace);
+
+        // Apply changes to ensure controller logic works as expected
+        addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, appliedPlan);
+        InfraConfigs.setCurrentInfraConfig(addressSpace, currentInfraConfig);
+
         if (currentInfraConfig == null && !kubernetes.existsAddressSpace(addressSpace)) {
             KubernetesList resourceList = new KubernetesListBuilder()
                     .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
                     .build();
             addAppliedInfraConfigAnnotation(resourceList, desiredInfraConfig);
+            addAppliedPlanAnnotation(resourceList, addressSpace.getSpec().getPlan());
 
             log.info("Creating address space {}", addressSpace);
 
@@ -145,17 +154,11 @@ public class CreateController implements Controller {
             eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
             InfraConfigs.setCurrentInfraConfig(addressSpace, desiredInfraConfig);
             addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
-            // TODO: Remove conditional after 0.28.0 is released
-            if (addressSpace.getStatus().getPhase() != null) {
-                addressSpace.getStatus().setPhase(Phase.Configuring);
-            }
+            addressSpace.getStatus().setPhase(Phase.Configuring);
         } else if (currentInfraConfig == null || !currentInfraConfig.equals(desiredInfraConfig)) {
 
             if (version.equals(desiredInfraConfig.getVersion())) {
-                // TODO: Remove conditional after 0.28.0 is released
-                if (addressSpace.getStatus().getPhase() != null) {
-                    addressSpace.getStatus().setPhase(Phase.Configuring);
-                }
+                addressSpace.getStatus().setPhase(Phase.Configuring);
                 if (checkExceedsQuota(addressSpaceType, addressSpacePlan, addressSpace)) {
                     return addressSpace;
                 }
@@ -163,6 +166,7 @@ public class CreateController implements Controller {
                         .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
                         .build();
                 addAppliedInfraConfigAnnotation(resourceList, desiredInfraConfig);
+                addAppliedPlanAnnotation(resourceList, addressSpace.getSpec().getPlan());
 
                 log.info("Upgrading address space {}", addressSpace);
 
@@ -173,11 +177,8 @@ public class CreateController implements Controller {
             } else {
                 log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredInfraConfig.getVersion(), version);
             }
-        } else if (!addressSpace.getSpec().getPlan().equals(addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN))) {
-            // TODO: Remove conditional after 0.28.0 is released
-            if (addressSpace.getStatus().getPhase() != null) {
-                addressSpace.getStatus().setPhase(Phase.Configuring);
-            }
+        } else if (!addressSpace.getSpec().getPlan().equals(appliedPlan)) {
+            addressSpace.getStatus().setPhase(Phase.Configuring);
             if (checkExceedsQuota(addressSpaceType, addressSpacePlan, addressSpace)) {
                 return addressSpace;
             }
@@ -186,6 +187,7 @@ public class CreateController implements Controller {
                     .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
                     .build();
             addAppliedInfraConfigAnnotation(resourceList, desiredInfraConfig);
+            addAppliedPlanAnnotation(resourceList, addressSpace.getSpec().getPlan());
 
             log.info("Updating address space plan {}", addressSpace);
 
@@ -196,6 +198,14 @@ public class CreateController implements Controller {
         }
 
         return addressSpace;
+    }
+
+    private void addAppliedPlanAnnotation(KubernetesList resourceList, String plan) {
+        for (HasMetadata resource : resourceList.getItems()) {
+            if (resource instanceof Service) {
+                Kubernetes.addObjectAnnotation(resource, AnnotationKeys.APPLIED_PLAN, plan);
+            }
+        }
     }
 
     private boolean checkExceedsQuota(AddressSpaceType addressSpaceType, AddressSpacePlan plan, AddressSpace addressSpace) {
@@ -244,7 +254,7 @@ public class CreateController implements Controller {
 
     private void addAppliedInfraConfigAnnotation(KubernetesList resourceList, InfraConfig infraConfig) throws JsonProcessingException {
         for (HasMetadata item : resourceList.getItems()) {
-            if (item instanceof StatefulSet) {
+            if (item instanceof StatefulSet || item instanceof Service) {
                 InfraConfigs.setCurrentInfraConfig(item, infraConfig);
             }
         }

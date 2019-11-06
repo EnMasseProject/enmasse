@@ -408,4 +408,12 @@ imports:
   - pkg/webhook/admission/types
   - pkg/webhook/internal/metrics
   - pkg/webhook/types
+- name: k8s.io/kube-aggregator
+  version: bc5f57b075c2797d4fe53cf4f749cd6e266d6525
+  subpackages:
+  - pkg/apis/apiregistration
+  - pkg/apis/apiregistration/v1
+  - pkg/apis/apiregistration/v1beta1
+  - pkg/client/clientset_generated/clientset/scheme
+
 testImports: []

@@ -14,6 +14,7 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -43,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.enmasse.systemtest.TestTag.UPGRADE;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -73,6 +75,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
+    @OpenShift
     void testUpgradeAnsible() throws Exception {
         doTestUpgrade(true);
     }
@@ -131,7 +134,9 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         }
 
         AddressSpace brokered = resourcesManager.getAddressSpace("brokered");
+        assertNotNull(brokered);
         AddressSpace standard = resourcesManager.getAddressSpace("standard");
+        assertNotNull(standard);
         Arrays.asList(brokered, standard).forEach(a -> {
             try {
                 resourcesManager.waitForAddressSpaceReady(a);

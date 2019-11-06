@@ -4,27 +4,32 @@
  */
 package io.enmasse.controller.standard;
 
-import java.time.Clock;
-import java.util.Map;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.k8s.api.*;
-import io.fabric8.kubernetes.api.model.OwnerReference;
-import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
+import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.CachingSchemaProvider;
+import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.KubeAddressSpaceApi;
+import io.enmasse.k8s.api.KubeEventLogger;
+import io.enmasse.k8s.api.KubeSchemaApi;
+import io.enmasse.k8s.api.LogEventLogger;
+import io.enmasse.k8s.api.SchemaApi;
+import io.enmasse.metrics.api.Metrics;
+import io.enmasse.model.CustomResourceDefinitions;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.utils.HttpClientUtils;
+import io.vertx.core.Vertx;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.metrics.api.Metrics;
-import io.enmasse.model.CustomResourceDefinitions;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
-import io.vertx.core.Vertx;
+import java.time.Clock;
+import java.util.Map;
 
 
 /**
@@ -100,35 +105,30 @@ public class StandardController {
 
         BrokerClientFactory brokerClientFactory = new MutualTlsBrokerClientFactory(vertx, options);
 
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(kubeClient, options.getVersion());
+        AddressSpaceApi addressSpaceApi = KubeAddressSpaceApi.create(kubeClient, options.getAddressSpaceNamespace(), options.getVersion());
         AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(options.getAddressSpaceNamespace(), options.getAddressSpace()).orElseThrow(() ->
                 new IllegalStateException("Unable to lookup address space " + options.getAddressSpace()));
 
-        OwnerReference ownerReference = new OwnerReferenceBuilder()
-                .withApiVersion("v1")
-                .withKind("ConfigMap")
-                .withBlockOwnerDeletion(true)
-                .withController(true)
-                .withName(ConfigMapAddressSpaceApi.getConfigMapName(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName()))
-                .withUid(addressSpace.getMetadata().getUid())
-                .build();
+        AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
 
-        ConfigMapAddressApi addressApi = new ConfigMapAddressApi(kubeClient, options.getInfraUuid(), ownerReference, options.getVersion());
-
+        String addressPrefix = String.format("%s.", options.getAddressSpace());
         // Replace resources as part of upgrade if version is different
         for (Address address : addressApi.listAddresses(options.getAddressSpaceNamespace())) {
-            if (!options.getVersion().equals(address.getAnnotation(AnnotationKeys.VERSION))) {
-                try {
-                    // Version will be updated by replaceAddress
-                    addressApi.replaceAddress(address);
-                } catch (Exception e) {
-                    log.warn("Error replacing {}", address.getMetadata().getName(), e);
+            if (address.getMetadata().getName().startsWith(addressPrefix)) {
+                if (!options.getVersion().equals(address.getAnnotation(AnnotationKeys.VERSION))) {
+                    try {
+                        // Version will be updated by replaceAddress
+                        addressApi.replaceAddress(address);
+                    } catch (Exception e) {
+                        log.warn("Error replacing {}", address.getMetadata().getName(), e);
+                    }
                 }
             }
         }
 
         addressController = new AddressController(
                 options,
+                addressSpaceApi,
                 addressApi,
                 kubernetes,
                 clusterGenerator,
