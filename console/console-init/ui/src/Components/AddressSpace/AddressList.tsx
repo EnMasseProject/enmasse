@@ -33,8 +33,6 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   onEdit,
   onDelete
 }) => {
-  //TODO: Separate modal to a different component
-  //TODO: Change columns and its cells to include two columns within
   //TODO: Add loading icon based on status
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;

@@ -2,7 +2,11 @@ import React from "react";
 import { useA11yRouteChange, useDocumentTitle } from "use-patternfly";
 import { PageSection, Button, Modal } from "@patternfly/react-core";
 import { AddressList, IAddress } from "src/Components/AddressSpace/AddressList";
-// import { ConnectionList, IConnection } from "src/Components/AddressSpace/ConnectionList";
+import {
+  ConnectionList,
+  IConnection
+} from "src/Components/AddressSpace/ConnectionList";
+import { EditAddress } from "src/Pages/EditAddressPage";
 
 const addressRows: IAddress[] = [
   {
@@ -43,14 +47,6 @@ const addressRows: IAddress[] = [
   }
 ];
 
-interface IEditAddressProps {
-  address: IAddress;
-  onChange: (address: IAddress) => void;
-}
-const EditAddress: React.FC<IEditAddressProps> = ({ address }) => {
-  return <pre>{JSON.stringify(address, null, 2)}</pre>;
-};
-
 const IndexPage: React.FC = ({ children }) => {
   useA11yRouteChange();
   useDocumentTitle("Index Page");
@@ -82,7 +78,8 @@ const IndexPage: React.FC = ({ children }) => {
       </PageSection>
       {addressBeingEdited && (
         <Modal
-          title="Modal Header"
+          isSmall
+          title="Edit"
           isOpen={true}
           onClose={handleCancelEdit}
           actions={[
