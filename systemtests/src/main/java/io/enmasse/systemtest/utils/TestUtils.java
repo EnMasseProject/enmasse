@@ -22,6 +22,7 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
+import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -261,11 +262,12 @@ public class TestUtils {
 
     private static void waitForSubscribers(BrokerManagement brokerManagement, AddressSpace addressSpace, String topic,
                                            TimeoutBudget budget, String plan) throws Exception {
-        IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
+        ResourceManager resourcesManager = (addressSpace.getMetadata().getName().contains("shared") ? SharedResourceManager.getInstance()
+                : IsolatedResourcesManager.getInstance());
         AmqpClient queueClient = null;
         try {
-            queueClient = isolatedResourcesManager.getAmqpClientFactory().createQueueClient(addressSpace);
-            queueClient.setConnectOptions(queueClient.getConnectOptions().setCredentials(Environment.getInstance().getManagementCredentials()));
+            queueClient = resourcesManager.getAmqpClientFactory().createQueueClient(addressSpace);
+            queueClient.setConnectOptions(queueClient.getConnectOptions().setCredentials(Environment.getInstance().getSharedManagementCredentials()));
             String replyQueueName = "reply-queue";
             Address replyQueue = new AddressBuilder()
                     .withNewMetadata()
@@ -278,7 +280,7 @@ public class TestUtils {
                     .withPlan(plan)
                     .endSpec()
                     .build();
-            isolatedResourcesManager.appendAddresses(replyQueue);
+            resourcesManager.appendAddresses(replyQueue);
 
             boolean done = false;
             int actualSubscribers;

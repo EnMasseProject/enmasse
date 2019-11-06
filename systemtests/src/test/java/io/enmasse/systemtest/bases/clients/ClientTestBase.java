@@ -224,7 +224,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
             TestUtils.waitForSubscribers(artemisManagement, getSharedAddressSpace(),
-                    dest.getSpec().getAddress(), getDefaultPlan(AddressType.TOPIC));
+                    dest.getSpec().getAddress(), getDefaultPlan(AddressType.QUEUE));
         } else {
             TestUtils.waitForSubscribersConsole(getSharedAddressSpace(), dest);
         }

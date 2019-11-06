@@ -69,6 +69,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             }
         } else {
             defaultCredentials = ENVIRONMENT.getDefaultCredentials();
+
             resourcesManager.setup();
         }
     }

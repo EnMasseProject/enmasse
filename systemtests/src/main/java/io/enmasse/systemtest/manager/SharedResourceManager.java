@@ -92,7 +92,7 @@ public class SharedResourceManager extends ResourceManager {
         sharedAddressSpace = null;
     }
 
-    void initFactories(AddressSpace addressSpace) {
+    void initFactories() {
         amqpClientFactory = new AmqpClientFactory(sharedAddressSpace, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(sharedAddressSpace, defaultCredentials);
     }
@@ -120,7 +120,7 @@ public class SharedResourceManager extends ResourceManager {
         createSharedAddressSpace(sharedAddressSpace);
         createOrUpdateUser(sharedAddressSpace, managementCredentials);
         createOrUpdateUser(sharedAddressSpace, defaultCredentials);
-        initFactories(sharedAddressSpace);
+        initFactories();
     }
 
     public void createSharedAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -159,7 +159,7 @@ public class SharedResourceManager extends ResourceManager {
         deleteAddresses(sharedAddressSpace);
         LOGGER.info("Closing clients");
         closeClientFactories(amqpClientFactory, mqttClientFactory);
-        initFactories(sharedAddressSpace);
+        initFactories();
     }
 
     @Override
