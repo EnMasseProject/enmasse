@@ -6,6 +6,7 @@ package authenticationservice
 
 import (
 	"context"
+
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -41,8 +42,11 @@ func applyNoneAuthServiceDefaults(ctx context.Context, client client.Client, sch
 
 func applyNoneAuthServiceDeployment(authservice *adminv1beta1.AuthenticationService, deployment *appsv1.Deployment) error {
 	install.ApplyDeploymentDefaults(deployment, "none-authservice", authservice.Name)
-	install.ApplyContainer(deployment, "none-authservice", func(container *corev1.Container) {
-		install.ApplyContainerImage(container, "none-authservice", authservice.Spec.None.Image)
+	if err := install.ApplyContainerWithError(deployment, "none-authservice", func(container *corev1.Container) error {
+		if err := install.ApplyContainerImage(container, "none-authservice", authservice.Spec.None.Image); err != nil {
+			return err
+		}
+
 		container.Env = []corev1.EnvVar{
 			{
 				Name:  "LISTENPORT",
@@ -77,7 +81,11 @@ func applyNoneAuthServiceDeployment(authservice *adminv1beta1.AuthenticationServ
 		}
 
 		install.ApplyVolumeMountSimple(container, "none-authservice-cert", "/opt/none-authservice/cert", true)
-	})
+
+		return nil
+	}); err != nil {
+		return err
+	}
 
 	install.ApplySecretVolume(deployment, "none-authservice-cert", authservice.Spec.None.CertificateSecret.Name)
 

@@ -7,6 +7,7 @@ package authenticationservice
 import (
 	"context"
 	"fmt"
+
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -106,16 +107,24 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		return err
 	}
 
-	install.ApplyInitContainer(deployment, "keycloak-plugin", func(container *corev1.Container) {
-		install.ApplyContainerImage(container, "keycloak-plugin", authservice.Spec.Standard.InitImage)
+	if err := install.ApplyInitContainerWithError(deployment, "keycloak-plugin", func(container *corev1.Container) error {
+		if err := install.ApplyContainerImage(container, "keycloak-plugin", authservice.Spec.Standard.InitImage); err != nil {
+			return err
+		}
 		install.ApplyEnvSimple(container, "KEYCLOAK_DIR", "/opt/jboss/keycloak")
 		install.ApplyVolumeMountSimple(container, "keycloak-providers", "/opt/jboss/keycloak/providers", false)
 		install.ApplyVolumeMountSimple(container, "keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration", false)
 		install.ApplyVolumeMountSimple(container, "standard-authservice-cert", "/opt/enmasse/cert", false)
 		install.ApplyEnvSimple(container, "KEYCLOAK_CONFIG_FILE", "standalone-"+string(authservice.Spec.Standard.Datasource.Type)+".xml")
-	})
-	install.ApplyContainer(deployment, "keycloak", func(container *corev1.Container) {
-		install.ApplyContainerImage(container, "keycloak", authservice.Spec.Standard.Image)
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	if err := install.ApplyContainerWithError(deployment, "keycloak", func(container *corev1.Container) error {
+		if err := install.ApplyContainerImage(container, "keycloak", authservice.Spec.Standard.Image); err != nil {
+			return err
+		}
 		jvmOptions := "-Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true -Duser.timezone=UTC"
 		if authservice.Spec.Standard.JvmOptions != nil {
 			jvmOptions += " " + *authservice.Spec.Standard.JvmOptions
@@ -171,7 +180,10 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyVolumeMountSimple(container, "keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration", false)
 		install.ApplyVolumeMountSimple(container, "keycloak-persistence", "/opt/jboss/keycloak/standalone/data", false)
 		install.ApplyVolumeMountSimple(container, "standard-authservice-cert", "/opt/enmasse/cert", true)
-	})
+		return nil
+	}); err != nil {
+		return err
+	}
 
 	install.ApplySecretVolume(deployment, "standard-authservice-cert", authservice.Spec.Standard.CertificateSecret.Name)
 	install.ApplyEmptyDirVolume(deployment, "keycloak-providers")

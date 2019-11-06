@@ -6,10 +6,13 @@ package authenticationservice
 
 import (
 	"context"
-	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+	"os"
 	"testing"
 
+	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+
 	"fmt"
+
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -25,7 +28,7 @@ func setup(t *testing.T, authservice *adminv1beta1.AuthenticationService) *Recon
 	objs := []runtime.Object{
 		authservice,
 	}
-	cl := fake.NewFakeClient(objs...)
+	cl := fake.NewFakeClientWithScheme(s, objs...)
 	r := &ReconcileAuthenticationService{client: cl, scheme: s}
 	return r
 }
@@ -39,6 +42,10 @@ func TestNoneAuthService(t *testing.T) {
 	}
 
 	r := setup(t, authservice)
+
+	if err := os.Setenv("NONE_AUTHSERVICE_IMAGE", "none-authservice"); err != nil {
+		t.Fatalf("Failed to set image version for test: %v", err)
+	}
 
 	req := reconcile.Request{
 		NamespacedName: types.NamespacedName{
@@ -80,5 +87,5 @@ func TestNoneAuthService(t *testing.T) {
 
 	fmt.Printf("") //%#v", dep)
 
-	r.client.Create(context.TODO(), dep)
+	_ = r.client.Create(context.TODO(), dep)
 }
