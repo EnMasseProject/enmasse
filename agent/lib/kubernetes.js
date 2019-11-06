@@ -68,7 +68,7 @@ function get_options(options, path) {
 }
 
 function get_path(base, resource, options) {
-    var namespace = options.namespace || process.env.ADDRESS_SPACE_NAMESPACE || process.env.KUBERNETES_NAMESPACE || read('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
+    var namespace = options.namespace || process.env.KUBERNETES_NAMESPACE || read('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
     var path = base + namespace + '/' + resource;
     if (options.selector) {
         path += '?' + querystring.stringify({'labelSelector':options.selector});

@@ -130,7 +130,7 @@ function AddressSource(config) {
 }
 
 AddressSource.prototype.start = function(ownerReference) {
-    var options = myutils.merge({selector: this.selector}, this.config);
+    var options = myutils.merge({selector: this.selector, namespace: this.config.ADDRESS_SPACE_NAMESPACE}, this.config);
     this.ownerReference = ownerReference;
     this.watcher = kubernetes.watch('addresses', options);
     this.watcher.on('updated', this.updated.bind(this));
@@ -222,7 +222,9 @@ AddressSource.prototype.update_status = function (record, ready) {
             return undefined;
         }
     }
-    return kubernetes.update('addresses/' + record.name, update, this.config).then(function (result) {
+    var options = {namespace: this.config.ADDRESS_SPACE_NAMESPACE};
+    Object.assign(options, this.config);
+    return kubernetes.update('addresses/' + record.name, update, options).then(function (result) {
         if (result === 200) {
             record.ready = ready;
             log.info('updated status for %s to %s: %s', record.address, record.ready, result);
