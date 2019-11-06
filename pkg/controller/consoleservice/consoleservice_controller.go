@@ -36,6 +36,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 	"strconv"
+	"time"
 )
 
 const CONSOLE_NAME = "console"
@@ -270,7 +271,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 		return newSsoCookieDomain, nil
 	})
 
-	return reconcile.Result{Requeue: requeue}, err
+	return reconcile.Result{Requeue: requeue, RequeueAfter: 10 * time.Second}, err
 }
 
 type UpdateStatusFn func(status *v1beta1.ConsoleServiceStatus) error
