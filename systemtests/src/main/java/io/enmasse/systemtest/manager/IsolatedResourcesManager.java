@@ -258,16 +258,18 @@ public class IsolatedResourcesManager extends ResourceManager {
 
     @Override
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
-        this.createAddressSpace(addressSpace, true);
+        createAddressSpace(addressSpace, true);
     }
 
     @Override
     public void createAddressSpace(AddressSpace addressSpace, boolean waitForReady) throws Exception {
         if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             currentAddressSpaces.add(addressSpace);
-            super.createAddressSpace(addressSpace);
+            super.createAddressSpace(addressSpace, waitForReady);
         } else {
-            super.waitForAddressSpaceReady(addressSpace);
+            if (waitForReady) {
+                super.waitForAddressSpaceReady(addressSpace);
+            }
         }
     }
 
