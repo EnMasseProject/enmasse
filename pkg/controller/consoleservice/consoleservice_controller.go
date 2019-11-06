@@ -271,6 +271,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 		return newSsoCookieDomain, nil
 	})
 
+	// TODO: Remove RequeueAfter once per-address space console is gone
 	return reconcile.Result{Requeue: requeue, RequeueAfter: 10 * time.Second}, err
 }
 
