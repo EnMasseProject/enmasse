@@ -6,6 +6,7 @@ package upgrader
 
 import (
 	"context"
+
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	v12 "github.com/openshift/api/apps/v1"
@@ -179,7 +180,9 @@ func tryUpgradeExistingStandardAuthService(ctx context.Context, r *UpgradeAuthen
 	}
 
 	if postgresService != nil && postgresqlContainer != nil {
-		configurePostgresqlDatasource(ctx, postgresService, authservice.Spec.Standard.Datasource, keycloakContainer, postgresqlContainer, r)
+		if err := configurePostgresqlDatasource(ctx, postgresService, authservice.Spec.Standard.Datasource, keycloakContainer, postgresqlContainer, r); err != nil {
+			log.Error(err, "Failed to create configure postgres datasource", "authenticationservice", authservice)
+		}
 	}
 
 	_, err = controllerutil.CreateOrUpdate(ctx, r.client, authservice, func(existing runtime.Object) error {

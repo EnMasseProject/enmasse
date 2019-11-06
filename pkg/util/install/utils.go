@@ -81,14 +81,6 @@ func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, na
 
 }
 
-func ApplyContainer(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container)) {
-	// call "with error", and eat up the error
-	_ = ApplyContainerWithError(deployment, name, func(container *corev1.Container) error {
-		mutator(container)
-		return nil
-	})
-}
-
 func DropContainer(deployment *appsv1.Deployment, name string) {
 	if deployment.Spec.Template.Spec.Containers == nil {
 		return
@@ -129,14 +121,6 @@ func ApplyContainerWithError(deployment *appsv1.Deployment, name string, mutator
 	}
 
 	return err
-}
-
-func ApplyInitContainer(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container)) {
-	// call "with error", and eat up the error
-	_ = ApplyInitContainerWithError(deployment, name, func(container *corev1.Container) error {
-		mutator(container)
-		return nil
-	})
 }
 
 func ApplyInitContainerWithError(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container) error) error {

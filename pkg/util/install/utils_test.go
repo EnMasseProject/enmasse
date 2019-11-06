@@ -46,8 +46,9 @@ func TestApplyDeploymentDefaults(t *testing.T) {
 func TestAddContainer(t *testing.T) {
 	d := appv1.Deployment{}
 
-	ApplyContainer(&d, "foo", func(container *corev1.Container) {
+	_ = ApplyContainerWithError(&d, "foo", func(container *corev1.Container) error {
 		container.Image = "bar"
+		return nil
 	})
 
 	if d.Spec.Template.Spec.Containers == nil {
@@ -67,11 +68,13 @@ func TestAddContainer(t *testing.T) {
 func TestReplaceContainer(t *testing.T) {
 	d := appv1.Deployment{}
 
-	ApplyContainer(&d, "foo", func(container *corev1.Container) {
+	_ = ApplyContainerWithError(&d, "foo", func(container *corev1.Container) error {
 		container.Image = "bar"
+		return nil
 	})
-	ApplyContainer(&d, "foo", func(container *corev1.Container) {
+	_ = ApplyContainerWithError(&d, "foo", func(container *corev1.Container) error {
 		container.Image = "baz"
+		return nil
 	})
 
 	if d.Spec.Template.Spec.Containers == nil {
@@ -91,14 +94,17 @@ func TestReplaceContainer(t *testing.T) {
 func TestTwoContainers(t *testing.T) {
 	d := appv1.Deployment{}
 
-	ApplyContainer(&d, "foo", func(container *corev1.Container) {
+	_ = ApplyContainerWithError(&d, "foo", func(container *corev1.Container) error {
 		container.Image = "bar"
+		return nil
 	})
-	ApplyContainer(&d, "foo2", func(container *corev1.Container) {
+	_ = ApplyContainerWithError(&d, "foo2", func(container *corev1.Container) error {
 		container.Image = "baz"
+		return nil
 	})
-	ApplyContainer(&d, "foo", func(container *corev1.Container) {
+	_ = ApplyContainerWithError(&d, "foo", func(container *corev1.Container) error {
 		container.Image = "baz2"
+		return nil
 	})
 
 	if d.Spec.Template.Spec.Containers == nil {

@@ -7,6 +7,8 @@ package authenticationservice
 
 import (
 	"context"
+	"reflect"
+
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	routev1 "github.com/openshift/api/route/v1"
@@ -16,7 +18,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -242,7 +243,9 @@ type UpdateStatusFn func(status *adminv1beta1.AuthenticationServiceStatus) error
 func (r *ReconcileAuthenticationService) updateStatus(ctx context.Context, authservice *adminv1beta1.AuthenticationService, updateFn UpdateStatusFn) (reconcile.Result, error) {
 
 	newStatus := adminv1beta1.AuthenticationServiceStatus{}
-	updateFn(&newStatus)
+	if err := updateFn(&newStatus); err != nil {
+		return reconcile.Result{}, err
+	}
 
 	if authservice.Status.Host != newStatus.Host ||
 		authservice.Status.Port != newStatus.Port ||
@@ -362,7 +365,6 @@ func (r *ReconcileAuthenticationService) reconcileStandardRoute(ctx context.Cont
 	}
 	return reconcile.Result{}, nil
 }
-
 
 /*
  * This function removes the keycloak controller if it exists. This process is no longer needed if this
