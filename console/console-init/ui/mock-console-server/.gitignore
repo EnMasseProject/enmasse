@@ -1,0 +1,16 @@
+# IntelliJ IDEA specific
+.idea/
+*.iml
+**/out/
+**/target
+
+# Eclipse
+**/.settings
+**/.project
+**/.classpath
+.factorypath
+**/.checkstyle
+
+# VS Code
+.vscode
+
