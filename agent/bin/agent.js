@@ -34,7 +34,7 @@ function create_ownerreference(namespace, address_space_name) {
     if (namespace === undefined || address_space_name === undefined) {
         return Promise.resolve(undefined)
     }
-    return kubernetes.get("addressspaces/" + address_space_name, {}).then(function (address_space) {
+    return kubernetes.get("addressspaces/" + address_space_name, {namespace: namespace}).then(function (address_space) {
         return {
             apiVersion: "enmasse.io/v1beta1",
             kind: "AddressSpace",
