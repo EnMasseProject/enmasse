@@ -94,6 +94,7 @@ public class Environment {
         log.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
         log.info(debugFormat, APP_NAME_ENV, appName);
         log.info(debugFormat, TEMPLATES_PATH, templatesPath);
+        log.info(debugFormat, DOWNSTREAM_ENV, downstream);
     }
 
     public static synchronized Environment getInstance() {
