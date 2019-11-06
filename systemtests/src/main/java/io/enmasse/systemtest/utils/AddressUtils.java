@@ -128,7 +128,7 @@ public class AddressUtils {
         log.info("Address {} will be replaced", destination);
         var client = Kubernetes.getInstance().getAddressClient(destination.getMetadata().getNamespace());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS);
-        client.createOrReplace(destination);
+        client.withName(destination.getMetadata().getName()).patch(destination);
         Thread.sleep(10_000);
         if (wait) {
             waitForDestinationsReady(timeoutBudget, destination);
