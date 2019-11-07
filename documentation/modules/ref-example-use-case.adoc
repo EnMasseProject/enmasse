@@ -1,0 +1,27 @@
+// Module included in the following assemblies:
+//
+// assembly-configuring.adoc
+
+[id='ref-example-use-case-{context}']
+= Example use case for configuring {ProductName}
+
+To help illustrate how the service configuration resources can be defined to satisfy a particular use case, the requirements of Company X for using {ProductName} are outlined. This use case is referenced throughout the following documentation describing the service configuration resource types in further detail.
+
+Company X has the following requirements:
+
+* Ability to accommodate multiple separate teams--for example, engineering and quality assurance (QA) work teams--that use messaging independently. To meet this requirement, multiple address spaces are needed.
+
+* Since the applications for Company X are written to use JMS APIs and make extensive use of local transactions and they use a mixture of AMQP and OpenWire clients, using the brokered address space type is required.
+
+* For engineering work, restricting the messaging infrastructure to support storage of no more than 1000 messages of approximately 1 KB per message, with up to 10 queues and topics is required.
++
+For QA work, restricting the messaging infrastructure to support storage of no more than 10,000 messages of approximately 100 KB, with up to 50 queues and topics is required.
+
+* For engineering work, the ability to restrict who can connect into the address space is required.
+
+* For engineering work, the engineering team does not need to create distinct users that need to be individually authenticated.
++
+For QA work, the QA team must be able to create users for each instance where the credentials are be verified.
+
+Each of these requirements and how they can be met by configuring the appropriate resources is discussed in the following sections. 
+
