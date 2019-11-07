@@ -47,7 +47,7 @@ Create a new directory and set the `GOPATH` environment variable:
 
     make
 
-This can be run at the top level or within each module. You can also run the 'build', 'test', and 'package' targets individually.
+This can be run at the top level or within each module. You can also run the `build`, `test`, and `package` targets individually.
 
 #### Building docker images
 
@@ -63,34 +63,31 @@ This can be run at the top level or within each module. You can also run the 'bu
 
     make buildpush
 
-*Note*: If you are using OKD and 'oc cluster up', you can push images directly to the builtin registry
+*Note*: If you are using OKD and `oc cluster up`, you can push images directly to the built-in registry
 by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 
 #### Deploying to a Kubernetes instance assuming already logged in with cluster-admin permissions
 
 *Note*: This assumes you have [OpenSSL](https://www.openssl.org) installed.
 
-```
-kubectl create namespace enmasse-infra
-kubectl config set-context $(kubectl config current-context) --namespace=enmasse-infra
-
-mkdir -p api-server-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.enmasse-infra.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
-kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
-
-kubectl apply -f templates/build/enmasse-latest/install/bundles/enmasse
-kubectl apply -f templates/build/enmasse-latest/install/components/example-plans
-kubectl apply -f templates/build/enmasse-latest/install/components/example-authservices
-```
+    kubectl create namespace enmasse-infra
+    kubectl config set-context $(kubectl config current-context) --namespace=enmasse-infra
+    
+    mkdir -p api-server-cert
+    openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.enmasse-infra.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
+    kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
+    
+    kubectl apply -f templates/build/enmasse-latest/install/bundles/enmasse
+    kubectl apply -f templates/build/enmasse-latest/install/components/example-plans
+    kubectl apply -f templates/build/enmasse-latest/install/components/example-authservices
 
 #### Deploying to an OKD instance assuming already logged in with cluster-admin permissions
 
-```
-oc new-project enmasse-infra || oc project enmasse-infra
-oc apply -f templates/build/enmasse-latest/install/bundles/enmasse
-oc apply -f templates/build/enmasse-latest/install/components/example-plans
-oc apply -f templates/build/enmasse-latest/install/components/example-authservices
-```
+    oc new-project enmasse-infra || oc project enmasse-infra
+    oc apply -f templates/build/enmasse-latest/install/bundles/enmasse
+    oc apply -f templates/build/enmasse-latest/install/components/example-plans
+    oc apply -f templates/build/enmasse-latest/install/components/example-authservices
+
 
 #### Running smoketests against a deployed instance
 
@@ -163,7 +160,7 @@ The following deployment names are available depending on their types and EnMass
 For forwarding port from the remote pod to the local host invoke following command (it will lock terminal) and then
 connect with development tool to the forwarded port on localhost
 
-   $CMD port-forward $(oc get pods | grep <deployment-name> | awk '{print $1}') $JAVA_DEBUG_PORT:$JAVA_DEBUG_PORT
+    $CMD port-forward $(oc get pods | grep <deployment-name> | awk '{print $1}') $JAVA_DEBUG_PORT:$JAVA_DEBUG_PORT
 
 #### Go unit tests
 
@@ -175,11 +172,11 @@ being used by the build to have a combined test result of Java and Go parts.  Yo
 There are several environment variables that control the behavior of the build. Some of them are
 only consumed by some tasks:
 
-   * `KUBERNETES_API_URL`   - URL to Kubernetes master. Consumed by `systemtests` target
-   * `KUBERNETES_API_TOKEN` - Kubernetes API token. Consumed by `systemtests` target
-   * `KUBERNETES_NAMESPACE` - Kubernetes namespace for EnMasse. Consumed by `systemtests` targets
-   * `DOCKER_ORG`           - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasse`
-   * `DOCKER_REGISTRY`      - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `quay.io`
+   * `KUBERNETES_API_URL`   - URL to Kubernetes master. Consumed by `systemtests` target.
+   * `KUBERNETES_API_TOKEN` - Kubernetes API token. Consumed by `systemtests` target.
+   * `KUBERNETES_NAMESPACE` - Kubernetes namespace for EnMasse. Consumed by `systemtests` targets.
+   * `DOCKER_ORG`           - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasse`.
+   * `DOCKER_REGISTRY`      - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `quay.io`.
    * `TAG`                  - Tag used as docker image tag in snapshots and in the generated templates. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets.
 
 ## Debugging

@@ -2,15 +2,15 @@
 
 ## How to contribute to EnMasse
 
-We'd love to accept your patches! Since we **♥︎♥︎ LOVE ♥︎♥︎** Contributors and Contributions :-)
+We'd love to accept your patches! Since we **:heart::heart: LOVE :heart::heart:** Contributors and Contributions :smile:
 
-You can start contributing to EnMasse by following the below guidelines:-
+You can start contributing to EnMasse by following the below guidelines:
 
-(We are assuming you know about git like resolving merge conflicts, squash, setting remote etc.)
+We assume you already know about git, like resolving merge conflicts, squashing, setting remote etc.
 
 ### Getting Source Code
 
-Get the source code by doing a fork and then using the below command
+Get the source code by doing a fork and then using the command below:
 
 ```
 git clone https://github.com/your_github_username/enmasse.git
@@ -29,7 +29,7 @@ There are lots of issues on EnMasse's [issue page](https://github.com/enmassepro
 
 #### Creating a new branch
 
-Please create a new branch to start your development work. You can create the branch by any name but we will suggest you consider the naming convention like issue-issueNumber. Example - issue-123
+Please create a new branch to start your development work. You can create the branch by any name but we will suggest you consider the naming convention like `issue-issueNumber`. Example: `issue-123`.
 
 ```
 git checkout -b issue-123
@@ -92,9 +92,8 @@ Your PR will get reviewed soon from the maintainers of the project. If they sugg
 
 That's it! Thank you for your contribution!
 
-Feel free to suggest changes to this documentation. If you want to discuss something with maintainers, you can ask us on `#enmasse` at Freenode or via a GitHub [issue](https://github.com/enmasseproject/enmasse/issues)
+Feel free to suggest changes to this documentation. If you want to discuss something with maintainers, you can ask us on [Gitter](https://gitter.im/EnMasseProject/community) or via a GitHub [issue](https://github.com/enmasseproject/enmasse/issues)
 
 ### Note
  
 Contributions can be small or big, it does not matter. We even love to receive a typo fix PR. Adding feature or fixing a bug is not the only way to contribute. You can send us PR for adding documentation, fixing typos or adding tests.
-
