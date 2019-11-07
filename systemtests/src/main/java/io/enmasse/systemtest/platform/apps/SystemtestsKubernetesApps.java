@@ -394,7 +394,12 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deleteDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
-        loadDirectories(streamManipulator, Deletable::delete, paths);
+        loadDirectories(streamManipulator, o -> {
+            o.fromServer().get().forEach(item -> {
+                // Workaround for https://github.com/fabric8io/kubernetes-client/issues/1856
+                Kubernetes.getInstance().getClient().resource(item).cascading(true).delete();
+            });
+        }, paths);
     }
 
     public static void loadDirectories(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
