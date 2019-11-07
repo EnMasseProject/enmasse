@@ -56,7 +56,7 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
         log.info("Starting project watcher");
 
         this.watcher = IoTProjects.clientForProject(getClient())
-
+                .inAnyNamespace()
                 .watch(new Watcher<>() {
 
                     @Override
