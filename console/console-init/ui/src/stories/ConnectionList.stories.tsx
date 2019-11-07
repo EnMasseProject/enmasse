@@ -1,43 +1,46 @@
-import React from 'react';
-import { MemoryRouter } from 'react-router';
-import { ConnectionList, IConnection } from '..//Components/AddressSpace/ConnectionList';
-import { EmptyConnection } from '../Components/Common/EmptyConnection';
+import React from "react";
+import { MemoryRouter } from "react-router";
+import {
+  ConnectionList,
+  IConnection
+} from "..//Components/AddressSpace/ConnectionList";
+import { EmptyConnection } from "../Components/Common/EmptyConnection";
 
 export default {
-  title: 'Connection'
+  title: "Connection"
 };
 
 const rows: IConnection[] = [
   {
-    hostname: 'foo',
-    containerId: '123',
-    protocol: 'AMQP',
+    hostname: "foo",
+    containerId: "123",
+    protocol: "AMQP",
     messagesIn: 123,
     messagesOut: 123,
     senders: 123,
     receivers: 123,
-    status: 'running',
+    status: "running"
   },
   {
-    hostname: 'foo',
-    containerId: '123',
-    protocol: 'AMQP',
+    hostname: "foo",
+    containerId: "123",
+    protocol: "AMQP",
     messagesIn: 123,
     messagesOut: 123,
     senders: 123,
     receivers: 123,
-    status: 'running',
+    status: "running"
   },
   {
-    hostname: 'foo',
-    containerId: '123',
-    protocol: 'AMQP',
+    hostname: "foo",
+    containerId: "123",
+    protocol: "AMQP",
     messagesIn: 123,
     messagesOut: 123,
     senders: 123,
     receivers: 123,
-    status: 'running',
-  },
+    status: "running"
+  }
 ];
 
 export const connectionList = () => (

@@ -1,14 +1,14 @@
-import React from 'react';
+import React from "react";
 import {
   Title,
   EmptyState,
   EmptyStateIcon,
   EmptyStateBody,
   EmptyStateVariant,
-  Button,
-} from '@patternfly/react-core';
-import { PlusCircleIcon } from '@patternfly/react-icons';
-import { Link } from '@storybook/router';
+  Button
+} from "@patternfly/react-core";
+import { PlusCircleIcon } from "@patternfly/react-icons";
+import { Link } from "@storybook/router";
 
 export const EmptyAddress = () => {
   return (

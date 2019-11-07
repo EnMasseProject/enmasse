@@ -1,86 +1,86 @@
-import React from 'react';
-import { MemoryRouter } from 'react-router';
-import { AddressList, IAddress } from '..//Components/AddressSpace/AddressList';
-import { action } from '@storybook/addon-actions';
-import { select } from '@storybook/addon-knobs';
-import { AddressListFilter } from '..//Components/AddressSpace/AddressListFilter';
-import { EmptyAddress } from '../Components/Common/EmptyAddress';
+import React from "react";
+import { MemoryRouter } from "react-router";
+import { AddressList, IAddress } from "..//Components/AddressSpace/AddressList";
+import { action } from "@storybook/addon-actions";
+import { select } from "@storybook/addon-knobs";
+import { AddressListFilter } from "..//Components/AddressSpace/AddressListFilter";
+import { EmptyAddress } from "../Components/Common/EmptyAddress";
 
-export default { 
-  title: 'Address list' 
+export default {
+  title: "Address list"
 };
 
 const rows: IAddress[] = [
   {
-    name: 'foo',
-    type: 'Queue',
-    plan: 'small',
+    name: "foo",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    status: 'running',
+    status: "running"
   },
   {
-    name: 'foo',
-    type: 'Queue',
-    plan: 'small',
+    name: "foo",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    status: 'creating',
+    status: "creating"
   },
   {
-    name: 'foo',
-    type: 'Queue',
-    plan: 'small',
+    name: "foo",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    status: 'deleting',
-  },
+    status: "deleting"
+  }
 ];
 
 export const addressList = () => (
   <MemoryRouter>
-    <AddressList rows={rows} onEdit={action('onEdit')} onDelete={action('onDelete')} />
+    <AddressList
+      rows={rows}
+      onEdit={action("onEdit")}
+      onDelete={action("onDelete")}
+    />
   </MemoryRouter>
 );
 
 export const addressListFilterComponent = () => {
   const options = {
-    Name: 'Name',
-    Type: 'Type',
-    Status: 'Status',
+    Name: "Name",
+    Type: "Type",
+    Status: "Status"
   };
 
   return (
     <MemoryRouter>
       <AddressListFilter
-        onSearch={action('onSearch')}
-        onFilterSelect={action('onFilterSelect')}
+        onSearch={action("onSearch")}
+        onFilterSelect={action("onFilterSelect")}
         filterValue={
-          select(
-            'Value Of Dropdown',
-            options,
-            'Name'
-          ) as
+          select("Value Of Dropdown", options, "Name") as
             | "Name"
             | "Type"
             | "Status"
         }
-        onTypeSelect={action('onTypeSelect')}
-        typeValue={'Queue'}
-        onStatusSelect={action('onStatusSelect')}
-        statusValue={'Active'}
+        onTypeSelect={action("onTypeSelect")}
+        typeValue={"Queue"}
+        onStatusSelect={action("onStatusSelect")}
+        statusValue={"Active"}
       />
     </MemoryRouter>
   );

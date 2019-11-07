@@ -1,7 +1,7 @@
-import React from 'react';
-import { withKnobs, boolean } from '@storybook/addon-knobs';
-import { action } from '@storybook/addon-actions';
-import { AppLayout } from 'use-patternfly';
+import React from "react";
+import { withKnobs, boolean } from "@storybook/addon-knobs";
+import { action } from "@storybook/addon-actions";
+import { AppLayout } from "use-patternfly";
 import {
   Avatar,
   Brand,
@@ -10,13 +10,13 @@ import {
   Dropdown,
   DropdownToggle,
   DropdownPosition,
-  DropdownItem,
-} from '@patternfly/react-core';
-import { CogIcon } from '@patternfly/react-icons';
-import brandImg from '../brand_logo.svg';
+  DropdownItem
+} from "@patternfly/react-core";
+import { CogIcon } from "@patternfly/react-icons";
+import brandImg from "../brand_logo.svg";
 
 export default {
-  title: 'AppHeader'
+  title: "AppHeader"
 };
 
 const avatar = (
@@ -26,7 +26,7 @@ const avatar = (
 );
 const dropdownItems = [
   <DropdownItem key="help">Help</DropdownItem>,
-  <DropdownItem key="About">About</DropdownItem>,
+  <DropdownItem key="About">About</DropdownItem>
 ];
 const NavToolBar = (
   <Dropdown
@@ -36,7 +36,7 @@ const NavToolBar = (
         <CogIcon />
       </DropdownToggle>
     }
-    isOpen={boolean('keep toolbar open', true)}
+    isOpen={boolean("keep toolbar open", true)}
     isPlain
     dropdownItems={dropdownItems}
   />
@@ -46,7 +46,7 @@ const logo = <Brand src={brandImg} alt="Console Logo" />;
 export const pageHeader = () => (
   <AppLayout
     logoProps={{
-      onClick: action('Logo clicked'),
+      onClick: action("Logo clicked")
     }}
     logo={logo}
     avatar={avatar}
