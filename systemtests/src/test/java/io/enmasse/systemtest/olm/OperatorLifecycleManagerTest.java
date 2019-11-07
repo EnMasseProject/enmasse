@@ -6,7 +6,6 @@ package io.enmasse.systemtest.olm;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
@@ -53,19 +52,16 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
 
     private static final int CREATE_CR_TIMEOUT_MILLIS = 30000;
 
-    //amqonline.1.3.1
     private static String csvName;
 
-    //amq-online-operator
     private static String operatorSource;
-    //amq-online
     private static String operatorName;
 
     private static String subscriptionName = "systemtests-enmasse-operator";
 
     @BeforeAll
     void prepare() throws Exception {
-        String productName = Environment.getInstance().isDownstream() ? "amq-online" : "enmasse";
+        String productName = environment.getAppName();
         operatorName = productName;
         operatorSource = String.format("%s-operator", productName);
         ExecutionResultData res = KubeCMDClient.runOnCluster("get", "packagemanifests", "-n", "openshift-marketplace", "-l", String.format("catalog=%s", operatorSource), "-o", "json");
@@ -132,7 +128,6 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @Order(2)
     void testCreateExampleResources() throws Exception {
         Predicate<String> isInfraCR = kind -> kind.equals("StandardInfraConfig") || kind.equals("BrokeredInfraConfig") || kind.equals("AddressPlan") || kind.equals("AddressSpacePlan") || kind.equals("AuthenticationService");
-        //oc get csv -n openshift-operators -o yaml
         ExecutionResultData result = KubeCMDClient.runOnCluster("get", "csv", "-n", infraNamespace, "-o", "json", csvName);
         JsonObject csv = new JsonObject(result.getStdOut());
         String almExamples = csv.getJsonObject("metadata").getJsonObject("annotations").getString("alm-examples");
@@ -201,9 +196,7 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @Order(4)
     void uninstallOperator() throws Exception {
         TestUtils.cleanAllEnmasseResourcesFromNamespace(infraNamespace);
-        //oc delete subscriptions -n openshift-operators amq-online-operator
         KubeCMDClient.runOnCluster("delete", "subscriptions", "-n", infraNamespace, subscriptionName);
-        //oc delete csv -n openshift-operators amqonline.1.3.0
         KubeCMDClient.runOnCluster("delete", "csv", "-n", infraNamespace, csvName);
         kubernetes.getConsoleServiceClient(infraNamespace).withPropagationPolicy("Background").delete();
         TestUtils.waitForNReplicas(0, false, Map.of("app", "enmasse"), Collections.emptyMap(), new TimeoutBudget(30, TimeUnit.SECONDS), 2000);
