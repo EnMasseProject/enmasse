@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     color: "rgb(0, 102, 204)"
   }
 });
-export interface ConnectionHeaderDetailProps {
+export interface IConnectionHeaderDetailProps {
   hostname: string;
   containerId: string;
   protocol: string;
@@ -33,7 +33,7 @@ export interface ConnectionHeaderDetailProps {
   messagesOut: number;
 }
 export const ConnectionDetailHeader: React.FunctionComponent<
-  ConnectionHeaderDetailProps
+  IConnectionHeaderDetailProps
 > = ({
   hostname,
   containerId,

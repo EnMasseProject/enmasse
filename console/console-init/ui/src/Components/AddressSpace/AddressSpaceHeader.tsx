@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     borderRightColor: "lightgrey"
   }
 });
-export interface AddressSpace {
+export interface IAddressSpace {
   name: string;
   namespace: string;
   createdOn: string;
@@ -30,7 +30,7 @@ export interface AddressSpace {
   onDownload: (name: string) => void;
   onDelete: (name: string) => void;
 }
-export const AddressSpaceHeader: React.FunctionComponent<AddressSpace> = ({
+export const AddressSpaceHeader: React.FunctionComponent<IAddressSpace> = ({
   name,
   namespace,
   createdOn,
