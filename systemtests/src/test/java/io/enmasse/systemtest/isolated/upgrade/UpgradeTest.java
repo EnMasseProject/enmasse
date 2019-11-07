@@ -288,7 +288,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
                 log.info("*********************************************");
             });
             return ready.get();
-        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+        }, new TimeoutBudget(10, TimeUnit.MINUTES));
         TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
     }
 
