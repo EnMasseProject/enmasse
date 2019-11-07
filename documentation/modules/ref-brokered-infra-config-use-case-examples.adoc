@@ -2,8 +2,8 @@
 //
 // assembly-configuring.adoc
 
-[id='ref-brokered-infra-config-use-case-examples-{context}']
-= Brokered infrastructure configuration use case examples
+[id='ref-restrict-messaging-infrastructure-{context}']
+= Restricting messaging infrastructure
 
 Company X has the following requirements for using {ProductName}:
 
@@ -17,11 +17,11 @@ Meeting this requirement involves configuring the `BrokeredInfraConfig` resource
 
 * Calculate the minimum amount of storage for the broker. For more information about broker sizing guidelines, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#broker-component-sizing-messaging[Broker component sizing].
 
-== Examples of brokered address space configuration
+== Examples of brokered infrastructure configurations
 
-The following brokered address space configuration examples show broker resource values that meet the requirements of Company X.
+The following brokered infrastructure configuration examples show broker component resource values that meet the requirements of Company X.
 
-.Brokered address space configuration example for engineering
+.Brokered infrastructure configuration example for engineering
 +
 [source,yaml,options="nowrap"]
 ----
@@ -36,7 +36,7 @@ spec:
       storage: 20Mi
 ----
 
-.Brokered address space configuration example for QA
+.Brokered infrastructure configuration example for QA
 
 [source,yaml,options="nowrap"]
 ----

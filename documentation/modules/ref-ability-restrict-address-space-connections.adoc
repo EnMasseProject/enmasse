@@ -1,0 +1,49 @@
+// Module included in the following assemblies:
+//
+// assembly-configuring.adoc
+
+[id='ref-ability-restrict-address-space-connections-{context}']
+= Ability to restrict address space connections
+
+Company X has the following requirement for using {ProductName}: For engineering work, the ability to restrict who can connect into the address space is required.
+
+To meet this requirement you must set a network policy in the brokered infrastructure configuration. For more information about network policies, see OpenShift documentation.
+
+.Brokered infrastructure configuration example showing network policy setting
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: BrokeredInfraConfig
+metadata:
+  name: engineering
+spec:
+  networkPolicy:
+    ingress:
+      - from:
+        - namespaceSelector:
+            matchLabels:
+              org: engineering
+  broker:
+    resources:
+      memory: 512Mi
+      storage: 20Mi
+----
+
+In addition, the address space plan references the previous `BrokeredInfraConfig` Custom Resource.
+
+.Address space plan example
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressSpacePlan
+metadata:
+  name: engineering
+spec:
+  infraConfigRef: engineering
+  addressSpaceType: brokered
+  addressPlans:
+  - brokered-queue
+  - brokered-topic
+----
+
+
