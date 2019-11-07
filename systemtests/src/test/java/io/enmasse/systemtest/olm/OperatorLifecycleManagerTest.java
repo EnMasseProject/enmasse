@@ -202,7 +202,7 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     void uninstallOperator() throws Exception {
         TestUtils.cleanAllEnmasseResourcesFromNamespace(infraNamespace);
         //oc delete subscriptions -n openshift-operators amq-online-operator
-        KubeCMDClient.runOnCluster("delete", "subscriptions", "-n", infraNamespace, subscriptionName);//"amq-online-operator");
+        KubeCMDClient.runOnCluster("delete", "subscriptions", "-n", infraNamespace, subscriptionName);
         //oc delete csv -n openshift-operators amqonline.1.3.0
         KubeCMDClient.runOnCluster("delete", "csv", "-n", infraNamespace, csvName);
         kubernetes.getConsoleServiceClient(infraNamespace).withPropagationPolicy("Background").delete();
