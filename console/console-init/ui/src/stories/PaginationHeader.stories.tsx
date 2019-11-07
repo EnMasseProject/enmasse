@@ -10,30 +10,30 @@ import {
   TextInput,
   PageSection,
   InputGroup,
-  Grid
-} from "@patternfly/react-core";
-import * as React from "react";
-import { storiesOf } from "@storybook/react";
-import { MemoryRouter } from "react-router";
-import { action } from "@storybook/addon-actions";
-import { SearchIcon } from "@patternfly/react-icons";
-const stories = storiesOf("Console", module);
+  Grid,
+} from '@patternfly/react-core';
+import React from 'react';
+import { MemoryRouter } from 'react-router';
+import { action } from '@storybook/addon-actions';
+import { SearchIcon } from '@patternfly/react-icons';
 
-stories.add("Address Space Pagination Header", () => {
+export default {
+  title: 'PaginationHeader'
+}
+
+export const addressSpacePaginationHeader = () => {
   return (
     <MemoryRouter>
-      <PageSection variant={"light"}>
-        <Grid style={{ height: "100vh" }}>
+      <PageSection variant={'light'}>
+        <Grid style={{ height: '100vh' }}>
           <GridItem span={6}>
             <InputGroup>
               <Dropdown
                 position="right"
-                onSelect={action("Dropdown onSelect")}
+                onSelect={action('Dropdown onSelect')}
                 isOpen={false}
                 toggle={
-                  <DropdownToggle onToggle={action("Dropdown onToggle")}>
-                    Name
-                  </DropdownToggle>
+                  <DropdownToggle onToggle={action('Dropdown onToggle')}>Name</DropdownToggle>
                 }
                 dropdownItems={[]}
               />
@@ -44,10 +44,7 @@ stories.add("Address Space Pagination Header", () => {
                 placeholder="Filter by name"
                 aria-label="search input name"
               />
-              <Button
-                variant={ButtonVariant.control}
-                aria-label="search button for search input"
-              >
+              <Button variant={ButtonVariant.control} aria-label="search button for search input">
                 <SearchIcon />
               </Button>
               <Button variant="primary">Create address</Button>
@@ -55,8 +52,8 @@ stories.add("Address Space Pagination Header", () => {
                 isPlain
                 position={DropdownPosition.right}
                 isOpen={false}
-                onSelect={action("dropdown select")}
-                toggle={<KebabToggle onToggle={action("toggle function")} />}
+                onSelect={action('dropdown select')}
+                toggle={<KebabToggle onToggle={action('toggle function')} />}
                 dropdownItems={[]}
               />
             </InputGroup>
@@ -66,13 +63,13 @@ stories.add("Address Space Pagination Header", () => {
               itemCount={523}
               perPage={10}
               page={1}
-              onSetPage={action("Page Changes")}
+              onSetPage={action('Page Changes')}
               widgetId="pagination-options-menu-top"
-              onPerPageSelect={action("page count changes")}
+              onPerPageSelect={action('page count changes')}
             />
           </GridItem>
         </Grid>
       </PageSection>
     </MemoryRouter>
   );
-});
+};

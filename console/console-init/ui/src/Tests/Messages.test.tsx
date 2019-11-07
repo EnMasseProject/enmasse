@@ -1,6 +1,6 @@
 import React from "react";
 import { render, getByTitle } from "@testing-library/react";
-import { Messages } from "src/Components/Messages";
+import { Messages } from "../Components/Messages";
 
 describe("Messages", () => {
   test("it renders the message", () => {

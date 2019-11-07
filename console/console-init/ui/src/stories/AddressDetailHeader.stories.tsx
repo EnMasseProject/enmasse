@@ -1,14 +1,14 @@
-import * as React from "react";
-import { storiesOf } from "@storybook/react";
-import { withKnobs, text, select, number, color } from "@storybook/addon-knobs";
+import React from "react";
 import { MemoryRouter } from "react-router";
+import { text, number } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import { AddressDetailHeader } from "src/Components/AddressDetail/AddressDetailHeader";
+import { AddressDetailHeader } from "../Components/AddressDetail/AddressDetailHeader";
 
-const stories = storiesOf("Address Detail", module);
-stories.addDecorator(withKnobs);
+export default {
+    title: 'Address Detail'
+};
 
-stories.add("Address Detail Header",()=>(
+export const sample = () => (
     <MemoryRouter>
         <AddressDetailHeader 
         type={text("Type","Queue")}
@@ -19,4 +19,4 @@ stories.add("Address Detail Header",()=>(
         onDelete={action("onDelete Clicked")}
         />
     </MemoryRouter>
-))
+);
