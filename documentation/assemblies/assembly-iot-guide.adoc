@@ -11,23 +11,10 @@ The IoT guide provides resources on how to set up and manage {ProductName} IoT f
 
 include::../modules/con-iot-concepts.adoc[leveloffset=+1]
 
-include::../modules/proc-installing-using-bundle.adoc[leveloffset=+1]
+include::../assemblies/assembly-iot-getting-started.adoc[leveloffset=+1]
 
-include::../modules/proc-iot-installing-services.adoc[leveloffset=+1]
+include::../assemblies/assembly-iot-service-admin-guide.adoc[leveloffset=+1]
 
-include::../modules/proc-iot-creating-project.adoc[leveloffset=+1]
-
-include::../modules/proc-iot-creating-device.adoc[leveloffset=+1]
-
-include::../modules/proc-iot-configuring-sigfox.adoc[leveloffset=+1]
-
-:api: telemetry
-
-include::../modules/proc-iot-api.adoc[leveloffset=+1]
-
-:api: event
-
-include::../modules/proc-iot-api.adoc[leveloffset=+1]
+include::../assemblies/assembly-iot-tenant-guide.adoc[leveloffset=+1]
 
 :context: {parent-context}
-

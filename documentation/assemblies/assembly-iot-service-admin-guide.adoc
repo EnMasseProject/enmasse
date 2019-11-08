@@ -1,0 +1,10 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+
+:context: {context}-iot
+
+[id='iot-service-admin-{context}]
+= IoT for service administrators 
+
+include::../modules/proc-iot-configuring-sigfox.adoc[leveloffset=+1]
