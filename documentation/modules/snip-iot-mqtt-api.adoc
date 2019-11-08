@@ -1,0 +1,6 @@
+. Send {api} using the MQTT protocol:
++
+[options="nowrap",subs="attributes"]
+----
+mosquitto_pub -d -h {mqtt-adapter} -p {mqtt-port} -u 'sensor1@myapp.iot' -P hono-secret -t {api} -m '{"temp": 5}' -i 4711 --cafile install/components/iot/examples/k8s-tls/build/iot-mqtt-adapter-fullchain.pem
+----

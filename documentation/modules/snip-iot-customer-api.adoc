@@ -1,0 +1,6 @@
+. Run the consumer application to receive {api}:
++
+[options="nowrap",subs="attributes"]
+----
+java -jar hono-cli-*-exec.jar --hono.client.host=$MESSAGING_HOST --hono.client.port=$MESSAGING_PORT --hono.client.username=consumer --hono.client.password=foobar --tenant.id=myapp.iot --hono.client.trustStorePath=tls.crt --message.type={api}
+----
