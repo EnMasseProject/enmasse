@@ -45,13 +45,13 @@ public class KubeCMDClient {
      * @param definition in yaml or json format
      * @return result of execution
      */
-    public static ExecutionResultData createOrUpdateCR(String namespace, String definition, boolean replace) throws IOException {
+    public static ExecutionResultData createOrUpdateCR(String namespace, String definition, boolean replace, int timeout) throws IOException {
         final File defInFile = new File("crdefinition.file");
         try (FileWriter wr = new FileWriter(defInFile.getName())) {
             wr.write(definition);
             wr.flush();
             log.info("User '{}' created", defInFile.getAbsolutePath());
-            return Exec.execute(Arrays.asList(CMD, replace ? "replace" : "apply", "-n", namespace, "-f", defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
+            return Exec.execute(Arrays.asList(CMD, replace ? "replace" : "apply", "-n", namespace, "-f", defInFile.getAbsolutePath()), timeout, true);
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
@@ -61,15 +61,19 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData createCR(String definition) throws IOException {
-        return createOrUpdateCR(Environment.getInstance().namespace(), definition, false);
+        return createOrUpdateCR(Environment.getInstance().namespace(), definition, false, DEFAULT_SYNC_TIMEOUT);
     }
 
     public static ExecutionResultData createCR(String namespace, String definition) throws IOException {
-        return createOrUpdateCR(namespace, definition, false);
+        return createOrUpdateCR(namespace, definition, false, DEFAULT_SYNC_TIMEOUT);
+    }
+
+    public static ExecutionResultData createCR(String namespace, String definition, int timeoutMillis) throws IOException {
+        return createOrUpdateCR(namespace, definition, false, timeoutMillis);
     }
 
     public static ExecutionResultData updateCR(String definition) throws IOException {
-        return createOrUpdateCR(Environment.getInstance().namespace(), definition, true);
+        return createOrUpdateCR(Environment.getInstance().namespace(), definition, true, DEFAULT_SYNC_TIMEOUT);
     }
 
     public static ExecutionResultData patchCR(String kind, String name, String patchData) {
@@ -78,7 +82,7 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData updateCR(String namespace, String definition) throws IOException {
-        return createOrUpdateCR(namespace, definition, true);
+        return createOrUpdateCR(namespace, definition, true, DEFAULT_SYNC_TIMEOUT);
     }
 
     public static String getOCUser() {
@@ -320,22 +324,6 @@ public class KubeCMDClient {
 
     public static ExecutionResultData deleteNamespace(String name) {
         return Exec.execute(Arrays.asList(CMD, "delete", "namespace", name), FIVE_MINUTES_TIMEOUT, true);
-    }
-
-
-    public static ExecutionResultData applyCR(String definition) throws IOException {
-        final File defInFile = new File("crdefinition.file");
-        try (FileWriter wr = new FileWriter(defInFile.getName())) {
-            wr.write(definition);
-            wr.flush();
-            log.info("User '{}' created", defInFile.getAbsolutePath());
-            return Exec.execute(Arrays.asList(CMD, "apply", "-f", defInFile.getAbsolutePath()), ONE_MINUTE_TIMEOUT, true);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw e;
-        } finally {
-            Files.delete(Paths.get(defInFile.getAbsolutePath()));
-        }
     }
 
     public static ExecutionResultData deleteResource(String namespace, String resource, String name) {

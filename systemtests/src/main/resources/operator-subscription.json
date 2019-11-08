@@ -1,0 +1,16 @@
+{
+  "apiVersion": "operators.coreos.com/v1alpha1",
+  "kind": "Subscription",
+  "metadata": {
+    "name": "XXXXX",
+    "namespace": "openshift-operators"
+  },
+  "spec": {
+    "channel": "stable",
+    "installPlanApproval": "Automatic",
+    "name": "XXXXX",
+    "source": "XXXX",
+    "sourceNamespace": "openshift-marketplace",
+    "startingCSV": "XXXXXXX"
+  }
+}
