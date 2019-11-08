@@ -127,7 +127,6 @@ func (d *AddressSpaceControllerDeployment) performUpgrade(deployment *appsv1.Dep
 		return err
 	}
 	log.Info("Downscaling api-server", "deployment", apiServerDeployment.Name)
-	apiServerReplicas := *apiServerDeployment.Spec.Replicas
 	apiServerDeployment.Spec.Replicas = &zero
 	_, err = deploymentClient.Update(apiServerDeployment)
 	if err != nil {
@@ -215,12 +214,13 @@ func (d *AddressSpaceControllerDeployment) performUpgrade(deployment *appsv1.Dep
 
 	// Scale api-server back up
 	log.Info("Scaling up api-server", "deployment", apiServerDeployment.Name)
-	apiServerDeployment.Spec.Replicas = &apiServerReplicas
+	var one int32 = 1
+	apiServerDeployment.Spec.Replicas = &one
 	_, err = deploymentClient.Update(apiServerDeployment)
 	if err != nil {
 		return err
 	}
-	err = waitForReplicas(podClient, apiServerDeployment, int(apiServerReplicas))
+	err = waitForReplicas(podClient, apiServerDeployment, int(one))
 	if err != nil {
 		return err
 	}
