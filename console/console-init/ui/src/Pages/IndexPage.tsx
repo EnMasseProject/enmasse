@@ -7,7 +7,6 @@ import {
   IConnection
 } from "src/Components/AddressSpace/ConnectionList";
 import { EditAddress } from "src/Pages/EditAddressPage";
-import { ConnectionDetailPage } from "./ConnectionDetailPage";
 
 const addressRows: IAddress[] = [
   {
@@ -69,37 +68,36 @@ const IndexPage: React.FC = ({ children }) => {
     setAddressBeingEdited(address);
 
   return (
-    <ConnectionDetailPage />
-    // <React.Fragment>
-    //   <PageSection>
-    //     <AddressList
-    //       rows={addressRows}
-    //       onEdit={handleEdit}
-    //       onDelete={handleDelete}
-    //     />
-    //   </PageSection>
-    //   {addressBeingEdited && (
-    //     <Modal
-    //       title="Modal Header"
-    //       isOpen={true}
-    //       onClose={handleCancelEdit}
-    //       actions={[
-    //         <Button key="confirm" variant="primary" onClick={handleSaving}>
-    //           Confirm
-    //         </Button>,
-    //         <Button key="cancel" variant="link" onClick={handleCancelEdit}>
-    //           Cancel
-    //         </Button>,
-    //       ]}
-    //       isFooterLeftAligned
-    //     >
-    //       <EditAddress
-    //         address={addressBeingEdited}
-    //         onChange={handleEditChange}
-    //       />
-    //     </Modal>
-    //   )}
-    // </React.Fragment>
+    <React.Fragment>
+      <PageSection>
+        <AddressList
+          rows={addressRows}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </PageSection>
+      {addressBeingEdited && (
+        <Modal
+          title="Modal Header"
+          isOpen={true}
+          onClose={handleCancelEdit}
+          actions={[
+            <Button key="confirm" variant="primary" onClick={handleSaving}>
+              Confirm
+            </Button>,
+            <Button key="cancel" variant="link" onClick={handleCancelEdit}>
+              Cancel
+            </Button>,
+          ]}
+          isFooterLeftAligned
+        >
+          <EditAddress
+            address={addressBeingEdited}
+            onChange={handleEditChange}
+          />
+        </Modal>
+      )}
+    </React.Fragment>
   );
 };
 

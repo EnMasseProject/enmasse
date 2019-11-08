@@ -12,7 +12,6 @@ const getAddressSpaceListPage = () => import('./Pages/AddressSpaceListPage');
 const getAddressSpaceDetail = () => import('./Pages/AddressSpaceDetailPage');
 const getAddressDetail = () => import('./Pages/AddressDetailPage');
 const getConnectionDetail = () => import('./Pages/ConnectionDetailPage');
-const getConnectionsList = () => import('./Pages/ConnectionsListPage');
 export const AppRoutes = () => (
   <LastLocationProvider>
     <SwitchWith404>
@@ -25,17 +24,17 @@ export const AppRoutes = () => (
       />
       {/* <Redirect path="/adress-space/:id" to="/main/items" exact={true}/> */}
       <LazyRoute
-        path="/address-space/:id/addresses"
+        path="/address-space/:id?/addresses"
         exact={true}
         getComponent={getAddressSpaceDetail}
       />
       <LazyRoute
-        path="/address-space/:id/address/:id"
+        path="/address-space/:id?/address/:id"
         getComponent={getAddressDetail}
       />
       <LazyRoute
-        path="/address-space/:id/connection/:id"
-        getComponent={getAddressDetail}
+        path="/address-space/:id?/connection/:id"
+        getComponent={getConnectionDetail}
       />
     </SwitchWith404>
   </LastLocationProvider>
