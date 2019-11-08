@@ -1,19 +1,19 @@
-import * as React from 'react';
-import { Flex, FlexItem } from '@patternfly/react-core';
-import { css, StyleSheet } from '@patternfly/react-styles';
+import * as React from "react";
+import { Flex, FlexItem } from "@patternfly/react-core";
+import { css, StyleSheet } from "@patternfly/react-styles";
 
 const styles = StyleSheet.create({
   message_in_flex: {
     paddingTop: 15,
-    textAlign: 'center',
+    textAlign: "center",
     paddingLeft: 48,
-    fontSize: 21,
+    fontSize: 21
   },
   message_out_flex: {
-    textAlign: 'center',
+    textAlign: "center",
     paddingLeft: 48,
-    fontSize: 21,
-  },
+    fontSize: 21
+  }
 });
 export interface IMessagesDetail {
   messagesIn: number;
@@ -24,17 +24,17 @@ export interface IMessagesDetail {
 export const MessagesDetail: React.FunctionComponent<IMessagesDetail> = ({
   messagesIn,
   messagesOut,
-  isMobileView,
+  isMobileView
 }) => {
   return (
-    <Flex breakpointMods={[{ modifier: 'row', breakpoint: 'sm' }]}>
+    <Flex breakpointMods={[{ modifier: "row", breakpoint: "sm" }]}>
       <FlexItem className={css(styles.message_in_flex)}>
-        {messagesIn || messagesIn === 0 ? messagesIn : '-'}{' '}
-        {isMobileView ? '' : <br />} Message in
+        {messagesIn || messagesIn === 0 ? messagesIn : "-"}{" "}
+        {isMobileView ? "" : <br />} Message in
       </FlexItem>
       <FlexItem className={css(styles.message_out_flex)}>
-        {messagesOut || messagesOut === 0 ? messagesOut : '-'}{' '}
-        {isMobileView ? '' : <br />} Message out
+        {messagesOut || messagesOut === 0 ? messagesOut : "-"}{" "}
+        {isMobileView ? "" : <br />} Message out
       </FlexItem>
     </Flex>
   );

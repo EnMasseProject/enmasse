@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "@testing-library/react";
-import { AddressList, IAddress } from "src/Components/AddressSpace/AddressList";
+import { AddressList, IAddress } from "../Components/AddressSpace/AddressList";
 import { MemoryRouter } from "react-router";
 
 describe("Address List", () => {

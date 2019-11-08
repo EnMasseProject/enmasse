@@ -1,12 +1,12 @@
-import React from 'react';
+import React from "react";
 import {
   Title,
   EmptyState,
   EmptyStateIcon,
   EmptyStateBody,
-  EmptyStateVariant,
-} from '@patternfly/react-core';
-import { GlobeRouteIcon } from '@patternfly/react-icons';
+  EmptyStateVariant
+} from "@patternfly/react-core";
+import { GlobeRouteIcon } from "@patternfly/react-icons";
 
 export const EmptyConnection = () => {
   return (

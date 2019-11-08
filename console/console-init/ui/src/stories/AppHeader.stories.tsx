@@ -1,5 +1,4 @@
-import * as React from "react";
-import { storiesOf } from "@storybook/react";
+import React from "react";
 import { withKnobs, boolean } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
 import { AppLayout } from "use-patternfly";
@@ -14,16 +13,15 @@ import {
   DropdownItem
 } from "@patternfly/react-core";
 import { CogIcon } from "@patternfly/react-icons";
-import avatarImg from "../src/logo.svg";
-import brandImg from "../src/brand_logo.svg";
+import brandImg from "../brand_logo.svg";
 
-const stories = storiesOf("Console", module);
-stories.addDecorator(withKnobs);
+export default {
+  title: "AppHeader"
+};
 
 const avatar = (
   <React.Fragment>
     <Text component={TextVariants.p}>Ramakrishna Pattnaik</Text>
-    <Avatar src={avatarImg} alt="avatar" />
   </React.Fragment>
 );
 const dropdownItems = [
@@ -45,7 +43,7 @@ const NavToolBar = (
 );
 const logo = <Brand src={brandImg} alt="Console Logo" />;
 
-stories.add("Page Header", () => (
+export const pageHeader = () => (
   <AppLayout
     logoProps={{
       onClick: action("Logo clicked")
@@ -54,4 +52,4 @@ stories.add("Page Header", () => (
     avatar={avatar}
     toolbar={NavToolBar}
   ></AppLayout>
-));
+);

@@ -12,14 +12,16 @@ import {
   InputGroup,
   Grid
 } from "@patternfly/react-core";
-import * as React from "react";
-import { storiesOf } from "@storybook/react";
+import React from "react";
 import { MemoryRouter } from "react-router";
 import { action } from "@storybook/addon-actions";
 import { SearchIcon } from "@patternfly/react-icons";
-const stories = storiesOf("Console", module);
 
-stories.add("Address Space Pagination Header", () => {
+export default {
+  title: "PaginationHeader"
+};
+
+export const addressSpacePaginationHeader = () => {
   return (
     <MemoryRouter>
       <PageSection variant={"light"}>
@@ -75,4 +77,4 @@ stories.add("Address Space Pagination Header", () => {
       </PageSection>
     </MemoryRouter>
   );
-});
+};

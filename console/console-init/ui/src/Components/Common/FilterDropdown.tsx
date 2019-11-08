@@ -18,7 +18,7 @@ export const FilterDropdown: React.FunctionComponent<IDropdown> = ({
   onSelect,
   options
 }) => {
-  const [isOpen,setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
   return (
     <Dropdown
       position="left"
@@ -34,7 +34,8 @@ export const FilterDropdown: React.FunctionComponent<IDropdown> = ({
         <DropdownItem
           key={option.value}
           value={option.value}
-          itemID={option.value}>
+          itemID={option.value}
+        >
           {option.label}
         </DropdownItem>
       ))}

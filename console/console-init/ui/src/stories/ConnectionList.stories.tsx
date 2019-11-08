@@ -1,10 +1,14 @@
-import * as React from "react";
+import React from "react";
 import { MemoryRouter } from "react-router";
-import { storiesOf } from "@storybook/react";
-import { ConnectionList, IConnection } from "../src/Components/AddressSpace/ConnectionList";
-import {  EmptyConnection } from "src/Components/Common/EmptyConnection";
+import {
+  ConnectionList,
+  IConnection
+} from "..//Components/AddressSpace/ConnectionList";
+import { EmptyConnection } from "../Components/Common/EmptyConnection";
 
-const stories = storiesOf("Connection", module);
+export default {
+  title: "Connection"
+};
 
 const rows: IConnection[] = [
   {
@@ -39,14 +43,14 @@ const rows: IConnection[] = [
   }
 ];
 
-stories.add("Connection List", () => (
+export const connectionList = () => (
   <MemoryRouter>
     <ConnectionList rows={rows} />
   </MemoryRouter>
-));
+);
 
-stories.add("Empty Connection List",()=>(
+export const emptyConnectionList = () => (
   <MemoryRouter>
     <EmptyConnection />
   </MemoryRouter>
-))
+);

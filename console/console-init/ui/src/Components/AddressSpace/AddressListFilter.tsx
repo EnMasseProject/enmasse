@@ -1,8 +1,5 @@
 import * as React from "react";
-import {
-  FilterDropdown,
-  IDropdownOption
-} from "../Common/FilterDropdown";
+import { FilterDropdown, IDropdownOption } from "../Common/FilterDropdown";
 import {
   InputGroup,
   Button,
@@ -47,7 +44,7 @@ export const AddressListFilter: React.FunctionComponent<
   onTypeSelect,
   typeValue,
   onStatusSelect,
-  statusValue,
+  statusValue
 }) => {
   return (
     <InputGroup>
@@ -56,30 +53,31 @@ export const AddressListFilter: React.FunctionComponent<
         onSelect={onFilterSelect}
         options={filterOptions}
       />
-      {filterValue==="Name" && 
+      {filterValue === "Name" && (
         <InputGroup>
-        <TextInput
-          name="search name"
-          id="searchName"
-          type="search"
-          placeholder="Filter by name..."
-          aria-label="search input name"
-        />
-        <Button
-          variant={ButtonVariant.control}
-          aria-label="search button for search input"
-          onClick={onSearch}>
-          <SearchIcon />
-        </Button>
+          <TextInput
+            name="search name"
+            id="searchName"
+            type="search"
+            placeholder="Filter by name..."
+            aria-label="search input name"
+          />
+          <Button
+            variant={ButtonVariant.control}
+            aria-label="search button for search input"
+            onClick={onSearch}
+          >
+            <SearchIcon />
+          </Button>
         </InputGroup>
-      }
-      {filterValue === "Type" && 
+      )}
+      {filterValue === "Type" && (
         <FilterDropdown
           value={typeValue}
           onSelect={onTypeSelect}
           options={typeOptions}
         />
-      }
+      )}
       {filterValue === "Status" && (
         <FilterDropdown
           value={statusValue}
