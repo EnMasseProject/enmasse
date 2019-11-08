@@ -7,53 +7,54 @@ import {
   IConnection
 } from "src/Components/AddressSpace/ConnectionList";
 import { EditAddress } from "src/Pages/EditAddressPage";
+import { ConnectionDetailPage } from "./ConnectionDetailPage";
 
 const addressRows: IAddress[] = [
   {
-    name: "foo",
-    type: "Queue",
-    plan: "small",
+    name: 'foo',
+    type: 'Queue',
+    plan: 'small',
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    status: "running"
+    status: 'running',
   },
   {
-    name: "foo",
-    type: "Queue",
-    plan: "small",
+    name: 'foo',
+    type: 'Queue',
+    plan: 'small',
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    status: "creating"
+    status: 'creating',
   },
   {
-    name: "foo",
-    type: "Queue",
-    plan: "small",
+    name: 'foo',
+    type: 'Queue',
+    plan: 'small',
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    status: "deleting"
-  }
+    status: 'deleting',
+  },
 ];
 
 const IndexPage: React.FC = ({ children }) => {
   useA11yRouteChange();
-  useDocumentTitle("Index Page");
+  useDocumentTitle('Index Page');
 
   const [
     addressBeingEdited,
-    setAddressBeingEdited
+    setAddressBeingEdited,
   ] = React.useState<IAddress | null>();
 
   const handleDelete = (data: IAddress) => void 0;
@@ -68,37 +69,37 @@ const IndexPage: React.FC = ({ children }) => {
     setAddressBeingEdited(address);
 
   return (
-    <React.Fragment>
-      <PageSection>
-        <AddressList
-          rows={addressRows}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      </PageSection>
-      {addressBeingEdited && (
-        <Modal
-          isSmall
-          title="Edit"
-          isOpen={true}
-          onClose={handleCancelEdit}
-          actions={[
-            <Button key="confirm" variant="primary" onClick={handleSaving}>
-              Confirm
-            </Button>,
-            <Button key="cancel" variant="link" onClick={handleCancelEdit}>
-              Cancel
-            </Button>
-          ]}
-          isFooterLeftAligned
-        >
-          <EditAddress
-            address={addressBeingEdited}
-            onChange={handleEditChange}
-          />
-        </Modal>
-      )}
-    </React.Fragment>
+    <ConnectionDetailPage />
+    // <React.Fragment>
+    //   <PageSection>
+    //     <AddressList
+    //       rows={addressRows}
+    //       onEdit={handleEdit}
+    //       onDelete={handleDelete}
+    //     />
+    //   </PageSection>
+    //   {addressBeingEdited && (
+    //     <Modal
+    //       title="Modal Header"
+    //       isOpen={true}
+    //       onClose={handleCancelEdit}
+    //       actions={[
+    //         <Button key="confirm" variant="primary" onClick={handleSaving}>
+    //           Confirm
+    //         </Button>,
+    //         <Button key="cancel" variant="link" onClick={handleCancelEdit}>
+    //           Cancel
+    //         </Button>,
+    //       ]}
+    //       isFooterLeftAligned
+    //     >
+    //       <EditAddress
+    //         address={addressBeingEdited}
+    //         onChange={handleEditChange}
+    //       />
+    //     </Modal>
+    //   )}
+    // </React.Fragment>
   );
 };
 

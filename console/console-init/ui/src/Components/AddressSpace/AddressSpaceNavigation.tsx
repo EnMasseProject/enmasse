@@ -15,7 +15,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
             key="addresses"
             itemId="addresses"
             isActive={activeItem === "addresses"}>
-            <NavLink to={"address_space/addresses"} exact={true}>
+            <NavLink to={"/address-space/456/addresses"} >
               Addresses
             </NavLink>
           </NavItem>
@@ -23,7 +23,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
             key="connections"
             itemId="connections"
             isActive={activeItem === "connections"}>
-            <NavLink to={"address_space/connections"} exact={true}>
+            <NavLink to={"/address-space/456/connections"}>
               Connections
             </NavLink>
           </NavItem>
