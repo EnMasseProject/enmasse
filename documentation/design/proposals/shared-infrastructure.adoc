@@ -1,0 +1,176 @@
+== Overview
+
+Address spaces in EnMasse are currently isolated, i.e. they don't share infrastructure (router network, brokers). Moreover, the standard-controller and agent deployments are created per address space. Sharing infrastructure allows sharing resources and reducing the footprint when configuring multiple address spaces, and speed up the time to provision new address spaces. Furthermore, the split between `standard` and `brokered` address space types has caused a lot of quirks in the architecture, which a shared address space type may handle in a better way.
+
+See the initial discussion in issue #3420 for more details on alternatives. This document will consider the alternative with a new address space type for shared infra.
+
+== Design
+
+A new address space type `shared` is introduced. This address space type will not be handled by the `address-space-controller`, which will have a filter to avoid processing such address spaces. Eventually, allow `type` field of an address space to be omitted, and make the absence of this field indicate that the `shared` type should be used.
+
+The `AddressSpacePlan` will also have the 'shared' addressSpaceType. A new field `messagingInfraRef` can refer to a new CRD type instace, `MessagingInfra`. This new type will contain configuration for both brokers and router.
+
+The infrastructure is deployed is when the `MessagingInfra` instance is created. Alternatively, it could be deployed on-demand when an address space referencing it is created. This behavior could potentially be configurable to give the service admins more control.
+
+Example:
+
+```
+apiVersion: admin.enmasse.io/v1beta1
+kind: MessagingInfra
+metadata:
+  name: infra1
+spec:
+  router: // Required?
+    minReplicas: 3
+    minAvailable: 2 // Allows 1 router to not be ready before alerting
+    maxReplicas: 5
+    ... // Other settings
+  broker:
+    pooled: // If omitted, does not deploy pooled brokers
+      minSize: 2 // Controls min pool size for `standard`-like brokers
+      maxSize: 5 // Controls max pool size for `standard`-like brokers
+
+    cluster:  // If omitted, does not deploy broker cluster
+        size: 2 // Controls size of `brokered` cluster
+    ... // Other, common settings
+```
+
+When deployed, the above would have the minimum impact of creating 3 routers, 2 pooled brokers, and a broker cluster of size 2.
+
+An `AddressSpacePlan` currently refers to router and broker credits to control the 'quota' of address spaces. With shared infra, the numbers would either have to change their meaning, or one could reithink and extend the schema.
+
+For instance, address space limits can be expressed in more specific terms that map to the routers per vhost policies:
+
+* max connections
+* max links per connection
+* max number of addresses (per type?)
+
+The `AddressSpacePlan` would then look like this:
+
+```
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressSpacePlan
+metadata:
+  name: shared-small
+spec:
+  messagingInfraRef: shared1 // Plans may refer to the same infra - this means address spaces will run on the same infra
+  limits:
+    addresses:
+    - type: queue
+      max: 100
+    maxConnections: 10
+    maxLinksPerConnection: 10
+```
+
+This would be easier to understand and reason about than fractions. It is also easier to relate the impact of those limits to the shared infra, and allow the limits to be enforced. It would allow a shared infra to support address space plans with different limits in place. 
+
+NOTE: Plans for existing address space types would continue to use the existing schema.
+
+For routers and pooled brokers, the shared infra has some potential for auto-scaling. It would be the responsibility of the enmasse-operator to scale the infrastructure within the bounds set by the `MessagingInfra`, which could be based on cpu and memory usage, or the limits defined in the address space plans.
+
+Addresses would keep their `type` field, but additional properties can be specified to indicate the desired guarantees of a queue such as message ordering, transaction support etc. An example address could be:
+
+```
+apiVersion: enmasse.io/v1beta1
+kind: Address
+metadata:
+  name: myspace.addr1
+spec:
+  address: addr1
+  type: queue
+  plan: small-queue
+  properties:
+    transactions: true
+    ordered: true
+```
+
+The set of properties for a given address will drive the placement of that queue, either on a link-routed broker cluster (for transaction support), or a set of pooled brokers (if no ordering is required or partitions are specified).
+
+In the same way as for `AddressSpacePlan`, the `AddressPlan` type could be modified to be more user-friendly and easy to reason about:
+
+```
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: partitioned-small-queue
+spec:
+  addressType: queue
+  properties:
+    partitions: 2
+    ordered: false
+    transactions: false
+  limits:
+    maxQueueLength: 10
+```
+
+This can be translated to limits that can be enforced in the broker, and that can be reasoned about from a sizing perspective. Properties specified on an `Address` may also be specified on an `AddressPlan`, and the plan may restrict if properties can be overridden or not.
+
+NOTE: Plans for existing address types would continue to use the existing schema.
+
+The following components will not be part of shared infra:
+
+* MQTT Gateway
+* MQTT LWT
+* Subserv
+* Address-space-controller
+* Agent
+* Standard-controller
+
+=== Phase 1 (Milestone 0.32.0 ?)
+
+Add support for shared infra address space type and implement basic features similar to standard address space.
+
+The `MessagingInfra` resource would be managed by the enmasse-operator, which will do a reconciliation of deployments, services etc. The router-operator should be used to deploy and manage the dispatch router to simplify the interface. Depending on the maturity of the broker-operator, it should be used to deploy the brokers.
+
+The `AddressSpace` resource of type `shared` will be managed by a controller in enmasse-operator. The controller will create vhost policies in the shared router infra for each address space, and apply restrictions as specified in the address space plan.
+
+The `Address` resource for `shared` address space types will be managed by a controller in enmasse-operator. The controller will watch all addresses across all address spaces, and apply the needed address configuration to brokers and routers using AMQP management.
+
+After the first phase, the following would be supported:
+
+* Deploy shared infra using the `MessagingInfra` resource
+* Creating 1 or more address spaces per shared infra
+* Anycast, multicast, queue and non-sharded topics supported (no transactions etc. yet)
+
+The following would NOT be supported:
+
+* Connectors and forwarders
+* Management using AMQ console
+* Broker-semantics for addresses
+* Configure per-address space limits
+* Configure per-address limits
+* MQTT, Core, STOMP
+
+=== Phase 2 (Milestone 0.33.0 ?)
+
+The second phase will expand the supported features of the shared infra. The shared infra will gain support for deploying broker clusters and assign addresses requiring a broker cluster to them.
+
+After the second phase, the following would be supported:
+
+* Connectors and forwarders
+* Management using AMQ console
+* Configure per-address space limits
+* Configure per-address limits
+* Broker-semantics for addresses - deploying broker clusters by specifying .spec.broker.cluster in the `MessagingInfra` resource and `ordered` and `transactional` properties.
+
+The following would NOT be supported:
+* MQTT, Core, STOMP
+
+=== Phase 3 (Milestone 0.34.0 ?)
+
+Phase 3 would mainly involve deprecation of `brokered` and `standard` and making sure any missing features are taken care of as part of that deprecation:
+
+* The missing protocol support could be addressed in some way.
+* Removal of address space `type` field
+* Removal of BrokeredInfraConfig and StandardInfraConfig
+* Handle migration from `brokered` and `standard` to `shared`, potentially as part of the enmasse-operator
+
+== Testing
+
+A new class of tests for shared infra should be created. The address-space-specific tests should be able to reuse the infra to speed up testing. Some tests would still need to be written to test that one can run multiple shared infra instances.
+
+A load-test is also essential to ensure that the operator can handle a large number of address spaces and addresses.
+
+== Documentation
+
+The shared address space will cause a lot of changes to the documentation, and it might be good to create a separate chapter for both service admin and messaging tenant related to shared infra specifically. 
