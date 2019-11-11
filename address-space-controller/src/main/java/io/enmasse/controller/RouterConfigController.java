@@ -38,7 +38,7 @@ public class RouterConfigController implements Controller {
 
     public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
 
-        if ( Controller.isDeleted(addressSpace)) {
+        if (Controller.isDeleted(addressSpace)) {
             return addressSpace;
         }
 
