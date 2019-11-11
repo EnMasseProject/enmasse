@@ -12,12 +12,14 @@ import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
+import org.junit.Ignore;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SeleniumFirefox
+@Ignore("Ignore whilst 0.31 console refactoring is underway")
 class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedBrokered {
 
     @Test
