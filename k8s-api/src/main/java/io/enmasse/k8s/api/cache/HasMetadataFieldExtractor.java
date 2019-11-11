@@ -10,7 +10,7 @@ public class HasMetadataFieldExtractor<T extends HasMetadata> implements FieldEx
 
     @Override
     public String getKey(T item) {
-        return item.getMetadata().getName();
+        return item.getMetadata().getNamespace() + "/" + item.getMetadata().getName();
     }
 
     @Override
