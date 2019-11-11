@@ -5,10 +5,6 @@
 
 package io.enmasse.controller;
 
-import static java.util.Optional.empty;
-import java.util.Map;
-import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +13,6 @@ import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.DoneableAddress;
 import io.enmasse.controller.common.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -25,8 +20,6 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 public class AddressFinalizerController extends AbstractFinalizeController {
 
     private static final Logger log = LoggerFactory.getLogger(AddressFinalizerController.class.getName());
-
-    private static final String ANNOTATION_ADDRESS_SPACE = "addressSpace";
 
     private static final String FINALIZER_ADDRESSES = "enmasse.io/addresses";
 
@@ -71,8 +64,7 @@ public class AddressFinalizerController extends AbstractFinalizeController {
     /**
      * Process a single address.
      *
-     * @param addresses
-     *
+     * @param addressSpace The address space to clean up.
      * @param address The address to process.
      */
     private void processAddress(final String addressSpace, final Address address) {
@@ -85,55 +77,15 @@ public class AddressFinalizerController extends AbstractFinalizeController {
 
     }
 
-    private boolean matchesAddressSpace(final String addressSpace, final Address address) {
-
-        return matchesAddressSpaceByAnnotation(addressSpace, address)
-                .or(() -> matchesAddressSpaceByName(addressSpace, address))
-                .orElse(false);
-
-    }
-
-    /**
-     * Check if the address is part of the address space, by matching the annotation.
-     *
-     * @param addressSpace The address space to test for.
-     * @param address The address to test.
-     * @return If the "addressSpace" annotation is missing, {@link Optional#empty()} is being returned.
-     *         Otherwise
-     *         {@code true} will be returned if value of the annotation matches the address space name,
-     *         or {@code false} otherwise.
-     */
-    private Optional<Boolean> matchesAddressSpaceByAnnotation(final String addressSpace, final Address address) {
-
-        final ObjectMeta metadata = address.getMetadata();
-        if (metadata == null) {
-            return empty();
-        }
-
-        final Map<String, String> annotations = metadata.getAnnotations();
-        if (annotations == null) {
-            return empty();
-        }
-
-        final String addressSpaceName = annotations.get(ANNOTATION_ADDRESS_SPACE);
-        if (addressSpaceName == null) {
-            return empty();
-        }
-
-        return Optional.of(addressSpaceName.equals(addressSpace));
-
-    }
-
     /**
      * Check if the address is part of the address space, by matching the annotation.
      *
      * @param addressSpace The address space to test for.
      * @param address The address to test.
      * @return {@code true} if the name of the address starts with the addressSpace name plus the ".".
-     *         Never returns and {@link Optional#empty()}.
      */
-    private Optional<Boolean> matchesAddressSpaceByName(final String addressSpace, final Address address) {
-        return Optional.of(address.getMetadata().getName().startsWith(addressSpace + "."));
+    private boolean matchesAddressSpace(final String addressSpace, final Address address) {
+        return address.getMetadata().getName().startsWith(addressSpace + ".");
     }
 
     public String toString() {
