@@ -43,6 +43,10 @@ public class RouterStatusController implements Controller {
 
     public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
 
+        if ( Controller.isDeleted(addressSpace)) {
+            return addressSpace;
+        }
+
         InfraConfig infraConfig = InfraConfigs.parseCurrentInfraConfig(addressSpace);
 
         if (infraConfig instanceof StandardInfraConfig) {
@@ -82,7 +86,7 @@ public class RouterStatusController implements Controller {
         RouterManagement routerManagement = RouterManagement.withCerts(vertx, "address-space-controller", connectTimeout, queryTimeout, cert, cert, key);
 
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
-        Map<RouterEntity, Map<String, List<List>>> results = new HashMap<>();
+        Map<RouterEntity, Map<String, List<List<?>>>> results = new HashMap<>();
 
         List<Pod> routerPods = client.pods().withLabel(LabelKeys.CAPABILITY, "router").withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().stream()
                 .filter(Readiness::isPodReady)
@@ -104,9 +108,9 @@ public class RouterStatusController implements Controller {
                 if (port != 0) {
                     // Until the connector entity allows querying for the status, we have to list
                     // all connections and match with the connector host.
-                    Map<RouterEntity, List<List>> response = routerManagement.query(router.getStatus().getPodIP(), port, entities);
+                    Map<RouterEntity, List<List<?>>> response = routerManagement.query(router.getStatus().getPodIP(), port, entities);
                     for (RouterEntity entity : entities) {
-                        Map<String, List<List>> entityResponse = results.computeIfAbsent(entity, e -> new HashMap<>());
+                        Map<String, List<List<?>>> entityResponse = results.computeIfAbsent(entity, e -> new HashMap<>());
                         entityResponse.put(router.getMetadata().getName(), response.get(entity));
                     }
                 }
@@ -127,7 +131,7 @@ public class RouterStatusController implements Controller {
         }
 
         if (results.containsKey(node)) {
-            Map<String, List<List>> response = results.get(node);
+            Map<String, List<List<?>>> response = results.get(node);
             checkRouterMesh(addressSpace, routerPods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList()), response);
         }
     }
@@ -136,7 +140,7 @@ public class RouterStatusController implements Controller {
      * Until the connector entity allows querying for the status, we have to go through all connections and
      * see if we can find our connector host in there.
      */
-    private void checkConnectorStatus(AddressSpaceStatusConnector connectorStatus, AddressSpaceSpecConnector connector, Map<String, List<List>> response) {
+    private void checkConnectorStatus(AddressSpaceStatusConnector connectorStatus, AddressSpaceSpecConnector connector, Map<String, List<List<?>>> response) {
         int hostIdx = connection.getAttributeIndex("host");
         int openedIdx = connection.getAttributeIndex("opened");
         int operStatusIdx = connection.getAttributeIndex("operStatus");
@@ -147,7 +151,7 @@ public class RouterStatusController implements Controller {
             connectionStatuses.put(host, new ConnectionStatus());
         }
 
-        for (Map.Entry<String, List<List>> entry : response.entrySet()) {
+        for (Map.Entry<String, List<List<?>>> entry : response.entrySet()) {
             List<String> hosts = filterOnAttribute(String.class, hostIdx, entry.getValue());
             List<Boolean> opened = filterOnAttribute(Boolean.class, openedIdx, entry.getValue());
             List<String> operStatus = filterOnAttribute(String.class, operStatusIdx, entry.getValue());
@@ -196,9 +200,9 @@ public class RouterStatusController implements Controller {
         }
     }
 
-    private void checkRouterMesh(AddressSpace addressSpace, List<String> routerIds, Map<String, List<List>> response) {
+    private void checkRouterMesh(AddressSpace addressSpace, List<String> routerIds, Map<String, List<List<?>>> response) {
         for (String routerId : routerIds) {
-            List<List> routerResponse = response.get(routerId);
+            List<List<?>> routerResponse = response.get(routerId);
             if (routerResponse == null) {
                 log.warn("No response received from router {}. Will not check mesh connectivity.", routerId);
                 continue;
@@ -217,9 +221,9 @@ public class RouterStatusController implements Controller {
     }
 
 
-    private static <T> List<T> filterOnAttribute(Class<T> type, int attrNum, List<List> list) {
+    private static <T> List<T> filterOnAttribute(Class<T> type, int attrNum, List<List<?>> list) {
         List<T> filtered = new ArrayList<>();
-        for (List entry : list) {
+        for (List<?> entry : list) {
             T filteredValue = type.cast(entry.get(attrNum));
             if (filteredValue != null) {
                 filtered.add(filteredValue);

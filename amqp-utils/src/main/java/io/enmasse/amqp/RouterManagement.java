@@ -66,7 +66,7 @@ public class RouterManagement {
 
 
 
-    public Map<RouterEntity, List<List>> query(String host, int port, RouterEntity... entities) throws Exception {
+    public Map<RouterEntity, List<List<?>>> query(String host, int port, RouterEntity... entities) throws Exception {
         int attempt = 1;
         final int allowedAttempts = 3;
         Exception lastException;
@@ -89,7 +89,7 @@ public class RouterManagement {
         throw lastException;
     }
 
-    private Map<RouterEntity, List<List>> doQuery(String host, int port, RouterEntity... entities) throws Exception {
+    private Map<RouterEntity, List<List<?>>> doQuery(String host, int port, RouterEntity... entities) throws Exception {
         log.debug("Checking router status of router : {}", host);
         try (ProtonRequestClient client = new ProtonRequestClient(vertx, containerId)) {
             CompletableFuture<Void> promise = new CompletableFuture<>();
@@ -97,7 +97,7 @@ public class RouterManagement {
 
             promise.get(connectTimeout.getSeconds(), TimeUnit.SECONDS);
 
-            Map<RouterEntity, List<List>> resultMap = new HashMap<>();
+            Map<RouterEntity, List<List<?>>> resultMap = new HashMap<>();
             for (RouterEntity routerEntity : entities) {
                 resultMap.put(routerEntity, collectRouter(client, routerEntity));
             }
@@ -105,7 +105,7 @@ public class RouterManagement {
         }
     }
 
-    private List<List> collectRouter(SyncRequestClient client, RouterEntity routerEntity) {
+    private List<List<?>> collectRouter(SyncRequestClient client, RouterEntity routerEntity) {
         Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("operation", "QUERY");
         properties.put("entityType", routerEntity.getName());
@@ -134,7 +134,7 @@ public class RouterManagement {
         }
 
         @SuppressWarnings("unchecked")
-        List<List> results = (List<List>) values.get("results");
+        List<List<?>> results = (List<List<?>>) values.get("results");
         if (results == null) {
             throw new IllegalArgumentException("Unexpected null results list");
         }
