@@ -6,7 +6,7 @@
 package controller
 
 import (
-	deployer "github.com/enmasseproject/enmasse/pkg/controller/address_space_controller_deployer"
+	address_space_controller "github.com/enmasseproject/enmasse/pkg/controller/address_space_controller"
 	"github.com/enmasseproject/enmasse/pkg/util"
 )
 
@@ -14,7 +14,7 @@ func init() {
 
 	// add ourselves to the list of controllers
 
-	if util.IsModuleEnabled("ADDRESS_SPACE_CONTROLLER_DEPLOYER") {
-		AddToManagerFuncs = append(AddToManagerFuncs, deployer.Add)
+	if util.IsModuleEnabled("ADDRESS_SPACE_CONTROLLER") {
+		AddToManagerFuncs = append(AddToManagerFuncs, address_space_controller.Add)
 	}
 }

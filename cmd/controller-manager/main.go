@@ -62,6 +62,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := controller.CheckUpgrade(mgr); err != nil {
+		log.Error(err, "Failed to upgrade")
+		os.Exit(1)
+	}
+
 	// register controller
 
 	if err := controller.AddToManager(mgr); err != nil {

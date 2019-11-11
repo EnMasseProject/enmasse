@@ -6,6 +6,7 @@
 package controller
 
 import (
+	"github.com/enmasseproject/enmasse/pkg/controller/upgrader"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -18,4 +19,12 @@ func AddToManager(m manager.Manager) error {
 		}
 	}
 	return nil
+}
+
+func CheckUpgrade(m manager.Manager) error {
+	upgrader, err := upgrader.New(m)
+	if err != nil {
+		return err
+	}
+	return upgrader.Upgrade()
 }
