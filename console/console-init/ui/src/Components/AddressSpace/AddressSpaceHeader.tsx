@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   Dropdown,
   DropdownPosition,
@@ -12,17 +12,32 @@ import {
   Card,
   CardHeader,
   CardBody,
-} from '@patternfly/react-core';
-import { css, StyleSheet } from '@patternfly/react-styles';
+  Badge
+} from "@patternfly/react-core";
+import { css, StyleSheet } from "@patternfly/react-styles";
+import {
+  AddressSpaceType
+} from "../Common/AddressSpaceListFormatter";
 
 const styles = StyleSheet.create({
   flex_right_border: {
-    paddingRight: '1em',
-    borderRight: '0.1em solid',
-    borderRightColor: 'lightgrey',
+    paddingRight: "1em",
+    borderRight: "0.1em solid",
+    borderRightColor: "lightgrey"
   },
+  address_space_icon_margin: {
+    backgroundColor: "#EC7A08",
+    marginTop: 30,
+    marginLeft: 10,
+    fontSize: 25
+  },
+  kebab_toggle_margin:{
+    marginTop: 30,
+    marginLeft: 10,
+    fontSize: 15
+  }
 });
-export interface IAddressSpace {
+export interface IAddressSpaceHeaderProps {
   name: string;
   namespace: string;
   createdOn: string;
@@ -30,14 +45,9 @@ export interface IAddressSpace {
   onDownload: (name: string) => void;
   onDelete: (name: string) => void;
 }
-export const AddressSpaceHeader: React.FunctionComponent<IAddressSpace> = ({
-  name,
-  namespace,
-  createdOn,
-  type,
-  onDownload,
-  onDelete,
-}) => {
+export const AddressSpaceHeader: React.FunctionComponent<
+  IAddressSpaceHeaderProps
+> = ({ name, namespace, createdOn, type, onDownload, onDelete }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const onSelect = (result: any) => {
     setIsOpen(!isOpen);
@@ -49,53 +59,60 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpace> = ({
     <DropdownItem
       key="download"
       aria-label="download"
-      onClick={() => onDownload(name)}
-    >
+      onClick={() => onDownload(name)}>
       Download Certificate
     </DropdownItem>,
     <DropdownItem
       key="delete"
       aria-label="delete"
-      onClick={() => onDelete(name)}
-    >
+      onClick={() => onDelete(name)}>
       Delete
-    </DropdownItem>,
+    </DropdownItem>
   ];
   return (
     <Card>
-      <CardHeader>
-        <Split gutter="md">
-          <SplitItem>
-            <Title headingLevel="h1" size="4xl">
-              {name}
-            </Title>
-          </SplitItem>
-          <SplitItem isFilled></SplitItem>
-          <SplitItem>
-            <Dropdown
-              onSelect={onSelect}
-              position={DropdownPosition.right}
-              toggle={<KebabToggle onToggle={onToggle} />}
-              isOpen={isOpen}
-              isPlain={true}
-              dropdownItems={dropdownItems}
-            />
-          </SplitItem>
-        </Split>
-      </CardHeader>
-      <CardBody>
-        <Flex>
-          <FlexItem className={css(styles.flex_right_border)}>
-            in namespace <b>{namespace}</b>
-          </FlexItem>
-          <FlexItem className={css(styles.flex_right_border)}>
-            <b>{type}</b>
-          </FlexItem>
-          <FlexItem>
-            Created <b>{createdOn}</b>
-          </FlexItem>
-        </Flex>
-      </CardBody>
+      <Split>
+        <SplitItem>
+          <Badge className={css(styles.address_space_icon_margin)}>AS</Badge>
+        </SplitItem>
+        <SplitItem>
+          <CardHeader>
+            <Split gutter="md">
+              <SplitItem>
+                <Title headingLevel="h1" size="4xl">
+                  {name}
+                </Title>
+              </SplitItem>
+            </Split>
+          </CardHeader>
+          <CardBody>
+            <Flex>
+              <FlexItem className={css(styles.flex_right_border)}>
+                in namespace <b>{namespace}</b>
+              </FlexItem>
+              <FlexItem className={css(styles.flex_right_border)}>
+                <b>
+                  <AddressSpaceType type={type} />
+                </b>
+              </FlexItem>
+              <FlexItem>
+                Created <b>{createdOn}</b>
+              </FlexItem>
+            </Flex>
+          </CardBody>
+        </SplitItem>
+        <SplitItem isFilled></SplitItem>
+        <SplitItem className={css(styles.kebab_toggle_margin)}>
+          <Dropdown
+            onSelect={onSelect}
+            position={DropdownPosition.right}
+            toggle={<KebabToggle onToggle={onToggle} />}
+            isOpen={isOpen}
+            isPlain={true}
+            dropdownItems={dropdownItems}
+          />
+        </SplitItem>
+      </Split>
     </Card>
   );
 };

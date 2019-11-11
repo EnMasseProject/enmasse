@@ -107,6 +107,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       cells={tableColumns}
       rows={tableRows}
       actionResolver={actionResolver}
+      aria-label="Address List"
     >
       <TableHeader />
       <TableBody />

@@ -8,7 +8,6 @@ export interface AddressSpaceNavigationProps {
 }
 export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigationProps> = ({activeItem,onSelect}) => {
   return (
-    <PageSection variant={PageSectionVariants.light}>
       <Nav onSelect={onSelect}>
         <NavList variant={NavVariants.tertiary}>
           <NavItem
@@ -29,6 +28,5 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
           </NavItem>
         </NavList>
       </Nav>
-    </PageSection>
   );
 };
