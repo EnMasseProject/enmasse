@@ -38,6 +38,10 @@ public class RouterConfigController implements Controller {
 
     public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
 
+        if ( Controller.isDeleted(addressSpace)) {
+            return addressSpace;
+        }
+
         InfraConfig infraConfig = InfraConfigs.parseCurrentInfraConfig(addressSpace);
 
         if (infraConfig instanceof StandardInfraConfig) {

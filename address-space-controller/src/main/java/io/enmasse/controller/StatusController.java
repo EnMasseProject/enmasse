@@ -40,6 +40,12 @@ public class StatusController implements Controller {
 
     @Override
     public AddressSpace reconcile(AddressSpace addressSpace) {
+
+        if (Controller.isDeleted(addressSpace)) {
+            addressSpace.getStatus().setPhase(Phase.Terminating);
+            return addressSpace;
+        }
+
         if (addressSpace.getStatus().isReady()) {
             checkComponentsReady(addressSpace);
             checkAuthServiceReady(addressSpace);
@@ -163,4 +169,5 @@ public class StatusController implements Controller {
     public String toString() {
         return "StatusController";
     }
+
 }

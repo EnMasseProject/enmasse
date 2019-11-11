@@ -11,7 +11,6 @@ import io.enmasse.address.model.CoreCrd;
 import io.enmasse.address.model.DoneableAddress;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.cache.*;
-import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
@@ -33,21 +32,19 @@ public class KubeAddressApi implements AddressApi, ListerWatcher<Address, Addres
     private final String namespace;
     private final CustomResourceDefinition customResourceDefinition;
     private final WorkQueue<Address> cache = new EventCache<>(new HasMetadataFieldExtractor<>());
-    private final OwnerReference ownerReference;
     private final String version;
 
 
-    private KubeAddressApi(NamespacedKubernetesClient kubeClient, String namespace, CustomResourceDefinition customResourceDefinition, OwnerReference ownerReference, String version) {
+    private KubeAddressApi(NamespacedKubernetesClient kubeClient, String namespace, CustomResourceDefinition customResourceDefinition, String version) {
         this.kubernetesClient = kubeClient;
         this.namespace = namespace;
         this.version = version;
         this.client = kubeClient.customResources(customResourceDefinition, Address.class, AddressList.class, DoneableAddress.class);
-        this.ownerReference = ownerReference;
         this.customResourceDefinition = customResourceDefinition;
     }
 
-    public static AddressApi create(NamespacedKubernetesClient kubernetesClient, String namespace, OwnerReference ownerReference, String version) {
-        return new KubeAddressApi(kubernetesClient, namespace, CoreCrd.addresses(), ownerReference, version);
+    public static AddressApi create(NamespacedKubernetesClient kubernetesClient, String namespace, String version) {
+        return new KubeAddressApi(kubernetesClient, namespace, CoreCrd.addresses(), version);
     }
 
     @Override
@@ -97,12 +94,6 @@ public class KubeAddressApi implements AddressApi, ListerWatcher<Address, Addres
         if (version != null) {
             builder.editOrNewMetadata()
                     .addToAnnotations(AnnotationKeys.VERSION, version)
-                    .endMetadata();
-        }
-
-        if (ownerReference != null) {
-            builder.editOrNewMetadata()
-                    .withOwnerReferences(ownerReference)
                     .endMetadata();
         }
 

@@ -20,6 +20,10 @@ public class DefaultsController implements Controller {
     @Override
     public AddressSpace reconcile(AddressSpace addressSpace) {
 
+        if ( Controller.isDeleted(addressSpace)) {
+            return addressSpace;
+        }
+
         AddressSpaceBuilder builder = new AddressSpaceBuilder(addressSpace);
 
         if (addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID) == null) {

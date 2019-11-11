@@ -9,8 +9,6 @@ import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.k8s.api.cache.*;
-import io.fabric8.kubernetes.api.model.OwnerReference;
-import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.*;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
@@ -134,15 +132,7 @@ public class KubeAddressSpaceApi implements AddressSpaceApi, ListerWatcher<Addre
 
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
-        OwnerReference ownerReference = new OwnerReferenceBuilder()
-                .withApiVersion(CoreCrd.API_VERSION)
-                .withKind(AddressSpace.KIND)
-                .withBlockOwnerDeletion(true)
-                .withController(true)
-                .withName(addressSpace.getMetadata().getName())
-                .withUid(addressSpace.getMetadata().getUid())
-                .build();
-        return KubeAddressApi.create(kubernetesClient, namespace, ownerReference, version);
+        return KubeAddressApi.create(kubernetesClient, namespace, version);
     }
 
     @Override

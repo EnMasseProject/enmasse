@@ -99,6 +99,11 @@ public class CreateController implements Controller {
 
     @Override
     public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
+
+        if ( Controller.isDeleted(addressSpace)) {
+            return addressSpace;
+        }
+
         Schema schema = schemaProvider.getSchema();
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
         if (!addressSpaceResolver.validate(addressSpace)) {
