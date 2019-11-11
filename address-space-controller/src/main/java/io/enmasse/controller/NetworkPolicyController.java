@@ -26,12 +26,7 @@ public class NetworkPolicyController implements Controller {
     }
 
     @Override
-    public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
-
-        if ( Controller.isDeleted(addressSpace)) {
-            return addressSpace;
-        }
-
+    public AddressSpace reconcileActive(AddressSpace addressSpace) throws Exception {
         NetworkPolicy networkPolicy = null;
         InfraConfig infraConfig = parseCurrentInfraConfig(addressSpace);
         if (infraConfig != null) {

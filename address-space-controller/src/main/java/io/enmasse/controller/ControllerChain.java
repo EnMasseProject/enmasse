@@ -98,7 +98,7 @@ public class ControllerChain implements Watcher<AddressSpace> {
                 for (Controller controller : chain) {
                     log.info("Controller {}", controller);
                     log.debug("Address space input: {}", addressSpace);
-                    addressSpace = controller.reconcile(addressSpace);
+                    addressSpace = controller.reconcileActive(addressSpace);
                 }
 
                 log.debug("Controller chain output: {}", addressSpace);

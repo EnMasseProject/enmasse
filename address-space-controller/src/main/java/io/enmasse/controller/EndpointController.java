@@ -39,12 +39,7 @@ public class EndpointController implements Controller {
     }
 
     @Override
-    public AddressSpace reconcile(AddressSpace addressSpace) {
-
-        if ( Controller.isDeleted(addressSpace)) {
-            return addressSpace;
-        }
-
+    public AddressSpace reconcileActive(AddressSpace addressSpace) {
         updateEndpoints(addressSpace);
         updateCaCert(addressSpace);
         return addressSpace;

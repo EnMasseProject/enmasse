@@ -23,12 +23,7 @@ public class ExportsController implements Controller {
     }
 
     @Override
-    public AddressSpace reconcile(AddressSpace addressSpace) {
-
-        if ( Controller.isDeleted(addressSpace)) {
-            return addressSpace;
-        }
-
+    public AddressSpace reconcileActive(AddressSpace addressSpace) {
         try {
             Map<String, List<ExportSpec>> exportsMap = new HashMap<>();
             for (EndpointSpec endpointSpec : addressSpace.getSpec().getEndpoints()) {

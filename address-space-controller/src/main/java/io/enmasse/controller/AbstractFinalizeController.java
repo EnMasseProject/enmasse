@@ -67,7 +67,7 @@ public abstract class AbstractFinalizeController implements Controller {
     protected abstract Result processFinalizer(AddressSpace addressSpace);
 
     @Override
-    public AddressSpace reconcile(final AddressSpace addressSpace) throws Exception {
+    public AddressSpace reconcileAnyState(final AddressSpace addressSpace) throws Exception {
 
         log.debug("Reconcile finalizer - id: {}, addressSpace: {}/{} -> {} ({})",
                 this.id, addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), addressSpace.getMetadata().getDeletionTimestamp(),

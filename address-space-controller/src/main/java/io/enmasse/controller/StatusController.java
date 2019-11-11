@@ -39,13 +39,7 @@ public class StatusController implements Controller {
     }
 
     @Override
-    public AddressSpace reconcile(AddressSpace addressSpace) {
-
-        if (Controller.isDeleted(addressSpace)) {
-            addressSpace.getStatus().setPhase(Phase.Terminating);
-            return addressSpace;
-        }
-
+    public AddressSpace reconcileActive(AddressSpace addressSpace) {
         if (addressSpace.getStatus().isReady()) {
             checkComponentsReady(addressSpace);
             checkAuthServiceReady(addressSpace);

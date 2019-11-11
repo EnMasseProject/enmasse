@@ -41,12 +41,7 @@ public class RouterStatusController implements Controller {
         this.queryTimeout = options.getManagementQueryTimeout();
     }
 
-    public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
-
-        if ( Controller.isDeleted(addressSpace)) {
-            return addressSpace;
-        }
-
+    public AddressSpace reconcileActive(AddressSpace addressSpace) throws Exception {
         InfraConfig infraConfig = InfraConfigs.parseCurrentInfraConfig(addressSpace);
 
         if (infraConfig instanceof StandardInfraConfig) {
