@@ -96,17 +96,19 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
     }
 
     private void assertManaged(IoTProject project) throws Exception {
-        //address space s
+        //address spaces
         AddressSpace addressSpace = isolatedIoTManager.getAddressSpace(IOT_PROJECT_NAMESPACE, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(), addressSpace.getMetadata().getName());
         assertEquals(AddressSpaceType.STANDARD.toString(), addressSpace.getSpec().getType());
         assertEquals(AddressSpacePlans.STANDARD_SMALL, addressSpace.getSpec().getPlan());
 
         // addresses
-        // {event/control/telemetry}/"project-namespace"."project-name"
+        // {event/control/command/command_response/telemetry}/"project-namespace"."project-name"
         final String addressSuffix = "/" + project.getMetadata().getNamespace() + "." + project.getMetadata().getName();
         final List<Address> addresses = AddressUtils.getAddresses(addressSpace);
+        // assert that we have the right number of addresses
         assertEquals(5, addresses.size());
+        // assert that all addresses have the project set as owner
         assertEquals(5, addresses.stream()
                 .map(Address::getMetadata)
                 .map(ObjectMeta::getOwnerReferences)
@@ -193,8 +195,15 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
     }
 
-    private boolean isOwner(IoTProject project, OwnerReference ownerReference) {
-        return ownerReference.getKind().equals(IoTProject.KIND) && project.getMetadata().getName().equals(ownerReference.getName());
+    /**
+     * Test if the project is the owner the reference points to.
+     * @param project The project to check for.
+     * @param ownerReference The reference to check.
+     * @return {@code true} if the reference points to the project.
+     */
+    private boolean isOwner(final IoTProject project, final OwnerReference ownerReference) {
+        return ownerReference.getKind().equals(IoTProject.KIND) &&
+                project.getMetadata().getName().equals(ownerReference.getName());
     }
 
 }

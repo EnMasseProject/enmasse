@@ -135,8 +135,8 @@ public class KubeAddressSpaceApi implements AddressSpaceApi, ListerWatcher<Addre
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
         OwnerReference ownerReference = new OwnerReferenceBuilder()
-                .withApiVersion("enmasse.io/v1beta1")
-                .withKind("AddressSpace")
+                .withApiVersion(CoreCrd.API_VERSION)
+                .withKind(AddressSpace.KIND)
                 .withBlockOwnerDeletion(true)
                 .withController(true)
                 .withName(addressSpace.getMetadata().getName())

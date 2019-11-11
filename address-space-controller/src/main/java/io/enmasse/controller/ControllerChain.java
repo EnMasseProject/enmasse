@@ -4,9 +4,19 @@
  */
 package io.enmasse.controller;
 
+import static io.enmasse.controller.common.ControllerReason.AddressSpaceSyncFailed;
+import static io.enmasse.k8s.api.EventLogger.Type.Warning;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.AddressSpaceStatus;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.EventLogger;
@@ -15,16 +25,6 @@ import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.k8s.api.Watch;
 import io.enmasse.k8s.api.Watcher;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static io.enmasse.controller.common.ControllerReason.AddressSpaceSyncFailed;
-import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
 /**
  * The main controller loop that monitors k8s address spaces
