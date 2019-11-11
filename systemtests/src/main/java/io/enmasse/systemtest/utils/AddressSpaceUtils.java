@@ -176,7 +176,7 @@ public class AddressSpaceUtils {
     public static void waitForAddressSpaceDeleted(AddressSpace addressSpace) throws Exception {
         Kubernetes kube = Kubernetes.getInstance();
         log.info("Waiting for AddressSpace {} to be deleted", addressSpace.getMetadata().getName());
-        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
         waitForItems(addressSpace, budget, () -> kube.listPods(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
         waitForItems(addressSpace, budget, () -> kube.listConfigMaps(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
         waitForItems(addressSpace, budget, () -> kube.listServices(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));

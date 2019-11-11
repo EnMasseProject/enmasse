@@ -181,6 +181,11 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         log.info("------------------- Start with restating -------------------");
         log.info("------------------------------------------------------------");
 
+        log.info("Addressspaces: ");
+        kubernetes.getAddressSpaceClient().list().getItems().forEach(addressSpace -> {
+            log.info(addressSpace.getMetadata().getName());
+        });
+
         List<Pod> pods = kubernetes.listPods();
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
