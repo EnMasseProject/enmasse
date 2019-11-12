@@ -76,7 +76,7 @@ query all_address_spaces {
 `;
   useA11yRouteChange();
   useDocumentTitle("Address Space Detail");
-  const { id, subList } = useParams();
+  const { subList } = useParams();
   const [activeNavItem, setActiveNavItem] = React.useState(
     subList || "addresses"
   );

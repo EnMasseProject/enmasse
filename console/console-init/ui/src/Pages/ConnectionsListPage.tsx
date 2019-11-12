@@ -1,6 +1,4 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
-import { PageSection, PageSectionVariants } from "@patternfly/react-core";
 import gql from "graphql-tag";
 import { useQuery } from "@apollo/react-hooks";
 import { Loading } from "use-patternfly";
@@ -47,17 +45,18 @@ export default function ConnectionsListPage() {
     }`
   );
 
-  let { loading, data } = useQuery<IConnectionListResponse>(
+  let { loading, error, data } = useQuery<IConnectionListResponse>(
     ALL_CONECTION_LIST,
     { pollInterval: 5000 }
   );
 
+  if(error) console.log(error);
   if (loading) return <Loading />;
-
-  // console.log(data);
   const { connections } = data || {
     connections: { Total: 0, Connections: [] }
   };
+
+  console.log(connections);
   const connectionList: IConnection[] = connections.Connections.map(
     connection => ({
       hostname: connection.Spec.Hostname,
@@ -71,7 +70,7 @@ export default function ConnectionsListPage() {
     })
   );
   // console.log(connectionList);
-  if (connections.Total == 0) {
+  if (connections.Total === 0) {
     return <EmptyConnection />;
   }
   return (

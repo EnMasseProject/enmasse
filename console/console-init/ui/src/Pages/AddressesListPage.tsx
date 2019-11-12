@@ -141,21 +141,19 @@ function AddressesListFunction() {
     status: address.Status.IsReady ? "running" : "creating"
   }));
   console.log(addresses);
-  if (addresses.Total == 0)
+  if (addresses.Total === 0) return <EmptyAddress />;
+  else
     return (
-        <EmptyAddress/>
+      <AddressList
+        rows={addressesList}
+        onEdit={data => {
+          console.log("on Edit", data);
+        }}
+        onDelete={() => {
+          console.log("on Delete");
+        }}
+      />
     );
-  else  
-  return (
-  <AddressList
-    rows={addressesList}
-    onEdit={(data) => {
-      console.log("on Edit",data);
-    }}
-    onDelete={() => {
-      console.log("on Delete");
-    }}
-  />)
 }
 
 export default function AddressesListPage() {

@@ -87,7 +87,8 @@ export const AddressSpaceLsit: React.FunctionComponent<IAddressListProps> = ({
       variant={TableVariant.compact}
       cells={tableColumns}
       rows={tableRows}
-      actionResolver={actionResolver}>
+      actionResolver={actionResolver}
+      aria-label="address space list">
       <TableHeader />
       <TableBody />
     </Table>
