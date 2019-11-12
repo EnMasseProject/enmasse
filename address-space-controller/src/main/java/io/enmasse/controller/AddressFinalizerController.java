@@ -9,13 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.DoneableAddress;
-import io.enmasse.controller.common.KubernetesHelper;
-import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
+import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.ContinuationResult;
 
 public class AddressFinalizerController extends AbstractFinalizeController {
 
@@ -25,34 +22,32 @@ public class AddressFinalizerController extends AbstractFinalizeController {
 
     private static final Integer BATCH_SIZE = Integer.getInteger("io.enmasse.controller.AddressFinalizerController.batchSize", 100);
 
-    private MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> addressClient;
+    private AddressSpaceApi addressSpaceApi;
 
-    public AddressFinalizerController(NamespacedKubernetesClient controllerClient) {
+    public AddressFinalizerController(final AddressSpaceApi addressSpaceApi) {
         super(FINALIZER_ADDRESSES);
-        this.addressClient = KubernetesHelper.clientForAddress(controllerClient);
+        this.addressSpaceApi = addressSpaceApi;
     }
 
     @Override
     public Result processFinalizer(final AddressSpace addressSpace) {
 
-        var addressSpaceName = addressSpace.getMetadata().getName();
-        var addresses = this.addressClient.inNamespace(addressSpace.getMetadata().getNamespace());
-
         log.info("Processing finalizer for {}/{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
 
-        AddressList list;
-        String continueValue = null;
-        do {
-            list = addresses.list(BATCH_SIZE, continueValue);
+        final String addressSpaceNamespace = addressSpace.getMetadata().getNamespace();
+        final AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
 
-            log.debug("Processing addresses - found: {} -> continue: '{}'", list.getItems().size(), list.getMetadata().getContinue());
+        ContinuationResult<Address> list = null;
+        do {
+            list = addressApi.listAddresses(addressSpaceNamespace, BATCH_SIZE, list, null);
+
+            log.debug("Processing addresses - found: {} -> continue: '{}'", list.getItems().size(), list.getContinuation());
 
             for (final Address address : list.getItems()) {
-                processAddress(addressSpaceName, address);
+                processAddress(addressSpace, address);
             }
 
-            continueValue = list.getMetadata().getContinue();
-            if (continueValue == null || continueValue.isBlank()) {
+            if (!list.canContinue()) {
                 log.debug("Completed cleanup");
                 return Result.completed(addressSpace);
             }
@@ -67,12 +62,12 @@ public class AddressFinalizerController extends AbstractFinalizeController {
      * @param addressSpace The address space to clean up.
      * @param address The address to process.
      */
-    private void processAddress(final String addressSpace, final Address address) {
+    private void processAddress(final AddressSpace addressSpace, final Address address) {
 
-        if (matchesAddressSpace(addressSpace, address)) {
-            this.addressClient
-                    .inNamespace(address.getMetadata().getNamespace())
-                    .delete(address);
+        final AddressApi addressApi = this.addressSpaceApi.withAddressSpace(addressSpace);
+
+        if (matchesAddressSpace(addressSpace.getMetadata().getName(), address)) {
+            addressApi.deleteAddress(address);
         }
 
     }

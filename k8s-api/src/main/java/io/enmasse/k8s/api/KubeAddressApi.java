@@ -21,10 +21,9 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 public class KubeAddressApi implements AddressApi, ListerWatcher<Address, AddressList> {
     private final NamespacedKubernetesClient kubernetesClient;
@@ -102,25 +101,23 @@ public class KubeAddressApi implements AddressApi, ListerWatcher<Address, Addres
 
     @Override
     public boolean deleteAddress(Address address) {
-        boolean exists = client.inNamespace(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get() != null;
-        if (!exists) {
-            return false;
-        }
-        client.inNamespace(address.getMetadata().getNamespace()).delete(address);
-        return true;
+        return client
+                .inNamespace(address.getMetadata().getNamespace())
+                .delete(address);
     }
 
     @Override
-    public Set<Address> listAddresses(String namespace) {
-        return new HashSet<>(client.inNamespace(namespace).list().getItems());
+    public ContinuationResult<Address> listAddresses(final String namespace, final Integer limit, final ContinuationResult<Address> continueValue,
+            final Map<String, String> labels) {
+
+        return ContinuationResult.from(
+                this.client.inNamespace(namespace)
+                        .withLabels(labels != null ? labels : Collections.emptyMap())
+                        .list(limit, continueValue != null ? continueValue.getContinuation() : null));
+
+
     }
 
-    @Override
-    public Set<Address> listAddressesWithLabels(String namespace, Map<String, String> labels) {
-        return new HashSet<>(client.inNamespace(namespace).withLabels(labels).list().getItems());
-    }
-
-    @Override
     public void deleteAddresses(String namespace) {
         client.inNamespace(namespace).delete();
     }

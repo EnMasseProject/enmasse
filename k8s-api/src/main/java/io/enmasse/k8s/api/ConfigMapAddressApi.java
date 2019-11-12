@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -106,25 +105,24 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     @Override
-    public Set<Address> listAddresses(String namespace) {
-        return listAddressesWithLabels(namespace, Collections.emptyMap());
-    }
-
-    @Override
-    public Set<Address> listAddressesWithLabels(String namespace, Map<String, String> labelSelector) {
-        Map<String, String> labels = new LinkedHashMap<>(labelSelector);
+    public ContinuationResult<Address> listAddresses(String namespace, Integer limit, ContinuationResult<Address> continueValue, Map<String, String> labelSelector) {
+        Map<String, String> labels = labelSelector != null ? new LinkedHashMap<>(labelSelector) : new LinkedHashMap<>(2);
         labels.put(LabelKeys.TYPE, "address-config");
         labels.put(LabelKeys.INFRA_UUID, infraUuid);
 
         Set<Address> addresses = new LinkedHashSet<>();
-        ConfigMapList list = client.configMaps().withLabels(labels).list();
+        ConfigMapList list = client
+                .configMaps()
+                .withLabels(labels)
+                .list(limit, continueValue != null ? continueValue.getContinuation() : null);
+
         for (ConfigMap config : list.getItems()) {
             Address address = getAddressFromConfig(config);
             if (namespace.equals(address.getMetadata().getNamespace())) {
                 addresses.add(address);
             }
         }
-        return addresses;
+        return ContinuationResult.from(addresses, list.getMetadata().getContinue());
     }
 
     @Override

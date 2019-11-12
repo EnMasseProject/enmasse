@@ -5,10 +5,7 @@
 
 package io.enmasse.controller.common;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.DoneableAddress;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.config.AnnotationKeys;
@@ -19,14 +16,10 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.client.OpenShiftClient;
 
-import static io.enmasse.address.model.CoreCrd.addresses;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -188,12 +181,4 @@ public class KubernetesHelper implements Kubernetes {
 
         return InfraConfigs.parseCurrentInfraConfig(messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
-
-
-    public static MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> clientForAddress(final KubernetesClient client) {
-        return client
-                .customResources(addresses(),
-                        Address.class, AddressList.class, DoneableAddress.class);
-    }
-
 }
