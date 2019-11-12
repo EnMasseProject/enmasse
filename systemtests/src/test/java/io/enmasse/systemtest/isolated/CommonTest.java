@@ -183,7 +183,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
         log.info("Addressspaces: ");
         kubernetes.getAddressSpaceClient().list().getItems().forEach(addressSpace -> {
-            log.info(addressSpace.getMetadata().getName());
+            log.info(addressSpace.toString());
         });
 
         List<Pod> pods = kubernetes.listPods();
