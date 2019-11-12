@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   Split,
   SplitItem,
@@ -11,16 +11,16 @@ import {
   Title,
   CardBody,
   Flex,
-  FlexItem,
-} from '@patternfly/react-core';
-import { css, StyleSheet } from '@patternfly/react-styles';
+  FlexItem
+} from "@patternfly/react-core";
+import { css, StyleSheet } from "@patternfly/react-styles";
 
 const styles = StyleSheet.create({
   flex_right_border: {
-    paddingRight: '1em',
-    borderRight: '0.1em solid',
-    borderRightColor: 'lightgrey',
-  },
+    paddingRight: "1em",
+    borderRight: "0.1em solid",
+    borderRightColor: "lightgrey"
+  }
 });
 
 export interface IAddressDetailHeaderProps {
@@ -56,7 +56,7 @@ export const AddressDetailHeader: React.FunctionComponent<
       onClick={() => onDelete(name)}
     >
       Delete
-    </DropdownItem>,
+    </DropdownItem>
   ];
   return (
     <Card>

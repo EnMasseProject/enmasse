@@ -1,14 +1,14 @@
-import * as React from "react";
+import React from "react";
 import { MemoryRouter } from "react-router";
-import { storiesOf } from "@storybook/react";
-import { AddressList, IAddress } from "../src/Components/AddressSpace/AddressList";
+import { AddressList, IAddress } from "..//Components/AddressSpace/AddressList";
 import { action } from "@storybook/addon-actions";
-import { select, withKnobs } from "@storybook/addon-knobs";
-import {AddressListFilter} from "../src/Components/AddressSpace/AddressListFilter";
-import { EmptyAddress } from "src/Components/Common/EmptyAddress";
+import { select } from "@storybook/addon-knobs";
+import { AddressListFilter } from "..//Components/AddressSpace/AddressListFilter";
+import { EmptyAddress } from "../Components/Common/EmptyAddress";
 
-const stories = storiesOf("Console", module);
-stories.addDecorator(withKnobs);
+export default {
+  title: "Address list"
+};
 
 const rows: IAddress[] = [
   {
@@ -49,7 +49,7 @@ const rows: IAddress[] = [
   }
 ];
 
-stories.add("Address List", () => (
+export const addressList = () => (
   <MemoryRouter>
     <AddressList
       rows={rows}
@@ -57,11 +57,9 @@ stories.add("Address List", () => (
       onDelete={action("onDelete")}
     />
   </MemoryRouter>
-));
+);
 
-stories.add("Address List Filter Component", () => {
-  const [typeValue, setTypeValue] = React.useState("Queue");
-  const [statusValue, setStatusValue] = React.useState("Active");
+export const addressListFilterComponent = () => {
   const options = {
     Name: "Name",
     Type: "Type",
@@ -80,16 +78,16 @@ stories.add("Address List Filter Component", () => {
             | "Status"
         }
         onTypeSelect={action("onTypeSelect")}
-        typeValue={typeValue}
+        typeValue={"Queue"}
         onStatusSelect={action("onStatusSelect")}
-        statusValue={statusValue}
+        statusValue={"Active"}
       />
     </MemoryRouter>
   );
-});
+};
 
-stories.add("Empty Address",()=>(
+export const emptyAddress = () => (
   <MemoryRouter>
-    <EmptyAddress/>
+    <EmptyAddress />
   </MemoryRouter>
-))
+);

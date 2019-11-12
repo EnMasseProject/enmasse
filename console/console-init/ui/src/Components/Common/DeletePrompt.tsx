@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { Modal, Button } from '@patternfly/react-core';
+import * as React from "react";
+import { Modal, Button } from "@patternfly/react-core";
 
 interface IDeleteProps {
   header: string;
@@ -13,7 +13,7 @@ export const DeletePrompt: React.FunctionComponent<IDeleteProps> = ({
   detail,
   name,
   isOpen,
-  setIsOpen,
+  setIsOpen
 }) => {
   const handleModalToggle = () => {
     setIsOpen(!isOpen);
@@ -30,7 +30,7 @@ export const DeletePrompt: React.FunctionComponent<IDeleteProps> = ({
         </Button>,
         <Button key="cancel" variant="link" onClick={handleModalToggle}>
           Cancel
-        </Button>,
+        </Button>
       ]}
       isFooterLeftAligned={true}
     >

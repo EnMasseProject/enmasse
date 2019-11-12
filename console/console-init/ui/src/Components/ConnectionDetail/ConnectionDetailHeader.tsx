@@ -1,25 +1,25 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   Title,
   Flex,
   FlexItem,
   Card,
   CardHeader,
-  CardBody,
-} from '@patternfly/react-core';
+  CardBody
+} from "@patternfly/react-core";
 import {
   LockIcon,
   LockOpenIcon,
   AngleDownIcon,
-  AngleUpIcon,
-} from '@patternfly/react-icons';
-import { ConnectionDetail } from './ConnectionDetail';
-import { MessagesDetail } from './MessagesDetail';
-import { css, StyleSheet } from '@patternfly/react-styles';
+  AngleUpIcon
+} from "@patternfly/react-icons";
+import { ConnectionDetail } from "./ConnectionDetail";
+import { MessagesDetail } from "./MessagesDetail";
+import { css, StyleSheet } from "@patternfly/react-styles";
 const styles = StyleSheet.create({
   expandable: {
-    color: 'rgb(0, 102, 204)',
-  },
+    color: "rgb(0, 102, 204)"
+  }
 });
 export interface IConnectionHeaderDetailProps {
   hostname: string;
@@ -43,11 +43,11 @@ export const ConnectionDetailHeader: React.FunctionComponent<
   platform,
   os,
   messagesIn,
-  messagesOut,
+  messagesOut
 }) => {
   const generateIcons = () => {
     switch (protocol) {
-      case 'AMQP':
+      case "AMQP":
         return <LockIcon />;
       default:
         return <LockOpenIcon />;
@@ -55,7 +55,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<
   };
   const [isHidden, setIsHidden] = React.useState(true);
   const [isMobileView, setIsMobileView] = React.useState(false);
-  window.addEventListener('resize', () => {
+  window.addEventListener("resize", () => {
     if (window.innerWidth < 992) {
       setIsMobileView(true);
     } else {
@@ -85,7 +85,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<
               className={css(styles.expandable)}
               // style={{ color: 'rgb(0, 102, 204)' }}
             >
-              {' '}
+              {" "}
               {isHidden ? (
                 <>
                   see more details <AngleDownIcon color="black" />
@@ -98,13 +98,13 @@ export const ConnectionDetailHeader: React.FunctionComponent<
               )}
             </FlexItem>
           ) : (
-            ''
+            ""
           )}
         </Flex>
         <Flex
           breakpointMods={[
-            { modifier: 'column', breakpoint: 'sm' },
-            { modifier: 'row', breakpoint: 'lg' },
+            { modifier: "column", breakpoint: "sm" },
+            { modifier: "row", breakpoint: "lg" }
           ]}
         >
           {isMobileView || !isHidden ? (
@@ -123,7 +123,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<
               />
             </>
           ) : (
-            ''
+            ""
           )}
         </Flex>
       </CardBody>

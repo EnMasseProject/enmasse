@@ -1,20 +1,20 @@
-import * as React from 'react';
-import { Flex, FlexItem } from '@patternfly/react-core';
-import { css, StyleSheet } from '@patternfly/react-styles';
-import { classNames } from '@patternfly/react-table';
+import * as React from "react";
+import { Flex, FlexItem } from "@patternfly/react-core";
+import { css, StyleSheet } from "@patternfly/react-styles";
+import { classNames } from "@patternfly/react-table";
 
 const styles = StyleSheet.create({
   flex_right_boder_with_padding: {
-    paddingRight: '48px',
-    marginRight: '48px',
-    borderRight: '2px solid',
-    borderRightColor: 'lightgrey',
+    paddingRight: "48px",
+    marginRight: "48px",
+    borderRight: "2px solid",
+    borderRightColor: "lightgrey"
   },
   flex_bottom_boder: {
-    borderBottom: '2px solid',
-    borderBottomColor: 'lightgrey',
-    paddingBottom: '12px',
-  },
+    borderBottom: "2px solid",
+    borderBottomColor: "lightgrey",
+    paddingBottom: "12px"
+  }
 });
 export interface IConnectionDetailProps {
   product: string;
@@ -28,7 +28,7 @@ export const ConnectionDetail: React.FunctionComponent<
 > = ({ product, version, jvm, os, isMobileView }) => {
   return (
     <Flex
-      breakpointMods={[{ modifier: 'column', breakpoint: 'sm' }]}
+      breakpointMods={[{ modifier: "column", breakpoint: "sm" }]}
       className={
         !isMobileView
           ? css(styles.flex_right_boder_with_padding)
@@ -51,8 +51,8 @@ export const ConnectionDetail: React.FunctionComponent<
         <FlexItem>
           <Flex
             breakpointMods={[
-              { modifier: 'row', breakpoint: 'lg' },
-              { modifier: 'column', breakpoint: 'sm' },
+              { modifier: "row", breakpoint: "lg" },
+              { modifier: "column", breakpoint: "sm" }
             ]}
           >
             <FlexItem>

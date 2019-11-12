@@ -1,9 +1,10 @@
-import * as React from "react";
+import React from "react";
 import { MemoryRouter } from "react-router";
-import { storiesOf } from "@storybook/react";
-import { LinkList, ILink } from "../src/Components/LinkList";
+import { LinkList, ILink } from "..//Components/LinkList";
 
-const stories = storiesOf("Console", module);
+export default {
+  title: "LinkList"
+};
 
 const rows: ILink[] = [
   {
@@ -44,8 +45,8 @@ const rows: ILink[] = [
   }
 ];
 
-stories.add("Link List", () => (
+export const linkList = () => (
   <MemoryRouter>
     <LinkList rows={rows} />
   </MemoryRouter>
-));
+);

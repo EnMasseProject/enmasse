@@ -5,23 +5,23 @@
   "proxy": "http://localhost:4000",
   "dependencies": {
     "@apollo/react-hooks": "^3.1.3",
-    "@patternfly/react-core": "^3.77.2",
-    "@patternfly/react-icons": "^3.10.15",
-    "@patternfly/react-styles": "^3.5.7",
-    "@patternfly/react-table": "^2.22.19",
-    "@rescripts/cli": "^0.0.12",
-    "@types/jest": "24.0.18",
-    "@types/node": "12.7.12",
-    "@types/react": "16.9.5",
-    "@types/react-dom": "16.9.1",
+    "@patternfly/react-core": "^3.120.5",
+    "@patternfly/react-icons": "^3.14.18",
+    "@patternfly/react-styles": "^3.6.5",
+    "@patternfly/react-table": "^2.24.17",
+    "@rescripts/cli": "^0.0.13",
+    "@types/jest": "24.0.22",
+    "@types/node": "12.12.6",
+    "@types/react": "16.9.11",
+    "@types/react-dom": "16.9.4",
     "@types/react-router": "^5.1.2",
-    "@types/react-router-dom": "^5.1.0",
+    "@types/react-router-dom": "^5.1.2",
     "apollo-boost": "^0.4.4",
-    "date-fns": "^2.4.1",
+    "date-fns": "^2.6.0",
     "graphql": "^14.5.8",
-    "react": "^16.10.2",
+    "react": "^16.11.0",
     "react-async": "^9.0.0",
-    "react-dom": "^16.10.2",
+    "react-dom": "^16.11.0",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
     "react-router-last-location": "^2.0.1",
@@ -34,7 +34,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "tsdx lint",
+    "format": "prettier --write 'src/**/*.{js,ts,tsx,json}'",
     "storybook": "start-storybook -p 9009",
     "build-storybook": "build-storybook"
   },
@@ -64,19 +64,33 @@
     "react-router-last-location": "^2.0.1"
   },
   "devDependencies": {
-    "@storybook/addon-actions": "^5.2.4",
-    "@storybook/addon-info": "^5.2.4",
-    "@storybook/addon-knobs": "^5.2.4",
-    "@storybook/addon-links": "^5.2.4",
+    "@storybook/addon-actions": "^5.2.5",
+    "@storybook/addon-docs": "^5.2.5",
+    "@storybook/addon-info": "^5.2.5",
+    "@storybook/addon-knobs": "^5.2.5",
+    "@storybook/addon-links": "^5.2.5",
     "@storybook/addon-viewport": "^5.2.5",
-    "@storybook/addons": "^5.2.4",
-    "@storybook/react": "^5.2.4",
-    "@testing-library/jest-dom": "^4.2.0",
-    "@testing-library/react": "^9.3.0",
+    "@storybook/addons": "^5.2.5",
+    "@storybook/react": "^5.2.5",
+    "@testing-library/jest-dom": "^4.2.3",
+    "@testing-library/react": "^9.3.2",
     "babel-loader": "^8.0.6",
-    "react-docgen-typescript-loader": "^3.3.0",
+    "husky": ">=1",
+    "lint-staged": ">=8",
+    "prettier": "^1.18.2",
     "react-testing-library": "^8.0.1",
-    "ts-loader": "^6.2.0",
+    "ts-loader": "^6.2.1",
     "tsconfig-paths-webpack-plugin": "^3.2.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,css,json,md}": [
+      "prettier --write 'src/**/*.{js,ts,tsx,json}'",
+      "git add"
+    ]
   }
 }
