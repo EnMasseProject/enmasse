@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     borderRightColor: "lightgrey"
   }
 });
-export interface IAddressSpace {
+export interface IAddressSpaceProps {
   name: string;
   namespace: string;
   createdOn: string;
