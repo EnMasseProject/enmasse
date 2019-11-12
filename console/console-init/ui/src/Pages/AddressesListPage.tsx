@@ -81,7 +81,8 @@ function AddressesListFunction() {
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
 
   const { loading, data } = useQuery<IAddressResponse>(
-    ALL_ADDRESS_FOR_ADDRESS_SPACE
+    ALL_ADDRESS_FOR_ADDRESS_SPACE,
+    { pollInterval: 5000 }
   );
 
   const setSearchParam = React.useCallback(

@@ -1,17 +1,17 @@
-import * as React from 'react';
-import { SwitchWith404, LazyRoute } from 'use-patternfly';
+import * as React from "react";
+import { SwitchWith404, LazyRoute } from "use-patternfly";
 import {
   LastLocationProvider,
-  useLastLocation,
-} from 'react-router-last-location';
-import { Redirect } from 'react-router';
-import IndexPage from 'src/Pages/IndexPage';
+  useLastLocation
+} from "react-router-last-location";
+import { Redirect } from "react-router";
+import IndexPage from "src/Pages/IndexPage";
 let routeFocusTimer: number;
 
-const getAddressSpaceListPage = () => import('./Pages/AddressSpaceListPage');
-const getAddressSpaceDetail = () => import('./Pages/AddressSpaceDetailPage');
-const getAddressDetail = () => import('./Pages/AddressDetailPage');
-const getConnectionDetail = () => import('./Pages/ConnectionDetailPage');
+const getAddressSpaceListPage = () => import("./Pages/AddressSpaceListPage");
+const getAddressSpaceDetail = () => import("./Pages/AddressSpaceDetailPage");
+const getAddressDetail = () => import("./Pages/AddressDetailPage");
+const getConnectionDetail = () => import("./Pages/ConnectionDetailPage");
 export const AppRoutes = () => (
   <LastLocationProvider>
     <SwitchWith404>
@@ -24,16 +24,16 @@ export const AppRoutes = () => (
       />
       {/* <Redirect path="/adress-space/:id" to="/main/items" exact={true}/> */}
       <LazyRoute
-        path="/address-space/:id?/addresses"
+        path="/address-space/:id/:subList"
         exact={true}
         getComponent={getAddressSpaceDetail}
       />
       <LazyRoute
-        path="/address-space/:id?/address/:id"
+        path="/address-space/:id/address/:id"
         getComponent={getAddressDetail}
       />
       <LazyRoute
-        path="/address-space/:id?/connection/:id"
+        path="/address-space/:id/connection/:id"
         getComponent={getConnectionDetail}
       />
     </SwitchWith404>

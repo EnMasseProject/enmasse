@@ -1,5 +1,4 @@
 import * as React from "react";
-import { AddressDetailHeader } from "src/Components/AddressDetail/AddressDetailHeader";
 import { AddressSpaceNavigation } from "src/Components/AddressSpace/AddressSpaceNavigation";
 import {
   useA11yRouteChange,
@@ -9,7 +8,7 @@ import {
   Loading
 } from "use-patternfly";
 import { PageSection, PageSectionVariants } from "@patternfly/react-core";
-import { Redirect, BrowserRouter } from "react-router-dom";
+import { Redirect, BrowserRouter, useParams } from "react-router-dom";
 import {
   IAddressSpaceHeaderProps,
   AddressSpaceHeader
@@ -21,34 +20,34 @@ const getConnectionsList = () => import("./ConnectionsListPage");
 const getAddressesList = () => import("./AddressesListPage");
 
 interface IAddressSpaceDetailResponse {
-  addressSpace :{
+  addressSpaces: {
     AddressSpaces: Array<{
-      MetaData:{
-        Namespace:string;
-        Name:string;
-        CreationTimestamp:string;
+      Metadata: {
+        Namespace: string;
+        Name: string;
+        CreationTimestamp: string;
       };
-      Spec:{
-        Type:{
-          Plan:{
-            Spec:{
-              DisplayName:string;
-            };
+      Spec: {
+        Type: string;
+        Plan: {
+          Spec: {
+            DisplayName: string;
           };
         };
       };
       Status: {
-        IsReady:boolean;
-        Messages:Array<string>;
+        IsReady: boolean;
+        Messages: Array<string>;
       };
     }>;
-  }
+  };
 }
 
 export default function AddressSpaceDetailPage() {
-  //Chnage 
-const name ="jupiter_as1", namespace="app1_ns";
-const ADDRESS_SPACE_DETAIL= gql`
+  //Chnage
+  const name = "jupiter_as1",
+    namespace = "app1_ns";
+  const ADDRESS_SPACE_DETAIL = gql`
 query all_address_spaces {
   addressSpaces(
      filter: "\`$.Metadata.Name\` = '${name}' AND \`$.Metadata.Namespace\` = '${namespace}'"
@@ -75,55 +74,53 @@ query all_address_spaces {
   }
 }
 `;
-
-  const [activeNavItem, setActiveNavItem] = React.useState("addresses");
   useA11yRouteChange();
   useDocumentTitle("Address Space Detail");
+  const { id, subList } = useParams();
+  const [activeNavItem, setActiveNavItem] = React.useState(
+    subList || "addresses"
+  );
   const onNavSelect = () => {
-    if (activeNavItem === "addresses") setActiveNavItem("connections");
-    if (activeNavItem === "connections") setActiveNavItem("addresses");
+    if (subList === "connections" || activeNavItem === "addresses")
+      setActiveNavItem("connections");
+    if (activeNavItem === "connections" || subList === "addresses")
+      setActiveNavItem("addresses");
   };
-  const {loading, data} = useQuery<any>(ADDRESS_SPACE_DETAIL)
-  
-  if(loading) return <Loading/>
-  console.log(data);
+  const { loading, data } = useQuery<IAddressSpaceDetailResponse>(
+    ADDRESS_SPACE_DETAIL
+  );
 
+  if (loading) return <Loading />;
+  // console.log(data);
 
   const { addressSpaces } = data || {
-    connections: { Total: 0, AddressSpaces: [] }
+    addressSpaces: { Total: 0, AddressSpaces: [] }
   };
-console.log("add",addressSpaces.AddressSpaces[0]);
+  // console.log("add", addressSpaces.AddressSpaces[0]);
   const addressSpaceDetails: IAddressSpaceHeaderProps = {
-    name:addressSpaces.AddressSpaces[0].Metadata.Name,
-    namespace:addressSpaces.AddressSpaces[0].Metadata.Namespace,
-    createdOn:addressSpaces.AddressSpaces[0].Metadata.CreationTimestamp,
-    type:addressSpaces.AddressSpaces[0].Spec.Type,
-    onDownload:(data)=>{console.log(data)},
-    onDelete:(data)=>{console.log(data)},
-  }
-  
-  // {
-  //   name: "jupiter_as1",
-  //   namespace: "app1_ns",
-  //   createdOn: "2019-11-10T05:08:31.489Z",
-  //   type: "standard",
-  //   onDownload: () => {
-  //     console.log("on Downlaod");
-  //   },
-  //   onDelete: () => {
-  //     console.log("on Delete");
-  //   }
-  // };
+    name: addressSpaces.AddressSpaces[0].Metadata.Name,
+    namespace: addressSpaces.AddressSpaces[0].Metadata.Namespace,
+    createdOn: addressSpaces.AddressSpaces[0].Metadata.CreationTimestamp,
+    type: addressSpaces.AddressSpaces[0].Spec.Type,
+    onDownload: data => {
+      console.log(data);
+    },
+    onDelete: data => {
+      console.log(data);
+    }
+  };
+
   return (
     <BrowserRouter>
-      <PageSection variant={PageSectionVariants.light}>
+      <PageSection
+        variant={PageSectionVariants.light}
+        style={{ paddingBottom: 0 }}>
         <AddressSpaceHeader {...addressSpaceDetails} />
-        {/* <h1>Address Space Detail Page</h1> */}
         <AddressSpaceNavigation
           activeItem={activeNavItem}
           onSelect={onNavSelect}></AddressSpaceNavigation>
-        </PageSection>
-        <PageSection>
+      </PageSection>
+      <PageSection>
         <SwitchWith404>
           <Redirect path="/" to="/address-spaces" exact={true} />
           <LazyRoute
