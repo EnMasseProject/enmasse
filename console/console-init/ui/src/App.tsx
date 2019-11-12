@@ -2,7 +2,7 @@ import React from "react";
 import "./App.css";
 import "@patternfly/react-core/dist/styles/base.css";
 import { AppLayout } from "use-patternfly";
-import { useHistory, BrowserRouter as Router } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 import { Brand, Text, TextVariants } from "@patternfly/react-core";
 import brandImg from "./brand_logo.svg";
 import NavToolBar from "./Components/NavToolBar/NavToolBar";
