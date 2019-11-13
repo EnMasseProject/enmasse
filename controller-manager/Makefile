@@ -17,7 +17,7 @@ build/operatorImageMap.yaml:
 	echo "iot-sigfox-adapter: $(IOT_SIGFOX_ADAPTER_IMAGE)" >> "$@"
 	echo "iot-tenant-service: $(IOT_TENANT_SERVICE_IMAGE)" >> "$@"
 	echo "iot-proxy-configurator: $(IOT_PROXY_CONFIGURATOR_IMAGE)" >> "$@"
-	echo "qdrouterd-base: $(ROUTER_IMAGE)" >> "$@"
+	echo "router: $(ROUTER_IMAGE)" >> "$@"
 	echo "none-authservice: $(NONE_AUTHSERVICE_IMAGE)" >> "$@"
 	echo "keycloak: $(KEYCLOAK_IMAGE)" >> "$@"
 	echo "keycloak-plugin: $(KEYCLOAK_PLUGIN_IMAGE)" >> "$@"
