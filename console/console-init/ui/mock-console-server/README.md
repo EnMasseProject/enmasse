@@ -27,7 +27,7 @@ object.  A JSON-path operand in the expression are enclosed in backticks.
 e.g.
 
 ```
- `$.Spec.AddressSpace` = 'jupiter_as1' AND `$.Metadata.Namespace` = 'app1_ns'
+ `$.Spec.AddressSpace` = 'jupiter_as1' AND `$.ObjectMeta.Namespace` = 'app1_ns'
 ```
 
 # Sorting
@@ -39,7 +39,7 @@ result that is to be subjected to the sort.  Sort order can be `ASC` (ascending 
 An ascending sort:
 
 ```
-"`$.Metadata.Name`"
+"`$.ObjectMeta.Name`"
 ```
 
 Multiple sort clauses are supported. Separate each clause with a comma.
@@ -47,7 +47,7 @@ Multiple sort clauses are supported. Separate each clause with a comma.
 A two clause sort:
 
 ```
-"`$.Spec.Type` ,`$.Metadata.Name` desc"
+"`$.Spec.Type` ,`$.ObjectMeta.Name` desc"
 ```
 
 # Paging
@@ -67,7 +67,7 @@ query all_address_spaces {
   addressSpaces {
     Total
     AddressSpaces {
-      Metadata {
+      ObjectMeta {
         Namespace
         Name
         CreationTimestamp
@@ -94,11 +94,11 @@ query all_address_spaces {
 ```
 query all_addresses_for_addressspace_view {
   addresses(
-    filter: "`$.Spec.AddressSpace` = 'jupiter_as1' AND `$.Metadata.Namespace` = 'app1_ns'"
+    filter: "`$.Spec.AddressSpace` = 'jupiter_as1' AND `$.ObjectMeta.Namespace` = 'app1_ns'"
   ) {
     Total
     Addresses {
-      Metadata {
+      ObjectMeta {
         Namespace
         Name
       }
@@ -113,6 +113,9 @@ query all_addresses_for_addressspace_view {
       Status {
         IsReady
         Messages
+        PlanStatus {
+          Partitions
+        }
       }
       Metrics {
         Name
@@ -131,11 +134,11 @@ query all_addresses_for_addressspace_view {
 ```
 query all_connections_for_addressspace_view {
   connections(
-    filter: "`$.Spec.AddressSpace.Metadata.Name` = 'jupiter_as1' AND `$.Spec.AddressSpace.Metadata.Namespace` = 'app1_ns'"
+    filter: "`$.Spec.AddressSpace.ObjectMeta.Name` = 'jupiter_as1' AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = 'app1_ns'"
   ) {
     Total
     Connections {
-      Metadata {
+      ObjectMeta {
         Name
       }
       Spec {
@@ -170,7 +173,7 @@ args:
 
 ```
 {
-  "as": { "Metadata": {"Name": "wibx", "Namespace": "app1_ns" },
+  "as": { "ObjectMeta": {"Name": "wibx", "Namespace": "app1_ns" },
     "Spec": {"Type": "standard", "Plan": "standard-small"}}
 }
 ```
@@ -207,7 +210,7 @@ args:
 
 ## Delete address space
 
-To delete an address space, call `deleteAddressSpace` passing the Metadata
+To delete an address space, call `deleteAddressSpace` passing the ObjectMeta
 object associated with the address to delete.
 
 ```
@@ -230,12 +233,9 @@ args:
 ```
 mutation create_addr($a:Address_enmasse_io_v1beta1_Input!) {
   createAddress(input: $a) {
-    Metadata
-    {
       Name
       Namespace
       Uid
-    }
   }
 }
 ```
@@ -244,7 +244,7 @@ args:
 
 ```
 {
-  "a": { "Metadata": {"Name": "jupiter_as1.wiby1", "Namespace": "app1_ns" },
+  "a": { "ObjectMeta": {"Name": "jupiter_as1.wiby1", "Namespace": "app1_ns" },
     "Spec": {"Type": "queue", "Plan": "standard-small-queue", "Address": "wiby1", "AddressSpace": "jupiter_as1"}}
 }
 ```
@@ -270,14 +270,14 @@ args:
 ```
 {
   "a": {"Name": "jupiter_as1.wiby1", "Namespace": "app1_ns" },
-"jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Spec/Plan\",\"value\":\"standard-medium-queue\"}]",
+"jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium-queue\"}]",
   "patchType": "application/json-patch+json"
 }
 ```
 
 # Delete address
 
-To delete an address, call `deleteAddress` passing the Metadata
+To delete an address, call `deleteAddress` passing the ObjectMeta
 object associated with the address to delete.
 
 
@@ -297,7 +297,7 @@ args:
 
 # Purging address
 
-To purge an address (i.e clear it of its messages), call `purgeAddress` passing the Metadata
+To purge an address (i.e clear it of its messages), call `purgeAddress` passing the ObjectMeta
 object associated with the address to purge.
 
 ```
@@ -316,7 +316,7 @@ args:
 
 # Closing connection
 
-To close a connection, call `closeConnection` passing the Metadata
+To close a connection, call `closeConnection` passing the ObjectMeta
 object associated with the connection to close.
 
 ```
@@ -338,7 +338,7 @@ args:
 To get the messaging certificate for an existing address space.
 
 ```
-query xx($as:ObjectMeta_v1_Input!) {
+query messagingCertificateChain($as:ObjectMeta_v1_Input!) {
   messagingCertificateChain(input :$as)
 }
 ```
@@ -364,7 +364,7 @@ args:
 
 ```
 {
-  "as": { "Metadata": {"Name": "wibx", "Namespace": "app1_ns" },
-    "Spec": {"Type": "standard", "Plan": "standard-small", "Address" :"wibx"}}
+  "as": { "ObjectMeta": {"Name": "wibx", "Namespace": "app1_ns" },
+    "Spec": {"Type": "standard", "Plan": "standard-small"}}
 }
 ```

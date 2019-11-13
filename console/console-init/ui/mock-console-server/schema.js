@@ -29,7 +29,6 @@ const typeDefs = gql`
     enum MetricType {
         gauge
         counter
-        rate
     }
 
     enum Protocol {
@@ -45,11 +44,11 @@ const typeDefs = gql`
     }
 
     type Connection_consoleapi_enmasse_io_v1beta1 {
-        Metadata: ObjectMeta_v1!
+        ObjectMeta: ObjectMeta_v1!
         Spec: ConnectionSpec_consoleapi_enmasse_io_v1beta1!
 
         Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
-        Links(first: Int, offset: Int, filter: String, orderBy: String): LinkQueryResult!
+        Links(first: Int, offset: Int, filter: String, orderBy: String): LinkQueryResult_consoleapi_enmasse_io_v1beta1!
     }
 
     type ConnectionSpec_consoleapi_enmasse_io_v1beta1 {
@@ -61,7 +60,7 @@ const typeDefs = gql`
     }
 
     type Link_consoleapi_enmasse_io_v1beta1 {
-        Metadata: ObjectMeta_v1!
+        ObjectMeta: ObjectMeta_v1!
         Spec: LinkSpec_consoleapi_enmasse_io_v1beta1!
         Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
     }
@@ -92,7 +91,7 @@ const typeDefs = gql`
         Connections: [Connection_consoleapi_enmasse_io_v1beta1!]!
     }
 
-    type LinkQueryResult {
+    type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
         Total: Int!
         Links: [Link_consoleapi_enmasse_io_v1beta1!]!
     }
@@ -107,7 +106,7 @@ const typeDefs = gql`
     #
 
     type AddressSpace_consoleapi_enmasse_io_v1beta1 {
-        Metadata: ObjectMeta_v1!
+        ObjectMeta: ObjectMeta_v1!
         Spec: AddressSpaceSpec_enmasse_io_v1beta1!
         Status: AddressSpaceStatus_enmasse_io_v1beta1
         Connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1beta1!
@@ -136,19 +135,25 @@ const typeDefs = gql`
     type AddressStatus_enmasse_io_v1beta1 {
         IsReady: Boolean!
         Messages: [String!]
+        PlanStatus: AddressPlanStatus_enmasse_io_v1beta1
+    }
+
+    type AddressPlanStatus_enmasse_io_v1beta1 {
+        Name: String!
+        Partitions: Int!
     }
 
     type Address_consoleapi_enmasse_io_v1beta1 {
-        Metadata: ObjectMeta_v1!
+        ObjectMeta: ObjectMeta_v1!
         Spec: AddressSpec_enmasse_io_v1beta1!
         Status: AddressStatus_enmasse_io_v1beta1
 
-        Links(first: Int, offset: Int, filter: String, orderBy: String ): LinkQueryResult!
+        Links(first: Int, offset: Int, filter: String, orderBy: String ): LinkQueryResult_consoleapi_enmasse_io_v1beta1!
         Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
     }
 
     type AddressPlan_admin_enmasse_io_v1beta2 {
-        Metadata: ObjectMeta_v1!
+        ObjectMeta: ObjectMeta_v1!
         Spec: AddressPlanSpec_admin_enmasse_io_v1beta2!
     }
 
@@ -161,12 +166,12 @@ const typeDefs = gql`
     }
 
     type AddressSpacePlan_admin_enmasse_io_v1beta2 {
-        Metadata: ObjectMeta_v1!
+        ObjectMeta: ObjectMeta_v1!
         Spec: AddressSpacePlanSpec_admin_enmasse_io_v1beta2!
     }
 
     type AddressSpacePlanSpec_admin_enmasse_io_v1beta2 {
-        AddressPlans: [AddressSpacePlan_admin_enmasse_io_v1beta2!]!
+        AddressPlans: [AddressPlan_admin_enmasse_io_v1beta2!]!
         AddressSpaceType: AddressSpaceType,
         DisplayName: String!
         LongDescription: String!
@@ -185,13 +190,14 @@ const typeDefs = gql`
     }
 
     type User_v1 {
-        Metadata: ObjectMeta_v1!
+        ObjectMeta: ObjectMeta_v1!
         Identities: [String!]!
         Groups: [String!]!
+        FullName: String!
     }
 
     type Namespace_v1 {
-        Metadata: ObjectMeta_v1!
+        ObjectMeta: ObjectMeta_v1!
         Status: NamespaceStatus_v1!
     }
 
@@ -252,7 +258,7 @@ const typeDefs = gql`
     }
 
     input AddressSpace_enmasse_io_v1beta1_Input {
-        Metadata: ObjectMeta_v1_Input
+        ObjectMeta: ObjectMeta_v1_Input
         Spec: AddressSpaceSpec_enmasse_io_v1beta1_Input
     }
 
@@ -265,7 +271,7 @@ const typeDefs = gql`
     }
 
     input Address_enmasse_io_v1beta1_Input {
-        Metadata: ObjectMeta_v1_Input
+        ObjectMeta: ObjectMeta_v1_Input
         Spec: AddressSpec_enmasse_io_v1beta1_Input
     }
 
