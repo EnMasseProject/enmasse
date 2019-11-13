@@ -49,7 +49,10 @@ jobs:
     - "./hack/verify-codegen.sh"
     script:
     - "./.travis/setup-kubernetes.sh"
+    - "./.travis/setup-olm.sh"
     - "./.travis/build.sh"
+    - "./.travis/test.sh"
+    - "./.travis/test-olm.sh"
     after_failure:
     - "./.travis/upload-artifacts.sh false"
     after_success:
