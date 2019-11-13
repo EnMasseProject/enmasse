@@ -27,3 +27,17 @@ spec:
   publisher: travis
   sourceType: grpc
 EOF
+
+cat<<EOF | kubectl create -f -
+apiVersion: operators.coreos.com/v1
+kind: Subscription
+metadata:
+  name: enmasse-sub
+  metadata: operators
+spec:
+  name: enmasse
+  source: enmasse-ocs
+  sourceNamespace: operators
+  startingCSV: enmasse.0.30-SNAPSHOT
+  channel: alpha
+EOF
