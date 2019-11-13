@@ -1,7 +1,5 @@
 import * as React from "react";
 import {
-  PageSection,
-  PageSectionVariants,
   Nav,
   NavList,
   NavVariants,
@@ -17,29 +15,25 @@ export const AddressSpaceNavigation: React.FunctionComponent<
   AddressSpaceNavigationProps
 > = ({ activeItem, onSelect }) => {
   return (
-    <PageSection variant={PageSectionVariants.light}>
       <Nav onSelect={onSelect}>
         <NavList variant={NavVariants.tertiary}>
           <NavItem
             key="addresses"
             itemId="addresses"
-            isActive={activeItem === "addresses"}
-          >
-            <NavLink to={"address_space/addresses"} exact={true}>
+            isActive={activeItem === "addresses"}>
+            <NavLink to={"/address-space/456/addresses"} >
               Addresses
             </NavLink>
           </NavItem>
           <NavItem
             key="connections"
             itemId="connections"
-            isActive={activeItem === "connections"}
-          >
-            <NavLink to={"address_space/connections"} exact={true}>
+            isActive={activeItem === "connections"}>
+            <NavLink to={"/address-space/456/connections"}>
               Connections
             </NavLink>
           </NavItem>
         </NavList>
       </Nav>
-    </PageSection>
   );
 };

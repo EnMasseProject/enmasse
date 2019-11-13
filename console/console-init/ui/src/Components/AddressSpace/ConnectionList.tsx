@@ -7,6 +7,7 @@ import {
   IRowData
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
+import { ConnectionProtocolFormat } from "../Common/ConnectionListFormatter";
 
 interface IConnectionListProps {
   rows: IConnection[];
@@ -31,7 +32,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       cells: [
         { title: <Link to="#">{row.hostname}</Link> },
         row.containerId,
-        row.protocol,
+        { title: <ConnectionProtocolFormat protocol={row.protocol} /> },
         row.messagesIn,
         row.messagesOut,
         row.senders,

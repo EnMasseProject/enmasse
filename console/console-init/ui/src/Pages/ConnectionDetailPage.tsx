@@ -6,7 +6,7 @@ import {
   IConnection
 } from "src/Components/AddressSpace/ConnectionList";
 
-export const ConnectionDetailPage: React.FunctionComponent<any> = () => {
+export default function ConnectionDetailPage() {
   const props = {
     hostname: "1.219.2.1.33904",
     containerId: "myapp1",
@@ -68,4 +68,4 @@ export const ConnectionDetailPage: React.FunctionComponent<any> = () => {
       </PageSection>
     </>
   );
-};
+}

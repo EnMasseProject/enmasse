@@ -10,50 +10,50 @@ import { EditAddress } from "../Pages/EditAddressPage";
 
 const addressRows: IAddress[] = [
   {
-    name: "foo",
-    type: "Queue",
-    plan: "small",
+    name: 'foo',
+    type: 'Queue',
+    plan: 'small',
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    status: "running"
+    status: 'running',
   },
   {
-    name: "foo",
-    type: "Queue",
-    plan: "small",
+    name: 'foo',
+    type: 'Queue',
+    plan: 'small',
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    status: "creating"
+    status: 'creating',
   },
   {
-    name: "foo",
-    type: "Queue",
-    plan: "small",
+    name: 'foo',
+    type: 'Queue',
+    plan: 'small',
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    status: "deleting"
-  }
+    status: 'deleting',
+  },
 ];
 
 const IndexPage: React.FC = ({ children }) => {
   useA11yRouteChange();
-  useDocumentTitle("Index Page");
+  useDocumentTitle('Index Page');
 
   const [
     addressBeingEdited,
-    setAddressBeingEdited
+    setAddressBeingEdited,
   ] = React.useState<IAddress | null>();
 
   const handleDelete = (data: IAddress) => void 0;
@@ -78,8 +78,7 @@ const IndexPage: React.FC = ({ children }) => {
       </PageSection>
       {addressBeingEdited && (
         <Modal
-          isSmall
-          title="Edit"
+          title="Modal Header"
           isOpen={true}
           onClose={handleCancelEdit}
           actions={[
@@ -88,7 +87,7 @@ const IndexPage: React.FC = ({ children }) => {
             </Button>,
             <Button key="cancel" variant="link" onClick={handleCancelEdit}>
               Cancel
-            </Button>
+            </Button>,
           ]}
           isFooterLeftAligned
         >

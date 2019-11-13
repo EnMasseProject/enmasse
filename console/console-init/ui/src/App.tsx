@@ -1,12 +1,19 @@
 import React from "react";
 import "./App.css";
-import { AppLayout, SwitchWith404, LazyRoute } from "use-patternfly";
+import "@patternfly/react-core/dist/styles/base.css";
+import { AppLayout } from "use-patternfly";
 import { useHistory } from "react-router-dom";
-import { Avatar, Brand, Text, TextVariants } from "@patternfly/react-core";
+import { Brand, Text, TextVariants } from "@patternfly/react-core";
 import brandImg from "./brand_logo.svg";
 import NavToolBar from "./Components/NavToolBar/NavToolBar";
+import { AppRoutes } from "./AppRoutes";
+import ApolloClient from "apollo-boost";
+import { ApolloProvider } from "@apollo/react-hooks";
 
-const getIndexPage = () => import("./Pages/IndexPage");
+const client = new ApolloClient({
+  uri: "http://localhost:4000"
+});
+
 const avatar = (
   <React.Fragment>
     <Text component={TextVariants.p}>Ramakrishna Pattnaik</Text>
@@ -16,19 +23,23 @@ const logo = <Brand src={brandImg} alt="Console Logo" />;
 
 const App: React.FC = () => {
   const history = useHistory();
+  const logoProps = React.useMemo(
+    () => ({
+      onClick: () => history.push("/")
+    }),
+    [history]
+  );
   return (
-    <AppLayout
-      logoProps={{
-        onClick: () => history.push("/")
-      }}
-      logo={logo}
-      avatar={avatar}
-      toolbar={<NavToolBar />}
-    >
-      <SwitchWith404>
-        <LazyRoute path="/" exact={true} getComponent={getIndexPage} />
-      </SwitchWith404>
-    </AppLayout>
+    <ApolloProvider client={client}>
+      <AppLayout
+        logoProps={logoProps}
+        logo={logo}
+        avatar={avatar}
+        toolbar={<NavToolBar />}
+      >
+        <AppRoutes />
+      </AppLayout>
+    </ApolloProvider>
   );
 };
 
