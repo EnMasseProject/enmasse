@@ -18,8 +18,7 @@ public class DefaultsController implements Controller {
     }
 
     @Override
-    public AddressSpace reconcile(AddressSpace addressSpace) {
-
+    public AddressSpace reconcileActive(AddressSpace addressSpace) {
         AddressSpaceBuilder builder = new AddressSpaceBuilder(addressSpace);
 
         if (addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID) == null) {

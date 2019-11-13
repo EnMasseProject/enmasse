@@ -36,8 +36,7 @@ public class RouterConfigController implements Controller {
         this.authenticationServiceResolver = authenticationServiceResolver;
     }
 
-    public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
-
+    public AddressSpace reconcileActive(AddressSpace addressSpace) throws Exception {
         InfraConfig infraConfig = InfraConfigs.parseCurrentInfraConfig(addressSpace);
 
         if (infraConfig instanceof StandardInfraConfig) {

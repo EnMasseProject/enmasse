@@ -11,7 +11,6 @@ import io.enmasse.address.model.CoreCrd;
 import io.enmasse.address.model.DoneableAddress;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.cache.*;
-import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
@@ -22,10 +21,9 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 public class KubeAddressApi implements AddressApi, ListerWatcher<Address, AddressList> {
     private final NamespacedKubernetesClient kubernetesClient;
@@ -33,21 +31,19 @@ public class KubeAddressApi implements AddressApi, ListerWatcher<Address, Addres
     private final String namespace;
     private final CustomResourceDefinition customResourceDefinition;
     private final WorkQueue<Address> cache = new EventCache<>(new HasMetadataFieldExtractor<>());
-    private final OwnerReference ownerReference;
     private final String version;
 
 
-    private KubeAddressApi(NamespacedKubernetesClient kubeClient, String namespace, CustomResourceDefinition customResourceDefinition, OwnerReference ownerReference, String version) {
+    private KubeAddressApi(NamespacedKubernetesClient kubeClient, String namespace, CustomResourceDefinition customResourceDefinition, String version) {
         this.kubernetesClient = kubeClient;
         this.namespace = namespace;
         this.version = version;
         this.client = kubeClient.customResources(customResourceDefinition, Address.class, AddressList.class, DoneableAddress.class);
-        this.ownerReference = ownerReference;
         this.customResourceDefinition = customResourceDefinition;
     }
 
-    public static AddressApi create(NamespacedKubernetesClient kubernetesClient, String namespace, OwnerReference ownerReference, String version) {
-        return new KubeAddressApi(kubernetesClient, namespace, CoreCrd.addresses(), ownerReference, version);
+    public static AddressApi create(NamespacedKubernetesClient kubernetesClient, String namespace, String version) {
+        return new KubeAddressApi(kubernetesClient, namespace, CoreCrd.addresses(), version);
     }
 
     @Override
@@ -100,36 +96,28 @@ public class KubeAddressApi implements AddressApi, ListerWatcher<Address, Addres
                     .endMetadata();
         }
 
-        if (ownerReference != null) {
-            builder.editOrNewMetadata()
-                    .withOwnerReferences(ownerReference)
-                    .endMetadata();
-        }
-
         return builder.build();
     }
 
     @Override
     public boolean deleteAddress(Address address) {
-        boolean exists = client.inNamespace(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get() != null;
-        if (!exists) {
-            return false;
-        }
-        client.inNamespace(address.getMetadata().getNamespace()).delete(address);
-        return true;
+        return client
+                .inNamespace(address.getMetadata().getNamespace())
+                .delete(address);
     }
 
     @Override
-    public Set<Address> listAddresses(String namespace) {
-        return new HashSet<>(client.inNamespace(namespace).list().getItems());
+    public ContinuationResult<Address> listAddresses(final String namespace, final Integer limit, final ContinuationResult<Address> continueValue,
+            final Map<String, String> labels) {
+
+        return ContinuationResult.from(
+                this.client.inNamespace(namespace)
+                        .withLabels(labels != null ? labels : Collections.emptyMap())
+                        .list(limit, continueValue != null ? continueValue.getContinuation() : null));
+
+
     }
 
-    @Override
-    public Set<Address> listAddressesWithLabels(String namespace, Map<String, String> labels) {
-        return new HashSet<>(client.inNamespace(namespace).withLabels(labels).list().getItems());
-    }
-
-    @Override
     public void deleteAddresses(String namespace) {
         client.inNamespace(namespace).delete();
     }

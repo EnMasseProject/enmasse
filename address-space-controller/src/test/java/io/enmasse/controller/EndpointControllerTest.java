@@ -86,7 +86,7 @@ public class EndpointControllerTest extends JULInitializingTest {
 
         EndpointController controller = new EndpointController(client, false, false);
 
-        AddressSpace newspace = controller.reconcile(addressSpace);
+        AddressSpace newspace = controller.reconcileActive(addressSpace);
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));
@@ -142,7 +142,7 @@ public class EndpointControllerTest extends JULInitializingTest {
 
         EndpointController controller = new EndpointController(client, true, false);
 
-        AddressSpace newspace = controller.reconcile(addressSpace);
+        AddressSpace newspace = controller.reconcileActive(addressSpace);
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));
@@ -198,7 +198,7 @@ public class EndpointControllerTest extends JULInitializingTest {
 
         EndpointController controller = new EndpointController(client, true, true);
 
-        AddressSpace newspace = controller.reconcile(addressSpace);
+        AddressSpace newspace = controller.reconcileActive(addressSpace);
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));

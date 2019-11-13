@@ -59,7 +59,7 @@ class RouterStatusCollector {
         String host = router.getStatus().getPodIP();
         log.debug("Collecting router status of router : {}", router.getMetadata().getName());
 
-        Map<RouterEntity, List<List>> results;
+        Map<RouterEntity, List<List<?>>> results;
         if (checkRouterLinks) {
             results = routerManagement.query(host, port, address, autoLink, linkRoute, connection, link);
         } else {
@@ -75,7 +75,7 @@ class RouterStatusCollector {
                 toTyped(String.class, results.getOrDefault(link, Collections.emptyList())));
     }
 
-    private static <T> List<List<T>> toTyped(Class<T> type, List<List> list) {
+    private static <T> List<List<T>> toTyped(Class<T> type, List<List<?>> list) {
         List<List<T>> typed = new ArrayList<>();
         for (List<?> entry : list) {
             List<T> values = new ArrayList<>();
@@ -87,9 +87,9 @@ class RouterStatusCollector {
         return typed;
     }
 
-    private static <T> List<T> filterOnAttribute(Class<T> type, int attrNum, List<List> list) {
+    private static <T> List<T> filterOnAttribute(Class<T> type, int attrNum, List<List<?>> list) {
         List<T> filtered = new ArrayList<>();
-        for (List entry : list) {
+        for (List<?> entry : list) {
             T filteredValue = type.cast(entry.get(attrNum));
             if (filteredValue != null) {
                 filtered.add(filteredValue);

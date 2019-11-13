@@ -17,12 +17,10 @@ public class DeleteController implements Controller {
         this.kubernetes = kubernetes;
     }
 
-
     @Override
     public String toString() {
         return "DeleteController";
     }
-
 
     @Override
     public void reconcileAll(List<AddressSpace> desiredAddressSpaces) {

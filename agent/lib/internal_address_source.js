@@ -129,9 +129,8 @@ function AddressSource(config) {
     events.EventEmitter.call(this);
 }
 
-AddressSource.prototype.start = function(ownerReference) {
+AddressSource.prototype.start = function () {
     var options = myutils.merge({selector: this.selector, namespace: this.config.ADDRESS_SPACE_NAMESPACE}, this.config);
-    this.ownerReference = ownerReference;
     this.watcher = kubernetes.watch('addresses', options);
     this.watcher.on('updated', this.updated.bind(this));
     this.readiness = {};
@@ -208,13 +207,8 @@ AddressSource.prototype.update_status = function (record, ready) {
         if (address.status === undefined) {
             address.status = {};
         }
-        var updateOwnerRef = false;
-        if (address.metadata.ownerReferences === undefined && self.ownerReference !== undefined) {
+        if (address.status.isReady !== ready) {
             address.metadata.annotations = myutils.merge({"enmasse.io/version": self.config.VERSION}, address.metadata.annotations);
-            address.metadata.ownerReferences = [self.ownerReference];
-            updateOwnerRef = true;
-        }
-        if (address.status.isReady !== ready || updateOwnerRef) {
             address.status.isReady = ready;
             address.status.phase = ready ? 'Active' : 'Pending';
             return address;

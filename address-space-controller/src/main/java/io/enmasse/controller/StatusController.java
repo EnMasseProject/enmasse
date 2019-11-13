@@ -39,7 +39,7 @@ public class StatusController implements Controller {
     }
 
     @Override
-    public AddressSpace reconcile(AddressSpace addressSpace) {
+    public AddressSpace reconcileActive(AddressSpace addressSpace) {
         if (addressSpace.getStatus().isReady()) {
             checkComponentsReady(addressSpace);
             checkAuthServiceReady(addressSpace);
@@ -163,4 +163,5 @@ public class StatusController implements Controller {
     public String toString() {
         return "StatusController";
     }
+
 }

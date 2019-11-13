@@ -74,7 +74,7 @@ public class AddressApiHelper {
           For the standard address space, the validation is done in AddressController#onUpdate in order to avoid slowing down the request.
          */
         if (addressSpace.getSpec().getType().equals("brokered")) {
-            Set<Address> existingAddresses = addressSpaceApi.withAddressSpace(addressSpace).listAddresses(address.getMetadata().getNamespace());
+            Collection<Address> existingAddresses = addressSpaceApi.withAddressSpace(addressSpace).listAddresses(address.getMetadata().getNamespace());
             addressResolver.validate(address);
             for (Address existing : existingAddresses) {
                 if (address.getSpec().getAddress().equals(existing.getSpec().getAddress()) && !address.getMetadata().getName().equals(existing.getMetadata().getName())) {
@@ -140,7 +140,7 @@ public class AddressApiHelper {
         AddressSpace addressSpace = null;
         AddressApi addressApi = null;
         AddressResolver addressResolver = null;
-        Set<Address> existingAddresses = null;
+        Collection<Address> existingAddresses = null;
         for(Address a : sorted) {
             if (addressSpace == null || !Objects.equals(addressSpace.getMetadata().getNamespace(), a.getMetadata().getNamespace())) {
                 addressSpace = getAddressSpace(a.getMetadata().getNamespace(), addressSpaceId);

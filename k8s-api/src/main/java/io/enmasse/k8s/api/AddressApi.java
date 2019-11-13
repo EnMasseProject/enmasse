@@ -8,17 +8,27 @@ import io.enmasse.address.model.Address;
 import io.enmasse.k8s.api.cache.CacheWatcher;
 
 import java.time.Duration;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * API for managing addresses in kubernetes.
  */
 public interface AddressApi {
     Optional<Address> getAddressWithName(String namespace, String name);
-    Set<Address> listAddresses(String namespace);
-    Set<Address> listAddressesWithLabels(String namespace, Map<String, String> labels);
+
+    ContinuationResult<Address> listAddresses(String namespace, Integer limit, ContinuationResult<Address> continueValue, Map<String,String> labels);
+
+    default Collection<Address> listAddresses(String namespace) {
+        return listAddressesWithLabels(namespace, Collections.emptyMap());
+    }
+
+    default Collection<Address> listAddressesWithLabels(String namespace, Map<String, String> labels) {
+        return listAddresses(namespace, null, null, labels).getItems();
+    }
+
     void deleteAddresses(String namespace);
 
     void createAddress(Address address);

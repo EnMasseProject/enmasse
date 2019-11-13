@@ -77,7 +77,7 @@ public class StatusControllerTest {
         when(infraResourceFactory.createInfraResources(eq(addressSpace), any())).thenReturn(Collections.singletonList(deployment));
 
         assertFalse(addressSpace.getStatus().isReady());
-        controller.reconcile(addressSpace);
+        controller.reconcileActive(addressSpace);
         assertFalse(addressSpace.getStatus().isReady());
     }
 }
