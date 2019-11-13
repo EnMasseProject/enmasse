@@ -19,6 +19,7 @@ DOCKER_DIRS = \
 	service-broker \
 	console/console-init \
 	console/console-httpd \
+	olm-manifest \
 	iot/iot-tenant-service \
 	iot/iot-auth-service \
 	iot/iot-device-registry-file \

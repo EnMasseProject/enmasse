@@ -1,0 +1,4 @@
+packageName: ${env.PACKAGE_NAME}
+channels:
+- name: ${env.PACKAGE_CHANNEL}
+  currentCSV: ${env.VERSIONED_NAME}

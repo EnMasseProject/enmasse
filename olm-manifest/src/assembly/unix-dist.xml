@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+     Copyright 2005-2019 Red Hat, Inc.
+
+     Red Hat licenses this file to you under the Apache License, version
+     2.0 (the "License"); you may not use this file except in compliance
+     with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+     implied.  See the License for the specific language governing
+     permissions and limitations under the License.
+
+-->
+<assembly>
+
+    <id>dist</id>
+
+    <formats>
+        <format>tar.gz</format>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>False</includeBaseDirectory>
+    <fileSets>
+        <fileSet>
+          <directory>${project.basedir}/../templates/crds</directory>
+          <outputDirectory>/manifests/${project.version}</outputDirectory>
+          <includes>
+            <include>*</include>
+          </includes>
+        </fileSet>
+        <fileSet>
+          <directory>${project.basedir}/target/classes</directory>
+          <outputDirectory>/manifests</outputDirectory>
+          <includes>
+            <include>manifests/*</include>
+            <include>${project.version}</include>
+          </includes>
+        </fileSet>
+    </fileSets>
+    <files>
+        <file>
+          <source>${project.basedir}/target/classes/latest/enmasse.package.yaml</source>
+          <outputDirectory>/manifests</outputDirectory>
+          <destName>${application.bundle.prefix}.package.yaml</destName>
+          <fileMode>0644</fileMode>
+        </file>
+        <file>
+          <source>${project.basedir}/target/classes/latest/enmasse.clusterserviceversion.yaml</source>
+          <outputDirectory>/manifests/${project.version}</outputDirectory>
+          <destName>${application.bundle.prefix}.${project.version}.clusterserviceversion.yaml</destName>
+          <fileMode>0644</fileMode>
+        </file>
+    </files>
+</assembly>

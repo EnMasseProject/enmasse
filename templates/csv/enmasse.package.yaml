@@ -1,4 +1,0 @@
-packageName: ${PACKAGE_NAME}
-channels:
-- name: ${PACKAGE_CHANNEL}
-  currentCSV: ${VERSIONED_NAME}
