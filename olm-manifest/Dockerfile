@@ -12,6 +12,6 @@ ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit}
 
 ADD target/olm-manifest-${MAVEN_VERSION}-dist.tar.gz /
 
-RUN /usr/bin/initializer -o bundles.db
+RUN /usr/bin/initializer -m /manifests -o bundles.db
 ENTRYPOINT ["/usr/bin/registry-server"]
 CMD ["-d", "bundles.db", "-t", "termination.log"]
