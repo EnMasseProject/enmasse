@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SeleniumFirefox
+@Disabled("Ignore whilst 0.31 console refactoring is underway")
 class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedBrokered {
 
     @Test

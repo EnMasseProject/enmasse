@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(NON_PR)
 @SeleniumChrome
+@Disabled("Ignore whilst 0.31 console refactoring is underway")
 public class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedStandard {
 
     @Test
