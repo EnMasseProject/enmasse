@@ -33,7 +33,7 @@ public class OperatorManager {
     private static OperatorManager instance;
 
     private OperatorManager() {
-        productName = Environment.getInstance().isDownstream() ? "amq-online" : "enmasse";
+        productName = Environment.getInstance().getProductName();
     }
 
     public static synchronized OperatorManager getInstance() {

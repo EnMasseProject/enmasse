@@ -30,10 +30,10 @@ public class Environment {
     public static final String TEMPLATES_PATH = "TEMPLATES";
     public static final String SKIP_CLEANUP_ENV = "SKIP_CLEANUP";
     public static final String SKIP_UNNSTALL = "SKIP_UNINSTALL";
-    public static final String DOWNSTREAM_ENV = "DOWNSTREAM";
     public static final String STORE_SCREENSHOTS_ENV = "STORE_SCREENSHOTS";
     public static final String MONITORING_NAMESPACE_ENV = "MONITORING_NAMESPACE";
     public static final String TAG_ENV = "TAG";
+    public static final String PRODUCT_NAME_ENV = "PRODUCT_NAME";
     public static final String APP_NAME_ENV = "APP_NAME";
     private static final String SKIP_SAVE_STATE = "SKIP_SAVE_STATE";
     private static final String SKIP_DEPLOY_INFINISPAN = "SKIP_DEPLOY_INFINISPAN";
@@ -45,7 +45,6 @@ public class Environment {
     private final String keycloakAdminPassword = System.getenv(KEYCLOAK_ADMIN_PASSWORD_ENV);
     private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
     private final String kubernetesDomain = System.getenv().getOrDefault(K8S_DOMAIN_ENV, "nip.io");
-    private final boolean downstream = Boolean.parseBoolean(System.getenv().getOrDefault(DOWNSTREAM_ENV, "false"));
     private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String upgradeTemplates = System.getenv().getOrDefault(UPGRADE_TEPLATES_ENV,
@@ -53,6 +52,7 @@ public class Environment {
     private final String monitoringNamespace = System.getenv().getOrDefault(MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
     private final String tag = System.getenv().getOrDefault(TAG_ENV, "latest");
     private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
+    private final String productName = System.getenv().getOrDefault(PRODUCT_NAME_ENV, "enmasse");
     private final boolean skipSaveState = Boolean.parseBoolean(System.getenv(SKIP_SAVE_STATE));
     private final boolean skipDeployInfinispan = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_INFINISPAN));
     private final Duration kubernetesApiConnectTimeout = Optional.ofNullable(System.getenv().get(K8S_API_CONNECT_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
@@ -94,7 +94,7 @@ public class Environment {
         log.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
         log.info(debugFormat, APP_NAME_ENV, appName);
         log.info(debugFormat, TEMPLATES_PATH, templatesPath);
-        log.info(debugFormat, DOWNSTREAM_ENV, downstream);
+        log.info(debugFormat, PRODUCT_NAME_ENV, productName);
     }
 
     public static synchronized Environment getInstance() {
@@ -156,10 +156,6 @@ public class Environment {
         return startTemplates;
     }
 
-    public boolean isDownstream() {
-        return downstream;
-    }
-
     public String getMonitoringNamespace() {
         return monitoringNamespace;
     }
@@ -170,6 +166,10 @@ public class Environment {
 
     public String getAppName() {
         return appName;
+    }
+
+    public String getProductName() {
+        return productName;
     }
 
     public UserCredentials getManagementCredentials() {
