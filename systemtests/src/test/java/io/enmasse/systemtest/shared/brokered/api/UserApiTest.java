@@ -92,8 +92,10 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
 
         //create user
         ExecutionResultData createUserResponse = KubeCMDClient.createCR(kubernetes.getInfraNamespace(), userDefinitionPayload.toString());
+        LOGGER.info("RESPONSE stdout: {}", createUserResponse.getStdOut());
+        LOGGER.info("RESPONSE stderr: {}", createUserResponse.getStdErr());
         assertThat(createUserResponse.getRetCode(), is(false));
-        assertTrue(createUserResponse.getStdErr().contains("value not one of declared Enum instance names: [send, view, recv, manage]"));
+        assertTrue(createUserResponse.getStdErr().contains("not one of the values accepted for Enum class: [send, view, recv, manage]"));
         assertThat(KubeCMDClient.getUser(kubernetes.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(false));
 
         User testUser2 = UserUtils.createUserResource(cred)
