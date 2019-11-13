@@ -72,6 +72,28 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
     }
 
+    public void installEnmasseOlm() throws Exception {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("                  Enmasse OLM install");
+        LOGGER.info("***********************************************************");
+        installExampleOlm();
+        installExamplePlans();
+        installExampleRoles();
+        installExampleAuthServices();
+        waithUntilOperatorReady();
+    }
+
+    public void deleteEnmasseOlm() {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("                  Enmasse OLM delete");
+        LOGGER.info("***********************************************************");
+        removeExampleAuthServices();
+        removeExampleRoles();
+        removeExamplePlans();
+        removeExampleOlm();
+        LOGGER.info("***********************************************************");
+    }
+
     public void installOperators() throws Exception {
         LOGGER.info("Installing enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
         kube.createNamespace(Environment.getInstance().namespace(), Collections.singletonMap("allowed", "true"));
@@ -89,8 +111,13 @@ public class OperatorManager {
         KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
     }
 
+    public void installExampleOlm() {
+        LOGGER.info("Installing enmasse example OLM from: {}", Environment.getInstance().getTemplatesPath());
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm"));
+    }
+
     public void installExamplePlans() {
-        LOGGER.info("Installing enmasse example role from: {}", Environment.getInstance().getTemplatesPath());
+        LOGGER.info("Installing enmasse example plans from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
     }
 
@@ -131,6 +158,11 @@ public class OperatorManager {
     public void removeExamplePlans() {
         LOGGER.info("Delete enmasse example role from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
+    }
+
+    public void removeExampleOlm() {
+        LOGGER.info("Delete enmasse example OLM from: {}", Environment.getInstance().getTemplatesPath());
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm"));
     }
 
     public void removeExampleRoles() {
