@@ -34,12 +34,8 @@
           </includes>
         </fileSet>
         <fileSet>
-          <directory>${project.basedir}/target/classes</directory>
+          <directory>${project.basedir}/target/classes/manifests</directory>
           <outputDirectory>/manifests</outputDirectory>
-          <includes>
-            <include>manifests/*</include>
-            <include>${project.version}</include>
-          </includes>
         </fileSet>
     </fileSets>
     <files>
