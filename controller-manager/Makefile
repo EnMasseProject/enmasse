@@ -4,6 +4,7 @@ include ../Makefile.go.mk
 build_deps: build/operatorImageMap.yaml
 
 build/operatorImageMap.yaml:
+	mkdir -p build
 	echo "" > "$@"
 
 	echo "address-space-controller: $(ADDRESS_SPACE_CONTROLLER_IMAGE)" >> "$@"
