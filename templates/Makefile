@@ -50,6 +50,10 @@ replace_images: prepare
 		mkdir -p $(BUILDDIR)/replaced/$$D ; \
 		cp -r $$i $(BUILDDIR)/replaced/$$D/ ; \
 	done
+	for i in `find $(BUILDDIR)/replaced/crds -type f`; do \
+		F=`basename $$i`; \
+		mv $$i $(BUILDDIR)/replaced/crds/010-$$F ; \
+	done
 	for i in `find $(BUILDDIR)/replaced -name "*.yaml"`; do \
 		cat $$i | sed -e 's,\$${ADDRESS_SPACE_CONTROLLER_IMAGE},$(ADDRESS_SPACE_CONTROLLER_IMAGE),g' \
 					  -e 's,\$${MAVEN_VERSION},$(MAVEN_VERSION),g' \
