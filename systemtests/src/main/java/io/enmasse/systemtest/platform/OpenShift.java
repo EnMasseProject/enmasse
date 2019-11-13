@@ -147,4 +147,9 @@ public class OpenShift extends Kubernetes {
         openShift.routes().inNamespace(namespace).withName(name).cascading(true).delete();
     }
 
+    @Override
+    public String getOlmNamespace() {
+        return "openshift-operators";
+    }
+
 }
