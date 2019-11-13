@@ -15,6 +15,7 @@ import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -79,6 +80,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         testInfo.setCurrentTest(context);
+        LOGGER.info("Print all pods in infra namespace");
+        Kubernetes.getInstance().listPods().forEach(pod -> LOGGER.info(pod.getMetadata().getName()));
     }
 
     @Override
