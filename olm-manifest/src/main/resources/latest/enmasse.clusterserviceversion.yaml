@@ -627,6 +627,8 @@ spec:
                   value: "${env.IMAGE_PULL_POLICY}"
                 - name: CONTROLLER_DISABLE_ALL
                   value: "true"
+                - name: CONTROLLER_ENABLE_UPGRADER
+                  value: "true"
                 - name: CONTROLLER_ENABLE_IOT_CONFIG
                   value: "true"
                 - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
