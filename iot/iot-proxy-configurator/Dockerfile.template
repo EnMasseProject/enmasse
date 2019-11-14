@@ -3,7 +3,7 @@
 # License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
 #
 
-FROM quay.io/enmasse/qdrouterd-base:1.8.0
+FROM ${ROUTER_IMAGE}
 
 ARG version
 ARG maven_version

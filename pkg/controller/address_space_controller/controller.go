@@ -171,7 +171,7 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 		install.ApplyEnvConfigMap(container, "RECHECK_INTERVAL", "recheckInterval", "address-space-controller-config", &t)
 
 		install.ApplyEnvSimple(container, "IMAGE_PULL_POLICY", string(images.PullPolicyFromImageName(container.Image)))
-		applyImageEnv(container, "ROUTER_IMAGE", "qdrouterd-base")
+		applyImageEnv(container, "ROUTER_IMAGE", "router")
 		applyImageEnv(container, "STANDARD_CONTROLLER_IMAGE", "standard-controller")
 		applyImageEnv(container, "AGENT_IMAGE", "agent")
 		applyImageEnv(container, "BROKER_IMAGE", "broker")

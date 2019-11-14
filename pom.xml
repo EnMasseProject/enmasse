@@ -131,6 +131,7 @@
         <module>iot</module>
         <module>controller-manager</module>
         <module>console</module>
+        <module>olm-manifest</module>
     </modules>
 
     <dependencyManagement>
