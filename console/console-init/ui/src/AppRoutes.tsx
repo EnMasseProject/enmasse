@@ -16,17 +16,19 @@ export const AppRoutes = () => (
       getComponent={getAddressSpaceListPage}
     />
     <LazyRoute
-      path="/address-space/:id/:subList"
+      path="/address-space/:namespace/:name/:subList"
       exact={true}
       getComponent={getAddressSpaceDetail}
     />
     <LazyRoute
-      path="/address-space/:id/address/:id"
+      path="/address-space/:namespace/:name/address/:addressname"
       getComponent={getAddressDetail}
+      exact={true}
     />
     <LazyRoute
-      path="/address-space/:id/connection/:id"
+      path="/address-space/:namespace/:name/connection/:connectionname"
       getComponent={getConnectionDetail}
+      exact={true}
     />
   </SwitchWith404>
 );

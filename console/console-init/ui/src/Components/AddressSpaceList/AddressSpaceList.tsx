@@ -63,7 +63,7 @@ export const AddressSpaceLsit: React.FunctionComponent<IAddressListProps> = ({
           header: "name",
           title: (
             <>
-              <Link to={`address-space/${row.name}/addresses`}>{row.name}</Link>
+              <Link to={`address-space/${row.nameSpace}/${row.name}/addresses`}>{row.name}</Link>
               <br />
               {row.nameSpace}
             </>

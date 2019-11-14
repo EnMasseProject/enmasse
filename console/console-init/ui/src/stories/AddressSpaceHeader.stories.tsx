@@ -28,7 +28,6 @@ export const addressSpaceHeaderNavigation = () => {
     <MemoryRouter>
       <AddressSpaceNavigation
         activeItem={select("Active Nav Item", options, "addresses")}
-        onSelect={action("Nav Item selected")}
       />
     </MemoryRouter>
   );

@@ -6,7 +6,7 @@ import {
   TableBody,
   IRowData
 } from "@patternfly/react-table";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { ConnectionProtocolFormat } from "../Common/ConnectionListFormatter";
 
 interface IConnectionListProps {
@@ -30,7 +30,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   const toTableCells = (row: IConnection) => {
     const tableRow: IRowData = {
       cells: [
-        { title: <Link to="#">{row.hostname}</Link> },
+        { title: <Link to={`connection/${row.hostname}`}>{row.hostname}</Link> },
         row.containerId,
         { title: <ConnectionProtocolFormat protocol={row.protocol} /> },
         row.messagesIn,
@@ -44,7 +44,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   };
   const tableRows = rows.map(toTableCells);
   const tableColumns = [
-    "Hostname",
+    {title:"Hostname",dataLabel:"host"},
     "Container ID",
     "Protocol",
     "Messages In",
@@ -54,7 +54,13 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   ];
 
   return (
-    <Table variant={TableVariant.compact} cells={tableColumns} rows={tableRows}>
+    <Table
+
+      variant={TableVariant.compact}
+      cells={tableColumns}
+      rows={tableRows}
+      aria-label="connection list"
+    >
       <TableHeader />
       <TableBody />
     </Table>

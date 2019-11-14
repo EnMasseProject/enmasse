@@ -7,12 +7,23 @@ import {
   ConnectionList
 } from "src/Components/AddressSpace/ConnectionList";
 import { EmptyConnection } from "src/Components/Common/EmptyConnection";
+import { IMetrics } from "./AddressesListPage";
+import { useParams } from "react-router";
+import { Pagination, PageSection, PageSectionVariants } from "@patternfly/react-core";
+import { Header } from "@patternfly/react-table/dist/js/components/Table/base";
+import { StyleSheet } from "@patternfly/react-styles";
 
+const styles = StyleSheet.create({
+  header_bottom_border : { 
+    borderBottom: "0.01em",
+    borderRightColor: "lightgrey"
+  }
+})
 interface IConnectionListResponse {
   connections: {
     Total: number;
     Connections: Array<{
-      Metadata: {
+      ObjectMeta: {
         Name: string;
       };
       Spec: {
@@ -20,60 +31,104 @@ interface IConnectionListResponse {
         ContainerId: string;
         Protocol: string;
       };
+      Metrics: Array<{
+        Name: string;
+        Type: string;
+        Value: number;
+        Units: string;
+      }>;
     }>;
   };
 }
-export default function ConnectionsListPage() {
-  const name="jupiter_as1",namespace="app1_ns";
+
+const return_ALL_CONECTION_LIST = (name?: string, namespace?: string) => {
   const ALL_CONECTION_LIST = gql(
     `query all_connections_for_addressspace_view {
-      connections(
-        filter: "\`$.Spec.AddressSpace.Metadata.Name\` = '${name}' AND \`$.Spec.AddressSpace.Metadata.Namespace\` = '${namespace}'"
-      ) {
-        Total
-        Connections {
-          Metadata {
-            Name
-          }
-          Spec {
-            Hostname
-            ContainerId
-            Protocol
-          }
+    connections(
+      filter: "\`$.Spec.AddressSpace.ObjectMeta.Name\` = '${name}' AND \`$.Spec.AddressSpace.ObjectMeta.Namespace\` = '${namespace}'"
+    ) {
+      Total
+      Connections {
+        ObjectMeta {
+          Name
+        }
+        Spec {
+          Hostname
+          ContainerId
+          Protocol
+        }
+        Metrics {
+          Name
+          Type
+          Value
+          Units
         }
       }
-    }`
+    }
+  }`
   );
-
+  return ALL_CONECTION_LIST;
+};
+export default function ConnectionsListPage() {
+  const { name, namespace } = useParams();
   let { loading, error, data } = useQuery<IConnectionListResponse>(
-    ALL_CONECTION_LIST,
+    return_ALL_CONECTION_LIST(name, namespace),
     { pollInterval: 5000 }
   );
 
-  if(error) console.log(error);
+  if (error) console.log(error);
   if (loading) return <Loading />;
   const { connections } = data || {
     connections: { Total: 0, Connections: [] }
   };
 
+  const getFilteredValue = (object: IMetrics[], value: string) => {
+    const filtered = object.filter(obj => obj.Name === value);
+    if (filtered.length > 0) {
+      return filtered[0].Value;
+    }
+    return 0;
+  };
   console.log(connections);
   const connectionList: IConnection[] = connections.Connections.map(
     connection => ({
       hostname: connection.Spec.Hostname,
       containerId: connection.Spec.ContainerId,
       protocol: connection.Spec.Protocol,
-      messagesIn: 0,
-      messagesOut: 0,
-      senders: 0,
-      receivers: 0,
+      messagesIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
+      messagesOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
+      senders: getFilteredValue(connection.Metrics, "enmasse_senders"),
+      receivers: getFilteredValue(connection.Metrics, "enmasse_receivers"),
       status: "running"
     })
   );
-  // console.log(connectionList);
-  if (connections.Total === 0) {
-    return <EmptyConnection />;
-  }
   return (
-    <ConnectionList rows={connectionList} />
+    <>
+      {connections.Total === 0 ? (
+        <EmptyConnection />
+      ) : (
+        <PageSection variant={PageSectionVariants.light}>
+          <div className={styles.header_bottom_border}>
+          <Pagination
+            itemCount={523}
+            perPage={10}
+            page={1}
+            onSetPage={() => {}}
+            widgetId="pagination-options-menu-top"
+            onPerPageSelect={() => {}}
+          />
+          </div>
+          <ConnectionList rows={connectionList} />{" "}
+          <Pagination
+            itemCount={523}
+            perPage={10}
+            page={1}
+            onSetPage={() => {}}
+            widgetId="pagination-options-menu-top"
+            onPerPageSelect={() => {}}
+          />
+        </PageSection>
+      )}
+    </>
   );
 }

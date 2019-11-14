@@ -8,9 +8,11 @@ import {
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
 import { Messages } from "../Messages";
+import { AddressListFilterWithPagination } from "./AddressListFilterWithPaginationHeader";
 
 export interface IAddress {
   name: string;
+  namespace:string;
   type: string;
   plan: string;
   messagesIn: number;
@@ -58,7 +60,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   const toTableCells = (row: IAddress) => {
     const tableRow: IRowData = {
       cells: [
-        { title: <Link to="#">{row.name}</Link> },
+        { title: <Link to={`address/${row.name}`}>{row.name}</Link> },
         row.type,
         row.plan,
         {

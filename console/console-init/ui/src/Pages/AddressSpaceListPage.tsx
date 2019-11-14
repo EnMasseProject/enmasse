@@ -18,7 +18,7 @@ const ALL_ADDRESS_SPACES = gql`
     addressSpaces {
       Total
       AddressSpaces {
-        Metadata {
+        ObjectMeta {
           Namespace
           Name
           CreationTimestamp
@@ -43,7 +43,7 @@ interface IAddressSpacesResponse {
   addressSpaces: {
     Total: number;
     AddressSpaces: Array<{
-      Metadata: {
+      ObjectMeta: {
         Name: string;
         Namespace: string;
         CreationTimestamp: string;
@@ -112,9 +112,9 @@ function AddressSpaceListFunc() {
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
   const addressSpacesList = addressSpaces.AddressSpaces.map(addSpace => ({
-    name: addSpace.Metadata.Name,
-    nameSpace: addSpace.Metadata.Namespace,
-    creationTimestamp: addSpace.Metadata.CreationTimestamp,
+    name: addSpace.ObjectMeta.Name,
+    nameSpace: addSpace.ObjectMeta.Namespace,
+    creationTimestamp: addSpace.ObjectMeta.CreationTimestamp,
     type: addSpace.Spec.Type,
     displayName: addSpace.Spec.Plan.Spec.DisplayName,
     isReady: addSpace.Status.IsReady

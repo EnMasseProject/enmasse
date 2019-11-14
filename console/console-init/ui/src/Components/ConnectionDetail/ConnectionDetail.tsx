@@ -40,7 +40,7 @@ export const ConnectionDetail: React.FunctionComponent<
           <b>Product</b> {product}
         </FlexItem>
         <FlexItem>
-          <b>Version</b>
+          <b>Version </b>
           {version} SNAPSHOT
         </FlexItem>
       </Flex>
