@@ -83,8 +83,6 @@ public class OperatorManager {
         LOGGER.info("                  Enmasse OLM install");
         LOGGER.info("***********************************************************");
         installOlm();
-        installExamplePlans(kube.getOlmNamespace());
-        installExampleAuthServices(kube.getOlmNamespace());
         waithUntilOperatorReady(kube.getOlmNamespace());
     }
 
@@ -92,8 +90,6 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
         LOGGER.info("                  Enmasse OLM delete");
         LOGGER.info("***********************************************************");
-        removeExampleAuthServices(kube.getOlmNamespace());
-        removeExamplePlans(kube.getOlmNamespace());
         removeOlm();
         LOGGER.info("***********************************************************");
     }

@@ -70,7 +70,8 @@ metadata:
           }
         },
         {
-        
+          "apiVersion": "admin.enmasse.io/v1beta2",
+          "kind": "AddressSpacePlan",
           "metadata": {
             "name": "standard-small"
           },
