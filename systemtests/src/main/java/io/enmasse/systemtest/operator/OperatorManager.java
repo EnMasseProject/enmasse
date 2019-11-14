@@ -230,16 +230,16 @@ public class OperatorManager {
 
         if (kube instanceof OpenShift) {
             // Kubernetes does not make a console service available by default.
-            awaitConsoleReadiness();
+            awaitConsoleReadiness(namespace);
         }
     }
 
-    private void awaitConsoleReadiness() throws Exception {
+    private void awaitConsoleReadiness(String namespace) throws Exception {
         final String serviceName = "console";
 
         TestUtils.waitUntilCondition("global console readiness", waitPhase -> {
             try {
-                final ConsoleService console = kube.getConsoleServiceClient().withName("console").get();
+                final ConsoleService console = kube.getConsoleServiceClient().inNamespace(namespace).withName("console").get();
                 if (console == null) {
                     LOGGER.info("ConsoleService {} not yet available", serviceName);
                     return false;
