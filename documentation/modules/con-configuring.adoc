@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-configuring.adoc
+// assembly-planning.adoc
 
 [id='con-configuring-{context}']
 = Service configuration resources and definition

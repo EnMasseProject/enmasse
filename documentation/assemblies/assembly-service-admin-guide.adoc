@@ -22,3 +22,6 @@ include::assembly-monitoring.adoc[leveloffset=+1]
 include::assembly-ops-procedures.adoc[leveloffset=+1]
 
 include::assembly-configuration-sizing-guide.adoc[leveloffset=+1]
+
+include::assembly-planning.adoc[leveloffset=+1]
+

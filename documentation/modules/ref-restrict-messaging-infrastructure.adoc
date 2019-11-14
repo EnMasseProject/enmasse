@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-configuring.adoc
+// assembly-planning.adoc
 
 [id='ref-restrict-messaging-infrastructure-{context}']
 = Restricting messaging infrastructure
@@ -22,7 +22,6 @@ Meeting this requirement involves configuring the `BrokeredInfraConfig` resource
 The following brokered infrastructure configuration examples show broker component resource values that meet the requirements of Company X.
 
 .Brokered infrastructure configuration example for engineering
-+
 [source,yaml,options="nowrap"]
 ----
 apiVersion: admin.enmasse.io/v1beta1

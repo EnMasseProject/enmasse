@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-configuring.adoc
+// assembly-planning.adoc
 
 [id='ref-example-use-case-{context}']
 = Example use case for configuring {ProductName}
@@ -21,7 +21,7 @@ For QA work, restricting the messaging infrastructure to support storage of no m
 
 * For engineering work, the engineering team does not need to create distinct users that need to be individually authenticated.
 +
-For QA work, the QA team must be able to create users for each instance where the credentials are verified.
+For QA work, the QA team must be able to create users for each instance.
 
 Each of these requirements and how they can be met by configuring the appropriate resources is discussed in the following sections. 
 

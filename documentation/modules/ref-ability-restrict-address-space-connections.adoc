@@ -1,13 +1,22 @@
 // Module included in the following assemblies:
 //
-// assembly-configuring.adoc
+// assembly-planning.adoc
 
 [id='ref-ability-restrict-address-space-connections-{context}']
 = Ability to restrict address space connections
 
 Company X has the following requirement for using {ProductName}: For engineering work, the ability to restrict who can connect into the address space is required.
 
-To meet this requirement you must set a network policy in the brokered infrastructure configuration. For more information about network policies, see OpenShift documentation.
+To meet this requirement you must set a network policy in the brokered infrastructure configuration. For more information about network policies, see
+
+ifeval::["{cmdcli}" == "kubectl"]
+* {KubePlatform} documentation about link:https://kubernetes.io/docs/concepts/services-networking/network-policies/[Network policies].
+endif::[]
+
+ifeval::["{cmdcli}" == "oc"]
+* OpenShift Container Platform 3.11 documentation about link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#admin-guide-networking-networkpolicy[Enabling Network Policy].
+* OpenShift Container Platform 4.2 documentation about link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.2/html-single/networking/index#configuring-networkpolicy[Configuring network policy with OpenShift SDN].
+endif::[]
 
 .Brokered infrastructure configuration example showing network policy setting
 [source,yaml,options="nowrap"]
