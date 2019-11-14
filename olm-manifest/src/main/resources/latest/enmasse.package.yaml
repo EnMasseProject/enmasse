@@ -1,4 +1,4 @@
 packageName: ${olm.package.name}
 channels:
 - name: ${olm.package.channel}
-  currentCSV: ${application.bundle.prefix}.${project.version}
+  currentCSV: ${application.bundle.prefix}.${olm.version}

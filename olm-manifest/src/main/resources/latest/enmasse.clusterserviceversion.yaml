@@ -3,7 +3,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: ${application.bundle.prefix}.${project.version}
+  name: ${application.bundle.prefix}.${olm.version}
   namespace: placeholder
   annotations:
     categories: "Streaming & Messaging"
@@ -405,7 +405,7 @@ spec:
 
     For more information on the IoT layer, see: [Getting Started with Internet of Things (IoT) on ${olm.csv.name.short}](${olm.csv.doc.iot.url})
 
-  version: ${project.version}
+  version: ${olm.version}
   keywords: ${olm.csv.keywords}
   icon:
     - base64data: ${olm.csv.logo.base64}
