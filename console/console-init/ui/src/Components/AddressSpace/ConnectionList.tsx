@@ -30,7 +30,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   const toTableCells = (row: IConnection) => {
     const tableRow: IRowData = {
       cells: [
-        { title: <Link to={`connection/name=${row.hostname}&namespace=${row.containerId}`}>{row.hostname}</Link> },
+        { title: <Link to={`connection/${row.hostname}/${row.containerId}`}>{row.hostname}</Link> },
         row.containerId,
         { title: <ConnectionProtocolFormat protocol={row.protocol} /> },
         row.messagesIn,

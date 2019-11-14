@@ -21,7 +21,7 @@ export interface ILink {
   modified: number;
   presettled: number;
   undelivered: number;
-  status: "creating" | "deleting" | "running";
+  status?: "creating" | "deleting" | "running";
 }
 
 export const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
@@ -56,7 +56,7 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
   ];
 
   return (
-    <Table variant={TableVariant.compact} cells={tableColumns} rows={tableRows}>
+    <Table variant={TableVariant.compact} cells={tableColumns} rows={tableRows} aria-label="links list">
       <TableHeader />
       <TableBody />
     </Table>

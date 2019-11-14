@@ -60,7 +60,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   const toTableCells = (row: IAddress) => {
     const tableRow: IRowData = {
       cells: [
-        { title: <Link to={`address/name=${row.name}&namespace=${row.namespace}`}>{row.name}</Link> },
+        { title: <Link to={`address/${row.name}/${row.namespace}`}>{row.name}</Link> },
         row.type,
         row.plan,
         {

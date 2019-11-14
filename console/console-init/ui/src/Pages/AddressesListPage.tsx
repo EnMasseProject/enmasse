@@ -45,6 +45,9 @@ const retrun_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
           }
         }
         Status {
+          PlanStatus{
+            Partitions
+          }
           IsReady
           Messages
         }
@@ -79,6 +82,9 @@ interface IAddressResponse {
         };
       };
       Status: {
+        PlanStatus:{
+          Partitions:number
+        }
         IsReady: boolean;
         Messages: Array<string>;
       };
@@ -168,7 +174,7 @@ function AddressesListFunction() {
     ),
     senders: getFilteredValue(address.Metrics, "enmasse-senders"),
     receivers: getFilteredValue(address.Metrics, "enmasse-receivers"),
-    shards: getFilteredValue(address.Metrics, "enmasse-shards"),
+    shards: address.Status.PlanStatus.Partitions,
     status: address.Status.IsReady ? "running" : "creating"
   }));
   // console.log(addresses);

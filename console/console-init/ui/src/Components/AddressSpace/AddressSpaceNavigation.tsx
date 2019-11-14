@@ -26,7 +26,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<
             key="addresses"
             itemId="addresses"
             isActive={active==="addresses"}>
-            <NavLink to={`/address_space/name=${name}&namespace=${namespace}/addresses`} >
+            <NavLink to={`/address-space/${name}/${namespace}/addresses`} >
               Addresses
             </NavLink>
           </NavItem>
@@ -34,7 +34,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<
             key="connections"
             itemId="connections"
             isActive={active==="connections"}>
-            <NavLink to={`/address_space/name=${name}&namespace=${namespace}/connections`}>
+            <NavLink to={`/address-space/${name}/${namespace}/connections`}>
               Connections
             </NavLink>
           </NavItem>
