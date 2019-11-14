@@ -80,8 +80,8 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
             }
         }
         TestUtils.waitUntilDeployed(infraNamespace);
-        //give some time for plans to sync
-        Thread.sleep(60_000);
+        TestUtils.waitForSchemaInSync("standard-small");
+
         var addressSpacePlanClient = kubernetes.getAddressSpacePlanClient(infraNamespace);
         TestUtils.waitUntilCondition("AddressSpacePlan standard-small visible",
                 phase -> addressSpacePlanClient.withName("standard-small").get() != null,

@@ -805,11 +805,11 @@ public class TestUtils {
         }, new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
-    public static void waitForSchemaInSync(AddressSpacePlan addressSpacePlan) throws Exception {
-        TestUtils.waitUntilCondition(String.format("Address space plan %s is applied", addressSpacePlan.getMetadata().getName()),
+    public static void waitForSchemaInSync(String addressSpacePlan) throws Exception {
+        TestUtils.waitUntilCondition(String.format("Address space plan %s is applied", addressSpacePlan),
                 waitPhase -> Kubernetes.getInstance().getSchemaClient().inAnyNamespace().list().getItems().stream()
                         .anyMatch(schema -> schema.getSpec().getPlans().stream()
-                                .anyMatch(plan -> plan.getName().contains(addressSpacePlan.getMetadata().getName()))),
+                                .anyMatch(plan -> plan.getName().contains(addressSpacePlan))),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 

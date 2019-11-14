@@ -5,6 +5,8 @@ kind: ClusterServiceVersion
 metadata:
   name: ${application.bundle.prefix}.${olm.version}
   namespace: placeholder
+  labels:
+    app: enmasse
   annotations:
     categories: "Streaming & Messaging"
     certified: "false"
@@ -691,6 +693,8 @@ spec:
                   value: "${env.CONSOLE_PROXY_KUBERNETES_IMAGE}"
                 - name: CONSOLE_HTTPD_IMAGE
                   value: "${env.CONSOLE_HTTPD_IMAGE}"
+                - name: FS_GROUP_OVERRIDE
+                  value: "185"
       - name: user-api-server
         spec:
           replicas: 1

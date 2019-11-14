@@ -9,5 +9,5 @@ spec:
   name: enmasse
   source: enmasse-source
   sourceNamespace: ${OPERATOR_NAMESPACE}
-  startingCSV: enmasse.${VERSION}
+  startingCSV: enmasse.${OLM_VERSION}
   channel: alpha

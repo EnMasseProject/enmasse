@@ -6,6 +6,7 @@ PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
 COMMIT          ?= $(shell git rev-parse HEAD)
 VERSION         ?= $(shell grep "release.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+OLM_VERSION     ?= $(shell grep "olm.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 MAVEN_VERSION   ?= $(shell grep "maven.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 TAG             ?= latest
 
