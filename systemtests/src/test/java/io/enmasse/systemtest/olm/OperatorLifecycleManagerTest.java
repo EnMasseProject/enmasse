@@ -14,6 +14,7 @@ import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -44,61 +45,12 @@ import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.OLM;
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Tag(OLM)
-@OpenShift(version = 4)
-@Kubernetes
 class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
-    private final String infraNamespace = "openshift-operators";
+    private final String infraNamespace = kubernetes.getOlmNamespace();
 
     private static final int CREATE_CR_TIMEOUT_MILLIS = 30000;
-
-    private static String csvName;
-
-    private static String operatorSource;
-    private static String operatorName;
-
-    private static String subscriptionName = "systemtests-enmasse-operator";
-
-    @BeforeAll
-    void prepare() throws Exception {
-        String productName = environment.getAppName();
-        operatorName = productName;
-        operatorSource = String.format("%s-operator", productName);
-        ExecutionResultData res = KubeCMDClient.runOnCluster("get", "packagemanifests", "-n", "openshift-marketplace", "-l", String.format("catalog=%s", operatorSource), "-o", "json");
-        if(!res.getRetCode()) {
-            Assertions.fail(res.getStdErr());
-        }
-        JsonObject manifests = new JsonObject(res.getStdOut());
-        JsonObject productManifest = manifests.getJsonArray("items")
-                .stream()
-                .map(o->(JsonObject)o)
-                .filter(o->o.getJsonObject("metadata").getString("name").equals(productName))
-                .findFirst()
-                .orElseThrow();
-        String productCSV = productManifest.getJsonObject("status")
-                .getJsonArray("channels")
-                .stream()
-                .map(o->(JsonObject)o)
-                .findFirst()
-                .map(o->o.getString("currentCSV"))
-                .orElseThrow();
-        csvName = productCSV;
-
-        log.info("Using CSV name {}", csvName);
-        log.info("Using operator source {}", operatorSource);
-        log.info("Using operator name {}", operatorName);
-    }
-
-    @AfterAll
-    void cleanRestOfResources() {
-        Exec.execute(Arrays.asList("oc", "delete", "all", "--selector", "app=enmasse"), 120_000, false);
-        Exec.execute(Arrays.asList("oc", "delete", "crd", "-l", "app=enmasse"), 120_000, false);
-        Exec.execute(Arrays.asList("oc", "delete", "apiservices", "-l", "app=enmasse"), 120_000, false);
-        Exec.execute(Arrays.asList("oc", "delete", "cm", "-l", "app=enmasse"), 120_000, false);
-        Exec.execute(Arrays.asList("oc", "delete", "secret", "-l", "app=enmasse"), 120_000, false);
-    }
 
     @AfterEach
     void collectLogs(ExtensionContext context) {
@@ -109,29 +61,11 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     }
 
     @Test
-    @Order(1)
-    void installOperator() throws Exception {
-        JsonObject subscription = new JsonObject(Files.readString(new File("src/main/resources/operator-subscription.json").toPath()));
-        subscription.getJsonObject("metadata").put("name", subscriptionName);
-        subscription.getJsonObject("metadata").put("namespace", infraNamespace);
-        subscription.getJsonObject("spec").put("startingCSV", csvName);
-        subscription.getJsonObject("spec").put("name", operatorName);
-        subscription.getJsonObject("spec").put("source", operatorSource);
-        log.info("Creating {}", subscription.toString());
-        ExecutionResultData res = KubeCMDClient.createCR(infraNamespace, subscription.encode(), CREATE_CR_TIMEOUT_MILLIS);
-        if(!res.getRetCode()) {
-            Assertions.fail(res.getStdErr());
-        }
-        Thread.sleep(30_000);
-        TestUtils.waitUntilDeployed(infraNamespace);
-    }
-
-    @Test
-    @Order(2)
     void testCreateExampleResources() throws Exception {
         Predicate<String> isInfraCR = kind -> kind.equals("StandardInfraConfig") || kind.equals("BrokeredInfraConfig") || kind.equals("AddressPlan") || kind.equals("AddressSpacePlan") || kind.equals("AuthenticationService");
-        ExecutionResultData result = KubeCMDClient.runOnCluster("get", "csv", "-n", infraNamespace, "-o", "json", csvName);
-        JsonObject csv = new JsonObject(result.getStdOut());
+        ExecutionResultData result = KubeCMDClient.runOnCluster("get", "csv", "-n", infraNamespace, "-o", "json", "-l", "app=enmasse");
+        JsonObject csvList = new JsonObject(result.getStdOut());
+        JsonObject csv = csvList.getJsonArray("items").getJsonObject(0);
         String almExamples = csv.getJsonObject("metadata").getJsonObject("annotations").getString("alm-examples");
         JsonArray examples = new JsonArray(almExamples);
         List<JsonObject> exampleResources = examples.stream().map(o->(JsonObject)o).collect(Collectors.toList());
@@ -184,24 +118,10 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
                 phase -> addressClient.withName("myspace.myqueue").get() != null,
                 new TimeoutBudget(30, TimeUnit.SECONDS));
         waitForDestinationsReady(addressClient.withName("myspace.myqueue").get());
-    }
 
-    @Test
-    @Order(3)
-    void testBasicMessagingAfterOlmInstallation() throws Exception {
+        // Test basic messages
         AddressSpace exampleSpace = kubernetes.getAddressSpaceClient(infraNamespace).withName("myspace").get();
         Address exampleAddress = kubernetes.getAddressClient(infraNamespace).withName("myspace.myqueue").get();
         getClientUtils().assertCanConnect(exampleSpace, new UserCredentials("user", "enmasse"), Collections.singletonList(exampleAddress), resourcesManager);
     }
-
-    @Test
-    @Order(4)
-    void uninstallOperator() throws Exception {
-        TestUtils.cleanAllEnmasseResourcesFromNamespace(infraNamespace);
-        KubeCMDClient.runOnCluster("delete", "subscriptions", "-n", infraNamespace, subscriptionName);
-        KubeCMDClient.runOnCluster("delete", "csv", "-n", infraNamespace, csvName);
-        kubernetes.getConsoleServiceClient(infraNamespace).withPropagationPolicy("Background").delete();
-        TestUtils.waitForNReplicas(0, false, Map.of("app", "enmasse"), Collections.emptyMap(), new TimeoutBudget(30, TimeUnit.SECONDS), 2000);
-    }
-
 }
