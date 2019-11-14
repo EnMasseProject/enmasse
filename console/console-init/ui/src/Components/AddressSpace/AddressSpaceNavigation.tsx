@@ -9,12 +9,10 @@ import { NavLink, useParams } from "react-router-dom";
 
 export interface AddressSpaceNavigationProps {
   activeItem: string;
-  name?:string;
-  namespace?:string;
 }
 export const AddressSpaceNavigation: React.FunctionComponent<
   AddressSpaceNavigationProps
-> = ({ activeItem , name, namespace }) => {
+> = ({ activeItem }) => {
   const [active,setActive] = React.useState(activeItem);
   const onSelect1 = (result:any)=>{
     setActive(result.itemId)
@@ -26,7 +24,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<
             key="addresses"
             itemId="addresses"
             isActive={active==="addresses"}>
-            <NavLink to={`/address-space/${name}/${namespace}/addresses`} >
+            <NavLink to={`addresses`} >
               Addresses
             </NavLink>
           </NavItem>
@@ -34,7 +32,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<
             key="connections"
             itemId="connections"
             isActive={active==="connections"}>
-            <NavLink to={`/address-space/${name}/${namespace}/connections`}>
+            <NavLink to={`connections`}>
               Connections
             </NavLink>
           </NavItem>

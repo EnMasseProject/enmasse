@@ -107,20 +107,18 @@ export default function AddressSpaceDetailPage() {
         <AddressSpaceHeader {...addressSpaceDetails} />
         <AddressSpaceNavigation
           activeItem={subList || "addresses"}
-          name={name}
-          namespace={namespace}
         ></AddressSpaceNavigation>
       </PageSection>
       <PageSection>
         <SwitchWith404>
           <Redirect path="/" to="/address-spaces" exact={true} />
           <LazyRoute
-            path="/address-space/:name/:namespace/addresses"
+            path="/address-space/:namespace/:name/addresses"
             getComponent={getAddressesList}
             exact={true}
           />
           <LazyRoute
-            path="/address-space/:name/:namespace/connections"
+            path="/address-space/:namespace/:name/connections"
             getComponent={getConnectionsList}
             exact={true}
           />
