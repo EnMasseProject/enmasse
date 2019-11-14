@@ -11,6 +11,7 @@ import { EditAddress } from "../Pages/EditAddressPage";
 const addressRows: IAddress[] = [
   {
     name: 'foo',
+    namespace:"foo",
     type: 'Queue',
     plan: 'small',
     messagesIn: 123,
@@ -23,6 +24,7 @@ const addressRows: IAddress[] = [
   },
   {
     name: 'foo',
+    namespace:"foo",
     type: 'Queue',
     plan: 'small',
     messagesIn: 123,
@@ -35,6 +37,7 @@ const addressRows: IAddress[] = [
   },
   {
     name: 'foo',
+    namespace:"foo",
     type: 'Queue',
     plan: 'small',
     messagesIn: 123,

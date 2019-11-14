@@ -13,6 +13,7 @@ export default {
 const rows: IAddress[] = [
   {
     name: "foo",
+    namespace:"foo",
     type: "Queue",
     plan: "small",
     messagesIn: 123,
@@ -25,6 +26,7 @@ const rows: IAddress[] = [
   },
   {
     name: "foo",
+    namespace:"foo",
     type: "Queue",
     plan: "small",
     messagesIn: 123,
@@ -37,6 +39,7 @@ const rows: IAddress[] = [
   },
   {
     name: "foo",
+    namespace:"foo",
     type: "Queue",
     plan: "small",
     messagesIn: 123,

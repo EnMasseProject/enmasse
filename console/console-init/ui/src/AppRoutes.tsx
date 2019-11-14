@@ -9,24 +9,26 @@ const getConnectionDetail = () => import("./Pages/ConnectionDetailPage");
 
 export const AppRoutes = () => (
   <SwitchWith404>
-    <Redirect path="/" to="/address-spaces" exact={true} />
+    <Redirect path="/" to="/address_spaces" exact={true} />
     <LazyRoute
-      path="/address-spaces"
+      path="/address_spaces"
       exact={true}
       getComponent={getAddressSpaceListPage}
     />
     <LazyRoute
-      path="/address-space/:id/:subList"
+      path="/address_space/name=:name&namespace=:namespace/:subList"
       exact={true}
       getComponent={getAddressSpaceDetail}
     />
     <LazyRoute
-      path="/address-space/:id/address/:id"
+      path="/address_space/name=:name&namespace=:namespace/address/name=:addressname&namespace=:addressnamespace"
       getComponent={getAddressDetail}
+      exact={true}
     />
     <LazyRoute
-      path="/address-space/:id/connection/:id"
+      path="/address_space/name=:name&namespace=:namespace/connection/name=:conectionname&namespace=:connectionnamespace"
       getComponent={getConnectionDetail}
+      exact={true}
     />
   </SwitchWith404>
 );

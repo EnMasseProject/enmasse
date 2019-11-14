@@ -5,7 +5,7 @@ import {
 } from "@patternfly/react-icons";
 
 interface IMessagesProps {
-  count: number;
+  count: any;
   column: string;
   status: string;
 }

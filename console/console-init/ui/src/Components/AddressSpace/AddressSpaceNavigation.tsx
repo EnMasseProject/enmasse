@@ -5,31 +5,36 @@ import {
   NavVariants,
   NavItem
 } from "@patternfly/react-core";
-import { NavLink } from "react-router-dom";
+import { NavLink, useParams } from "react-router-dom";
 
 export interface AddressSpaceNavigationProps {
   activeItem: string;
-  onSelect: (item: any) => void;
+  name?:string;
+  namespace?:string;
 }
 export const AddressSpaceNavigation: React.FunctionComponent<
   AddressSpaceNavigationProps
-> = ({ activeItem, onSelect }) => {
+> = ({ activeItem , name, namespace }) => {
+  const [active,setActive] = React.useState(activeItem);
+  const onSelect1 = (result:any)=>{
+    setActive(result.itemId)
+  }
   return (
-      <Nav onSelect={onSelect}>
+      <Nav onSelect={onSelect1}>
         <NavList variant={NavVariants.tertiary}>
           <NavItem
             key="addresses"
             itemId="addresses"
-            isActive={activeItem === "addresses"}>
-            <NavLink to={"/address-space/456/addresses"} >
+            isActive={active==="addresses"}>
+            <NavLink to={`/address_space/name=${name}&namespace=${namespace}/addresses`} >
               Addresses
             </NavLink>
           </NavItem>
           <NavItem
             key="connections"
             itemId="connections"
-            isActive={activeItem === "connections"}>
-            <NavLink to={"/address-space/456/connections"}>
+            isActive={active==="connections"}>
+            <NavLink to={`/address_space/name=${name}&namespace=${namespace}/connections`}>
               Connections
             </NavLink>
           </NavItem>

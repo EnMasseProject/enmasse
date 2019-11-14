@@ -22,7 +22,7 @@ const getAddressesList = () => import("./AddressesListPage");
 interface IAddressSpaceDetailResponse {
   addressSpaces: {
     AddressSpaces: Array<{
-      Metadata: {
+      ObjectMeta: {
         Namespace: string;
         Name: string;
         CreationTimestamp: string;
@@ -42,65 +42,53 @@ interface IAddressSpaceDetailResponse {
     }>;
   };
 }
-
-export default function AddressSpaceDetailPage() {
-  //Chnage
-  const name = "jupiter_as1",
-    namespace = "app1_ns";
+const return_ADDRESS_SPACE_DETAIL = (name?: string, namespace?: string) => {
   const ADDRESS_SPACE_DETAIL = gql`
-query all_address_spaces {
-  addressSpaces(
-     filter: "\`$.Metadata.Name\` = '${name}' AND \`$.Metadata.Namespace\` = '${namespace}'"
-  ) {
-    AddressSpaces {
-      Metadata {
-        Namespace
-        Name
-        CreationTimestamp
-      }
-      Spec {
-        Type
-        Plan {
+    query all_address_spaces {
+      addressSpaces(
+        filter: "\`$..Name\` = '${name}' AND \`$..Namespace\` = '${namespace}'"
+      ) {
+        AddressSpaces {
+          ObjectMeta {
+            Namespace
+            Name
+            CreationTimestamp
+          }
           Spec {
-            DisplayName
+            Type
+            Plan {
+              Spec {
+                DisplayName
+              }
+            }
+          }
+          Status {
+            IsReady
+            Messages
           }
         }
       }
-      Status {
-        IsReady
-        Messages
-      }
-    }
-  }
-}
-`;
+    }`;
+  return ADDRESS_SPACE_DETAIL;
+};
+
+export default function AddressSpaceDetailPage() {
+  const { name, namespace, subList } = useParams();
   useA11yRouteChange();
   useDocumentTitle("Address Space Detail");
-  const { subList } = useParams();
-  const [activeNavItem, setActiveNavItem] = React.useState(
-    subList || "addresses"
-  );
-  const onNavSelect = () => {
-    if (subList === "connections" || activeNavItem === "addresses")
-      setActiveNavItem("connections");
-    if (activeNavItem === "connections" || subList === "addresses")
-      setActiveNavItem("addresses");
-  };
   const { loading, data } = useQuery<IAddressSpaceDetailResponse>(
-    ADDRESS_SPACE_DETAIL
+    return_ADDRESS_SPACE_DETAIL(name, namespace)
   );
 
   if (loading) return <Loading />;
-  // console.log(data);
 
   const { addressSpaces } = data || {
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
-  // console.log("add", addressSpaces.AddressSpaces[0]);
   const addressSpaceDetails: IAddressSpaceHeaderProps = {
-    name: addressSpaces.AddressSpaces[0].Metadata.Name,
-    namespace: addressSpaces.AddressSpaces[0].Metadata.Namespace,
-    createdOn: addressSpaces.AddressSpaces[0].Metadata.CreationTimestamp,
+    name: addressSpaces.AddressSpaces[0].ObjectMeta.Name,
+    namespace: addressSpaces.AddressSpaces[0].ObjectMeta.Namespace,
+    createdOn: addressSpaces.AddressSpaces[0].ObjectMeta.CreationTimestamp,
     type: addressSpaces.AddressSpaces[0].Spec.Type,
     onDownload: data => {
       console.log(data);
@@ -111,30 +99,33 @@ query all_address_spaces {
   };
 
   return (
-    <BrowserRouter>
+    <>
       <PageSection
         variant={PageSectionVariants.light}
-        style={{ paddingBottom: 0 }}>
+        style={{ paddingBottom: 0 }}
+      >
         <AddressSpaceHeader {...addressSpaceDetails} />
         <AddressSpaceNavigation
-          activeItem={activeNavItem}
-          onSelect={onNavSelect}></AddressSpaceNavigation>
+          activeItem={subList || "addresses"}
+          name={name}
+          namespace={namespace}
+        ></AddressSpaceNavigation>
       </PageSection>
       <PageSection>
         <SwitchWith404>
           <Redirect path="/" to="/address-spaces" exact={true} />
           <LazyRoute
-            path="/address-space/:id/addresses"
+            path="/address_space/name=:name&namespace=:namespace/addresses"
             getComponent={getAddressesList}
             exact={true}
           />
           <LazyRoute
-            path="/address-space/:id/connections"
+            path="/address_space/name=:name&namespace=:namespace/connections"
             getComponent={getConnectionsList}
             exact={true}
           />
         </SwitchWith404>
       </PageSection>
-    </BrowserRouter>
+      </>
   );
 }
