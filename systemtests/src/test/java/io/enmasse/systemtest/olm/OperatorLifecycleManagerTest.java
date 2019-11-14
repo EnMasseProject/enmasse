@@ -9,6 +9,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.condition.Kubernetes;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
@@ -46,6 +47,7 @@ import static io.enmasse.systemtest.TestTag.OLM;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Tag(OLM)
 @OpenShift(version = 4)
+@Kubernetes
 class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
     private final String infraNamespace = "openshift-operators";
