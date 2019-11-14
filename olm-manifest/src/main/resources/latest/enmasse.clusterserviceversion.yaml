@@ -513,7 +513,7 @@ spec:
           resources: [ "services", "secrets" ]
           verbs: [ "get", "list", "watch" ]
         - apiGroups: [ "" ]
-          resources: [ "configmaps", "configmap/finalizers" ]
+          resources: [ "configmaps", "configmaps/finalizers" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "admin.enmasse.io" ]
           resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs", "authenticationservices", "consoleservices"]
