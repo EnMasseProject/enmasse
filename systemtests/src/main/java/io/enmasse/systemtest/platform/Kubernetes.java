@@ -969,4 +969,6 @@ public abstract class Kubernetes {
     public abstract void createExternalEndpoint(String name, String namespace, Service service, ServicePort targetPort);
 
     public abstract void deleteExternalEndpoint(String namespace, String name);
+
+    public abstract String getOlmNamespace();
 }

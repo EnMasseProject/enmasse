@@ -1,0 +1,12 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: enmasse-source
+  namespace: ${OPERATOR_NAMESPACE}
+  labels:
+    app: enmasse
+spec:
+  displayName: EnMasse Operator Source
+  image: ${OLM_MANIFEST_IMAGE}
+  publisher: enmasse
+  sourceType: grpc

@@ -28,7 +28,7 @@
     <fileSets>
         <fileSet>
           <directory>${project.basedir}/../templates/crds</directory>
-          <outputDirectory>/manifests/${project.version}</outputDirectory>
+          <outputDirectory>/manifests/${olm.version}</outputDirectory>
           <includes>
             <include>*</include>
           </includes>
@@ -47,8 +47,8 @@
         </file>
         <file>
           <source>${project.basedir}/target/classes/latest/enmasse.clusterserviceversion.yaml</source>
-          <outputDirectory>/manifests/${project.version}</outputDirectory>
-          <destName>${application.bundle.prefix}.${project.version}.clusterserviceversion.yaml</destName>
+          <outputDirectory>/manifests/${olm.version}</outputDirectory>
+          <destName>${application.bundle.prefix}.${olm.version}.clusterserviceversion.yaml</destName>
           <fileMode>0644</fileMode>
         </file>
     </files>

@@ -48,8 +48,15 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     public void beforeAll(ExtensionContext context) throws Exception {
         testInfo.setCurrentTestClass(context);
         handleCallBackError(context, () -> {
-            if (testInfo.isUpgradeTest() || testInfo.isOLMTest()) {
+            if (testInfo.isUpgradeTest()) {
                 LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
+            } else if (testInfo.isOLMTest()) {
+                if (!operatorManager.isEnmasseOlmDeployed()) {
+                    operatorManager.installEnmasseOlm();
+                }
+                if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
+                    operatorManager.installIoTOperator();
+                }
             } else {
                 if (!operatorManager.isEnmasseBundleDeployed()) {
                     operatorManager.installEnmasseBundle();
@@ -72,6 +79,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                 }
                 if (operatorManager.isEnmasseBundleDeployed() && (testInfo.isNextTestUpgrade() || testInfo.isNextTestOLM())) {
                     operatorManager.deleteEnmasseBundle();
+                }
+                if (operatorManager.isEnmasseOlmDeployed()) {
+                    operatorManager.deleteEnmasseOlm();
                 }
             }
         });

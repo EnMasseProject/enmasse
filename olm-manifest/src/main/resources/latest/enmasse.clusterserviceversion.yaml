@@ -3,8 +3,10 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: ${application.bundle.prefix}.${project.version}
+  name: ${application.bundle.prefix}.${olm.version}
   namespace: placeholder
+  labels:
+    app: enmasse
   annotations:
     categories: "Streaming & Messaging"
     certified: "false"
@@ -68,7 +70,8 @@ metadata:
           }
         },
         {
-        
+          "apiVersion": "admin.enmasse.io/v1beta2",
+          "kind": "AddressSpacePlan",
           "metadata": {
             "name": "standard-small"
           },
@@ -405,7 +408,7 @@ spec:
 
     For more information on the IoT layer, see: [Getting Started with Internet of Things (IoT) on ${olm.csv.name.short}](${olm.csv.doc.iot.url})
 
-  version: ${project.version}
+  version: ${olm.version}
   keywords: ${olm.csv.keywords}
   icon:
     - base64data: ${olm.csv.logo.base64}
@@ -561,6 +564,9 @@ spec:
           resources: [ "configmaps" ]
           resourceNames: [ "extension-apiserver-authentication" ]
           verbs: [ "get" ]
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "addressspaces", "addresses" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
       - serviceAccountName: iot-operator
         rules:
         - apiGroups: [ "enmasse.io" ]
@@ -691,6 +697,8 @@ spec:
                   value: "${env.CONSOLE_PROXY_KUBERNETES_IMAGE}"
                 - name: CONSOLE_HTTPD_IMAGE
                   value: "${env.CONSOLE_HTTPD_IMAGE}"
+                - name: FS_GROUP_OVERRIDE
+                  value: "1000"
       - name: user-api-server
         spec:
           replicas: 1

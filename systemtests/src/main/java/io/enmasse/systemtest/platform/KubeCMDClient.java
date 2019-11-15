@@ -50,8 +50,22 @@ public class KubeCMDClient {
         try (FileWriter wr = new FileWriter(defInFile.getName())) {
             wr.write(definition);
             wr.flush();
-            log.info("User '{}' created", defInFile.getAbsolutePath());
+            log.info("Resource '{}' created", defInFile.getAbsolutePath());
             return Exec.execute(Arrays.asList(CMD, replace ? "replace" : "apply", "-n", namespace, "-f", defInFile.getAbsolutePath()), timeout, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw e;
+        } finally {
+            Files.delete(Paths.get(defInFile.getAbsolutePath()));
+        }
+    }
+
+    public static ExecutionResultData deleteCR(String namespace, String definition, int timeout) throws IOException {
+        final File defInFile = new File("crdefinition.file");
+        try (FileWriter wr = new FileWriter(defInFile.getName())) {
+            wr.write(definition);
+            wr.flush();
+            return Exec.execute(Arrays.asList(CMD, "delete", "-n", namespace, "-f", defInFile.getAbsolutePath()), timeout, true);
         } catch (IOException e) {
             e.printStackTrace();
             throw e;

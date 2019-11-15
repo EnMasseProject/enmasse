@@ -25,6 +25,7 @@ MODULES=\
 	example-roles \
 	example-plans \
 	example-authservices \
+	example-olm \
 	iot/examples \
 	api-server \
 	api-service \
@@ -59,6 +60,7 @@ replace_images: prepare
 					  -e 's,\$${MAVEN_VERSION},$(MAVEN_VERSION),g' \
 					  -e 's,\$${NAMESPACE},$(DEFAULT_PROJECT),g' \
 					  -e 's,\$${VERSION},$(VERSION),g' \
+					  -e 's,\$${OLM_VERSION},$(OLM_VERSION),g' \
 					  -e 's,\$${IMAGE_PULL_POLICY},$(IMAGE_PULL_POLICY),g' \
 					  -e 's,\$${STANDARD_CONTROLLER_IMAGE},$(STANDARD_CONTROLLER_IMAGE),g' \
 					  -e 's,\$${ROUTER_IMAGE},$(ROUTER_IMAGE),g' \
@@ -88,6 +90,7 @@ replace_images: prepare
 					  -e 's,\$${IOT_SIGFOX_ADAPTER_IMAGE},$(IOT_SIGFOX_ADAPTER_IMAGE),g' \
 					  -e 's,\$${IOT_PROXY_CONFIGURATOR_IMAGE},$(IOT_PROXY_CONFIGURATOR_IMAGE),g' \
 					  -e 's,\$${CONTROLLER_MANAGER_IMAGE},$(CONTROLLER_MANAGER_IMAGE),g' \
+					  -e 's,\$${OLM_MANIFEST_IMAGE},$(OLM_MANIFEST_IMAGE),g' \
 					  -e 's,\$${CONSOLE_INIT_IMAGE},$(CONSOLE_INIT_IMAGE),g' \
 					  -e 's,\$${CONSOLE_PROXY_OPENSHIFT_IMAGE},$(CONSOLE_PROXY_OPENSHIFT_IMAGE),g' \
 					  -e 's,\$${OAUTH_PROXY_IMAGE},$(OAUTH_PROXY_IMAGE),g' \

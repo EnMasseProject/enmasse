@@ -6,6 +6,7 @@ PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
 COMMIT          ?= $(shell git rev-parse HEAD)
 VERSION         ?= $(shell grep "release.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+OLM_VERSION     ?= $(shell grep "olm.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 MAVEN_VERSION   ?= $(shell grep "maven.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 TAG             ?= latest
 
@@ -34,6 +35,7 @@ CONSOLE_INIT_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/console-init:$(IMAG
 CONSOLE_PROXY_OPENSHIFT_IMAGE ?= openshift/oauth-proxy:latest
 CONSOLE_PROXY_KUBERNETES_IMAGE ?= quay.io/pusher/oauth2_proxy:latest
 CONSOLE_HTTPD_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/console-httpd:$(IMAGE_VERSION)
+OLM_MANIFEST_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/olm-manifest:$(IMAGE_VERSION)
 PROMETHEUS_IMAGE ?= prom/prometheus:v2.4.3
 ALERTMANAGER_IMAGE ?= prom/alertmanager:v0.15.2
 GRAFANA_IMAGE ?= grafana/grafana:5.3.1
@@ -80,6 +82,7 @@ IMAGE_ENV=ADDRESS_SPACE_CONTROLLER_IMAGE=$(ADDRESS_SPACE_CONTROLLER_IMAGE) \
 			CONSOLE_PROXY_OPENSHIFT_IMAGE=$(CONSOLE_PROXY_OPENSHIFT_IMAGE) \
 			CONSOLE_PROXY_KUBERNETES_IMAGE=$(CONSOLE_PROXY_KUBERNETES_IMAGE) \
 			CONSOLE_HTTPD_IMAGE=$(CONSOLE_HTTPD_IMAGE) \
+			OLM_MANIFEST_IMAGE=$(OLM_MANIFEST_IMAGE) \
 			PROMETHEUS_IMAGE=$(PROMETHEUS_IMAGE) \
 			ALERTMANAGER_IMAGE=$(ALERTMANAGER_IMAGE) \
 			GRAFANA_IMAGE=$(GRAFANA_IMAGE) \
@@ -119,6 +122,7 @@ IMAGE_LIST=\
 		   $(CONSOLE_PROXY_OPENSHIFT_IMAGE) \
 		   $(CONSOLE_PROXY_KUBERNETES_IMAGE) \
 		   $(CONSOLE_HTTPD_IMAGE) \
+		   $(OLM_MANIFEST_IMAGE) \
 		   $(PROMETHEUS_IMAGE) \
 		   $(ALERTMANAGER_IMAGE) \
 		   $(GRAFANA_IMAGE) \

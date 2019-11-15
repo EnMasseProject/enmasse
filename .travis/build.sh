@@ -8,8 +8,6 @@ BRANCH=${BRANCH:-master}
 VERSION=$(grep "release.version" pom.properties| cut -d'=' -f2)
 TAG=${TAG:-latest}
 DOCKER_ORG=${DOCKER_ORG:-$USER}
-SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-"io.enmasse.**.SmokeTest"}
-SYSTEMTEST_PROFILE=${SYSTEMTEST_PROFILE:-"smoke"}
 
 if use_external_registry
 then
@@ -45,6 +43,3 @@ else
     echo "Pushing images to Local Docker Registry"
     make docker_push
 fi
-
-echo "Running systemtests"
-time ./systemtests/scripts/run_test_kubernetes.sh ${PWD}/templates/build/enmasse-${TAG} ${SYSTEMTEST_PROFILE} ${SYSTEMTEST_ARGS}

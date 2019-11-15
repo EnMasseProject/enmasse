@@ -80,6 +80,8 @@ public class JunitExecutionListener implements TestExecutionListener {
         TimeMeasuringSystem.printAndSaveResults();
         if (!(Environment.getInstance().skipCleanup() || Environment.getInstance().skipUninstall())) {
             try {
+                OperatorManager.getInstance().removeIoTOperator();
+                OperatorManager.getInstance().deleteEnmasseOlm();
                 OperatorManager.getInstance().deleteEnmasseBundle();
                 OperatorManager.getInstance().clean();
             } catch (Exception e) {

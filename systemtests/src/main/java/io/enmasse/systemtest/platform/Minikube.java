@@ -123,4 +123,9 @@ public class Minikube extends Kubernetes {
         }
         client.services().inNamespace(name).withName(name).cascading(true).delete();
     }
+
+    @Override
+    public String getOlmNamespace() {
+        return "operators";
+    }
 }

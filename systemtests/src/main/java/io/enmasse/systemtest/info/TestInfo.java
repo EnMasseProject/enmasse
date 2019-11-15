@@ -45,7 +45,7 @@ public class TestInfo {
     }
 
     public void setTestPlan(TestPlan testPlan) {
-        LOGGER.info("Setting testplan");
+        LOGGER.info("Setting testplan {}", testPlan.getRoots());
         tests = new ArrayList<>();
         testClasses = Arrays.asList(testPlan.getChildren(testPlan.getRoots()
                 .toArray(new TestIdentifier[0])[0]).toArray(new TestIdentifier[0]));

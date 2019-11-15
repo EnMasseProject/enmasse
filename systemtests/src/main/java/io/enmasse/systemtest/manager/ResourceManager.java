@@ -132,7 +132,7 @@ public abstract class ResourceManager {
         }
         var client = Kubernetes.getInstance().getAddressSpacePlanClient();
         client.create(addressSpacePlan);
-        TestUtils.waitForSchemaInSync(addressSpacePlan);
+        TestUtils.waitForSchemaInSync(addressSpacePlan.getMetadata().getName());
         Thread.sleep(1000);
     }
 
