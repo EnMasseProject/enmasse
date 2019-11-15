@@ -7,16 +7,23 @@ package io.enmasse.systemtest.olm;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpConnectOptions;
+import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import io.vertx.core.net.PemTrustOptions;
+import io.vertx.proton.ProtonClientOptions;
+import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -27,7 +34,10 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -65,9 +75,11 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
 
     @AfterEach
     void teardownExampleResources() throws IOException {
-        for (JsonObject example : exampleResources) {
-            log.info("Deleting {}", example.toString());
-            KubeCMDClient.deleteCR(infraNamespace, example.toString(), CR_TIMEOUT_MILLIS);
+        if (!environment.skipCleanup()) {
+            for (JsonObject example : exampleResources) {
+                log.info("Deleting {}", example.toString());
+                KubeCMDClient.deleteCR(infraNamespace, example.toString(), CR_TIMEOUT_MILLIS);
+            }
         }
     }
 
@@ -130,10 +142,13 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
         AddressSpace exampleSpace = kubernetes.getAddressSpaceClient(infraNamespace).withName("myspace").get();
         Address exampleAddress = kubernetes.getAddressClient(infraNamespace).withName("myspace.myqueue").get();
 
-        AmqpClient amqpClient = resourcesManager.getAmqpClientFactory().createQueueClient(exampleSpace);
-        amqpClient.getConnectOptions().setEndpoint(kubernetes.getExternalEndpoint("messaging", infraNamespace));
-        amqpClient.getConnectOptions().setUsername("user");
-        amqpClient.getConnectOptions().setPassword("enmasse");
+        AmqpClient amqpClient = resourcesManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
+                .setTerminusFactory(new QueueTerminusFactory())
+                .setQos(ProtonQoS.AT_LEAST_ONCE)
+                .setCert(new String(Base64.getDecoder().decode(exampleSpace.getStatus().getCaCert()), StandardCharsets.UTF_8))
+                .setEndpoint(kubernetes.getExternalEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(exampleSpace), infraNamespace))
+                .setUsername("user")
+                .setPassword("enmasse"));
 
         int messageCount = 10;
         Future<Integer> sent = amqpClient.sendMessages(exampleAddress.getSpec().getAddress(), TestUtils.generateMessages(messageCount));
