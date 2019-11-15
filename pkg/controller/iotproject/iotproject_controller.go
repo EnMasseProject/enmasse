@@ -78,54 +78,11 @@ func add(mgr manager.Manager, r *ReconcileIoTProject) error {
 		return err
 	}
 
-	// Watch for enmasse address space
+	// Watch for address spaces
 
-	ownerHandler := ForkedEnqueueRequestForOwner{
-		OwnerType:    &iotv1alpha1.IoTProject{},
-		IsController: false,
-	}
-	// inject schema so that the handlers know the groupKind
-	err = ownerHandler.InjectScheme(r.scheme)
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &enmassev1beta1.AddressSpace{}},
-		&handler.EnqueueRequestsFromMapFunc{
-			ToRequests: handler.ToRequestsFunc(func(a handler.MapObject) []reconcile.Request {
-
-				l := log.WithValues("kind", "AddressSpace", "namespace", a.Meta.GetNamespace(), "name", a.Meta.GetName())
-
-				l.V(2).Info("Change event")
-
-				// check if we have an owner
-
-				result := ownerHandler.GetOwnerReconcileRequest(a.Meta)
-
-				if result != nil && len(result) > 0 {
-					l.V(2).Info("Owned resource")
-					// looks like an owned resource ... take this is a result
-					return result
-				}
-
-				/*
-				 * TODO: at this point we are actively searching through all IoT projects
-				 *       for all AddressSpaces that change.
-				 */
-
-				// we need to actively look for a mapped resource
-
-				// a is the AddressSpace that changed
-				addressSpaceNamespace := a.Meta.GetNamespace()
-				addressSpaceName := a.Meta.GetName()
-
-				l.Info("Looking up IoT project for un-owned addressspace")
-
-				// look for an iot project, that references this address space
-
-				return convertToRequests(r.findIoTProjectsByMappedAddressSpaces(addressSpaceNamespace, addressSpaceName))
-			}),
-		})
+	err = c.Watch(&source.Kind{Type: &enmassev1beta1.AddressSpace{}}, &handler.EnqueueRequestForOwner{
+		OwnerType: &iotv1alpha1.IoTProject{},
+	})
 	if err != nil {
 		return err
 	}
