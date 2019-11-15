@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
+
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -29,8 +31,9 @@ import (
 const nameMqttAdapter = "iot-mqtt-adapter"
 const routeMqttAdapter = "iot-mqtt-adapter"
 
-func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
+	configCtx := qdrProxyConfigCtx.Clone()
 	rc := &recon.ReconcileContext{}
 
 	adapter := findAdapter("mqtt")
@@ -38,7 +41,9 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 	adapterConfig := config.Spec.AdaptersConfig.MqttAdapterConfig
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameMqttAdapter, config, !enabled, r.reconcileMqttAdapterDeployment)
+		return r.processDeployment(ctx, nameMqttAdapter, config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+			return r.reconcileMqttAdapterDeployment(config, deployment, configCtx)
+		})
 	})
 	rc.ProcessSimple(func() error {
 		return r.processService(ctx, nameMqttAdapter, config, !enabled, r.reconcileMqttAdapterService)
@@ -68,13 +73,13 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, configCtx *cchange.ConfigChangeRecorder) error {
 
 	adapter := config.Spec.AdaptersConfig.MqttAdapterConfig
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig)
+	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
 
 	install.DropContainer(deployment, "mqtt-adapter")
 	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {

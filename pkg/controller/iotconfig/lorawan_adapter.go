@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	routev1 "github.com/openshift/api/route/v1"
 
@@ -28,8 +29,9 @@ import (
 const nameLoraWanAdapter = "iot-lorawan-adapter"
 const routeLoraWanAdapter = "iot-lorawan-adapter"
 
-func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
+	configCtx := qdrProxyConfigCtx.Clone()
 	rc := &recon.ReconcileContext{}
 
 	adapter := findAdapter("lorawan")
@@ -37,7 +39,9 @@ func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *
 	adapterConfig := config.Spec.AdaptersConfig.LoraWanAdapterConfig
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameLoraWanAdapter, config, !enabled, r.reconcileLoraWanAdapterDeployment)
+		return r.processDeployment(ctx, nameLoraWanAdapter, config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+			return r.reconcileLoraWanAdapterDeployment(config, deployment, configCtx)
+		})
 	})
 	rc.ProcessSimple(func() error {
 		return r.processService(ctx, nameLoraWanAdapter, config, !enabled, r.reconcileLoraWanAdapterService)
@@ -67,13 +71,13 @@ func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, configCtx *cchange.ConfigChangeRecorder) error {
 
 	adapter := config.Spec.AdaptersConfig.LoraWanAdapterConfig
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig)
+	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
 
 	install.DropContainer(deployment, "lorawan-adapter")
 	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
