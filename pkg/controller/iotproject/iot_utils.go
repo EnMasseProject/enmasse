@@ -11,30 +11,9 @@ import (
 
 	"github.com/enmasseproject/enmasse/pkg/util"
 
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
-
-// Convert projects to reconcile requests
-func convertToRequests(projects []iotv1alpha1.IoTProject, err error) []reconcile.Request {
-	if err != nil {
-		return []reconcile.Request{}
-	}
-
-	var result []reconcile.Request
-
-	for _, project := range projects {
-		result = append(result, reconcile.Request{NamespacedName: types.NamespacedName{
-			Namespace: project.Namespace,
-			Name:      project.Name,
-		}})
-	}
-
-	return result
-}
 
 func (r *ReconcileIoTProject) findIoTProjectsByPredicate(predicate func(project *iotv1alpha1.IoTProject) bool) ([]iotv1alpha1.IoTProject, error) {
 
@@ -54,31 +33,6 @@ func (r *ReconcileIoTProject) findIoTProjectsByPredicate(predicate func(project 
 	}
 
 	return result, nil
-}
-
-func (r *ReconcileIoTProject) findIoTProjectsByMappedAddressSpaces(addressSpaceNamespace string, addressSpaceName string) ([]iotv1alpha1.IoTProject, error) {
-
-	// FIXME: brute force scanning through all IoT projects.
-	//        This could be improved if field selectors for CRDs would be implemented, which they
-	//        current are not.
-
-	// Look for all IoTProjects where:
-	//    spec.downstreamStrategy.providedStrategy.namespace = addressSpaceNamespace
-	//      and
-	//    spec.downstreamStrategy.providedStrategy.addressSpaceName = addressSpaceName
-
-	return r.findIoTProjectsByPredicate(func(project *iotv1alpha1.IoTProject) bool {
-		if project.Spec.DownstreamStrategy.ProvidedDownstreamStrategy == nil {
-			return false
-		}
-		if project.Spec.DownstreamStrategy.ProvidedDownstreamStrategy.Namespace != addressSpaceNamespace {
-			return false
-		}
-		if project.Spec.DownstreamStrategy.ProvidedDownstreamStrategy.AddressSpaceName != addressSpaceName {
-			return false
-		}
-		return true
-	})
 }
 
 func getOrDefaults(strategy *iotv1alpha1.ProvidedDownstreamStrategy) (string, string, iotv1alpha1.EndpointMode, error) {
