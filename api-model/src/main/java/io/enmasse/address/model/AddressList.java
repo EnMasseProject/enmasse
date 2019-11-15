@@ -15,7 +15,7 @@ import io.enmasse.common.model.DefaultCustomResource;
  */
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class AddressList extends AbstractList<Address> implements AddressOrAddressList {
+public class AddressList extends AbstractList<Address> {
 
     public static final String KIND = "AddressList";
 

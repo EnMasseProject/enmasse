@@ -40,6 +40,7 @@ import io.enmasse.iot.model.v1.IoTConfigList;
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectList;
+import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
@@ -109,6 +110,15 @@ public abstract class Kubernetes {
     protected final KubernetesClient client;
     protected final String infraNamespace;
     protected static KubeCluster cluster;
+
+    static {
+        try {
+            CustomResourceDefinitions.registerAll();
+        } catch (RuntimeException t) {
+            t.printStackTrace();
+            throw new ExceptionInInitializerError(t);
+        }
+    }
 
     protected Kubernetes(String infraNamespace, Supplier<KubernetesClient> clientSupplier) {
         this.environment = Environment.getInstance();
