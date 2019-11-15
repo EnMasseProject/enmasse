@@ -698,7 +698,7 @@ spec:
                 - name: CONSOLE_HTTPD_IMAGE
                   value: "${env.CONSOLE_HTTPD_IMAGE}"
                 - name: FS_GROUP_OVERRIDE
-                  value: "185"
+                  value: "1000"
       - name: user-api-server
         spec:
           replicas: 1
