@@ -25,6 +25,7 @@ import io.enmasse.systemtest.time.WaitPhase;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
+
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -40,8 +41,13 @@ import java.util.function.Function;
 
 import static io.enmasse.systemtest.apiclients.Predicates.any;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class IoTUtils {
@@ -134,7 +140,7 @@ public class IoTUtils {
             project = iotProjectClient.withName(project.getMetadata().getName()).get();
             isReady = project.getStatus() != null && "Ready".equals(project.getStatus().getPhase());
             if (!isReady) {
-                log.info("Waiting until IoTProject: '{}' will be in ready state", project.getMetadata().getName());
+                log.info("Waiting until IoTProject: '{}' will be in ready state -> {}", project.getMetadata().getName(), project.getStatus() != null ? project.getStatus().getPhase() : null);
                 Thread.sleep(10000);
             }
         }
@@ -142,6 +148,9 @@ public class IoTUtils {
             String jsonStatus = project.getStatus() != null ? project.getStatus().toString() : "Project doesn't have status";
             throw new IllegalStateException("IoTProject " + project.getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
+
+        // refresh
+        project = iotProjectClient.withName(project.getMetadata().getName()).get();
 
         if (project.getSpec().getDownstreamStrategy() != null
                 && project.getSpec().getDownstreamStrategy().getManagedStrategy() != null
@@ -151,8 +160,19 @@ public class IoTUtils {
             var addressSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
             var addressSpace = Kubernetes.getInstance().getAddressSpaceClient(project.getMetadata().getNamespace()).withName(addressSpaceName).get();
             Objects.requireNonNull(addressSpace, () -> String.format("Unable to find addressSpace: %s", addressSpaceName));
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace, budget);
+            assertNotNull(addressSpace);
+            assertNotNull(addressSpace.getStatus());
+            assertTrue(addressSpace.getStatus().isReady());
         }
+
+        // the project is ready, so we need to check a few things
+
+        assertNotNull(project.getStatus());
+        assertNotNull(project.getStatus().getDownstreamEndpoint());
+        assertThat(project.getStatus().getDownstreamEndpoint().getHost(), not(emptyOrNullString()));
+        assertThat(project.getStatus().getDownstreamEndpoint().getUsername(), not(emptyOrNullString()));
+        assertThat(project.getStatus().getDownstreamEndpoint().getPassword(), not(emptyOrNullString()));
+        assertThat(project.getStatus().getDownstreamEndpoint().getPort(), not(is(0)));
     }
 
     private static void waitForIoTProjectDeleted(Kubernetes kubernetes, IoTProject project) throws Exception {

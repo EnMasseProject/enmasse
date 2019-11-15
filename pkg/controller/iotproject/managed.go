@@ -82,7 +82,7 @@ func updateFromMap(resources map[string]bool, condition *iotv1alpha1.CommonCondi
 
 }
 
-func updateManagedStatus(m *managedStatus, project *iotv1alpha1.IoTProject) {
+func updateManagedReadyStatus(m *managedStatus, project *iotv1alpha1.IoTProject) {
 
 	createdCondition := project.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeResourcesCreated)
 	updateFromMap(m.remainingCreated, &createdCondition.CommonCondition, "Missing resources")
@@ -90,8 +90,34 @@ func updateManagedStatus(m *managedStatus, project *iotv1alpha1.IoTProject) {
 	readyCondition := project.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeResourcesReady)
 	updateFromMap(m.remainingReady, &readyCondition.CommonCondition, "Non-ready resources")
 
-	project.Status.IsReady = readyCondition.Status == corev1.ConditionTrue
+	if createdCondition.Status == corev1.ConditionTrue && readyCondition.Status == corev1.ConditionTrue {
+		project.Status.Phase = iotv1alpha1.ProjectPhaseReady
+	} else {
+		project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
+	}
 
+}
+
+func updateManagedStatus(managedStatus *managedStatus, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
+
+	updateManagedReadyStatus(managedStatus, project)
+
+	// extract endpoint information
+
+	currentCredentials := project.Status.DownstreamEndpoint.Credentials.DeepCopy()
+	if managedStatus.addressSpace != nil && project.Status.Phase == iotv1alpha1.ProjectPhaseReady {
+
+		forceTls := true
+		endpoint, err := extractEndpointInformation("messaging", iotv1alpha1.Service, "amqps", currentCredentials, managedStatus.addressSpace, &forceTls)
+
+		if endpoint != nil {
+			project.Status.DownstreamEndpoint = endpoint.ConnectionInformation.DeepCopy()
+		}
+
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
 }
 
 func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
@@ -112,10 +138,6 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 
 	managedStatus.remainingCreated[resourceTypeAddressSpace] = false
 	managedStatus.remainingReady[resourceTypeAdapterUser] = false
-
-	// defer condition status update
-
-	defer updateManagedStatus(managedStatus, project)
 
 	// start reconciling
 
@@ -154,22 +176,11 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 		return r.reconcileAdapterUser(ctx, project, strategy, managedStatus)
 	})
 
-	// extract endpoint information
+	// update status - no more changes to "managedStatus" beyond this point
 
-	currentCredentials := project.Status.DownstreamEndpoint.Credentials.DeepCopy()
-	if managedStatus.addressSpace != nil && project.Status.IsReady {
-
-		forceTls := true
-		rc.Process(func() (result reconcile.Result, e error) {
-			endpoint, err := extractEndpointInformation("messaging", iotv1alpha1.Service, "amqps", currentCredentials, managedStatus.addressSpace, &forceTls)
-
-			if endpoint != nil {
-				project.Status.DownstreamEndpoint = endpoint.ConnectionInformation.DeepCopy()
-			}
-
-			return reconcile.Result{}, err
-		})
-	}
+	rc.Process(func() (result reconcile.Result, e error) {
+		return updateManagedStatus(managedStatus, project)
+	})
 
 	// check and queue password reset
 

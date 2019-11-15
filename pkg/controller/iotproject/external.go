@@ -52,7 +52,7 @@ func (r *ReconcileIoTProject) reconcileExternal(ctx context.Context, request *re
 		SetStatusOk()
 
 	project.Status.DownstreamEndpoint = project.Spec.DownstreamStrategy.ExternalDownstreamStrategy.ConnectionInformation.DeepCopy()
-	project.Status.IsReady = true
+	project.Status.Phase = iotv1alpha1.ProjectPhaseReady
 
 	return reconcile.Result{}, nil
 
