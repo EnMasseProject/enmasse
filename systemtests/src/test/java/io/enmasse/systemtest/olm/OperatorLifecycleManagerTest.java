@@ -6,7 +6,7 @@ package io.enmasse.systemtest.olm;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.executor.ExecutionResultData;
@@ -17,6 +17,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,13 +28,14 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.OLM;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(OLM)
 class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStandard {
@@ -127,6 +129,17 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
         // Test basic messages
         AddressSpace exampleSpace = kubernetes.getAddressSpaceClient(infraNamespace).withName("myspace").get();
         Address exampleAddress = kubernetes.getAddressClient(infraNamespace).withName("myspace.myqueue").get();
-        getClientUtils().assertCanConnect(exampleSpace, new UserCredentials("user", "enmasse"), Collections.singletonList(exampleAddress), resourcesManager);
+
+        AmqpClient amqpClient = resourcesManager.getAmqpClientFactory().createQueueClient();
+        amqpClient.getConnectOptions().setEndpoint(kubernetes.getExternalEndpoint("messaging", infraNamespace));
+        amqpClient.getConnectOptions().setUsername("user");
+        amqpClient.getConnectOptions().setPassword("enmasse");
+
+        int messageCount = 10;
+        Future<Integer> sent = amqpClient.sendMessages(exampleAddress.getSpec().getAddress(), TestUtils.generateMessages(messageCount));
+        assertEquals(messageCount, sent.get(1, TimeUnit.MINUTES).intValue(), "Incorrect count of messages send");
+
+        Future<List<Message>> received = amqpClient.recvMessages(exampleAddress.getSpec().getAddress(), messageCount);
+        assertEquals(messageCount, received.get(1, TimeUnit.MINUTES).size(), "Incorrect count of messages received");
     }
 }
