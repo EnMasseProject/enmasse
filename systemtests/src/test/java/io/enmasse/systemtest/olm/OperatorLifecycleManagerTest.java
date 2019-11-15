@@ -130,7 +130,7 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
         AddressSpace exampleSpace = kubernetes.getAddressSpaceClient(infraNamespace).withName("myspace").get();
         Address exampleAddress = kubernetes.getAddressClient(infraNamespace).withName("myspace.myqueue").get();
 
-        AmqpClient amqpClient = resourcesManager.getAmqpClientFactory().createQueueClient();
+        AmqpClient amqpClient = resourcesManager.getAmqpClientFactory().createQueueClient(exampleSpace);
         amqpClient.getConnectOptions().setEndpoint(kubernetes.getExternalEndpoint("messaging", infraNamespace));
         amqpClient.getConnectOptions().setUsername("user");
         amqpClient.getConnectOptions().setPassword("enmasse");
