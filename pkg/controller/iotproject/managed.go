@@ -8,6 +8,7 @@ package iotproject
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -55,7 +56,15 @@ type managedStatus struct {
 func updateFromMap(resources map[string]bool, condition *iotv1alpha1.CommonCondition, reason string) {
 
 	message := ""
-	for k, v := range resources {
+
+	keys := make([]string, 0, len(resources))
+	for k := range resources {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		v := resources[k]
 		if v {
 			continue
 		}
