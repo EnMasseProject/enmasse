@@ -67,7 +67,7 @@ public class IoTUtils {
         var iotConfigClient = kubernetes.getIoTConfigClient();
         while (budget.timeLeft() >= 0 && !isReady) {
             config = iotConfigClient.withName(config.getMetadata().getName()).get();
-            isReady = config.getStatus() != null && config.getStatus().isInitialized();
+            isReady = config.getStatus() != null && "Ready".equals(config.getStatus().getPhase());
             if (!isReady) {
                 log.info("Waiting until IoTConfig: '{}' will be in ready state", config.getMetadata().getName());
                 Thread.sleep(10000);
@@ -132,7 +132,7 @@ public class IoTUtils {
         var iotProjectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         while (budget.timeLeft() >= 0 && !isReady) {
             project = iotProjectClient.withName(project.getMetadata().getName()).get();
-            isReady = project.getStatus() != null && project.getStatus().isReady();
+            isReady = project.getStatus() != null && "Ready".equals(project.getStatus().getPhase());
             if (!isReady) {
                 log.info("Waiting until IoTProject: '{}' will be in ready state", project.getMetadata().getName());
                 Thread.sleep(10000);

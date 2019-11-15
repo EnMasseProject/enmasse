@@ -8,8 +8,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
@@ -29,19 +27,10 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class IoTProjectStatus {
 
-    @JsonProperty("isReady")
-    private boolean ready = false;
     private String tenantName;
     private ExternalDownstreamStrategy downstreamEndpoint;
     private List<ProjectCondition> conditions;
-
-    public boolean isReady() {
-        return ready;
-    }
-
-    public void setReady(boolean ready) {
-        this.ready = ready;
-    }
+    private String phase;
 
     public String getTenantName() {
         return tenantName;
@@ -65,6 +54,14 @@ public class IoTProjectStatus {
 
     public void setConditions(List<ProjectCondition> conditions) {
         this.conditions = conditions;
+    }
+
+    public void setPhase(String phase) {
+        this.phase = phase;
+    }
+
+    public String getPhase() {
+        return phase;
     }
 
 }

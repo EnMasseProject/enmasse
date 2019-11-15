@@ -26,21 +26,12 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class IoTConfigStatus {
 
-    private boolean initialized = false;
     private String phase;
     private String phaseReason;
     private String authenticationServicePSK;
     private Map<String, AdapterStatus> adapters;
     private Map<String, ServiceStatus> services;
     private List<ConfigCondition> conditions;
-
-    public boolean isInitialized() {
-        return initialized;
-    }
-
-    public void setInitialized(boolean initialized) {
-        this.initialized = initialized;
-    }
 
     public String getPhase() {
         return phase;
