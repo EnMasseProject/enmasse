@@ -166,7 +166,25 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void delete(KubernetesList resources) {
-        resources.getItems().forEach( resource -> client.resource(resource).cascading(true).delete());
+        for (HasMetadata resource : resources.getItems()) {
+            int maxRetries = 10;
+            int retry = 0;
+            while (true) {
+                try {
+                    client.resource(resource).cascading(true).delete();
+                    break;
+                } catch (Exception e) {
+                    if (retry < maxRetries) {
+                        // Re-fetch resources to make it up to date
+                        resource = client.resource(resource).get();
+                        retry++;
+                    } else {
+                        log.warn("Error deleting {} after {} attempts", resource, maxRetries, e);
+                        throw e;
+                    }
+                }
+            }
+        }
     }
 
     @Override
