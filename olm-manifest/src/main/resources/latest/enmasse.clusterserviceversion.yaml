@@ -564,6 +564,9 @@ spec:
           resources: [ "configmaps" ]
           resourceNames: [ "extension-apiserver-authentication" ]
           verbs: [ "get" ]
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "addressspaces", "addresses" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
       - serviceAccountName: iot-operator
         rules:
         - apiGroups: [ "enmasse.io" ]
