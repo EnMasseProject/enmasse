@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
+
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
@@ -175,8 +177,10 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 
 	// start normal reconcile
 
+	qdrProxyConfigCtx := cchange.NewRecorder()
+
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processQdrProxyConfig(ctx, config)
+		return r.processQdrProxyConfig(ctx, config, qdrProxyConfigCtx)
 	})
 	rc.ProcessSimple(func() error {
 		return r.processCollector(ctx, config)
@@ -201,16 +205,16 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		}
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processHttpAdapter(ctx, config)
+		return r.processHttpAdapter(ctx, config, qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processMqttAdapter(ctx, config)
+		return r.processMqttAdapter(ctx, config, qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processSigfoxAdapter(ctx, config)
+		return r.processSigfoxAdapter(ctx, config, qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processLoraWanAdapter(ctx, config)
+		return r.processLoraWanAdapter(ctx, config, qdrProxyConfigCtx)
 	})
 
 	return r.updateFinalStatus(ctx, config, rc)

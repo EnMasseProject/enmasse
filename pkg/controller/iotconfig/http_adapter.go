@@ -9,6 +9,8 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
+
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -28,8 +30,9 @@ import (
 const nameHttpAdapter = "iot-http-adapter"
 const routeHttpAdapter = "iot-http-adapter"
 
-func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
+	configCtx := qdrProxyConfigCtx.Clone()
 	rc := &recon.ReconcileContext{}
 
 	adapter := findAdapter("http")
@@ -37,7 +40,9 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 	adapterConfig := config.Spec.AdaptersConfig.HttpAdapterConfig
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameHttpAdapter, config, !enabled, r.reconcileHttpAdapterDeployment)
+		return r.processDeployment(ctx, nameHttpAdapter, config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+			return r.reconcileHttpAdapterDeployment(config, deployment, configCtx)
+		})
 	})
 	rc.ProcessSimple(func() error {
 		return r.processService(ctx, nameHttpAdapter, config, !enabled, r.reconcileHttpAdapterService)
@@ -67,13 +72,13 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, configCtx *cchange.ConfigChangeRecorder) error {
 
 	adapter := config.Spec.AdaptersConfig.HttpAdapterConfig
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig)
+	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
 
 	install.DropContainer(deployment, "http-adapter")
 	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {

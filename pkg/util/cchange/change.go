@@ -50,3 +50,16 @@ func (c ConfigChangeRecorder) Hash() []byte {
 func (c ConfigChangeRecorder) HashString() string {
 	return hex.EncodeToString(c.Hash())
 }
+
+func (c ConfigChangeRecorder) Clone() *ConfigChangeRecorder {
+
+	// start a new hash
+	new := sha256.New()
+	// taking the parent into consideration
+	new.Write(c.hasher.Sum(nil))
+
+	// return the new
+	return &ConfigChangeRecorder{
+		hasher: new,
+	}
+}
