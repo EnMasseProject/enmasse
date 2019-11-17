@@ -339,7 +339,20 @@ function createConnection(addressSpace, hostname) {
       Hostname: hostport,
       ContainerId: uuidv1() + "",
       Protocol: "amqp",
-      Properties: [],
+      Properties: [
+        {
+          "Key": "platform",
+          "Value": "JVM: 1.8.0_191, 25.191-b12, Oracle Corporation, OS: Mac OS X, 10.13.6, x86_64"
+        },
+        {
+          "Key": "product",
+          "Value": "QpidJMS"
+        },
+        {
+          "Key": "version",
+          "Value": "0.38.0-SNAPSHOT"
+        }
+        ],
       Metrics: []
 
     }
