@@ -113,6 +113,7 @@ type ConnectorAddressRule struct {
 
 type AddressSpaceStatus struct {
 	IsReady        bool              `json:"isReady"`
+	Phase          string            `json:"phase,omitempty"`
 	Messages       []string          `json:"messages,omitempty"`
 	CACertificate  []byte            `json:"caCert,omitempty"`
 	EndpointStatus []EndpointStatus  `json:"endpointStatuses,omitempty"`
