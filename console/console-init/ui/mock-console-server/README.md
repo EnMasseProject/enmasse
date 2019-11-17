@@ -81,6 +81,7 @@ query all_address_spaces {
         }
       }
       Status {
+        Phase
         IsReady
         Messages
       }
@@ -113,6 +114,7 @@ query all_addresses_for_addressspace_view {
       Status {
         IsReady
         Messages
+        Phase
         PlanStatus {
           Partitions
         }
