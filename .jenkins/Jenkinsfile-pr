@@ -88,7 +88,10 @@ pipeline {
                         }
                         env.DOCKER_ORG = 'enmasseci'
                     }
-
+                    if (env.ghprbCommentBody.contains('OLM')) {
+                        env.INSTALL_TYPE = "OLM"
+                        echo "INSTALL_TYPE: ${env.INSTALL_TYPE}"
+                    }
                     echo "TEST_ONLY: ${env.TEST_ONLY}"
                     echo "TEST_CASE: ${env.TEST_CASE}"
                     echo "TEST_PROFILE: ${env.TEST_PROFILE}"

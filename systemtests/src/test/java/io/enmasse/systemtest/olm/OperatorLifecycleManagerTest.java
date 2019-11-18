@@ -97,6 +97,7 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
             }
         }
         TestUtils.waitUntilDeployed(infraNamespace);
+        resourcesManager.waitForAuthPods(kubernetes.getAuthenticationServiceClient(infraNamespace).withName("standard-authservice").get());
         TestUtils.waitForSchemaInSync("standard-small");
 
         var addressSpacePlanClient = kubernetes.getAddressSpacePlanClient(infraNamespace);

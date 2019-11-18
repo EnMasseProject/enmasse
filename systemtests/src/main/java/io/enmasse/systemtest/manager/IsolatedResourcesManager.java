@@ -225,11 +225,6 @@ public class IsolatedResourcesManager extends ResourceManager {
     //------------------------------------------------------------------------------------------------
 
     @Override
-    public AuthenticationService getAuthService(String name) throws Exception {
-        return Kubernetes.getInstance().getAuthenticationServiceClient().withName(name).get();
-    }
-
-    @Override
     public void replaceAuthService(AuthenticationService authService) throws Exception {
         replaceAuthService(authService, false);
     }
