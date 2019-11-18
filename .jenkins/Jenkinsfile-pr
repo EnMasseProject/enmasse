@@ -25,8 +25,8 @@ pipeline {
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
         KUBERNETES_NAMESPACE = "enmasse-infra"
-        OPENSHIFT_PASSWD = "developer"
-        OPENSHIFT_USER = "developer"
+        OPENSHIFT_PASSWD = "admin"
+        OPENSHIFT_USER = "admin"
     }
     agent {
         node {
@@ -67,6 +67,11 @@ pipeline {
                     } else {
                         env.UPGRADE_FROM = params.UPGRADE_FROM
                     }
+                    if (env.ghprbCommentBody.contains('ocp4')) {
+                        env.OC_VERSION = "4"
+                    } else {
+                        env.OC_VERSION = "3.11"
+                    }
                     if (env.ghprbCommentBody.contains('test_only')) {
                         env.TEST_ONLY = true
                         env.DOCKER_REGISTRY = 'quay.io'
@@ -81,6 +86,7 @@ pipeline {
                     echo "TEST_CASE: ${env.TEST_CASE}"
                     echo "TEST_PROFILE: ${env.TEST_PROFILE}"
                     echo "UPGRADE_FROM: ${env.UPGRADE_FROM}"
+                    echo "OC_VERSION : ${env.OC_VERSION}"
                 }
             }
         }
