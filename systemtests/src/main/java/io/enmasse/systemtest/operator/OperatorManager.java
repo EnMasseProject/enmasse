@@ -170,7 +170,7 @@ public class OperatorManager {
     }
 
     public void removeExamplePlans(String namespace) {
-        LOGGER.info("Delete enmasse example role from: {}", Environment.getInstance().getTemplatesPath());
+        LOGGER.info("Delete enmasse example plans from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
     }
 

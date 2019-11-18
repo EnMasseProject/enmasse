@@ -10,6 +10,7 @@ import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.DoneableAuthenticationService;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.api.model.SecretReference;
 import io.vertx.core.json.JsonObject;
 
@@ -68,6 +69,7 @@ public class AuthServiceUtils {
         return new DoneableAuthenticationService(new AuthenticationServiceBuilder()
                 .withNewMetadata()
                 .withName(name)
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(type)

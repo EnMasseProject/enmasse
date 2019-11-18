@@ -208,7 +208,7 @@ public abstract class ResourceManager {
     public void waitForAuthPods(AuthenticationService authenticationService) throws Exception {
         String desiredPodName = authenticationService.getMetadata().getName();
         TestUtils.waitUntilCondition("Auth service is deployed: " + desiredPodName, phase -> {
-                    List<Pod> pods = TestUtils.listReadyPods(Kubernetes.getInstance());
+                    List<Pod> pods = TestUtils.listReadyPods(Kubernetes.getInstance(), authenticationService.getMetadata().getNamespace());
                     long matching = pods.stream().filter(pod ->
                             pod.getMetadata().getName().contains(desiredPodName)).count();
                     if (matching != 1) {
@@ -225,7 +225,7 @@ public abstract class ResourceManager {
     public void removeAuthService(AuthenticationService authService) throws Exception {
         Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService.getMetadata().getName()).cascading(true).delete();
         TestUtils.waitUntilCondition("Auth service is deleted: " + authService.getMetadata().getName(), (phase) ->
-                        TestUtils.listReadyPods(Kubernetes.getInstance()).stream().noneMatch(pod ->
+                        TestUtils.listReadyPods(Kubernetes.getInstance(), authService.getMetadata().getNamespace()).stream().noneMatch(pod ->
                                 pod.getMetadata().getName().contains(authService.getMetadata().getName())),
                 new TimeoutBudget(1, TimeUnit.MINUTES));
     }
