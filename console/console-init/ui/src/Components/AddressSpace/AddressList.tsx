@@ -4,15 +4,17 @@ import {
   TableVariant,
   TableHeader,
   TableBody,
-  IRowData
+  IRowData,
+  sortable,
+  RowWrapper
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
-import { Messages } from "../Messages";
+import { TypePlan } from "../TypePlan";
 import { AddressListFilterWithPagination } from "./AddressListFilterWithPaginationHeader";
 
 export interface IAddress {
   name: string;
-  namespace:string;
+  namespace: string;
   type: string;
   plan: string;
   messagesIn: number;
@@ -57,29 +59,17 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     }
   };
 
+  //TODO: Display error after the phase variable is exposed from backend.
   const toTableCells = (row: IAddress) => {
     const tableRow: IRowData = {
       cells: [
-        { title: <Link to={`address/${row.name}`}>{row.name}</Link> },
-        row.type,
-        row.plan,
+        { title: <Link to={`addresses/${row.name}`}>{row.name}</Link> },
+        { title: <TypePlan type={row.type} plan={row.plan} /> },
         {
-          title: (
-            <Messages
-              count={row.messagesIn}
-              column="MessagesIn"
-              status={row.status}
-            />
-          )
+          title: row.messagesIn
         },
         {
-          title: (
-            <Messages
-              count={row.messagesOut}
-              column="MessagesOut"
-              status={row.status}
-            />
-          )
+          title: row.messagesOut
         },
         row.storedMessages,
         row.senders,
@@ -93,16 +83,15 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   const tableRows = rows.map(toTableCells);
   const tableColumns = [
     "Name",
-    "Type",
-    "Plan",
-    "Messages In",
-    "Messages Out",
-    "Stored Messages",
+    "Type/Plan",
+    { title: "Messages In", transforms: [sortable] },
+    { title: "Messages Out", transforms: [sortable] },
+    { title: "Stored Messages", transforms: [sortable] },
     "Senders",
     "Receivers",
     "Shards"
   ];
-
+  const sortBy = {};
   return (
     <Table
       variant={TableVariant.compact}
