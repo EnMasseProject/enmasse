@@ -122,6 +122,7 @@ const typeDefs = gql`
     type AddressSpaceStatus_enmasse_io_v1beta1 {
         IsReady: Boolean!
         Messages: [String!]
+        Phase: String!
     }
 
     type AddressSpec_enmasse_io_v1beta1 {
@@ -135,6 +136,7 @@ const typeDefs = gql`
     type AddressStatus_enmasse_io_v1beta1 {
         IsReady: Boolean!
         Messages: [String!]
+        Phase: String!
         PlanStatus: AddressPlanStatus_enmasse_io_v1beta1
     }
 

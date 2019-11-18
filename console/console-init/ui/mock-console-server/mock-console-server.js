@@ -212,6 +212,15 @@ function createAddressSpace(as) {
     throw `Address space with name  '${as.ObjectMeta.Name} already exists in namespace ${as.ObjectMeta.Namespace}`;
   }
 
+  var phase = "Active";
+  var messages = [];
+  if (as.Status && as.Status.Phase) {
+    phase = as.Status.Phase
+  }
+  if (phase !== "Active") {
+    messages.push("The following deployments are not ready: [admin.daf7b31]")
+  }
+
   var addressSpace = {
     ObjectMeta: {
       Name: as.ObjectMeta.Name,
@@ -224,9 +233,9 @@ function createAddressSpace(as) {
       Type: as.Spec.Type
     },
     Status: {
-      "isReady": true,
-      "messages": [],
-      "phase": "Active"
+      IsReady: phase === "Active",
+      Messages: messages,
+      Phase: phase
     }
   };
 
@@ -304,6 +313,9 @@ createAddressSpace(
       Spec: {
         Plan: "standard-medium",
         Type: "standard"
+      },
+      Status: {
+        Phase: "Configuring"
       }
     });
 
@@ -435,6 +447,14 @@ function createAddress(addr) {
     throw `Address with name  '${addr.ObjectMeta.Name} already exists in address space ${addr.Spec.AddressSpace}`;
   }
 
+  var phase = "Active";
+  var messages = [];
+  if (addr.Status && addr.Status.Phase) {
+    phase = addr.Status.Phase
+  }
+  if (phase !== "Active") {
+    messages.push("Address " + addr.ObjectMeta.Name + " not found on qdrouterd")
+  }
   var address = {
     ObjectMeta: {
       Name: addr.ObjectMeta.Name,
@@ -449,7 +469,9 @@ function createAddress(addr) {
       Type: addr.Spec.Type
     },
     Status: {
-      Phase: "Active",
+      IsReady: "Active" === phase,
+      Messages: messages,
+      Phase: phase,
       PlanStatus: {
         Name: plan.ObjectMeta.Name,
         Partitions: 1
@@ -539,6 +561,9 @@ function closeConnection(objectmeta) {
         AddressSpace: addressSpaces[0].ObjectMeta.Name,
         Plan: "standard-small-queue",
         Type: "queue"
+      },
+      Status: {
+        Phase: n.startsWith("c") ? "Configuring" : (n.startsWith("p") ? "Pending" : "Active")
       }
     })));
 
