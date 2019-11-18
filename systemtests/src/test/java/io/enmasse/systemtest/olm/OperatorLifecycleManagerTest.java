@@ -11,18 +11,16 @@ import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.condition.OLMRequired;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import io.vertx.core.net.PemTrustOptions;
-import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
@@ -34,7 +32,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -44,10 +41,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static io.enmasse.systemtest.TestTag.OLM;
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Tag(OLM)
+@Tag(ACCEPTANCE)
+@OLMRequired
 class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
     private final String infraNamespace = kubernetes.getOlmNamespace();

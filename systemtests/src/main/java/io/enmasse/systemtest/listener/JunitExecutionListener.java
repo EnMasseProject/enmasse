@@ -67,7 +67,8 @@ public class JunitExecutionListener implements TestExecutionListener {
                         }
                     });
                     LOGGER.info("Infinispan server will be removed");
-                    SystemtestsKubernetesApps.deleteInfinispanServer(kube.getInfraNamespace());
+                    SystemtestsKubernetesApps.deleteInfinispanServer();
+                    kube.deleteNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
                 } catch (Exception e) {
                     LOGGER.warn("Cleanup failed or no clean is needed");
                 }
@@ -81,7 +82,6 @@ public class JunitExecutionListener implements TestExecutionListener {
                 OperatorManager.getInstance().removeIoTOperator();
                 OperatorManager.getInstance().deleteEnmasseOlm();
                 OperatorManager.getInstance().deleteEnmasseBundle();
-                OperatorManager.getInstance().clean();
             } catch (Exception e) {
                 e.printStackTrace();
             }

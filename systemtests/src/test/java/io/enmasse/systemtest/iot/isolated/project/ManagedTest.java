@@ -101,7 +101,7 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
         if (context.getExecutionException().isPresent()) { //test failed
             logCollector.collectHttpAdapterQdrProxyState();
         }
-        SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+        SystemtestsKubernetesApps.deleteInfinispanServer();
     }
 
     @Test

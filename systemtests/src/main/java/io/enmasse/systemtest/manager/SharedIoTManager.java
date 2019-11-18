@@ -73,7 +73,7 @@ public class SharedIoTManager extends ResourceManager {
                 }
             }
             tearDownSharedIoTConfig();
-            SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+            SystemtestsKubernetesApps.deleteInfinispanServer();
         } else {
             LOGGER.info("Skip cleanup is set, no cleanup process");
         }

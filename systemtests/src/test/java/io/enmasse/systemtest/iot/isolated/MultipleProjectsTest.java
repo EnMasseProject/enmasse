@@ -129,7 +129,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
             cleanAmqpSide(ctx);
         }
 
-        SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+        SystemtestsKubernetesApps.deleteInfinispanServer();
     }
 
     @Test
