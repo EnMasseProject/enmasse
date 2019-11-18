@@ -10,7 +10,7 @@ import (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.availableReplicas,selectorpath=.status.selector
+// +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.availableReplicas,selectorpath=.status.labelSelector
 
 // IngressController describes a managed ingress controller for the cluster. The
 // controller can service OpenShift Route and Kubernetes Ingress resources.
@@ -70,9 +70,9 @@ type IngressControllerSpec struct {
 	// If unset, the default is based on
 	// infrastructure.config.openshift.io/cluster .status.platform:
 	//
-	//   AWS:      LoadBalancerService (with External scope)
-	//   Azure:    LoadBalancerService (with External scope)
-	//   GCP:      LoadBalancerService (with External scope)
+	//   AWS:      LoadBalancerService
+	//   Azure:    LoadBalancerService
+	//   GCP:      LoadBalancerService
 	//   Libvirt:  HostNetwork
 	//
 	// Any other platform types (including None) default to HostNetwork.
@@ -186,10 +186,9 @@ var (
 // LoadBalancerStrategy holds parameters for a load balancer.
 type LoadBalancerStrategy struct {
 	// scope indicates the scope at which the load balancer is exposed.
-	// Possible values are "External" and "Internal".
-	//
-	// +kubebuilder:validation:Required
-	// +required
+	// Possible values are "External" and "Internal".  The default is
+	// "External".
+	// +optional
 	Scope LoadBalancerScope `json:"scope"`
 }
 

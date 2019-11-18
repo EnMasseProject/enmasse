@@ -153,11 +153,10 @@ func (l *zapLogger) WithName(name string) logr.Logger {
 
 // NewLogger creates a new logr.Logger using the given Zap Logger to log.
 func NewLogger(l *zap.Logger) logr.Logger {
-	log := l.WithOptions(zap.AddCallerSkip(1))
 	return &zapLogger{
-		l: log,
+		l: l,
 		infoLogger: infoLogger{
-			l:   log,
+			l:   l,
 			lvl: zap.InfoLevel,
 		},
 	}
