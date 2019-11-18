@@ -4,6 +4,8 @@
 
 def getAgentLabel() {
     node('master') {
+        println('Get agent label method')
+        println("Comment body: ${env.ghprbCommentBody}")
         if (env.ghprbCommentBody.contains('ocp4')) {
             return "enmasse-crc"
         }
