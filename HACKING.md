@@ -105,16 +105,23 @@ By default the test suite tears down the EnMasse deployment and namespace after 
 
     make SYSTEMTEST_ARGS="shared.standard.QueueTest#testCreateDeleteQueue" systemtests
 
-### Adding / Updating go dependencies
+### Adding / Updating Go dependencies
 
 This project currently uses go modules to vendor go sources. Change dependencies in the file `go.mod` and then run:
-
 
     go mod vendor
     go mod tidy
     git add --all vendor
     git add go.sum
     git commit
+
+### Updating the Go generated code
+
+Run the following script:
+
+    hack/update-codegen.sh
+
+Running `hack/verify-codegen.sh` checks whether the generated code is up to date.
 
 ## Reference
 
