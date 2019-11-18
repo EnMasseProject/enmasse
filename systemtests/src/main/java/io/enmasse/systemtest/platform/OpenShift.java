@@ -23,6 +23,7 @@ import okhttp3.Protocol;
 import org.slf4j.Logger;
 
 import java.util.Collections;
+import java.util.function.Function;
 
 /**
  * Handles interaction with openshift cluster
@@ -30,9 +31,10 @@ import java.util.Collections;
 public class OpenShift extends Kubernetes {
     private static Logger log = CustomLogger.getLogger();
 
-    public OpenShift(Environment environment, String globalNamespace) {
-        super(globalNamespace, () -> {
-            final Environment instance = Environment.getInstance();
+    private static final String OLM_NAMESPACE = "openshift-operators";
+
+    public OpenShift(Environment environment, Function<String, String> infraNamespace) {
+        super(environment, infraNamespace.apply(OLM_NAMESPACE), () -> {
             Config config = new ConfigBuilder().withMasterUrl(environment.getApiUrl())
                     .withOauthToken(environment.getApiToken())
                     .build();
@@ -41,9 +43,9 @@ public class OpenShift extends Kubernetes {
             // Workaround https://github.com/square/okhttp/issues/3146
             httpClient = httpClient.newBuilder()
                     .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-                    .connectTimeout(instance.getKubernetesApiConnectTimeout())
-                    .writeTimeout(instance.getKubernetesApiWriteTimeout())
-                    .readTimeout(instance.getKubernetesApiReadTimeout())
+                    .connectTimeout(environment.getKubernetesApiConnectTimeout())
+                    .writeTimeout(environment.getKubernetesApiWriteTimeout())
+                    .readTimeout(environment.getKubernetesApiReadTimeout())
                     .build();
             return new DefaultOpenShiftClient(httpClient, new OpenShiftConfig(config));
         });
@@ -149,7 +151,6 @@ public class OpenShift extends Kubernetes {
 
     @Override
     public String getOlmNamespace() {
-        return "openshift-operators";
+        return OLM_NAMESPACE;
     }
-
 }
