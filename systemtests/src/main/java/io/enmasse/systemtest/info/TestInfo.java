@@ -7,10 +7,13 @@ package io.enmasse.systemtest.info;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.condition.AssumeKubernetesCondition;
 import io.enmasse.systemtest.condition.AssumeOpenshiftCondition;
+import io.enmasse.systemtest.condition.OLMRequired;
+import io.enmasse.systemtest.condition.OLMRequiredCondition;
 import io.enmasse.systemtest.logs.CustomLogger;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
+import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.support.AnnotationSupport;
 import org.junit.platform.commons.util.ReflectionUtils;
@@ -26,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 /*
 Class for store and query information about test plan and tests
  */
@@ -56,12 +60,10 @@ public class TestInfo {
                     MethodSource testSource = (MethodSource) test.getSource().get();
                     try {
                         Optional<Method> testMethod = ReflectionUtils.findMethod(Class.forName(testSource.getClassName()), testSource.getMethodName(), testSource.getMethodParameterTypes());
-                        MethodBasedExtensionContext extensionContext = new MethodBasedExtensionContext(testMethod);
                         if (testMethod.isPresent()) {
-                            Optional<Disabled> disabled = AnnotationSupport.findAnnotation(testMethod.get(), Disabled.class);
-                            ConditionEvaluationResult kubernetesDisabled = new AssumeKubernetesCondition().evaluateExecutionCondition(extensionContext);
-                            ConditionEvaluationResult openshiftDisabled = new AssumeOpenshiftCondition().evaluateExecutionCondition(extensionContext);
-                            if (disabled.isPresent() || kubernetesDisabled.isDisabled() || openshiftDisabled.isDisabled()) {
+                            MethodBasedExtensionContext extensionContext = new MethodBasedExtensionContext(testMethod);
+                            ExecutionCondition[] conditions = new ExecutionCondition[] {this::disabledCondition, new OLMRequiredCondition(), new AssumeKubernetesCondition(), new AssumeOpenshiftCondition()};
+                            if (evaluateTestDisabled(extensionContext, conditions)) {
                                 LOGGER.debug("Test {}.{} is disabled", testSource.getClassName(), testSource.getMethodName());
                             } else {
                                 tests.add(test);
@@ -76,6 +78,21 @@ public class TestInfo {
             });
         });
         LOGGER.debug("Final tests are {}", tests);
+    }
+
+    private ConditionEvaluationResult disabledCondition(ExtensionContext ctx) {
+        return AnnotationSupport.findAnnotation(ctx.getElement().get(), Disabled.class)
+            .map(a -> ConditionEvaluationResult.disabled("Disabled annotation"))
+            .orElseGet(() -> ConditionEvaluationResult.enabled("No disabled annotation"));
+    }
+
+    private boolean evaluateTestDisabled(ExtensionContext context, ExecutionCondition... conditions) {
+        for(ExecutionCondition condition : conditions) {
+            if (condition.evaluateExecutionCondition(context).isDisabled()) {
+               return true;
+            }
+        }
+        return false;
     }
 
     public void printTestClasses() {
@@ -150,21 +167,13 @@ public class TestInfo {
     }
 
     public boolean isOLMTest() {
-        return currentTestClass.getTags().stream().anyMatch(TestTag.OLM::equals);
+        return AnnotationSupport.findAnnotation(currentTestClass.getElement(), OLMRequired.class).isPresent();
     }
 
     public boolean isNextTestUpgrade() {
         int currentClassIndex = getCurrentClassIndex();
         if (currentClassIndex + 1 < testClasses.size()) {
             return getTags(testClasses.get(currentClassIndex + 1)).stream().anyMatch(TestTag.UPGRADE::equals);
-        }
-        return false;
-    }
-
-    public boolean isNextTestOLM() {
-        int currentClassIndex = getCurrentClassIndex();
-        if (currentClassIndex + 1 < testClasses.size()) {
-            return getTags(testClasses.get(currentClassIndex + 1)).stream().anyMatch(TestTag.OLM::equals);
         }
         return false;
     }

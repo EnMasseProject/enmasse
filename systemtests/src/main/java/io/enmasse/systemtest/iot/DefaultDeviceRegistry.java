@@ -7,19 +7,15 @@ package io.enmasse.systemtest.iot;
 
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfig;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfigBuilder;
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
 public final class DefaultDeviceRegistry {
-
-    private static final Kubernetes kubernetes = Kubernetes.getInstance();
 
     private DefaultDeviceRegistry() {
     }
 
     public static DeviceRegistryServiceConfig newInfinispanBased() throws Exception {
-        var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getInfraNamespace());
+        var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
         return new DeviceRegistryServiceConfigBuilder()
                 .withNewInfinispan()
                 .withNewServer()
@@ -45,24 +41,6 @@ public final class DefaultDeviceRegistry {
                 .withNumberOfDevicesPerTenant(100_000)
                 .endFile()
                 .build();
-    }
-
-    /**
-     * Create default device registry setup.
-     *
-     * @return A new instance of a device registry configuration.
-     * @throws Exception in case anything goes wrong.
-     */
-    public static DeviceRegistryServiceConfig deviceRegistry(String deviceReg) throws Exception {
-        switch (deviceReg) {
-            case "file":
-                return newFileBased();
-            case "infinispan":
-                return newInfinispanBased();
-            default:
-                throw new IllegalArgumentException(String.format("Device registry type '%s' unknown", deviceReg));
-        }
-
     }
 
 }
