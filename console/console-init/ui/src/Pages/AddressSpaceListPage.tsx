@@ -11,7 +11,7 @@ import {
   Dropdown,
   KebabToggle
 } from "@patternfly/react-core";
-import { AddressSpaceLsit } from "src/Components/AddressSpaceList/AddressSpaceList";
+import { AddressSpaceList } from "src/Components/AddressSpaceList/AddressSpaceList";
 
 const ALL_ADDRESS_SPACES = gql`
   query all_address_spaces {
@@ -74,7 +74,7 @@ function AddressSpaceListFunc() {
 
   const { loading, data } = useQuery<IAddressSpacesResponse>(
     ALL_ADDRESS_SPACES,
-    {pollInterval:2000}
+    { pollInterval: 2000 }
   );
   // const setSearchParam = React.useCallback(
   //   (name: string, value: string) => {
@@ -132,7 +132,7 @@ function AddressSpaceListFunc() {
         dropdownItems={[]}
       />
       {/*END*/}
-      <AddressSpaceLsit
+      <AddressSpaceList
         rows={addressSpacesList}
         onEdit={() => {
           console.log("on Edit");

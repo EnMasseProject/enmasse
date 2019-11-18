@@ -29,7 +29,7 @@ interface IAddressListProps {
   onDelete: (rowData: IAddressSpace) => void;
 }
 
-export const AddressSpaceLsit: React.FunctionComponent<IAddressListProps> = ({
+export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   rows,
   onEdit,
   onDelete
@@ -63,15 +63,26 @@ export const AddressSpaceLsit: React.FunctionComponent<IAddressListProps> = ({
           header: "name",
           title: (
             <>
-              <Link to={`address-space/${row.nameSpace}/${row.name}/addresses`}>{row.name}</Link>
+              <Link
+                to={`address-spaces/${row.nameSpace}/${row.name}/addresses`}
+              >
+                {row.name}
+              </Link>
               <br />
               {row.nameSpace}
             </>
           )
         },
         // row.type,?
-        { header: "type", title: 
-        <><AddressSpaceIcon /><AddressSpaceType type={row.type} /></> },
+        {
+          header: "type",
+          title: (
+            <>
+              <AddressSpaceIcon />
+              <AddressSpaceType type={row.type} />
+            </>
+          )
+        },
         { title: <AddressSpaceStatus isReady={row.isReady} /> },
         row.creationTimestamp
       ],
@@ -88,7 +99,8 @@ export const AddressSpaceLsit: React.FunctionComponent<IAddressListProps> = ({
       cells={tableColumns}
       rows={tableRows}
       actionResolver={actionResolver}
-      aria-label="address space list">
+      aria-label="address space list"
+    >
       <TableHeader />
       <TableBody />
     </Table>

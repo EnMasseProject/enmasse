@@ -30,7 +30,9 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   const toTableCells = (row: IConnection) => {
     const tableRow: IRowData = {
       cells: [
-        { title: <Link to={`connection/${row.hostname}`}>{row.hostname}</Link> },
+        {
+          title: <Link to={`connections/${row.hostname}`}>{row.hostname}</Link>
+        },
         row.containerId,
         { title: <ConnectionProtocolFormat protocol={row.protocol} /> },
         row.messagesIn,
@@ -44,7 +46,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   };
   const tableRows = rows.map(toTableCells);
   const tableColumns = [
-    {title:"Hostname",dataLabel:"host"},
+    { title: "Hostname", dataLabel: "host" },
     "Container ID",
     "Protocol",
     "Messages In",
@@ -55,7 +57,6 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
 
   return (
     <Table
-
       variant={TableVariant.compact}
       cells={tableColumns}
       rows={tableRows}
