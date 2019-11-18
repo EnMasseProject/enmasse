@@ -2,6 +2,19 @@
 
 @Library('amq-ci') _
 
+def NODE_LABEL = null
+
+node('master') {
+    stage('Set agent label') {
+        echo "Github PR comment: ${env.ghprbCommentBody}"
+        if (env.ghprbCommentBody.contains('ocp4')) {
+            NODE_LABEL = "enmasse-crc"
+        } else {
+            NODE_LABEL = params.AGENT_LABEL
+        }
+    }
+}
+
 pipeline {
 
     options {
@@ -13,12 +26,12 @@ pipeline {
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
         KUBERNETES_NAMESPACE = "enmasse-infra"
-        OPENSHIFT_PASSWD = "developer"
-        OPENSHIFT_USER = "developer"
+        OPENSHIFT_PASSWD = "admin"
+        OPENSHIFT_USER = "admin"
     }
     agent {
         node {
-            label "${params.AGENT_LABEL}"
+            label "${NODE_LABEL}"
         }
     }
     stages {
@@ -55,6 +68,11 @@ pipeline {
                     } else {
                         env.UPGRADE_FROM = params.UPGRADE_FROM
                     }
+                    if (env.ghprbCommentBody.contains('ocp4')) {
+                        env.OC_VERSION = "4"
+                    } else {
+                        env.OC_VERSION = "3.11"
+                    }
                     if (env.ghprbCommentBody.contains('test_only')) {
                         env.TEST_ONLY = true
                         env.DOCKER_REGISTRY = 'quay.io'
@@ -69,12 +87,13 @@ pipeline {
                     echo "TEST_CASE: ${env.TEST_CASE}"
                     echo "TEST_PROFILE: ${env.TEST_PROFILE}"
                     echo "UPGRADE_FROM: ${env.UPGRADE_FROM}"
+                    echo "OC_VERSION : ${env.OC_VERSION}"
                 }
             }
         }
         stage('Start or connect to openshift env') {
             steps {
-                timeout(time: 10, unit: 'MINUTES') {
+                timeout(time: 80, unit: 'MINUTES') {
                     dir('enmasse') {
                         script {
                             enmasse.prepareLogDirs()
