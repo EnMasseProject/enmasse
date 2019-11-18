@@ -3,10 +3,12 @@
 @Library('amq-ci') _
 
 def getAgentLabel() {
-    if (env.ghprbCommentBody.contains('ocp4')) {
-        return "enmasse-crc"
+    node('master') {
+        if (env.ghprbCommentBody.contains('ocp4')) {
+            return "enmasse-crc"
+        }
+        return params.AGENT_LABEL
     }
-    return params.AGENT_LABEL
 }
 
 pipeline {
