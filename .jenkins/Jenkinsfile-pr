@@ -2,14 +2,15 @@
 
 @Library('amq-ci') _
 
-def getAgentLabel() {
-    node('master') {
-        println('Get agent label method')
-        println("Comment body: ${env.ghprbCommentBody}")
+def NODE_LABEL = null
+
+node('master') {
+    stage('Set agent label'){
         if (env.ghprbCommentBody.contains('ocp4')) {
-            return "enmasse-crc"
+            NODE_LABEL = "enmasse-crc"
+        } else {
+            NODE_LABEL = params.AGENT_LABEL
         }
-        return params.AGENT_LABEL
     }
 }
 
@@ -26,11 +27,10 @@ pipeline {
         KUBERNETES_NAMESPACE = "enmasse-infra"
         OPENSHIFT_PASSWD = "developer"
         OPENSHIFT_USER = "developer"
-        AGENT = getAgentLabel()
     }
     agent {
         node {
-            label "${env.AGENT}"
+            label "${NODE_LABEL}"
         }
     }
     stages {
