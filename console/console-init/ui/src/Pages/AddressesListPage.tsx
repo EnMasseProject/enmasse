@@ -5,7 +5,9 @@ import {
   PageSectionVariants,
   Pagination,
   GridItem,
-  Grid
+  Grid,
+  Modal,
+  Button
 } from "@patternfly/react-core";
 import gql from "graphql-tag";
 import { useQuery } from "@apollo/react-hooks";
@@ -14,13 +16,14 @@ import { IAddress, AddressList } from "src/Components/AddressSpace/AddressList";
 import { EmptyAddress } from "src/Components/Common/EmptyAddress";
 import { AddressListFilterWithPagination } from "src/Components/AddressSpace/AddressListFilterWithPaginationHeader";
 import { StyleSheet } from "@patternfly/react-styles";
+import { EditAddress } from "./EditAddressPage";
 
 const styles = StyleSheet.create({
-  header_bottom_border : { 
-    borderBottom:"1px solid black"
+  header_bottom_border: {
+    borderBottom: "1px solid black"
   }
-})
-const retrun_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
+});
+const return_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
   name?: string,
   namespace?: string
 ) => {
@@ -74,7 +77,7 @@ interface IAddressResponse {
       };
       Spec: {
         Address: string;
-        Type:string;
+        Type: string;
         Plan: {
           Spec: {
             DisplayName: string;
@@ -82,9 +85,9 @@ interface IAddressResponse {
         };
       };
       Status: {
-        PlanStatus:{
-          Partitions:number
-        }
+        PlanStatus: {
+          Partitions: number;
+        };
         IsReady: boolean;
         Messages: Array<string>;
       };
@@ -107,48 +110,52 @@ export interface IMetrics {
 
 function AddressesListFunction() {
   const { name, namespace } = useParams();
-  useDocumentTitle("Addressses List");
+  useDocumentTitle("Address List");
   useA11yRouteChange();
-  const location = useLocation();
-  const history = useHistory();
-  const searchParams = new URLSearchParams(location.search);
-  const page = parseInt(searchParams.get("page") || "", 10) || 0;
-  const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+  const [
+    addressBeingEdited,
+    setAddressBeingEdited
+  ] = React.useState<IAddress | null>();
+  // const location = useLocation();
+  // const history = useHistory();
+  // const searchParams = new URLSearchParams(location.search);
+  // const page = parseInt(searchParams.get("page") || "", 10) || 0;
+  // const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
 
   const { loading, data } = useQuery<IAddressResponse>(
-    retrun_ALL_ADDRESS_FOR_ADDRESS_SPACE(name, namespace),
+    return_ALL_ADDRESS_FOR_ADDRESS_SPACE(name, namespace),
     { pollInterval: 5000 }
   );
 
-  const setSearchParam = React.useCallback(
-    (name: string, value: string) => {
-      searchParams.set(name, value.toString());
-    },
-    [searchParams]
-  );
+  // const setSearchParam = React.useCallback(
+  //   (name: string, value: string) => {
+  //     searchParams.set(name, value.toString());
+  //   },
+  //   [searchParams]
+  // );
 
-  const handlePageChange = React.useCallback(
-    (newPage: number) => {
-      setSearchParam("page", (newPage - 1).toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
+  // const handlePageChange = React.useCallback(
+  //   (newPage: number) => {
+  //     setSearchParam("page", (newPage - 1).toString());
+  //     history.push({
+  //       search: searchParams.toString()
+  //     });
+  //   },
+  //   [setSearchParam, history, searchParams]
+  // );
 
-  const handlePerPageChange = React.useCallback(
-    (newPerPage: number) => {
-      setSearchParam("page", "0");
-      setSearchParam("perPage", newPerPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
+  // const handlePerPageChange = React.useCallback(
+  //   (newPerPage: number) => {
+  //     setSearchParam("page", "0");
+  //     setSearchParam("perPage", newPerPage.toString());
+  //     history.push({
+  //       search: searchParams.toString()
+  //     });
+  //   },
+  //   [setSearchParam, history, searchParams]
+  // );
   if (loading) return <Loading />;
-    console.log(data);
+
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };
@@ -163,7 +170,7 @@ function AddressesListFunction() {
   //   addresses.Total=0;
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
     name: address.ObjectMeta.Name,
-    namespace:address.ObjectMeta.Namespace,
+    namespace: address.ObjectMeta.Namespace,
     type: address.Spec.Type,
     plan: address.Spec.Plan.Spec.DisplayName,
     messagesIn: getFilteredValue(address.Metrics, "enmasse_messages_in"),
@@ -177,7 +184,18 @@ function AddressesListFunction() {
     shards: address.Status.PlanStatus.Partitions,
     status: address.Status.IsReady ? "running" : "creating"
   }));
-  // console.log(addresses);
+
+  const handleDelete = (data: IAddress) => void 0;
+  const handleEdit = (data: IAddress) => {
+    if (!addressBeingEdited) {
+      setAddressBeingEdited(data);
+    }
+  };
+  const handleCancelEdit = () => setAddressBeingEdited(null);
+  const handleSaving = () => void 0;
+  const handleEditChange = (address: IAddress) =>
+    setAddressBeingEdited(address);
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
@@ -204,12 +222,8 @@ function AddressesListFunction() {
       ) : (
         <AddressList
           rows={addressesList}
-          onEdit={data => {
-            console.log("on Edit", data);
-          }}
-          onDelete={() => {
-            console.log("on Delete");
-          }}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
       )}
 
@@ -224,6 +238,28 @@ function AddressesListFunction() {
           widgetId="pagination-options-menu-top"
           onPerPageSelect={() => {}}
         />
+      )}
+      {addressBeingEdited && (
+        <Modal
+          title="Edit"
+          isSmall
+          isOpen={true}
+          onClose={handleCancelEdit}
+          actions={[
+            <Button key="confirm" variant="primary" onClick={handleSaving}>
+              Confirm
+            </Button>,
+            <Button key="cancel" variant="link" onClick={handleCancelEdit}>
+              Cancel
+            </Button>
+          ]}
+          isFooterLeftAligned
+        >
+          <EditAddress
+            address={addressBeingEdited}
+            onChange={handleEditChange}
+          />
+        </Modal>
       )}
     </PageSection>
   );
