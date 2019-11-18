@@ -5,7 +5,8 @@
 def NODE_LABEL = null
 
 node('master') {
-    stage('Set agent label'){
+    stage('Set agent label') {
+        echo "Github PR comment: ${env.ghprbCommentBody}"
         if (env.ghprbCommentBody.contains('ocp4')) {
             NODE_LABEL = "enmasse-crc"
         } else {
@@ -92,7 +93,7 @@ pipeline {
         }
         stage('Start or connect to openshift env') {
             steps {
-                timeout(time: 10, unit: 'MINUTES') {
+                timeout(time: 80, unit: 'MINUTES') {
                     dir('enmasse') {
                         script {
                             enmasse.prepareLogDirs()
