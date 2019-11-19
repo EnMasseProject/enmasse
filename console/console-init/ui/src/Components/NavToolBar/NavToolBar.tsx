@@ -5,15 +5,14 @@ import {
   DropdownItem,
   DropdownPosition
 } from "@patternfly/react-core";
-import { CogIcon } from "@patternfly/react-icons";
-import "./NavToolBar.css";
+import { QuestionCircleIcon } from "@patternfly/react-icons";
 
 const NavToolBar: React.FC = () => {
   const [isOpen, onToggle] = useState(false);
 
   const dropdownItems = [
-    <DropdownItem key="help">Help</DropdownItem>,
-    <DropdownItem key="About">About</DropdownItem>
+    <DropdownItem key="help" style={{paddingRight:100,paddingLeft:20, paddingTop:20,paddingBottom:10}}>Help</DropdownItem>,
+    <DropdownItem key="About" style={{paddingRight:100,paddingLeft:20, paddingTop:10,paddingBottom:20}}>About</DropdownItem>
   ];
   return (
     <React.Fragment>
@@ -25,7 +24,7 @@ const NavToolBar: React.FC = () => {
             onToggle={onToggle}
             aria-label="Applications"
           >
-            <CogIcon />
+            <QuestionCircleIcon />
           </DropdownToggle>
         }
         isOpen={isOpen}

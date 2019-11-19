@@ -9,9 +9,16 @@ import {
   Button,
   ButtonVariant,
   Dropdown,
-  KebabToggle
+  KebabToggle,
+  Modal
 } from "@patternfly/react-core";
-import { AddressSpaceList } from "src/Components/AddressSpaceList/AddressSpaceList";
+// import { AddressSpaceList } from "src/Components/AddressSpaceList/AddressSpaceList";
+import {
+    AddressSpaceList,
+  IAddressSpace
+} from "src/Components/AddressSpaceList/AddressSpaceList";
+import { EmptyAddressSpace } from "src/Components/Common/EmptyAddressSpace";
+import { DeletePrompt } from "src/Components/Common/DeletePrompt";
 
 const ALL_ADDRESS_SPACES = gql`
   query all_address_spaces {
@@ -66,13 +73,33 @@ interface IAddressSpacesResponse {
 function AddressSpaceListFunc() {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
+
+  const [
+    addressSpaceBeingEdited,
+    setAddressSpaceBeingEdited
+  ] = React.useState<IAddressSpace | null>();
+
+  const [
+    addressSpaceBeingDeleted,
+    setAddressSpaceBeingDeleted
+  ] = React.useState<IAddressSpace | null>();
+
+  const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
+  const handleSaving = () => void 0;
+  const handleEditChange = (addressSpace: IAddressSpace) =>
+    setAddressSpaceBeingEdited(addressSpace);
+
+  const handleCancelDelete = () => setAddressSpaceBeingDeleted(null);
+  const handleDelete = () => void 0;
+  const handleDeleteChange = (addressSpace: IAddressSpace) =>
+    setAddressSpaceBeingDeleted(addressSpace);
   // const location = useLocation();
   // const history = useHistory();
   // const searchParams = new URLSearchParams(location.search);
   // const page = parseInt(searchParams.get("page") || "", 10) || 0;
   // const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
 
-  const { loading, data } = useQuery<IAddressSpacesResponse>(
+  const { loading, error, data } = useQuery<IAddressSpacesResponse>(
     ALL_ADDRESS_SPACES,
     { pollInterval: 2000 }
   );
@@ -105,7 +132,10 @@ function AddressSpaceListFunc() {
   // );
 
   if (loading) return <Loading />;
-
+  if (error) {
+    console.log(error);
+    return <Loading />;
+  }
   console.log(data);
 
   const { addressSpaces } = data || {
@@ -119,6 +149,7 @@ function AddressSpaceListFunc() {
     displayName: addSpace.Spec.Plan.Spec.DisplayName,
     isReady: addSpace.Status.IsReady
   }));
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       {/* TODO: Replace with component*/}
@@ -132,15 +163,40 @@ function AddressSpaceListFunc() {
         dropdownItems={[]}
       />
       {/*END*/}
-      <AddressSpaceList
-        rows={addressSpacesList}
-        onEdit={() => {
-          console.log("on Edit");
-        }}
-        onDelete={() => {
-          console.log("on Delete");
-        }}
-      />
+      {addressSpaces.Total > 0 ? (
+        <AddressSpaceList
+          rows={addressSpacesList}
+          onEdit={handleEditChange}
+          onDelete={handleDeleteChange}
+        />
+      ) : (
+        <EmptyAddressSpace />
+      )}
+      {addressSpaceBeingEdited && (
+        <Modal
+          title="Modal Header"
+          isOpen={true}
+          onClose={handleCancelEdit}
+          actions={[
+            <Button key="confirm" variant="primary" onClick={handleSaving}>
+              Confirm
+            </Button>,
+            <Button key="cancel" variant="link" onClick={handleCancelEdit}>
+              Cancel
+            </Button>
+          ]}
+          isFooterLeftAligned={true}
+          children />
+      )}
+      {addressSpaceBeingDeleted && (
+        <DeletePrompt
+          detail={`Are you sure to delete ${addressSpaceBeingDeleted.name} ?`}
+          name={addressSpaceBeingDeleted.name}
+          header="Delete the Address Space"
+          handleCancelDelte={handleCancelDelete}
+          handleConfirmDelete={handleDelete}
+        />
+      )}
     </PageSection>
   );
 }

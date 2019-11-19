@@ -5,7 +5,7 @@ import {
   NavVariants,
   NavItem
 } from "@patternfly/react-core";
-import { NavLink, useParams } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 export interface AddressSpaceNavigationProps {
   activeItem: string;

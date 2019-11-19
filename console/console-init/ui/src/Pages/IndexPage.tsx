@@ -2,10 +2,6 @@ import React from "react";
 import { useA11yRouteChange, useDocumentTitle } from "use-patternfly";
 import { PageSection, Button, Modal } from "@patternfly/react-core";
 import { AddressList, IAddress } from "../Components/AddressSpace/AddressList";
-import {
-  ConnectionList,
-  IConnection
-} from "../Components/AddressSpace/ConnectionList";
 import { EditAddress } from "../Pages/EditAddressPage";
 
 const addressRows: IAddress[] = [
@@ -20,6 +16,7 @@ const addressRows: IAddress[] = [
     senders: 123,
     receivers: 123,
     shards: 123,
+    isReady:true,
     status: 'running',
   },
   {
@@ -33,6 +30,7 @@ const addressRows: IAddress[] = [
     senders: 123,
     receivers: 123,
     shards: 123,
+    isReady:true,
     status: 'creating',
   },
   {
@@ -46,6 +44,7 @@ const addressRows: IAddress[] = [
     senders: 123,
     receivers: 123,
     shards: 123,
+    isReady:true,
     status: 'deleting',
   },
 ];

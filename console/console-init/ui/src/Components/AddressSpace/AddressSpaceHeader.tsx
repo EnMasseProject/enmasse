@@ -15,23 +15,24 @@ import {
   Badge
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import {
-  AddressSpaceType
-} from "../Common/AddressSpaceListFormatter";
+import { AddressSpaceType } from "../Common/AddressSpaceListFormatter";
+import { FormatDistance } from "use-patternfly";
 
 const styles = StyleSheet.create({
   flex_right_border: {
     paddingRight: "1em",
-    borderRight: "0.1em solid",
+    borderRight: "0.05em solid",
     borderRightColor: "lightgrey"
   },
   address_space_icon_margin: {
     backgroundColor: "#EC7A08",
-    marginTop: 30,
-    marginLeft: 10,
     fontSize: 25
   },
-  kebab_toggle_margin:{
+  address_icon_align: {
+    paddingTop: 24,
+    paddingLeft: 18
+  },
+  kebab_toggle_margin: {
     marginTop: 30,
     marginLeft: 10,
     fontSize: 15
@@ -59,7 +60,9 @@ export const AddressSpaceHeader: React.FunctionComponent<
     <DropdownItem
       key="download"
       aria-label="download"
-      onClick={() => onDownload(name)}>
+      onClick={() => onDownload(name)}
+      style={{paddingRight:50}}
+      >
       Download Certificate
     </DropdownItem>,
     <DropdownItem
@@ -72,7 +75,7 @@ export const AddressSpaceHeader: React.FunctionComponent<
   return (
     <Card>
       <Split>
-        <SplitItem>
+        <SplitItem className={css(styles.address_icon_align)}>
           <Badge className={css(styles.address_space_icon_margin)}>AS</Badge>
         </SplitItem>
         <SplitItem>
@@ -96,7 +99,10 @@ export const AddressSpaceHeader: React.FunctionComponent<
                 </b>
               </FlexItem>
               <FlexItem>
-                Created <b>{createdOn}</b>
+                Created{" "}
+                <b>
+                  <FormatDistance date={createdOn} />
+                </b>
               </FlexItem>
             </Flex>
           </CardBody>

@@ -8,7 +8,7 @@ import {
   Loading
 } from "use-patternfly";
 import { PageSection, PageSectionVariants } from "@patternfly/react-core";
-import { Redirect, BrowserRouter, useParams } from "react-router-dom";
+import { Redirect, useParams } from "react-router-dom";
 import {
   IAddressSpaceHeaderProps,
   AddressSpaceHeader
@@ -59,7 +59,7 @@ const return_ADDRESS_SPACE_DETAIL = (name?: string, namespace?: string) => {
             Plan {
               Spec {
                 DisplayName
-              }
+              }   
             }
           }
           Status {
@@ -74,17 +74,28 @@ const return_ADDRESS_SPACE_DETAIL = (name?: string, namespace?: string) => {
 
 export default function AddressSpaceDetailPage() {
   const { name, namespace, subList } = useParams();
+
   useA11yRouteChange();
   useDocumentTitle("Address Space Detail");
-  const { loading, data } = useQuery<IAddressSpaceDetailResponse>(
-    return_ADDRESS_SPACE_DETAIL(name, namespace)
+
+  const { loading, error, data } = useQuery<IAddressSpaceDetailResponse>(
+    return_ADDRESS_SPACE_DETAIL(name, namespace),
+    { pollInterval: 2000 }
   );
 
   if (loading) return <Loading />;
 
+  if (error) {
+    console.log(error);
+  }
+
   const { addressSpaces } = data || {
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
+
+  if (!addressSpaces || addressSpaces.AddressSpaces.length <= 0) {
+    return <Loading />;
+  }
   const addressSpaceDetails: IAddressSpaceHeaderProps = {
     name: addressSpaces.AddressSpaces[0].ObjectMeta.Name,
     namespace: addressSpaces.AddressSpaces[0].ObjectMeta.Namespace,
@@ -97,17 +108,14 @@ export default function AddressSpaceDetailPage() {
       console.log(data);
     }
   };
-
   return (
     <>
       <PageSection
         variant={PageSectionVariants.light}
-        style={{ paddingBottom: 0 }}
-      >
+        style={{ paddingBottom: 0 }}>
         <AddressSpaceHeader {...addressSpaceDetails} />
         <AddressSpaceNavigation
-          activeItem={subList || "addresses"}
-        ></AddressSpaceNavigation>
+          activeItem={subList || "addresses"}></AddressSpaceNavigation>
       </PageSection>
       <PageSection>
         <SwitchWith404>

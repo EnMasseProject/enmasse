@@ -5,12 +5,11 @@ import {
   TableHeader,
   TableBody,
   IRowData,
-  sortable,
-  RowWrapper
+  sortable
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
-import { TypePlan } from "../TypePlan";
-import { AddressListFilterWithPagination } from "./AddressListFilterWithPaginationHeader";
+import { TypePlan } from "../Common/TypePlan";
+import {Messages} from "../Common/Messages";
 
 export interface IAddress {
   name: string;
@@ -23,7 +22,9 @@ export interface IAddress {
   senders: number;
   receivers: number;
   shards: number;
-  status: "creating" | "deleting" | "running";
+  isReady: boolean;
+  errorMessages?: string[];
+  status?: "creating" | "deleting" | "running";
 }
 
 interface IAddressListProps {
@@ -40,66 +41,84 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   //TODO: Add loading icon based on status
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;
-    const status = originalData.status;
-    switch (status) {
-      case "creating":
-      case "deleting":
-        return [];
-      default:
-        return [
-          {
-            title: "Edit",
-            onClick: () => onEdit(originalData)
-          },
-          {
-            title: "Delete",
-            onClick: () => onDelete(originalData)
-          }
-        ];
-    }
+    return [
+      {
+        title: "Edit",
+        onClick: () => onEdit(originalData)
+      },
+      {
+        title: "Delete",
+        onClick: () => onDelete(originalData)
+      }
+    ];
   };
 
   //TODO: Display error after the phase variable is exposed from backend.
   const toTableCells = (row: IAddress) => {
-    const tableRow: IRowData = {
-      cells: [
-        { title: <Link to={`addresses/${row.name}`}>{row.name}</Link> },
-        { title: <TypePlan type={row.type} plan={row.plan} /> },
-        {
-          title: row.messagesIn
-        },
-        {
-          title: row.messagesOut
-        },
-        row.storedMessages,
-        row.senders,
-        row.receivers,
-        row.shards
-      ],
-      originalData: row
-    };
-    return tableRow;
+    if (row.isReady) {
+      const tableRow: IRowData = {
+        cells: [
+          { title: <Link to={`address/${row.name}`}>{row.name}</Link> },
+          { title: <TypePlan type={row.type} plan={row.plan} /> },
+          {
+            title: (
+              <Messages
+                count={row.messagesIn}
+                column="MessagesIn"
+                isReady={row.isReady}
+              />
+            )
+          },
+          {
+            title: (
+              <Messages
+                count={row.messagesOut}
+                column="MessagesOut"
+                isReady={row.isReady}
+              />
+            )
+          },
+          row.storedMessages,
+          row.senders,
+          row.receivers,
+          row.shards
+        ],
+        originalData: row
+      };
+      return tableRow;
+    } else {
+      const tableRow: IRowData = {
+        cells: [
+          { title: <Link to={`address/${row.name}`}>{row.name}</Link> },
+          { title: <TypePlan type={row.type} plan={row.plan} /> },
+          {
+            title: row.errorMessages ? row.errorMessages[0] : "",
+            props: { colSpan: 6 }
+          }
+        ]
+      };
+      return tableRow;
+    }
   };
   const tableRows = rows.map(toTableCells);
   const tableColumns = [
     "Name",
     "Type/Plan",
-    { title: "Messages In", transforms: [sortable] },
-    { title: "Messages Out", transforms: [sortable] },
-    { title: "Stored Messages", transforms: [sortable] },
+    { title: "Messages In", transforms:[sortable] },
+    { title: "Messages Out", transforms:[sortable]  },
+    { title: "Stored Messages", transforms:[sortable]  },
     "Senders",
     "Receivers",
     "Shards"
   ];
-  const sortBy = {};
+
   return (
     <Table
       variant={TableVariant.compact}
       cells={tableColumns}
       rows={tableRows}
       actionResolver={actionResolver}
-      aria-label="Address List"
-    >
+      aria-label="Address List">
       <TableHeader />
       <TableBody />
     </Table>

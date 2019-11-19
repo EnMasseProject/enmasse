@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Flex, FlexItem } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { classNames } from "@patternfly/react-table";
 
 const styles = StyleSheet.create({
   flex_right_boder_with_padding: {

@@ -22,6 +22,7 @@ const rows: IAddress[] = [
     senders: 123,
     receivers: 123,
     shards: 123,
+    isReady:true,
     status: "running"
   },
   {
@@ -35,6 +36,7 @@ const rows: IAddress[] = [
     senders: 123,
     receivers: 123,
     shards: 123,
+    isReady:true,
     status: "creating"
   },
   {
@@ -48,6 +50,7 @@ const rows: IAddress[] = [
     senders: 123,
     receivers: 123,
     shards: 123,
+    isReady:true,
     status: "deleting"
   }
 ];

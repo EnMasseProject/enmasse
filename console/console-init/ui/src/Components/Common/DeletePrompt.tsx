@@ -5,35 +5,31 @@ interface IDeleteProps {
   header: string;
   detail: string;
   name: string;
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  handleCancelDelte: () => void;
+  handleConfirmDelete: () => void;
 }
 export const DeletePrompt: React.FunctionComponent<IDeleteProps> = ({
   header,
   detail,
   name,
-  isOpen,
-  setIsOpen
+  handleCancelDelte,
+  handleConfirmDelete
 }) => {
-  const handleModalToggle = () => {
-    setIsOpen(!isOpen);
-  };
   return (
     <Modal
       isSmall={true}
       title={header}
-      isOpen={isOpen}
-      onClose={handleModalToggle}
+      isOpen={true}
+      onClose={handleCancelDelte}
       actions={[
-        <Button key="Delete" variant="primary" onClick={handleModalToggle}>
+        <Button key="Delete" variant="primary" onClick={handleConfirmDelete}>
           Confirm
         </Button>,
-        <Button key="cancel" variant="link" onClick={handleModalToggle}>
+        <Button key="cancel" variant="link" onClick={handleCancelDelte}>
           Cancel
         </Button>
       ]}
-      isFooterLeftAligned={true}
-    >
+      isFooterLeftAligned={true}>
       <b>{name}</b>
       <br />
       {detail}
