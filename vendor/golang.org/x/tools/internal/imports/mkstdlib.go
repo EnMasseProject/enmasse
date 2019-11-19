@@ -3,7 +3,7 @@
 // mkstdlib generates the zstdlib.go file, containing the Go standard
 // library API symbols. It's baked into the binary to avoid scanning
 // GOPATH in the common case.
-package main
+package imports
 
 import (
 	"bufio"
@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strings"
 )
 
 func mustOpen(name string) io.Reader {
@@ -59,7 +60,6 @@ func main() {
 		mustOpen(api("go1.10.txt")),
 		mustOpen(api("go1.11.txt")),
 		mustOpen(api("go1.12.txt")),
-		mustOpen(api("go1.13.txt")),
 
 		// The API of the syscall/js package needs to be computed explicitly,
 		// because it's not included in the GOROOT/api/go1.*.txt files at this time.
@@ -74,6 +74,10 @@ func main() {
 
 	for sc.Scan() {
 		l := sc.Text()
+		has := func(v string) bool { return strings.Contains(l, v) }
+		if has("struct, ") || has("interface, ") || has(", method (") {
+			continue
+		}
 		if m := sym.FindStringSubmatch(l); m != nil {
 			path, sym := m[1], m[2]
 
