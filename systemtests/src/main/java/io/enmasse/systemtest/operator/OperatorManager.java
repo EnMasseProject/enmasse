@@ -88,7 +88,7 @@ public class OperatorManager {
         waitUntilOperatorReadyOLM();
     }
 
-    public void deleteEnmasseOlm() {
+    public void deleteEnmasseOlm() throws Exception {
         LOGGER.info("***********************************************************");
         LOGGER.info("                  Enmasse OLM delete");
         LOGGER.info("***********************************************************");
@@ -174,7 +174,7 @@ public class OperatorManager {
         KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
     }
 
-    public void removeOlm() {
+    public void removeOlm() throws Exception {
         LOGGER.info("Delete enmasse OLM from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.runOnCluster("delete", "subscriptions", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
         KubeCMDClient.runOnCluster("delete", "catalogsources", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
@@ -189,6 +189,7 @@ public class OperatorManager {
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "oauthclients", "-l", "app=enmasse");
+        TestUtils.waitForNReplicas(0, false, Collections.singletonMap("app", "enmasse"), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
     }
 
     public void removeExampleRoles() {
