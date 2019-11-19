@@ -127,7 +127,7 @@ public class KubernetesHelper implements Kubernetes {
         // scaling of the deployment to zero and the deletion of the replicaset.  If the replicaset is deleted first
         // the pods are orphaned.
         final Set<Deployment> deployments = new HashSet<>(client.apps().deployments().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).list().getItems());
-        deployments.forEach(d -> scaleDeployment(d.getMetadata().getName(), 0));
+        deployments.forEach(d -> scaleDeployment(d, 0));
 
         long timeout = System.currentTimeMillis() + 60000;
         while(!deployments.isEmpty() && timeout > System.currentTimeMillis()) {
@@ -150,8 +150,8 @@ public class KubernetesHelper implements Kubernetes {
         }
 
         if (!deployments.isEmpty()) {
-            final List<Object> collect = deployments.stream().map(d -> d.getMetadata().getName()).collect(Collectors.toList());
-            log.warn("Could not delete all not-in-use deployments at this time as pods did not scale to zero within timeout: Deployments: {}", deployments);
+            final List<Object> names = deployments.stream().map(d -> d.getMetadata().getName()).collect(Collectors.toList());
+            log.warn("Could not delete all not-in-use deployments at this time as pods did not scale to zero within timeout: Deployments: {}", names);
         }
 
         client.services().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
@@ -217,8 +217,8 @@ public class KubernetesHelper implements Kubernetes {
         return InfraConfigs.parseCurrentInfraConfig(messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
 
-    private void scaleDeployment(String name, int numReplicas) {
-        client.apps().deployments().withName(name).scale(numReplicas);
+    private void scaleDeployment(Deployment deployment, int numReplicas) {
+        client.apps().deployments().withName(deployment.getMetadata().getName()).scale(numReplicas);
     }
 
 }
