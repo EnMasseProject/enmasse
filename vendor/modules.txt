@@ -178,7 +178,7 @@ gopkg.in/fsnotify.v1
 gopkg.in/inf.v0
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
-# k8s.io/api v0.0.0 => k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b
+# k8s.io/api v0.0.0 => k8s.io/api v0.0.0-20191004102349-159aefb8556b
 k8s.io/api/core/v1
 k8s.io/api/apps/v1
 k8s.io/api/admission/v1beta1
@@ -217,7 +217,7 @@ k8s.io/api/networking/v1beta1
 k8s.io/api/node/v1alpha1
 k8s.io/api/node/v1beta1
 k8s.io/api/scheduling/v1
-# k8s.io/apimachinery v0.0.0 => k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
+# k8s.io/apimachinery v0.0.0 => k8s.io/apimachinery v0.0.0-20191004074956-c5d2f014d689
 k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/apis/meta/v1
 k8s.io/apimachinery/pkg/util/runtime
@@ -261,7 +261,7 @@ k8s.io/apimachinery/pkg/apis/meta/internalversion
 k8s.io/apimachinery/pkg/util/framer
 k8s.io/apimachinery/pkg/util/mergepatch
 k8s.io/apimachinery/third_party/forked/golang/json
-# k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible => k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
+# k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible => k8s.io/client-go v11.0.1-0.20191029005444-8e4128053008+incompatible
 k8s.io/client-go/kubernetes/scheme
 k8s.io/client-go/plugin/pkg/client/auth/gcp
 k8s.io/client-go/kubernetes
@@ -368,7 +368,7 @@ k8s.io/gengo/parser
 k8s.io/gengo/examples/set-gen/sets
 # k8s.io/klog v0.3.3
 k8s.io/klog
-# k8s.io/kube-aggregator v0.0.0-20190404125450-f5e124c822d6 => k8s.io/kube-aggregator v0.0.0-20190409022021-00b8e31abe9d
+# k8s.io/kube-aggregator v0.0.0-20190404125450-f5e124c822d6 => k8s.io/kube-aggregator v0.0.0-20191114014954-0e3176a6f3ed
 k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset
 k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/typed/apiregistration/v1
 k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/typed/apiregistration/v1beta1
