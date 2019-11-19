@@ -18,7 +18,6 @@ import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -139,7 +138,7 @@ public class SharedResourceManager extends ResourceManager {
             if (environment.skipCleanup()) {
                 LOGGER.warn("Remove address spaces when test run finished - SKIPPED!");
             } else {
-                GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes, new File(environment.testLogDir()));
+                GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes, environment.testLogDir());
                 try {
                     AddressSpaceUtils.deleteAddressSpaceAndWait(sharedAddressSpace, logCollector);
                     sharedAddressSpace = null;

@@ -58,11 +58,11 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
     public void setUpClientBase(TestInfo info) {
         clients = new ArrayList<>();
         String clientFolder = "clients_tests";
-        logPath = Paths.get(
-                environment.testLogDir(),
-                clientFolder,
-                info.getTestClass().get().getName(),
-                info.getTestMethod().get().getName());
+        logPath = environment.testLogDir().resolve(
+                Paths.get(
+                        clientFolder,
+                        info.getTestClass().get().getName(),
+                        info.getTestMethod().get().getName()));
 
         arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());

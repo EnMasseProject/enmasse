@@ -12,13 +12,14 @@ import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
+
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,14 +35,14 @@ public class GlobalLogCollector {
     private final static Logger log = CustomLogger.getLogger();
     private final Map<String, LogCollector> collectorMap = new HashMap<>();
     private final Kubernetes kubernetes;
-    private final File logDir;
+    private final Path logDir;
     private final String namespace;
 
-    public GlobalLogCollector(Kubernetes kubernetes, File logDir) {
+    public GlobalLogCollector(Kubernetes kubernetes, Path logDir) {
         this(kubernetes, logDir, kubernetes.getInfraNamespace());
     }
 
-    public GlobalLogCollector(Kubernetes kubernetes, File logDir, String namespace) {
+    public GlobalLogCollector(Kubernetes kubernetes, Path logDir, String namespace) {
         this.kubernetes = kubernetes;
         this.logDir = logDir;
         this.namespace = namespace;
@@ -50,7 +51,7 @@ public class GlobalLogCollector {
 
     public synchronized void startCollecting(AddressSpace addressSpace) throws Exception {
         log.info("Start collecting logs for address space {}", addressSpace.getMetadata().getName());
-        collectorMap.put(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), new LogCollector(kubernetes, new File(logDir, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)), AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)));
+        collectorMap.put(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), new LogCollector(kubernetes, logDir.resolve(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)), AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)));
     }
 
     public synchronized void stopCollecting(String namespace) throws Exception {
@@ -153,6 +154,11 @@ public class GlobalLogCollector {
         }
     }
 
+    public void collectAllAdapterQdrProxyState() {
+        collectHttpAdapterQdrProxyState();
+        collectMqttAdapterQdrProxyState();
+    }
+
     public void collectHttpAdapterQdrProxyState() {
         log.info("Collecting qdr-proxy router state in namespace {}", namespace);
         collectRouterState("httpAdapterQdrProxyState", System.currentTimeMillis(),
@@ -172,7 +178,7 @@ public class GlobalLogCollector {
     public void collectRouterState(String operation) {
         log.info("Collecting router state in namespace {}", namespace);
         collectRouterState(operation, System.currentTimeMillis(),
-                kubernetes.listPods(Collections.singletonMap("capability", "router")).stream(),
+                kubernetes.listPods(Map.of("capability", "router")).stream(),
                 Optional.of("router"),
                 this::enmasseRouterCmd);
     }
@@ -181,14 +187,14 @@ public class GlobalLogCollector {
                                     BiFunction<String, String[], String[]> saslMechanismArgsCmdProvider) {
         podsStream.filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .forEach(pod -> {
-                    collectRouterInfo(pod, container, "." + operation + ".autolinks." + timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=autoLink"}));
-                    collectRouterInfo(pod, container, "." + operation + ".links." + timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=link"}));
-                    collectRouterInfo(pod, container, "." + operation + ".connections." + timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=connection"}));
-                    collectRouterInfo(pod, container, "." + operation + ".qdstat_a." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-a"}));
-                    collectRouterInfo(pod, container, "." + operation + ".qdstat_l." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-l"}));
-                    collectRouterInfo(pod, container, "." + operation + ".qdstat_n." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-n"}));
-                    collectRouterInfo(pod, container, "." + operation + ".qdstat_c." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-c"}));
-                    collectRouterInfo(pod, container, "." + operation + ".qdstat_linkroutes." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"--linkroutes"}));
+                    collectRouterInfo(pod, container, "." + operation + ".autolinks." + timestamp + ".log", saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=autoLink"}));
+                    collectRouterInfo(pod, container, "." + operation + ".links." + timestamp + ".log", saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=link"}));
+                    collectRouterInfo(pod, container, "." + operation + ".connections." + timestamp + ".log", saslMechanismArgsCmdProvider.apply("qdmanage", new String[]{"QUERY", "--type=connection"}));
+                    collectRouterInfo(pod, container, "." + operation + ".qdstat_a." + timestamp + ".log", saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-a"}));
+                    collectRouterInfo(pod, container, "." + operation + ".qdstat_l." + timestamp + ".log", saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-l"}));
+                    collectRouterInfo(pod, container, "." + operation + ".qdstat_n." + timestamp + ".log", saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-n"}));
+                    collectRouterInfo(pod, container, "." + operation + ".qdstat_c." + timestamp + ".log", saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"-c"}));
+                    collectRouterInfo(pod, container, "." + operation + ".qdstat_linkroutes." + timestamp + ".log", saslMechanismArgsCmdProvider.apply("qdstat", new String[]{"--linkroutes"}));
                 });
     }
 
@@ -220,11 +226,7 @@ public class GlobalLogCollector {
         try {
             Path routerAutoLinks = resolveLogFile(pod.getMetadata().getName() + filesuffix);
             log.info("router info '{}' pod will be archived with path: '{}'", pod.getMetadata().getName(), routerAutoLinks);
-            if (!Files.exists(routerAutoLinks)) {
-                try (BufferedWriter bf = Files.newBufferedWriter(routerAutoLinks)) {
-                    bf.write(output);
-                }
-            }
+            Files.writeString(routerAutoLinks, output, UTF_8, CREATE_NEW);
         } catch (IOException e) {
             log.warn("Error collecting router state", e);
         }
@@ -258,7 +260,7 @@ public class GlobalLogCollector {
      */
     private Path resolveLogFile(final String other) throws IOException {
         return Files
-                .createDirectories(Paths.get(logDir.getPath(), namespace))
+                .createDirectories(logDir.resolve(namespace))
                 .resolve(other);
     }
 

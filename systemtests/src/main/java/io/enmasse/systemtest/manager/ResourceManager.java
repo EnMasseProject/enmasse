@@ -34,7 +34,6 @@ import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -46,8 +45,7 @@ import static java.time.Duration.ofMinutes;
 public abstract class ResourceManager {
     protected static final Environment environment = Environment.getInstance();
     protected static final Kubernetes kubernetes = Kubernetes.getInstance();
-    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
-            new File(environment.testLogDir()));
+    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes, environment.testLogDir());
     private static Logger LOGGER = CustomLogger.getLogger();
 
     protected String defaultAddSpaceIdentifier;

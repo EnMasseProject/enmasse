@@ -285,12 +285,12 @@ public class SeleniumProvider {
         waitUntilItem(timeInSeconds, item, false);
     }
 
-    private Path getWebConsolePath(String target, String className, String methodName) {
-        return Paths.get(
-                target,
-                webconsoleFolder,
-                className,
-                methodName);
+    private Path getWebConsolePath(Path target, String className, String methodName) {
+        return target.resolve(
+                Paths.get(
+                        webconsoleFolder,
+                        className,
+                        methodName));
     }
 
     private <T extends WebItem> T waitUntilItem(int timeInSeconds, Supplier<T> item, boolean present) throws Exception {

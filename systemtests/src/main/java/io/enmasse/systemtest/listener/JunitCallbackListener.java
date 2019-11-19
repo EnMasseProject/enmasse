@@ -9,13 +9,13 @@ import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.IsolatedIoTManager;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -213,6 +213,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(kube.getInfraNamespace()).getStdOut());
             if (testInfo.isTestIoT()) {
                 Files.writeString(path.resolve("iotconfig.yaml"), KubeCMDClient.getIoTConfig(kube.getInfraNamespace()).getStdOut());
+                GlobalLogCollector collectors = new GlobalLogCollector(kube, path, kube.getInfraNamespace());
+                collectors.collectAllAdapterQdrProxyState();
             }
             LOGGER.info("Pod logs and describe successfully stored into {}", path);
         } catch (Exception ex) {
@@ -222,10 +224,10 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     public static Path getPath(Method testMethod, Class<?> testClass) {
-        Path path = Paths.get(
-                Environment.getInstance().testLogDir(),
-                "failed_test_logs",
-                testClass.getName());
+        Path path = Environment.getInstance().testLogDir().resolve(
+                Paths.get(
+                        "failed_test_logs",
+                        testClass.getName()));
         if (testMethod != null) {
             path = path.resolve(testMethod.getName());
         }

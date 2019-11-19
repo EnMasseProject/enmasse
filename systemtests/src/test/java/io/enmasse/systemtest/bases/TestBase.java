@@ -55,12 +55,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 
 import javax.jms.DeliveryMode;
-import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.naming.NamingException;
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -92,8 +89,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public abstract class TestBase implements ITestBase, ITestSeparator {
     protected static final UserCredentials clusterUser = new UserCredentials(KubeCMDClient.getOCUser());
     protected static final Environment environment = Environment.getInstance();
-    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
-            new File(environment.testLogDir()));
+    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes, environment.testLogDir());
     protected ResourceManager resourcesManager;
     protected UserCredentials defaultCredentials = null;
     protected UserCredentials managementCredentials = null;
