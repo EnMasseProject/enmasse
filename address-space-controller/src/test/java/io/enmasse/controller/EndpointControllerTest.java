@@ -46,7 +46,7 @@ public class EndpointControllerTest extends JULInitializingTest {
     }
 
     @Test
-    public void testRoutesNotCreated() {
+    public void testRoutesNotCreated() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
 
                 .withNewMetadata()
@@ -86,7 +86,7 @@ public class EndpointControllerTest extends JULInitializingTest {
 
         EndpointController controller = new EndpointController(client, false, false);
 
-        AddressSpace newspace = controller.reconcileActive(addressSpace);
+        AddressSpace newspace = controller.reconcileAnyState(addressSpace);
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));
@@ -97,7 +97,7 @@ public class EndpointControllerTest extends JULInitializingTest {
     }
 
     @Test
-    public void testExternalLoadBalancerCreated() {
+    public void testExternalLoadBalancerCreated() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
 
                 .withNewMetadata()
@@ -142,7 +142,7 @@ public class EndpointControllerTest extends JULInitializingTest {
 
         EndpointController controller = new EndpointController(client, true, false);
 
-        AddressSpace newspace = controller.reconcileActive(addressSpace);
+        AddressSpace newspace = controller.reconcileAnyState(addressSpace);
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));
@@ -151,7 +151,7 @@ public class EndpointControllerTest extends JULInitializingTest {
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getExternalPorts().size(), is(1));
     }
 
-    public void testExternalRouteCreated() {
+    public void testExternalRouteCreated() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
 
                 .withNewMetadata()
@@ -198,7 +198,7 @@ public class EndpointControllerTest extends JULInitializingTest {
 
         EndpointController controller = new EndpointController(client, true, true);
 
-        AddressSpace newspace = controller.reconcileActive(addressSpace);
+        AddressSpace newspace = controller.reconcileAnyState(addressSpace);
 
         assertThat(newspace.getStatus().getEndpointStatuses().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getName(), is("myendpoint"));

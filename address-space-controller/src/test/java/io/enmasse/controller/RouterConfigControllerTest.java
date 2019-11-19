@@ -105,7 +105,7 @@ public class RouterConfigControllerTest {
                 .build();
         InfraConfigs.setCurrentInfraConfig(addressSpace, appliedConfig);
 
-        configController.reconcileActive(addressSpace);
+        configController.reconcileAnyState(addressSpace);
 
         ConfigMap routerConfigMap = client.configMaps().inNamespace("test").withName("qdrouterd-config.1234").get();
         assertNotNull(routerConfigMap);
@@ -152,7 +152,7 @@ public class RouterConfigControllerTest {
         appliedConfig.getSpec().getRouter().getPolicy().setMaxConnectionsPerUser(300);
         InfraConfigs.setCurrentInfraConfig(addressSpace, appliedConfig);
 
-        configController.reconcileActive(addressSpace);
+        configController.reconcileAnyState(addressSpace);
 
         routerConfigMap = client.configMaps().inNamespace("test").withName("qdrouterd-config.1234").get();
         assertNotNull(routerConfigMap);
@@ -264,7 +264,7 @@ public class RouterConfigControllerTest {
                 .done();
                 */
 
-        configController.reconcileActive(addressSpace);
+        configController.reconcileAnyState(addressSpace);
 
         AddressSpaceStatusConnector status = addressSpace.getStatus().getConnectors().get(0);
         assertNotNull(status);
@@ -298,7 +298,7 @@ public class RouterConfigControllerTest {
                 .addToData("ca.crt", "ca")
                 .done();
 
-        configController.reconcileActive(addressSpace);
+        configController.reconcileAnyState(addressSpace);
 
 
         routerConfigMap = client.configMaps().inNamespace("test").withName("qdrouterd-config.1234").get();
