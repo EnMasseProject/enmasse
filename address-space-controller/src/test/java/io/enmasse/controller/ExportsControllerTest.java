@@ -44,13 +44,13 @@ public class ExportsControllerTest extends JULInitializingTest {
     }
 
     @Test
-    public void testExportConfigMap() {
+    public void testExportConfigMap() throws Exception {
         AddressSpace addressSpace = createTestSpace(new ExportSpecBuilder()
                 .withKind(ExportKind.ConfigMap)
                 .withName("mymap").build());
 
         ExportsController controller = new ExportsController(client);
-        controller.reconcileActive(addressSpace);
+        controller.reconcileAnyState(addressSpace);
 
         ConfigMap configMap = client.configMaps().inNamespace(addressSpace.getMetadata().getNamespace()).withName("mymap").get();
         assertNotNull(configMap);
@@ -63,7 +63,7 @@ public class ExportsControllerTest extends JULInitializingTest {
         assertEquals("mycert", data.get("ca.crt"));
 
         addressSpace.getStatus().getEndpointStatuses().get(0).setServiceHost("messaging2.svc");
-        controller.reconcileActive(addressSpace);
+        controller.reconcileAnyState(addressSpace);
 
         configMap = client.configMaps().inNamespace(addressSpace.getMetadata().getNamespace()).withName("mymap").get();
         assertNotNull(configMap);
@@ -72,14 +72,14 @@ public class ExportsControllerTest extends JULInitializingTest {
     }
 
     @Test
-    public void testExportSecret() {
+    public void testExportSecret() throws Exception {
         AddressSpace addressSpace = createTestSpace(
                 new ExportSpecBuilder()
                         .withKind(ExportKind.Secret)
                         .withName("mysecret")
                         .build());
         ExportsController controller = new ExportsController(client);
-        controller.reconcileActive(addressSpace);
+        controller.reconcileAnyState(addressSpace);
 
         Secret secret = client.secrets().inNamespace(addressSpace.getMetadata().getNamespace()).withName("mysecret").get();
         assertNotNull(secret);
@@ -92,7 +92,7 @@ public class ExportsControllerTest extends JULInitializingTest {
         assertEquals("mycert", data.get("ca.crt"));
 
         addressSpace.getStatus().getEndpointStatuses().get(0).setServiceHost("messaging2.svc");
-        controller.reconcileActive(addressSpace);
+        controller.reconcileAnyState(addressSpace);
 
         secret = client.secrets().inNamespace(addressSpace.getMetadata().getNamespace()).withName("mysecret").get();
         assertNotNull(secret);
@@ -108,7 +108,7 @@ public class ExportsControllerTest extends JULInitializingTest {
                         .withName("myservice")
                         .build());
         ExportsController controller = new ExportsController(client);
-        controller.reconcileActive(addressSpace);
+        controller.reconcileAnyState(addressSpace);
 
         Service service = client.services().inNamespace(addressSpace.getMetadata().getNamespace()).withName("myservice").get();
         assertNotNull(service);
@@ -117,7 +117,7 @@ public class ExportsControllerTest extends JULInitializingTest {
         assertEquals(2, service.getSpec().getPorts().size());
 
         addressSpace.getStatus().getEndpointStatuses().get(0).setServiceHost("messaging2.svc");
-        controller.reconcileActive(addressSpace);
+        controller.reconcileAnyState(addressSpace);
 
         service = client.services().inNamespace(addressSpace.getMetadata().getNamespace()).withName("myservice").get();
         assertNotNull(service);

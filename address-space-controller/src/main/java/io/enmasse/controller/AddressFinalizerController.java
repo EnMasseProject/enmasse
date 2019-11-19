@@ -18,7 +18,7 @@ public class AddressFinalizerController extends AbstractFinalizeController {
 
     private static final Logger log = LoggerFactory.getLogger(AddressFinalizerController.class.getName());
 
-    private static final String FINALIZER_ADDRESSES = "enmasse.io/addresses";
+    public static final String FINALIZER_ADDRESSES = "enmasse.io/addresses";
 
     private static final Integer BATCH_SIZE = Integer.getInteger("io.enmasse.controller.AddressFinalizerController.batchSize", 100);
 

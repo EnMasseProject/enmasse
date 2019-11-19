@@ -75,7 +75,7 @@ public class CreateControllerTest {
         SchemaProvider testSchema = new TestSchemaProvider();
         CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, eventLogger, null, "1.0", new TestAddressSpaceApi());
 
-        createController.reconcileActive(addressSpace);
+        createController.reconcileAnyState(addressSpace);
 
         ArgumentCaptor<KubernetesList> resourceCaptor = ArgumentCaptor.forClass(KubernetesList.class);
         verify(kubernetes).create(resourceCaptor.capture());
@@ -150,7 +150,7 @@ public class CreateControllerTest {
 
         CreateController createController = new CreateController(kubernetes, testSchema, null, eventLogger, null, "1.0", addressSpaceApi);
 
-        addressSpace = createController.reconcileActive(addressSpace);
+        addressSpace = createController.reconcileAnyState(addressSpace);
 
         assertThat(addressSpace.getStatus().getMessages().size(), is(1));
         assertTrue(addressSpace.getStatus().getMessages().iterator().next().contains("quota exceeded for resource broker"));
