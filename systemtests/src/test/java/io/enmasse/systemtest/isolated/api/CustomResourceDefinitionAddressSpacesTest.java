@@ -28,6 +28,7 @@ import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+import io.enmasse.user.model.v1.UserBuilder;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
 
@@ -263,6 +264,10 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(brokered.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
             assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(standard.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
 
+            TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+            UserUtils.waitForUserActive(new UserBuilder(testUser).editOrNewMetadata().withName(String.format("%s.%s", brokered.getMetadata().getName(), cred.getUsername())).withNamespace(namespace).endMetadata().build(), budget);
+            UserUtils.waitForUserActive(new UserBuilder(testUser).editOrNewMetadata().withName(String.format("%s.%s", standard.getMetadata().getName(), cred.getUsername())).withNamespace(namespace).endMetadata().build(), budget);
+
             data = new CliOutputData(KubeCMDClient.getUser(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.USER);
             assertEquals(((CliOutputData.UserRow) data.getData(String.format("%s.%s", brokered.getMetadata().getName(),
@@ -361,7 +366,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             TestUtils.waitUntilCondition(() -> {
                 ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(namespace, Optional.empty());
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
-            }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+            }, "No resources found", new TimeoutBudget(30, TimeUnit.SECONDS));
         } finally {
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());

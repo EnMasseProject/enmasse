@@ -8,10 +8,16 @@ package upgrader
 import (
 	"errors"
 	"fmt"
-	deployer "github.com/enmasseproject/enmasse/pkg/controller/address_space_controller"
-	"github.com/enmasseproject/enmasse/pkg/util"
 	"strconv"
+	"strings"
 	"time"
+
+	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+	adminv1beta1_client "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta1"
+	userv1beta1_client "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/user/v1beta1"
+	deployer "github.com/enmasseproject/enmasse/pkg/controller/address_space_controller"
+	"github.com/enmasseproject/enmasse/pkg/keycloak"
+	"github.com/enmasseproject/enmasse/pkg/util"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -146,8 +152,20 @@ func (u *Upgrader) performUpgrade(addressSpaceControllerDeployment *appsv1.Deplo
 		return err
 	}
 
-	// Scale api-server back up
-	err = u.scale("api-server", 1)
+	log.Info("Deleting v1beta1.user.enmasse.io api service")
+	err = deleteApiServiceIfPresent(apiServiceClient, "v1beta1.user.enmasse.io")
+	if err != nil {
+		return err
+	}
+
+	log.Info("Deleting v1alpha1.user.enmasse.io api service")
+	err = deleteApiServiceIfPresent(apiServiceClient, "v1alpha1.user.enmasse.io")
+	if err != nil {
+		return err
+	}
+
+	// Create MessagingUser CRs for all users in all realms
+	err = u.convertMessagingUsers()
 	if err != nil {
 		return err
 	}
@@ -167,12 +185,118 @@ func (u *Upgrader) performUpgrade(addressSpaceControllerDeployment *appsv1.Deplo
 		return err
 	}
 
+	// Delete api-server deployment
+	err = u.delete("api-server")
+	if err != nil {
+		return err
+	}
+
 	// Scale up iot-operator if deployed
 	err = u.scale("iot-operator", 1)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (u *Upgrader) convertMessagingUsers() error {
+	adminClient, err := adminv1beta1_client.NewForConfig(u.config)
+	if err != nil {
+		return err
+	}
+	userClient, err := userv1beta1_client.NewForConfig(u.config)
+	if err != nil {
+		return err
+	}
+	secretClient := u.client.CoreV1().Secrets(u.namespace)
+	if err != nil {
+		return err
+	}
+	list, err := adminClient.AuthenticationServices(u.namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	for _, authenticationService := range list.Items {
+		if authenticationService.Spec.Type == adminv1beta1.Standard {
+			var ca []byte
+			if authenticationService.Status.CaCertSecret != nil {
+				caCertSecret, err := secretClient.Get(authenticationService.Status.CaCertSecret.Name, metav1.GetOptions{})
+				if err != nil {
+					log.Error(err, "Getting authentication service CA")
+					return err
+				}
+				ca = caCertSecret.Data["tls.crt"]
+			}
+
+			credentials, err := secretClient.Get(authenticationService.Spec.Standard.CredentialsSecret.Name, metav1.GetOptions{})
+			if err != nil {
+				log.Error(err, "Getting authentication service credentials")
+				return err
+			}
+
+			adminUser := credentials.Data["admin.username"]
+			adminPassword := credentials.Data["admin.password"]
+			host := authenticationService.Status.Host
+			// Handle wrong host for previous auth service
+			if !strings.HasSuffix(host, fmt.Sprintf("%s.svc", authenticationService.Namespace)) {
+				host += "." + authenticationService.Namespace + ".svc"
+			}
+			kcClient, err := keycloak.NewClient(host, 8443, string(adminUser), string(adminPassword), ca)
+			if err != nil {
+				log.Error(err, "Creating keycloak client")
+				return err
+			}
+
+			realms, err := kcClient.GetRealms()
+			if err != nil {
+				log.Error(err, "Getting realms from keycloak")
+				return err
+			}
+
+			for _, realm := range realms {
+				if realm != "master" {
+					log.Info("Migrating users in authentication service", "realm", realm)
+					users, err := kcClient.GetUsers(realm, func(name string, values []string) bool {
+						return name != keycloak.ATTR_FROM_CRD
+					})
+					if err != nil {
+						log.Error(err, "Getting users from keycloak", "realm", realm)
+						return err
+					}
+					for _, user := range users {
+						log.Info("Migrating user", "name", user.Name, "namespace", user.Namespace)
+						_, err = userClient.MessagingUsers(user.Namespace).Get(user.Name, metav1.GetOptions{})
+						if err != nil {
+							if k8errors.IsNotFound(err) {
+								_, err = userClient.MessagingUsers(user.Namespace).Create(user)
+								if err != nil {
+									log.Error(err, "Error creating messaginguser")
+									return err
+								}
+								log.Info("User migrated successfully", "name", user.Name, "namespace", user.Namespace)
+							} else {
+								log.Error(err, "Error getting messaginguser")
+								return err
+							}
+						} else {
+							log.Info("User already migrated! Skipping...", "name", user.Name, "namespace", user.Namespace)
+						}
+					}
+				}
+			}
+
+		}
+	}
+	return nil
+}
+
+func (u *Upgrader) delete(deploymentName string) error {
+	deploymentClient := u.client.AppsV1().Deployments(u.namespace)
+	propagationPolicy := metav1.DeletePropagationBackground
+	err := deploymentClient.Delete(deploymentName, &metav1.DeleteOptions{
+		PropagationPolicy: &propagationPolicy,
+	})
+	return err
 }
 
 func (u *Upgrader) scale(deploymentName string, replicas int32) error {

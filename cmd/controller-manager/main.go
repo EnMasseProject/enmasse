@@ -18,6 +18,7 @@ import (
 
 	"github.com/enmasseproject/enmasse/pkg/cache"
 	"github.com/enmasseproject/enmasse/pkg/controller"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -45,7 +46,38 @@ func main() {
 
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace: namespace,
-		NewCache:  cache.NewDelegateCacheBuilder(namespace),
+		NewCache: cache.NewDelegateCacheBuilder(namespace,
+			schema.GroupVersionKind{
+				Group:   "user.enmasse.io",
+				Version: "v1beta1",
+				Kind:    "MessagingUser",
+			},
+			schema.GroupVersionKind{
+				Group:   "user.enmasse.io",
+				Version: "v1beta1",
+				Kind:    "MessagingUserList",
+			},
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta1",
+				Kind:    "AddressSpace",
+			},
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta1",
+				Kind:    "AddressSpaceList",
+			},
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta1",
+				Kind:    "Address",
+			},
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta1",
+				Kind:    "AddressList",
+			},
+		),
 	})
 	if err != nil {
 		log.Error(err, "Failed to create manager")

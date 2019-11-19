@@ -44,7 +44,7 @@ public class RealmFinalizerController extends AbstractFinalizerController {
             if (authenticationService != null &&
                     authenticationService.getStatus() != null &&
                     authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard) &&
-                    authenticationService.getSpec().getRealm() == null) {
+                    (authenticationService.getSpec().getRealm() == null || authenticationService.getSpec().getRealm().isEmpty())) {
 
                 try {
                     deleteRealm(authenticationService, realmName);

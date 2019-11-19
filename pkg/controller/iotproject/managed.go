@@ -43,7 +43,6 @@ var Addresses = []string{
 const resourceTypeAddressSpace = "Address Space"
 const resourceTypeAdapterUser = "Adapter User"
 
-const annotationPasswordSyncTime = annotationBase + "/passwordSyncTime"
 const annotationProject = annotationBase + "/project.name"
 const annotationProjectUID = annotationBase + "/project.uid"
 
@@ -360,7 +359,7 @@ func (r *ReconcileIoTProject) reconcileAdapterUser(ctx context.Context, project 
 
 	if err == nil {
 		managedStatus.remainingCreated[resourceTypeAdapterUser] = true
-		managedStatus.remainingReady[resourceTypeAdapterUser] = true
+		managedStatus.remainingReady[resourceTypeAdapterUser] = (adapterUser.Status.Phase == userv1beta1.UserActive)
 	}
 
 	return reconcile.Result{}, err
@@ -514,8 +513,6 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 		return err
 	}
 
-	managed := project.Status.Managed
-
 	existing.Spec.Username = credentials.Username
 	existing.Spec.Authentication = userv1beta1.AuthenticationSpec{
 		Type: "password",
@@ -528,25 +525,8 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 	existing.Annotations[annotationProject] = project.Name
 	existing.Annotations[annotationProjectUID] = string(project.UID)
 
-	// get last password sync
-
-	var syncTime time.Time
-	syncTimeString := existing.Annotations[annotationPasswordSyncTime]
-	if syncTimeString != "" {
-		syncTime, _ = time.Parse(time.RFC3339, syncTimeString)
-	}
-
-	// if we missed an update
-
-	if managed.PasswordTime.After(syncTime) {
-
-		log.Info("Updating password for", "user", existing.Name)
-
-		// set the password
-		existing.Spec.Authentication.Password = []byte(credentials.Password)
-		existing.Annotations[annotationPasswordSyncTime] = managed.PasswordTime.UTC().Format(time.RFC3339)
-
-	}
+	// set the password
+	existing.Spec.Authentication.Password = []byte(credentials.Password)
 
 	// create access rules
 
@@ -567,8 +547,8 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				commandResponseName,
 				commandResponseName + "/*",
 			},
-			Operations: []string{
-				"send",
+			Operations: []userv1beta1.AuthorizationOperation{
+				userv1beta1.Send,
 			},
 		},
 
@@ -577,8 +557,8 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				commandName,
 				commandName + "/*",
 			},
-			Operations: []string{
-				"recv",
+			Operations: []userv1beta1.AuthorizationOperation{
+				userv1beta1.Recv,
 			},
 		},
 
@@ -587,9 +567,9 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				commandLegacyName,
 				commandLegacyName + "/*",
 			},
-			Operations: []string{
-				"send",
-				"recv",
+			Operations: []userv1beta1.AuthorizationOperation{
+				userv1beta1.Send,
+				userv1beta1.Recv,
 			},
 		},
 	}

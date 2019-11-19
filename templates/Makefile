@@ -27,8 +27,6 @@ MODULES=\
 	example-authservices \
 	example-olm \
 	iot/examples \
-	api-server \
-	api-service \
 	monitoring-operator \
 	monitoring-deployment \
 	grafana-dashboards \
@@ -115,7 +113,7 @@ scripts_install:
 ENMASSE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse
 $(ENMASSE_BUNDLE): replace_images
 	mkdir -p $(ENMASSE_BUNDLE)
-	for i in crds address-space-controller api-server api-service enmasse-operator; do \
+	for i in crds address-space-controller enmasse-operator; do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 

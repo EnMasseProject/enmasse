@@ -1,5 +1,8 @@
 ## 0.31.0
 *  #2714: Allow setting security context of pods using persistent volumes
+* AddressSpace, Address and MessagingUser resources are now backed by Custom Resource Definitions
+  (CRD) rather than api-server. On upgrade, existing users in the standard authservices will be converted to CRDs
+* The api-server is removed from the deployment. The enmasse-operator will automatically remove it when upgrading.
 
 ## 0.30.2
 *  #2714: Allow setting security context of pods using persistent volumes

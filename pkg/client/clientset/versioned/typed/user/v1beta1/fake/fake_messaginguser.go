@@ -89,6 +89,18 @@ func (c *FakeMessagingUsers) Update(messagingUser *v1beta1.MessagingUser) (resul
 	return obj.(*v1beta1.MessagingUser), err
 }
 
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+func (c *FakeMessagingUsers) UpdateStatus(messagingUser *v1beta1.MessagingUser) (*v1beta1.MessagingUser, error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewUpdateSubresourceAction(messagingusersResource, "status", c.ns, messagingUser), &v1beta1.MessagingUser{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1beta1.MessagingUser), err
+}
+
 // Delete takes name of the messagingUser and deletes it. Returns an error if one occurs.
 func (c *FakeMessagingUsers) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.

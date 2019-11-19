@@ -7,6 +7,7 @@ package authenticationservice
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
@@ -82,37 +83,6 @@ type ReconcileAuthenticationService struct {
 	namespace string
 }
 
-func updateAuthenticationServiceStatus(authservice *adminv1beta1.AuthenticationService) {
-	if authservice.Spec.Type == adminv1beta1.External {
-
-	} else if authservice.Spec.Type == adminv1beta1.None {
-		var cert = authservice.Spec.None.CertificateSecret
-		if cert == nil {
-			cert = &corev1.SecretReference{
-				Name: "none-authservice-cert",
-			}
-		}
-		authservice.Status = adminv1beta1.AuthenticationServiceStatus{
-			Host:         authservice.Name,
-			Port:         5671,
-			CaCertSecret: cert,
-		}
-	} else if authservice.Spec.Type == adminv1beta1.Standard {
-		var cert = authservice.Spec.Standard.CertificateSecret
-		if cert == nil {
-			cert = &corev1.SecretReference{
-				Name: "standard-authservice-cert",
-			}
-		}
-		authservice.Status = adminv1beta1.AuthenticationServiceStatus{
-			Host:         authservice.Name,
-			Port:         5671,
-			CaCertSecret: cert,
-		}
-	}
-
-}
-
 // Reconcile by reading the authentication service spec and making required changes
 //
 // returning an error will get the request re-queued
@@ -164,7 +134,7 @@ func (r *ReconcileAuthenticationService) reconcileNoneAuthService(ctx context.Co
 	requeue = requeue || result.Requeue
 
 	result, err = r.updateStatus(ctx, authservice, func(status *adminv1beta1.AuthenticationServiceStatus) error {
-		status.Host = authservice.Name
+		status.Host = fmt.Sprintf("%s.%s.svc", authservice.Name, authservice.Namespace)
 		status.Port = 5671
 		status.CaCertSecret = authservice.Spec.None.CertificateSecret
 		return nil
@@ -210,7 +180,7 @@ func (r *ReconcileAuthenticationService) reconcileStandardAuthService(ctx contex
 	requeue = requeue || result.Requeue
 
 	result, err = r.updateStatus(ctx, authservice, func(status *adminv1beta1.AuthenticationServiceStatus) error {
-		status.Host = authservice.Name
+		status.Host = fmt.Sprintf("%s.%s.svc", authservice.Name, authservice.Namespace)
 		status.Port = 5671
 		status.CaCertSecret = authservice.Spec.Standard.CertificateSecret
 		return nil

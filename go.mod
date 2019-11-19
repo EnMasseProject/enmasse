@@ -19,6 +19,7 @@ replace (
 )
 
 require (
+	github.com/Nerzal/gocloak/v3 v3.7.0
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/google/uuid v1.1.1

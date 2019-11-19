@@ -132,7 +132,6 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
     @Test
     void testRestartComponents() throws Exception {
         List<Label> labels = new LinkedList<>();
-        labels.add(new Label("component", "api-server"));
         labels.add(new Label("name", "standard-authservice"));
         labels.add(new Label("name", "address-space-controller"));
         labels.add(new Label("name", "enmasse-operator"));
@@ -184,33 +183,27 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         List<Pod> pods = kubernetes.listPods();
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
-        try {
-            for (Label label : labels) {
-                log.info("Restarting {}", label.labelValue);
-                KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
-                Thread.sleep(30_000);
-                TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-                assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
-            }
-
-            log.info("Restarting whole enmasse");
-            KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
-            Thread.sleep(180_000);
+        for (Label label : labels) {
+            log.info("Restarting {}", label.labelValue);
+            KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
+            Thread.sleep(30_000);
             TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-            AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
-                    standardAddresses.toArray(new Address[0]));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+        }
 
-            //TODO: Uncomment when #2127 will be fixedy
+        log.info("Restarting whole enmasse");
+        KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
+        Thread.sleep(180_000);
+        TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
+                standardAddresses.toArray(new Address[0]));
+        assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+
+        //TODO: Uncomment when #2127 will be fixedy
 
 //            Pod qdrouter = pods.stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList()).get(0);
 //            kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
 //            assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
-        } finally {
-            // Ensure that EnMasse's API services are finished re-registering (after api-server restart) before ending
-            // the test otherwise test clean-up will fail.
-            assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s", CoreCrd.VERSION, CoreCrd.GROUP)).getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
-        }
     }
 
     //https://github.com/EnMasseProject/enmasse/issues/3098

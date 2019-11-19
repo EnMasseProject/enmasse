@@ -56,12 +56,6 @@
     name: cluster_service_broker
   when: service_catalog
 - import_role:
-    name: api_server
-  when: api_server
-- import_role:
-    name: api_service
-  when: register_api_server
-- import_role:
     name: iot
   when: enable_iot
 - import_role:

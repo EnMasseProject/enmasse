@@ -520,7 +520,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 String.format("Expected %d received messages", expectedMsgCount));
     }
 
-    private void createPublisherAndConsumer(UserCredentials publishCred, UserCredentials consumCred) {
+    private void createPublisherAndConsumer(UserCredentials publishCred, UserCredentials consumCred) throws Exception {
         User publisher = (UserUtils.createUserResource(publishCred)
                 .editSpec()
                 .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
