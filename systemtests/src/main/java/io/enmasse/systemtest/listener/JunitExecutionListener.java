@@ -19,8 +19,6 @@ import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
 
-import java.io.File;
-
 public class JunitExecutionListener implements TestExecutionListener {
     private static final Logger LOGGER = CustomLogger.getLogger();
 
@@ -35,7 +33,7 @@ public class JunitExecutionListener implements TestExecutionListener {
         Environment env = Environment.getInstance();
         if (!env.skipCleanup()) {
             Kubernetes kube = Kubernetes.getInstance();
-            GlobalLogCollector logCollector = new GlobalLogCollector(kube, new File(env.testLogDir()));
+            GlobalLogCollector logCollector = new GlobalLogCollector(kube, env.testLogDir());
             try {
                 kube.getAddressSpaceClient().inAnyNamespace().list().getItems().forEach((addrSpace) -> {
                     LOGGER.info("address space '{}' will be removed", addrSpace);

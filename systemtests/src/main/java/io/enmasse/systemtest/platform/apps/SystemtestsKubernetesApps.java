@@ -10,7 +10,6 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -36,7 +35,6 @@ import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.apps.DoneableDeployment;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressBackend;
@@ -48,7 +46,6 @@ import io.fabric8.kubernetes.api.model.rbac.RoleBuilder;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Applicable;
-import io.fabric8.kubernetes.client.dsl.Deletable;
 import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
 import io.fabric8.kubernetes.client.utils.ReplaceValueStream;
 import org.slf4j.Logger;
@@ -65,7 +62,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -127,7 +123,7 @@ public class SystemtestsKubernetesApps {
     public static void collectMessagingClientAppLogs(Path path) {
         try {
             Files.createDirectories(path);
-            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path.toFile(), SystemtestsKubernetesApps.MESSAGING_PROJECT);
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, SystemtestsKubernetesApps.MESSAGING_PROJECT);
             collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.MESSAGING_PROJECT);
         } catch (Exception e) {
             log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.MESSAGING_PROJECT);

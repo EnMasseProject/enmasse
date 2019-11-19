@@ -9,6 +9,7 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.fabric8.kubernetes.client.Config;
 import org.slf4j.Logger;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Optional;
@@ -116,8 +117,8 @@ public class Environment {
         return namespace;
     }
 
-    public String testLogDir() {
-        return testLogDir;
+    public Path testLogDir() {
+        return Paths.get(testLogDir);
     }
 
     public UserCredentials keycloakCredentials() {
