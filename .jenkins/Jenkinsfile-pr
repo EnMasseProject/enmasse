@@ -91,6 +91,7 @@ pipeline {
                     }
                     if (env.ghprbCommentBody.contains('OLM')) {
                         env.INSTALL_TYPE = "OLM"
+                        env.OC_VERSION = "4"
                         echo "INSTALL_TYPE: ${env.INSTALL_TYPE}"
                     }
                     echo "TEST_ONLY: ${env.TEST_ONLY}"
