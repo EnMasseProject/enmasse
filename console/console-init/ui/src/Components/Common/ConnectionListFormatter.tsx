@@ -8,7 +8,7 @@ interface ProtocolIcon {
 
 const protocolIconToDisplay = (protocol: string) => {
   switch (protocol.toLowerCase()) {
-    case "amqp" :
+    case "amqp":
       return <LockIcon />;
     default:
       return <LockOpenIcon />;

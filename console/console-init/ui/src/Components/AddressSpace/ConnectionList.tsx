@@ -7,7 +7,7 @@ import {
   IRowData,
   sortable
 } from "@patternfly/react-table";
-import { Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ConnectionProtocolFormat } from "../Common/ConnectionListFormatter";
 
 interface IConnectionListProps {
@@ -67,7 +67,8 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       variant={TableVariant.compact}
       cells={tableColumns}
       rows={tableRows}
-      aria-label="connection list">
+      aria-label="connection list"
+    >
       <TableHeader />
       <TableBody />
     </Table>

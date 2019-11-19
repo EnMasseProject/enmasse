@@ -11,8 +11,28 @@ const NavToolBar: React.FC = () => {
   const [isOpen, onToggle] = useState(false);
 
   const dropdownItems = [
-    <DropdownItem key="help" style={{paddingRight:100,paddingLeft:20, paddingTop:20,paddingBottom:10}}>Help</DropdownItem>,
-    <DropdownItem key="About" style={{paddingRight:100,paddingLeft:20, paddingTop:10,paddingBottom:20}}>About</DropdownItem>
+    <DropdownItem
+      key="help"
+      style={{
+        paddingRight: 100,
+        paddingLeft: 20,
+        paddingTop: 20,
+        paddingBottom: 10
+      }}
+    >
+      Help
+    </DropdownItem>,
+    <DropdownItem
+      key="About"
+      style={{
+        paddingRight: 100,
+        paddingLeft: 20,
+        paddingTop: 10,
+        paddingBottom: 20
+      }}
+    >
+      About
+    </DropdownItem>
   ];
   return (
     <React.Fragment>

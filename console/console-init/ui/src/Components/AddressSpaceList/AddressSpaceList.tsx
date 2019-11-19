@@ -65,7 +65,8 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
           title: (
             <>
               <Link
-                to={`address-spaces/${row.nameSpace}/${row.name}/addresses`}>
+                to={`address-spaces/${row.nameSpace}/${row.name}/addresses`}
+              >
                 {row.name}
               </Link>
               <br />
@@ -98,7 +99,8 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
       cells={tableColumns}
       rows={tableRows}
       actionResolver={actionResolver}
-      aria-label="address space list">
+      aria-label="address space list"
+    >
       <TableHeader />
       <TableBody />
     </Table>

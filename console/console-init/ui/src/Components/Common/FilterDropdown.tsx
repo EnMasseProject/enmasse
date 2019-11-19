@@ -19,10 +19,10 @@ export const FilterDropdown: React.FunctionComponent<IDropdown> = ({
   options
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const onSelectFilter =(item:any)=>{
+  const onSelectFilter = (item: any) => {
     onSelect(item);
     setIsOpen(!isOpen);
-  }
+  };
   return (
     <Dropdown
       position="left"

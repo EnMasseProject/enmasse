@@ -229,7 +229,8 @@ function AddressesListFunction() {
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned>
+          isFooterLeftAligned
+        >
           <EditAddress
             address={addressBeingEdited}
             onChange={handleEditChange}

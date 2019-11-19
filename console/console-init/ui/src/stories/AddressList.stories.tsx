@@ -13,7 +13,7 @@ export default {
 const rows: IAddress[] = [
   {
     name: "foo",
-    namespace:"foo",
+    namespace: "foo",
     type: "Queue",
     plan: "small",
     messagesIn: 123,
@@ -22,12 +22,12 @@ const rows: IAddress[] = [
     senders: 123,
     receivers: 123,
     shards: 123,
-    isReady:true,
+    isReady: true,
     status: "running"
   },
   {
     name: "foo",
-    namespace:"foo",
+    namespace: "foo",
     type: "Queue",
     plan: "small",
     messagesIn: 123,
@@ -36,12 +36,12 @@ const rows: IAddress[] = [
     senders: 123,
     receivers: 123,
     shards: 123,
-    isReady:true,
+    isReady: true,
     status: "creating"
   },
   {
     name: "foo",
-    namespace:"foo",
+    namespace: "foo",
     type: "Queue",
     plan: "small",
     messagesIn: 123,
@@ -50,7 +50,7 @@ const rows: IAddress[] = [
     senders: 123,
     receivers: 123,
     shards: 123,
-    isReady:true,
+    isReady: true,
     status: "deleting"
   }
 ];

@@ -33,11 +33,7 @@ const statusToDisplay = (isReady: boolean) => {
 export const AddressSpaceType: React.FunctionComponent<
   AddressSpaceTypeProps
 > = ({ type }) => {
-  return (
-    <>
-      {typeToDisplay(type)}
-    </>
-  );
+  return <>{typeToDisplay(type)}</>;
 };
 
 export const AddressSpaceStatus: React.FunctionComponent<

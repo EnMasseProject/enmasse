@@ -56,7 +56,12 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
   ];
 
   return (
-    <Table variant={TableVariant.compact} cells={tableColumns} rows={tableRows} aria-label="links list">
+    <Table
+      variant={TableVariant.compact}
+      cells={tableColumns}
+      rows={tableRows}
+      aria-label="links list"
+    >
       <TableHeader />
       <TableBody />
     </Table>

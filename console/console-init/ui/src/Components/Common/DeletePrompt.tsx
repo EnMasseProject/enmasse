@@ -29,7 +29,8 @@ export const DeletePrompt: React.FunctionComponent<IDeleteProps> = ({
           Cancel
         </Button>
       ]}
-      isFooterLeftAligned={true}>
+      isFooterLeftAligned={true}
+    >
       <b>{name}</b>
       <br />
       {detail}

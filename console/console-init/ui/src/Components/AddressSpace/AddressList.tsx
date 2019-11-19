@@ -9,7 +9,7 @@ import {
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
 import { TypePlan } from "../Common/TypePlan";
-import {Messages} from "../Common/Messages";
+import { Messages } from "../Common/Messages";
 
 export interface IAddress {
   name: string;
@@ -104,9 +104,9 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   const tableColumns = [
     "Name",
     "Type/Plan",
-    { title: "Messages In", transforms:[sortable] },
-    { title: "Messages Out", transforms:[sortable]  },
-    { title: "Stored Messages", transforms:[sortable]  },
+    { title: "Messages In", transforms: [sortable] },
+    { title: "Messages Out", transforms: [sortable] },
+    { title: "Stored Messages", transforms: [sortable] },
     "Senders",
     "Receivers",
     "Shards"
@@ -118,7 +118,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       cells={tableColumns}
       rows={tableRows}
       actionResolver={actionResolver}
-      aria-label="Address List">
+      aria-label="Address List"
+    >
       <TableHeader />
       <TableBody />
     </Table>

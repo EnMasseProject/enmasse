@@ -14,7 +14,7 @@ import {
 } from "@patternfly/react-core";
 // import { AddressSpaceList } from "src/Components/AddressSpaceList/AddressSpaceList";
 import {
-    AddressSpaceList,
+  AddressSpaceList,
   IAddressSpace
 } from "src/Components/AddressSpaceList/AddressSpaceList";
 import { EmptyAddressSpace } from "src/Components/Common/EmptyAddressSpace";
@@ -186,7 +186,8 @@ function AddressSpaceListFunc() {
             </Button>
           ]}
           isFooterLeftAligned={true}
-          children />
+          children
+        />
       )}
       {addressSpaceBeingDeleted && (
         <DeletePrompt

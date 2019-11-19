@@ -32,7 +32,10 @@ export const TypePlan: React.FunctionComponent<ITypePlanProps> = address => {
   }
   return (
     <React.Fragment>
-      <Label isCompact style={{backgroundColor:iconColor}}>{address.type[0].toUpperCase()}</Label> {address.plan}
+      <Label isCompact style={{ backgroundColor: iconColor }}>
+        {address.type[0].toUpperCase()}
+      </Label>{" "}
+      {address.plan}
     </React.Fragment>
   );
 };

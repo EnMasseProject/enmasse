@@ -6,56 +6,56 @@ import { EditAddress } from "../Pages/EditAddressPage";
 
 const addressRows: IAddress[] = [
   {
-    name: 'foo',
-    namespace:"foo",
-    type: 'Queue',
-    plan: 'small',
+    name: "foo",
+    namespace: "foo",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    isReady:true,
-    status: 'running',
+    isReady: true,
+    status: "running"
   },
   {
-    name: 'foo',
-    namespace:"foo",
-    type: 'Queue',
-    plan: 'small',
+    name: "foo",
+    namespace: "foo",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    isReady:true,
-    status: 'creating',
+    isReady: true,
+    status: "creating"
   },
   {
-    name: 'foo',
-    namespace:"foo",
-    type: 'Queue',
-    plan: 'small',
+    name: "foo",
+    namespace: "foo",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
     senders: 123,
     receivers: 123,
     shards: 123,
-    isReady:true,
-    status: 'deleting',
-  },
+    isReady: true,
+    status: "deleting"
+  }
 ];
 
 const IndexPage: React.FC = ({ children }) => {
   useA11yRouteChange();
-  useDocumentTitle('Index Page');
+  useDocumentTitle("Index Page");
 
   const [
     addressBeingEdited,
-    setAddressBeingEdited,
+    setAddressBeingEdited
   ] = React.useState<IAddress | null>();
 
   const handleDelete = (data: IAddress) => void 0;
@@ -89,7 +89,7 @@ const IndexPage: React.FC = ({ children }) => {
             </Button>,
             <Button key="cancel" variant="link" onClick={handleCancelEdit}>
               Cancel
-            </Button>,
+            </Button>
           ]}
           isFooterLeftAligned
         >

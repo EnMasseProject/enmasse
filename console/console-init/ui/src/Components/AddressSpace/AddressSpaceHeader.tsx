@@ -61,14 +61,15 @@ export const AddressSpaceHeader: React.FunctionComponent<
       key="download"
       aria-label="download"
       onClick={() => onDownload(name)}
-      style={{paddingRight:50}}
-      >
+      style={{ paddingRight: 50 }}
+    >
       Download Certificate
     </DropdownItem>,
     <DropdownItem
       key="delete"
       aria-label="delete"
-      onClick={() => onDelete(name)}>
+      onClick={() => onDelete(name)}
+    >
       Delete
     </DropdownItem>
   ];

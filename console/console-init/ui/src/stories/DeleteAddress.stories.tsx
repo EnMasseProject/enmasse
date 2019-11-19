@@ -18,7 +18,8 @@ export const deleteAddressPrompt = () => {
         <Button
           onClick={() => {
             setIsOpen(!isOpen);
-          }}>
+          }}
+        >
           Open Modal On Delete
         </Button>
         <DeletePrompt

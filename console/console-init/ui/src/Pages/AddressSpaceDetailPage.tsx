@@ -112,10 +112,12 @@ export default function AddressSpaceDetailPage() {
     <>
       <PageSection
         variant={PageSectionVariants.light}
-        style={{ paddingBottom: 0 }}>
+        style={{ paddingBottom: 0 }}
+      >
         <AddressSpaceHeader {...addressSpaceDetails} />
         <AddressSpaceNavigation
-          activeItem={subList || "addresses"}></AddressSpaceNavigation>
+          activeItem={subList || "addresses"}
+        ></AddressSpaceNavigation>
       </PageSection>
       <PageSection>
         <SwitchWith404>
