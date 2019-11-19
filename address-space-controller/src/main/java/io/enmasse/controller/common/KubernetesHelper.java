@@ -123,7 +123,7 @@ public class KubernetesHelper implements Kubernetes {
         client.secrets().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
         client.configMaps().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
 
-        // Work around fabric8 issue when deleting a deployment using *selector*.  Internally there is a race between Fabric8's
+        // Work around fabric8 issue when deleting a deployment.  Internally there is a race between Fabric8's
         // scaling of the deployment to zero and the deletion of the replicaset.  If the replicaset is deleted first
         // the pods are orphaned.
         final Set<Deployment> deployments = new HashSet<>(client.apps().deployments().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).list().getItems());
