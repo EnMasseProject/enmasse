@@ -16,4 +16,5 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(OLMRequiredCondition.class)
 public @interface OLMRequired {
 
+    OLMInstallationType installation();
 }

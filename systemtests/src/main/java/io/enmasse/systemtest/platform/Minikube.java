@@ -21,15 +21,14 @@ import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.function.Function;
 
 public class Minikube extends Kubernetes {
     private static Logger log = CustomLogger.getLogger();
 
     private static final String OLM_NAMESPACE = "operators";
 
-    protected Minikube(Environment environment, Function<String, String> infraNamespace) {
-        super(environment, infraNamespace.apply(OLM_NAMESPACE), () -> {
+    protected Minikube(Environment environment) {
+        super(environment, () -> {
             Config config = new ConfigBuilder().build();
 
             OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
