@@ -20,7 +20,7 @@ public interface KubeCluster {
     static KubeCluster detect() {
         Logger LOGGER = CustomLogger.getLogger();
 
-        KubeCluster[] clusters = new KubeCluster[]{new MinikubeCluster(), new OpenShiftCluster()};
+        KubeCluster[] clusters = new KubeCluster[]{new MinikubeCluster(), new CRCCluster(), new OpenShiftCluster()};
         KubeCluster cluster = null;
         for (KubeCluster kc : clusters) {
             if (kc.isAvailable()) {
