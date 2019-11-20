@@ -90,8 +90,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         testInfo.setCurrentTest(context);
-        LOGGER.info("Print all pods in infra namespace");
-        Kubernetes.getInstance().listPods().forEach(pod -> LOGGER.info(pod.getMetadata().getName()));
+        logPodsInInfraNamespace();
     }
 
     @Override
@@ -170,6 +169,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     private void saveKubernetesState(ExtensionContext extensionContext, Throwable throwable) throws Throwable {
+        LOGGER.warn("Test failed: Saving pod logs and info...");
+        logPodsInInfraNamespace();
         if (isSkipSaveState()) {
             throw throwable;
         }
@@ -177,7 +178,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         Method testMethod = extensionContext.getTestMethod().orElse(null);
         Class<?> testClass = extensionContext.getRequiredTestClass();
         try {
-            LOGGER.warn("Test failed: Saving pod logs and info...");
             Kubernetes kube = Kubernetes.getInstance();
             Path path = getPath(testMethod, testClass);
             Files.createDirectories(path);
@@ -237,6 +237,12 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     private boolean isSkipSaveState() {
         return Environment.getInstance().isSkipSaveState();
     }
+
+    private void logPodsInInfraNamespace() {
+        LOGGER.info("Print all pods in infra namespace");
+        KubeCMDClient.runOnCluster("get", "pods", "-n", Environment.getInstance().namespace());
+    }
+
 }
 
 
