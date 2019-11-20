@@ -9,7 +9,7 @@ To build EnMasse, you need
    * [Docker](https://www.docker.com/)
    * [GNU Make](https://www.gnu.org/software/make/)
    * [Asciidoctor](https://asciidoctor.org/) >= 1.5.7
-   * [Go](https://golang.org/) > 1.10.0
+   * [Go](https://golang.org/) >= 1.12.0
 
 *Note*: On OSX, make sure you have [Coreutils](https://www.gnu.org/software/coreutils/) installed, e.g. `brew install coreutils`
 
@@ -105,14 +105,23 @@ By default the test suite tears down the EnMasse deployment and namespace after 
 
     make SYSTEMTEST_ARGS="shared.standard.QueueTest#testCreateDeleteQueue" systemtests
 
-### Adding / Updating go dependencies
+### Adding / Updating Go dependencies
 
-This project currently uses "glide" to vendor go sources. Change dependencies in the file `glide.yaml` and then run:
+This project currently uses go modules to vendor go sources. Change dependencies in the file `go.mod` and then run:
 
-    glide up -v
+    go mod vendor
+    go mod tidy
     git add --all vendor
-    git add glide.lock
+    git add go.sum
     git commit
+
+### Updating the Go generated code
+
+Run the following script:
+
+    hack/update-codegen.sh
+
+Running `hack/verify-codegen.sh` checks whether the generated code is up to date.
 
 ## Reference
 

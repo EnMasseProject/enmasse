@@ -65,27 +65,21 @@
 */
 package v1
 
-import (
-	fmt "fmt"
+import proto "github.com/gogo/protobuf/proto"
+import fmt "fmt"
+import math "math"
 
-	proto "github.com/gogo/protobuf/proto"
+import k8s_io_api_core_v1 "k8s.io/api/core/v1"
+import k8s_io_apimachinery_pkg_apis_meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	math "math"
+import time "time"
 
-	k8s_io_api_core_v1 "k8s.io/api/core/v1"
+import github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
 
-	k8s_io_apimachinery_pkg_apis_meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import strings "strings"
+import reflect "reflect"
 
-	time "time"
-
-	github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
-
-	strings "strings"
-
-	reflect "reflect"
-
-	io "io"
-)
+import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
