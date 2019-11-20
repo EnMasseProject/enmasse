@@ -12,6 +12,7 @@ import {
   AddressSpaceStatus,
   AddressSpaceIcon
 } from "../Common/AddressSpaceListFormatter";
+import { FormatDistance } from "use-patternfly";
 
 export interface IAddressSpace {
   name: string;
@@ -73,7 +74,6 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
             </>
           )
         },
-        // row.type,?
         {
           header: "type",
           title: (
@@ -84,7 +84,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
           )
         },
         { title: <AddressSpaceStatus isReady={row.isReady} /> },
-        row.creationTimestamp
+        { title: <FormatDistance date={row.creationTimestamp} /> }
       ],
       originalData: row
     };

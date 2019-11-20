@@ -11,6 +11,8 @@ export default {
 export const deleteAddressPrompt = () => {
   return createElement(() => {
     const [isOpen, setIsOpen] = React.useState(false);
+    const handleCancel = () => setIsOpen(!isOpen);
+    const handleDelete = () => setIsOpen(!isOpen);
     return (
       <MemoryRouter>
         <Button
@@ -27,8 +29,8 @@ export const deleteAddressPrompt = () => {
             "Details",
             "There are some description that telling users what would happenafter deleting this address."
           )}
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
+          handleConfirmDelete={handleDelete}
+          handleCancelDelte={handleCancel}
         />
       </MemoryRouter>
     );

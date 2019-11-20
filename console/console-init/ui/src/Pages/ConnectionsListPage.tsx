@@ -7,45 +7,28 @@ import {
   ConnectionList
 } from "src/Components/AddressSpace/ConnectionList";
 import { EmptyConnection } from "src/Components/Common/EmptyConnection";
-import { IMetrics } from "./AddressesListPage";
 import { useParams } from "react-router";
-import { Pagination, PageSection, PageSectionVariants } from "@patternfly/react-core";
-import { Header } from "@patternfly/react-table/dist/js/components/Table/base";
-import { StyleSheet } from "@patternfly/react-styles";
+import {
+  Pagination,
+  PageSection,
+  PageSectionVariants
+} from "@patternfly/react-core";
+import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
+import { IConnectionListResponse } from "src/Types/ResponseTypes";
 
-const styles = StyleSheet.create({
-  header_bottom_border : { 
-    borderBottom: "0.01em",
-    borderRightColor: "lightgrey"
+const RETURN_ALL_CONECTION_LIST = (name?: string, namespace?: string) => {
+  let filter = "";
+  if (name) {
+    filter += "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + name + "'";
   }
-})
-interface IConnectionListResponse {
-  connections: {
-    Total: number;
-    Connections: Array<{
-      ObjectMeta: {
-        Name: string;
-      };
-      Spec: {
-        Hostname: string;
-        ContainerId: string;
-        Protocol: string;
-      };
-      Metrics: Array<{
-        Name: string;
-        Type: string;
-        Value: number;
-        Units: string;
-      }>;
-    }>;
-  };
-}
-
-const return_ALL_CONECTION_LIST = (name?: string, namespace?: string) => {
+  if (namespace) {
+    filter +=
+      " AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = '" + namespace + "'";
+  }
   const ALL_CONECTION_LIST = gql(
     `query all_connections_for_addressspace_view {
     connections(
-      filter: "\`$.Spec.AddressSpace.ObjectMeta.Name\` = '${name}' AND \`$.Spec.AddressSpace.ObjectMeta.Namespace\` = '${namespace}'"
+      filter: "${filter}"
     ) {
       Total
       Connections {
@@ -72,7 +55,7 @@ const return_ALL_CONECTION_LIST = (name?: string, namespace?: string) => {
 export default function ConnectionsListPage() {
   const { name, namespace } = useParams();
   let { loading, error, data } = useQuery<IConnectionListResponse>(
-    return_ALL_CONECTION_LIST(name, namespace),
+    RETURN_ALL_CONECTION_LIST(name, namespace),
     { pollInterval: 5000 }
   );
 
@@ -82,13 +65,6 @@ export default function ConnectionsListPage() {
     connections: { Total: 0, Connections: [] }
   };
 
-  const getFilteredValue = (object: IMetrics[], value: string) => {
-    const filtered = object.filter(obj => obj.Name === value);
-    if (filtered.length > 0) {
-      return filtered[0].Value;
-    }
-    return 0;
-  };
   console.log(connections);
   const connectionList: IConnection[] = connections.Connections.map(
     connection => ({
@@ -108,7 +84,6 @@ export default function ConnectionsListPage() {
         <EmptyConnection />
       ) : (
         <PageSection variant={PageSectionVariants.light}>
-          <div className={styles.header_bottom_border}>
           <Pagination
             itemCount={523}
             perPage={10}
@@ -117,7 +92,6 @@ export default function ConnectionsListPage() {
             widgetId="pagination-options-menu-top"
             onPerPageSelect={() => {}}
           />
-          </div>
           <ConnectionList rows={connectionList} />{" "}
           <Pagination
             itemCount={523}

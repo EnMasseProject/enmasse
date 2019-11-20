@@ -1,6 +1,6 @@
 import React from "react";
 import { render, getByTitle } from "@testing-library/react";
-import { TypePlan } from "../Components/TypePlan";
+import { TypePlan } from "../Components/Common/TypePlan";
 
 describe("TypePlan", () => {
   test("it renders the plan", () => {
