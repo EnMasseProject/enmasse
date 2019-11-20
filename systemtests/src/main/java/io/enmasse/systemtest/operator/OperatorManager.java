@@ -8,6 +8,8 @@ import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.ConsoleServiceSpec;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.condition.OLMInstallationType;
+import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -24,9 +26,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.Collections;
 
 public class OperatorManager {
+
+    private static final OLMInstallationType SYSTEMTESTS_OLM_INSTALLATION_TYPE = OLMInstallationType.SPECIFIC;
+
     private static Logger LOGGER = CustomLogger.getLogger();
     private Kubernetes kube = Kubernetes.getInstance();
     private String productName;
@@ -81,11 +87,16 @@ public class OperatorManager {
     }
 
     public void installEnmasseOlm() throws Exception {
+        installEnmasseOlm(SYSTEMTESTS_OLM_INSTALLATION_TYPE);
+    }
+
+    public void installEnmasseOlm(OLMInstallationType installation) throws Exception {
         LOGGER.info("***********************************************************");
         LOGGER.info("                  Enmasse OLM install");
         LOGGER.info("***********************************************************");
-        installOlm();
+        installOlm(installation);
         waitUntilOperatorReadyOLM();
+        LOGGER.info("***********************************************************");
     }
 
     public void deleteEnmasseOlm() throws Exception {
@@ -114,20 +125,31 @@ public class OperatorManager {
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
     }
 
-    public void installOlm() throws Exception {
-        LOGGER.info("Installing enmasse example OLM from: {}", Environment.getInstance().getTemplatesPath());
+    private void installOlm(OLMInstallationType installation) throws Exception {
+        String namespace = installation == OLMInstallationType.DEFAULT ? kube.getOlmNamespace() : kube.getInfraNamespace();
+
+        if (installation == OLMInstallationType.SPECIFIC) {
+            kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
+        }
 
         Path catalogSourceFile = Files.createTempFile("catalogsource", ".yaml");
         String catalogSource = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "catalog-source.yaml"));
-        Files.writeString(catalogSourceFile, catalogSource.replaceAll("\\$\\{OPERATOR_NAMESPACE}", kube.getOlmNamespace()));
+        Files.writeString(catalogSourceFile, catalogSource.replaceAll("\\$\\{OPERATOR_NAMESPACE}", namespace));
+        KubeCMDClient.applyFromFile(namespace, catalogSourceFile);
+
+        if (installation == OLMInstallationType.SPECIFIC) {
+            Path operatorGroupFile = Files.createTempFile("operatorgroup", ".yaml");
+            String operatorGroup = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "operator-group.yaml"));
+            Files.writeString(operatorGroupFile, operatorGroup.replaceAll("\\$\\{OPERATOR_NAMESPACE}", namespace));
+            KubeCMDClient.applyFromFile(namespace, operatorGroupFile);
+        }
 
         Path subscriptionFile = Files.createTempFile("subscription", ".yaml");
         String subscription = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "subscription.yaml"));
-        Files.writeString(subscriptionFile, subscription.replaceAll("\\$\\{OPERATOR_NAMESPACE}", kube.getOlmNamespace()));
+        Files.writeString(subscriptionFile, subscription.replaceAll("\\$\\{OPERATOR_NAMESPACE}", namespace));
+        KubeCMDClient.applyFromFile(namespace, subscriptionFile);
 
-        KubeCMDClient.applyFromFile(kube.getOlmNamespace(), catalogSourceFile);
-        KubeCMDClient.applyFromFile(kube.getOlmNamespace(), subscriptionFile);
-        TestUtils.waitForPodReady("enmasse-operator", kube.getOlmNamespace());
+        TestUtils.waitForPodReady("enmasse-operator", namespace);
     }
 
     public void installExamplePlans(String namespace) {
@@ -175,21 +197,28 @@ public class OperatorManager {
     }
 
     public void removeOlm() throws Exception {
+        Consumer<String> remover = (namespace) -> {
+            KubeCMDClient.runOnCluster("delete", "subscriptions", "-l", "app=enmasse", "-n", namespace);
+            KubeCMDClient.runOnCluster("delete", "catalogsources", "-l", "app=enmasse", "-n", namespace);
+            KubeCMDClient.runOnCluster("delete", "csv", "-l", "app=enmasse", "-n", namespace);
+            KubeCMDClient.runOnCluster("delete", "deployments", "-l", "app=enmasse", "-n", namespace);
+            KubeCMDClient.runOnCluster("delete", "statefulsets", "-l", "app=enmasse", "-n", namespace);
+            KubeCMDClient.runOnCluster("delete", "configmaps", "-l", "app=enmasse", "-n", namespace);
+            KubeCMDClient.runOnCluster("delete", "secrets", "-l", "app=enmasse", "-n", namespace);
+            KubeCMDClient.runOnCluster("delete", "services", "-l", "app=enmasse", "-n", namespace);
+        };
         LOGGER.info("Delete enmasse OLM from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.runOnCluster("delete", "subscriptions", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
-        KubeCMDClient.runOnCluster("delete", "catalogsources", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
-        KubeCMDClient.runOnCluster("delete", "csv", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
-        KubeCMDClient.runOnCluster("delete", "deployments", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
-        KubeCMDClient.runOnCluster("delete", "statefulsets", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
-        KubeCMDClient.runOnCluster("delete", "configmaps", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
-        KubeCMDClient.runOnCluster("delete", "secrets", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
-        KubeCMDClient.runOnCluster("delete", "services", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
+        if (isEnmasseOLMDeployed(kube.getOlmNamespace())) {
+            remover.accept(kube.getOlmNamespace());
+        }
+        if (isEnmasseOLMDeployed(kube.getInfraNamespace())) {
+            remover.accept(kube.getInfraNamespace());
+        }
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "oauthclients", "-l", "app=enmasse");
-        TestUtils.waitForNReplicas(0, false, Collections.singletonMap("app", "enmasse"), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
     }
 
     public void removeExampleRoles() {
@@ -277,8 +306,21 @@ public class OperatorManager {
     }
 
     public boolean isEnmasseOlmDeployed() {
-        return kube.namespaceExists(kube.getOlmNamespace())
-                && kube.listPods(kube.getOlmNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("enmasse-operator")).count() == 1;
+        if (isEnmasseOLMDeployed(kube.getOlmNamespace())) {
+            return true;
+        }
+        if (kube.namespaceExists(kube.getInfraNamespace()) && isEnmasseOLMDeployed(kube.getInfraNamespace())) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isEnmasseOLMDeployed(String namespace) {
+        ExecutionResultData res = KubeCMDClient.runOnCluster("get", "subscriptions", "-n", namespace);
+        if(res.getRetCode()) {
+            return res.getStdOut().contains(productName+"-sub");
+        }
+        return false;
     }
 
     public boolean areExamplesApplied() {

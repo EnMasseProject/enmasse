@@ -23,7 +23,6 @@ import okhttp3.Protocol;
 import org.slf4j.Logger;
 
 import java.util.Collections;
-import java.util.function.Function;
 
 /**
  * Handles interaction with openshift cluster
@@ -33,8 +32,8 @@ public class OpenShift extends Kubernetes {
 
     private static final String OLM_NAMESPACE = "openshift-operators";
 
-    public OpenShift(Environment environment, Function<String, String> infraNamespace) {
-        super(environment, infraNamespace.apply(OLM_NAMESPACE), () -> {
+    public OpenShift(Environment environment) {
+        super(environment, () -> {
             Config config = new ConfigBuilder().withMasterUrl(environment.getApiUrl())
                     .withOauthToken(environment.getApiToken())
                     .build();

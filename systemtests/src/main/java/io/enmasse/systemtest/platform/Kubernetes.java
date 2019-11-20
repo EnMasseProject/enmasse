@@ -42,7 +42,6 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -101,7 +100,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -122,9 +120,9 @@ public abstract class Kubernetes {
         }
     }
 
-    protected Kubernetes(Environment environment, String infraNamespace, Supplier<KubernetesClient> clientSupplier) {
+    protected Kubernetes(Environment environment, Supplier<KubernetesClient> clientSupplier) {
         this.environment = environment;
-        this.infraNamespace = infraNamespace;
+        this.infraNamespace = environment.namespace();
         this.client = clientSupplier.get();
     }
 
@@ -148,11 +146,10 @@ public abstract class Kubernetes {
                 log.error(ex.getMessage());
             }
             Environment env = Environment.getInstance();
-            Function<String, String> infraNamespace = olmNamespace -> env.installType() == EnmasseInstallType.BUNDLE ? env.namespace() : olmNamespace;
             if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
-                instance = new Minikube(env, infraNamespace);
+                instance = new Minikube(env);
             } else {
-                instance = new OpenShift(env, infraNamespace);
+                instance = new OpenShift(env);
             }
         }
         return instance;
