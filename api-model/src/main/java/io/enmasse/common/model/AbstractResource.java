@@ -19,13 +19,17 @@ import io.sundr.builder.annotations.Inline;
                                 value = "done"))
 public abstract class AbstractResource<T> {
 
-    private final String kind;
+    private String kind;
 
     private String apiVersion;
 
     protected AbstractResource(final String kind, final String apiVersion) {
         this.kind = kind;
         this.apiVersion = apiVersion;
+    }
+
+    public void setKind(String kind) {
+        this.kind = kind;
     }
 
     public String getKind() {
