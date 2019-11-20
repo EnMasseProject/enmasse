@@ -118,15 +118,15 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void deleteResourcesNotIn(String [] uuids) {
-        client.apps().statefulSets().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
-        client.secrets().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
-        client.configMaps().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
+    public void deleteResources(String infraUuid) {
+        client.apps().statefulSets().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
+        client.secrets().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
+        client.configMaps().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
 
         // Work around fabric8 issue when deleting a deployment.  Internally there is a race between Fabric8's
         // scaling of the deployment to zero and the deletion of the replicaset.  If the replicaset is deleted first
         // the pods are orphaned.
-        final Set<Deployment> deployments = new HashSet<>(client.apps().deployments().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).list().getItems());
+        final Set<Deployment> deployments = new HashSet<>(client.apps().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
         deployments.forEach(d -> scaleDeployment(d, 0));
 
         long timeout = System.currentTimeMillis() + 60000;
@@ -154,10 +154,10 @@ public class KubernetesHelper implements Kubernetes {
             log.warn("Could not delete all not-in-use deployments at this time as pods did not scale to zero within timeout: Deployments: {}", names);
         }
 
-        client.services().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
-        client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
+        client.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
+        client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_UUID, infraUuid).delete();
         if (isOpenShift) {
-            client.adapt(OpenShiftClient.class).routes().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
+            client.adapt(OpenShiftClient.class).routes().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         }
     }
 

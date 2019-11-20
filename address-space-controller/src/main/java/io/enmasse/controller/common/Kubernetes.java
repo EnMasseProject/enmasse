@@ -27,7 +27,7 @@ public interface Kubernetes {
     void apply(KubernetesList resourceList, boolean patchPersistentVolumeClaims);
     KubernetesList processTemplate(String templateName, Map<String, String> parameters);
 
-    void deleteResourcesNotIn(String[] addressSpaces);
+    void deleteResources(String infraUuid);
 
     Set<Deployment> getReadyDeployments(AddressSpace addressSpace);
     Set<StatefulSet> getReadyStatefulSets(AddressSpace addressSpace);
