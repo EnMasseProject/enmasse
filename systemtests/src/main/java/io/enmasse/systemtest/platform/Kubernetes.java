@@ -141,6 +141,7 @@ public abstract class Kubernetes {
         if (instance == null) {
             try {
                 cluster = KubeCluster.detect();
+                log.info("Cluster is {}", cluster.toString());
             } catch (NoClusterException ex) {
                 log.error(ex.getMessage());
             }

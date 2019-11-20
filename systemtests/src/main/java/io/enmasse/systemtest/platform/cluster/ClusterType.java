@@ -6,5 +6,6 @@ package io.enmasse.systemtest.platform.cluster;
 
 public enum ClusterType {
     MINIKUBE,
-    OPENSHIFT
+    OPENSHIFT,
+    CRC
 }
