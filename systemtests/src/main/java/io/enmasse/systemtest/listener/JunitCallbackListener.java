@@ -53,25 +53,32 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         handleCallBackError(context, () -> {
             if (testInfo.isUpgradeTest()) {
                 LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
-            } else if (env.installType() == EnmasseInstallType.OLM || testInfo.isOLMTest()) {
-
-                if (testInfo.isOLMTest() && operatorManager.areExamplesApplied()) {
+            } else if (testInfo.isOLMTest()) {
+                LOGGER.info("Test is OLM");
+                if (operatorManager.areExamplesApplied()) {
                     operatorManager.deleteExamplesBundle();
                 }
-                if (testInfo.isOLMTest() && operatorManager.isEnmasseBundleDeployed() && env.installType() != EnmasseInstallType.OLM) {
-                    operatorManager.deleteEnmasseBundle();
-                } else if(testInfo.isOLMTest() && operatorManager.isEnmasseBundleDeployed() && env.installType() == EnmasseInstallType.OLM) {
+                if (operatorManager.isEnmasseBundleDeployed()) {
+                    if (env.installType() == EnmasseInstallType.OLM) {
+                        operatorManager.deleteEnmasseOlm();
+                    } else {
+                        operatorManager.deleteEnmasseBundle();
+                    }
+                }
+                if (operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.deleteEnmasseOlm();
                 }
-
+                if (!operatorManager.isEnmasseOlmDeployed()) {
+                    operatorManager.installEnmasseOlm(testInfo.getOLMInstallationType());
+                }
+            } else if (env.installType() == EnmasseInstallType.OLM) {
                 if (!operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.installEnmasseOlm();
                 }
-                if (!testInfo.isOLMTest() && !operatorManager.areExamplesApplied()) {
+                if (!operatorManager.areExamplesApplied()) {
                     operatorManager.installExamplesBundle();
                     operatorManager.waitUntilOperatorReadyOLM();
                 }
-
                 //FIXME this shouldn't be necessary because of OLM installation
                 if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
                     operatorManager.installIoTOperator();

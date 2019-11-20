@@ -7,6 +7,7 @@ package io.enmasse.systemtest.info;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.condition.AssumeKubernetesCondition;
 import io.enmasse.systemtest.condition.AssumeOpenshiftCondition;
+import io.enmasse.systemtest.condition.OLMInstallationType;
 import io.enmasse.systemtest.condition.OLMRequired;
 import io.enmasse.systemtest.condition.OLMRequiredCondition;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -168,6 +169,12 @@ public class TestInfo {
 
     public boolean isOLMTest() {
         return AnnotationSupport.findAnnotation(currentTestClass.getElement(), OLMRequired.class).isPresent();
+    }
+
+    public OLMInstallationType getOLMInstallationType() {
+        return AnnotationSupport.findAnnotation(currentTestClass.getElement(), OLMRequired.class)
+                .map(OLMRequired::installation)
+                .orElseThrow();
     }
 
     public boolean isNextTestUpgrade() {
