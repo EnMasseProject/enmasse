@@ -19,6 +19,8 @@ import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.OpenShiftClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +31,8 @@ import java.util.stream.Collectors;
  * Wraps the Kubernetes client and adds some helper methods.
  */
 public class KubernetesHelper implements Kubernetes {
+    private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class);
+
     private static final String TEMPLATE_SUFFIX = ".yaml";
 
     private final NamespacedKubernetesClient client;
@@ -118,7 +122,38 @@ public class KubernetesHelper implements Kubernetes {
         client.apps().statefulSets().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
         client.secrets().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
         client.configMaps().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
-        client.apps().deployments().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
+
+        // Work around fabric8 issue when deleting a deployment.  Internally there is a race between Fabric8's
+        // scaling of the deployment to zero and the deletion of the replicaset.  If the replicaset is deleted first
+        // the pods are orphaned.
+        final Set<Deployment> deployments = new HashSet<>(client.apps().deployments().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).list().getItems());
+        deployments.forEach(d -> scaleDeployment(d, 0));
+
+        long timeout = System.currentTimeMillis() + 60000;
+        while(!deployments.isEmpty() && timeout > System.currentTimeMillis()) {
+            final Iterator<Deployment> iterator = deployments.iterator();
+            while (iterator.hasNext()) {
+                final Deployment next = iterator.next();
+                final String deploymentName = next.getMetadata().getName();
+                final Deployment current = client.apps().deployments().withName(deploymentName).get();
+                if (current.getStatus() != null && (current.getStatus().getReplicas() == null || current.getStatus().getReplicas() == 0)) {
+                    client.apps().deployments().withName(deploymentName).withPropagationPolicy("Background").delete();
+                    iterator.remove();
+                }
+            }
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        if (!deployments.isEmpty()) {
+            final List<Object> names = deployments.stream().map(d -> d.getMetadata().getName()).collect(Collectors.toList());
+            log.warn("Could not delete all not-in-use deployments at this time as pods did not scale to zero within timeout: Deployments: {}", names);
+        }
+
         client.services().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).withPropagationPolicy("Background").delete();
         client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         if (isOpenShift) {
@@ -181,4 +216,9 @@ public class KubernetesHelper implements Kubernetes {
 
         return InfraConfigs.parseCurrentInfraConfig(messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
+
+    private void scaleDeployment(Deployment deployment, int numReplicas) {
+        client.apps().deployments().withName(deployment.getMetadata().getName()).scale(numReplicas);
+    }
+
 }
