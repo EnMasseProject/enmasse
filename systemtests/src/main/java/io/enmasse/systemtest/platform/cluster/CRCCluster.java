@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.platform.cluster;
 
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.executor.Exec;
 
 import java.util.Arrays;
@@ -19,7 +20,7 @@ public class CRCCluster implements KubeCluster {
 
     @Override
     public boolean isClusterUp() {
-        return Exec.execute(Arrays.asList(IDENTIFIER, "status"), false).getRetCode();
+        return Exec.execute(Arrays.asList(IDENTIFIER, "status"), false).getRetCode() && Environment.getInstance().getApiUrl().contains("api.crc.testing");
     }
 
     @Override

@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
@@ -32,10 +31,10 @@ import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.cluster.CRCCluster;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
@@ -86,8 +85,7 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
         for(JsonObject example : exampleResources) {
             LOGGER.info("Example: {}", example);
             String kind = example.getString("kind");
-//            if(kind.equals("AuthenticationService") && kubernetes.getCluster() instanceof CRCCLuster) {
-            if(kind.equals("AuthenticationService") && Exec.execute(Arrays.asList("crc", "status")).getRetCode()) {
+            if(kind.equals("AuthenticationService") && kubernetes.getCluster() instanceof CRCCluster) {
                 log.info("Creating standard-authservice with no persistence because of CRC cluster");
                 AuthenticationService authService = AuthServiceUtils.createStandardAuthServiceObject("standard-authservice", false);
                 authService.getMetadata().setNamespace(getInstallationNamespace());
