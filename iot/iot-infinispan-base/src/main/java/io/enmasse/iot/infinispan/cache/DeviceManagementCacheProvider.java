@@ -10,11 +10,8 @@ import java.util.Optional;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ServerConfigurationBuilder;
-import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Index;
-import org.infinispan.protostream.SerializationContext;
-import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.infinispan.transaction.TransactionMode;
 import org.infinispan.util.concurrent.IsolationLevel;
@@ -32,17 +29,17 @@ import io.enmasse.iot.infinispan.device.DeviceKey;
 @Component
 public class DeviceManagementCacheProvider extends AbstractCacheProvider {
 
-    private static final String GENERATED_PROTOBUF_FILE_NAME = "deviceRegistry.proto";
     private static final Logger log = LoggerFactory.getLogger(DeviceManagementCacheProvider.class);
 
     @Autowired
     public DeviceManagementCacheProvider(final InfinispanProperties properties) {
         super(properties);
+        log.info("Protobuf schema: {}", new DeviceManagementProtobufSchemaBuilderImpl().getProtoFile());
     }
 
     @Override
     protected void customizeServerConfiguration(ServerConfigurationBuilder configuration) {
-        configuration.marshaller(ProtoStreamMarshaller.class);
+        configuration.addContextInitializer(new DeviceManagementProtobufSchemaBuilderImpl());
     }
 
     @Override
@@ -52,25 +49,12 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
     }
 
     private static void configureSerializer(RemoteCacheManager remoteCacheManager) throws Exception {
-        final SerializationContext serCtx = ProtoStreamMarshaller.getSerializationContext(remoteCacheManager);
 
-        final String generatedSchema = new ProtoSchemaBuilder()
-
-                .addClass(DeviceKey.class)
-                .addClass(DeviceInformation.class)
-                .addClass(DeviceCredential.class)
-
-                .addClass(CredentialKey.class)
-
-                .packageName("io.enmasse.iot.registry.infinispan.data")
-                .fileName(GENERATED_PROTOBUF_FILE_NAME)
-                .build(serCtx);
-
-        log.info("Generated protobuf schema - {}", generatedSchema);
+        final DeviceManagementProtobufSchemaBuilderImpl schema = new DeviceManagementProtobufSchemaBuilderImpl();
 
         remoteCacheManager
                 .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
-                .put(GENERATED_PROTOBUF_FILE_NAME, generatedSchema);
+                .put(schema.getProtoFileName(), schema.getProtoFile());
 
     }
 
@@ -80,12 +64,14 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
                 .indexing()
                 .index(Index.PRIMARY_OWNER)
                 .addProperty("default.indexmanager", "org.infinispan.query.indexmanager.InfinispanIndexManager")
+                .addProperty("default.worker.execution", "async")
+                .addProperty("default.index_flush_interval", "500")
                 .addIndexedEntity(DeviceInformation.class)
                 .addIndexedEntity(DeviceCredential.class)
 
-                .persistence()
-                .addSingleFileStore()
-                .fetchPersistentState(true)
+//                .persistence()
+//                .addSingleFileStore()
+//                .fetchPersistentState(true)
 
                 .clustering()
                 .cacheMode(CacheMode.DIST_SYNC)
@@ -136,6 +122,5 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
     public Optional<RemoteCache<CredentialKey, String>> getAdapterCredentialsCache() {
         return getCache(properties.getAdapterCredentialsCacheName());
     }
-
 
 }

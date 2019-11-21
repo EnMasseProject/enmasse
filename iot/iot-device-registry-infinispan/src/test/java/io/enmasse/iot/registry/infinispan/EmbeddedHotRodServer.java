@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.util.UUID;
 
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.server.core.admin.embeddedserver.EmbeddedServerAdminOperationHandler;
@@ -41,7 +42,8 @@ public class EmbeddedHotRodServer {
 
     public EmbeddedHotRodServer() throws Exception {
 
-        var globalConfig = new GlobalConfigurationBuilder()
+        GlobalConfiguration globalConfig = new GlobalConfigurationBuilder()
+                .defaultCacheName("default")
                 .transport()
                 .clusterName(UUID.randomUUID().toString())
                 .defaultTransport()
@@ -95,6 +97,6 @@ public class EmbeddedHotRodServer {
     }
 
     public RemoteCache<DeviceConnectionKey, String> getDeviceStateCache() {
-        return this.stateProvider.getOrCreateDeviceStateCache();
+        return this.stateProvider.getDeviceStateTestCache();
     }
 }

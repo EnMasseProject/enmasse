@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.UUID;
 
 /**
- * Tests verifying behavior of {@link CacheRegistrationService}.
+ * Tests verifying behavior of {@link CacheDeviceConnectionService}.
  *
  */
 @ExtendWith(VertxExtension.class)
