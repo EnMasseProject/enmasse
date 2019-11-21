@@ -497,8 +497,8 @@ func ApplyNodeAffinity(template *corev1.PodTemplateSpec, matchKey string) {
 // This is a workaround for a problem that may manifest when EnMasse is deployed into OLM cluster-wide
 // under certain configurations. If https://github.com/operator-framework/operator-lifecycle-manager/issues/927
 // is resolved, this workaround can be removed.
-func ApplyFsGroupOverride(deployment *appsv1.Deployment) error {
-	err := util.ApplyEnv("FS_GROUP_OVERRIDE", func(name string, value string, ok bool) error {
+func ApplyFsGroupOverride(envVar string, deployment *appsv1.Deployment) error {
+	err := util.ApplyEnv(envVar, func(name string, value string, ok bool) error {
 		if ok {
 			fsGroupOverride, err := strconv.ParseInt(value, 10, 0)
 			if deployment.Spec.Template.Spec.SecurityContext == nil {

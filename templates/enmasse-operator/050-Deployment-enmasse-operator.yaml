@@ -111,3 +111,5 @@ spec:
           value: "${CONSOLE_PROXY_KUBERNETES_IMAGE}"
         - name: CONSOLE_HTTPD_IMAGE
           value: "${CONSOLE_HTTPD_IMAGE}"
+        - name: FS_GROUP_STANDARD_AUTHSERVICE_OVERRIDE
+          value: "1000"
