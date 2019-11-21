@@ -36,5 +36,4 @@ public interface AddressApi {
     boolean deleteAddress(Address address);
 
     Watch watchAddresses(CacheWatcher<Address> watcher, Duration resyncInterval) throws Exception;
-    boolean exists();
 }

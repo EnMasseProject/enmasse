@@ -44,7 +44,7 @@ public class AddressFinalizerController extends AbstractFinalizeController {
                 list = addressApi.listAddresses(addressSpaceNamespace, BATCH_SIZE, list, null);
             } catch (KubernetesClientException e) {
                 // If not found, the address CRD does not exist so we drop the finalizer
-                if (e.getCode() == 404 && !addressApi.exists()) {
+                if (e.getCode() == 404) {
                     return Result.completed(addressSpace);
                 } else {
                     log.warn("Error finalizing {}/{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), e);

@@ -4,7 +4,6 @@
  */
 package io.enmasse.k8s.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
@@ -12,7 +11,6 @@ import io.enmasse.address.model.CoreCrd;
 import io.enmasse.address.model.DoneableAddress;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.cache.*;
-import io.enmasse.k8s.model.v1.APIResourceList;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
@@ -20,14 +18,7 @@ import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
-import java.io.IOException;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Collections;
@@ -41,7 +32,7 @@ public class KubeAddressApi implements AddressApi, ListerWatcher<Address, Addres
     private final CustomResourceDefinition customResourceDefinition;
     private final WorkQueue<Address> cache = new EventCache<>(new HasMetadataFieldExtractor<>());
     private final String version;
-    private static final ObjectMapper mapper = new ObjectMapper();
+
 
     private KubeAddressApi(NamespacedKubernetesClient kubeClient, String namespace, CustomResourceDefinition customResourceDefinition, String version) {
         this.kubernetesClient = kubeClient;
@@ -150,35 +141,6 @@ public class KubeAddressApi implements AddressApi, ListerWatcher<Address, Addres
         Controller controller = new Controller(reflector);
         controller.start();
         return controller;
-    }
-
-    @Override
-    public boolean exists() {
-        OkHttpClient httpClient = kubernetesClient.adapt(OkHttpClient.class);
-
-        HttpUrl url = HttpUrl.get(kubernetesClient.getMasterUrl()).resolve(String.format("/apis/%s/%s", CoreCrd.GROUP, CoreCrd.VERSION));
-
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(url)
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Authorization", "Bearer " + kubernetesClient.getConfiguration().getOauthToken())
-                .method("GET", null);
-
-        try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
-            try (ResponseBody responseBody = response.body()) {
-                String responseString = responseBody != null ? responseBody.string() : "{}";
-                if (response.isSuccessful()) {
-                    APIResourceList resourceList = mapper.readValue(responseString, APIResourceList.class);
-                    return resourceList.getResources().stream()
-                            .anyMatch(resource -> resource.getKind().equals(customResourceDefinition.getSpec().getNames().getKind()) &&
-                                    resourceList.getGroupVersion().equals(customResourceDefinition.getSpec().getGroup()));
-                } else {
-                    return false;
-                }
-            }
-        } catch (IOException e) {
-            return false;
-        }
     }
 
     @Override
