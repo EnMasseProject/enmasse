@@ -181,8 +181,8 @@ public class OperatorManager {
         KubeCMDClient.runOnCluster("delete", "configmaps", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
         KubeCMDClient.runOnCluster("delete", "secrets", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
         KubeCMDClient.runOnCluster("delete", "services", "-l", "app=enmasse", "-n", kube.getOlmNamespace());
-        KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse");
+        KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "oauthclients", "-l", "app=enmasse");
@@ -211,8 +211,8 @@ public class OperatorManager {
     }
 
     public void clean() throws Exception {
-        KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse");
+        KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "oauthclients", "-l", "app=enmasse");

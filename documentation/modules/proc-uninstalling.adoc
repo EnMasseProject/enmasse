@@ -24,8 +24,8 @@ ifeval::["{cmdcli}" == "oc"]
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} delete clusterrolebindings -l app=enmasse
 {cmdcli} delete crd -l app=enmasse
+{cmdcli} delete clusterrolebindings -l app=enmasse
 {cmdcli} delete clusterroles -l app=enmasse
 {cmdcli} delete apiservices -l app=enmasse
 {cmdcli} delete oauthclients -l app=enmasse
@@ -44,8 +44,8 @@ ifeval::["{cmdcli}" == "kubectl"]
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} delete clusterrolebindings -l app=enmasse
 {cmdcli} delete crd -l app=enmasse
+{cmdcli} delete clusterrolebindings -l app=enmasse
 {cmdcli} delete clusterroles -l app=enmasse
 {cmdcli} delete apiservices -l app=enmasse
 ----
