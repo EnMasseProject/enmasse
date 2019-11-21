@@ -52,11 +52,6 @@ public class TestAddressApi implements AddressApi {
     }
 
     @Override
-    public boolean exists() {
-        return true;
-    }
-
-    @Override
     public Optional<Address> getAddressWithName(String namespace, String address) {
         if (throwException) {
             throw new RuntimeException("exception");
