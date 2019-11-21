@@ -585,6 +585,11 @@ spec:
         - apiGroups: [ "iot.enmasse.io" ]
           resources: [ "iotprojects" ]
           verbs: [ "get", "list", "watch" ]
+      - serviceAccountName: iot-tenant-service
+        rules:
+        - apiGroups: [ "iot.enmasse.io" ]
+          resources: [ "iotprojects" ]
+          verbs: [ "get", "list", "watch" ]
       deployments:
       - name: enmasse-operator
         spec:
