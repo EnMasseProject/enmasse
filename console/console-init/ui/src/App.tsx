@@ -12,7 +12,7 @@ import { ApolloProvider } from "@apollo/react-hooks";
 import avatarImg from "./img_avatar.svg";
 
 const client = new ApolloClient({
-  uri: "http://10.215.99.74:4000"
+  uri: "http://localhost:4000"
 });
 
 const avatar = (
