@@ -1,0 +1,42 @@
+// Module included in the following assemblies:
+//
+// assembly-planning.adoc
+
+[id='ref-auth-service-resource-examples-{context}']
+= Authentication service resource examples
+
+Company X has the following requirement for using {ProductName}: For engineering work, the engineering team does not need to create distinct users that need to be individually authenticated. To meet this requirement, you specify the `none` authentication service:
+
+.None authentication service example
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: engineering
+spec:
+  type: none
+----
+
+For QA work, the QA team must be able to create users for each instance. Also,  QA has a database they want to use for persisting the users. To meet this requirement, you must use the `standard` authentication service and specify a data source:
+
+.Standard authentication service example
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: qa
+spec:
+  type: standard
+  standard:
+    storage:
+      type: persistent-claim
+      size: 5Gi
+    datasource:
+      type: postgresql
+      host: db.example.com
+      port: 5432
+      database: authdb
+----
+

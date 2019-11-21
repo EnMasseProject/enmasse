@@ -1,0 +1,53 @@
+// Module included in the following assemblies:
+//
+// assembly-planning.adoc
+
+[id='ref-restrict-messaging-infrastructure-{context}']
+= Restricting messaging infrastructure
+
+Company X has the following requirements for using {ProductName}:
+
+* For engineering work, restricting the messaging infrastructure to support storage of no more than 1000 messages of approximately 1 KB per message, with up to 10 queues and topics is required.
++
+For QA work, restricting the messaging infrastructure to support storage of no more than 10,000 messages of approximately 100 KB, with up to 50 queues and topics is required.
+
+Meeting this requirement involves configuring the `BrokeredInfraConfig` resource. The following points need to be taken into consideration:
+
+* Calculate the memory size for the broker: Given the requirements, specifying a relatively small memory size for engineering work is likely sufficient, while more memory is required for the QA work. For more information about broker sizing guidelines, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#broker-component-sizing-messaging[Broker component sizing].
+
+* Calculate the minimum amount of storage for the broker. For more information about broker sizing guidelines, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#broker-component-sizing-messaging[Broker component sizing].
+
+== Examples of brokered infrastructure configurations
+
+The following brokered infrastructure configuration examples show broker component resource values that meet the requirements of Company X.
+
+.Brokered infrastructure configuration example for engineering
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: BrokeredInfraConfig
+metadata:
+  name: engineering
+spec:
+  broker:
+    resources:
+      memory: 512Mi
+      storage: 20Mi
+----
+
+.Brokered infrastructure configuration example for QA
+
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: BrokeredInfraConfig
+metadata:
+  name: qa
+spec:
+  broker:
+    resources:
+      memory: 4Gi
+      storage: 50Gi
+----
+
+

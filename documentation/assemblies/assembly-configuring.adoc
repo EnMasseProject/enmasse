@@ -5,8 +5,6 @@
 [id='configuring-{context}']
 = Configuring {ProductName}
 
-include::../modules/con-configuring.adoc[leveloffset=+1]
-
 include::../modules/proc-minimal-service-configuration.adoc[leveloffset=+1]
 
 include::../modules/con-address-space-plans.adoc[leveloffset=+1]
