@@ -30,9 +30,9 @@ import org.slf4j.LoggerFactory;
 
 public class DeviceRegistryTokenAuthProvider implements AuthProvider {
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger log = LoggerFactory.getLogger(DeviceRegistryTokenAuthProvider.class);
 
-    static final HttpStatusException UNAUTHORIZED = new HttpStatusException(401);
+    private static final HttpStatusException UNAUTHORIZED = new HttpStatusException(401);
 
     private final NamespacedKubernetesClient client;
     private final AuthApi authApi;
@@ -65,18 +65,18 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
         final String iotProject = tenant[1];
 
         TokenReview review = authApi.performTokenReview(token);
-        log.info("Authorizing token for '{}' access to '{}' iot project in '{}' namespace", verb, iotProject, namespace);
+        log.debug("Authorizing token for '{}' access to '{}' iot project in '{}' namespace", verb, iotProject, namespace);
         if (review.isAuthenticated()) {
             RbacSecurityContext securityContext = new RbacSecurityContext(review, authApi, null);
             if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, "iotprojects", iotProject, "iot.enmasse.io"))) {
-                log.info("Bearer token not authorized");
+                log.debug("Bearer token not authorized");
                 resultHandler.handle(Future.failedFuture(UNAUTHORIZED));
             }
             // TODO It's possible to cache authorities in the user object implementation based on
             // review.getUserName()
             resultHandler.handle(Future.succeededFuture());
         } else {
-            log.info("Bearer token not authenticated");
+            log.debug("Bearer token not authenticated");
             resultHandler.handle(Future.failedFuture(UNAUTHORIZED));
         }
     }
