@@ -9,9 +9,6 @@ import {
   FlexItem,
   Split,
   SplitItem,
-  Card,
-  CardHeader,
-  CardBody,
   Badge
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
@@ -29,13 +26,17 @@ const styles = StyleSheet.create({
     fontSize: 25
   },
   address_icon_align: {
-    paddingTop: 24,
-    paddingLeft: 18
+    paddingTop: 5,
+    paddingRight: 16
   },
   kebab_toggle_margin: {
-    marginTop: 30,
+    marginTop: 20,
     marginLeft: 10,
     fontSize: 15
+  },
+  namespace_info_margin: {
+    marginTop: 16,
+    marginBottom: 24
   }
 });
 export interface IAddressSpaceHeaderProps {
@@ -61,52 +62,46 @@ export const AddressSpaceHeader: React.FunctionComponent<
       key="download"
       aria-label="download"
       onClick={() => onDownload(name)}
-      style={{ paddingRight: 50 }}
-    >
+      style={{ paddingRight: 50 }}>
       Download Certificate
     </DropdownItem>,
     <DropdownItem
       key="delete"
       aria-label="delete"
-      onClick={() => onDelete(name)}
-    >
+      onClick={() => onDelete(name)}>
       Delete
     </DropdownItem>
   ];
   return (
-    <Card>
+    <>
       <Split>
         <SplitItem className={css(styles.address_icon_align)}>
           <Badge className={css(styles.address_space_icon_margin)}>AS</Badge>
         </SplitItem>
         <SplitItem>
-          <CardHeader>
-            <Split gutter="md">
-              <SplitItem>
-                <Title headingLevel="h1" size="4xl">
-                  {name}
-                </Title>
-              </SplitItem>
-            </Split>
-          </CardHeader>
-          <CardBody>
-            <Flex>
-              <FlexItem className={css(styles.flex_right_border)}>
-                in namespace <b>{namespace}</b>
-              </FlexItem>
-              <FlexItem className={css(styles.flex_right_border)}>
-                <b>
-                  <AddressSpaceType type={type} />
-                </b>
-              </FlexItem>
-              <FlexItem>
-                Created{" "}
-                <b>
-                  <FormatDistance date={createdOn} />
-                </b>
-              </FlexItem>
-            </Flex>
-          </CardBody>
+          <Split gutter="md">
+            <SplitItem>
+              <Title headingLevel="h1" size="4xl">
+                {name}
+              </Title>
+            </SplitItem>
+          </Split>
+          <Flex className={css(styles.namespace_info_margin)}>
+            <FlexItem className={css(styles.flex_right_border)}>
+              in namespace <b>{namespace}</b>
+            </FlexItem>
+            <FlexItem className={css(styles.flex_right_border)}>
+              <b>
+                <AddressSpaceType type={type} />
+              </b>
+            </FlexItem>
+            <FlexItem>
+              Created{" "}
+              <b>
+                <FormatDistance date={createdOn} />
+              </b>
+            </FlexItem>
+          </Flex>
         </SplitItem>
         <SplitItem isFilled></SplitItem>
         <SplitItem className={css(styles.kebab_toggle_margin)}>
@@ -120,6 +115,6 @@ export const AddressSpaceHeader: React.FunctionComponent<
           />
         </SplitItem>
       </Split>
-    </Card>
+    </>
   );
 };

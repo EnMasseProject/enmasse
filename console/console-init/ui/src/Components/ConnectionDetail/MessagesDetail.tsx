@@ -16,8 +16,8 @@ const styles = StyleSheet.create({
   }
 });
 export interface IMessagesDetail {
-  messagesIn: number;
-  messagesOut: number;
+  messagesIn?: number;
+  messagesOut?: number;
   isMobileView: boolean;
 }
 

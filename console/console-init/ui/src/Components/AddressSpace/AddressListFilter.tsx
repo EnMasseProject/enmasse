@@ -61,12 +61,12 @@ export const AddressListFilter: React.FunctionComponent<
             type="search"
             placeholder="Filter by name..."
             aria-label="search input name"
+            style={{ marginLeft: 2 }}
           />
           <Button
             variant={ButtonVariant.control}
             aria-label="search button for search input"
-            onClick={onSearch}
-          >
+            onClick={onSearch}>
             <SearchIcon />
           </Button>
         </InputGroup>

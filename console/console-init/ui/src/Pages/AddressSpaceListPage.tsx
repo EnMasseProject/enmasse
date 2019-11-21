@@ -12,7 +12,6 @@ import {
   KebabToggle,
   Modal
 } from "@patternfly/react-core";
-// import { AddressSpaceList } from "src/Components/AddressSpaceList/AddressSpaceList";
 import {
   AddressSpaceList,
   IAddressSpace

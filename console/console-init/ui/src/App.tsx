@@ -18,8 +18,7 @@ const client = new ApolloClient({
 const avatar = (
   <React.Fragment>
     <Text component={TextVariants.p}>Ramakrishna Pattnaik</Text>
-    {/* Change src later */}
-    <Avatar src="" alt="avatar" />
+    <Avatar src={avatarImg} alt="avatar" />
   </React.Fragment>
 );
 
@@ -39,8 +38,7 @@ const App: React.FC = () => {
         logoProps={logoProps}
         logo={logo}
         avatar={avatar}
-        toolbar={<NavToolBar />}
-      >
+        toolbar={<NavToolBar />}>
         <AppRoutes />
       </AppLayout>
     </ApolloProvider>

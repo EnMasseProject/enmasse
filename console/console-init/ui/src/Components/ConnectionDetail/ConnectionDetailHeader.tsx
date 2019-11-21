@@ -19,18 +19,23 @@ import { css, StyleSheet } from "@patternfly/react-styles";
 const styles = StyleSheet.create({
   expandable: {
     color: "rgb(0, 102, 204)"
+  },
+  flex_right_border: {
+    paddingRight: "1em",
+    borderRight: "0.05em solid",
+    borderRightColor: "lightgrey"
   }
 });
 export interface IConnectionHeaderDetailProps {
   hostname: string;
   containerId: string;
   protocol: string;
-  product: string;
-  version: string;
-  platform: string;
-  os: string;
-  messagesIn: number;
-  messagesOut: number;
+  product?: string;
+  version?: string;
+  platform?: string;
+  os?: string;
+  messagesIn?: number;
+  messagesOut?: number;
 }
 export const ConnectionDetailHeader: React.FunctionComponent<
   IConnectionHeaderDetailProps
@@ -71,7 +76,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<
       </CardHeader>
       <CardBody>
         <Flex>
-          <FlexItem>
+          <FlexItem className={css(styles.flex_right_border)}>
             in container <b>{containerId}</b>
           </FlexItem>
           <FlexItem>
@@ -105,8 +110,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<
           breakpointMods={[
             { modifier: "column", breakpoint: "sm" },
             { modifier: "row", breakpoint: "lg" }
-          ]}
-        >
+          ]}>
           {isMobileView || !isHidden ? (
             <>
               <ConnectionDetail

@@ -11,11 +11,23 @@ import { useParams } from "react-router";
 import {
   Pagination,
   PageSection,
-  PageSectionVariants
+  PageSectionVariants,
+  Grid,
+  GridItem,
+  InputGroup,
+  TextInput,
+  Button,
+  ButtonVariant
 } from "@patternfly/react-core";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionListResponse } from "src/Types/ResponseTypes";
-
+import { css } from "@patternfly/react-styles";
+import {
+  FilterDropdown,
+  IDropdownOption
+} from "src/Components/Common/FilterDropdown";
+import { SearchIcon } from "@patternfly/react-icons";
+import { GridStylesForTableHeader } from "./AddressesListPage";
 const RETURN_ALL_CONECTION_LIST = (name?: string, namespace?: string) => {
   let filter = "";
   if (name) {
@@ -66,6 +78,8 @@ export default function ConnectionsListPage() {
   };
 
   console.log(connections);
+  // connections.Total=0;
+  // connections.Connections=[];
   const connectionList: IConnection[] = connections.Connections.map(
     connection => ({
       hostname: connection.Spec.Hostname,
@@ -78,31 +92,75 @@ export default function ConnectionsListPage() {
       status: "running"
     })
   );
+
+  const filterOptions: IDropdownOption[] = [
+    { value: "container", label: "Container" },
+    { value: "miss", label: "Miss", disabled: false },
+    { value: "mrs", label: "Mrs", disabled: false },
+    { value: "ms", label: "Ms", disabled: false },
+    { value: "dr", label: "Dr", disabled: false },
+    { value: "other", label: "Other", disabled: false }
+  ];
   return (
-    <>
+    <PageSection variant={PageSectionVariants.light}>
+      <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
+        <GridItem
+          span={4}
+          className={css(GridStylesForTableHeader.filter_left_margin)}>
+          <InputGroup>
+            {/** Add the logic for select for filter and dropdown */}
+            <FilterDropdown
+              value="Container"
+              onSelect={() => {}}
+              options={filterOptions}
+            />
+            <InputGroup>
+              <TextInput
+                name="search name"
+                id="searchName"
+                type="search"
+                placeholder="Filter by container ID..."
+                aria-label="search input container"
+              />
+              <Button
+                variant={ButtonVariant.control}
+                aria-label="search button for search input"
+                onClick={() => {
+                  console.log("search icon clicked");
+                }}>
+                <SearchIcon />
+              </Button>
+            </InputGroup>
+          </InputGroup>
+        </GridItem>
+        <GridItem span={8}>
+          {connections.Total === 0 ? (
+            ""
+          ) : (
+            <Pagination
+              itemCount={523}
+              perPage={10}
+              page={1}
+              onSetPage={() => {}}
+              widgetId="pagination-options-menu-top"
+              onPerPageSelect={() => {}}
+            />
+          )}
+        </GridItem>
+      </Grid>
+      <ConnectionList rows={connectionList ? connectionList : []} />
       {connections.Total === 0 ? (
         <EmptyConnection />
       ) : (
-        <PageSection variant={PageSectionVariants.light}>
-          <Pagination
-            itemCount={523}
-            perPage={10}
-            page={1}
-            onSetPage={() => {}}
-            widgetId="pagination-options-menu-top"
-            onPerPageSelect={() => {}}
-          />
-          <ConnectionList rows={connectionList} />{" "}
-          <Pagination
-            itemCount={523}
-            perPage={10}
-            page={1}
-            onSetPage={() => {}}
-            widgetId="pagination-options-menu-top"
-            onPerPageSelect={() => {}}
-          />
-        </PageSection>
+        <Pagination
+          itemCount={523}
+          perPage={10}
+          page={1}
+          onSetPage={() => {}}
+          widgetId="pagination-options-menu-top"
+          onPerPageSelect={() => {}}
+        />
       )}
-    </>
+    </PageSection>
   );
 }

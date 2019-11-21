@@ -18,17 +18,39 @@ import {
   Dropdown,
   DropdownPosition,
   KebabToggle
+  // Breadcrumb,
+  // BreadcrumbItem
 } from "@patternfly/react-core";
 
 import gql from "graphql-tag";
 import { useQuery } from "@apollo/react-hooks";
-import { useDocumentTitle, useA11yRouteChange, Loading } from "use-patternfly";
+import {
+  useDocumentTitle,
+  useA11yRouteChange,
+  Loading
+  // useBreadcrumb
+} from "use-patternfly";
 import { IAddress, AddressList } from "src/Components/AddressSpace/AddressList";
 import { EmptyAddress } from "src/Components/Common/EmptyAddress";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IAddressResponse } from "src/Types/ResponseTypes";
 import { EditAddress } from "./EditAddressPage";
 import { AddressListFilter } from "src/Components/AddressSpace/AddressListFilter";
+import { css, StyleSheet } from "@patternfly/react-styles";
+
+export const GridStylesForTableHeader = StyleSheet.create({
+  grid_bottom_border: {
+    paddingBottom: "1em",
+    borderBottom: "0.05em solid",
+    borderBottomColor: "lightgrey"
+  },
+  filter_left_margin: {
+    marginLeft: 24
+  },
+  create_button_left_margin: {
+    marginLeft: 10
+  }
+});
 
 const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
   name?: string,
@@ -58,6 +80,7 @@ const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
           PlanStatus{
             Partitions
           }
+          Phase
           IsReady
           Messages
         }
@@ -98,7 +121,7 @@ function AddressesListFunction() {
     RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE(name, namespace),
     { pollInterval: 5000 }
   );
-
+  console.log(data);
   // const setSearchParam = React.useCallback(
   //   (name: string, value: string) => {
   //     searchParams.set(name, value.toString());
@@ -132,7 +155,8 @@ function AddressesListFunction() {
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };
-
+  // addresses.Total = 0;
+  // addresses.Addresses = [];
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
     name: address.ObjectMeta.Name,
     namespace: address.ObjectMeta.Namespace,
@@ -148,7 +172,8 @@ function AddressesListFunction() {
     receivers: getFilteredValue(address.Metrics, "enmasse-receivers"),
     shards: address.Status.PlanStatus.Partitions,
     isReady: address.Status.IsReady,
-    status: address.Status.IsReady ? "running" : "creating"
+    status: address.Status.Phase,
+    errorMessages: address.Status.Messages
   }));
 
   const handleDelete = (data: IAddress) => void 0;
@@ -165,8 +190,10 @@ function AddressesListFunction() {
 
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Grid>
-        <GridItem span={6}>
+      <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
+        <GridItem
+          span={6}
+          className={css(GridStylesForTableHeader.filter_left_margin)}>
           <InputGroup>
             {/** Add the logic for select for filter and dropdown */}
             <AddressListFilter
@@ -180,7 +207,13 @@ function AddressesListFunction() {
               onStatusSelect={() => {}}
               statusValue={"Active"}
             />
-            <Button variant="primary">Create address</Button>
+            <Button
+              variant="primary"
+              className={css(
+                GridStylesForTableHeader.create_button_left_margin
+              )}>
+              Create address
+            </Button>
             <Dropdown
               isPlain
               position={DropdownPosition.right}
@@ -206,15 +239,12 @@ function AddressesListFunction() {
           )}
         </GridItem>
       </Grid>
-      {addresses.Total === 0 ? (
-        <EmptyAddress />
-      ) : (
-        <AddressList
-          rows={addressesList}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )}
+      <AddressList
+        rows={addressesList ? addressesList : []}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+      {addresses.Total === 0 ? <EmptyAddress /> : ""}
       {addressBeingEdited && (
         <Modal
           title="Edit"
@@ -229,8 +259,7 @@ function AddressesListFunction() {
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned
-        >
+          isFooterLeftAligned>
           <EditAddress
             address={addressBeingEdited}
             onChange={handleEditChange}

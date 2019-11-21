@@ -5,6 +5,7 @@ import { FilterIcon } from "@patternfly/react-icons";
 export interface IDropdownOption {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 export interface IDropdown {
@@ -38,8 +39,7 @@ export const FilterDropdown: React.FunctionComponent<IDropdown> = ({
         <DropdownItem
           key={option.value}
           value={option.value}
-          itemID={option.value}
-        >
+          itemID={option.value}>
           {option.label}
         </DropdownItem>
       ))}
