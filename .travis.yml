@@ -33,7 +33,7 @@ jobs:
     - gimme 1.12.9
     - source ~/.gimme/envs/go1.12.9.env
     - go version
-    - wget https://archive.apache.org/dist/maven/maven-3/3.6.2/binaries/apache-maven-3.6.2-bin.zip
+    - wget http://repo2.maven.org/maven2/org/apache/maven/apache-maven/3.6.2/apache-maven-3.6.2-bin.zip
     - unzip -qq apache-maven-3.6.2-bin.zip
     - export M2_HOME=$PWD/apache-maven-3.6.2
     - export PATH=$M2_HOME/bin:$PATH
