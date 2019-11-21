@@ -15,13 +15,14 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.configuration.ServerConfigurationBuilder;
+import org.infinispan.commons.api.CacheContainerAdmin;
 import org.infinispan.configuration.cache.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.enmasse.iot.infinispan.config.InfinispanProperties;
 
-public abstract class AbstractCacheProvider {
+public abstract class AbstractCacheProvider implements AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractCacheProvider.class);
 
@@ -77,6 +78,11 @@ public abstract class AbstractCacheProvider {
         }
     }
 
+    @Override
+    public void close() throws Exception {
+        stop();
+    }
+
     /**
      * Make it a proper SNI hostname.
      * <br>
@@ -112,4 +118,13 @@ public abstract class AbstractCacheProvider {
 
     }
 
+    protected <K, V> RemoteCache<K, V> getOrCreateTestCache(final String cacheName, final Configuration configuration) {
+
+        log.debug("CacheConfig - {}\n{}", cacheName, configuration.toXMLString(cacheName));
+
+            return this.remoteCacheManager
+                    .administration()
+                    .withFlags(CacheContainerAdmin.AdminFlag.VOLATILE)
+                    .getOrCreateCache(cacheName, configuration);
+    }
 }

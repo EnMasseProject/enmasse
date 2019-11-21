@@ -11,7 +11,6 @@ import java.util.Objects;
 
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
-import org.infinispan.protostream.annotations.ProtoMessage;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
@@ -21,13 +20,12 @@ import com.google.common.base.MoreObjects.ToStringHelper;
  *
  */
 @ProtoDoc("@Indexed")
-@ProtoMessage
 public class DeviceCredential {
 
-    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.YES)")
     @ProtoField(number = 1, required = true)
     protected String authId;
-    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.YES)")
     @ProtoField(number = 2, required = true)
     protected String type;
 

@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.infinispan.protostream.annotations.ProtoField;
-import org.infinispan.protostream.annotations.ProtoMessage;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
@@ -23,7 +22,6 @@ import io.enmasse.iot.infinispan.tenant.TenantHandle;
  *
  * See {@link CacheRegistrationService CacheRegistrationService} class.
  */
-@ProtoMessage
 public class DeviceKey implements Serializable {
 
     private static final long serialVersionUID = 1L;
