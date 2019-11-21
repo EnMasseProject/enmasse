@@ -10,6 +10,7 @@ import {
 import { Link } from "react-router-dom";
 import { TypePlan } from "../Common/TypePlan";
 import { Messages } from "../Common/Messages";
+import { Error } from "../Common/Error";
 
 export interface IAddress {
   name: string;
@@ -24,7 +25,7 @@ export interface IAddress {
   shards: number;
   isReady: boolean;
   errorMessages?: string[];
-  status?: "creating" | "deleting" | "running";
+  status?: string;
 }
 
 interface IAddressListProps {
@@ -92,7 +93,11 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
           { title: <Link to={`address/${row.name}`}>{row.name}</Link> },
           { title: <TypePlan type={row.type} plan={row.plan} /> },
           {
-            title: row.errorMessages ? row.errorMessages[0] : "",
+            title: row.errorMessages ? (
+              <Error message={row.errorMessages[0]} type={row.status} />
+            ) : (
+              ""
+            ),
             props: { colSpan: 6 }
           }
         ]
@@ -118,8 +123,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       cells={tableColumns}
       rows={tableRows}
       actionResolver={actionResolver}
-      aria-label="Address List"
-    >
+      aria-label="Address List">
       <TableHeader />
       <TableBody />
     </Table>

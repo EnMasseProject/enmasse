@@ -5,17 +5,29 @@ import {
   useDocumentTitle,
   SwitchWith404,
   LazyRoute,
-  Loading
+  Loading,
+  useBreadcrumb
 } from "use-patternfly";
-import { PageSection, PageSectionVariants } from "@patternfly/react-core";
-import { Redirect, useParams } from "react-router-dom";
+import {
+  PageSection,
+  PageSectionVariants,
+  Breadcrumb,
+  BreadcrumbItem
+} from "@patternfly/react-core";
+import { Redirect, useParams, Link } from "react-router-dom";
 import {
   IAddressSpaceHeaderProps,
   AddressSpaceHeader
 } from "src/Components/AddressSpace/AddressSpaceHeader";
 import gql from "graphql-tag";
 import { useQuery } from "@apollo/react-hooks";
+import { StyleSheet, css } from "@patternfly/react-styles";
 
+const styles = StyleSheet.create({
+  no_bottom_padding: {
+    paddingBottom: 0
+  }
+});
 const getConnectionsList = () => import("./ConnectionsListPage");
 const getAddressesList = () => import("./AddressesListPage");
 
@@ -71,11 +83,18 @@ const return_ADDRESS_SPACE_DETAIL = (name?: string, namespace?: string) => {
     }`;
   return ADDRESS_SPACE_DETAIL;
 };
-
+const breadcrumb = (
+  <Breadcrumb>
+    <BreadcrumbItem>
+      <Link to={"/"}>Home</Link>
+    </BreadcrumbItem>
+  </Breadcrumb>
+);
 export default function AddressSpaceDetailPage() {
   const { name, namespace, subList } = useParams();
 
   useA11yRouteChange();
+  useBreadcrumb(breadcrumb);
   useDocumentTitle("Address Space Detail");
 
   const { loading, error, data } = useQuery<IAddressSpaceDetailResponse>(
@@ -112,12 +131,10 @@ export default function AddressSpaceDetailPage() {
     <>
       <PageSection
         variant={PageSectionVariants.light}
-        style={{ paddingBottom: 0 }}
-      >
+        className={css(styles.no_bottom_padding)}>
         <AddressSpaceHeader {...addressSpaceDetails} />
         <AddressSpaceNavigation
-          activeItem={subList || "addresses"}
-        ></AddressSpaceNavigation>
+          activeItem={subList || "addresses"}></AddressSpaceNavigation>
       </PageSection>
       <PageSection>
         <SwitchWith404>

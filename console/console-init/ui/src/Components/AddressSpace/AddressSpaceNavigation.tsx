@@ -18,16 +18,18 @@ export const AddressSpaceNavigation: React.FunctionComponent<
         <NavItem
           key="addresses"
           itemId="addresses"
-          isActive={active === "addresses"}
-        >
-          <NavLink to={`addresses`}>Addresses</NavLink>
+          isActive={active === "addresses"}>
+          <NavLink to={`addresses`} style={{ color: "black" }}>
+            Addresses
+          </NavLink>
         </NavItem>
         <NavItem
           key="connections"
           itemId="connections"
-          isActive={active === "connections"}
-        >
-          <NavLink to={`connections`}>Connections</NavLink>
+          isActive={active === "connections"}>
+          <NavLink to={`connections`} style={{ color: "black" }}>
+            Connections
+          </NavLink>
         </NavItem>
       </NavList>
     </Nav>

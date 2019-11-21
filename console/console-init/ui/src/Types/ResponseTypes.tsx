@@ -19,6 +19,10 @@ export interface IConnectionDetailResponse {
         Hostname: string;
         ContainerId: string;
         Protocol: string;
+        Properties: Array<{
+          Key: string;
+          Value: string;
+        }>;
       };
       Metrics: Array<IMetrics>;
       Links: {
@@ -61,6 +65,7 @@ export interface IAddressResponse {
         };
         IsReady: boolean;
         Messages: Array<string>;
+        Phase: string;
       };
       Metrics: Array<IMetrics>;
     }>;

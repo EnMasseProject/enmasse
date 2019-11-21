@@ -1,15 +1,26 @@
 import * as React from "react";
-import { ExclamationCircleIcon } from "@patternfly/react-icons";
+import { ExclamationCircleIcon, InProgressIcon } from "@patternfly/react-icons";
 
 interface IErrorProps {
   message: string;
+  type?: string;
 }
 
-export const Error: React.FunctionComponent<IErrorProps> = error => {
-  return (
+export const Error: React.FunctionComponent<IErrorProps> = ({
+  message,
+  type
+}) => {
+  return type === "Pending" ? (
     <React.Fragment>
-      <ExclamationCircleIcon />
-      {error.message}
+      <ExclamationCircleIcon color="red" />
+      &nbsp;
+      {message}
     </React.Fragment>
+  ) : (
+    <>
+      <InProgressIcon />
+      &nbsp;
+      {message}
+    </>
   );
 };

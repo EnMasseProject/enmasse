@@ -3,7 +3,7 @@ import { Flex, FlexItem } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 
 const styles = StyleSheet.create({
-  flex_right_boder_with_padding: {
+  flex_right_border_with_padding: {
     paddingRight: "48px",
     marginRight: "48px",
     borderRight: "2px solid",
@@ -16,10 +16,10 @@ const styles = StyleSheet.create({
   }
 });
 export interface IConnectionDetailProps {
-  product: string;
-  version: string;
-  jvm: string;
-  os: string;
+  product?: string;
+  version?: string;
+  jvm?: string;
+  os?: string;
   isMobileView: boolean;
 }
 export const ConnectionDetail: React.FunctionComponent<
@@ -30,17 +30,16 @@ export const ConnectionDetail: React.FunctionComponent<
       breakpointMods={[{ modifier: "column", breakpoint: "sm" }]}
       className={
         !isMobileView
-          ? css(styles.flex_right_boder_with_padding)
+          ? css(styles.flex_right_border_with_padding)
           : css(styles.flex_bottom_boder)
-      }
-    >
+      }>
       <Flex>
         <FlexItem>
-          <b>Product</b> {product}
+          <b>Product</b> {product || "-"}
         </FlexItem>
         <FlexItem>
           <b>Version </b>
-          {version} SNAPSHOT
+          {version || "-"}
         </FlexItem>
       </Flex>
       <Flex>
@@ -52,15 +51,14 @@ export const ConnectionDetail: React.FunctionComponent<
             breakpointMods={[
               { modifier: "row", breakpoint: "lg" },
               { modifier: "column", breakpoint: "sm" }
-            ]}
-          >
+            ]}>
             <FlexItem>
               <b>JVM: </b>
-              {jvm}
+              {jvm || "-"}
             </FlexItem>
             <FlexItem>
               <b>OS: </b>
-              {os}
+              {os || "-"}
             </FlexItem>
           </Flex>
         </FlexItem>
