@@ -54,7 +54,7 @@ public class RouterConfigController implements Controller {
     }
 
     private static ConfigMapBuilder createNewConfigMap(String infraUuid) {
-        // NOTE: Deletion of this configmap is handled by ComponentFinalizeController based on these labels
+        // NOTE: Deletion of this configmap is handled by ComponentFinalizerController based on these labels
         return new ConfigMapBuilder().editOrNewMetadata()
                 .withName(routerConfigName(infraUuid))
                 .addToLabels("app", "enmasse")

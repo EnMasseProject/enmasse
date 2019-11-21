@@ -15,14 +15,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
-public class RealmFinalizeController extends AbstractFinalizeController {
+public class RealmFinalizerController extends AbstractFinalizerController {
     private static final Logger log = LoggerFactory.getLogger(AddressFinalizerController.class);
     public static final String FINALIZER_REALMS = "enmasse.io/realms";
 
     private final RealmApi realmApi;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
 
-    public RealmFinalizeController(RealmApi realmApi, AuthenticationServiceRegistry authenticationServiceRegistry) {
+    public RealmFinalizerController(RealmApi realmApi, AuthenticationServiceRegistry authenticationServiceRegistry) {
         super(FINALIZER_REALMS);
         this.realmApi = realmApi;
         this.authenticationServiceRegistry = authenticationServiceRegistry;
@@ -30,27 +30,28 @@ public class RealmFinalizeController extends AbstractFinalizeController {
 
     @Override
     public String toString() {
-        return "RealmFinalizeController";
+        return "RealmFinalizerController";
     }
 
     @Override
     protected Result processFinalizer(AddressSpace addressSpace) {
         log.info("Processing realm finalizer for {}/{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
 
-        final AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
         final String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-        // Only remove realms on authentication services of type standard where realm is per-address space
-        if (authenticationService != null &&
-                authenticationService.getStatus() != null &&
-                authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard) &&
-                authenticationService.getSpec().getRealm() == null &&
-                realmName != null) {
+        if (realmName != null) {
+            final AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
+            // Only remove realms on authentication services of type standard where realm is per-address space
+            if (authenticationService != null &&
+                    authenticationService.getStatus() != null &&
+                    authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard) &&
+                    authenticationService.getSpec().getRealm() == null) {
 
-            try {
-                deleteRealm(authenticationService, realmName);
-            } catch (Exception e) {
-                log.warn("Error finalizing {}/{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), e);
-                return Result.waiting(addressSpace);
+                try {
+                    deleteRealm(authenticationService, realmName);
+                } catch (Exception e) {
+                    log.warn("Error finalizing {}/{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), e);
+                    return Result.waiting(addressSpace);
+                }
             }
         }
         return Result.completed(addressSpace);

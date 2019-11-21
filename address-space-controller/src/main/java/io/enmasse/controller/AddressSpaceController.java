@@ -156,8 +156,8 @@ public class AddressSpaceController {
         controllerChain = new ControllerChain(addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new DefaultsController(authenticationServiceRegistry));
         controllerChain.addController(new AddressFinalizerController(addressSpaceApi));
-        controllerChain.addController(new ComponentFinalizeController(kubernetes));
-        controllerChain.addController(new RealmFinalizeController(keycloakUserApi, authenticationServiceRegistry));
+        controllerChain.addController(new ComponentFinalizerController(kubernetes));
+        controllerChain.addController(new RealmFinalizerController(keycloakUserApi, authenticationServiceRegistry));
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi));
         controllerChain.addController(new RouterConfigController(controllerClient, controllerClient.getNamespace(), authenticationServiceResolver));
         controllerChain.addController(new RealmController(keycloakUserApi, authenticationServiceRegistry));

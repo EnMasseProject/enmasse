@@ -10,19 +10,19 @@ import io.enmasse.controller.common.Kubernetes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ComponentFinalizeController extends AbstractFinalizeController {
+public class ComponentFinalizerController extends AbstractFinalizerController {
     private static final Logger log = LoggerFactory.getLogger(AddressFinalizerController.class);
     private final Kubernetes kubernetes;
     public static final String FINALIZER_COMPONENTS = "enmasse.io/components";
 
-    public ComponentFinalizeController(Kubernetes kubernetes) {
+    public ComponentFinalizerController(Kubernetes kubernetes) {
         super(FINALIZER_COMPONENTS);
         this.kubernetes = kubernetes;
     }
 
     @Override
     public String toString() {
-        return "ComponentFinalizeController";
+        return "ComponentFinalizerController";
     }
 
     @Override

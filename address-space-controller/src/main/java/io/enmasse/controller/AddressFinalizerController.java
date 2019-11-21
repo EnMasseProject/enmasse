@@ -14,7 +14,7 @@ import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ContinuationResult;
 
-public class AddressFinalizerController extends AbstractFinalizeController {
+public class AddressFinalizerController extends AbstractFinalizerController {
 
     private static final Logger log = LoggerFactory.getLogger(AddressFinalizerController.class);
 
