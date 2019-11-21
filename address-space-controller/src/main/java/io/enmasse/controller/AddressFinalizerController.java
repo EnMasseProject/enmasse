@@ -38,14 +38,19 @@ public class AddressFinalizerController extends AbstractFinalizeController {
         final String addressSpaceNamespace = addressSpace.getMetadata().getNamespace();
         final AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
 
-        // If API does not exist, the address CRD does not exist so we drop the finalizer
-        if (!addressApi.exists()) {
-            return Result.completed(addressSpace);
-        }
-
         ContinuationResult<Address> list = null;
         do {
-            list = addressApi.listAddresses(addressSpaceNamespace, BATCH_SIZE, list, null);
+            try {
+                list = addressApi.listAddresses(addressSpaceNamespace, BATCH_SIZE, list, null);
+            } catch (KubernetesClientException e) {
+                // If not found, the address CRD does not exist so we drop the finalizer
+                if (e.getCode() == 404 && !addressApi.exists()) {
+                    return Result.completed(addressSpace);
+                } else {
+                    log.warn("Error finalizing {}/{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), e);
+                    return Result.waiting(addressSpace);
+                }
+            }
 
             log.debug("Processing addresses - found: {} -> continue: '{}'", list.getItems().size(), list.getContinuation());
 
