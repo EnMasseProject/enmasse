@@ -155,7 +155,8 @@ function AddressesListFunction() {
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };
-
+  // addresses.Total = 0;
+  // addresses.Addresses = [];
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
     name: address.ObjectMeta.Name,
     namespace: address.ObjectMeta.Namespace,
@@ -238,15 +239,12 @@ function AddressesListFunction() {
           )}
         </GridItem>
       </Grid>
-      {addresses.Total === 0 ? (
-        <EmptyAddress />
-      ) : (
-        <AddressList
-          rows={addressesList}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )}
+      <AddressList
+        rows={addressesList ? addressesList : []}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+      {addresses.Total === 0 ? <EmptyAddress /> : ""}
       {addressBeingEdited && (
         <Modal
           title="Edit"

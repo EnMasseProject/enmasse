@@ -15,7 +15,6 @@ import {
   Grid,
   GridItem,
   InputGroup,
-  Dropdown,
   TextInput,
   Button,
   ButtonVariant
@@ -79,6 +78,8 @@ export default function ConnectionsListPage() {
   };
 
   console.log(connections);
+  // connections.Total=0;
+  // connections.Connections=[];
   const connectionList: IConnection[] = connections.Connections.map(
     connection => ({
       hostname: connection.Spec.Hostname,
@@ -118,7 +119,7 @@ export default function ConnectionsListPage() {
                 name="search name"
                 id="searchName"
                 type="search"
-                placeholder="Filter by container..."
+                placeholder="Filter by container ID..."
                 aria-label="search input container"
               />
               <Button
@@ -147,20 +148,18 @@ export default function ConnectionsListPage() {
           )}
         </GridItem>
       </Grid>
+      <ConnectionList rows={connectionList ? connectionList : []} />
       {connections.Total === 0 ? (
         <EmptyConnection />
       ) : (
-        <>
-          <ConnectionList rows={connectionList} />{" "}
-          <Pagination
-            itemCount={523}
-            perPage={10}
-            page={1}
-            onSetPage={() => {}}
-            widgetId="pagination-options-menu-top"
-            onPerPageSelect={() => {}}
-          />
-        </>
+        <Pagination
+          itemCount={523}
+          perPage={10}
+          page={1}
+          onSetPage={() => {}}
+          widgetId="pagination-options-menu-top"
+          onPerPageSelect={() => {}}
+        />
       )}
     </PageSection>
   );

@@ -9,9 +9,6 @@ import {
   FlexItem,
   Split,
   SplitItem,
-  Card,
-  CardHeader,
-  CardBody,
   Badge
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";

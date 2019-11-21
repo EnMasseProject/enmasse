@@ -4,7 +4,8 @@ import {
   TableVariant,
   TableHeader,
   TableBody,
-  IRowData
+  IRowData,
+  sortable
 } from "@patternfly/react-table";
 
 interface ILinkListProps {
@@ -48,11 +49,11 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
     "Name",
     "Address",
     "Deliveries",
-    "Rejected",
-    "Released",
-    "Modified",
-    "Presettled",
-    "Undelivered"
+    {title:"Rejected", transforms: [sortable] },
+    {title:"Released", transforms: [sortable] },
+    {title:"Modified", transforms: [sortable] },
+    {title:"Presettled", transforms: [sortable] },
+    {title:"Undelivered", transforms: [sortable] }
   ];
 
   return (

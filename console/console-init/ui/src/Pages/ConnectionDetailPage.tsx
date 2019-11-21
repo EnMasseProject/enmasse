@@ -178,6 +178,7 @@ export default function ConnectionDetailPage() {
   const linkRows: ILink[] = connection.Links.Links.map(link => ({
     name: link.ObjectMeta.Name,
     role: link.Spec.Role,
+    //change it after confiramtion
     address: link.ObjectMeta.Namespace,
     deliveries: getFilteredValue(link.Metrics, "enmasse_deliveries"),
     rejected: getFilteredValue(link.Metrics, "enmasse_rejected"),
