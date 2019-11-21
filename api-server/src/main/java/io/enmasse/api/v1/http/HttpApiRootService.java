@@ -6,7 +6,11 @@ package io.enmasse.api.v1.http;
 
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.common.Exceptions;
-import io.enmasse.api.v1.types.*;
+import io.enmasse.k8s.model.v1.APIGroup;
+import io.enmasse.k8s.model.v1.APIGroupList;
+import io.enmasse.k8s.model.v1.APIGroupVersion;
+import io.enmasse.k8s.model.v1.APIResource;
+import io.enmasse.k8s.model.v1.APIResourceList;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

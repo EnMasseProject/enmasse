@@ -247,6 +247,11 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     @Override
+    public boolean exists() {
+        return true;
+    }
+
+    @Override
     public ConfigMapList list(ListOptions listOptions) {
         return client.configMaps()
                         .withLabel(LabelKeys.TYPE, "address-config")
