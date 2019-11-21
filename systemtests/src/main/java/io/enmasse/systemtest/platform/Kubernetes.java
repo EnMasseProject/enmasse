@@ -42,8 +42,10 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.condition.OLMInstallationType;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
 import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
@@ -122,8 +124,13 @@ public abstract class Kubernetes {
 
     protected Kubernetes(Environment environment, Supplier<KubernetesClient> clientSupplier) {
         this.environment = environment;
-        this.infraNamespace = environment.namespace();
         this.client = clientSupplier.get();
+        if (environment.installType() == EnmasseInstallType.OLM
+                && environment.olmInstallType() == OLMInstallationType.DEFAULT) {
+            this.infraNamespace = getOlmNamespace();
+        } else {
+            this.infraNamespace = environment.namespace();
+        }
     }
 
     private static int getPort(Service service, String portName) {

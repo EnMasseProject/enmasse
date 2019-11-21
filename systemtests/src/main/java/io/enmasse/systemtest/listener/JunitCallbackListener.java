@@ -55,29 +55,20 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                 LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
             } else if (testInfo.isOLMTest()) {
                 LOGGER.info("Test is OLM");
-                if (operatorManager.areExamplesApplied()) {
-                    operatorManager.deleteExamplesBundle();
-                }
-                if (operatorManager.isEnmasseBundleDeployed()) {
-                    if (env.installType() == EnmasseInstallType.OLM) {
-                        operatorManager.deleteEnmasseOlm();
-                    } else {
-                        operatorManager.deleteEnmasseBundle();
-                    }
-                }
                 if (operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.deleteEnmasseOlm();
                 }
-                if (!operatorManager.isEnmasseOlmDeployed()) {
-                    operatorManager.installEnmasseOlm(testInfo.getOLMInstallationType());
+                if (operatorManager.isEnmasseBundleDeployed()) {
+                    operatorManager.deleteEnmasseBundle();
                 }
+                operatorManager.installEnmasseOlm(testInfo.getOLMInstallationType());
             } else if (env.installType() == EnmasseInstallType.OLM) {
                 if (!operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.installEnmasseOlm();
                 }
                 if (!operatorManager.areExamplesApplied()) {
-                    operatorManager.installExamplesBundle();
-                    operatorManager.waitUntilOperatorReadyOLM();
+                    operatorManager.installExamplesBundleOlm();
+                    operatorManager.waitUntilOperatorReadyOlm();
                 }
                 //FIXME this shouldn't be necessary because of OLM installation
                 if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
