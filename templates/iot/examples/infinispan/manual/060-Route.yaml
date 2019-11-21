@@ -9,7 +9,7 @@ spec:
     kind: Service
     name: infinispan
   port:
-    targetPort: management
+    targetPort: infinispan
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect

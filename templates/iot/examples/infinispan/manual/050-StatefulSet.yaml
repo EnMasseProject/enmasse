@@ -21,9 +21,13 @@ spec:
     spec:
       serviceAccount: infinispan
       containers:
-      - args:
-        - custom/cloud-ephemeral.xml
-        - -Djboss.default.jgroups.stack=kubernetes
+      - command: [/opt/infinispan/bin/server.sh]
+        args:
+        - -b 
+        - SITE_LOCAL
+        - -c
+        - /config/custom-infinispan.xml
+        - -Djgroups.dns.query=infinispan.enmasse-infra.svc.cluster.local
         env:
         - name: KUBERNETES_LABELS
           value: app=infinispan,name=infinispan
@@ -51,25 +55,19 @@ spec:
             secretKeyRef:
               name: mgmt-auth-secret
               key: password
-        image: jboss/infinispan-server:9.4.11.Final
+        image: quay.io/infinispan/server:10.0.1.Final
         name: infinispan-server
         ports:
-        - containerPort: 8080
-          name: http
-          protocol: TCP
-        - containerPort: 9990
-          name: management
-          protocol: TCP
         - containerPort: 8888
           name: ping
           protocol: TCP
         - containerPort: 11222
-          name: hotrod
+          name: infinispan
           protocol: TCP
         livenessProbe:
           exec:
             command:
-            - /usr/local/bin/is_running.sh
+            - /opt/infinispan/bin/livenessProbe.sh
           failureThreshold: 5
           initialDelaySeconds: 10
           periodSeconds: 60
@@ -78,7 +76,7 @@ spec:
         readinessProbe:
           exec:
             command:
-            - /usr/local/bin/is_healthy.sh
+            - /opt/infinispan/bin/readinessProbe.sh
           failureThreshold: 5
           initialDelaySeconds: 10
           periodSeconds: 10
@@ -89,9 +87,9 @@ spec:
             cpu: "0.5"
             memory: 512Mi
         volumeMounts:
-        - mountPath: /opt/jboss/infinispan-server/standalone/configuration/custom
+        - mountPath: /config
           name: infinispan-configuration
-        - mountPath: /opt/jboss/infinispan-server/standalone/data
+        - mountPath: /opt/infinispan/server/data
           name: infinispan-data
       terminationGracePeriodSeconds: 120
       volumes:
@@ -107,4 +105,4 @@ spec:
       - ReadWriteOnce
       resources:
         requests:
-          storage: 32Gi
+          storage: 2Gi

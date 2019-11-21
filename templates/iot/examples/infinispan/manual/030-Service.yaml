@@ -8,10 +8,7 @@ spec:
   ports:
   - port: 11222
     targetPort: 11222
-    name: hotrod
-  - port: 9990
-    targetPort: 9990
-    name: management
+    name: infinispan
   selector:
     name: infinispan
     app: infinispan
