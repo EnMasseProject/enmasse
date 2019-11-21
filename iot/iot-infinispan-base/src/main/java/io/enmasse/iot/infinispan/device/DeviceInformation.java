@@ -14,7 +14,6 @@ import java.util.UUID;
 
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
-import org.infinispan.protostream.annotations.ProtoMessage;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
@@ -22,7 +21,6 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 import io.vertx.core.json.JsonObject;
 
 @ProtoDoc("@Indexed")
-@ProtoMessage
 public class DeviceInformation implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -32,7 +30,7 @@ public class DeviceInformation implements Serializable {
      * <br>
      * Although this information is redundant, it is required for indexing.
      */
-    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.YES)")
     @ProtoField(number = 1, required = true)
     protected String tenantId;
 
@@ -63,7 +61,7 @@ public class DeviceInformation implements Serializable {
     /**
      * The credentials, in our internal encoding.
      */
-    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.YES)")
     @ProtoField(number = 5, collectionImplementation = ArrayList.class)
     protected List<DeviceCredential> credentials;
 
