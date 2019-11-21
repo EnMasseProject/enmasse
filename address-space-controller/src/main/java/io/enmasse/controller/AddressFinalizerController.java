@@ -5,6 +5,7 @@
 
 package io.enmasse.controller;
 
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +40,17 @@ public class AddressFinalizerController extends AbstractFinalizeController {
 
         ContinuationResult<Address> list = null;
         do {
-            list = addressApi.listAddresses(addressSpaceNamespace, BATCH_SIZE, list, null);
+            try {
+                list = addressApi.listAddresses(addressSpaceNamespace, BATCH_SIZE, list, null);
+            } catch (KubernetesClientException e) {
+                // If not found, the address CRD does not exist so we drop the finalizer
+                if (e.getCode() == 404) {
+                    return Result.completed(addressSpace);
+                } else {
+                    log.warn("Error finalizing {}/{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), e);
+                    return Result.waiting(addressSpace);
+                }
+            }
 
             log.debug("Processing addresses - found: {} -> continue: '{}'", list.getItems().size(), list.getContinuation());
 
