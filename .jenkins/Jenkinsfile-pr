@@ -76,6 +76,7 @@ pipeline {
                     if (env.ghprbCommentBody.contains('test_only')) {
                         env.TEST_ONLY = true
                         env.DOCKER_REGISTRY = 'quay.io'
+                        env.INTERNAL_REGISTRY = 'quay.io'
                         env.DOCKER_ORG = 'enmasse'
                     } else {
                         env.TEST_ONLY = false
