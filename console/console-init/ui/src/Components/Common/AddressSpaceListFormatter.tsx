@@ -17,7 +17,7 @@ const typeToDisplay = (type: string) => {
   }
 };
 export const AddressSpaceIcon = () => {
-  return <Badge style={{ backgroundColor: "#EC7A08" }}>AS</Badge>;
+  return <Badge style={{ backgroundColor: "#EC7A08", fontSize: 'var(--pf-c-table-cell--FontSize)' }}>AS</Badge>;
 };
 const statusToDisplay = (isReady: boolean) => {
   return isReady ? (
@@ -25,10 +25,10 @@ const statusToDisplay = (isReady: boolean) => {
       <CheckCircleIcon color="green" /> Active
     </>
   ) : (
-    <>
-      <TimesCircleIcon color="red" /> Failed
+      <>
+        <TimesCircleIcon color="red" /> Failed 
     </>
-  );
+    );
 };
 export const AddressSpaceType: React.FunctionComponent<
   AddressSpaceTypeProps

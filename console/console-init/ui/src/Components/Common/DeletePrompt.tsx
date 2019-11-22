@@ -5,14 +5,14 @@ interface IDeleteProps {
   header: string;
   detail: string;
   name: string;
-  handleCancelDelte: () => void;
+  handleCancelDelete: () => void;
   handleConfirmDelete: () => void;
 }
 export const DeletePrompt: React.FunctionComponent<IDeleteProps> = ({
   header,
   detail,
   name,
-  handleCancelDelte,
+  handleCancelDelete,
   handleConfirmDelete
 }) => {
   return (
@@ -20,12 +20,12 @@ export const DeletePrompt: React.FunctionComponent<IDeleteProps> = ({
       isSmall={true}
       title={header}
       isOpen={true}
-      onClose={handleCancelDelte}
+      onClose={handleCancelDelete}
       actions={[
         <Button key="Delete" variant="primary" onClick={handleConfirmDelete}>
           Confirm
         </Button>,
-        <Button key="cancel" variant="link" onClick={handleCancelDelte}>
+        <Button key="cancel" variant="link" onClick={handleCancelDelete}>
           Cancel
         </Button>
       ]}

@@ -32,7 +32,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
     const tableRow: IRowData = {
       cells: [
         {
-          title: <Link to={`connection/${row.hostname}`}>{row.hostname}</Link>
+          title: <Link to={`connections/${row.hostname}`}>{row.hostname}</Link>
         },
         row.containerId,
         { title: <ConnectionProtocolFormat protocol={row.protocol} /> },
@@ -50,8 +50,8 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
     { title: "Hostname", dataLabel: "host" },
     "Container ID",
     "Protocol",
-    "Messages In",
-    "Messages Out",
+    { title: <span style={{display:"inline-flex"}} >Messages In<br/>{`(over last 5 min)`}</span> },
+    { title: <span style={{display:"inline-flex"}} >Messages Out<br/>{`(over last 5 min)`}</span> },
     {
       title: "Senders",
       transforms: [sortable]

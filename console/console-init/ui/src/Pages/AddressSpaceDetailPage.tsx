@@ -88,6 +88,7 @@ const breadcrumb = (
     <BreadcrumbItem>
       <Link to={"/"}>Home</Link>
     </BreadcrumbItem>
+    <BreadcrumbItem isActive={true}>Address Space</BreadcrumbItem>
   </Breadcrumb>
 );
 export default function AddressSpaceDetailPage() {

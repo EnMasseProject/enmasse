@@ -13,16 +13,20 @@ export default function AddressDetailPage() {
   const { namespace, name } = useParams();
   console.log(namespace);
   console.log(name);
-  const breadcrumb = (
+  const breadcrumb = React.useMemo(() => (
     <Breadcrumb>
       <BreadcrumbItem>
         <Link to={"/"}>Home</Link>
       </BreadcrumbItem>
       <BreadcrumbItem>
-        <Link to={`/address-spaces/${namespace}/${name}`}>{name}</Link>
+        <Link to={`/address-spaces/${namespace}/${name}/addresses`}>{name}</Link>
       </BreadcrumbItem>
+      <BreadcrumbItem isActive={true}>Address</BreadcrumbItem>
     </Breadcrumb>
-  );
+  ), [name, namespace])
+
+  useBreadcrumb(breadcrumb);
+
 
   useA11yRouteChange();
   // useBreadcrumb(breadcrumb);

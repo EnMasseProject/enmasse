@@ -21,12 +21,12 @@ export const AppRoutes = () => (
       getComponent={getAddressSpaceDetail}
     />
     <LazyRoute
-      path="/address-spaces/:namespace/:name/address/:addressname"
+      path="/address-spaces/:namespace/:name/addresses/:addressname"
       getComponent={getAddressDetail}
       exact={true}
     />
     <LazyRoute
-      path="/address-spaces/:namespace/:name/connection/:connectionname"
+      path="/address-spaces/:namespace/:name/connections/:connectionname"
       getComponent={getConnectionDetail}
       exact={true}
     />

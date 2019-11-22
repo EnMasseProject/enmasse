@@ -6,24 +6,24 @@ import {
 import {
   PageSection,
   PageSectionVariants,
-  Title
-  // Breadcrumb,
-  // BreadcrumbItem
+  Title,
+  Breadcrumb,
+  BreadcrumbItem
 } from "@patternfly/react-core";
 import gql from "graphql-tag";
 import { useQuery } from "@apollo/react-hooks";
 import { useParams } from "react-router";
 import {
   Loading,
-  useA11yRouteChange
-  // useBreadcrumb
+  useA11yRouteChange,
+  useBreadcrumb
 } from "use-patternfly";
 import { ILink, LinkList } from "src/Components/LinkList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionDetailResponse } from "src/Types/ResponseTypes";
 import { css } from "@patternfly/react-styles";
 import { GridStylesForTableHeader } from "./AddressesListPage";
-// import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const RETURN_CONNECTION_DETAIL = (
   addressSpaceName?: string,
@@ -98,19 +98,6 @@ const RETURN_CONNECTION_DETAIL = (
   return CONNECTION_DETAIL;
 };
 
-// const return_breadCrumb = (name?: string, namespace?: string) => {
-//   const breadcrumb = (
-//     <Breadcrumb>
-//       <BreadcrumbItem>
-//         <Link to={"/"}>Home</Link>
-//       </BreadcrumbItem>
-//       <BreadcrumbItem>
-//         <Link to={`/address-spaces/${namespace}/${name}`}>{name}</Link>
-//       </BreadcrumbItem>
-//     </Breadcrumb>
-//   );
-//   return breadcrumb;
-// };
 
 const getProductFilteredValue = (object: any[], value: string) => {
   const filtered = object.filter(obj => obj.Key === value);
@@ -134,19 +121,25 @@ const getSplitValue = (value: string) => {
 
 export default function ConnectionDetailPage() {
   const { name, namespace, connectionname } = useParams();
-  // useBreadcrumb(breadcrumb);
-  // const breadcrumb = (
-  //   <Breadcrumb>
-  //     <BreadcrumbItem>
-  //       <Link to={"/"}>Home</Link>
-  //     </BreadcrumbItem>
-  //   </Breadcrumb>
-  // );
+  const breadcrumb = React.useMemo(() => (
+    <Breadcrumb>
+      <BreadcrumbItem>
+        <Link to={"/"}>Home</Link>
+      </BreadcrumbItem>
+      <BreadcrumbItem>
+        <Link to={`/address-spaces/${namespace}/${name}/connections`}>{name}</Link>
+      </BreadcrumbItem>
+      <BreadcrumbItem isActive={true}>Connection</BreadcrumbItem>
+    </Breadcrumb>
+  ), [name, namespace])
+
+  useBreadcrumb(breadcrumb);
+
   useA11yRouteChange();
   // useBreadcrumb(breadcrumb);
   const { loading, error, data } = useQuery<IConnectionDetailResponse>(
     RETURN_CONNECTION_DETAIL(name || "", namespace || "", connectionname || ""),
-    { pollInterval: 5000 }
+    { pollInterval: 20000 }
   );
   if (loading) return <Loading />;
   if (error) {

@@ -32,11 +32,12 @@ import {
 } from "use-patternfly";
 import { IAddress, AddressList } from "src/Components/AddressSpace/AddressList";
 import { EmptyAddress } from "src/Components/Common/EmptyAddress";
-import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
-import { IAddressResponse } from "src/Types/ResponseTypes";
+import { IAddressResponse, IMetrics } from "src/Types/ResponseTypes";
 import { EditAddress } from "./EditAddressPage";
 import { AddressListFilter } from "src/Components/AddressSpace/AddressListFilter";
 import { css, StyleSheet } from "@patternfly/react-styles";
+// import { IRowData, IRow } from "@patternfly/react-table";
+import { DeletePrompt } from "src/Components/Common/DeletePrompt";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   grid_bottom_border: {
@@ -106,6 +107,11 @@ function AddressesListFunction() {
     setAddressBeingEdited
   ] = React.useState<IAddress | null>();
 
+  const [
+    addressBeingDeleted,
+    setAddressBeingDeleted
+  ] = React.useState<IAddress | null>();
+
   const [filter, setFilter] = React.useState("Name");
 
   const onFilterSelect = (item: any) => {
@@ -119,7 +125,7 @@ function AddressesListFunction() {
 
   const { loading, error, data } = useQuery<IAddressResponse>(
     RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE(name, namespace),
-    { pollInterval: 5000 }
+    { pollInterval: 20000 }
   );
   console.log(data);
   // const setSearchParam = React.useCallback(
@@ -157,6 +163,14 @@ function AddressesListFunction() {
   };
   // addresses.Total = 0;
   // addresses.Addresses = [];
+  const getFilteredValue = (object: IMetrics[], value: string) => {
+    const filtered = object.filter(obj => obj.Name === value);
+    if (filtered.length > 0) {
+      return filtered[0].Value;
+    }
+    return 0;
+  };
+
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
     name: address.ObjectMeta.Name,
     namespace: address.ObjectMeta.Namespace,
@@ -176,24 +190,33 @@ function AddressesListFunction() {
     errorMessages: address.Status.Messages
   }));
 
-  const handleDelete = (data: IAddress) => void 0;
   const handleEdit = (data: IAddress) => {
     if (!addressBeingEdited) {
+      console.log(data);
       setAddressBeingEdited(data);
     }
   };
 
+  // const handleCheckboxEdit = (rowsData: IRowData[]) => {
+  //   setRowsBeingEdited(rowsData)
+  // };
   const handleCancelEdit = () => setAddressBeingEdited(null);
   const handleSaving = () => void 0;
   const handleEditChange = (address: IAddress) =>
     setAddressBeingEdited(address);
+
+  const handleCancelDelete = () => setAddressBeingDeleted(null);
+  const handleDeleting = () => void 0;
+  const handleDeleteChange = (address: IAddress) =>
+    setAddressBeingDeleted(address);
 
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
         <GridItem
           span={6}
-          className={css(GridStylesForTableHeader.filter_left_margin)}>
+          className={css(GridStylesForTableHeader.filter_left_margin)}
+        >
           <InputGroup>
             {/** Add the logic for select for filter and dropdown */}
             <AddressListFilter
@@ -211,7 +234,8 @@ function AddressesListFunction() {
               variant="primary"
               className={css(
                 GridStylesForTableHeader.create_button_left_margin
-              )}>
+              )}
+            >
               Create address
             </Button>
             <Dropdown
@@ -240,9 +264,11 @@ function AddressesListFunction() {
         </GridItem>
       </Grid>
       <AddressList
-        rows={addressesList ? addressesList : []}
+        rowsData={addressesList ? addressesList : []}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={handleDeleteChange}
+        // onCheckboxEdit={handleCheckboxEdit}
+        // rows={rowsBeingEdited}
       />
       {addresses.Total === 0 ? <EmptyAddress /> : ""}
       {addressBeingEdited && (
@@ -259,12 +285,22 @@ function AddressesListFunction() {
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned>
+          isFooterLeftAligned
+        >
           <EditAddress
             address={addressBeingEdited}
             onChange={handleEditChange}
           />
         </Modal>
+      )}
+      {addressBeingDeleted && (
+        <DeletePrompt
+          detail={`Are you sure you want to delete ${addressBeingDeleted.name}`}
+          name={addressBeingDeleted.name}
+          header="Delete this address?"
+          handleCancelDelete={handleCancelDelete}
+          handleConfirmDelete={handleDeleting}
+        />
       )}
       {addresses.Total === 0 ? (
         ""

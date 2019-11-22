@@ -1,7 +1,7 @@
 import * as React from "react";
 import { storiesOf } from "@storybook/react";
 import { withKnobs } from "@storybook/addon-knobs";
-import { IAddressSpace, AddressSpaceLsit } from "src/Components/AddressSpaceList/AddressSpaceList";
+import { IAddressSpace, AddressSpaceList } from "src/Components/AddressSpaceList/AddressSpaceList";
 import { MemoryRouter } from "react-router";
 import { action } from "@storybook/addon-actions";
 
@@ -39,16 +39,16 @@ const rows: IAddressSpace[] = [
     creationTimestamp: "2019-11-10T15:08:32.489Z",
     type: "brokered",
     displayName: "Medium",
-    isReady: false              
+    isReady: false
   }
 ];
 
 stories.add("Address Space List", () => (
-    <MemoryRouter>
-      <AddressSpaceLsit
-        rows={rows}
-        onEdit={action("onEdit")}
-        onDelete={action("onDelete")}
-      />
-    </MemoryRouter>
-  ));
+  <MemoryRouter>
+    <AddressSpaceList
+      rows={rows}
+      onEdit={action("onEdit")}
+      onDelete={action("onDelete")}
+    />
+  </MemoryRouter>
+));
