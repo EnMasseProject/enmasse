@@ -106,7 +106,7 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		return err
 	}
 
-	err := install.ApplyFsGroupOverride("FS_GROUP_STANDARD_AUTHSERVICE_OVERRIDE", deployment)
+	err = install.ApplyFsGroupOverride("FS_GROUP_STANDARD_AUTHSERVICE_OVERRIDE", deployment)
 	if err != nil {
 		return err
 	}

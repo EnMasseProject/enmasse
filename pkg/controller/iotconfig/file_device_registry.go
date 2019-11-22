@@ -73,7 +73,7 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 
 	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig, nil)
 
-	err := install.ApplyFsGroupOverride(deployment)
+	err := install.ApplyFsGroupOverride("FS_GROUP_OVERRIDE", deployment)
 
 	if err != nil {
 		return err
