@@ -1,0 +1,46 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-creating-device.adoc
+
+[id='proc-iot-register-new-device-{context}']
+= Registering a new device
+
+To create a new device, you must first register the device.
+
+.Procedure
+
+. Export the device registry host:
++
+[options="nowrap",subs="attributes"]
+----
+export REGISTRY_HOST={registry}
+----
+
+. Export the device registry access token:
++
+[options="nowrap",subs="attributes"]
+----
+ifeval::["{cmdcli}" == "oc"]
+export TOKEN=$(oc whoami --show-token)
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+export TOKEN=$(kubectl -n enmasse-infra describe secret $(kubectl -n enmasse-infra get secret | grep default-token | awk '{print $1}') | grep token: | awk '{print $2}')
+endif::[]
+----
+This token is used to authenticate against the device registry management API.
+
+. Register a device with a defined ID (this example uses `4711`):
++
+[options="nowrap",subs="attributes"]
+----
+curl --insecure -X POST -i {headers} https://$REGISTRY_HOST/v1/devices/myapp.iot/4711
+----
+. (Optional) If you need to provide additional registration information, do so as follows:
++
+[options="nowrap",subs="attributes"]
+----
+curl --insecure -X POST -i {headers} --data-binary '{
+	"via": ["gateway1"]
+}' https://$REGISTRY_HOST/v1/devices/myapp.iot/4711
+----
+

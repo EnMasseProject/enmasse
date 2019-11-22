@@ -1,0 +1,17 @@
+// Module included in the following assemblies:
+//
+// assembly-service-admin.adoc
+// assembly-iot-getting-started.adoc
+
+:api: events
+
+[id='proc-iot-sending-events-mqtt-{context}']
+= Sending events using MQTT
+
+You can send an event message from the customer application to the device using the MQTT protocol.
+
+.Procedure
+
+include::../common/snip-iot-mqtt-api.adoc[leveloffset=+1]
+
+

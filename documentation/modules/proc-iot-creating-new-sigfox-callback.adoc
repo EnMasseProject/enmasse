@@ -1,0 +1,24 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-configuring-sigfox.adoc
+
+[id='proc-iot-creating-new-sigfox-callback-{context}']
+= Creating a new callback in the Sigfox backend
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-iot-configure-sigfox-connection-information-{context}[Prepared the Sigfox connection information].
+
+.Procedure
+
+. Log in to https://backend.sigfox.com.
+. In the `Device Type` open a type for editing and switch to the `Callbacks`
+  section.
+. Create a new "Custom" callback, with the following settings:
++
+Type:: `DATA` – `UPLINK`
+Channel:: `URL`
+Url pattern:: The _URL pattern_. For example, `\https://iot-sigfox-adapter.my.cluster/data/telemetry/<TENANT>?device={device}&data={data}`
+Use HTTP Method:: `GET`
+Headers:: `Authorization` – `Basic…`
+Send SNI:: ☑ (Enabled)
+
