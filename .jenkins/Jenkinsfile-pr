@@ -127,6 +127,39 @@ pipeline {
             }
 
         }
+        stage('workaround olm-manifest step 1') {
+            when {
+                allOf {
+                    environment name: 'TEST_ONLY', value: 'false'
+                    environment name: 'OC_VERSION', value: '4'
+                }
+            }
+            environment {
+                DOCKER_REGISTRY = "${env.INTERNAL_REGISTRY}"
+            }
+            steps {
+                dir('enmasse') {
+                    script {
+                        sh 'cd olm-manifest && make build docker_build'
+                    }
+                }
+            }
+        }
+        stage('workaround olm-manifest step 2') {
+            when {
+                allOf {
+                    environment name: 'TEST_ONLY', value: 'false'
+                    environment name: 'OC_VERSION', value: '4'
+                }
+            }
+            steps {
+                dir('enmasse') {
+                    script {
+                        sh 'cd olm-manifest && make docker_tag'
+                    }
+                }
+            }
+        }
         stage('push docker images') {
             when {
                 environment name: 'TEST_ONLY', value: 'false'
