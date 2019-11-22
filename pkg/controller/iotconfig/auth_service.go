@@ -56,10 +56,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	service := config.Spec.ServicesConfig.Authentication
-	applyDefaultDeploymentConfig(deployment, service.ServiceConfig)
-
-	// set the permissions hash on the pod template to re-deploy, in case the permissions.json changed
-	deployment.Spec.Template.Annotations["iot.enmasse.io/config-hash"] = configCtx.HashString()
+	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, configCtx)
 
 	err := install.ApplyContainerWithError(deployment, "auth-service", func(container *corev1.Container) error {
 

@@ -64,14 +64,14 @@ public class ControllerChainTest {
                 .withNewStatus(false)
                 .build();
 
-        when(mockController.reconcile(eq(a1))).thenReturn(a1);
-        when(mockController.reconcile(eq(a2))).thenReturn(a2);
+        when(mockController.reconcileAnyState(eq(a1))).thenReturn(a1);
+        when(mockController.reconcileAnyState(eq(a2))).thenReturn(a2);
 
         controllerChain.onUpdate(Arrays.asList(a1, a2));
 
-        verify(mockController, times(2)).reconcile(any());
-        verify(mockController).reconcile(eq(a1));
-        verify(mockController).reconcile(eq(a2));
+        verify(mockController, times(2)).reconcileAnyState(any());
+        verify(mockController).reconcileAnyState(eq(a1));
+        verify(mockController).reconcileAnyState(eq(a2));
 
 
     }

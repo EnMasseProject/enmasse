@@ -2,6 +2,19 @@
 
 @Library('amq-ci') _
 
+def NODE_LABEL = null
+
+node('master') {
+    stage('Set agent label') {
+        echo "Github PR comment: ${env.ghprbCommentBody}"
+        if (env.ghprbCommentBody.contains('ocp4')) {
+            NODE_LABEL = "enmasse-crc"
+        } else {
+            NODE_LABEL = params.AGENT_LABEL
+        }
+    }
+}
+
 pipeline {
 
     options {
@@ -13,12 +26,12 @@ pipeline {
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
         KUBERNETES_NAMESPACE = "enmasse-infra"
-        OPENSHIFT_PASSWD = "developer"
-        OPENSHIFT_USER = "developer"
+        OPENSHIFT_PASSWD = "admin"
+        OPENSHIFT_USER = "admin"
     }
     agent {
         node {
-            label "${params.AGENT_LABEL}"
+            label "${NODE_LABEL}"
         }
     }
     stages {
@@ -55,13 +68,25 @@ pipeline {
                     } else {
                         env.UPGRADE_FROM = params.UPGRADE_FROM
                     }
+                    if (env.ghprbCommentBody.contains('ocp4')) {
+                        env.OC_VERSION = "4"
+                    } else {
+                        env.OC_VERSION = "3.11"
+                    }
                     if (env.ghprbCommentBody.contains('test_only')) {
                         env.TEST_ONLY = true
                         env.DOCKER_REGISTRY = 'quay.io'
+                        env.INTERNAL_REGISTRY = 'quay.io'
                         env.DOCKER_ORG = 'enmasse'
                     } else {
                         env.TEST_ONLY = false
-                        env.DOCKER_REGISTRY = '172.30.1.1:5000'
+                        if (env.OC_VERSION == "4") {
+                            env.DOCKER_REGISTRY = 'default-route-openshift-image-registry.apps-crc.testing'
+                            env.INTERNAL_REGISTRY = 'image-registry.openshift-image-registry.svc:5000'
+                        } else {
+                            env.DOCKER_REGISTRY = '172.30.1.1:5000'
+                            env.INTERNAL_REGISTRY = '172.30.1.1:5000'
+                        }
                         env.DOCKER_ORG = 'enmasseci'
                     }
 
@@ -69,12 +94,13 @@ pipeline {
                     echo "TEST_CASE: ${env.TEST_CASE}"
                     echo "TEST_PROFILE: ${env.TEST_PROFILE}"
                     echo "UPGRADE_FROM: ${env.UPGRADE_FROM}"
+                    echo "OC_VERSION : ${env.OC_VERSION}"
                 }
             }
         }
         stage('Start or connect to openshift env') {
             steps {
-                timeout(time: 10, unit: 'MINUTES') {
+                timeout(time: 80, unit: 'MINUTES') {
                     dir('enmasse') {
                         script {
                             enmasse.prepareLogDirs()
@@ -104,9 +130,8 @@ pipeline {
             }
             steps {
                 dir('enmasse') {
-                    sh 'oc login -u test -p test --server localhost:8443 --insecure-skip-tls-verify'
                     sh 'oc new-project enmasseci'
-                    sh '$DOCKER login -u unused -p `oc whoami -t` $DOCKER_REGISTRY'
+                    sh 'docker login -u unused -p `oc whoami -t` $DOCKER_REGISTRY'
                     sh 'make docker_push'
                 }
             }
@@ -155,6 +180,7 @@ pipeline {
             environment {
                 UPGRADE_TEMPLATES = "${WORKSPACE}/enmasse/templates/build/enmasse-${env.TAG}"
                 START_TEMPLATES = "${WORKSPACE}/enmasse/templates/build/enmasse-${env.UPGRADE_FROM}"
+                DOCKER_REGISTRY = "${env.INTERNAL_REGISTRY}"
             }
             steps {
                 script {
@@ -171,6 +197,9 @@ pipeline {
         stage('[PR] system tests') {
             when {
                 expression { env.TEST_PROFILE != 'upgrade' }
+            }
+            environment {
+                DOCKER_REGISTRY = "${env.INTERNAL_REGISTRY}"
             }
             steps {
                 dir('enmasse') {

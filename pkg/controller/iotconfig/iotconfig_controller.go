@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
+
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
@@ -175,8 +177,10 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 
 	// start normal reconcile
 
+	qdrProxyConfigCtx := cchange.NewRecorder()
+
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processQdrProxyConfig(ctx, config)
+		return r.processQdrProxyConfig(ctx, config, qdrProxyConfigCtx)
 	})
 	rc.ProcessSimple(func() error {
 		return r.processCollector(ctx, config)
@@ -201,16 +205,16 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		}
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processHttpAdapter(ctx, config)
+		return r.processHttpAdapter(ctx, config, qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processMqttAdapter(ctx, config)
+		return r.processMqttAdapter(ctx, config, qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processSigfoxAdapter(ctx, config)
+		return r.processSigfoxAdapter(ctx, config, qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processLoraWanAdapter(ctx, config)
+		return r.processLoraWanAdapter(ctx, config, qdrProxyConfigCtx)
 	})
 
 	return r.updateFinalStatus(ctx, config, rc)
@@ -267,22 +271,20 @@ func (r *ReconcileIoTConfig) failWrongConfigName(ctx context.Context, config *io
 
 func (r *ReconcileIoTConfig) processDeployment(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, delete bool, manipulator func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error) error {
 
-	deployment := appsv1.Deployment{
+	deployment := &appsv1.Deployment{
 		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
 	}
 
 	if delete {
-		return install.DeleteIgnoreNotFound(ctx, r.client, &deployment, client.PropagationPolicy(v1.DeletePropagationForeground))
+		return install.DeleteIgnoreNotFound(ctx, r.client, deployment, client.PropagationPolicy(v1.DeletePropagationForeground))
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &deployment, func(existing runtime.Object) error {
-		existingDeployment := existing.(*appsv1.Deployment)
-
-		if err := controllerutil.SetControllerReference(config, existingDeployment, r.scheme); err != nil {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func() error {
+		if err := controllerutil.SetControllerReference(config, deployment, r.scheme); err != nil {
 			return err
 		}
 
-		return manipulator(config, existingDeployment)
+		return manipulator(config, deployment)
 	})
 
 	if err != nil {
@@ -295,22 +297,20 @@ func (r *ReconcileIoTConfig) processDeployment(ctx context.Context, name string,
 
 func (r *ReconcileIoTConfig) processService(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, delete bool, manipulator func(config *iotv1alpha1.IoTConfig, service *corev1.Service) error) error {
 
-	service := corev1.Service{
+	service := &corev1.Service{
 		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
 	}
 
 	if delete {
-		return install.DeleteIgnoreNotFound(ctx, r.client, &service, client.PropagationPolicy(v1.DeletePropagationForeground))
+		return install.DeleteIgnoreNotFound(ctx, r.client, service, client.PropagationPolicy(v1.DeletePropagationForeground))
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &service, func(existing runtime.Object) error {
-		existingService := existing.(*corev1.Service)
-
-		if err := controllerutil.SetControllerReference(config, existingService, r.scheme); err != nil {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
+		if err := controllerutil.SetControllerReference(config, service, r.scheme); err != nil {
 			return err
 		}
 
-		return manipulator(config, existingService)
+		return manipulator(config, service)
 	})
 
 	if err != nil {
@@ -323,22 +323,23 @@ func (r *ReconcileIoTConfig) processService(ctx context.Context, name string, co
 
 func (r *ReconcileIoTConfig) processConfigMap(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, delete bool, manipulator func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error) error {
 
-	cm := corev1.ConfigMap{
-		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
+	cm := &corev1.ConfigMap{
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: config.Namespace,
+			Name:      name,
+		},
 	}
 
 	if delete {
-		return install.DeleteIgnoreNotFound(ctx, r.client, &cm, client.PropagationPolicy(v1.DeletePropagationForeground))
+		return install.DeleteIgnoreNotFound(ctx, r.client, cm, client.PropagationPolicy(v1.DeletePropagationForeground))
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &cm, func(existing runtime.Object) error {
-		existingConfigMap := existing.(*corev1.ConfigMap)
-
-		if err := controllerutil.SetControllerReference(config, existingConfigMap, r.scheme); err != nil {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, cm, func() error {
+		if err := controllerutil.SetControllerReference(config, cm, r.scheme); err != nil {
 			return err
 		}
 
-		return manipulator(config, existingConfigMap)
+		return manipulator(config, cm)
 	})
 
 	if err != nil {
@@ -351,22 +352,23 @@ func (r *ReconcileIoTConfig) processConfigMap(ctx context.Context, name string, 
 
 func (r *ReconcileIoTConfig) processSecret(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, delete bool, manipulator func(config *iotv1alpha1.IoTConfig, secret *corev1.Secret) error) error {
 
-	secret := corev1.Secret{
-		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
+	secret := &corev1.Secret{
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: config.Namespace,
+			Name:      name,
+		},
 	}
 
 	if delete {
-		return install.DeleteIgnoreNotFound(ctx, r.client, &secret, client.PropagationPolicy(v1.DeletePropagationForeground))
+		return install.DeleteIgnoreNotFound(ctx, r.client, secret, client.PropagationPolicy(v1.DeletePropagationForeground))
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &secret, func(existing runtime.Object) error {
-		existingSecret := existing.(*corev1.Secret)
-
-		if err := controllerutil.SetControllerReference(config, existingSecret, r.scheme); err != nil {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, secret, func() error {
+		if err := controllerutil.SetControllerReference(config, secret, r.scheme); err != nil {
 			return err
 		}
 
-		return manipulator(config, existingSecret)
+		return manipulator(config, secret)
 	})
 
 	if err != nil {
@@ -379,22 +381,23 @@ func (r *ReconcileIoTConfig) processSecret(ctx context.Context, name string, con
 
 func (r *ReconcileIoTConfig) processPersistentVolumeClaim(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, delete bool, manipulator func(config *iotv1alpha1.IoTConfig, service *corev1.PersistentVolumeClaim) error) error {
 
-	pvc := corev1.PersistentVolumeClaim{
-		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
+	pvc := &corev1.PersistentVolumeClaim{
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: config.Namespace,
+			Name:      name,
+		},
 	}
 
 	if delete {
-		return install.DeleteIgnoreNotFound(ctx, r.client, &pvc, client.PropagationPolicy(v1.DeletePropagationForeground))
+		return install.DeleteIgnoreNotFound(ctx, r.client, pvc, client.PropagationPolicy(v1.DeletePropagationForeground))
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &pvc, func(existing runtime.Object) error {
-		existingPersistentVolumeClaim := existing.(*corev1.PersistentVolumeClaim)
-
-		if err := controllerutil.SetControllerReference(config, existingPersistentVolumeClaim, r.scheme); err != nil {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, pvc, func() error {
+		if err := controllerutil.SetControllerReference(config, pvc, r.scheme); err != nil {
 			return err
 		}
 
-		return manipulator(config, existingPersistentVolumeClaim)
+		return manipulator(config, pvc)
 	})
 
 	if err != nil {
@@ -407,23 +410,24 @@ func (r *ReconcileIoTConfig) processPersistentVolumeClaim(ctx context.Context, n
 
 func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, delete bool, endpointStatus *iotv1alpha1.EndpointStatus, manipulator func(config *iotv1alpha1.IoTConfig, service *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error) error {
 
-	route := routev1.Route{
-		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
+	route := &routev1.Route{
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: config.Namespace,
+			Name:      name,
+		},
 	}
 
 	if delete {
 		endpointStatus.URI = ""
-		return install.DeleteIgnoreNotFound(ctx, r.client, &route, client.PropagationPolicy(v1.DeletePropagationForeground))
+		return install.DeleteIgnoreNotFound(ctx, r.client, route, client.PropagationPolicy(v1.DeletePropagationForeground))
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &route, func(existing runtime.Object) error {
-		existingRoute := existing.(*routev1.Route)
-
-		if err := controllerutil.SetControllerReference(config, existingRoute, r.scheme); err != nil {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, route, func() error {
+		if err := controllerutil.SetControllerReference(config, route, r.scheme); err != nil {
 			return err
 		}
 
-		return manipulator(config, existingRoute, endpointStatus)
+		return manipulator(config, route, endpointStatus)
 	})
 
 	if err != nil {

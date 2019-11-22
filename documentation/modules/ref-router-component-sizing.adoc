@@ -1,0 +1,137 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-configuration-sizing-guide.adoc
+//
+[id='router-component-sizing-{context}']
+= Router component sizing
+
+Routers are configured in the `StandardInfraConfig` resource. In determining router sizing, consider:
+
+* The number of addresses
+* The number of connections and links
+* Link capacity
+
+The router does not persist any state and therefore does not require persistent storage.
+
+Address configuration itself does not require a significant amount of router memory. However, queues and subscriptions require an additional two links between the router and broker per address.
+
+The total number of links is then two times the number of queues/subscriptions plus the number of client links. Each link requires metadata and buffers in the router to handle routing messages for that link. 
+
+The router link capacity affects how many messages the router can handle per link. Setting the link capacity to a higher value might improve performance, but at the cost of potentially more memory being used to hold in-flight messages if senders are filling the links. If you have many connections and links, consider specifying a lower value to balance the memory usage.
+
+In addition, the router has to parse the message headers, manage dispositions and settlements of messages, and other per-link activities. The per-link cost can be derived using a constant factor of the link capacity and message size. This factor varies depending on the message size. The following table provides an approximation of this factor for different message size ranges:
+
+.Link multiplication factor
+[cols="50%a,50%a",options="header"]
+|===
+|Message size (bytes)|Factor
+|20-1000 |18,000
+|1000-4000 |22,000
+|4000-10,000 |30,000
+|>10,000 |50,000
+|===
+
+== Example use case for router component sizing
+
+Consider the following example use case:
+
+* 500 anycast and 1000 queued addresses
+* 10,000 connected clients (one link per client)
+* Link capacity of 10
+* An average message size of 512 bytes
+
+Based on measurements, an estimated 7 kB overhead per anycast address is realistic, so:
+[options="nowrap",subs="+quotes,attributes"]
+----
+500 anycast addresses * 7 kB overhead per address = 3.5 MB
+----
+
+Memory usage of queues and topics is slightly higher than that of anycast addresses, with an estimated 32 kB overhead per address. In addition, each router-broker link can have up to `linkCapacity` message deliveries to keep track of. Also, we need to multiply the link capacity with the multiplication factor to account for the worst-case scenario:
+[options="nowrap",subs="+quotes,attributes"]
+----
+(1000 queued addresses * 32,768) + (2000 * 18,000 link multiplication factor * 100 links) = 374 MB
+----
+
+Memory usage of client connections/links:
+[options="nowrap",subs="+quotes,attributes"]
+----
+10,000 clients * 10 link capacity * 18,000 link multiplication factor = 1717 MB
+----
+
+[NOTE]
+====
+The memory usage of client connections/links can be divided by the number of router instances.
+
+If you have N routers, the total amount of router memory required for this configuration, including a constant base memory of 50 MB, is `50 + 3.5 + (374 + 1717)/N MB`.
+====
+
+To ensure the maximum number of connections and links is not exceeded, a router policy can be applied as well. The following configuration example shows two routers with a router policy specified:
+
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardInfraConfig 
+metadata:
+  name: cfg1
+spec:
+  router:
+    resources:
+      memory: 1100Mi
+    linkCapacity: 10
+    policy:
+      maxConnections: 5000
+      maxSessionsPerConnection: 1
+      maxSendersPerConnection: 1
+      maxReceiversPerConnection: 1
+  ...
+----
+
+== High availability (HA)
+
+To configure routers for high availability (HA), multiply the minimum number of required router replicas by the amount of memory per router to calculate the amount of expected memory usage. Although all connections and links are distributed across all routers, if one router fails, you must plan for those connections and links to be redistributed across the remaining routers.
+
+== Router scaling
+
+Routers are scaled dynamically on demand within the limits specified for `minReplicas` in the `StandardInfraConfig` resource and the `resourceLimits.router` specified in the `AddressSpacePlan`. To restrict the number of routers to a maximum number of four, but require a minimum amount of two routers for HA purposes, the following configuration is needed:
+
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardInfraConfig 
+metadata:
+  name: cfg1
+spec:
+  router:
+    minReplicas: 2
+  ...
+---
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressSpacePlan
+metadata:
+  name: plan1
+spec:
+  infraConfigRef: cfg1
+  resourceLimits:
+    router: 4
+  ...
+----
+
+In terms of capacity, multiply the memory requirements for the router by the resource limit. The router will then scale up to the resource limits specified in the `AddressSpacePlan` for the address space.
+
+The number of router replicas is scaled dynamically between the minimum and maximum limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes the fraction of a router that is required by an address. The fraction defined in the plan is multiplied by the number of addresses referencing this plan, and then rounded up to produce the number of desired router replicas. 
+
+.`AddressPlan` configuration example:
+----
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: plan1
+spec:
+  ...
+  resources:
+    router: 0.01
+----
+
+If you create 110 addresses with `plan1` as the address plan, the number of router replicas is `ceil(110 addresses * 0.01 router) = 2 replicas`. 
+
+If the number of replicas exceeds the address space plan limit, the addresses exceeding the maximum number remain in the `Pending` state and an error message describing the issue is displayed in the `Address` status section.
+

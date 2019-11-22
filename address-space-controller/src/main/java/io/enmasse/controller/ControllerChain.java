@@ -4,22 +4,27 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.controller.common.ControllerKind;
-import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.k8s.api.*;
-import io.enmasse.metrics.api.*;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static io.enmasse.controller.common.ControllerReason.AddressSpaceSyncFailed;
+import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.enmasse.controller.common.ControllerReason.AddressSpaceSyncFailed;
-import static io.enmasse.k8s.api.EventLogger.Type.Warning;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.controller.common.ControllerKind;
+import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.ResourceChecker;
+import io.enmasse.k8s.api.SchemaProvider;
+import io.enmasse.k8s.api.Watch;
+import io.enmasse.k8s.api.Watcher;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 
 /**
  * The main controller loop that monitors k8s address spaces
@@ -85,18 +90,31 @@ public class ControllerChain implements Watcher<AddressSpace> {
         for (AddressSpace addressSpace : resources) {
 
             try {
+                AddressSpace original = new AddressSpaceBuilder(addressSpace).build();
+
                 log.info("Checking address space {}:{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
                 addressSpace.getStatus().setReady(true);
                 addressSpace.getStatus().clearMessages();
                 for (Controller controller : chain) {
                     log.info("Controller {}", controller);
                     log.debug("Address space input: {}", addressSpace);
-                    addressSpace = controller.reconcile(addressSpace);
+                    addressSpace = controller.reconcileAnyState(addressSpace);
                 }
 
                 log.debug("Controller chain output: {}", addressSpace);
 
-                addressSpaceApi.replaceAddressSpace(addressSpace);
+                if (hasAddressSpaceChanged(original, addressSpace)) {
+                    if (!original.getMetadata().equals(addressSpace.getMetadata())) {
+                        log.debug("Meta changed from {} to {}", original.getMetadata(), addressSpace.getMetadata());
+                    }
+                    if (!original.getSpec().equals(addressSpace.getSpec())) {
+                        log.debug("Spec changed from {} to {}", original.getSpec(), addressSpace.getSpec());
+                    }
+                    if (!original.getStatus().equals(addressSpace.getStatus())) {
+                        log.debug("Status changed from {} to {}", original.getStatus(), addressSpace.getStatus());
+                    }
+                    addressSpaceApi.replaceAddressSpace(addressSpace);
+                }
             } catch (KubernetesClientException e) {
                 log.warn("Error syncing address space {}", addressSpace.getMetadata().getName(), e);
                 eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
@@ -115,5 +133,11 @@ public class ControllerChain implements Watcher<AddressSpace> {
             }
         }
 
+    }
+
+    private boolean hasAddressSpaceChanged(AddressSpace original, AddressSpace addressSpace) {
+        return !(original.getMetadata().equals(addressSpace.getMetadata()) &&
+                original.getSpec().equals(addressSpace.getSpec()) &&
+                original.getStatus().equals(addressSpace.getStatus()));
     }
 }

@@ -6,11 +6,15 @@ package io.enmasse.systemtest.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceStatus;
 import io.enmasse.address.model.AddressSpaceStatusConnector;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
+import io.enmasse.address.model.KubeUtil;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -36,6 +40,10 @@ import java.util.stream.Stream;
 public class AddressSpaceUtils {
     private static Logger log = CustomLogger.getLogger();
 
+    private AddressSpaceUtils() {
+        //utility class no need to instantiate it
+    }
+
     public static void syncAddressSpaceObject(AddressSpace addressSpace) {
         AddressSpace data = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace())
                 .withName(addressSpace.getMetadata().getName()).get();
@@ -49,7 +57,11 @@ public class AddressSpaceUtils {
     }
 
     public static String getAddressSpaceInfraUuid(AddressSpace addressSpace) {
-        return addressSpace.getMetadata().getAnnotations().get("enmasse.io/infra-uuid");
+        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        if (infraUuid == null) {
+            return KubeUtil.infraUuid(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
+        }
+        return infraUuid;
     }
 
     public static boolean existAddressSpace(String namespace, String addressSpaceName) {
@@ -99,6 +111,25 @@ public class AddressSpaceUtils {
         return clientAddressSpace;
     }
 
+    public static AddressSpace waitForAddressSpaceStatusMessage(AddressSpace addressSpace, String expected, TimeoutBudget budget) throws Exception {
+        var client = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
+
+        String name = addressSpace.getMetadata().getName();
+        while (!budget.timeoutExpired()) {
+            addressSpace = client.withName(name).get();
+            if (String.join("", addressSpace.getStatus().getMessages()).contains(expected)) {
+                break;
+            }
+            Thread.sleep(10000);
+            log.info("Waiting until Address space: '{}' messages {} contains {}", addressSpace.getMetadata().getName(), addressSpace.getStatus().getMessages(), expected);
+        }
+        addressSpace = client.withName(name).get();
+        if (!String.join("", addressSpace.getStatus().getMessages()).contains(expected)) {
+            throw new IllegalStateException(String.format("Address space: '%s' messages %s does not contain %s", addressSpace.getMetadata().getName(), addressSpace.getStatus().getMessages(), expected));
+        }
+        return addressSpace;
+    }
+
     public static void waitForAddressSpacePlanApplied(AddressSpace addressSpace) throws Exception {
         AddressSpace addressSpaceObject = null;
         TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
@@ -135,18 +166,11 @@ public class AddressSpaceUtils {
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpace");
+        List<Address> addresses = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace()).list().getItems().stream()
+                .filter(address -> address.getMetadata().getName().startsWith(addressSpace.getMetadata().getName() + "."))
+                .collect(Collectors.toList());
+        Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace()).delete(addresses);
         Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).cascading(true).delete();
-    }
-
-    public static void deleteAllAddressSpaces(GlobalLogCollector logCollector) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS_SPACE);
-        logCollector.collectEvents();
-        logCollector.collectApiServerJmapLog();
-        logCollector.collectLogsTerminatedPods();
-        logCollector.collectConfigMaps();
-        logCollector.collectRouterState("deleteAddressSpace");
-        Kubernetes.getInstance().getAddressSpaceClient().delete();
-        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void waitForAddressSpaceDeleted(AddressSpace addressSpace) throws Exception {
@@ -231,7 +255,7 @@ public class AddressSpaceUtils {
         return endpoints.stream().filter(endpointStatus -> endpointStatus.getServiceHost().startsWith(serviceName)).findAny().get();
     }
 
-    public boolean isBrokered(AddressSpace addressSpace) {
+    public static boolean isBrokered(AddressSpace addressSpace) {
         return addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString());
     }
 

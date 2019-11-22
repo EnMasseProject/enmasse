@@ -128,7 +128,9 @@ public class AddressUtils {
         log.info("Address {} will be replaced", destination);
         var client = Kubernetes.getInstance().getAddressClient(destination.getMetadata().getNamespace());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS);
-        client.createOrReplace(destination);
+        Address existing = client.withName(destination.getMetadata().getName()).get();
+        existing.setSpec(destination.getSpec());
+        client.withName(existing.getMetadata().getName()).patch(existing);
         Thread.sleep(10_000);
         if (wait) {
             waitForDestinationsReady(timeoutBudget, destination);
@@ -178,8 +180,7 @@ public class AddressUtils {
 
     private static FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> getAddressClient(Address... destinations) {
         List<String> namespaces = Stream.of(destinations)
-                .map(Address::getMetadata)
-                .map(ObjectMeta::getNamespace)
+                .map(address -> address.getMetadata().getNamespace())
                 .distinct()
                 .collect(Collectors.toList());
         if (namespaces.size() != 1) {
@@ -239,7 +240,7 @@ public class AddressUtils {
         Map<String, Address> notMatchingAddresses = new HashMap<>();
         for (Address destination : destinations) {
             Optional<Address> lookupAddressResult = addressList.stream()
-                    .filter(addr -> addr.getSpec().getAddress().equals(destination.getSpec().getAddress()))
+                    .filter(addr -> addr.getMetadata().getName().contains(destination.getMetadata().getName()))
                     .findFirst();
             if (lookupAddressResult.isEmpty()) {
                 notMatchingAddresses.put(destination.getSpec().getAddress(), null);

@@ -13,4 +13,6 @@ public interface ReceiverStatus extends AutoCloseable {
     Future<List<Message>> getResult();
 
     int getNumReceived();
+
+    void closeGracefully();
 }

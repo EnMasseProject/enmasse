@@ -146,11 +146,11 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
         Address addressQueue = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-queue"))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-queue-commit"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
-                .withAddress("jmsQueue")
+                .withAddress("jmsQueueCommit")
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
@@ -225,11 +225,11 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
         Address addressQueue = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-queue"))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-queue-load"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
-                .withAddress("jmsQueue")
+                .withAddress("jmsQueueLoad")
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
@@ -268,22 +268,20 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
         recvd = jmsProvider.receiveMessages(receiver, count, 1000);
         assertThat("Wrong count of received messages", recvd.size(), Matchers.is(count));
         log.info("{} messages received", count);
-
         sender.close();
         receiver.close();
     }
 
     @Test
-    @Disabled("due to issue #1330")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         Address addressQueue = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-queue"))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-queue-large"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
-                .withAddress("jmsQueue")
+                .withAddress("jmsQueueLarge")
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
@@ -293,13 +291,13 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 "jmsCliId", addressQueue);
         connection.start();
 
-        sendReceiveLargeMessage(jmsProvider, 90, addressQueue, 1);
-        sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1);
-        sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1);
-        sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1);
-        sendReceiveLargeMessage(jmsProvider, 90, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1);
+        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1, DeliveryMode.PERSISTENT);
+        connection.stop();
+        connection.close();
     }
 }

@@ -10,6 +10,8 @@ import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
+import java.util.Objects;
+
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
@@ -47,5 +49,19 @@ public class ExportSpec extends AbstractWithAdditionalProperties {
                 "kind=" + kind +
                 ", name='" + name + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ExportSpec that = (ExportSpec) o;
+        return kind == that.kind &&
+                Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(kind, name);
     }
 }

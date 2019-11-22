@@ -159,7 +159,7 @@ describe('load brokered and standard plans', () => {
   it('loadStandardAddressPlans should return plan names', (done) => {
     var mock = new MockAdapter(axios);
     const data = {response: testStandardPlans};
-    mock.onGet('apis/enmasse.io/v1beta1/namespaces/undefined/addressspaceschemas/standard').reply(200, testStandardPlans);
+    mock.onGet('apis/enmasse.io/v1beta1/addressspaceschemas/standard').reply(200, testStandardPlans);
 
     service.loadStandardAddressPlans().then(response => {
 
@@ -172,7 +172,7 @@ describe('load brokered and standard plans', () => {
   it('loadBrokeredAddressPlans should return plan names', (done) => {
     var mock = new MockAdapter(axios);
     const data = {response: testBrokeredPlans};
-    mock.onGet('apis/enmasse.io/v1beta1/namespaces/undefined/addressspaceschemas/brokered').reply(200, testBrokeredPlans);
+    mock.onGet('apis/enmasse.io/v1beta1/addressspaceschemas/brokered').reply(200, testBrokeredPlans);
 
     service.loadBrokeredAddressPlans().then(response => {
 

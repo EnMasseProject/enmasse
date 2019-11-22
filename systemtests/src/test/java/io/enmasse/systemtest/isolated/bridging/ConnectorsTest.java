@@ -4,18 +4,6 @@
  */
 package io.enmasse.systemtest.isolated.bridging;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AddressSpaceSpecConnectorAddressRuleBuilder;
@@ -30,7 +18,17 @@ import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.client.KubernetesClientException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 class ConnectorsTest extends BridgingBase {
 
@@ -116,11 +114,11 @@ class ConnectorsTest extends BridgingBase {
                                 .build())
                         .withCredentials(new AddressSpaceSpecConnectorCredentialsBuilder()
                                 .withNewUsername()
-                                    .withValue(remoteBrokerUsername)
-                                    .endUsername()
+                                .withValue(remoteBrokerUsername)
+                                .endUsername()
                                 .withNewPassword()
-                                    .withValue(remoteBrokerPassword)
-                                    .endPassword()
+                                .withValue(remoteBrokerPassword)
+                                .endPassword()
                                 .build())
                         .addToAddresses(new AddressSpaceSpecConnectorAddressRuleBuilder()
                                 .withName("queuesrule")
@@ -129,13 +127,10 @@ class ConnectorsTest extends BridgingBase {
                         .build())
                 .endSpec()
                 .build();
-        try {
-            resourcesManager.createAddressSpace(space);
-            Assertions.fail();
-        } catch (KubernetesClientException e) {
-            assertEquals(400, e.getCode());
-            assertTrue(e.getMessage().contains("Invalid address space connector name"));
-        }
+
+        resourcesManager.createAddressSpace(space, false);
+        TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
+        AddressSpaceUtils.waitForAddressSpaceStatusMessage(space, "Invalid address space connector name", budget);
     }
 
     @Test
@@ -169,14 +164,10 @@ class ConnectorsTest extends BridgingBase {
                         .build())
                 .endSpec()
                 .build();
-        try {
-            resourcesManager.createAddressSpace(space);
-            Assertions.fail();
-        } catch (KubernetesClientException e) {
-            assertEquals(400, e.getCode());
-            assertTrue(e.getMessage().contains("Invalid address space connector address rule pattern"));
-        }
 
+        resourcesManager.createAddressSpace(space, false);
+        TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
+        AddressSpaceUtils.waitForAddressSpaceStatusMessage(space, "Invalid address space connector address rule", budget);
     }
 
     @Test

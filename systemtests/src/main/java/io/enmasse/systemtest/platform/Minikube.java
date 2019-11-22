@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.platform;
 
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.fabric8.kubernetes.api.model.Service;
@@ -26,12 +27,17 @@ public class Minikube extends Kubernetes {
 
     protected Minikube(String globalNamespace) {
         super(globalNamespace, () -> {
+            final Environment instance = Environment.getInstance();
             Config config = new ConfigBuilder().build();
 
             OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
             // Workaround https://github.com/square/okhttp/issues/3146
-            httpClient = httpClient.newBuilder().protocols(Collections.singletonList(Protocol.HTTP_1_1)).build();
-
+            httpClient = httpClient.newBuilder()
+                    .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                    .connectTimeout(instance.getKubernetesApiConnectTimeout())
+                    .writeTimeout(instance.getKubernetesApiWriteTimeout())
+                    .readTimeout(instance.getKubernetesApiReadTimeout())
+                    .build();
             return new DefaultKubernetesClient(httpClient, config);
         });
     }
@@ -115,6 +121,11 @@ public class Minikube extends Kubernetes {
         if (!name.endsWith("-external")) {
             name += "-external";
         }
-        client.services().inNamespace(name).withName(name).delete();
+        client.services().inNamespace(name).withName(name).cascading(true).delete();
+    }
+
+    @Override
+    public String getOlmNamespace() {
+        return "operators";
     }
 }

@@ -128,14 +128,19 @@ public class EventCache<T> implements WorkQueue<T> {
 
     @Override
     public synchronized void replace(List<T> list, String resourceVersion) throws InterruptedException {
+
+        log.debug("Replacing queue with {} items. Populated {}.", list.size(), populated);
         Map<String, T> newItems = new HashMap<>();
         for (T item : list) {
             String key = fieldExtractor.getKey(item);
             newItems.put(key, item);
         }
-        log.debug("Replacing queue with {} items. Populated {}", list.size(), populated);
+
+        log.debug("Current store size: {}", store.size());
         store.clear();
         store.putAll(newItems);
+        log.debug("New store size: {}", store.size());
+
         if (!populated) {
             initialPopulationCount.set(1);
         }

@@ -1,0 +1,32 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-getting-started.adoc
+
+:context: {context}-iot
+
+[id='iot-getting-started-{context}]
+= Getting started using IoT
+
+The following information describes how to set up and manage {ProductName} IoT features.
+
+include::../modules/proc-installing-using-bundle.adoc[leveloffset=+1]
+
+include::../modules/proc-iot-installing-services.adoc[leveloffset=+1]
+
+include::../modules/proc-iot-creating-project.adoc[leveloffset=+1]
+
+include::../modules/proc-iot-creating-device.adoc[leveloffset=+1]
+
+=== Installing command-line client
+
+include::../modules/proc-iot-configure-hono-cli.adoc[leveloffset=+1]
+
+:api: telemetry
+
+=== Starting telemetry consumer
+
+include::../modules/snip-iot-customer-api.adoc[leveloffset=+2]
+
+=== Sending HTTP telemetry message
+
+include::../modules/snip-iot-http-api.adoc[leveloffset=+2]

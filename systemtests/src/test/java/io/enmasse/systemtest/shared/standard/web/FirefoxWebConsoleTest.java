@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SeleniumFirefox
+@Disabled("Ignore whilst 0.31 console refactoring is underway")
 public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedStandard {
 
     @Test
@@ -73,6 +74,32 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestShared
                         .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
                         .endSpec()
                         .build());
+    }
+
+    @Test
+    void testPurgeAddress() throws Exception {
+        doTestPurgeMessages(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "purge-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("purge-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build());
+        doTestPurgeMessages(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "purge-queue-sharded"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("purge-queue-sharded")
+                .withPlan(DestinationPlan.STANDARD_XLARGE_QUEUE)
+                .endSpec()
+                .build());
     }
 
     @Test

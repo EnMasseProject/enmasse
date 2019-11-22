@@ -11,7 +11,6 @@ import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -95,9 +94,9 @@ public class IsolatedResourcesManager extends ResourceManager {
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
         LOGGER.info("Reuse addressspace: " + reuseAddressSpace);
-        LOGGER.info("Environment cleanup: " + Environment.getInstance().skipCleanup());
+        LOGGER.info("Environment cleanup: " + environment.skipCleanup());
 
-        if (!Environment.getInstance().skipCleanup() && !reuseAddressSpace) {
+        if (!environment.skipCleanup() && !reuseAddressSpace) {
             for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
                 Kubernetes.getInstance().getAddressSpacePlanClient().withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
@@ -259,11 +258,18 @@ public class IsolatedResourcesManager extends ResourceManager {
 
     @Override
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        createAddressSpace(addressSpace, true);
+    }
+
+    @Override
+    public void createAddressSpace(AddressSpace addressSpace, boolean waitForReady) throws Exception {
         if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             currentAddressSpaces.add(addressSpace);
-            super.createAddressSpace(addressSpace);
+            super.createAddressSpace(addressSpace, waitForReady);
         } else {
-            super.waitForAddressSpaceReady(addressSpace);
+            if (waitForReady) {
+                super.waitForAddressSpaceReady(addressSpace);
+            }
         }
     }
 
@@ -295,22 +301,22 @@ public class IsolatedResourcesManager extends ResourceManager {
     }
 
     public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
-        super.replaceAddressSpace(addressSpace, true, currentAddressSpaces);
+        replaceAddressSpace(addressSpace, true);
     }
 
-    public void replaceAddressSpace(AddressSpace addressSpace, boolean replaceExisting) throws Exception {
-        super.replaceAddressSpace(addressSpace, replaceExisting, currentAddressSpaces);
+    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied) throws Exception {
+        super.replaceAddressSpace(addressSpace, waitForPlanApplied, currentAddressSpaces);
     }
 
     public void deleteAddressspacesFromList() throws Exception {
-        if (!Environment.getInstance().skipCleanup()) {
+        if (environment.skipCleanup()) {
+            LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
+        } else {
             LOGGER.info("All addressspaces will be removed");
             for (AddressSpace addressSpace : currentAddressSpaces) {
                 deleteAddressSpace(addressSpace);
             }
             currentAddressSpaces.clear();
-        } else {
-            LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
         }
     }
 

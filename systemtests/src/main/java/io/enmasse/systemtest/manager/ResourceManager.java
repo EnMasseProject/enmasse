@@ -34,7 +34,6 @@ import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -46,8 +45,7 @@ import static java.time.Duration.ofMinutes;
 public abstract class ResourceManager {
     protected static final Environment environment = Environment.getInstance();
     protected static final Kubernetes kubernetes = Kubernetes.getInstance();
-    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
-            new File(environment.testLogDir()));
+    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes, environment.testLogDir());
     private static Logger LOGGER = CustomLogger.getLogger();
 
     protected String defaultAddSpaceIdentifier;
@@ -127,8 +125,12 @@ public abstract class ResourceManager {
 
     public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
         LOGGER.info("AddressSpace plan {} will be created {}", addressSpacePlan.getMetadata().getName(), addressSpacePlan);
+        if (addressSpacePlan.getMetadata().getNamespace() == null || addressSpacePlan.getMetadata().getNamespace().equals("")) {
+            addressSpacePlan.getMetadata().setNamespace(Kubernetes.getInstance().getInfraNamespace());
+        }
         var client = Kubernetes.getInstance().getAddressSpacePlanClient();
         client.create(addressSpacePlan);
+        TestUtils.waitForSchemaInSync(addressSpacePlan.getMetadata().getName());
         Thread.sleep(1000);
     }
 
@@ -229,18 +231,43 @@ public abstract class ResourceManager {
     }
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        createAddressSpace(addressSpace, true);
+    }
+
+    public void createAddressSpace(AddressSpace addressSpace, boolean waitUntilReady) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
         if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             LOGGER.info("Address space '{}' doesn't exist and will be created.", addressSpace);
             kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace);
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            if (waitUntilReady) {
+                AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            }
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         } else {
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            if (waitUntilReady) {
+                AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            }
             LOGGER.info("Address space '" + addressSpace + "' already exists.");
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         }
         syncAddressSpaceAndCollectLogs(addressSpace, operationID);
+    }
+
+    public void createAddressSpace(AddressSpace... addressSpaces) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
+        for (AddressSpace addressSpace : addressSpaces) {
+            if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
+                LOGGER.info("Address space '{}' doesn't exist and will be created.", addressSpace);
+                kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace);
+            } else {
+                LOGGER.info("Address space '" + addressSpace + "' already exists.");
+            }
+        }
+        for (AddressSpace addressSpace : addressSpaces) {
+            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
+            syncAddressSpaceAndCollectLogs(addressSpace, operationID);
+        }
     }
 
     public void waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
@@ -279,7 +306,7 @@ public abstract class ResourceManager {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    protected void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied, List<AddressSpace> addressSpaceList) throws Exception {
+    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied, List<AddressSpace> addressSpaceList) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS_SPACE);
         var client = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
         if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {

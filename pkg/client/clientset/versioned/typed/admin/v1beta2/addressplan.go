@@ -8,6 +8,8 @@
 package v1beta2
 
 import (
+	"time"
+
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	scheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -64,11 +66,16 @@ func (c *addressPlans) Get(name string, options v1.GetOptions) (result *v1beta2.
 
 // List takes label and field selectors, and returns the list of AddressPlans that match those selectors.
 func (c *addressPlans) List(opts v1.ListOptions) (result *v1beta2.AddressPlanList, err error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	result = &v1beta2.AddressPlanList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("addressplans").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Do().
 		Into(result)
 	return
@@ -76,11 +83,16 @@ func (c *addressPlans) List(opts v1.ListOptions) (result *v1beta2.AddressPlanLis
 
 // Watch returns a watch.Interface that watches the requested addressPlans.
 func (c *addressPlans) Watch(opts v1.ListOptions) (watch.Interface, error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
 		Resource("addressplans").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Watch()
 }
 
@@ -122,10 +134,15 @@ func (c *addressPlans) Delete(name string, options *v1.DeleteOptions) error {
 
 // DeleteCollection deletes a collection of objects.
 func (c *addressPlans) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+	var timeout time.Duration
+	if listOptions.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("addressplans").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
+		Timeout(timeout).
 		Body(options).
 		Do().
 		Error()

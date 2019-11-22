@@ -1,5 +1,3 @@
-include olm.enmasse.env
-
 # WARNING: this file has the be included last, otherwise the whole
 # build silently fails since VERSION (etc) and TOPDIR are defined
 # as a recursive variable and based on the location on the "last"
@@ -27,6 +25,7 @@ MODULES=\
 	example-roles \
 	example-plans \
 	example-authservices \
+	example-olm \
 	iot/examples \
 	api-server \
 	api-service \
@@ -37,8 +36,7 @@ MODULES=\
 	cluster-service-broker \
 	kube-state-metrics \
 	service-monitors \
-	prometheus-rules \
-	csv 
+	prometheus-rules
 
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
@@ -53,11 +51,16 @@ replace_images: prepare
 		mkdir -p $(BUILDDIR)/replaced/$$D ; \
 		cp -r $$i $(BUILDDIR)/replaced/$$D/ ; \
 	done
+	for i in `find $(BUILDDIR)/replaced/crds -type f`; do \
+		F=`basename $$i`; \
+		mv $$i $(BUILDDIR)/replaced/crds/010-$$F ; \
+	done
 	for i in `find $(BUILDDIR)/replaced -name "*.yaml"`; do \
 		cat $$i | sed -e 's,\$${ADDRESS_SPACE_CONTROLLER_IMAGE},$(ADDRESS_SPACE_CONTROLLER_IMAGE),g' \
 					  -e 's,\$${MAVEN_VERSION},$(MAVEN_VERSION),g' \
 					  -e 's,\$${NAMESPACE},$(DEFAULT_PROJECT),g' \
 					  -e 's,\$${VERSION},$(VERSION),g' \
+					  -e 's,\$${OLM_VERSION},$(OLM_VERSION),g' \
 					  -e 's,\$${IMAGE_PULL_POLICY},$(IMAGE_PULL_POLICY),g' \
 					  -e 's,\$${STANDARD_CONTROLLER_IMAGE},$(STANDARD_CONTROLLER_IMAGE),g' \
 					  -e 's,\$${ROUTER_IMAGE},$(ROUTER_IMAGE),g' \
@@ -87,28 +90,13 @@ replace_images: prepare
 					  -e 's,\$${IOT_SIGFOX_ADAPTER_IMAGE},$(IOT_SIGFOX_ADAPTER_IMAGE),g' \
 					  -e 's,\$${IOT_PROXY_CONFIGURATOR_IMAGE},$(IOT_PROXY_CONFIGURATOR_IMAGE),g' \
 					  -e 's,\$${CONTROLLER_MANAGER_IMAGE},$(CONTROLLER_MANAGER_IMAGE),g' \
+					  -e 's,\$${OLM_MANIFEST_IMAGE},$(OLM_MANIFEST_IMAGE),g' \
 					  -e 's,\$${CONSOLE_INIT_IMAGE},$(CONSOLE_INIT_IMAGE),g' \
 					  -e 's,\$${CONSOLE_PROXY_OPENSHIFT_IMAGE},$(CONSOLE_PROXY_OPENSHIFT_IMAGE),g' \
 					  -e 's,\$${OAUTH_PROXY_IMAGE},$(OAUTH_PROXY_IMAGE),g' \
 					  -e 's,\$${CONSOLE_PROXY_KUBERNETES_IMAGE},$(CONSOLE_PROXY_KUBERNETES_IMAGE),g' \
 					  -e 's,\$${CONSOLE_HTTPD_IMAGE},$(CONSOLE_HTTPD_IMAGE),g' \
 					  -e 's,\$${APP_PREFIX},$(PROJECT_PREFIX),g' \
-					  -e 's,\$${ABOUT_URL},$(ABOUT_URL),g' \
-					  -e 's,\$${ABOUT_NAME},$(ABOUT_NAME),g' \
-					  -e 's,\$${CONFIGURE_DOC_URL},$(CONFIGURE_DOC_URL),g' \
-					  -e 's,\$${DOC_URL},$(DOC_URL),g' \
-					  -e 's,\$${LOGO_BASE64},$(LOGO_BASE64),g' \
-					  -e 's,\$${OLM_KEYWORDS},$(OLM_KEYWORDS),g' \
-					  -e 's,\$${LONG_PRODUCT_NAME},$(LONG_PRODUCT_NAME),g' \
-					  -e 's,\$${MAINTAINER},$(MAINTAINER),g' \
-					  -e 's,\$${MAINTAINER_EMAIL},$(MAINTAINER_EMAIL),g' \
-					  -e 's,\$${MATURITY},$(MATURITY),g' \
-					  -e 's,\$${PLATFORM},$(PLATFORM),g' \
-					  -e 's,\$${REPOSITORY},$(REPOSITORY),g' \
-					  -e 's,\$${SHORT_PRODUCT_NAME},$(SHORT_PRODUCT_NAME),g' \
-					  -e 's,\$${PACKAGE_NAME},$(PACKAGE_NAME),g' \
-					  -e 's,\$${PACKAGE_CHANNEL},$(PACKAGE_CHANNEL),g' \
-					  -e 's,\$${VERSIONED_NAME},$(VERSIONED_NAME),g' \
 					  -e 's,\$${CONSOLE_HTTPD_IMAGE},$(CONSOLE_HTTPD_IMAGE),g' \
 					> $$i.tmp; \
 		mv $$i.tmp $$i; \
@@ -145,21 +133,7 @@ $(IOT_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(IOT_BUNDLE)/; \
 	done
 
-OLM=$(PACKAGE_INSTALL_DIR)/olm/enmasse
-$(OLM): replace_images
-	mkdir -p $(OLM)
-	for i in csv; do \
-		cp $(BUILDDIR)/replaced/$$i/*.yaml $(OLM)/; \
-	done
-	for i in crds; do \
-		for file in $(BUILDDIR)/replaced/$$i/*.yaml; do \
-		    b=`basename $$file`; \
-			newfile=$${b$(HASHMARK)010-}; \
-			cp $$file $(OLM)/$${newfile}; \
-		done \
-	done
-
-install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE) $(OLM)
+install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE)
 	@echo "Preparing installation bundle"
 
 package: prepare install
@@ -167,4 +141,4 @@ package: prepare install
 
 coverage:
 
-.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE) $(OLM)
+.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE)

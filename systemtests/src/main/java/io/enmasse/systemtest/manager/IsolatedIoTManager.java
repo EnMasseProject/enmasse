@@ -70,7 +70,6 @@ public class IsolatedIoTManager extends ResourceManager {
                 tearDownProjects();
                 tearDownConfigs();
                 SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
-                kubernetes.deleteNamespace(IOT_PROJECT_NAMESPACE);
             } catch (Exception e) {
                 LOGGER.error("Error tearing down iot test: {}", e.getMessage());
                 throw e;

@@ -106,6 +106,13 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
+            <exclusions>
+                <!-- Prevent Selenium dependency managing okhttp3 back to 3.11.  Remove on upgrade to Selenium 4 -->
+                <exclusion>
+                    <groupId>com.squareup.okhttp3</groupId>
+                    <artifactId>okhttp</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.paulhammant</groupId>
@@ -113,7 +120,7 @@
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
+            <artifactId>hamcrest</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -174,14 +181,14 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | shared-mqtt | isolated | marathon | shared-iot | isolated-iot) &amp; !upgrade</groups>
+                <groups>(shared-standard | shared-brokered | shared-mqtt | isolated | soak | shared-iot | isolated-iot) &amp; !upgrade</groups>
             </properties>
         </profile>
         <profile>
             <id>shared</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | shared-mqtt) &amp; !isolated &amp; !smoke &amp; !marathon
+                <groups>(shared-standard | shared-brokered | shared-mqtt) &amp; !isolated &amp; !smoke &amp; !soak
                     &amp; !shared-iot &amp; !olm &amp; !upgrade
                 </groups>
             </properties>
@@ -189,7 +196,7 @@
         <profile>
             <id>isolated</id>
             <properties>
-                <groups>(isolated | isolated-broker | isolated-standard) &amp; !marathon &amp; !shared-iot &amp; !olm &amp; !upgrade</groups>
+                <groups>(isolated | isolated-broker | isolated-standard) &amp; !soak &amp; !shared-iot &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -197,7 +204,7 @@
             <id>pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | shared-mqtt | isolated) &amp; !nonPR &amp; !smoke &amp; !marathon
+                <groups>(shared-standard | shared-brokered | shared-mqtt | isolated) &amp; !nonPR &amp; !smoke &amp; !soak
                     &amp; !shared-iot &amp; !olm &amp; !upgrade
                 </groups>
             </properties>
@@ -205,56 +212,56 @@
         <profile>
             <id>iot</id>
             <properties>
-                <groups>(isolated-iot | shared-iot) &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>(isolated-iot | shared-iot) &amp; !soak &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>shared-iot</id>
             <properties>
-                <groups>shared-iot &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>shared-iot &amp; !soak &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>isolated-iot</id>
             <properties>
-                <groups>isolated-iot &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>isolated-iot &amp; !soak &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>smoke-iot</id>
             <properties>
-                <groups>(shared-iot | isolated-iot) &amp; smoke &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>(shared-iot | isolated-iot) &amp; smoke &amp; !soak &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>marathon</id>
+            <id>soak</id>
             <properties>
-                <groups>marathon</groups>
+                <groups>soak</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>smoke</id>
             <properties>
-                <groups>smoke &amp; !shared-iot &amp; !isolated-iot &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>smoke &amp; !shared-iot &amp; !isolated-iot &amp; !soak &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>upgrade</id>
             <properties>
-                <groups>upgrade &amp; !marathon &amp; !olm</groups>
+                <groups>upgrade &amp; !soak &amp; !olm</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>iot-release</id>
             <properties>
-                <groups>(shared-iot | isolated-iot) &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>(shared-iot | isolated-iot) &amp; !noneAuth &amp; !smoke &amp; !soak &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -262,7 +269,7 @@
             <id>olm</id>
             <properties>
                 <groups>olm &amp; !shared-standard &amp; !shared-brokered &amp; !shared-mqtt &amp; !noneAuth &amp;
-                    !smoke &amp; !marathon &amp; !shared-iot &amp; !smoke-iot &amp; !isolated &amp; !upgrade
+                    !smoke &amp; !soak &amp; !shared-iot &amp; !smoke-iot &amp; !isolated &amp; !upgrade
                 </groups>
                 <skip.tests>false</skip.tests>
             </properties>
@@ -270,7 +277,7 @@
         <profile>
             <id>acceptance</id>
             <properties>
-                <groups>acceptance &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>acceptance &amp; !soak &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>

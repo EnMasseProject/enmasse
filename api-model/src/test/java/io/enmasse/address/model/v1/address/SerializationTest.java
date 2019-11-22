@@ -1033,7 +1033,7 @@ public class SerializationTest {
                 Collections.singletonList(endpointSpec),
                 Collections.singletonList(infraConfig));
 
-        AddressSpaceSchema schema = AddressSpaceSchema.fromAddressSpaceType("0", addressSpaceType, Collections.singletonList(authService));
+        AddressSpaceSchema schema = AddressSpaceSchema.fromAddressSpaceType(addressSpaceType, Collections.singletonList(authService));
 
         ObjectMapper mapper = new ObjectMapper();
         String serialized = mapper.writeValueAsString(schema);

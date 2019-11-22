@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(NON_PR)
 @SeleniumChrome
+@Disabled("Ignore whilst 0.31 console refactoring is underway")
 public class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedStandard {
 
     @Test
@@ -77,6 +78,33 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedS
                         .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
                         .endSpec()
                         .build());
+    }
+
+    @Test
+    @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
+    void testPurgeAddress() throws Exception {
+        doTestPurgeMessages(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "purge-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("purge-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build());
+        doTestPurgeMessages(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "purge-queue-sharded"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("purge-queue-sharded")
+                .withPlan(DestinationPlan.STANDARD_XLARGE_QUEUE)
+                .endSpec()
+                .build());
     }
 
     @Test

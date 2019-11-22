@@ -344,55 +344,32 @@ ResourceServer.prototype.post_resource = function (request, response, type) {
     });
 };
 
-function ConfigMapServer () {
+function AddressServer() {
     ResourceServer.call(this);
 }
 
-util.inherits(ConfigMapServer, ResourceServer);
+util.inherits(AddressServer, ResourceServer);
 
-function get_empty_config_map(name, labels) {
-    return {
-        kind:'ConfigMap',
-        metadata: {
-            name: name,
-            labels: labels
-        },
-        data:{}
-    };
-}
-
-function get_config_map(name, labels, key, content) {
-    var cm = get_empty_config_map(name, labels);
-    cm.data[key] = JSON.stringify(content);
-    return cm;
-}
-
-ConfigMapServer.prototype.add_address_definition = function (def, name, infra_uuid, annotations, status) {
+AddressServer.prototype.add_address_definition = function (def, name, infra_uuid, annotations, status) {
     var address = {kind: 'Address', metadata: {name: name || def.address}, spec:def};
     if (annotations) {
         address.metadata.annotations = annotations;
     }
-    var labels = {type: 'address-config'};
+    address.metadata.labels = {};
     if (infra_uuid) {
-        labels.infraUuid = infra_uuid;
+        address.metadata.labels.infraUuid = infra_uuid;
     }
     address.status = status || { phase: 'Active' };
-    this.add_resource('configmaps', get_config_map(name || def.address, labels, 'config.json', address));
+    this.add_resource('addresses', address);
 };
 
-ConfigMapServer.prototype.add_config_map = function (name, labels, data) {
-    var cm = get_empty_config_map(name, labels);
-    cm.data = data;
-    this.add_resource('configmaps', cm);
-};
-
-ConfigMapServer.prototype.add_address_definitions = function (defs) {
+AddressServer.prototype.add_address_definitions = function (defs) {
     for (var i in defs) {
         this.add_address_definition(defs[i]);
     }
 };
 
-ConfigMapServer.prototype.add_address_space_plan = function (params) {
+AddressServer.prototype.add_address_space_plan = function (params) {
     var plan = {
         kind: 'AddressSpacePlan',
         metadata: {name: params.plan_name},
@@ -409,7 +386,7 @@ ConfigMapServer.prototype.add_address_space_plan = function (params) {
     this.add_resource('addressspaceplans', plan);
 }
 
-ConfigMapServer.prototype.add_address_plan = function (params) {
+AddressServer.prototype.add_address_plan = function (params) {
     var plan = {
         kind: 'AddressPlan',
         metadata: {name: params.plan_name},
@@ -427,26 +404,11 @@ ConfigMapServer.prototype.add_address_plan = function (params) {
     this.add_resource('addressplans', plan);
 };
 
-ConfigMapServer.prototype.resource_initialiser = function (resource) {
-    if (resource.data !== undefined && resource.data['config.json']) {
-        try {
-            var address = JSON.parse(resource.data['config.json']);
-            var changed = true;
-            if (address.status === undefined) {
-                address.status = {'phase': 'Active'};
-            } else if (address.status.phase === undefined) {
-                address.status.phase = 'Active';
-            } else {
-                changed = false;
-            }
-            if (changed) {
-                resource.data['config.json'] = JSON.stringify(address);
-            }
-        } catch (e) {
-            console.error('Failed to parse address for resource initialisation: %s', e);
-        }
+AddressServer.prototype.resource_initialiser = function (resource) {
+    if (resource.status === undefined) {
+        resource.status = {'phase': 'Active'};
     }
 };
 
 module.exports.ResourceServer = ResourceServer;
-module.exports.ConfigMapServer = ConfigMapServer;
+module.exports.AddressServer = AddressServer;

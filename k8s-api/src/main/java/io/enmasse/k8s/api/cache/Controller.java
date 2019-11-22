@@ -7,11 +7,11 @@ package io.enmasse.k8s.api.cache;
 import io.enmasse.k8s.api.Watch;
 
 public class Controller implements Watch {
-    private final Reflector<?,?> reflector;
+    private final Reflector<?, ?> reflector;
     private volatile boolean running;
     private Thread thread;
 
-    public Controller(Reflector<?,?> reflector) {
+    public Controller(Reflector<?, ?> reflector) {
         this.reflector = reflector;
     }
 
@@ -22,6 +22,7 @@ public class Controller implements Watch {
                 reflector.run();
             }
         });
+        thread.setName(String.format("controller|%s", reflector.getExpectedType().getSimpleName()));
         thread.start();
     }
 

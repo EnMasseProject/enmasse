@@ -131,7 +131,7 @@ public class AuthController implements Controller {
     }
 
     @Override
-    public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
+    public AddressSpace reconcileActive(AddressSpace addressSpace) throws Exception {
         Secret addressSpaceCa = issueAddressSpaceCert(addressSpace);
         if (addressSpaceCa != null) {
             issueComponentCertificates(addressSpace, addressSpaceCa);

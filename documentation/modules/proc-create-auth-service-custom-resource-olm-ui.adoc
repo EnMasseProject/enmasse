@@ -1,0 +1,38 @@
+// Module included in the following assemblies:
+//
+// assembly-configuring-olm.adoc
+// rhassemblies/assembly-configuring-olm-rh.adoc
+
+[id="proc-create-auth-service-custom-resource-olm-ui-{context}"]
+= Creating an authentication service custom resource using the {KubePlatform} console
+
+You must create a custom resource for an authentication service to use {ProductName}. This example uses the standard authentication service.
+
+.Procedure
+
+. From the dropdown menu, select the `{ProductNamespace}` project.
+
+. Click *Catalog > Installed Operators*.
+
+. Click *Add > Import YAML*. The Import YAML window opens.
+
+. Copy the following code: 
++
+[source,yaml,options="nowrap",subs="attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: standard-authservice
+spec:
+  type: standard
+----
+
+. In the Import YAML window, paste the copied code and click *Create*. The AddressPlan Overview page is displayed.
+
+. Click *Workloads > Pods*. In the *Readiness* column, the Pod status is `Ready` when the custom resource has been deployed.
+
+.Next steps
+
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-auth-service-custom-resource-olm-ui-messaging[Create an infrastructure configuration custom resource using the {KubePlatform} console]
+

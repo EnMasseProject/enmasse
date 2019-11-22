@@ -8,6 +8,8 @@ package iotconfig
 import (
 	"context"
 
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -23,11 +25,8 @@ import (
 func SetHonoProbes(container *corev1.Container) {
 
 	container.ReadinessProbe = install.ApplyHttpProbe(container.ReadinessProbe, 10, "/readiness", 8088)
+	container.LivenessProbe = install.ApplyHttpProbe(container.LivenessProbe, 10, "/liveness", 8088)
 
-	// FIXME: For the moment we are mapping the liveness probe to the readiness endpoint.
-	// This must be reverted once eclipse/hono#1471 is fixed.
-	container.LivenessProbe = install.ApplyHttpProbe(container.LivenessProbe, 10, "/readiness", 8088)
-	// container.LivenessProbe = install.ApplyHttpProbe(container.LivenessProbe, 10, "/liveness", 8088)
 }
 
 func FullHostNameForEnvVar(serviceName string) string {
@@ -69,9 +68,14 @@ func AppendStandardHonoJavaOptions(container *corev1.Container) {
 	)
 }
 
-func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig iotv1alpha1.ServiceConfig) {
+func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig iotv1alpha1.ServiceConfig, configCtx *cchange.ConfigChangeRecorder) {
 	deployment.Spec.Replicas = serviceConfig.Replicas
 	deployment.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
+	if configCtx != nil {
+		deployment.Spec.Template.Annotations["iot.enmasse.io/config-hash"] = configCtx.HashString()
+	} else {
+		delete(deployment.Spec.Template.Annotations, "iot.enmasse.io/config-hash")
+	}
 }
 
 func applyContainerConfig(container *corev1.Container, config *iotv1alpha1.ContainerConfig) {

@@ -22,10 +22,14 @@ import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import io.fabric8.kubernetes.client.utils.HttpClientUtils;
 import io.vertx.core.*;
+import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +58,14 @@ public class ApiServer extends AbstractVerticle {
     }
 
     private ApiServer(ApiServerOptions options) throws IOException {
-        this.client = new DefaultKubernetesClient();
+        Config config = new ConfigBuilder().build();
+        OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
+        httpClient = httpClient.newBuilder()
+                .connectTimeout(options.getKubernetesApiConnectTimeout())
+                .writeTimeout(options.getKubernetesApiWriteTimeout())
+                .readTimeout(options.getKubernetesApiReadTimeout())
+                .build();
+        this.client = new DefaultKubernetesClient(httpClient, config);
         this.options = options;
     }
 
@@ -65,7 +76,7 @@ public class ApiServer extends AbstractVerticle {
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client, options.getVersion());
+        AddressSpaceApi addressSpaceApi = KubeAddressSpaceApi.create(client, null, options.getVersion());
 
         AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
 
@@ -96,9 +107,12 @@ public class ApiServer extends AbstractVerticle {
         Metrics metrics = new Metrics();
 
         HTTPHealthServer httpHealthServer = new HTTPHealthServer(options.getVersion(), metrics);
-        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, options, clientCa, requestHeaderClientCa, clock, authenticationServiceRegistry, apiHeaderConfig);
 
-        vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
+        ResteasyDeploymentFactory resteasyDeploymentFactory = new ResteasyDeploymentFactory(addressSpaceApi, schemaProvider, authApi, userApi, clock, authenticationServiceRegistry, apiHeaderConfig, metrics, options.isEnableRbac());
+        String finalRequestHeaderClientCa = requestHeaderClientCa;
+        String finalClientCa = clientCa;
+        vertx.deployVerticle(() -> new HTTPServer(options, resteasyDeploymentFactory, finalClientCa, finalRequestHeaderClientCa),
+                new DeploymentOptions().setWorker(true).setInstances(options.getNumWorkerThreads()), result -> {
             if (result.succeeded()) {
                 vertx.deployVerticle(httpHealthServer, ar -> {
                     if (ar.succeeded()) {
@@ -155,8 +169,10 @@ public class ApiServer extends AbstractVerticle {
 
     public static void main(String args[]) {
         try {
-            Vertx vertx = Vertx.vertx();
-            vertx.deployVerticle(new ApiServer(ApiServerOptions.fromEnv(System.getenv())));
+            final ApiServerOptions options = ApiServerOptions.fromEnv(System.getenv());
+            Vertx vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(options.getNumWorkerThreads()));
+            log.info("ApiServer starting with options: {}", options);
+            vertx.deployVerticle(new ApiServer(options));
         } catch (IllegalArgumentException e) {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
             System.exit(1);

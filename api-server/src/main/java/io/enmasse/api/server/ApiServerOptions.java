@@ -21,6 +21,10 @@ public class ApiServerOptions {
     private String apiserverClientCaConfigName;
     private String apiserverClientCaConfigNamespace;
     private Duration userApiTimeout;
+    private Duration kubernetesApiConnectTimeout;
+    private Duration kubernetesApiReadTimeout;
+    private Duration kubernetesApiWriteTimeout;
+    private int numWorkerThreads;
     private String version;
 
     public static ApiServerOptions fromEnv(Map<String, String> env) {
@@ -40,6 +44,21 @@ public class ApiServerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(10)));
 
+        options.setKubernetesApiConnectTimeout(getEnv(env, "KUBERNETES_API_CONNECT_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
+        options.setKubernetesApiReadTimeout(getEnv(env, "KUBERNETES_API_READ_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
+        options.setKubernetesApiWriteTimeout(getEnv(env, "KUBERNETES_API_WRITE_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
+        options.setNumWorkerThreads(getEnv(env, "NUM_WORKER_THREADS")
+                .map(Integer::parseInt)
+                .orElse(Runtime.getRuntime().availableProcessors() * 4));
         options.setEnableRbac(Boolean.parseBoolean(getEnv(env, "ENABLE_RBAC").orElse("false")));
 
         options.setApiserverClientCaConfigName(getEnv(env, "APISERVER_CLIENT_CA_CONFIG_NAME").orElse(null));
@@ -130,5 +149,55 @@ public class ApiServerOptions {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public Duration getKubernetesApiConnectTimeout() {
+        return kubernetesApiConnectTimeout;
+    }
+
+    public void setKubernetesApiConnectTimeout(Duration kubernetesApiConnectTimeout) {
+        this.kubernetesApiConnectTimeout = kubernetesApiConnectTimeout;
+    }
+
+    public Duration getKubernetesApiReadTimeout() {
+        return kubernetesApiReadTimeout;
+    }
+
+    public void setKubernetesApiReadTimeout(Duration kubernetesApiReadTimeout) {
+        this.kubernetesApiReadTimeout = kubernetesApiReadTimeout;
+    }
+
+    public Duration getKubernetesApiWriteTimeout() {
+        return kubernetesApiWriteTimeout;
+    }
+
+    public void setKubernetesApiWriteTimeout(Duration kubernetesApiWriteTimeout) {
+        this.kubernetesApiWriteTimeout = kubernetesApiWriteTimeout;
+    }
+
+    @Override
+    public String toString() {
+        return "ApiServerOptions{" +
+                "namespace='" + namespace + '\'' +
+                ", certDir='" + certDir + '\'' +
+                ", resyncInterval=" + resyncInterval +
+                ", enableRbac=" + enableRbac +
+                ", numWorkerThreads=" + numWorkerThreads +
+                ", apiserverClientCaConfigName='" + apiserverClientCaConfigName + '\'' +
+                ", apiserverClientCaConfigNamespace='" + apiserverClientCaConfigNamespace + '\'' +
+                ", userApiTimeout=" + userApiTimeout +
+                ", kubernetesApiConnectTimeout=" + kubernetesApiConnectTimeout +
+                ", kubernetesApiReadTimeout=" + kubernetesApiReadTimeout +
+                ", kubernetesApiWriteTimeout=" + kubernetesApiWriteTimeout +
+                ", version='" + version + '\'' +
+                '}';
+    }
+
+    public int getNumWorkerThreads() {
+        return numWorkerThreads;
+    }
+
+    public void setNumWorkerThreads(int numWorkerThreads) {
+        this.numWorkerThreads = numWorkerThreads;
     }
 }

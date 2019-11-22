@@ -41,7 +41,7 @@ function address_describe (a) {
 }
 
 function autolink_compare (a, b) {
-    return myutils.string_compare(a.addr, b.addr) || myutils.string_compare(a.direction, b.direction) || myutils.string_compare(a.containerId, b.containerId);
+    return myutils.string_compare(a.address, b.address) || myutils.string_compare(a.direction, b.direction) || myutils.string_compare(a.containerId, b.containerId);
 }
 
 function is_not_defined (a) {
@@ -55,11 +55,11 @@ function equivalent_container_id(a, b) {
 }
 
 function same_autolink_definition (a, b) {
-    return a.addr === b.addr && a.direction === b.direction && equivalent_container_id(a.containerId, b.containerId);
+    return a.address === b.address && a.direction === b.direction && equivalent_container_id(a.containerId, b.containerId);
 }
 
 function autolink_describe (a) {
-    return 'autolink ' + a.name + ' (dir: ' + a.direction + ', addr: ' + a.addr + ')';
+    return 'autolink ' + a.name + ' (dir: ' + a.direction + ', address: ' + a.address + ')';
 }
 
 function linkroute_compare (a, b) {
@@ -162,7 +162,7 @@ RouterConfig.prototype.add_address = function (a) {
 };
 
 RouterConfig.prototype.add_autolink = function (a) {
-    this.autolinks.push(myutils.merge({name: this.prefix + a.addr + '-' + a.containerId}, a));
+    this.autolinks.push(myutils.merge({name: this.prefix + a.address + '-' + a.containerId}, a));
 };
 
 RouterConfig.prototype.add_listener = function (a) {
@@ -374,16 +374,16 @@ function desired_address_config(high_level_address_definitions) {
                 for (var j in def.allocated_to) {
                     var brokerStatus = def.allocated_to[j];
                     if (brokerStatus.state === 'Active') {
-                        config.add_autolink_pair({addr:def.address, containerId: brokerStatus.containerId});
+                        config.add_autolink_pair({address:def.address, containerId: brokerStatus.containerId});
                     } else if (brokerStatus.state === 'Migrating') {
-                        config.add_autolink_pair({addr:def.address, containerId: brokerStatus.containerId});
+                        config.add_autolink_pair({address:def.address, containerId: brokerStatus.containerId});
                     } else if (brokerStatus.state === 'Draining') {
-                        config.add_autolink_in({addr:def.address, containerId: brokerStatus.containerId});
+                        config.add_autolink_in({address:def.address, containerId: brokerStatus.containerId});
                     }
                 }
             } else {
                 log.debug("Constructing old config for queue %s", def.address);
-                config.add_autolink_pair({addr:def.address, containerId: def.address});
+                config.add_autolink_pair({address:def.address, containerId: def.address});
             }
         } else if (def.type === 'topic') {
             if (def.allocated_to) {

@@ -36,7 +36,7 @@ import io.sundr.builder.annotations.Inline;
 @DefaultCustomResource
 @SuppressWarnings("serial")
 @AddressName
-public class Address extends AbstractHasMetadata<Address> implements AddressOrAddressList {
+public class Address extends AbstractHasMetadata<Address> {
 
     public static final String KIND = "Address";
 

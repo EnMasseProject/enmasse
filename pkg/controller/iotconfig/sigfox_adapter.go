@@ -9,6 +9,8 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
+
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -28,8 +30,9 @@ import (
 const nameSigfoxAdapter = "iot-sigfox-adapter"
 const routeSigfoxAdapter = "iot-sigfox-adapter"
 
-func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
+	configCtx := qdrProxyConfigCtx.Clone()
 	rc := &recon.ReconcileContext{}
 
 	adapter := findAdapter("sigfox")
@@ -37,7 +40,9 @@ func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *i
 	adapterConfig := config.Spec.AdaptersConfig.SigfoxAdapterConfig
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameSigfoxAdapter, config, !enabled, r.reconcileSigfoxAdapterDeployment)
+		return r.processDeployment(ctx, nameSigfoxAdapter, config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+			return r.reconcileSigfoxAdapterDeployment(config, deployment, configCtx)
+		})
 	})
 	rc.ProcessSimple(func() error {
 		return r.processService(ctx, nameSigfoxAdapter, config, !enabled, r.reconcileSigfoxAdapterService)
@@ -67,13 +72,13 @@ func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *i
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, configCtx *cchange.ConfigChangeRecorder) error {
 
 	adapter := config.Spec.AdaptersConfig.SigfoxAdapterConfig
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig)
+	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
 
 	install.DropContainer(deployment, "sigfox-adapter")
 	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {

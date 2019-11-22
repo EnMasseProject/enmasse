@@ -1,0 +1,17 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-planning.adoc
+
+:context: {context}-planning
+
+[id='assembly-address-space-address-concepts-{context}']
+= Address space and address concepts in {ProductName}
+
+Before you begin configuring resources for {ProductName}, you must first understand the concepts of an address space and an address in {ProductName}.
+
+include::../modules/con-address-space.adoc[leveloffset=+1]
+
+include::../modules/con-address.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

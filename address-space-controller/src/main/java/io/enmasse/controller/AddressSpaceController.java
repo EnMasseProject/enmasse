@@ -5,9 +5,13 @@
 
 package io.enmasse.controller;
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.api.common.OpenShift;
 import io.enmasse.controller.auth.*;
+import io.enmasse.controller.common.ControllerKind;
+import io.enmasse.controller.common.ControllerReason;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
 import io.enmasse.controller.keycloak.RealmController;
@@ -21,15 +25,23 @@ import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import io.fabric8.kubernetes.client.utils.HttpClientUtils;
+import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AddressSpaceController {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceController.class.getName());
@@ -49,7 +61,14 @@ public class AddressSpaceController {
     private ControllerChain controllerChain;
 
     private AddressSpaceController(AddressSpaceControllerOptions options) {
-        this.controllerClient = new DefaultKubernetesClient();
+        Config config = new ConfigBuilder().build();
+        OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
+        httpClient = httpClient.newBuilder()
+                .connectTimeout(options.getKubernetesApiConnectTimeout())
+                .writeTimeout(options.getKubernetesApiWriteTimeout())
+                .readTimeout(options.getKubernetesApiReadTimeout())
+                .build();
+        this.controllerClient = new DefaultKubernetesClient(httpClient, config);
         this.options = options;
     }
 
@@ -61,13 +80,61 @@ public class AddressSpaceController {
         if (options.isInstallDefaultResources()) {
             configureDefaultResources(controllerClient, options.getResourcesDir());
         }
+        AddressSpaceSchemaUpdater addressSpaceSchemaUpdater = new AddressSpaceSchemaUpdater(controllerClient);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
+        schemaProvider.registerListener(addressSpaceSchemaUpdater);
+
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
         Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, options.getTemplateDir(), isOpenShift);
 
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient, options.getVersion());
+        AddressSpaceApi addressSpaceApi = KubeAddressSpaceApi.create(controllerClient, null, options.getVersion());
         EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "address-space-controller")
                 : new LogEventLogger();
+
+        // Convert all address spaces from configmaps to CRD variant
+        ConfigMapAddressSpaceApi legacyAddressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient, options.getVersion());
+        Map<AddressSpace, List<Address>> converted = new HashMap<>();
+
+        for (AddressSpace legacy : legacyAddressSpaceApi.listAllAddressSpaces()) {
+            String globalName = legacy.getMetadata().getNamespace() + "." + legacy.getMetadata().getName();
+            try {
+                legacy.getMetadata().setResourceVersion(null);
+                addressSpaceApi.createAddressSpace(legacy);
+
+                // Should not fail, but if it does it will be handled below
+                AddressSpace created = addressSpaceApi.getAddressSpaceWithName(legacy.getMetadata().getNamespace(), legacy.getMetadata().getName()).get();
+
+                AddressApi addressApi = addressSpaceApi.withAddressSpace(created);
+                AddressApi legacyAddressApi = legacyAddressSpaceApi.withAddressSpace(legacy);
+                List<Address> convertedAddresses = new ArrayList<>();
+                for (Address address : legacyAddressApi.listAddresses(legacy.getMetadata().getNamespace()).stream().filter(address -> address.getMetadata().getName().startsWith(legacy.getMetadata().getName())).collect(Collectors.toList())) {
+                    address.getMetadata().setResourceVersion(null);
+                    addressApi.createAddress(address);
+                    convertedAddresses.add(address);
+                    log.info("Converted address {} in {} from ConfigMap to Address CRD", address.getMetadata().getName(), address.getMetadata().getNamespace());
+                }
+                converted.put(legacy, convertedAddresses);
+                String message = String.format("Converted address space %s in %s from ConfigMap to AddressSpace CRD. %d addresses converted", legacy.getMetadata().getName(), legacy.getMetadata().getNamespace(), convertedAddresses.size());
+                eventLogger.log(ControllerReason.AddressSpaceConverted, message, EventLogger.Type.Normal, ControllerKind.AddressSpace, globalName);
+            } catch (Exception e) {
+                eventLogger.log(ControllerReason.AddressSpaceConversionFailed, String.format("Error converting address space %s: %s", legacy.getMetadata().getName(), e.getMessage()), EventLogger.Type.Warning, ControllerKind.AddressSpace, globalName);
+                throw e;
+            }
+        }
+
+        for (Map.Entry<AddressSpace, List<Address>> entry : converted.entrySet()) {
+            AddressSpace addressSpace = entry.getKey();
+            try {
+                AddressApi legacyAddressApi = legacyAddressSpaceApi.withAddressSpace(addressSpace);
+                for (Address address : entry.getValue()) {
+                    legacyAddressApi.deleteAddress(address);
+                }
+
+                legacyAddressSpaceApi.deleteAddressSpace(addressSpace);
+            } catch (Exception e) {
+                log.warn("Error deleting ConfigMaps for address space {}", addressSpace, e);
+            }
+        }
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
         CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
@@ -87,16 +154,19 @@ public class AddressSpaceController {
 
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
+        controllerChain.addController(new DefaultsController(authenticationServiceRegistry));
+        controllerChain.addController(new AddressFinalizerController(addressSpaceApi));
+        controllerChain.addController(new ComponentFinalizerController(kubernetes));
+        controllerChain.addController(new RealmFinalizerController(keycloakUserApi, authenticationServiceRegistry));
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi));
         controllerChain.addController(new RouterConfigController(controllerClient, controllerClient.getNamespace(), authenticationServiceResolver));
         controllerChain.addController(new RealmController(keycloakUserApi, authenticationServiceRegistry));
-        controllerChain.addController(new NetworkPolicyController(controllerClient, schemaProvider));
+        controllerChain.addController(new NetworkPolicyController(controllerClient));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, authenticationServiceRegistry, userApi));
         controllerChain.addController(new RouterStatusController(controllerClient, controllerClient.getNamespace(), options));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault(), isOpenShift));
         controllerChain.addController(new ExportsController(controllerClient));
         controllerChain.addController(authController);
-        controllerChain.addController(new DeleteController(kubernetes));
         controllerChain.addController(new MetricsReporterController(metrics, options.getVersion()));
         controllerChain.start();
 
@@ -165,7 +235,9 @@ public class AddressSpaceController {
     public static void main(String args[]) {
         AddressSpaceController controller = null;
         try {
-            controller = new AddressSpaceController(AddressSpaceControllerOptions.fromEnv(System.getenv()));
+            final AddressSpaceControllerOptions options = AddressSpaceControllerOptions.fromEnv(System.getenv());
+            log.info("AddressSpaceController starting with options: {}", options);
+            controller = new AddressSpaceController(options);
             controller.start();
         } catch (IllegalArgumentException e) {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));

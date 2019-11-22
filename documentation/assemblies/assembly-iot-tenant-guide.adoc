@@ -1,0 +1,55 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-tenant-guide.adoc
+
+:context: {context}-iot
+
+[id='iot-tenant-{context}]
+= IoT for messaging tenants
+
+
+== Customer applications
+
+include::../modules/proc-iot-configure-hono-cli.adoc[leveloffset=+1]
+
+:api: telemetry
+
+=== Telemetry
+
+include::../modules/snip-iot-customer-api.adoc[leveloffset=+1]
+
+:api: events
+
+=== Events
+
+include::../modules/snip-iot-customer-api.adoc[leveloffset=+1]
+
+== Device applications
+
+=== HTTP
+
+.Telemetry
+
+:api: telemetry
+
+include::../modules/snip-iot-http-api.adoc[leveloffset=+2]
+
+:api: events
+
+.Events
+
+include::../modules/snip-iot-http-api.adoc[leveloffset=+2]
+
+=== MQTT
+
+:api: telemetry
+
+.Telemetry
+
+include::../modules/snip-iot-mqtt-api.adoc[leveloffset=+2]
+
+:api: events
+
+.Events
+
+include::../modules/snip-iot-mqtt-api.adoc[leveloffset=+2]

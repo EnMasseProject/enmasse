@@ -144,7 +144,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     @Override
     public boolean deleteAddressSpace(AddressSpace addressSpace) {
         String name = getConfigMapName(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
-        Boolean deleted = client.configMaps().withName(name).delete();
+        Boolean deleted = client.configMaps().withName(name).cascading(true).delete();
         return deleted != null && deleted;
     }
 
@@ -187,7 +187,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.TYPE, "address-space");
         labels.put(LabelKeys.NAMESPACE, namespace);
-        client.configMaps().withLabels(labels).delete();
+        client.configMaps().withLabels(labels).withPropagationPolicy("Background").delete();
     }
 
     private AddressSpace getAddressSpaceFromConfig(ConfigMap map) {

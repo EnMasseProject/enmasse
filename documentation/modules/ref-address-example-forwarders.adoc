@@ -6,19 +6,20 @@
 = Address forwarding examples
 
 You can use forwarders to:
-* automatically forward messages from a "local" address to a remote AMQP address outside of {ProductName}, or 
-* forward messages from a remote AMQP address to a "local" address. 
-To create a forwarder you must first configure a connector to the remote AMQP endpoint for the address space. For more information about connectors, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-connectors-messaging[Address space connector examples].
 
-Forwarding is only supported in the `standard` address space type, and only for the `queue` and `subscription` address types. The `subscription` address type only supports forwarding in the `out` direction.
+* automatically forward messages from a local address to a remote AMQP server outside of {ProductName}, or
 
-These examples expect that a connector `remote1` has been configured for the address space.
+* forward messages from a remote AMQP server to a local address.
 
-== Forwarding messages from a local queue to a remote endpoint
+To use an address forwarder, you must first configure a connector to the remote AMQP server for the address space. For more information about address space connectors, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-connectors-messaging[Address space connector examples].
 
-In this example, messages in `myqueue` are forwarded to the remote endpoint with an  address of `clients/me/1`.
+Address forwarding is supported only in the `standard` address space type, and only for the `queue` and `subscription` address types. With the `queue` address type, you can forward messages to a remote AMQP server or from a remote AMQP server to a local queue. With the `subscription` address type, you can create a forwarder to a remote AMQP address, but you cannot create a forwarder that copies messages to the subscription. That is, the `subscription` address type supports forwarding in the `out` direction only, as shown in the example.
 
-that we can forward messages in  to.
+In the following examples, it is assumed that a connector, `remote1`, has been configured for the address space.
+
+== Forwarding messages from a local queue to a remote AMQP server
+
+In this example, messages in `myqueue` are forwarded to the remote AMQP server with an address of `clients/me/1`.
 
 [source,yaml,options="nowrap"]
 ----
@@ -39,9 +40,9 @@ spec:
 <2> (Required) Specifies the remote address to forward messages to. The address must be prefixed with the connector name and must be identical to the address matching patterns defined on the connector.
 <3> (Required) Specifies the direction of message flow, which is either `out` or `in`. A value of `out` forwards messages to the remote endpoint. A value of `in` forwards messages from the remote endpoint.
 
-== Forwarding messages from a remote endpoint to a local queue
+== Forwarding messages from a remote AMQP server to a local queue
 
-In this example, the remote endpoint has an address `prices/milk` that we can receive messages from and move to `myqueue`.
+In this example, you receive messages from an an address `prices/milk` on a remote AMQP server.  The messages are then moved to a local queue, `myqueue`.
 
 [source,yaml,options="nowrap"]
 ----
@@ -61,3 +62,4 @@ spec:
 <1> (Required) Specifies the name of the forwarder, which is used to ensure a unique identity.
 <2> (Required) Specifies the remote address to forward messages to. The address must be prefixed with the connector name and must be identical to the address matching patterns defined on the connector.
 <3> (Required) Specifies the direction of message flow, which is either `out` or `in`. A value of `out` forwards messages to the remote endpoint. A value of `in` forwards messages from the remote endpoint.
+

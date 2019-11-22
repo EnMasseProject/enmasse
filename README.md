@@ -3,6 +3,7 @@
 [![Systemtest Status](https://travis-ci.org/EnMasseProject/enmasse.svg?branch=master)](https://travis-ci.org/EnMasseProject/enmasse)
 [![GitHub release](https://img.shields.io/github/release/EnMasseProject/enmasse.svg)](https://github.com/EnMasseProject/enmasse/releases/latest)
 [![Twitter Follow](https://img.shields.io/twitter/follow/enmasseio.svg?style=social&label=Follow&style=for-the-badge)](https://twitter.com/enmasseio)
+[![Gitter](https://badges.gitter.im/EnMasseProject/community.svg)](https://gitter.im/EnMasseProject/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 ----
 
@@ -38,7 +39,7 @@ See [contributing] for information on how to contribute to EnMasse.
 
 ## Support
 
-If you need support, reach out to us via the [mailinglist] or on [IRC].
+If you need support, reach out to us via the [mailinglist] or on [Gitter].
 
 See [contributing] for more info on how to get help from the community.
 
@@ -48,5 +49,5 @@ If you run into issues, don't hesitate to raise an [issue].
 [contributing]: CONTRIBUTING.md
 [developing]: HACKING.md
 [mailinglist]: https://www.redhat.com/mailman/listinfo/enmasse
-[IRC]: https://webchat.freenode.net/?randomnick=1&channels=enmasse&uio=d4
+[Gitter]: https://gitter.im/EnMasseProject/community
 [issue]: https://github.com/EnMasseProject/enmasse/issues/new/choose

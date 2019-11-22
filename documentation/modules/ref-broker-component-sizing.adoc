@@ -1,0 +1,114 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-configuration-sizing-guide.adoc
+//
+[id='broker-component-sizing-{context}']
+= Broker component sizing
+
+Brokers are configured using the `BrokeredInfraConfig` and `StandardInfraConfig` resources, depending on the type of address space. When sizing a broker, consider:
+
+* The average message size
+* The number of messages stored
+* The number of queues and topics
+* The address full policy
+
+NOTE: In {ProductName}, you can only restrict the total amount of memory allocated for a broker. You cannot restrict the amount of memory used by individual addresses.
+
+The broker persists all messages to disk. When the `BLOCK`, `FAIL`, or `DROP` address full policy is specified, the number of messages that can be persisted is limited to the amount of memory in the broker. By using the `PAGE` address full policy, more messages can be stored than can be held in memory, at the expense of a potential performance degradation from reading data from disk. Therefore, paging is useful in the case of large messages or a large backlog of messages in your system.
+
+== Example use case for a broker component configuration
+
+Given 10 queues with a maximum of 1000 messages stored per queue and an average message size of 128 kB, the amount of storage space required to store messages is:
+
+```
+10 queues * 1000 messages * (128 + (128 kB * 1024)) = 1.25 GB
+```
+
+In addition, the broker has a fixed storage footprint of about 50 MB.
+
+The amount of memory required for the broker depends on which address full policy is specified. If the `PAGE` policy is used, the memory requirements can be reduced  since the messages are stored separately from the journal (which always needs to fit in memory). If the `FAIL`, `BLOCK`, or `DROP` policies are specified, all messages must also be held in memory, even if they are persisted.
+
+There is also constant memory cost associated with running the broker as well as the JVM. The memory available to store message is automatically derived from the memory set in the broker configuration and is set to be half the JVM memory, which in turn is set to half of the system memory.
+
+NOTE: In the `standard` address space type, multiple broker instances might be created. The sizing of these broker instances also depends on the address plan configuration and how many addresses you expect each broker to be able to handle before another broker is spawned.
+
+=== Example broker component configuration without paging
+
+For broker configurations not using a `PAGE` policy, take into consideration an additional 5 percent bookkeeping overhead per address should be taken into account (`1.05 * 1.25 = 1.35 GB`):
+
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: BrokeredInfraConfig
+metadata:
+  name: cfg1
+spec:
+  broker:
+    addressFullPolicy: FAIL
+    globalMaxSize: 1.35Gb
+    resources:
+      memory: 4Gi
+      storage: 2Gi
+  ...
+----
+
+=== Example broker component configuration with paging
+
+When paging is enabled, the original formula can be modified to only account for a reference to the message as well as holding 1000 in-flight messages in memory:
+
+``` 
+(1000 messages * 1000 * 128 kB) + (10 queues * 128 kB * 1024) = 123.5 MB
+```
+
+So, the amount of memory specified for the broker can now be reduced, as seen in this configuration example:
+
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: BrokeredInfraConfig
+metadata:
+  name: cfg1
+spec:
+  broker:
+    addressFullPolicy: PAGE
+    globalMaxSize: 124Mb
+    resources:
+      memory: 512Mi
+      storage: 2Gi
+  ...
+----
+
+== Broker scaling (standard address space only)
+
+Brokers are deployed on demand, that is, when addresses of type `queue` or `topic` are created. The number of brokers deployed is restricted by the resource limits specified in the `AddressSpacePlan` configuration. The following `AddressSpacePlan` configuration example specifies a limit of four brokers in total per address space:
+
+----
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressSpacePlan
+metadata:
+  name: cfg1
+spec:
+  resourceLimits:
+    broker: 4.0
+  ...
+----
+
+In terms of capacity, multiply the memory requirements for the broker by the limit.
+
+The number of broker instances are scaled dynamically between one and the maximum limit specified based on the `AddressPlan` used for the different addresses. An `AddressPlan` specifies the fraction of a broker that is required by an address. The fraction specified in the plan is multiplied by the number of addresses referencing this plan, and then rounded up to produce the number of desired broker replicas.
+
+.`AddressPlan` configuration example
+----
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: plan1
+spec:
+  ...
+  resources:
+    broker: 0.01
+----
+
+If you create 110 addresses with `plan1` as the address plan, the number of broker replicas is `ceil(110 addresses * 0.01 broker) = 2 replicas`.
+
+The total number of brokers is capped by the address space plan resource limits.

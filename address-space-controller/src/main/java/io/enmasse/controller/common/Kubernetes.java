@@ -5,12 +5,15 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -24,7 +27,7 @@ public interface Kubernetes {
     void apply(KubernetesList resourceList, boolean patchPersistentVolumeClaims);
     KubernetesList processTemplate(String templateName, Map<String, String> parameters);
 
-    void deleteResourcesNotIn(String[] addressSpaces);
+    void deleteResources(String infraUuid);
 
     Set<Deployment> getReadyDeployments(AddressSpace addressSpace);
     Set<StatefulSet> getReadyStatefulSets(AddressSpace addressSpace);
@@ -41,4 +44,7 @@ public interface Kubernetes {
         annotations.put(annotationKey, annotationValue);
         item.getMetadata().setAnnotations(annotations);
     }
+
+    String getAppliedPlan(AddressSpace addressSpace);
+    InfraConfig getAppliedInfraConfig(AddressSpace addressSpace) throws IOException;
 }

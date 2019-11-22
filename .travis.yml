@@ -28,12 +28,16 @@ jobs:
   include:
   - stage: build
     before_install:
-    - ./.travis/find-qdrouterd-base-versions.sh
     - pip install --user requests[security] ansible
     - gem install asciidoctor
     - gimme 1.12.9
     - source ~/.gimme/envs/go1.12.9.env
     - go version
+    - wget https://archive.apache.org/dist/maven/maven-3/3.6.2/binaries/apache-maven-3.6.2-bin.zip
+    - unzip -qq apache-maven-3.6.2-bin.zip
+    - export M2_HOME=$PWD/apache-maven-3.6.2
+    - export PATH=$M2_HOME/bin:$PATH
+    - export MAVEN_OPTS='-Xmx6g'
     install: true
     before_script:
     - pwd
@@ -50,7 +54,9 @@ jobs:
     - "./hack/verify-codegen.sh"
     script:
     - "./.travis/setup-kubernetes.sh"
+    - "./.travis/setup-olm.sh"
     - "./.travis/build.sh"
+    - "./.travis/test.sh"
     after_failure:
     - "./.travis/upload-artifacts.sh false"
     after_success:
@@ -68,6 +74,7 @@ jobs:
         repo: EnMasseProject/enmasse
 env:
   global:
+  - TEST_MINIKUBE_VERSION=v1.4.0
   - BRANCH=${TRAVIS_BRANCH}
   - PULL_REQUEST=${TRAVIS_PULL_REQUEST}
   - TAG=${TRAVIS_TAG}

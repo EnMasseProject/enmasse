@@ -20,6 +20,8 @@ import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -44,7 +46,6 @@ import io.fabric8.kubernetes.api.model.rbac.RoleBuilder;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Applicable;
-import io.fabric8.kubernetes.client.dsl.Deletable;
 import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
 import io.fabric8.kubernetes.client.utils.ReplaceValueStream;
 import org.slf4j.Logger;
@@ -82,9 +83,14 @@ public class SystemtestsKubernetesApps {
     private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
 
     public static String getMessagingAppPodName() throws Exception {
-        TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
+        return getMessagingAppPodName(MESSAGING_PROJECT);
+    }
+
+    public static String getMessagingAppPodName(String namespace) throws Exception {
+        TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
                 pod.getStatus().getContainerStatuses().get(0).getReady()).count() == 1, new TimeoutBudget(1, TimeUnit.MINUTES));
-        return Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
+
+        return Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
                 pod.getStatus().getContainerStatuses().get(0).getReady()).findAny().get().getMetadata().getName();
     }
 
@@ -97,11 +103,27 @@ public class SystemtestsKubernetesApps {
         return getMessagingAppPodName();
     }
 
+    public static String deployMessagingClientApp(String namespace) throws Exception {
+        if (!Kubernetes.getInstance().namespaceExists(namespace)) {
+            if (namespace.equals("allowed-namespace")) {
+                Namespace allowedNamespace = new NamespaceBuilder().withNewMetadata()
+                        .withName("allowed-namespace").addToLabels("allowed", "true").endMetadata().build();
+                Kubernetes.getInstance().getClient().namespaces().create(allowedNamespace);
+            } else {
+                Kubernetes.getInstance().createNamespace(namespace);
+            }
+
+        }
+        Kubernetes.getInstance().createDeploymentFromResource(namespace, getMessagingAppDeploymentResource(namespace));
+        TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), namespace, 1, new TimeoutBudget(5, TimeUnit.MINUTES));
+        return getMessagingAppPodName(namespace);
+    }
+
 
     public static void collectMessagingClientAppLogs(Path path) {
         try {
             Files.createDirectories(path);
-            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path.toFile(), SystemtestsKubernetesApps.MESSAGING_PROJECT);
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, SystemtestsKubernetesApps.MESSAGING_PROJECT);
             collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.MESSAGING_PROJECT);
         } catch (Exception e) {
             log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.MESSAGING_PROJECT);
@@ -278,7 +300,7 @@ public class SystemtestsKubernetesApps {
             kubeCli.createNamespace(namespace);
         }
 
-        kubeCli.getClient().rbac().roles().inNamespace(namespace).create(new RoleBuilder()
+        kubeCli.getClient().rbac().roles().inNamespace(namespace).createOrReplace(new RoleBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .withNamespace(namespace)
@@ -290,7 +312,7 @@ public class SystemtestsKubernetesApps {
                         .addToVerbs("get")
                         .build())
                 .build());
-        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).create(new RoleBindingBuilder()
+        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).createOrReplace(new RoleBindingBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .withNamespace(namespace)
@@ -342,8 +364,8 @@ public class SystemtestsKubernetesApps {
 
     public static void deleteAMQBroker(String namespace, String name) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
-        kubeCli.getClient().rbac().roles().inNamespace(namespace).withName(name).delete();
-        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).withName(name).delete();
+        kubeCli.getClient().rbac().roles().inNamespace(namespace).withName(name).cascading(true).delete();
+        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).withName(name).cascading(true).delete();
         kubeCli.deleteSecret(namespace, name);
         kubeCli.deleteService(namespace, name);
         kubeCli.deleteDeployment(namespace, name);
@@ -368,7 +390,12 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deleteDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
-        loadDirectories(streamManipulator, Deletable::delete, paths);
+        loadDirectories(streamManipulator, o -> {
+            o.fromServer().get().forEach(item -> {
+                // Workaround for https://github.com/fabric8io/kubernetes-client/issues/1856
+                Kubernetes.getInstance().getClient().resource(item).cascading(true).delete();
+            });
+        }, paths);
     }
 
     public static void loadDirectories(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
@@ -481,20 +508,54 @@ public class SystemtestsKubernetesApps {
                 .endSelector()
                 .withReplicas(1)
                 .withNewTemplate()
-                .withNewMetadata()
-                .addToLabels("app", MESSAGING_CLIENTS)
-                .endMetadata()
-                .withNewSpec()
-                .addNewContainer()
-                .withName(MESSAGING_CLIENTS)
-                .withImage("quay.io/enmasse/systemtests-clients:latest")
-                .withCommand("sleep")
-                .withArgs("infinity")
-                .endContainer()
+                    .withNewMetadata()
+                    .addToLabels("app", MESSAGING_CLIENTS)
+                    .endMetadata()
+                    .withNewSpec()
+                    .addNewContainer()
+                    .withName(MESSAGING_CLIENTS)
+                    .withImage("quay.io/enmasse/systemtests-clients:latest")
+                    .withCommand("sleep")
+                    .withArgs("infinity")
+                    .endContainer()
+                    .endSpec()
+                    .endTemplate()
                 .endSpec()
+                .build();
+    }
+
+    private static Deployment getMessagingAppDeploymentResource(String namespace) {
+        return new DeploymentBuilder(getMessagingAppDeploymentResource())
+                .editMetadata()
+                .withName(namespace)
+                .endMetadata()
+                .editSpec()
+                .withNewSelector()
+                .addToMatchLabels("app", namespace)
+                .endSelector()
+                .editTemplate()
+                .withNewMetadata()
+                .addToLabels("app", namespace)
+                .endMetadata()
                 .endTemplate()
                 .endSpec()
                 .build();
+
+       /* return new DoneableDeployment(getMessagingAppDeploymentResource())
+            .editMetadata()
+                .withName(namespace)
+            .endMetadata()
+            .editSpec()
+             .withNewSelector()
+             .addToMatchLabels("app", namespace)
+             .endSelector()
+             .editTemplate()
+             .withNewMetadata()
+             .addToLabels("app", namespace)
+             .endMetadata()
+             .endTemplate()
+             .endSpec()
+             .done();*/
     }
 
     private static Service getSystemtestsServiceResource(String appName, int port) {

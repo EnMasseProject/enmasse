@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SeleniumFirefox
+@Disabled("Ignore whilst 0.31 console refactoring is underway")
 class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedBrokered {
 
     @Test
@@ -46,6 +47,21 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedBrokere
                 .withType("topic")
                 .withAddress("test-topic")
                 .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build());
+    }
+
+    @Test
+    void testPurgeAddress() throws Exception {
+        doTestPurgeMessages(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "purge-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("purge-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build());
     }

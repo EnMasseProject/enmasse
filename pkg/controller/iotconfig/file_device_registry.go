@@ -71,7 +71,7 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 	deployment.Annotations[RegistryTypeAnnotation] = "file"
 	deployment.Spec.Template.Annotations[RegistryTypeAnnotation] = "file"
 
-	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig)
+	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig, nil)
 
 	err := install.ApplyFsGroupOverride(deployment)
 

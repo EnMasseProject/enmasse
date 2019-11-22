@@ -23,7 +23,7 @@ func (r *ReconcileIoTConfig) reconcileProjectOperator(config *iotv1alpha1.IoTCon
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.Operator.ServiceConfig)
+	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.Operator.ServiceConfig, nil)
 
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-operator"
 

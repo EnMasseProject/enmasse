@@ -11,6 +11,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
+import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -23,7 +24,6 @@ import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -66,7 +66,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     public static void runQueueTest(AmqpClient client, Address dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
         List<String> msgs = TestUtils.generateMessages(countMessages);
         Count<Message> predicate = new Count<>(msgs.size());
-        long timeoutMs = countMessages * 200; //estimate in worst case it takes at most 200ms to send one message
+        long timeoutMs = countMessages * ClientUtils.ESTIMATE_MAX_MS_PER_MESSAGE;
         log.info("Start sending with " + timeoutMs + " ms timeout");
         Future<Integer> numSent = client.sendMessages(dest.getSpec().getAddress(), msgs, predicate);
 
@@ -459,17 +459,16 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     }
 
     @Test
-    @Disabled("due to issue #1330")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         Address addressQueue = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-queue"))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-queue-large"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
-                .withAddress("jmsQueue")
-                .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                .withAddress("jmsQueueLarge")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
         resourcesManager.setAddresses(addressQueue);
@@ -478,12 +477,14 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 "jmsCliId", addressQueue);
         connection.start();
 
-        sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1);
-        sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1);
-        sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1);
-        sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1);
+        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1, DeliveryMode.PERSISTENT);
+        connection.stop();
+        connection.close();
     }
 }
 

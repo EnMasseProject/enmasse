@@ -6,6 +6,7 @@ package io.enmasse.address.model;
 
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.model.validation.DefaultValidator;
 
 import java.util.Optional;
 
@@ -50,7 +51,28 @@ public class AddressResolver {
         return addressSpaceType.findAddressType(address.getSpec().getType()).orElseThrow(() -> new UnresolvedAddressException("Unknown address type " + address.getSpec().getType()));
     }
 
-    public void validate(Address address) {
-        getPlan(getType(address), address);
+    public boolean validate(Address address) {
+        AddressType addressType = addressSpaceType.findAddressType(address.getSpec().getType()).orElse(null);
+        if (addressType == null) {
+            address.getStatus().setReady(false);
+            address.getStatus().appendMessage("Unknown address type '" + address.getSpec().getType() + "'");
+            return false;
+        } else {
+            if (addressType.findAddressPlan(address.getSpec().getPlan()).isEmpty()) {
+                address.getStatus().setReady(false);
+                address.getStatus().appendMessage("Unknown address plan '" + address.getSpec().getPlan() + "'");
+                return false;
+            }
+        }
+
+        try {
+            DefaultValidator.validate(address);
+        } catch (Exception e) {
+            address.getStatus().setReady(false);
+            address.getStatus().appendMessage("Error validating address '" + address.getMetadata().getName() + "' in namespace '" + address.getMetadata().getNamespace() + "': " + e.getMessage());
+            return false;
+        }
+
+        return true;
     }
 }

@@ -58,11 +58,11 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
     public void setUpClientBase(TestInfo info) {
         clients = new ArrayList<>();
         String clientFolder = "clients_tests";
-        logPath = Paths.get(
-                environment.testLogDir(),
-                clientFolder,
-                info.getTestClass().get().getName(),
-                info.getTestMethod().get().getName());
+        logPath = environment.testLogDir().resolve(
+                Paths.get(
+                        clientFolder,
+                        info.getTestClass().get().getName(),
+                        info.getTestMethod().get().getName()));
 
         arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());
@@ -168,7 +168,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> recResult = receiver.runAsync();
         Future<Boolean> rec2Result = receiver2.runAsync();
 
-        if (new AddressSpaceUtils().isBrokered(getSharedAddressSpace())) {
+        if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
             waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
         } else {
             waitForSubscribersConsole(getSharedAddressSpace(), dest, 2);
@@ -225,7 +225,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> recResult = subscriber.runAsync();
         Future<Boolean> recResult2 = subscriber2.runAsync();
 
-        if (new AddressSpaceUtils().isBrokered(getSharedAddressSpace())) {
+        if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
             waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
         } else {
             waitForSubscribersConsole(getSharedAddressSpace(), dest, 2);
@@ -450,7 +450,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> result1 = subscriber.runAsync();
         Future<Boolean> result2 = subscriber2.runAsync();
 
-        if (new AddressSpaceUtils().isBrokered(getSharedAddressSpace())) {
+        if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
             waitForSubscribers(artemisManagement, getSharedAddressSpace(), topic.getSpec().getAddress(), 2);
         } else {
             waitForSubscribersConsole(getSharedAddressSpace(), topic, 2);

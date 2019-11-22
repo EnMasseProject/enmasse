@@ -40,6 +40,7 @@ import io.enmasse.iot.model.v1.IoTConfigList;
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectList;
+import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
@@ -110,6 +111,15 @@ public abstract class Kubernetes {
     protected final String infraNamespace;
     protected static KubeCluster cluster;
 
+    static {
+        try {
+            CustomResourceDefinitions.registerAll();
+        } catch (RuntimeException t) {
+            t.printStackTrace();
+            throw new ExceptionInInitializerError(t);
+        }
+    }
+
     protected Kubernetes(String infraNamespace, Supplier<KubernetesClient> clientSupplier) {
         this.environment = Environment.getInstance();
         this.client = clientSupplier.get();
@@ -131,6 +141,7 @@ public abstract class Kubernetes {
         if (instance == null) {
             try {
                 cluster = KubeCluster.detect();
+                log.info("Cluster is {}", cluster.toString());
             } catch (NoClusterException ex) {
                 log.error(ex.getMessage());
             }
@@ -174,7 +185,7 @@ public abstract class Kubernetes {
 
     public MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace,
             Resource<AddressSpace, DoneableAddressSpace>> getAddressSpaceClient(String namespace) {
-        return (MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>>) client.customResources(CoreCrd.addresseSpaces(), AddressSpace.class, AddressSpaceList.class, DoneableAddressSpace.class).inNamespace(namespace);
+        return (MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>>) client.customResources(CoreCrd.addressSpaces(), AddressSpace.class, AddressSpaceList.class, DoneableAddressSpace.class).inNamespace(namespace);
     }
 
     public MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> getAddressClient() {
@@ -534,10 +545,20 @@ public abstract class Kubernetes {
         }
     }
 
+    public void createNamespace(String namespace, Map<String, String> labels) {
+        log.info("Following namespace will be created = {}", namespace);
+        if (!namespaceExists(namespace)) {
+            Namespace ns = new NamespaceBuilder().withNewMetadata().withName(namespace).withLabels(labels).endMetadata().build();
+            client.namespaces().create(ns);
+        } else {
+            log.info("Namespace {} already exists", namespace);
+        }
+    }
+
     public void deleteNamespace(String namespace) throws Exception {
         log.info("Following namespace will be removed - {}", namespace);
         if (namespaceExists(namespace)) {
-            client.namespaces().withName(namespace).delete();
+            client.namespaces().withName(namespace).cascading(true).delete();
 
             TestUtils.waitUntilCondition("Namespace will be deleted", phase ->
                     !namespaceExists(namespace), new TimeoutBudget(5, TimeUnit.MINUTES));
@@ -553,7 +574,7 @@ public abstract class Kubernetes {
 
     public void deletePod(String namespace, Map<String, String> labels) {
         log.info("Delete pods with labels: {}", labels.toString());
-        client.pods().inNamespace(namespace).withLabels(labels).delete();
+        client.pods().inNamespace(namespace).withLabels(labels).withPropagationPolicy("Background").delete();
     }
 
     /***
@@ -578,7 +599,7 @@ public abstract class Kubernetes {
      * @throws Exception
      */
     public void deletePod(String namespace, String podName) {
-        client.pods().inNamespace(namespace).withName(podName).delete();
+        client.pods().inNamespace(namespace).withName(podName).cascading(true).delete();
         log.info("Pod {} removed", podName);
     }
 
@@ -647,7 +668,7 @@ public abstract class Kubernetes {
      * @param ingressName ingress name
      */
     public void deleteIngress(String namespace, String ingressName) {
-        client.extensions().ingresses().inNamespace(namespace).withName(ingressName).delete();
+        client.extensions().ingresses().inNamespace(namespace).withName(ingressName).cascading(true).delete();
         log.info("Ingress {} deleted", ingressName);
     }
 
@@ -696,7 +717,7 @@ public abstract class Kubernetes {
      * @param configmapName configmap
      */
     public void deleteConfigmap(String namespace, String configmapName) {
-        client.configMaps().inNamespace(namespace).withName(configmapName).delete();
+        client.configMaps().inNamespace(namespace).withName(configmapName).cascading(true).delete();
         log.info("Configmap {} in namespace {} deleted", configmapName, namespace);
     }
 
@@ -718,7 +739,7 @@ public abstract class Kubernetes {
      * @param appName
      */
     public void deleteDeployment(String namespace, String appName) {
-        client.apps().deployments().inNamespace(namespace).withName(appName).delete();
+        client.apps().deployments().inNamespace(namespace).withName(appName).cascading(true).delete();
         log.info("Deployment {} removed", appName);
     }
 
@@ -739,7 +760,7 @@ public abstract class Kubernetes {
      * @param serviceName service name
      */
     public void deleteService(String namespace, String serviceName) {
-        client.services().inNamespace(namespace).withName(serviceName).delete();
+        client.services().inNamespace(namespace).withName(serviceName).cascading(true).delete();
         log.info("Service {} removed", serviceName);
     }
 
@@ -832,6 +853,10 @@ public abstract class Kubernetes {
         }
     }
 
+    public ServiceAccount getServiceAccount(String namespace, String name) {
+        return client.serviceAccounts().inNamespace(namespace).withName(name).get();
+    }
+
     /**
      * Creates service account
      *
@@ -855,7 +880,7 @@ public abstract class Kubernetes {
      */
     public String deleteServiceAccount(String name, String namespace) {
         log.info("Delete serviceaccount {} from namespace {}", name, namespace);
-        client.serviceAccounts().inNamespace(namespace).withName(name).delete();
+        client.serviceAccounts().inNamespace(namespace).withName(name).cascading(true).delete();
         return "system:serviceaccount:" + namespace + ":" + name;
     }
 
@@ -932,7 +957,7 @@ public abstract class Kubernetes {
      * @param secret    secret name
      */
     public void deleteSecret(String namespace, String secret) {
-        client.secrets().inNamespace(namespace).withName(secret).delete();
+        client.secrets().inNamespace(namespace).withName(secret).cascading(true).delete();
         log.info("Secret {} deleted", secret);
     }
 
@@ -955,4 +980,6 @@ public abstract class Kubernetes {
     public abstract void createExternalEndpoint(String name, String namespace, Service service, ServicePort targetPort);
 
     public abstract void deleteExternalEndpoint(String namespace, String name);
+
+    public abstract String getOlmNamespace();
 }

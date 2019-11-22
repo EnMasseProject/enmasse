@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 public class Receiver extends ClientHandlerBase<List<Message>> {
 
     private static final Logger log = CustomLogger.getLogger();
+    private ProtonReceiver receiver;
     private final List<Message> messages = new ArrayList<>();
     private final AtomicInteger messageCount = new AtomicInteger();
     private final Predicate<Message> done;
@@ -39,7 +40,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
     }
 
     private void connectionOpened(ProtonConnection conn, String linkName, Source source) {
-        ProtonReceiver receiver = conn.createReceiver(source.getAddress(), new ProtonLinkOptions().setLinkName(linkName));
+        receiver = conn.createReceiver(source.getAddress(), new ProtonLinkOptions().setLinkName(linkName));
         receiver.setSource(source);
         receiver.setPrefetch(0);
         receiver.handler((protonDelivery, message) -> {
@@ -96,5 +97,12 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
 
     int getNumReceived() {
         return messageCount.get();
+    }
+
+    void closeGracefully() {
+        if (receiver!=null && receiver.isOpen()) {
+            receiver.close();
+            resultPromise.complete(messages);
+        }
     }
 }

@@ -1,0 +1,36 @@
+// Module included in the following assemblies:
+//
+// assembly-configuring-olm.adoc
+// rhassemblies/assembly-configuring-olm-rh.adoc
+
+[id="proc-create-infraconfig-custom-resource-olm-ui-{context}"]
+= Creating an infrastructure configuration custom resource using the {KubePlatform} console
+
+You must create an infrastructure configuration custom resource to use {ProductName}. This example uses `StandardInfraConfig` for a standard address space.
+
+.Procedure
+
+. From the dropdown menu, select the `{ProductNamespace}` project.
+
+. Click *Catalog > Installed Operators*.
+
+. Click *Add > Import YAML*. The Import YAML window opens.
+
+. Copy the following code for `StandardInfraConfig`:
++
+[source,yaml,options="nowrap",subs="attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardInfraConfig
+metadata:
+  name: default
+----
+
+. In the Import YAML window, paste the copied code and click *Create*. The StandardInfraConfig Overview page is displayed.
+
+. Click *Workloads > Pods*. In the *Readiness* column, the Pod status is `Ready` when the custom resource has been deployed.
+
+.Next steps
+
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-address-space-plan-custom-resource-olm-ui-messaging[Create an address space plan custom resource using the {KubePlatform} console]
+

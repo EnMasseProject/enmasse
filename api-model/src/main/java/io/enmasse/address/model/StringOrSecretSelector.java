@@ -12,6 +12,8 @@ import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
+import java.util.Objects;
+
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
@@ -49,5 +51,19 @@ public class StringOrSecretSelector extends AbstractWithAdditionalProperties {
         return "StringOrSecretSelector{" +
                 ", valueFromSecret=" + valueFromSecret +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        StringOrSecretSelector that = (StringOrSecretSelector) o;
+        return Objects.equals(value, that.value) &&
+                Objects.equals(valueFromSecret, that.valueFromSecret);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value, valueFromSecret);
     }
 }

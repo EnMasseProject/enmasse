@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.validation.Valid;
 
@@ -113,5 +114,37 @@ public class ExposeSpec extends AbstractWithAdditionalProperties {
 
     public List<String> getLoadBalancerSourceRanges() {
         return Collections.unmodifiableList(loadBalancerSourceRanges);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ExposeSpec that = (ExposeSpec) o;
+        return type == that.type &&
+                Objects.equals(annotations, that.annotations) &&
+                Objects.equals(routeHost, that.routeHost) &&
+                Objects.equals(routeServicePort, that.routeServicePort) &&
+                routeTlsTermination == that.routeTlsTermination &&
+                Objects.equals(loadBalancerPorts, that.loadBalancerPorts) &&
+                Objects.equals(loadBalancerSourceRanges, that.loadBalancerSourceRanges);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, annotations, routeHost, routeServicePort, routeTlsTermination, loadBalancerPorts, loadBalancerSourceRanges);
+    }
+
+    @Override
+    public String toString() {
+        return "ExposeSpec{" +
+                "type=" + type +
+                ", annotations=" + annotations +
+                ", routeHost='" + routeHost + '\'' +
+                ", routeServicePort='" + routeServicePort + '\'' +
+                ", routeTlsTermination=" + routeTlsTermination +
+                ", loadBalancerPorts=" + loadBalancerPorts +
+                ", loadBalancerSourceRanges=" + loadBalancerSourceRanges +
+                '}';
     }
 }

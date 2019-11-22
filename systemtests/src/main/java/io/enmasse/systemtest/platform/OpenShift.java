@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.platform;
 
-import io.enmasse.address.model.TlsTermination;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -30,19 +29,22 @@ import java.util.Collections;
  */
 public class OpenShift extends Kubernetes {
     private static Logger log = CustomLogger.getLogger();
-    private final Config build = new ConfigBuilder().withMasterUrl(environment.getApiUrl())
-            .withOauthToken(environment.getApiToken())
-            .build();
 
     public OpenShift(Environment environment, String globalNamespace) {
         super(globalNamespace, () -> {
+            final Environment instance = Environment.getInstance();
             Config config = new ConfigBuilder().withMasterUrl(environment.getApiUrl())
                     .withOauthToken(environment.getApiToken())
                     .build();
 
             OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
             // Workaround https://github.com/square/okhttp/issues/3146
-            httpClient = httpClient.newBuilder().protocols(Collections.singletonList(Protocol.HTTP_1_1)).build();
+            httpClient = httpClient.newBuilder()
+                    .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                    .connectTimeout(instance.getKubernetesApiConnectTimeout())
+                    .writeTimeout(instance.getKubernetesApiWriteTimeout())
+                    .readTimeout(instance.getKubernetesApiReadTimeout())
+                    .build();
             return new DefaultOpenShiftClient(httpClient, new OpenShiftConfig(config));
         });
     }
@@ -142,7 +144,12 @@ public class OpenShift extends Kubernetes {
     @Override
     public void deleteExternalEndpoint(String namespace, String name) {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
-        openShift.routes().inNamespace(namespace).withName(name).delete();
+        openShift.routes().inNamespace(namespace).withName(name).cascading(true).delete();
+    }
+
+    @Override
+    public String getOlmNamespace() {
+        return "openshift-operators";
     }
 
 }

@@ -5,9 +5,11 @@
 package io.enmasse.systemtest.listener;
 
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.IsolatedIoTManager;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.SharedIoTManager;
@@ -44,46 +46,67 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        testInfo.setActualTestClass(context);
-        if (!operatorManager.isEnmasseBundleDeployed() && !testInfo.isUpgradeTest()) {
-            operatorManager.installEnmasseBundle();
-        }
-        if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed() && !testInfo.isUpgradeTest()) {
-            operatorManager.installIoTOperator();
-        }
+        testInfo.setCurrentTestClass(context);
+        handleCallBackError(context, () -> {
+            if (testInfo.isUpgradeTest()) {
+                LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
+            } else if (testInfo.isOLMTest()) {
+                if (!operatorManager.isEnmasseOlmDeployed()) {
+                    operatorManager.installEnmasseOlm();
+                }
+                if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
+                    operatorManager.installIoTOperator();
+                }
+            } else {
+                if (!operatorManager.isEnmasseBundleDeployed()) {
+                    operatorManager.installEnmasseBundle();
+                }
+                if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
+                    operatorManager.installIoTOperator();
+                }
+            }
+        });
     }
 
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
-        if (!Environment.getInstance().skipCleanup()) {
-            if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed() && !Environment.getInstance().skipUninstall()) {
-                operatorManager.removeIoTOperator();
+        handleCallBackError(extensionContext, () -> {
+            if (Environment.getInstance().skipCleanup() || Environment.getInstance().skipUninstall()) {
+                LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
+            } else {
+                if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed()) {
+                    operatorManager.removeIoTOperator();
+                }
+                if (operatorManager.isEnmasseBundleDeployed() && (testInfo.isNextTestUpgrade() || testInfo.isNextTestOLM())) {
+                    operatorManager.deleteEnmasseBundle();
+                }
+                if (operatorManager.isEnmasseOlmDeployed()) {
+                    operatorManager.deleteEnmasseOlm();
+                }
             }
-            if (operatorManager.isEnmasseBundleDeployed() && testInfo.isNextTestUpgrade() && !Environment.getInstance().skipUninstall()) {
-                operatorManager.deleteEnmasseBundle();
-            }
-        } else {
-            LOGGER.info("Skip cleanup is set, enmasse and iot operators won't be deleted");
-        }
+        });
     }
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
-        testInfo.setActualTest(context);
+        testInfo.setCurrentTest(context);
+        logPodsInInfraNamespace();
     }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) throws Exception {
-        LOGGER.info("Teardown section: ");
-        if (testInfo.isTestShared()) {
-            tearDownSharedResources();
-        } else {
-            if (testInfo.isTestIoT()) {
-                isolatedIoTManager.tearDown(testInfo.getActualTest());
+        handleCallBackError(extensionContext, () -> {
+            LOGGER.info("Teardown section: ");
+            if (testInfo.isTestShared()) {
+                tearDownSharedResources();
             } else {
-                tearDownCommonResources();
+                if (testInfo.isTestIoT()) {
+                    isolatedIoTManager.tearDown(testInfo.getActualTest());
+                } else {
+                    tearDownCommonResources();
+                }
             }
-        }
+        });
     }
 
     private void tearDownCommonResources() throws Exception {
@@ -94,7 +117,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     private void tearDownSharedResources() throws Exception {
-        if (testInfo.isAddressSpaceDeletable() || testInfo.getActualTest().getExecutionException().isPresent()) {
+        if (testInfo.isAddressSpaceDeleteable() || testInfo.getActualTest().getExecutionException().isPresent()) {
             if (testInfo.isTestIoT()) {
                 LOGGER.info("Teardown shared IoT!");
                 sharedIoTManager.tearDown(testInfo.getActualTest());
@@ -103,8 +126,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                 sharedResourcesManager.tearDown(testInfo.getActualTest());
             }
         } else if (sharedResourcesManager.getSharedAddressSpace() != null) {
-            LOGGER.info("Deleting addresses");
-            sharedResourcesManager.deleteAddresses(sharedResourcesManager.getSharedAddressSpace());
+            sharedResourcesManager.tearDownShared();
         }
     }
 
@@ -133,7 +155,22 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         saveKubernetesState(context, throwable);
     }
 
+    private void handleCallBackError(ExtensionContext context, ThrowableRunner runnable) throws Exception {
+        try {
+            runnable.run();
+        } catch (Exception ex) {
+            try {
+                saveKubernetesState(context, ex);
+            } catch (Throwable ignored) {
+            }
+            LOGGER.error("Exception captured in Junit callback", ex);
+            throw ex;
+        }
+    }
+
     private void saveKubernetesState(ExtensionContext extensionContext, Throwable throwable) throws Throwable {
+        LOGGER.warn("Test failed: Saving pod logs and info...");
+        logPodsInInfraNamespace();
         if (isSkipSaveState()) {
             throw throwable;
         }
@@ -141,7 +178,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         Method testMethod = extensionContext.getTestMethod().orElse(null);
         Class<?> testClass = extensionContext.getRequiredTestClass();
         try {
-            LOGGER.warn("Test failed: Saving pod logs and info...");
             Kubernetes kube = Kubernetes.getInstance();
             Path path = getPath(testMethod, testClass);
             Files.createDirectories(path);
@@ -177,6 +213,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(kube.getInfraNamespace()).getStdOut());
             if (testInfo.isTestIoT()) {
                 Files.writeString(path.resolve("iotconfig.yaml"), KubeCMDClient.getIoTConfig(kube.getInfraNamespace()).getStdOut());
+                GlobalLogCollector collectors = new GlobalLogCollector(kube, path, kube.getInfraNamespace());
+                collectors.collectAllAdapterQdrProxyState();
             }
             LOGGER.info("Pod logs and describe successfully stored into {}", path);
         } catch (Exception ex) {
@@ -186,10 +224,10 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     public static Path getPath(Method testMethod, Class<?> testClass) {
-        Path path = Paths.get(
-                Environment.getInstance().testLogDir(),
-                "failed_test_logs",
-                testClass.getName());
+        Path path = Environment.getInstance().testLogDir().resolve(
+                Paths.get(
+                        "failed_test_logs",
+                        testClass.getName()));
         if (testMethod != null) {
             path = path.resolve(testMethod.getName());
         }
@@ -199,6 +237,12 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     private boolean isSkipSaveState() {
         return Environment.getInstance().isSkipSaveState();
     }
+
+    private void logPodsInInfraNamespace() {
+        LOGGER.info("Print all pods in infra namespace");
+        KubeCMDClient.runOnCluster("get", "pods", "-n", Environment.getInstance().namespace());
+    }
+
 }
 
 

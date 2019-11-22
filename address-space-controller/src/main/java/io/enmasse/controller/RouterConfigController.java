@@ -36,8 +36,7 @@ public class RouterConfigController implements Controller {
         this.authenticationServiceResolver = authenticationServiceResolver;
     }
 
-    public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
-
+    public AddressSpace reconcileActive(AddressSpace addressSpace) throws Exception {
         InfraConfig infraConfig = InfraConfigs.parseCurrentInfraConfig(addressSpace);
 
         if (infraConfig instanceof StandardInfraConfig) {
@@ -55,7 +54,7 @@ public class RouterConfigController implements Controller {
     }
 
     private static ConfigMapBuilder createNewConfigMap(String infraUuid) {
-        // NOTE: Deletion of this configmap is handled by DeleteController based on these labels
+        // NOTE: Deletion of this configmap is handled by ComponentFinalizerController based on these labels
         return new ConfigMapBuilder().editOrNewMetadata()
                 .withName(routerConfigName(infraUuid))
                 .addToLabels("app", "enmasse")
@@ -435,19 +434,19 @@ public class RouterConfigController implements Controller {
         List<Address> addresses = new ArrayList<>();
         Address mqttAddress = new Address();
         mqttAddress.setName("override.mqtt");
-        mqttAddress.setPrefix("$${dummy}mqtt");
+        mqttAddress.setPrefix("$mqtt");
         mqttAddress.setDistribution(Distribution.balanced);
         addresses.add(mqttAddress);
 
         Address subctrlAddress = new Address();
         subctrlAddress.setName("override.subctrl");
-        subctrlAddress.setPrefix("$${dummy}subctrl");
+        subctrlAddress.setPrefix("$subctrl");
         subctrlAddress.setDistribution(Distribution.balanced);
         addresses.add(subctrlAddress);
 
         Address tempAddress = new Address();
         tempAddress.setName("override.temp");
-        tempAddress.setPrefix("$${dummy}temp");
+        tempAddress.setPrefix("$temp");
         tempAddress.setDistribution(Distribution.balanced);
         addresses.add(tempAddress);
 
@@ -471,14 +470,14 @@ public class RouterConfigController implements Controller {
         List<LinkRoute> linkRoutes = new ArrayList<>();
         LinkRoute mqttLwtInLinkRoute = new LinkRoute();
         mqttLwtInLinkRoute.setName("override.lwt_in");
-        mqttLwtInLinkRoute.setPrefix("$${dummy}lwt");
+        mqttLwtInLinkRoute.setPrefix("$lwt");
         mqttLwtInLinkRoute.setDirection(LinkDirection.in);
         mqttLwtInLinkRoute.setContainerId("lwt-service");
         linkRoutes.add(mqttLwtInLinkRoute);
 
         LinkRoute mqttLwtOutLinkRoute = new LinkRoute();
         mqttLwtOutLinkRoute.setName("override.lwt_out");
-        mqttLwtOutLinkRoute.setPrefix("$${dummy}lwt");
+        mqttLwtOutLinkRoute.setPrefix("$lwt");
         mqttLwtOutLinkRoute.setDirection(LinkDirection.out);
         mqttLwtOutLinkRoute.setContainerId("lwt-service");
         linkRoutes.add(mqttLwtOutLinkRoute);
@@ -648,7 +647,7 @@ public class RouterConfigController implements Controller {
             vhostPolicy.setMaxConnectionsPerUser(policy.getMaxConnectionsPerUser());
         }
 
-        vhostPolicy.setGroups(Collections.singletonMap("$${dummy}default", group));
+        vhostPolicy.setGroups(Collections.singletonMap("$default", group));
 
         VhostPolicyGroup internalGroup = new VhostPolicyGroup();
         internalGroup.setRemoteHosts("*");
@@ -658,9 +657,9 @@ public class RouterConfigController implements Controller {
         internalGroup.setAllowAnonymousSender(true);
 
         VhostPolicy internalVhostPolicy = new VhostPolicy();
-        internalVhostPolicy.setHostname("$${dummy}default");
+        internalVhostPolicy.setHostname("$default");
         internalVhostPolicy.setAllowUnknownUser(true);
-        internalVhostPolicy.setGroups(Collections.singletonMap("$${dummy}default", internalGroup));
+        internalVhostPolicy.setGroups(Collections.singletonMap("$default", internalGroup));
 
         return Arrays.asList(internalVhostPolicy, vhostPolicy);
     }

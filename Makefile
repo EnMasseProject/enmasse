@@ -19,6 +19,7 @@ DOCKER_DIRS = \
 	service-broker \
 	console/console-init \
 	console/console-httpd \
+	olm-manifest \
 	iot/iot-tenant-service \
 	iot/iot-auth-service \
 	iot/iot-device-registry-file \
@@ -41,7 +42,7 @@ endif
 
 all: build_java build_go templates
 
-templates:
+templates: imageenv
 	$(MAKE) -C templates
 
 deploy: build_go
@@ -68,20 +69,20 @@ test_go: test_go_vet test_go_run
 endif
 
 test_go_vet:
-	cd $(GOPRJ) && go vet ./cmd/... ./pkg/...
+	cd $(GOPRJ) && GO111MODULE=on go vet -mod=vendor ./cmd/... ./pkg/...
 
 ifeq (,$(GO2XUNIT))
 test_go_run: $(GOPRJ)
-	cd $(GOPRJ) && go test -v ./...
+	cd $(GOPRJ) && GO111MODULE=on go test -mod=vendor -v ./...
 else
 test_go_run: $(GOPRJ)
 	mkdir -p build
-	-cd $(GOPRJ) && go test -v ./... 2>&1 | tee $(abspath build/go.testoutput)
+	-cd $(GOPRJ) && GO111MODULE=on go test -mod=vendor -v ./... 2>&1 | tee $(abspath build/go.testoutput)
 	$(GO2XUNIT) -fail -input build/go.testoutput -output build/TEST-go.xml
 endif
 
 coverage_go:
-	cd $(GOPRJ) && go test -cover ./...
+	cd $(GOPRJ) && GO111MODULE=on go test -mod=vendor -cover ./...
 
 buildpush:
 	$(MAKE)

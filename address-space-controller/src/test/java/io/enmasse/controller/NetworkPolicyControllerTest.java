@@ -63,8 +63,8 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         InfraConfig infraConfig = createTestInfra(createTestPolicy("my", "label"));
         AddressSpace addressSpace = createTestSpace(infraConfig, null);
 
-        NetworkPolicyController controller = new NetworkPolicyController(client, new TestSchemaProvider());
-        controller.reconcile(addressSpace);
+        NetworkPolicyController controller = new NetworkPolicyController(client);
+        controller.reconcileAnyState(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
         io.fabric8.kubernetes.api.model.networking.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
@@ -80,8 +80,8 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         InfraConfig infraConfig = createTestInfra(null);
         AddressSpace addressSpace = createTestSpace(infraConfig, createTestPolicy("my", "label"));
 
-        NetworkPolicyController controller = new NetworkPolicyController(client, new TestSchemaProvider());
-        controller.reconcile(addressSpace);
+        NetworkPolicyController controller = new NetworkPolicyController(client);
+        controller.reconcileAnyState(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
         io.fabric8.kubernetes.api.model.networking.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
@@ -97,8 +97,8 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         InfraConfig infraConfig = createTestInfra(createTestPolicy("my", "label"));
         AddressSpace addressSpace = createTestSpace(infraConfig, createTestPolicy("my", "overridden"));
 
-        NetworkPolicyController controller = new NetworkPolicyController(client, new TestSchemaProvider());
-        controller.reconcile(addressSpace);
+        NetworkPolicyController controller = new NetworkPolicyController(client);
+        controller.reconcileAnyState(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
         io.fabric8.kubernetes.api.model.networking.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
@@ -116,8 +116,8 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         AddressSpace addressSpace = createTestSpace(infraConfig,
                 createTestPolicy("my", "label1"));
 
-        NetworkPolicyController controller = new NetworkPolicyController(client, new TestSchemaProvider());
-        controller.reconcile(addressSpace);
+        NetworkPolicyController controller = new NetworkPolicyController(client);
+        controller.reconcileAnyState(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
         io.fabric8.kubernetes.api.model.networking.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
@@ -126,7 +126,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         assertEquals("label1", networkPolicy.getSpec().getIngress().get(0).getFrom().get(0).getPodSelector().getMatchLabels().get("my"));
 
         addressSpace = createTestSpace(infraConfig, createTestPolicy("my", "label2"));
-        controller.reconcile(addressSpace);
+        controller.reconcileAnyState(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
         networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
@@ -135,7 +135,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         assertEquals("label2", networkPolicy.getSpec().getIngress().get(0).getFrom().get(0).getPodSelector().getMatchLabels().get("my"));
 
         addressSpace = createTestSpace(infraConfig, createTestPolicy("my", "label2", "other", "label3"));
-        controller.reconcile(addressSpace);
+        controller.reconcileAnyState(addressSpace);
         networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
         assertNotNull(networkPolicy);
         assertThat(networkPolicy.getSpec().getPolicyTypes(), hasItem("Ingress"));
@@ -149,8 +149,8 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         InfraConfig infraConfig = createTestInfra(null);
         AddressSpace addressSpace = createTestSpace(infraConfig, createTestPolicy("my", "label"));
 
-        NetworkPolicyController controller = new NetworkPolicyController(client, new TestSchemaProvider());
-        controller.reconcile(addressSpace);
+        NetworkPolicyController controller = new NetworkPolicyController(client);
+        controller.reconcileAnyState(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
         io.fabric8.kubernetes.api.model.networking.NetworkPolicy networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
@@ -159,7 +159,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         assertEquals("label", networkPolicy.getSpec().getIngress().get(0).getFrom().get(0).getPodSelector().getMatchLabels().get("my"));
 
         addressSpace = createTestSpace(infraConfig, null);
-        controller.reconcile(addressSpace);
+        controller.reconcileAnyState(addressSpace);
         assertEquals(0, client.network().networkPolicies().list().getItems().size());
         networkPolicy = client.network().networkPolicies().withName(KubeUtil.getNetworkPolicyName(addressSpace)).get();
         assertNull(networkPolicy);

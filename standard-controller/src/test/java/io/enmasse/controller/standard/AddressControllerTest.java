@@ -8,6 +8,7 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.metrics.api.Metrics;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -44,24 +45,26 @@ public class AddressControllerTest {
         mockHelper = mock(Kubernetes.class);
         mockGenerator = mock(BrokerSetGenerator.class);
         mockApi = mock(AddressApi.class);
+        AddressSpaceApi mockSpaceApi = mock(AddressSpaceApi.class);
         mockClient = mock(OpenShiftClient.class);
         EventLogger eventLogger = mock(EventLogger.class);
         when(mockHelper.getRouterCluster()).thenReturn(new RouterCluster("qdrouterd", 1, null));
         StandardControllerOptions options = new StandardControllerOptions();
-        options.setAddressSpace("me1");
+        options.setAddressSpace("myspace");
+        options.setAddressSpaceNamespace("ns");
         options.setInfraUuid("infra");
         options.setAddressSpacePlanName("plan1");
         options.setResyncInterval(Duration.ofSeconds(5));
         options.setVersion("1.0");
         Vertx vertx = Vertx.vertx();
-        controller = new AddressController(options, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, vertx, new Metrics(), idGenerator, new MutualTlsBrokerClientFactory(vertx, options));
+        controller = new AddressController(options, mockSpaceApi, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, vertx, new Metrics(), idGenerator, new MutualTlsBrokerClientFactory(vertx, options));
     }
 
     @Test
     public void testAddressGarbageCollection() throws Exception {
         Address alive = new AddressBuilder()
                 .withNewMetadata()
-                .withName("q1")
+                .withName("myspace.q1")
                 .withNamespace("ns")
                 .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "small-queue")
                 .endMetadata()
@@ -90,7 +93,7 @@ public class AddressControllerTest {
 
         Address terminating = new AddressBuilder()
                 .withNewMetadata()
-                .withName("q2")
+                .withName("myspace.q2")
                 .withNamespace("ns")
                 .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "small-queue")
                 .endMetadata()
@@ -268,7 +271,7 @@ public class AddressControllerTest {
     public void testDeleteUnusedClusters() throws Exception {
         Address alive = new AddressBuilder()
                 .withNewMetadata()
-                .withName("q1")
+                .withName("myspace.q1")
                 .withNamespace("ns")
                 .endMetadata()
 
@@ -380,7 +383,7 @@ public class AddressControllerTest {
     public void testMovesBrokersToDrained() throws Exception {
         Address alive = new AddressBuilder()
                 .withNewMetadata()
-                .withName("q1")
+                .withName("myspace.q1")
                 .withNamespace("ns")
                 .endMetadata()
 

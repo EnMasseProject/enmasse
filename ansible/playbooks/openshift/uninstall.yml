@@ -1,14 +1,14 @@
 - name: "Uninstall EnMasse"
   hosts: enmasse
   tasks:
+    - name: Delete CRDs
+      shell: oc delete crd -l app=enmasse
     - name: Delete rolebindings for the kube-system namespace
       shell: oc delete rolebindings -l app=enmasse -n kube-system
     - name: Delete clusterrolebindings
       shell: oc delete clusterrolebindings -l app=enmasse
     - name: Delete clusterroles
       shell: oc delete clusterroles -l app=enmasse
-    - name: Delete CRDs
-      shell: oc delete crd -l app=enmasse
     - name: Delete API services
       shell: oc delete apiservices -l app=enmasse
     - name: Delete OAUTH clients

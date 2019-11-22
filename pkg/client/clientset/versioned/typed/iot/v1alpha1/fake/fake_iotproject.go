@@ -120,7 +120,7 @@ func (c *FakeIoTProjects) DeleteCollection(options *v1.DeleteOptions, listOption
 // Patch applies the patch and returns the patched ioTProject.
 func (c *FakeIoTProjects) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.IoTProject, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(iotprojectsResource, c.ns, name, data, subresources...), &v1alpha1.IoTProject{})
+		Invokes(testing.NewPatchSubresourceAction(iotprojectsResource, c.ns, name, pt, data, subresources...), &v1alpha1.IoTProject{})
 
 	if obj == nil {
 		return nil, err

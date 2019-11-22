@@ -7,8 +7,10 @@ package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.KubeUtil;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.InfraConfigs;
 import io.enmasse.k8s.util.Templates;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -17,8 +19,11 @@ import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.OpenShiftClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +31,8 @@ import java.util.stream.Collectors;
  * Wraps the Kubernetes client and adds some helper methods.
  */
 public class KubernetesHelper implements Kubernetes {
+    private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class);
+
     private static final String TEMPLATE_SUFFIX = ".yaml";
 
     private final NamespacedKubernetesClient client;
@@ -111,15 +118,46 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void deleteResourcesNotIn(String [] uuids) {
-        client.apps().statefulSets().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
-        client.secrets().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
-        client.configMaps().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
-        client.apps().deployments().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
-        client.services().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
-        client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
+    public void deleteResources(String infraUuid) {
+        client.apps().statefulSets().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
+        client.secrets().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
+        client.configMaps().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
+
+        // Work around fabric8 issue when deleting a deployment.  Internally there is a race between Fabric8's
+        // scaling of the deployment to zero and the deletion of the replicaset.  If the replicaset is deleted first
+        // the pods are orphaned.
+        final Set<Deployment> deployments = new HashSet<>(client.apps().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems());
+        deployments.forEach(d -> scaleDeployment(d, 0));
+
+        long timeout = System.currentTimeMillis() + 60000;
+        while(!deployments.isEmpty() && timeout > System.currentTimeMillis()) {
+            final Iterator<Deployment> iterator = deployments.iterator();
+            while (iterator.hasNext()) {
+                final Deployment next = iterator.next();
+                final String deploymentName = next.getMetadata().getName();
+                final Deployment current = client.apps().deployments().withName(deploymentName).get();
+                if (current.getStatus() != null && (current.getStatus().getReplicas() == null || current.getStatus().getReplicas() == 0)) {
+                    client.apps().deployments().withName(deploymentName).withPropagationPolicy("Background").delete();
+                    iterator.remove();
+                }
+            }
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        if (!deployments.isEmpty()) {
+            final List<Object> names = deployments.stream().map(d -> d.getMetadata().getName()).collect(Collectors.toList());
+            log.warn("Could not delete all not-in-use deployments at this time as pods did not scale to zero within timeout: Deployments: {}", names);
+        }
+
+        client.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
+        client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_UUID, infraUuid).delete();
         if (isOpenShift) {
-            client.adapt(OpenShiftClient.class).routes().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
+            client.adapt(OpenShiftClient.class).routes().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         }
     }
 
@@ -144,4 +182,43 @@ public class KubernetesHelper implements Kubernetes {
     public boolean existsAddressSpace(AddressSpace addressSpace) {
         return client.services().inNamespace(namespace).withName(KubeUtil.getAddressSpaceServiceName("messaging", addressSpace)).get() != null;
     }
+
+    @Override
+    public String getAppliedPlan(AddressSpace addressSpace) {
+        if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN) != null) {
+            return addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN);
+        }
+        Service messaging = client.services().inNamespace(namespace).withName(KubeUtil.getAddressSpaceServiceName("messaging", addressSpace)).get();
+        if (messaging == null) {
+            return null;
+        }
+        if (messaging.getMetadata().getAnnotations() == null) {
+            return null;
+        }
+        return messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_PLAN);
+    }
+
+    @Override
+    public InfraConfig getAppliedInfraConfig(AddressSpace addressSpace) throws IOException {
+        InfraConfig config = InfraConfigs.parseCurrentInfraConfig(addressSpace);
+        if (config != null) {
+            return config;
+        }
+
+        Service messaging = client.services().inNamespace(namespace).withName(KubeUtil.getAddressSpaceServiceName("messaging", addressSpace)).get();
+        if (messaging == null) {
+            return null;
+        }
+
+        if (messaging.getMetadata().getAnnotations() == null) {
+            return null;
+        }
+
+        return InfraConfigs.parseCurrentInfraConfig(messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG));
+    }
+
+    private void scaleDeployment(Deployment deployment, int numReplicas) {
+        client.apps().deployments().withName(deployment.getMetadata().getName()).scale(numReplicas);
+    }
+
 }

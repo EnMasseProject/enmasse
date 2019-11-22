@@ -107,6 +107,14 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(ByAngular.buttonText("Delete")));
     }
 
+    public WebElement getKekabButton() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("_kebab")));
+    }
+
+    public WebElement getPurgeButton() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.xpath("//a[contains(text(), 'Purge')]")));
+    }
+
     public void assertDialogPresent(String id) {
         int timeout = 30;
         try {
@@ -307,13 +315,13 @@ public class ConsoleWebPage implements IWebPage {
      * get specific address
      */
     public AddressWebItem getAddressItem(Address destination) {
-        AddressWebItem returnedElement = null;
         List<AddressWebItem> addressWebItems = getAddressItems();
         for (AddressWebItem item : addressWebItems) {
-            if (item.getName().equals(destination.getSpec().getAddress()))
-                returnedElement = item;
+            if (item.getName().equals(destination.getSpec().getAddress())) {
+                return item;
+            }
         }
-        return returnedElement;
+        return null;
     }
 
     /**
@@ -338,17 +346,17 @@ public class ConsoleWebPage implements IWebPage {
      */
     public List<ConnectionWebItem> getConnectionItems(int expectedCount) {
         List<ConnectionWebItem> connectionItems = new ArrayList<>();
-        int timeout = 60000;
+        int timeout = 120000;
         long endTime = System.currentTimeMillis() + timeout;
         while (connectionItems.size() != expectedCount && endTime > System.currentTimeMillis()) {
-            log.info("First iteration waiting for {} connections items", expectedCount);
+            log.info("Awaiting {}/{} active connections items", connectionItems.size(), expectedCount);
             WebElement content = getContentContainer();
             List<WebElement> elements = content.findElements(By.className("list-group-item"));
             connectionItems.clear();
             for (WebElement element : elements) {
                 if (!element.getAttribute("class").contains("disabled")) {
                     ConnectionWebItem item = new ConnectionWebItem(element);
-                    log.info(String.format("Got connection: %s", item.toString()));
+                    log.info("Got connection: {}", item);
                     connectionItems.add(item);
                 }
             }
@@ -376,14 +384,6 @@ public class ConsoleWebPage implements IWebPage {
 
     private WebElement getFilterRegexAlertClose() throws Exception {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-close")));
-    }
-
-    private WebElement getNextButton() {
-        return getModalWindow().findElement(By.id("nextButton"));
-    }
-
-    private WebElement getModalWindow() {
-        return selenium.getDriver().findElement(By.className("modal-content"));
     }
 
     /**
@@ -448,8 +448,18 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getRemoveButton());
     }
 
+    public void clickOnPurgeButton() throws Exception {
+        selenium.clickOnItem(getKekabButton(), "Kebab menu button");
+        selenium.clickOnItem(getPurgeButton());
+    }
+
+    public void confirmPurge() throws Exception {
+        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("purge-confirmation-modal")).findElement(ByAngular.buttonText("Purge"))));
+    }
+
     public void next() throws Exception {
-        selenium.clickOnItem(getNextButton());
+        WebElement nextButton = selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("nextButton")));
+        selenium.clickOnItem(nextButton);
     }
 
     public void clickOnAddressModalPageByNumber(Integer pageNumber) throws Exception {
@@ -697,7 +707,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(nextButton);
         selenium.clickOnItem(nextButton);
 
-        AddressWebItem items = selenium.waitUntilItemPresent(60, () -> getAddressItem(destination));
+        AddressWebItem items = selenium.waitUntilItemPresent(120, () -> getAddressItem(destination));
 
         assertNotNull(items, String.format("Console failed, does not contain created address item : %s", destination));
 
@@ -733,6 +743,13 @@ public class ConsoleWebPage implements IWebPage {
 
         //check if address deleted
         assertNull(getAddressItem(destination), "Console failed, still contains deleted address item ");
+    }
+
+    public void purgeAddress(Address address) throws Exception {
+        AddressWebItem addressWebItem = selenium.waitUntilItemPresent(10, () -> getAddressItem(address));
+        selenium.clickOnItem(addressWebItem.getCheckBox(), "Selecting address " + addressWebItem.getName());
+        clickOnPurgeButton();
+        confirmPurge();
     }
 
     public boolean login() throws Exception {

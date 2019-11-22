@@ -108,7 +108,7 @@ func (c *FakeMessagingUsers) DeleteCollection(options *v1.DeleteOptions, listOpt
 // Patch applies the patch and returns the patched messagingUser.
 func (c *FakeMessagingUsers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.MessagingUser, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(messagingusersResource, c.ns, name, data, subresources...), &v1beta1.MessagingUser{})
+		Invokes(testing.NewPatchSubresourceAction(messagingusersResource, c.ns, name, pt, data, subresources...), &v1beta1.MessagingUser{})
 
 	if obj == nil {
 		return nil, err

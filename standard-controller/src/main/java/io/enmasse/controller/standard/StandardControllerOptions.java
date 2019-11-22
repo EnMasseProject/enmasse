@@ -28,6 +28,9 @@ public class StandardControllerOptions {
     private String authenticationServiceSaslInitHost;
     private Duration managementQueryTimeout;
     private Duration managementConnectTimeout;
+    private Duration kubernetesApiConnectTimeout;
+    private Duration kubernetesApiReadTimeout;
+    private Duration kubernetesApiWriteTimeout;
 
     public String getCertDir() {
         return certDir;
@@ -178,6 +181,18 @@ public class StandardControllerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30)));
 
+        options.setKubernetesApiConnectTimeout(getEnv(env, "KUBERNETES_API_CONNECT_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
+        options.setKubernetesApiReadTimeout(getEnv(env, "KUBERNETES_API_READ_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
+        options.setKubernetesApiWriteTimeout(getEnv(env, "KUBERNETES_API_WRITE_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
         return options;
     }
 
@@ -225,6 +240,9 @@ public class StandardControllerOptions {
                 ", authenticationServiceSaslInitHost='" + authenticationServiceSaslInitHost + '\'' +
                 ", managementQueryTimeout='" + managementQueryTimeout + '\'' +
                 ", managementConnectTimeout='" + managementConnectTimeout + '\'' +
+                ", kubernetesApiConnectTimeout='" + kubernetesApiConnectTimeout + '\'' +
+                ", kubernetesApiReadTimeout='" + kubernetesApiReadTimeout + '\'' +
+                ", kubernetesApiWriteTimeout='" + kubernetesApiWriteTimeout + '\'' +
                 '}';
     }
 
@@ -255,4 +273,29 @@ public class StandardControllerOptions {
     public void setStatusCheckInterval(Duration statusCheckInterval) {
         this.statusCheckInterval = statusCheckInterval;
     }
+
+    public Duration getKubernetesApiConnectTimeout() {
+        return kubernetesApiConnectTimeout;
+    }
+
+    public void setKubernetesApiConnectTimeout(Duration kubernetesApiConnectTimeout) {
+        this.kubernetesApiConnectTimeout = kubernetesApiConnectTimeout;
+    }
+
+    public Duration getKubernetesApiReadTimeout() {
+        return kubernetesApiReadTimeout;
+    }
+
+    public void setKubernetesApiReadTimeout(Duration kubernetesApiReadTimeout) {
+        this.kubernetesApiReadTimeout = kubernetesApiReadTimeout;
+    }
+
+    public Duration getKubernetesApiWriteTimeout() {
+        return kubernetesApiWriteTimeout;
+    }
+
+    public void setKubernetesApiWriteTimeout(Duration kubernetesApiWriteTimeout) {
+        this.kubernetesApiWriteTimeout = kubernetesApiWriteTimeout;
+    }
+
 }

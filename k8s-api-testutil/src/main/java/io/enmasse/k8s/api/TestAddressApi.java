@@ -79,6 +79,11 @@ public class TestAddressApi implements AddressApi {
     }
 
     @Override
+    public ContinuationResult<Address> listAddresses(String namespace, Integer limit, ContinuationResult<Address> continueValue, Map<String, String> labels) {
+        return ContinuationResult.from(listAddresses(namespace), null);
+    }
+
+    @Override
     public void deleteAddresses(String namespace) {
         addresses.removeIf(address -> namespace.equals(address.getMetadata().getNamespace()));
     }

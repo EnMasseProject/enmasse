@@ -158,7 +158,7 @@ public class TimeMeasuringSystem {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String json = gson.toJson(data);
             Date timestamp = new Date(System.currentTimeMillis());
-            Path logPath = Paths.get(Environment.getInstance().testLogDir(), "timeMeasuring");
+            Path logPath = Environment.getInstance().testLogDir().resolve("timeMeasuring");
             Files.createDirectories(logPath);
             Files.write(Paths.get(logPath.toString(),
                     String.format("%s-%s.json", name, dateFormat.format(timestamp))), json.getBytes());
@@ -183,7 +183,7 @@ public class TimeMeasuringSystem {
     }
 
     private void saveCsvResults(Map<String, Long> data, String name) {
-        Path logPath = Paths.get(Environment.getInstance().testLogDir(), "timeMeasuring");
+        Path logPath = Environment.getInstance().testLogDir().resolve("timeMeasuring");
         Path filePath = Paths.get(logPath.toString(), String.format("%s.csv", name));
         Map<String, Long> loadedData = null;
         List<String[]> csvData = new LinkedList<>();

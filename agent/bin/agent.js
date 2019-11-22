@@ -29,27 +29,11 @@ function bind_event(source, event, target, method) {
     source.on(event, target[method || event].bind(target));
 }
 
-function create_ownerreference(namespace, address_space_name) {
-    // If not defined, that is ok. The address source handles the case where ownerreference is not set
-    if (namespace === undefined || address_space_name === undefined) {
-        return Promise.resolve(undefined)
-    }
-    return kubernetes.get('configmaps/' + namespace + '.' + address_space_name, {}).then(function (configmap) {
-        return {
-            apiVersion: "v1",
-            kind: "ConfigMap",
-            blockOwnerDeletion: true,
-            controller: true,
-            name: configmap.metadata.name,
-            uid: configmap.metadata.uid
-        }
-    });
-}
-
 function start(env) {
     kubernetes.is_openshift().then((openshift) => {
         kubernetes.get_messaging_route_hostname(env).then(function (result) {
             if (result !== undefined) env.MESSAGING_ROUTE_HOSTNAME = result;
+            env.ADDRESS_SPACE_PREFIX = env.ADDRESS_SPACE + ".";
             var address_source = new AddressSource(env);
 
             var console_server = new ConsoleServer(address_source, env, openshift);
@@ -87,9 +71,7 @@ function start(env) {
                     ragent.listen_health({HEALTH_PORT:8888});
                 }
 
-                create_ownerreference(env.ADDRESS_SPACE_NAMESPACE, env.ADDRESS_SPACE).then(function (ownerReference) {
-                    address_source.start(ownerReference);
-                });
+                address_source.start();
 
                 process.on('SIGTERM', function () {
                     log.info('Shutdown started');

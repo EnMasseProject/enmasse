@@ -1,0 +1,23 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-service-admin-guide.adoc
+
+:context: {context}-planning
+
+[id='assembly-planning-{context}']
+= Understanding {ProductName} resource configuration
+
+include::assembly-address-space-address-concepts.adoc[leveloffset=+1]
+
+include::../modules/con-configuring.adoc[leveloffset=+1]
+
+include::../modules/ref-example-use-case.adoc[leveloffset=+1]
+
+include::../modules/ref-restrict-messaging-infrastructure.adoc[leveloffset=+2]
+
+include::../modules/ref-ability-restrict-address-space-connections.adoc[leveloffset=+2]
+
+include::../modules/ref-auth-service-resource-examples.adoc[leveloffset=+2]
+
+:context: {parent-context}
+

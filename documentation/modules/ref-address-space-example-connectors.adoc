@@ -5,13 +5,17 @@
 [id='ref-address-space-example-connectors-{context}']
 = Address space connector examples
 
-Address space connectors are most commonly used in two ways. One use case is to map addresses on a remote AMQP endpoint into an address space. For example, a broker is running on the host `messaging.example.com` that you want to access by connecting using the {ProductName} endpoints. Another use case is to enable address forwarding. For more information about address forwarding, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-example-forwarders-messaging[Address forwarding examples].
+You can federate a `standard` address space type with another AMQP server. Two methods of operation are supported: _remote address connection_ and _message store-and-forward_.
 
-The following address space examples show how you can configure connectors.
+Remote address connection involves mapping addresses on a remote AMQP endpoint into an address space. For example, suppose an AMQP server is running on the host `messaging.example.com` that you want to access by connecting using the {ProductName} endpoints. To enable remote address connection, you need to create an address space connector.
 
-== Connector using SASL PLAIN
+Message store-and-forward involves enabling address forwarding. First you need to create an address space connector. Then, you need to create an address forwarder for each address. For more information about address forwarding, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-example-forwarders-messaging[Address forwarding examples].
 
-SASL PLAIN can be used when you do not want to use mutual TLS for authentication. Not enabling TLS is not recommended, since any usernames and passwords are then sent as clear text. 
+The following examples show how you can configure an address space connector.
+
+== Address space connector using SASL PLAIN
+
+You can use SASL PLAIN when you do not want to use mutual TLS for authentication. Not enabling TLS is not recommended, since any user names and passwords are then sent as plain text.
 
 [source,yaml,options="nowrap"]
 ----
@@ -48,7 +52,7 @@ spec:
 <4> (Optional) Specifies the username and password credentials to use for this connector. The values can be specified inline or by referencing a secret along with an optional key specifying the location within the secret. The secret must be readable by the `system:serviceaccounts:_{ProductNamespace}_` group.
 <5> (Required) Specifies a list of patterns matching addresses to be exposed on the remote endpoint. The pattern consists of one or more tokens separated by a forward slash, `/`. A token can be one of the following: a * character, a # character, or a sequence of characters that do not include /, *, or #. The * token matches any single token. The # token matches zero or more tokens. * has higher precedence than #, and exact match has the highest precedence.
 
-== Connector using mutual TLS
+== Address space connector using mutual TLS
 
 Configuring a client TLS certificate enables SASL EXTERNAL to be used for authentication. The certificates can be specified inline or using a secret reference.
 

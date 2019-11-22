@@ -10,8 +10,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net"
+	"net/url"
+	"reflect"
+	"strconv"
+	"time"
+
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
-	v1beta12 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	enmasse_v1beta1_client "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	oauthv1 "github.com/openshift/api/oauth/v1"
@@ -23,9 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"net"
-	"net/url"
-	"reflect"
+	rest "k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -34,7 +38,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"strconv"
 )
 
 const CONSOLE_NAME = "console"
@@ -48,7 +51,7 @@ func Add(mgr manager.Manager) error {
 }
 
 func newReconciler(mgr manager.Manager) *ReconcileConsoleService {
-	return &ReconcileConsoleService{client: mgr.GetClient(), scheme: mgr.GetScheme(), namespace: util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")}
+	return &ReconcileConsoleService{config: mgr.GetConfig(), client: mgr.GetClient(), scheme: mgr.GetScheme(), namespace: util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")}
 }
 
 func add(mgr manager.Manager, r *ReconcileConsoleService) error {
@@ -97,7 +100,7 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 				reqs := make([]reconcile.Request, 0)
 				if t, ok := a.Meta.GetLabels()["type"]; ok && t == "address-space" {
 					list := &v1beta1.ConsoleServiceList{}
-					err = r.client.List(context.TODO(), &client.ListOptions{}, list)
+					err = r.client.List(context.TODO(), list)
 					if err == nil {
 						for _, item := range list.Items {
 							request := reconcile.Request{
@@ -134,6 +137,7 @@ var _ reconcile.Reconciler = &ReconcileConsoleService{}
 type ReconcileConsoleService struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
+	config    *rest.Config
 	client    client.Client
 	scheme    *runtime.Scheme
 	namespace string
@@ -268,7 +272,8 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 		return newSsoCookieDomain, nil
 	})
 
-	return reconcile.Result{Requeue: requeue}, err
+	// TODO: Remove RequeueAfter once per-address space console is gone
+	return reconcile.Result{Requeue: requeue, RequeueAfter: 10 * time.Second}, err
 }
 
 type UpdateStatusFn func(status *v1beta1.ConsoleServiceStatus) error
@@ -409,14 +414,12 @@ func (r *ReconcileConsoleService) reconcileService(ctx context.Context, consoles
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: consoleservice.Name},
 	}
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func(existing runtime.Object) error {
-		existingService := existing.(*corev1.Service)
-
-		if err := controllerutil.SetControllerReference(consoleservice, existingService, r.scheme); err != nil {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
+		if err := controllerutil.SetControllerReference(consoleservice, service, r.scheme); err != nil {
 			return err
 		}
 
-		return applyService(consoleservice, existingService)
+		return applyService(consoleservice, service)
 	})
 
 	if err != nil {
@@ -451,9 +454,7 @@ func (r *ReconcileConsoleService) reconcileRoute(ctx context.Context, consoleser
 		route := &routev1.Route{
 			ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: consoleservice.Name},
 		}
-		_, err := controllerutil.CreateOrUpdate(ctx, r.client, route, func(existing runtime.Object) error {
-			route = existing.(*routev1.Route)
-
+		_, err := controllerutil.CreateOrUpdate(ctx, r.client, route, func() error {
 			secretName := types.NamespacedName{
 				Name:      consoleservice.Spec.CertificateSecret.Name,
 				Namespace: consoleservice.Namespace,
@@ -510,8 +511,7 @@ func (r *ReconcileConsoleService) reconcileSsoCookieSecret(ctx context.Context, 
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: secretref.Name},
 	}
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, secret, func(existing runtime.Object) error {
-		secret = existing.(*corev1.Secret)
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, secret, func() error {
 		if err := controllerutil.SetControllerReference(consoleservice, secret, r.scheme); err != nil {
 			return err
 		}
@@ -536,14 +536,12 @@ func (r *ReconcileConsoleService) reconcileDeployment(ctx context.Context, conso
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: consoleservice.Name},
 	}
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func(existing runtime.Object) error {
-		existingDeployment := existing.(*appsv1.Deployment)
-
-		if err := controllerutil.SetControllerReference(consoleservice, existingDeployment, r.scheme); err != nil {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func() error {
+		if err := controllerutil.SetControllerReference(consoleservice, deployment, r.scheme); err != nil {
 			return err
 		}
 
-		return applyDeployment(consoleservice, existingDeployment)
+		return applyDeployment(consoleservice, deployment)
 	})
 
 	if err != nil {
@@ -644,7 +642,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 						"-c",
 						"curl --fail --show-error --silent " +
 							"--header \"X-Forwarded-Access-Token: $(< /var/run/secrets/kubernetes.io/serviceaccount/token)\" " +
-							"http://localhost:8080/apis/user.openshift.io/v1/users/~"},
+							"http://127.0.0.1:8080/apis/user.openshift.io/v1/users/~"},
 				},
 			}
 			container.LivenessProbe = &corev1.Probe{
@@ -728,8 +726,7 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 		secret := &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: secretref.Name},
 		}
-		_, err := controllerutil.CreateOrUpdate(ctx, r.client, secret, func(existing runtime.Object) error {
-			secret = existing.(*corev1.Secret)
+		_, err := controllerutil.CreateOrUpdate(ctx, r.client, secret, func() error {
 			if err := controllerutil.SetControllerReference(consoleservice, secret, r.scheme); err != nil {
 				return err
 			}
@@ -761,44 +758,35 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 		}
 
 		// Redirects for the address space console(s)
-		// We currently list of the underlying configmaps.  We can't list addressspace objects because the read caching
-		// API beneath requires that watch is implemented
-
-		list := &corev1.ConfigMapList{}
-		opts := &client.ListOptions{}
-		_ = opts.SetLabelSelector("type=address-space")
-		err = r.client.List(context.TODO(), opts, list)
+		// Currently we have to create a new client that is able to read address spaces across all namespaces,
+		// as the controller-runtime client is only able to run in single namespace or all namespaces mode.
+		eclient, err := enmasse_v1beta1_client.NewForConfig(r.config)
+		if err != nil {
+			return reconcile.Result{}, nil, err
+		}
+		list, err := eclient.AddressSpaces("").List(metav1.ListOptions{})
 		if err != nil {
 			return reconcile.Result{}, nil, err
 		} else {
 
-			for _, item := range list.Items {
-				if jas, ok := item.Data["config.json"]; ok {
-					space := v1beta12.AddressSpace{}
-					err = json.Unmarshal([]byte(jas), &space)
-					if err == nil {
-						consoleEndpointName := "console"
-						for _, specEndpoints := range space.Spec.Endpoints {
-							if specEndpoints.Service == "console" && specEndpoints.Name != "" {
-								consoleEndpointName = specEndpoints.Name
-								break
-							}
-						}
+			for _, space := range list.Items {
+				consoleEndpointName := "console"
+				for _, specEndpoints := range space.Spec.Endpoints {
+					if specEndpoints.Service == "console" && specEndpoints.Name != "" {
+						consoleEndpointName = specEndpoints.Name
+						break
+					}
+				}
 
-						for _, s := range space.Status.EndpointStatus {
-							if s.Name == consoleEndpointName {
-								for _, p := range s.ExternalPorts {
-									scheme := "http"
-									if p.Name == "https" || p.Port == 443 {
-										scheme = "https"
-									}
-									redirects, err = appendRedirect(scheme, s.ExternalHost, redirects)
-								}
+				for _, s := range space.Status.EndpointStatus {
+					if s.Name == consoleEndpointName {
+						for _, p := range s.ExternalPorts {
+							scheme := "http"
+							if p.Name == "https" || p.Port == 443 {
+								scheme = "https"
 							}
+							redirects, err = appendRedirect(scheme, s.ExternalHost, redirects)
 						}
-					} else {
-						log.Error(err, "Could not unmarshall config.json of config map as an "+
-							"address space, ignoring..", "name", item.Name)
 					}
 				}
 			}
@@ -808,10 +796,8 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 			ObjectMeta: metav1.ObjectMeta{Name: secret.Name},
 		}
 
-		_, err = controllerutil.CreateOrUpdate(ctx, r.client, oauth, func(existing runtime.Object) error {
-			existingOauth := existing.(*oauthv1.OAuthClient)
-
-			err = applyOauthClient(existingOauth, secret, redirects)
+		_, err = controllerutil.CreateOrUpdate(ctx, r.client, oauth, func() error {
+			err = applyOauthClient(oauth, secret, redirects)
 			if err != nil {
 				return err
 			}
@@ -911,13 +897,12 @@ func ensureSingletonConsoleService(ctx context.Context, objectMeta metav1.Object
 	consoleservice := &v1beta1.ConsoleService{
 		ObjectMeta: objectMeta,
 	}
-	_, err := controllerutil.CreateOrUpdate(ctx, c, consoleservice, func(existing runtime.Object) error {
+	_, err := controllerutil.CreateOrUpdate(ctx, c, consoleservice, func() error {
 		return nil
 	})
 
 	list := &v1beta1.ConsoleServiceList{}
-	opts := &client.ListOptions{}
-	err = c.List(ctx, opts, list)
+	err = c.List(ctx, list)
 	if err != nil {
 		return err
 	}

@@ -11,6 +11,8 @@ import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
+import java.util.Objects;
+
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
@@ -59,5 +61,20 @@ public class AddressSpaceSpecConnectorTls extends AbstractWithAdditionalProperti
                 ", clientCert=" + clientCert +
                 ", clientKey=" + clientKey +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AddressSpaceSpecConnectorTls that = (AddressSpaceSpecConnectorTls) o;
+        return Objects.equals(caCert, that.caCert) &&
+                Objects.equals(clientCert, that.clientCert) &&
+                Objects.equals(clientKey, that.clientKey);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(caCert, clientCert, clientKey);
     }
 }

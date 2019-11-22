@@ -74,7 +74,7 @@ public class AddressApiHelper {
           For the standard address space, the validation is done in AddressController#onUpdate in order to avoid slowing down the request.
          */
         if (addressSpace.getSpec().getType().equals("brokered")) {
-            Set<Address> existingAddresses = addressSpaceApi.withAddressSpace(addressSpace).listAddresses(address.getMetadata().getNamespace());
+            Collection<Address> existingAddresses = addressSpaceApi.withAddressSpace(addressSpace).listAddresses(address.getMetadata().getNamespace());
             addressResolver.validate(address);
             for (Address existing : existingAddresses) {
                 if (address.getSpec().getAddress().equals(existing.getSpec().getAddress()) && !address.getMetadata().getName().equals(existing.getMetadata().getName())) {
@@ -140,7 +140,7 @@ public class AddressApiHelper {
         AddressSpace addressSpace = null;
         AddressApi addressApi = null;
         AddressResolver addressResolver = null;
-        Set<Address> existingAddresses = null;
+        Collection<Address> existingAddresses = null;
         for(Address a : sorted) {
             if (addressSpace == null || !Objects.equals(addressSpace.getMetadata().getNamespace(), a.getMetadata().getNamespace())) {
                 addressSpace = getAddressSpace(a.getMetadata().getNamespace(), addressSpaceId);
@@ -170,17 +170,7 @@ public class AddressApiHelper {
         return address;
     }
 
-    public static Map<String,String> parseLabelSelector(String labelSelector) {
-        Map<String, String> labels = new HashMap<>();
-        String [] pairs = labelSelector.split(",");
-        for (String pair : pairs) {
-            String elements[] = pair.split("=");
-            if (elements.length > 1) {
-                labels.put(elements[0], elements[1]);
-            }
-        }
-        return labels;
-    }
+
 
     public void deleteAddresses(String namespace) {
         for (AddressSpace addressSpace : addressSpaceApi.listAddressSpaces(namespace)) {

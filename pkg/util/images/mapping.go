@@ -62,7 +62,7 @@ func overrideImageMapFromEnv(data map[string]string) {
 	setIfEnvPresent(data, "iot-sigfox-adapter", "IOT_SIGFOX_ADAPTER_IMAGE")
 	setIfEnvPresent(data, "iot-tenant-service", "IOT_TENANT_SERVICE_IMAGE")
 	setIfEnvPresent(data, "iot-proxy-configurator", "IOT_PROXY_CONFIGURATOR_IMAGE")
-	setIfEnvPresent(data, "qdrouterd-base", "ROUTER_IMAGE")
+	setIfEnvPresent(data, "router", "ROUTER_IMAGE")
 	setIfEnvPresent(data, "none-authservice", "NONE_AUTHSERVICE_IMAGE")
 	setIfEnvPresent(data, "keycloak", "KEYCLOAK_IMAGE")
 	setIfEnvPresent(data, "keycloak-plugin", "KEYCLOAK_PLUGIN_IMAGE")
@@ -70,6 +70,14 @@ func overrideImageMapFromEnv(data map[string]string) {
 	setIfEnvPresent(data, "console-proxy-openshift", "CONSOLE_PROXY_OPENSHIFT_IMAGE")
 	setIfEnvPresent(data, "console-proxy-kubernetes", "CONSOLE_PROXY_KUBERNETES_IMAGE")
 	setIfEnvPresent(data, "console-httpd", "CONSOLE_HTTPD_IMAGE")
+	setIfEnvPresent(data, "address-space-controller", "ADDRESS_SPACE_CONTROLLER_IMAGE")
+	setIfEnvPresent(data, "standard-controller", "STANDARD_CONTROLLER_IMAGE")
+	setIfEnvPresent(data, "agent", "AGENT_IMAGE")
+	setIfEnvPresent(data, "broker", "BROKER_IMAGE")
+	setIfEnvPresent(data, "broker-plugin", "BROKER_PLUGIN_IMAGE")
+	setIfEnvPresent(data, "topic-forwarder", "TOPIC_FORWARDER_IMAGE")
+	setIfEnvPresent(data, "mqtt-gateway", "MQTT_GATEWAY_IMAGE")
+	setIfEnvPresent(data, "mqtt-lwt", "MQTT_LWT_IMAGE")
 }
 
 const defaultImageMapFileName = "operatorImageMap.yaml"

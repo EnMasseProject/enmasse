@@ -60,7 +60,7 @@ public class SeleniumManagement {
     public static void collectAppLogs(Path path) {
         try {
             Files.createDirectories(path);
-            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path.toFile(), SystemtestsKubernetesApps.SELENIUM_PROJECT);
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, SystemtestsKubernetesApps.SELENIUM_PROJECT);
             collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.SELENIUM_PROJECT);
         } catch (Exception e) {
             log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.SELENIUM_PROJECT);

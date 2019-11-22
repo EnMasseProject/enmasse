@@ -8,6 +8,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.CoreCrd;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -183,28 +184,33 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         List<Pod> pods = kubernetes.listPods();
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
+        try {
+            for (Label label : labels) {
+                log.info("Restarting {}", label.labelValue);
+                KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
+                Thread.sleep(30_000);
+                TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+                assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+            }
 
-        for (Label label : labels) {
-            log.info("Restarting {}", label.labelValue);
-            KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
-            Thread.sleep(30_000);
+            log.info("Restarting whole enmasse");
+            KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
+            Thread.sleep(180_000);
             TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+            AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
+                    standardAddresses.toArray(new Address[0]));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+
+            //TODO: Uncomment when #2127 will be fixedy
+
+//            Pod qdrouter = pods.stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList()).get(0);
+//            kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
+//            assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+        } finally {
+            // Ensure that EnMasse's API services are finished re-registering (after api-server restart) before ending
+            // the test otherwise test clean-up will fail.
+            assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s", CoreCrd.VERSION, CoreCrd.GROUP)).getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
         }
-
-        log.info("Restarting whole enmasse");
-        KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
-        Thread.sleep(180_000);
-        TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-        AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
-                standardAddresses.toArray(new Address[0]));
-        assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
-
-        //TODO: Uncomment when #2127 will be fixedy
-
-//        Pod qdrouter = pods.stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList()).get(0);
-//        kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
-//        assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
     }
 
     //https://github.com/EnMasseProject/enmasse/issues/3098
@@ -349,9 +355,9 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         String qdRouterName = TestUtils.listRunningPods(kubernetes, standard).stream()
                 .filter(pod -> pod.getMetadata().getName().contains("qdrouter"))
                 .collect(Collectors.toList()).get(0).getMetadata().getName();
-        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-c", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
-        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-a", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
-        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-l", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-c", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-a", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-l", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
     }
 
     @Test
@@ -432,7 +438,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         } finally {
             // Ensure that EnMasse's API services are finished re-registering (after api-server restart) before ending
             // the test otherwise test clean-up will fail.
-            assertWaitForValue(true, () -> KubeCMDClient.getApiServices("v1beta1.enmasse.io").getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
+            assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s", CoreCrd.VERSION, CoreCrd.GROUP)).getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
         }
 
     }
@@ -453,18 +459,16 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
     }
 
     private void doMessagingDuringRestart(Label label, int runningPodsBefore, UserCredentials user, AddressSpace space, Address addr) throws Exception {
+        long sleepMillis = 500;
         log.info("Starting messaging");
         AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
         AmqpClient client = getAmqpClientFactory().createAddressClient(space, addressType);
         client.getConnectOptions().setCredentials(user);
 
-        var restart = new CompletableFuture<Object>();
+        var stopSend = new CompletableFuture<Object>();
 
-        var recvFut = client.recvMessages(addr.getSpec().getAddress(), msg -> {
+        var recvFut = client.recvMessagesWithStatus(addr.getSpec().getAddress(), msg -> {
             log.info("Message received");
-            if (restart.isDone()) {
-                return true;
-            }
             return false;
         });
 
@@ -472,14 +476,14 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         var sendFut = client.sendMessages(addr.getSpec().getAddress(),
                 Stream.generate(() -> UUID.randomUUID().toString()).limit(1000).collect(Collectors.toList()),
                 msg -> {
-                    if (restart.isDone()) {
+                    if (stopSend.isDone()) {
                         return true;
                     }
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(sleepMillis);
                     } catch (InterruptedException e) {
                         log.error("Error waiting between sends", e);
-                        restart.completeExceptionally(e);
+                        stopSend.completeExceptionally(e);
                         return true;
                     }
                     return false;
@@ -487,13 +491,20 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
         log.info("Restarting {}", label.labelValue);
         KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
+        Thread.sleep(30_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-        if (restart.isCompletedExceptionally()) {
-            restart.get();
+        if (stopSend.isCompletedExceptionally()) {
+            stopSend.get();
         }
-        restart.complete(new Object());
+        stopSend.complete(new Object());
+        try {
+            Thread.sleep(sleepMillis);
+        } catch (InterruptedException e) {
+            log.error("Error waiting between stop sender and receiver", e);
+        }
+        recvFut.closeGracefully();
 
-        int received = recvFut.get(10, TimeUnit.SECONDS).size();
+        int received = recvFut.getResult().get(10, TimeUnit.SECONDS).size();
         int sent = sendFut.get(10, TimeUnit.SECONDS);
         assertEquals(sent, received, "Missmatch between messages sent and received");
     }

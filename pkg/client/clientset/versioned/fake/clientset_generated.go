@@ -78,18 +78,8 @@ func (c *Clientset) AdminV1beta2() adminv1beta2.AdminV1beta2Interface {
 	return &fakeadminv1beta2.FakeAdminV1beta2{Fake: &c.Fake}
 }
 
-// Admin retrieves the AdminV1beta2Client
-func (c *Clientset) Admin() adminv1beta2.AdminV1beta2Interface {
-	return &fakeadminv1beta2.FakeAdminV1beta2{Fake: &c.Fake}
-}
-
 // EnmasseV1beta1 retrieves the EnmasseV1beta1Client
 func (c *Clientset) EnmasseV1beta1() enmassev1beta1.EnmasseV1beta1Interface {
-	return &fakeenmassev1beta1.FakeEnmasseV1beta1{Fake: &c.Fake}
-}
-
-// Enmasse retrieves the EnmasseV1beta1Client
-func (c *Clientset) Enmasse() enmassev1beta1.EnmasseV1beta1Interface {
 	return &fakeenmassev1beta1.FakeEnmasseV1beta1{Fake: &c.Fake}
 }
 
@@ -98,17 +88,7 @@ func (c *Clientset) IotV1alpha1() iotv1alpha1.IotV1alpha1Interface {
 	return &fakeiotv1alpha1.FakeIotV1alpha1{Fake: &c.Fake}
 }
 
-// Iot retrieves the IotV1alpha1Client
-func (c *Clientset) Iot() iotv1alpha1.IotV1alpha1Interface {
-	return &fakeiotv1alpha1.FakeIotV1alpha1{Fake: &c.Fake}
-}
-
 // UserV1beta1 retrieves the UserV1beta1Client
 func (c *Clientset) UserV1beta1() userv1beta1.UserV1beta1Interface {
-	return &fakeuserv1beta1.FakeUserV1beta1{Fake: &c.Fake}
-}
-
-// User retrieves the UserV1beta1Client
-func (c *Clientset) User() userv1beta1.UserV1beta1Interface {
 	return &fakeuserv1beta1.FakeUserV1beta1{Fake: &c.Fake}
 }

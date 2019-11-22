@@ -12,6 +12,7 @@ import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -54,5 +55,19 @@ public class AddressSpaceSpecConnectorCredentials extends AbstractWithAdditional
                 "username=" + username +
                 ", password=" + password +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AddressSpaceSpecConnectorCredentials that = (AddressSpaceSpecConnectorCredentials) o;
+        return Objects.equals(username, that.username) &&
+                Objects.equals(password, that.password);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(username, password);
     }
 }

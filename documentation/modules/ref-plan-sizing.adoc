@@ -1,0 +1,11 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-configuration-sizing-guide.adoc
+
+[id='plan-sizing-{context}']
+= Plan sizing
+
+Plans enable dynamic scaling in the `standard` address space, as shown in the broker and router sizing sections. At the cluster level, the combination of plans and infrastructure configuration settings determines the maximum number of Pods that can be deployed on the cluster. Since {ProductName} does not support limiting the number of address spaces that can be created, it is a best practice to apply a policy to limit who is allowed to create address spaces. Such policy configuration can be handled through the standard {KubePlatform} policies.
+
+From a capacity-planning perspective, it is useful to calculate the maximum number of Pods and the maximum amount of memory that can be consumed for a given address space. To make this calculation using a script, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-run-calculation-script-messaging[Running the check-memory calculation script].
+

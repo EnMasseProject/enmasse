@@ -31,7 +31,7 @@ var MockBroker = require('../testlib/mock_broker.js');
 var MockRouter = require('../testlib/mock_router.js');
 var match_source_address = require('../lib/utils.js').match_source_address;
 var mock_resource_server = require('../testlib/mock_resource_server.js');
-var ConfigMapServer = mock_resource_server.ConfigMapServer;
+var AddressServer = mock_resource_server.AddressServer;
 var ResourceServer = mock_resource_server.ResourceServer;
 var myutils = require('../lib/utils.js');
 
@@ -93,12 +93,12 @@ function verify_queue(name, all_addresses, all_autolinks, allocated_to) {
     assert.equal(addresses[0].distribution, 'balanced');
     assert.equal(addresses[0].waypoint, true);
 
-    var autolinks = remove(all_autolinks, function (o) { return o.addr === name; });
+    var autolinks = remove(all_autolinks, function (o) { return o.address === name; });
     if (allocated_to !== undefined) {
         if (allocated_to[0].state === 'Active') {
             assert.equal(autolinks.length, 2, 'did not find required autolinks for queue ' + name);
-            assert.equal(autolinks[0].addr, name);
-            assert.equal(autolinks[1].addr, name);
+            assert.equal(autolinks[0].address, name);
+            assert.equal(autolinks[1].address, name);
             if (autolinks[0].direction === 'in') {
                 assert.equal(autolinks[1].direction, 'out');
                 assert.equal(autolinks[0].containerId, util.format('%s-in', allocated_to[0].containerId));
@@ -116,8 +116,8 @@ function verify_queue(name, all_addresses, all_autolinks, allocated_to) {
         }
     } else {
         assert.equal(autolinks.length, 2, 'did not find required autolinks for queue ' + name);
-        assert.equal(autolinks[0].addr, name);
-        assert.equal(autolinks[1].addr, name);
+        assert.equal(autolinks[0].address, name);
+        assert.equal(autolinks[1].address, name);
         if (autolinks[0].direction === 'in') {
             assert.equal(autolinks[1].direction, 'out');
             assert.equal(autolinks[0].containerId, util.format('%s-in', name));
@@ -407,14 +407,14 @@ describe('basic router configuration', function() {
        function (router) {
            router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-foo', {prefix:'foo', distribution:'closest', 'waypoint':false});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-bar', {prefix:'bar', direction:'in'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {addr:'baz', direction:'out', containerId: 'baz'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {address:'baz', direction:'out', containerId: 'baz'});
        }));
     it('removes or updates address config', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
            router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-a', {prefix:'a', distribution:'closest', 'waypoint':false});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-in', {prefix:'b', direction:'in'});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-out', {prefix:'b', direction:'out'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {addr:'baz', direction:'out', containerId: 'baz'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {address:'baz', direction:'out', containerId: 'baz'});
        }));
     it('configures addresses on multiple routers', multi_router_address_test(3, [{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}]));
     it('configures multiple routers into a full mesh', multi_router_address_test(6, [], function (routers) {
@@ -630,7 +630,7 @@ describe('configuration from configmaps', function() {
     var watcher;
 
     beforeEach(function(done) {
-        address_source = new ConfigMapServer();
+        address_source = new AddressServer();
         address_source.listen(0).on('listening', function () {
             ragent = new Ragent();
             watcher = ragent.subscribe_to_addresses({token:'foo', namespace:'default', host: 'localhost', port:address_source.port});
@@ -681,7 +681,7 @@ describe('configuration from configmaps', function() {
         ragent.wait_for_stable(2).then(function () {
             address_source.add_address_definition({address:'c', type:'anycast'}, undefined, '1234');
             address_source.add_address_definition({address:'d', type:'queue'}, undefined, '1234');
-            address_source.remove_resource_by_name('configmaps', 'b');
+            address_source.remove_resource_by_name('addresses', 'b');
             ragent.wait_for_stable(3).then(function () {
                 verify_addresses([{address:'a', type:'topic'}, {address:'c', type:'anycast'}, {address:'d', type:'queue'}], router);
                 done();
@@ -887,7 +887,7 @@ function merge(a, b) {
 }
 
 function mock_address_source(addresses) {
-    var server = new ConfigMapServer();
+    var server = new AddressServer();
     for (var i = 0; i < addresses.length; i++) {
         server.add_address_definition(addresses[i], undefined, '1234');
     }
@@ -1035,7 +1035,7 @@ describe('broker configuration', function() {
     var watcher;
 
     beforeEach(function(done) {
-        address_source = new ConfigMapServer();
+        address_source = new AddressServer();
         connections = [];
         address_source.listen(0).on('listening', function () {
             ragent = new Ragent();
@@ -1124,7 +1124,7 @@ describe('broker configuration', function() {
                 broker_a.verify_addresses([{address:'a', type:'queue'}, {address:'c', type:'queue'}]);
                 broker_b.verify_addresses([{address:'b', type:'queue'}]);
                 //delete configmap
-                address_source.remove_resource_by_name('configmaps', 'address-config-a');
+                address_source.remove_resource_by_name('addresses', 'address-config-a');
                 ragent.wait_for_stable(2, 1, 2).then(function () {
                     verify_addresses([{address:'b', type:'queue', allocated_to:[broker_state('broker_b')]}, {address:'c', type:'queue', allocated_to:[broker_state('broker_a')]}], router);
                     broker_a.verify_addresses([{address:'c', type:'queue'}]);

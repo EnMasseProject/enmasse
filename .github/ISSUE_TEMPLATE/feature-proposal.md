@@ -2,7 +2,7 @@
 name: Feature proposal
 about: Proposal for improvement/change/feature in EnMasse
 title: ''
-labels: ''
+labels: kind/feature
 assignees: ''
 
 ---
@@ -17,4 +17,4 @@ If you have a more detailed design in mind, or as you plan to implement this fea
 
 **Tasklist**
 
-If/when you can, enumerate the tasks required to complete the feature in order to track progress as the feature is implemented.
+If/when you can, enumerate the tasks required to complete the feature in order to track progress as the feature is implemented. 

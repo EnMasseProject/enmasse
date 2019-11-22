@@ -7,7 +7,6 @@ package io.enmasse.systemtest.manager;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.info.TestInfo;
@@ -19,7 +18,6 @@ import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,28 +56,30 @@ public class SharedResourceManager extends ResourceManager {
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
-            if (!environment.skipCleanup()) {
+            if (environment.skipCleanup()) {
+                LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
+            } else {
                 LOGGER.info(String.format("test failed: %s.%s",
                         context.getTestClass().get().getName(),
                         context.getTestMethod().get().getName()));
                 LOGGER.info("shared address space '{}' will be removed", sharedAddressSpace);
                 try {
-                    super.deleteAddressSpace(sharedAddressSpace);
+                    if (sharedAddressSpace != null) {
+                        super.deleteAddressSpace(sharedAddressSpace);
+                    }
                 } catch (Exception ex) {
                     LOGGER.warn("Failed to delete shared address space (ignored)", ex);
                 } finally {
                     spaceCountMap.compute(defaultAddSpaceIdentifier, (k, count) -> count == null ? null : count + 1);
                 }
-            } else {
-                LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
             }
         } else { //succeed
             try {
-                if (!environment.skipCleanup()) {
+                if (environment.skipCleanup()) {
+                    LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
+                } else {
                     LOGGER.info("Shared address space will be deleted!");
                     super.deleteAddressSpace(sharedAddressSpace);
-                } else {
-                    LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
                 }
             } catch (Exception e) {
                 LOGGER.warn("Failed to delete addresses from shared address space (ignored)", e);
@@ -133,26 +133,32 @@ public class SharedResourceManager extends ResourceManager {
     }
 
     public void deleteSharedAddressSpace() {
-        if (sharedAddressSpace != null && TestInfo.getInstance().isAddressSpaceDeletable()) {
+        if (sharedAddressSpace != null && TestInfo.getInstance().isAddressSpaceDeleteable()) {
             LOGGER.info("Shared address {} space will be removed", sharedAddressSpace.getMetadata().getName());
-            Environment env = Environment.getInstance();
-            if (!env.skipCleanup()) {
-                Kubernetes kube = Kubernetes.getInstance();
-                GlobalLogCollector logCollector = new GlobalLogCollector(kube, new File(env.testLogDir()));
+            if (environment.skipCleanup()) {
+                LOGGER.warn("Remove address spaces when test run finished - SKIPPED!");
+            } else {
+                GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes, environment.testLogDir());
                 try {
                     AddressSpaceUtils.deleteAddressSpaceAndWait(sharedAddressSpace, logCollector);
                     sharedAddressSpace = null;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            } else {
-                LOGGER.warn("Remove address spaces when test run finished - SKIPPED!");
             }
         } else {
             if (sharedAddressSpace != null) {
                 LOGGER.info("Shared address {} space will be reused", sharedAddressSpace.getMetadata().getName());
             }
         }
+    }
+
+    public void tearDownShared() throws Exception {
+        LOGGER.info("Deleting addresses");
+        deleteAddresses(sharedAddressSpace);
+        LOGGER.info("Closing clients");
+        closeClientFactories(amqpClientFactory, mqttClientFactory);
+        initFactories(sharedAddressSpace);
     }
 
     @Override

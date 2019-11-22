@@ -7,6 +7,8 @@ package authenticationservice
 
 import (
 	"context"
+	"reflect"
+
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	routev1 "github.com/openshift/api/route/v1"
@@ -16,7 +18,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -242,7 +243,9 @@ type UpdateStatusFn func(status *adminv1beta1.AuthenticationServiceStatus) error
 func (r *ReconcileAuthenticationService) updateStatus(ctx context.Context, authservice *adminv1beta1.AuthenticationService, updateFn UpdateStatusFn) (reconcile.Result, error) {
 
 	newStatus := adminv1beta1.AuthenticationServiceStatus{}
-	updateFn(&newStatus)
+	if err := updateFn(&newStatus); err != nil {
+		return reconcile.Result{}, err
+	}
 
 	if authservice.Status.Host != newStatus.Host ||
 		authservice.Status.Port != newStatus.Port ||
@@ -265,14 +268,12 @@ func (r *ReconcileAuthenticationService) reconcileDeployment(ctx context.Context
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{Namespace: authservice.Namespace, Name: name},
 	}
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func(existing runtime.Object) error {
-		existingDeployment := existing.(*appsv1.Deployment)
-
-		if err := controllerutil.SetControllerReference(authservice, existingDeployment, r.scheme); err != nil {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func() error {
+		if err := controllerutil.SetControllerReference(authservice, deployment, r.scheme); err != nil {
 			return err
 		}
 
-		return fn(authservice, existingDeployment)
+		return fn(authservice, deployment)
 	})
 
 	if err != nil {
@@ -288,14 +289,12 @@ func (r *ReconcileAuthenticationService) reconcileService(ctx context.Context, a
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{Namespace: authservice.Namespace, Name: name},
 	}
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func(existing runtime.Object) error {
-		existingService := existing.(*corev1.Service)
-
-		if err := controllerutil.SetControllerReference(authservice, existingService, r.scheme); err != nil {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
+		if err := controllerutil.SetControllerReference(authservice, service, r.scheme); err != nil {
 			return err
 		}
 
-		return applyFn(authservice, existingService)
+		return applyFn(authservice, service)
 	})
 
 	if err != nil {
@@ -312,15 +311,13 @@ func (r *ReconcileAuthenticationService) reconcileStandardVolume(ctx context.Con
 		pvc := &corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{Namespace: authservice.Namespace, Name: name},
 		}
-		_, err := controllerutil.CreateOrUpdate(ctx, r.client, pvc, func(existing runtime.Object) error {
-			existingPvc := existing.(*corev1.PersistentVolumeClaim)
-
+		_, err := controllerutil.CreateOrUpdate(ctx, r.client, pvc, func() error {
 			if *authservice.Spec.Standard.Storage.DeleteClaim {
-				if err := controllerutil.SetControllerReference(authservice, existingPvc, r.scheme); err != nil {
+				if err := controllerutil.SetControllerReference(authservice, pvc, r.scheme); err != nil {
 					return err
 				}
 			}
-			return applyStandardAuthServiceVolume(authservice, existingPvc)
+			return applyStandardAuthServiceVolume(authservice, pvc)
 		})
 
 		if err != nil {
@@ -336,9 +333,7 @@ func (r *ReconcileAuthenticationService) reconcileStandardRoute(ctx context.Cont
 		route := &routev1.Route{
 			ObjectMeta: metav1.ObjectMeta{Namespace: authservice.Namespace, Name: name},
 		}
-		_, err := controllerutil.CreateOrUpdate(ctx, r.client, route, func(existing runtime.Object) error {
-			existingRoute := existing.(*routev1.Route)
-
+		_, err := controllerutil.CreateOrUpdate(ctx, r.client, route, func() error {
 			secretName := types.NamespacedName{
 				Name:      authservice.Spec.Standard.CertificateSecret.Name,
 				Namespace: authservice.Namespace,
@@ -349,10 +344,10 @@ func (r *ReconcileAuthenticationService) reconcileStandardRoute(ctx context.Cont
 				return err
 			}
 			cert := certsecret.Data["tls.crt"]
-			if err := controllerutil.SetControllerReference(authservice, existingRoute, r.scheme); err != nil {
+			if err := controllerutil.SetControllerReference(authservice, route, r.scheme); err != nil {
 				return err
 			}
-			return applyRoute(authservice, existingRoute, string(cert[:]))
+			return applyRoute(authservice, route, string(cert[:]))
 		})
 
 		if err != nil {
@@ -362,7 +357,6 @@ func (r *ReconcileAuthenticationService) reconcileStandardRoute(ctx context.Cont
 	}
 	return reconcile.Result{}, nil
 }
-
 
 /*
  * This function removes the keycloak controller if it exists. This process is no longer needed if this

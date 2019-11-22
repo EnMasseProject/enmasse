@@ -28,12 +28,12 @@ public final class AddressSpaceControllerOptions {
 
     private String version;
 
-    private String standardAuthserviceConfigName;
-    private String standardAuthserviceCredentialsSecretName;
-    private String standardAuthserviceCertSecretName;
-
     private Duration managementQueryTimeout;
     private Duration managementConnectTimeout;
+
+    private Duration kubernetesApiConnectTimeout;
+    private Duration kubernetesApiReadTimeout;
+    private Duration kubernetesApiWriteTimeout;
 
     public File getTemplateDir() {
         return templateDir;
@@ -79,10 +79,6 @@ public final class AddressSpaceControllerOptions {
         }
         options.setResourcesDir(resourcesDir);
 
-        options.setStandardAuthserviceConfigName(getEnv(env, "STANDARD_AUTHSERVICE_CONFIG_NAME").orElse(null));
-        options.setStandardAuthserviceCredentialsSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME"));
-        options.setStandardAuthserviceCertSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CERT_SECRET_NAME"));
-
         options.setEnableEventLogger(getEnv(env, "ENABLE_EVENT_LOGGER").map(Boolean::parseBoolean).orElse(false));
 
         options.setExposeEndpointsByDefault(getEnv(env, "EXPOSE_ENDPOINTS_BY_DEFAULT").map(Boolean::parseBoolean).orElse(true));
@@ -109,6 +105,19 @@ public final class AddressSpaceControllerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30)));
 
+        options.setKubernetesApiConnectTimeout(getEnv(env, "KUBERNETES_API_CONNECT_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
+        options.setKubernetesApiReadTimeout(getEnv(env, "KUBERNETES_API_READ_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
+        options.setKubernetesApiWriteTimeout(getEnv(env, "KUBERNETES_API_WRITE_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
+
         options.setVersion(getEnvOrThrow(env, "VERSION"));
         return options;
     }
@@ -127,10 +136,6 @@ public final class AddressSpaceControllerOptions {
 
     public boolean isExposeEndpointsByDefault() {
         return exposeEndpointsByDefault;
-    }
-
-    public String getStandardAuthserviceConfigName() {
-        return standardAuthserviceConfigName;
     }
 
     public void setTemplateDir(File templateDir) {
@@ -165,26 +170,6 @@ public final class AddressSpaceControllerOptions {
         this.version = version;
     }
 
-    public void setStandardAuthserviceConfigName(String standardAuthserviceConfigName) {
-        this.standardAuthserviceConfigName = standardAuthserviceConfigName;
-    }
-
-    public String getStandardAuthserviceCredentialsSecretName() {
-        return standardAuthserviceCredentialsSecretName;
-    }
-
-    public void setStandardAuthserviceCredentialsSecretName(String standardAuthserviceCredentialsSecretName) {
-        this.standardAuthserviceCredentialsSecretName = standardAuthserviceCredentialsSecretName;
-    }
-
-    public String getStandardAuthserviceCertSecretName() {
-        return standardAuthserviceCertSecretName;
-    }
-
-    public void setStandardAuthserviceCertSecretName(String standardAuthserviceCertSecretName) {
-        this.standardAuthserviceCertSecretName = standardAuthserviceCertSecretName;
-    }
-
     public File getResourcesDir() {
         return resourcesDir;
     }
@@ -205,11 +190,11 @@ public final class AddressSpaceControllerOptions {
                 ", resyncInterval=" + resyncInterval +
                 ", recheckInterval=" + recheckInterval +
                 ", version='" + version + '\'' +
-                ", standardAuthserviceConfigName='" + standardAuthserviceConfigName + '\'' +
-                ", standardAuthserviceCredentialsSecretName='" + standardAuthserviceCredentialsSecretName + '\'' +
-                ", standardAuthserviceCertSecretName='" + standardAuthserviceCertSecretName + '\'' +
                 ", managementQueryTimeout='" + managementQueryTimeout + '\'' +
                 ", managementConnectTimeout='" + managementConnectTimeout + '\'' +
+                ", kubernetesApiConnectTimeout='" + kubernetesApiConnectTimeout + '\'' +
+                ", kubernetesApiReadTimeout='" + kubernetesApiReadTimeout + '\'' +
+                ", kubernetesApiWriteTimeout='" + kubernetesApiWriteTimeout + '\'' +
                 '}';
     }
 
@@ -236,4 +221,29 @@ public final class AddressSpaceControllerOptions {
     public void setManagementConnectTimeout(Duration managementConnectTimeout) {
         this.managementConnectTimeout = managementConnectTimeout;
     }
+
+    public Duration getKubernetesApiConnectTimeout() {
+        return kubernetesApiConnectTimeout;
+    }
+
+    public void setKubernetesApiConnectTimeout(Duration kubernetesApiConnectTimeout) {
+        this.kubernetesApiConnectTimeout = kubernetesApiConnectTimeout;
+    }
+
+    public Duration getKubernetesApiReadTimeout() {
+        return kubernetesApiReadTimeout;
+    }
+
+    public void setKubernetesApiReadTimeout(Duration kubernetesApiReadTimeout) {
+        this.kubernetesApiReadTimeout = kubernetesApiReadTimeout;
+    }
+
+    public Duration getKubernetesApiWriteTimeout() {
+        return kubernetesApiWriteTimeout;
+    }
+
+    public void setKubernetesApiWriteTimeout(Duration kubernetesApiWriteTimeout) {
+        this.kubernetesApiWriteTimeout = kubernetesApiWriteTimeout;
+    }
+
 }

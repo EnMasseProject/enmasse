@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
+
 	"github.com/enmasseproject/enmasse/pkg/util"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
@@ -118,7 +120,7 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 
 	err = install.ApplyContainerWithError(deployment, "qdr-proxy", func(container *corev1.Container) error {
 
-		if err := install.SetContainerImage(container, "qdrouterd-base", config); err != nil {
+		if err := install.SetContainerImage(container, "router", config); err != nil {
 			return err
 		}
 
@@ -201,7 +203,7 @@ func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Cont
 
 }
 
-func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *iotv1alpha1.IoTConfig, configCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
 
@@ -216,6 +218,7 @@ func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *
 router {
   mode: standalone
   id: Router.Proxy
+  defaultDistribution: unavailable
 }
 
 listener {
@@ -224,6 +227,8 @@ listener {
   saslMechanisms: ANONYMOUS
 }
 `
+			configCtx.AddString(configMap.Data["qdrouterd.conf"])
+
 			return nil
 		})
 	})

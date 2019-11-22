@@ -6,7 +6,11 @@
 package install
 
 import (
+	"fmt"
 	"strconv"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -81,14 +85,6 @@ func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, na
 
 }
 
-func ApplyContainer(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container)) {
-	// call "with error", and eat up the error
-	_ = ApplyContainerWithError(deployment, name, func(container *corev1.Container) error {
-		mutator(container)
-		return nil
-	})
-}
-
 func DropContainer(deployment *appsv1.Deployment, name string) {
 	if deployment.Spec.Template.Spec.Containers == nil {
 		return
@@ -129,14 +125,6 @@ func ApplyContainerWithError(deployment *appsv1.Deployment, name string, mutator
 	}
 
 	return err
-}
-
-func ApplyInitContainer(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container)) {
-	// call "with error", and eat up the error
-	_ = ApplyInitContainerWithError(deployment, name, func(container *corev1.Container) error {
-		mutator(container)
-		return nil
-	})
 }
 
 func ApplyInitContainerWithError(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container) error) error {
@@ -447,7 +435,7 @@ func ApplyEnvOptionalSecret(container *corev1.Container, name string, secretKey 
 	})
 }
 
-func ApplyEnvConfigMap(container *corev1.Container, name string, configMapKey string, configMapName string) {
+func ApplyEnvConfigMap(container *corev1.Container, name string, configMapKey string, configMapName string, optional *bool) {
 	ApplyEnv(container, name, func(envvar *corev1.EnvVar) {
 		envvar.Value = ""
 		envvar.ValueFrom = &corev1.EnvVarSource{
@@ -456,6 +444,7 @@ func ApplyEnvConfigMap(container *corev1.Container, name string, configMapKey st
 				LocalObjectReference: corev1.LocalObjectReference{
 					Name: configMapName,
 				},
+				Optional: optional,
 			},
 		}
 	})
@@ -482,6 +471,29 @@ func RemoveEnv(container *corev1.Container, name string) {
 	}
 }
 
+func ApplyNodeAffinity(template *corev1.PodTemplateSpec, matchKey string) {
+	template.Spec.Affinity = &corev1.Affinity{
+		NodeAffinity: &corev1.NodeAffinity{
+			PreferredDuringSchedulingIgnoredDuringExecution: []corev1.PreferredSchedulingTerm{
+				{
+					Weight: 1,
+					Preference: corev1.NodeSelectorTerm{
+						MatchExpressions: []corev1.NodeSelectorRequirement{
+							{
+								Key:      matchKey,
+								Operator: "In",
+								Values: []string{
+									"true",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 // This is a workaround for a problem that may manifest when EnMasse is deployed into OLM cluster-wide
 // under certain configurations. If https://github.com/operator-framework/operator-lifecycle-manager/issues/927
 // is resolved, this workaround can be removed.
@@ -498,4 +510,42 @@ func ApplyFsGroupOverride(deployment *appsv1.Deployment) error {
 		return nil
 	})
 	return err
+}
+
+// Ensure that an owner is set
+func AddOwnerReference(owner v1.Object, object v1.Object, scheme *runtime.Scheme) error {
+
+	ro, ok := owner.(runtime.Object)
+	if !ok {
+		return fmt.Errorf("is not a %T a runtime.Object, cannot call ensureOwnerIsSet", owner)
+	}
+
+	gvk, err := apiutil.GVKForObject(ro, scheme)
+	if err != nil {
+		return err
+	}
+
+	// create our ref
+	newref := *util.NewOwnerRef(owner, gvk)
+
+	// get existing refs
+	refs := object.GetOwnerReferences()
+
+	found := false
+	for _, ref := range refs {
+		if util.IsSameRef(ref, newref) {
+			found = true
+		}
+	}
+
+	// did we find it?
+	if !found {
+		// no! so append
+		refs = append(refs, newref)
+	}
+
+	// set the new result
+	object.SetOwnerReferences(refs)
+
+	return nil
 }

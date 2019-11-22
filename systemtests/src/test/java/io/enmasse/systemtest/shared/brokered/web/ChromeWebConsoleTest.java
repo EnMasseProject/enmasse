@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(NON_PR)
 @SeleniumChrome
+@Disabled("Ignore whilst 0.31 console refactoring is underway")
 class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedBrokered {
 
     @Test
@@ -50,6 +51,22 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedBrokered
                 .withType("topic")
                 .withAddress("test-topic")
                 .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build());
+    }
+
+    @Test
+    @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
+    void testPurgeAddress() throws Exception {
+        doTestPurgeMessages(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "purge-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("purge-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build());
     }

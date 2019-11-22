@@ -12,7 +12,6 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
-import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -40,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
     private static Logger log = CustomLogger.getLogger();
-    private ClientUtils clientUtils = new ClientUtils();
     private UserCredentials credentials = new UserCredentials("test", "test");
 
     @Test

@@ -9,27 +9,6 @@
 - set_fact:
     ca_bundle: "{{ secret_result.stdout }}"
 
-- name: Register Legacy API Server with API Aggregator
-  shell:
-    cmd: |
-      cat <<EOF | oc apply -f -
-      apiVersion: apiregistration.k8s.io/v1beta1
-      kind: APIService
-      metadata:
-        name: v1alpha1.enmasse.io
-        labels:
-          app: enmasse
-      spec:
-        group: enmasse.io
-        groupPriorityMinimum: 1000
-        caBundle: "{{ ca_bundle | b64encode }}"
-        version: v1alpha1
-        versionPriority: 10
-        service:
-          name: api-server
-          namespace: "{{ namespace }}"
-      EOF
-
 - name: Register Legacy User API Server with API Aggregator
   when: '"standard" in authentication_services'
   shell:
@@ -52,27 +31,6 @@
           namespace: "{{ namespace }}"
       EOF
 
-
-- name: Register API Server with API Aggregator
-  shell:
-    cmd: |
-      cat <<EOF | oc apply -f -
-      apiVersion: apiregistration.k8s.io/v1beta1
-      kind: APIService
-      metadata:
-        name: v1beta1.enmasse.io
-        labels:
-          app: enmasse
-      spec:
-        group: enmasse.io
-        groupPriorityMinimum: 1000
-        caBundle: "{{ ca_bundle | b64encode }}"
-        version: v1beta1
-        versionPriority: 10
-        service:
-          name: api-server
-          namespace: "{{ namespace }}"
-      EOF
 
 - name: Register User API Server with API Aggregator
   when: '"standard" in authentication_services'

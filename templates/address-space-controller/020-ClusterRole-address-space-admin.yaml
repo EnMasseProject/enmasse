@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: enmasse
+  name: enmasse.io:address-space-admin
+rules:
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "addressspaces" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "addresses", "addresses/finalizers", "addressspaces/finalizers" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
