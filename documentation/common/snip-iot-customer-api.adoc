@@ -1,4 +1,6 @@
-. Run the consumer application to receive {api}:
+// This snip is included in the following procedures:
+
+. Run the customer application to receive {api}:
 +
 [options="nowrap",subs="attributes"]
 ----

@@ -1,0 +1,17 @@
+// Module included in the following assemblies:
+//
+// assembly-service-admin.adoc
+// assembly-iot-getting-started.adoc
+
+:api: telemetry
+
+[id='proc-iot-starting-telemetry-consumer-{context}']
+= Starting the telemetry consumer
+
+You can send telemetry data such as sensor readings, for example, from a device to the cloud. To do this, you must first start the telemetry consumer by running the customer application.
+
+.Procedure
+
+include::../common/snip-iot-customer-api.adoc[leveloffset=+2]
+
+

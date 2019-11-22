@@ -3,8 +3,6 @@
 // assembly-iot-getting-started.adoc
 // assembly-iot-tenant-guide.adoc
 
-[id='iot-installing-cli-{context}']
-
 ifeval::["{cmdcli}" == "oc"]
 :http-adapter: $(oc -n enmasse-infra get routes iot-http-adapter --template='{{ .spec.host }}')
 :mqtt-adapter: $(oc -n enmasse-infra get routes iot-mqtt-adapter --template='{{ .spec.host }}')
@@ -16,6 +14,7 @@ ifeval::["{cmdcli}" == "kubectl"]
 :mqtt-port: 30883
 endif::[]
 
+[id='proc-iot-installing-cli-{context}']
 = Installing the Eclipse Hono command-line client
 
 .Prerequisites
@@ -26,6 +25,7 @@ endif::[]
 .Procedure
 
 . Download the link:https://www.eclipse.org/hono/downloads/[Eclipse Hono command-line client].
+
 . Obtain the messaging endpoint certificate:
 +
 [options="nowrap",subs="attributes"]
@@ -52,3 +52,4 @@ export MESSAGING_PORT=5671
 ----
 ====
 endif::[]
+

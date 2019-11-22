@@ -1,0 +1,23 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-configuring-sigfox.adoc
+
+[id='iot-register-sigfox-backend-gateway-device-{context}']
+= Registering the Sigfox backend as a gateway device
+
+//already specified in assembly?
+.Prerequisites
+
+* The Sigfox backend is set up in {ProductName} as a gateway device. For more information see link:[].
+* The credentials assigned to this device are required for the configuration
+of the "callback" in the Sigfox backend.
+* The actual devices are configured to use this gateway device as their transport.
+
+.Procedure
+
+. link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-iot-register-new-device-messaging-iot[Register a new device].
++
+In step 3 of this procedure, specify `sigfox-backend` as the ID.
+
+. link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-proc-creating-device-set-password-messaging-iot[Set up password credentials] for this device (for example, `sigfox-user` / `sigfox-password`).
+
