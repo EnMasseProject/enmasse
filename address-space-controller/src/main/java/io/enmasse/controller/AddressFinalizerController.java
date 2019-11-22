@@ -15,9 +15,9 @@ import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ContinuationResult;
 
-public class AddressFinalizerController extends AbstractFinalizeController {
+public class AddressFinalizerController extends AbstractFinalizerController {
 
-    private static final Logger log = LoggerFactory.getLogger(AddressFinalizerController.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(AddressFinalizerController.class);
 
     public static final String FINALIZER_ADDRESSES = "enmasse.io/addresses";
 
@@ -33,7 +33,7 @@ public class AddressFinalizerController extends AbstractFinalizeController {
     @Override
     public Result processFinalizer(final AddressSpace addressSpace) {
 
-        log.info("Processing finalizer for {}/{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
+        log.info("Processing address finalizer for {}/{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
 
         final String addressSpaceNamespace = addressSpace.getMetadata().getNamespace();
         final AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);

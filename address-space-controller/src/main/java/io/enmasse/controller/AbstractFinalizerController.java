@@ -5,6 +5,7 @@
 
 package io.enmasse.controller;
 
+import io.enmasse.address.model.Phase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,9 +15,9 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 /**
  * Abstract base class for finalizer controllers.
  */
-public abstract class AbstractFinalizeController implements Controller {
+public abstract class AbstractFinalizerController implements Controller {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractFinalizeController.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(AbstractFinalizerController.class.getName());
 
     protected static interface Result {
         public AddressSpace getAddressSpace();
@@ -54,7 +55,7 @@ public abstract class AbstractFinalizeController implements Controller {
 
     protected final String id;
 
-    public AbstractFinalizeController(final String id) {
+    public AbstractFinalizerController(final String id) {
         this.id = id;
     }
 
@@ -78,6 +79,9 @@ public abstract class AbstractFinalizeController implements Controller {
             // ... we ensure we are added to the list of finalizers.
             return ensureFinalizer(addressSpace);
         }
+
+        // if we are deleted, set phase to Terminating
+        addressSpace.getStatus().setPhase(Phase.Terminating);
 
         // if we are deleted, and no longer have the finalizer ...
         if (!addressSpace.getMetadata().getFinalizers().contains(this.id)) {
