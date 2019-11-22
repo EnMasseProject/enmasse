@@ -68,7 +68,7 @@ export default function ConnectionsListPage() {
   const { name, namespace } = useParams();
   let { loading, error, data } = useQuery<IConnectionListResponse>(
     RETURN_ALL_CONECTION_LIST(name, namespace),
-    { pollInterval: 5000 }
+    { pollInterval: 20000 }
   );
 
   if (error) console.log(error);

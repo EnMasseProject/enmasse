@@ -58,9 +58,11 @@ const rows: IAddress[] = [
 export const addressList = () => (
   <MemoryRouter>
     <AddressList
-      rows={rows}
+      rowsData={rows}
       onEdit={action("onEdit")}
       onDelete={action("onDelete")}
+      // onCheckboxEdit={action("onCheckBoxEdit")}
+      // rows={[]}
     />
   </MemoryRouter>
 );

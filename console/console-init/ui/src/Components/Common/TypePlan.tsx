@@ -1,5 +1,9 @@
 import * as React from "react";
-import { Label } from "@patternfly/react-core";
+import {
+  Label,
+  // Tooltip, 
+  // TooltipPosition
+} from "@patternfly/react-core";
 
 interface ITypePlanProps {
   plan: string;
@@ -32,10 +36,12 @@ export const TypePlan: React.FunctionComponent<ITypePlanProps> = address => {
   }
   return (
     <React.Fragment>
+      {/* <Tooltip content={<div>{address.type}</div>} position={TooltipPosition.top}> */}
       <Label isCompact style={{ backgroundColor: iconColor }}>
         {address.type[0].toUpperCase()}
       </Label>{" "}
       {address.plan}
+      {/* </Tooltip> */}
     </React.Fragment>
   );
 };

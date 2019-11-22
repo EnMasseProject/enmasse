@@ -84,7 +84,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
           )
         },
         { title: <AddressSpaceStatus isReady={row.isReady} /> },
-        { title: <FormatDistance date={row.creationTimestamp} /> }
+        { title: <><FormatDistance date={row.creationTimestamp} /> ago</> }
       ],
       originalData: row
     };
@@ -96,6 +96,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   return (
     <Table
       variant={TableVariant.compact}
+      onSelect={() => { }}
       cells={tableColumns}
       rows={tableRows}
       actionResolver={actionResolver}

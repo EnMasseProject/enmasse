@@ -5,7 +5,8 @@ import {
   TableHeader,
   TableBody,
   IRowData,
-  sortable
+  sortable,
+  IExtraData
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
 import { TypePlan } from "../Common/TypePlan";
@@ -29,17 +30,23 @@ export interface IAddress {
 }
 
 interface IAddressListProps {
-  rows: IAddress[];
+  rowsData: IAddress[];
   onEdit: (rowData: IAddress) => void;
   onDelete: (rowData: IAddress) => void;
+  // onCheckboxEdit: (rowData: IRowData[]) => void;
+  // rows: IRowData[];
 }
 
 export const AddressList: React.FunctionComponent<IAddressListProps> = ({
-  rows,
+  rowsData,
   onEdit,
   onDelete
+  // onCheckboxEdit,
+  // rows
 }) => {
   //TODO: Add loading icon based on status
+  // const [tableRows, setTableRows] = useState([]);
+
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;
     return [
@@ -59,7 +66,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     if (row.isReady) {
       const tableRow: IRowData = {
         cells: [
-          { title: <Link to={`address/${row.name}`}>{row.name}</Link> },
+          { title: <Link to={`addresses/${row.name}`}>{row.name}</Link> },
           { title: <TypePlan type={row.type} plan={row.plan} /> },
           {
             title: (
@@ -90,14 +97,14 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     } else {
       const tableRow: IRowData = {
         cells: [
-          { title: <Link to={`address/${row.name}`}>{row.name}</Link> },
+          { title: <Link to={`addresses/${row.name}`}>{row.name}</Link> },
           { title: <TypePlan type={row.type} plan={row.plan} /> },
           {
             title: row.errorMessages ? (
               <Error message={row.errorMessages[0]} type={row.status} />
             ) : (
-              ""
-            ),
+                ""
+              ),
             props: { colSpan: 6 }
           }
         ]
@@ -105,25 +112,49 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       return tableRow;
     }
   };
-  const tableRows = rows.map(toTableCells);
+  let tableRows = rowsData.map(toTableCells);
   const tableColumns = [
     "Name",
     "Type/Plan",
-    { title: "Messages In", transforms: [sortable] },
-    { title: "Messages Out", transforms: [sortable] },
+    { title: <span style={{display:"inline-flex"}} >Messages In<br/>{`(over last 5 min)`}</span>, transforms: [sortable] },
+    { title: <span style={{display:"inline-flex"}} >Messages Out<br/>{`(over last 5 min)`}</span>, transforms: [sortable] },
     { title: "Stored Messages", transforms: [sortable] },
     "Senders",
     "Receivers",
     "Shards"
   ];
 
+  const onSelect = (
+    event: React.MouseEvent,
+    isSelected: boolean,
+    rowIndex: number,
+    rowData: IRowData,
+    extraData: IExtraData
+  ) => {
+    let rows;
+    if (rowIndex === -1) {
+      rows = tableRows.map(oneRow => {
+        oneRow.selected = isSelected;
+        return oneRow;
+      });
+    } else {
+      rows = [...tableRows];
+      rows[rowIndex].selected = isSelected;
+    }
+    tableRows = rows;
+    // onCheckboxEdit(rows);
+  };
+  // console.log(rows);
   return (
     <Table
       variant={TableVariant.compact}
+      onSelect={onSelect}
       cells={tableColumns}
       rows={tableRows}
       actionResolver={actionResolver}
-      aria-label="Address List">
+      aria-label="Address List"
+      canSelectAll={true}
+    >
       <TableHeader />
       <TableBody />
     </Table>

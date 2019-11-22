@@ -98,7 +98,7 @@ export const AddressSpaceHeader: React.FunctionComponent<
             <FlexItem>
               Created{" "}
               <b>
-                <FormatDistance date={createdOn} />
+                <FormatDistance date={createdOn} /> ago
               </b>
             </FlexItem>
           </Flex>

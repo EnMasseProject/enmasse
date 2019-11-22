@@ -30,7 +30,7 @@ export const deleteAddressPrompt = () => {
             "There are some description that telling users what would happenafter deleting this address."
           )}
           handleConfirmDelete={handleDelete}
-          handleCancelDelte={handleCancel}
+          handleCancelDelete={handleCancel}
         />
       </MemoryRouter>
     );

@@ -10,7 +10,8 @@ import {
   ButtonVariant,
   Dropdown,
   KebabToggle,
-  Modal
+  Modal,
+  DropdownItem
 } from "@patternfly/react-core";
 import {
   AddressSpaceList,
@@ -78,6 +79,7 @@ function AddressSpaceListFunc() {
     setAddressSpaceBeingEdited
   ] = React.useState<IAddressSpace | null>();
 
+  const [isOpen, setIsOpen] = React.useState(false);
   const [
     addressSpaceBeingDeleted,
     setAddressSpaceBeingDeleted
@@ -100,7 +102,7 @@ function AddressSpaceListFunc() {
 
   const { loading, error, data } = useQuery<IAddressSpacesResponse>(
     ALL_ADDRESS_SPACES,
-    { pollInterval: 2000 }
+    { pollInterval: 20000 }
   );
   // const setSearchParam = React.useCallback(
   //   (name: string, value: string) => {
@@ -148,18 +150,17 @@ function AddressSpaceListFunc() {
     displayName: addSpace.Spec.Plan.Spec.DisplayName,
     isReady: addSpace.Status.IsReady
   }));
-
   return (
     <PageSection variant={PageSectionVariants.light}>
       {/* TODO: Replace with component*/}
       {/*START*/}
-      <Button variant={ButtonVariant.primary}>Create</Button>
+      <Button variant={ButtonVariant.primary} style={{ marginBottom: 24, marginLeft: 24 }}>Create</Button>
       <Dropdown
-        onSelect={() => {}}
-        toggle={<KebabToggle onToggle={() => {}} />}
-        isOpen={false}
+        onSelect={() => { }}
+        toggle={<KebabToggle onToggle={() => { setIsOpen(!isOpen) }} />}
+        isOpen={isOpen}
         isPlain={true}
-        dropdownItems={[]}
+        dropdownItems={[<DropdownItem key="Delete">Delete</DropdownItem>]}
       />
       {/*END*/}
       {addressSpaces.Total > 0 ? (
@@ -169,8 +170,8 @@ function AddressSpaceListFunc() {
           onDelete={handleDeleteChange}
         />
       ) : (
-        <EmptyAddressSpace />
-      )}
+          <EmptyAddressSpace />
+        )}
       {addressSpaceBeingEdited && (
         <Modal
           title="Modal Header"
@@ -190,10 +191,10 @@ function AddressSpaceListFunc() {
       )}
       {addressSpaceBeingDeleted && (
         <DeletePrompt
-          detail={`Are you sure to delete ${addressSpaceBeingDeleted.name} ?`}
+          detail={`Are you sure you want to delete ${addressSpaceBeingDeleted.name} ?`}
           name={addressSpaceBeingDeleted.name}
-          header="Delete the Address Space"
-          handleCancelDelte={handleCancelDelete}
+          header="Delete this Address Space ?"
+          handleCancelDelete={handleCancelDelete}
           handleConfirmDelete={handleDelete}
         />
       )}
