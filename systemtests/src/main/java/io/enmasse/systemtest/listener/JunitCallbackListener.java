@@ -40,6 +40,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         AfterEachCallback, BeforeEachCallback, BeforeAllCallback, AfterAllCallback {
     private static final Logger LOGGER = CustomLogger.getLogger();
     private static Environment env = Environment.getInstance();
+    private Kubernetes kubernetes = Kubernetes.getInstance();
     private TestInfo testInfo = TestInfo.getInstance();
     private IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
     private SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
@@ -69,10 +70,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                 if (!operatorManager.areExamplesApplied()) {
                     operatorManager.installExamplesBundleOlm();
                     operatorManager.waitUntilOperatorReadyOlm();
-                }
-                //FIXME this shouldn't be necessary because of OLM installation
-                if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
-                    operatorManager.installIoTOperator();
                 }
             } else {
                 if (!operatorManager.isEnmasseBundleDeployed()) {
@@ -241,7 +238,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     public static Path getPath(Method testMethod, Class<?> testClass) {
-        Path path = Environment.getInstance().testLogDir().resolve(
+        Path path = env.testLogDir().resolve(
                 Paths.get(
                         "failed_test_logs",
                         testClass.getName()));
@@ -253,7 +250,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     private void logPodsInInfraNamespace() {
         LOGGER.info("Print all pods in infra namespace");
-        KubeCMDClient.runOnCluster("get", "pods", "-n", env.namespace());
+        KubeCMDClient.runOnCluster("get", "pods", "-n", kubernetes.getInfraNamespace());
     }
 
 }

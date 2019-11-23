@@ -4,12 +4,13 @@
  */
 package io.enmasse.systemtest.info;
 
+import io.enmasse.systemtest.EnmasseInstallType;
+import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.condition.AssumeKubernetesCondition;
 import io.enmasse.systemtest.condition.AssumeOpenshiftCondition;
-import io.enmasse.systemtest.condition.OLMInstallationType;
-import io.enmasse.systemtest.condition.OLMRequired;
-import io.enmasse.systemtest.condition.OLMRequiredCondition;
+import io.enmasse.systemtest.condition.SupportedInstallType;
+import io.enmasse.systemtest.condition.SupportedInstallTypeCondition;
 import io.enmasse.systemtest.logs.CustomLogger;
 
 import org.junit.jupiter.api.Disabled;
@@ -63,7 +64,7 @@ public class TestInfo {
                         Optional<Method> testMethod = ReflectionUtils.findMethod(Class.forName(testSource.getClassName()), testSource.getMethodName(), testSource.getMethodParameterTypes());
                         if (testMethod.isPresent()) {
                             MethodBasedExtensionContext extensionContext = new MethodBasedExtensionContext(testMethod);
-                            ExecutionCondition[] conditions = new ExecutionCondition[] {this::disabledCondition, new OLMRequiredCondition(), new AssumeKubernetesCondition(), new AssumeOpenshiftCondition()};
+                            ExecutionCondition[] conditions = new ExecutionCondition[] {this::disabledCondition, new SupportedInstallTypeCondition(), new AssumeKubernetesCondition(), new AssumeOpenshiftCondition()};
                             if (evaluateTestDisabled(extensionContext, conditions)) {
                                 LOGGER.debug("Test {}.{} is disabled", testSource.getClassName(), testSource.getMethodName());
                             } else {
@@ -168,12 +169,15 @@ public class TestInfo {
     }
 
     public boolean isOLMTest() {
-        return AnnotationSupport.findAnnotation(currentTestClass.getElement(), OLMRequired.class).isPresent();
+        return AnnotationSupport.findAnnotation(currentTestClass.getElement(), SupportedInstallType.class)
+            .map(a -> a.value() == EnmasseInstallType.OLM)
+            .orElse(false);
     }
 
     public OLMInstallationType getOLMInstallationType() {
-        return AnnotationSupport.findAnnotation(currentTestClass.getElement(), OLMRequired.class)
-                .map(OLMRequired::installation)
+        return AnnotationSupport.findAnnotation(currentTestClass.getElement(), SupportedInstallType.class)
+                .filter(a -> a.value() == EnmasseInstallType.OLM)
+                .map(SupportedInstallType::olmInstallType)
                 .orElseThrow();
     }
 

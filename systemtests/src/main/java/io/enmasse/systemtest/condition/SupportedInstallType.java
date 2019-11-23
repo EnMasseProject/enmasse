@@ -11,10 +11,16 @@ import java.lang.annotation.Target;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-@ExtendWith(OLMRequiredCondition.class)
-public @interface OLMRequired {
+import io.enmasse.systemtest.EnmasseInstallType;
+import io.enmasse.systemtest.OLMInstallationType;
 
-    OLMInstallationType installation();
+@Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE })
+@Retention(RetentionPolicy.RUNTIME)
+@ExtendWith(SupportedInstallTypeCondition.class)
+public @interface SupportedInstallType {
+
+    EnmasseInstallType value();
+
+    OLMInstallationType olmInstallType() default OLMInstallationType.DEFAULT;
+
 }

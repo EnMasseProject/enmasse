@@ -44,8 +44,8 @@ import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.condition.OLMInstallationType;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
 import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
@@ -112,6 +112,7 @@ public abstract class Kubernetes {
     protected final KubernetesClient client;
     protected final String infraNamespace;
     protected static KubeCluster cluster;
+    private boolean olmAvailable;
 
     static {
         try {
@@ -158,6 +159,13 @@ public abstract class Kubernetes {
             } else {
                 instance = new OpenShift(env);
             }
+            try {
+                instance.olmAvailable = instance.getCRD("clusterserviceversions.operators.coreos.com") != null
+                        && instance.getCRD("subscriptions.operators.coreos.com") != null;
+            } catch (Exception e) {
+                log.error("Error checking olm availability", e);
+                instance.olmAvailable = false;
+            }
         }
         return instance;
     }
@@ -181,6 +189,10 @@ public abstract class Kubernetes {
 
     public KubeCluster getCluster() {
         return cluster;
+    }
+
+    public boolean isOLMAvailable() {
+        return olmAvailable;
     }
 
     ///////////////////////////////////////////////////////////////////////////////

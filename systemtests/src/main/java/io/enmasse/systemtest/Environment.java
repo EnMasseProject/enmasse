@@ -5,7 +5,6 @@
 
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.condition.OLMInstallationType;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.fabric8.kubernetes.client.Config;
 import org.slf4j.Logger;
