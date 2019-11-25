@@ -18,6 +18,7 @@ dist: xenial
 cache:
   directories:
   - "$HOME/.m2"
+  - "$HOME/.dependencies"
 jdk:
 - openjdk11
 python:
@@ -28,16 +29,18 @@ jobs:
   include:
   - stage: build
     before_install:
+    - mkdir -p $HOME/.dependencies
     - pip install --user requests[security] ansible
     - gem install asciidoctor
     - gimme 1.12.9
     - source ~/.gimme/envs/go1.12.9.env
     - go version
-    - wget https://archive.apache.org/dist/maven/maven-3/3.6.2/binaries/apache-maven-3.6.2-bin.zip
-    - unzip -qq apache-maven-3.6.2-bin.zip
-    - export M2_HOME=$PWD/apache-maven-3.6.2
+    - if [[ ! -f "$HOME/.dependencies/apache-maven-3.6.2-bin.zip" ]]; then wget "http://repo2.maven.org/maven2/org/apache/maven/apache-maven/3.6.2/apache-maven-3.6.2-bin.zip" -O "$HOME/.dependencies/apache-maven-3.6.2-bin.zip"; fi
+    - if [[ ! -d "$HOME/.dependencies/apache-maven-3.6.2" ]]; then unzip -qq $HOME/.dependencies/apache-maven-3.6.2-bin.zip -d $HOME/.dependencies; fi
+    - export M2_HOME=$HOME/.dependencies/apache-maven-3.6.2
     - export PATH=$M2_HOME/bin:$PATH
     - export MAVEN_OPTS='-Xmx6g'
+    - mvn --version
     install: true
     before_script:
     - pwd
