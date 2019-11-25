@@ -12,7 +12,7 @@ spec:
             port: 11222
             username: app
             password: test12
-            saslServerName: hotrod
+            saslServerName: infinispan
             saslRealm: default
   adapters:
     mqtt:

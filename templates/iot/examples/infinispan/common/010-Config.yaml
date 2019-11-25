@@ -9,7 +9,7 @@ data:
     endpoints:
       hotrod:
         enabled: true
-        qup: auth
+        qop: auth
         serverName: infinispan
       memcached:
         enabled: false
@@ -18,5 +18,5 @@ data:
     jgroups:
       transport: tcp
       dnsPing:
-        query: infinispan-dns-ping.myproject.svc.cluster.local
+        query: infinispan-dns-ping.enmasse-infra.svc.cluster.local
 
