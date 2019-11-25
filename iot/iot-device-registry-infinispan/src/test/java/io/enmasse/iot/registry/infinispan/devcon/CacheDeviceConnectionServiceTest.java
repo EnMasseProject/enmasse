@@ -38,7 +38,7 @@ public class CacheDeviceConnectionServiceTest {
     @BeforeEach
     public void setUp() throws Exception {
         this.server = new EmbeddedHotRodServer();
-        this.service = new CacheDeviceConnectionService(server.getDeviceStateTestCache());
+        this.service = new CacheDeviceConnectionService(server.getDeviceStateCache());
     }
 
     @AfterEach

@@ -97,10 +97,6 @@ public class EmbeddedHotRodServer {
     }
 
     public RemoteCache<DeviceConnectionKey, String> getDeviceStateCache() {
-        return this.stateProvider.getDeviceStateCache();
-    }
-
-    public RemoteCache<DeviceConnectionKey, String> getDeviceStateTestCache() {
         return this.stateProvider.getDeviceStateTestCache();
     }
 }
