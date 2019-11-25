@@ -18,7 +18,7 @@ dist: xenial
 cache:
   directories:
   - "$HOME/.m2"
-  #- "$HOME/.dependencies"
+  - "$HOME/.dependencies"
 jdk:
 - openjdk11
 python:
@@ -35,8 +35,8 @@ jobs:
     - gimme 1.12.9
     - source ~/.gimme/envs/go1.12.9.env
     - go version
-    - [ ! -f "$HOME/.dependencies/apache-maven-3.6.2-bin.zip" ] && wget "http://repo2.maven.org/maven2/org/apache/maven/apache-maven/3.6.2/apache-maven-3.6.2-bin.zip" -O "$HOME/.dependencies/apache-maven-3.6.2-bin.zip"
-    - [ ! -d "$HOME/.dependencies/apache-maven-3.6.2" ] && unzip -qq $HOME/.dependencies/apache-maven-3.6.2-bin.zip -d $HOME/.dependencies
+    - if [[ ! -f "$HOME/.dependencies/apache-maven-3.6.2-bin.zip" ]]; then wget "http://repo2.maven.org/maven2/org/apache/maven/apache-maven/3.6.2/apache-maven-3.6.2-bin.zip" -O "$HOME/.dependencies/apache-maven-3.6.2-bin.zip"; fi
+    - if [[ ! -d "$HOME/.dependencies/apache-maven-3.6.2" ]]; then unzip -qq $HOME/.dependencies/apache-maven-3.6.2-bin.zip -d $HOME/.dependencies; fi
     - export M2_HOME=$HOME/.dependencies/apache-maven-3.6.2
     - export PATH=$M2_HOME/bin:$PATH
     - export MAVEN_OPTS='-Xmx6g'
