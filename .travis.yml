@@ -18,7 +18,7 @@ dist: xenial
 cache:
   directories:
   - "$HOME/.m2"
-  - "$HOME/.dependencies"
+  #- "$HOME/.dependencies"
 jdk:
 - openjdk11
 python:
