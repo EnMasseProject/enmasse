@@ -21,39 +21,24 @@ spec:
     spec:
       serviceAccount: infinispan
       containers:
-      - command: [/opt/infinispan/bin/server.sh]
-        args:
-        - -b 
-        - SITE_LOCAL
-        - -c
-        - /config/custom-infinispan.xml
-        - -Djgroups.dns.query=infinispan.enmasse-infra.svc.cluster.local
-        env:
+      - env:
+        - name: CONFIG_PATH
+          value: /config/infinispan.yml
         - name: KUBERNETES_LABELS
           value: app=infinispan,name=infinispan
         - name: KUBERNETES_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: APP_USER
+        - name: USER
           valueFrom:
             secretKeyRef:
               name: conn-auth-secret
               key: username
-        - name: APP_PASS
+        - name: PASS
           valueFrom:
             secretKeyRef:
               name: conn-auth-secret
-              key: password
-        - name: MGMT_USER
-          valueFrom:
-            secretKeyRef:
-              name: mgmt-auth-secret
-              key: username
-        - name: MGMT_PASS
-          valueFrom:
-            secretKeyRef:
-              name: mgmt-auth-secret
               key: password
         image: quay.io/infinispan/server:10.0.1.Final
         name: infinispan-server

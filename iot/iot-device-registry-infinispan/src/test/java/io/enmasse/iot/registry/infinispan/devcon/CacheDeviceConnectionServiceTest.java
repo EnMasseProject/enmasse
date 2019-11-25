@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.UUID;
 
 /**
- * Tests verifying behavior of {@link CacheRegistrationService}.
+ * Tests verifying behavior of {@link CacheDeviceConnectionService}.
  *
  */
 @ExtendWith(VertxExtension.class)
@@ -38,7 +38,7 @@ public class CacheDeviceConnectionServiceTest {
     @BeforeEach
     public void setUp() throws Exception {
         this.server = new EmbeddedHotRodServer();
-        this.service = new CacheDeviceConnectionService(server.getDeviceStateCache());
+        this.service = new CacheDeviceConnectionService(server.getDeviceStateTestCache());
     }
 
     @AfterEach
