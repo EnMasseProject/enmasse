@@ -4,9 +4,9 @@
  */
 package io.enmasse.systemtest.listener;
 
+import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.ThrowableRunner;
-import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -15,6 +15,7 @@ import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.operator.OperatorManager;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -34,9 +35,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+
 public class JunitCallbackListener implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler,
         AfterEachCallback, BeforeEachCallback, BeforeAllCallback, AfterAllCallback {
     private static final Logger LOGGER = CustomLogger.getLogger();
+    private static Environment env = Environment.getInstance();
+    private Kubernetes kubernetes = Kubernetes.getInstance();
     private TestInfo testInfo = TestInfo.getInstance();
     private IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
     private SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
@@ -51,11 +55,21 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             if (testInfo.isUpgradeTest()) {
                 LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
             } else if (testInfo.isOLMTest()) {
+                LOGGER.info("Test is OLM");
+                if (operatorManager.isEnmasseOlmDeployed()) {
+                    operatorManager.deleteEnmasseOlm();
+                }
+                if (operatorManager.isEnmasseBundleDeployed()) {
+                    operatorManager.deleteEnmasseBundle();
+                }
+                operatorManager.installEnmasseOlm(testInfo.getOLMInstallationType());
+            } else if (env.installType() == EnmasseInstallType.OLM) {
                 if (!operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.installEnmasseOlm();
                 }
-                if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
-                    operatorManager.installIoTOperator();
+                if (!operatorManager.areExamplesApplied()) {
+                    operatorManager.installExamplesBundleOlm();
+                    operatorManager.waitUntilOperatorReadyOlm();
                 }
             } else {
                 if (!operatorManager.isEnmasseBundleDeployed()) {
@@ -71,13 +85,13 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
         handleCallBackError(extensionContext, () -> {
-            if (Environment.getInstance().skipCleanup() || Environment.getInstance().skipUninstall()) {
+            if (env.skipCleanup() || env.skipUninstall()) {
                 LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
-            } else {
+            } else if (env.installType() == EnmasseInstallType.BUNDLE) {
                 if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed()) {
                     operatorManager.removeIoTOperator();
                 }
-                if (operatorManager.isEnmasseBundleDeployed() && (testInfo.isNextTestUpgrade() || testInfo.isNextTestOLM())) {
+                if (operatorManager.isEnmasseBundleDeployed() && testInfo.isNextTestUpgrade()) {
                     operatorManager.deleteEnmasseBundle();
                 }
                 if (operatorManager.isEnmasseOlmDeployed()) {
@@ -171,7 +185,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     private void saveKubernetesState(ExtensionContext extensionContext, Throwable throwable) throws Throwable {
         LOGGER.warn("Test failed: Saving pod logs and info...");
         logPodsInInfraNamespace();
-        if (isSkipSaveState()) {
+        if (env.isSkipSaveState()) {
             throw throwable;
         }
 
@@ -211,7 +225,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
             Files.writeString(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut());
             Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(kube.getInfraNamespace()).getStdOut());
-            if (testInfo.isTestIoT()) {
+            if (testInfo.isClassIoT()) {
                 Files.writeString(path.resolve("iotconfig.yaml"), KubeCMDClient.getIoTConfig(kube.getInfraNamespace()).getStdOut());
                 GlobalLogCollector collectors = new GlobalLogCollector(kube, path, kube.getInfraNamespace());
                 collectors.collectAllAdapterQdrProxyState();
@@ -224,7 +238,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     public static Path getPath(Method testMethod, Class<?> testClass) {
-        Path path = Environment.getInstance().testLogDir().resolve(
+        Path path = env.testLogDir().resolve(
                 Paths.get(
                         "failed_test_logs",
                         testClass.getName()));
@@ -234,13 +248,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         return path;
     }
 
-    private boolean isSkipSaveState() {
-        return Environment.getInstance().isSkipSaveState();
-    }
-
     private void logPodsInInfraNamespace() {
         LOGGER.info("Print all pods in infra namespace");
-        KubeCMDClient.runOnCluster("get", "pods", "-n", Environment.getInstance().namespace());
+        KubeCMDClient.runOnCluster("get", "pods", "-n", kubernetes.getInfraNamespace());
     }
 
 }

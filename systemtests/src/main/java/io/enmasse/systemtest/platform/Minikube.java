@@ -25,18 +25,19 @@ import java.util.Collections;
 public class Minikube extends Kubernetes {
     private static Logger log = CustomLogger.getLogger();
 
-    protected Minikube(String globalNamespace) {
-        super(globalNamespace, () -> {
-            final Environment instance = Environment.getInstance();
+    private static final String OLM_NAMESPACE = "operators";
+
+    protected Minikube(Environment environment) {
+        super(environment, () -> {
             Config config = new ConfigBuilder().build();
 
             OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
             // Workaround https://github.com/square/okhttp/issues/3146
             httpClient = httpClient.newBuilder()
                     .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-                    .connectTimeout(instance.getKubernetesApiConnectTimeout())
-                    .writeTimeout(instance.getKubernetesApiWriteTimeout())
-                    .readTimeout(instance.getKubernetesApiReadTimeout())
+                    .connectTimeout(environment.getKubernetesApiConnectTimeout())
+                    .writeTimeout(environment.getKubernetesApiWriteTimeout())
+                    .readTimeout(environment.getKubernetesApiReadTimeout())
                     .build();
             return new DefaultKubernetesClient(httpClient, config);
         });
@@ -126,6 +127,6 @@ public class Minikube extends Kubernetes {
 
     @Override
     public String getOlmNamespace() {
-        return "operators";
+        return OLM_NAMESPACE;
     }
 }
