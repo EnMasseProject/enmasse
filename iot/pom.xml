@@ -15,6 +15,7 @@
   <properties>
     <hono.version>1.0.0</hono.version>
     <infinispan.version>10.0.1.Final</infinispan.version>
+    <infinispan-protostream.version>4.3.0.Final</infinispan-protostream.version>
 
     <!-- align with Hono compatible versions -->
     <logback.version>1.2.3</logback.version>
@@ -136,6 +137,11 @@
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-query-dsl</artifactId>
         <version>${infinispan.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan.protostream</groupId>
+        <artifactId>protostream-processor</artifactId>
+        <version>${infinispan-protostream.version}</version>
       </dependency>
 
       <dependency>

@@ -10,16 +10,20 @@ import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 
 public class DeviceConnectionKey implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private String tenantId;
-    private String deviceId;
+    @ProtoField(number = 1, required = true)
+    protected String tenantId;
+    @ProtoField(number = 2, required = true)
+    protected String deviceId;
 
-    public DeviceConnectionKey() {}
 
+    @ProtoFactory
     public DeviceConnectionKey(String tenantId, String deviceId) {
         this.tenantId = tenantId;
         this.deviceId = deviceId;

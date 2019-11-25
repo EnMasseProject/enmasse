@@ -8,6 +8,7 @@ package io.enmasse.iot.registry.infinispan.device.data;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoMessage;
 
@@ -23,7 +24,6 @@ import io.enmasse.iot.registry.infinispan.tenant.TenantHandle;
  *
  * See {@link CacheCredentialService CacheCredentialService} class.
  */
-@ProtoMessage
 public class CredentialKey implements Serializable {
 
     private static final long serialVersionUID = 1L;

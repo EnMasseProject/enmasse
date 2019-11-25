@@ -9,9 +9,6 @@ import java.net.ServerSocket;
 import java.util.UUID;
 
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.commons.configuration.ClassWhiteList;
-import org.infinispan.commons.marshall.JavaSerializationMarshaller;
-import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
@@ -45,13 +42,8 @@ public class EmbeddedHotRodServer {
 
     public EmbeddedHotRodServer() throws Exception {
 
-        ClassWhiteList whitelist = new ClassWhiteList();
-        whitelist.addClasses("io.enmasse.iot.registry.infinispan.devcon.DeviceConnectionKey");
-
         GlobalConfiguration globalConfig = new GlobalConfigurationBuilder()
                 .defaultCacheName("default")
-                .serialization()
-                    .marshaller(new JavaSerializationMarshaller(whitelist))
                 .transport()
                 .clusterName(UUID.randomUUID().toString())
                 .defaultTransport()
@@ -104,7 +96,11 @@ public class EmbeddedHotRodServer {
         }
     }
 
-    public RemoteCache<DeviceConnectionKey, String> getDeviceStateTestCache() {
+    public RemoteCache<DeviceConnectionKey, String> getDeviceStateCache() {
         return this.stateProvider.getDeviceStateCache();
+    }
+
+    public RemoteCache<DeviceConnectionKey, String> getDeviceStateTestCache() {
+        return this.stateProvider.getDeviceStateTestCache();
     }
 }

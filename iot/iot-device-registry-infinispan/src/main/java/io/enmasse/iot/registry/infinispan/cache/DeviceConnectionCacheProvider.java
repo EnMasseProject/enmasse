@@ -6,6 +6,7 @@
 package io.enmasse.iot.registry.infinispan.cache;
 
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.configuration.ServerConfigurationBuilder;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Index;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,12 @@ public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
     @Autowired
     public DeviceConnectionCacheProvider(final InfinispanProperties properties) throws Exception {
         super(properties);
+    }
+
+    @Override
+    protected void customizeServerConfiguration(ServerConfigurationBuilder configuration) {
+
+        configuration.addContextInitializer(new DeviceConnectionProtobufSchemaBuilderImpl());
     }
 
     public org.infinispan.configuration.cache.Configuration buildConfiguration() {
