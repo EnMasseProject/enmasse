@@ -105,6 +105,17 @@ By default the test suite tears down the EnMasse deployment and namespace after 
 
     make SYSTEMTEST_ARGS="shared.standard.QueueTest#testCreateDeleteQueue" systemtests
 
+#### Systemtests management of enmasse's installation
+
+Systemtests can manage the installation of enmasse before the actual test suite is run, this eases the testing of the various installation types.
+Currently we can have enmasse installed by systemtests in two ways, using the bundles or using OLM. This can be instructed using the environment variable `INSTALL_TYPE` which
+can take the values `BUNDLE` or `OLM`. By default the install type is `BUNDLE`
+Then when using OLM installation enmasse can be installed into OLM default namespace, ie: `openshift-operators`, or into `enmasse-infra` namespace, this can be instructed too with
+the environment variable `OLM_INSTALL_TYPE` that can take the values `DEFAULT` to installation into `openshift-operators` namespace or `SPECIFIC` to installation into `enmasse-infra`namespace. The olm installation type by default has the value `SPECIFIC`.
+
+This functionalities can be used in our PR's too, in example to run the smoke profile in an ocp4 cluster (actually CRC) and installing via OLM you have to type the comment:
+`@enmasse-ci run tests profile=smoke ocp4 OLM`
+
 ### Adding / Updating Go dependencies
 
 This project currently uses go modules to vendor go sources. Change dependencies in the file `go.mod` and then run:
