@@ -64,9 +64,9 @@ spec:
           successThreshold: 1
           timeoutSeconds: 80
         readinessProbe:
-          exec:
-            command:
-            - /probe/readyness.sh
+          httpGet:
+            path: /rest/v2/cache-managers/clustered/health/status
+            port: infinispan
           failureThreshold: 5
           initialDelaySeconds: 10
           periodSeconds: 10
@@ -81,18 +81,12 @@ spec:
           name: infinispan-configuration
         - mountPath: /opt/infinispan/server/data
           name: infinispan-data
-        - mountPath: /probe
-          name: readyness-script
       terminationGracePeriodSeconds: 120
       volumes:
       - name: infinispan-configuration
         configMap:
           defaultMode: 420
           name: infinispan-configuration
-      - name: readyness-script
-        configMap:
-          defaultMode: 0720
-          name: infinispan-readyness-script
   volumeClaimTemplates:
   - metadata:
       name: infinispan-data
