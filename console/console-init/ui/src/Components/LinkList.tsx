@@ -49,11 +49,11 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
     "Name",
     "Address",
     "Deliveries",
-    {title:"Rejected", transforms: [sortable] },
-    {title:"Released", transforms: [sortable] },
-    {title:"Modified", transforms: [sortable] },
-    {title:"Presettled", transforms: [sortable] },
-    {title:"Undelivered", transforms: [sortable] }
+    { title: "Rejected", transforms: [sortable] },
+    { title: "Released", transforms: [sortable] },
+    { title: "Modified", transforms: [sortable] },
+    { title: "Presettled", transforms: [sortable] },
+    { title: "Undelivered", transforms: [sortable] }
   ];
 
   return (

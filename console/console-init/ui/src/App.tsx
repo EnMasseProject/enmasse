@@ -38,7 +38,8 @@ const App: React.FC = () => {
         logoProps={logoProps}
         logo={logo}
         avatar={avatar}
-        toolbar={<NavToolBar />}>
+        toolbar={<NavToolBar />}
+      >
         <AppRoutes />
       </AppLayout>
     </ApolloProvider>

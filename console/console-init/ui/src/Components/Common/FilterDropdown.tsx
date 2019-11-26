@@ -6,22 +6,24 @@ export interface IDropdownOption {
   value: string;
   label: string;
   disabled?: boolean;
+  description?: string;
 }
 
 export interface IDropdown {
   options: IDropdownOption[];
   value: string;
-  onSelect: (item: any) => void;
+  setValue: (value: any) => void;
+  // onSelect: (item: any) => void;
 }
 
 export const FilterDropdown: React.FunctionComponent<IDropdown> = ({
   value,
-  onSelect,
+  setValue,
   options
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const onSelectFilter = (item: any) => {
-    onSelect(item);
+  const onSelectFilter = (event: any) => {
+    setValue(event.target.value);
     setIsOpen(!isOpen);
   };
   return (
@@ -39,7 +41,9 @@ export const FilterDropdown: React.FunctionComponent<IDropdown> = ({
         <DropdownItem
           key={option.value}
           value={option.value}
-          itemID={option.value}>
+          itemID={option.value}
+          component={"button"}
+        >
           {option.label}
         </DropdownItem>
       ))}

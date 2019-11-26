@@ -8,25 +8,25 @@ describe("Messages", () => {
     const props = {
       count: 9,
       column: "MessagesIn",
-      status: "running"
+      isReady: true
     };
 
     const { getByText } = render(<Messages {...props} />);
     const messageNode = getByText(props.count.toString());
 
-    expect(messageNode.childNodes[1]).toBeDefined();
+    expect(messageNode).toBeDefined();
   });
 
   test("it renders the icon", () => {
     const props = {
       count: 9,
       column: "MessagesIn",
-      status: "running"
+      isReady: true
     };
 
     const { getByText } = render(<Messages {...props} />);
     const messageNode = getByText(props.count.toString());
 
-    expect(messageNode.childNodes[0]).toBeDefined();
+    expect(messageNode).toBeDefined();
   });
 });

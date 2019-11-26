@@ -106,12 +106,13 @@ export default function ConnectionsListPage() {
       <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
         <GridItem
           span={4}
-          className={css(GridStylesForTableHeader.filter_left_margin)}>
+          className={css(GridStylesForTableHeader.filter_left_margin)}
+        >
           <InputGroup>
             {/** Add the logic for select for filter and dropdown */}
             <FilterDropdown
               value="Container"
-              onSelect={() => {}}
+              setValue={() => {}}
               options={filterOptions}
             />
             <InputGroup>
@@ -127,7 +128,8 @@ export default function ConnectionsListPage() {
                 aria-label="search button for search input"
                 onClick={() => {
                   console.log("search icon clicked");
-                }}>
+                }}
+              >
                 <SearchIcon />
               </Button>
             </InputGroup>

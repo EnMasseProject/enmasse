@@ -22,9 +22,13 @@ export interface IConnectionDetailProps {
   os?: string;
   isMobileView: boolean;
 }
-export const ConnectionDetail: React.FunctionComponent<
-  IConnectionDetailProps
-> = ({ product, version, jvm, os, isMobileView }) => {
+export const ConnectionDetail: React.FunctionComponent<IConnectionDetailProps> = ({
+  product,
+  version,
+  jvm,
+  os,
+  isMobileView
+}) => {
   return (
     <Flex
       breakpointMods={[{ modifier: "column", breakpoint: "sm" }]}
@@ -32,7 +36,8 @@ export const ConnectionDetail: React.FunctionComponent<
         !isMobileView
           ? css(styles.flex_right_border_with_padding)
           : css(styles.flex_bottom_boder)
-      }>
+      }
+    >
       <Flex>
         <FlexItem>
           <b>Product</b> {product || "-"}
@@ -51,7 +56,8 @@ export const ConnectionDetail: React.FunctionComponent<
             breakpointMods={[
               { modifier: "row", breakpoint: "lg" },
               { modifier: "column", breakpoint: "sm" }
-            ]}>
+            ]}
+          >
             <FlexItem>
               <b>JVM: </b>
               {jvm || "-"}

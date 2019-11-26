@@ -44,12 +44,17 @@ export interface IAddressSpaceHeaderProps {
   namespace: string;
   createdOn: string;
   type: string;
-  onDownload: (name: string) => void;
-  onDelete: (name: string) => void;
+  onDownload: (data: { name: string; namespace: string }) => void;
+  onDelete: (data: { name: string; namespace: string }) => void;
 }
-export const AddressSpaceHeader: React.FunctionComponent<
-  IAddressSpaceHeaderProps
-> = ({ name, namespace, createdOn, type, onDownload, onDelete }) => {
+export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProps> = ({
+  name,
+  namespace,
+  createdOn,
+  type,
+  onDownload,
+  onDelete
+}) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const onSelect = (result: any) => {
     setIsOpen(!isOpen);
@@ -61,14 +66,16 @@ export const AddressSpaceHeader: React.FunctionComponent<
     <DropdownItem
       key="download"
       aria-label="download"
-      onClick={() => onDownload(name)}
-      style={{ paddingRight: 50 }}>
+      onClick={() => onDownload({ name, namespace })}
+      style={{ paddingRight: 50 }}
+    >
       Download Certificate
     </DropdownItem>,
     <DropdownItem
       key="delete"
       aria-label="delete"
-      onClick={() => onDelete(name)}>
+      onClick={() => onDelete({ name, namespace })}
+    >
       Delete
     </DropdownItem>
   ];

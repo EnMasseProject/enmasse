@@ -22,15 +22,13 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
     { value: "Topic", label: "Topic", disabled: false },
     { value: "Subscription", label: "Subscription", disabled: false },
     { value: "Multicast", label: "Multicast", disabled: false },
-    { value: "Anycast", label: "Anycast", disabled: false },
-
+    { value: "Anycast", label: "Anycast", disabled: false }
   ];
 
   const optionsPlan = [
     { value: "Small", label: "Small", disabled: false },
     { value: "Large", label: "Large", disabled: false },
     { value: "Medium", label: "Medium", disabled: false }
-
   ];
   const [plan, setPlan] = useState<string>("mrs");
   const [type, setType] = useState<string>("mrs");

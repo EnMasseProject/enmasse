@@ -10,50 +10,48 @@ import { SearchIcon } from "@patternfly/react-icons";
 
 export interface IAddressListFilterProps {
   onSearch: () => void;
-  onFilterSelect: (item: any) => void;
+  setFilterValue: (item: any) => void;
   filterValue: string;
-  onTypeSelect: (item: any) => void;
+  setTypeValue: (item: any) => void;
   typeValue: string;
-  onStatusSelect: (item: any) => void;
+  setStatusValue: (item: any) => void;
   statusValue: string;
 }
 export const filterOptions: IDropdownOption[] = [
-    { value: "name", label: "Name" },
-    { value: "type", label: "Type" },
-    { value: "status", label: "Status" }
+    { value: "Name", label: "Name" },
+    { value: "Type", label: "Type" },
+    { value: "Status", label: "Status" }
   ],
   typeOptions: IDropdownOption[] = [
-    { value: "queue", label: "Queue" },
-    { value: "topic", label: "Topic" },
-    { value: "subscripition", label: "Subscripition" },
-    { value: "mulitcast", label: "Mulitcast" },
-    { value: "anycast", label: "Anycast" }
+    { value: "Queue", label: "Queue" },
+    { value: "Topic", label: "Topic" },
+    { value: "Subscripition", label: "Subscripition" },
+    { value: "Mulitcast", label: "Mulitcast" },
+    { value: "Anycast", label: "Anycast" }
   ],
   statusOptions: IDropdownOption[] = [
-    { value: "active", label: "Active" },
-    { value: "configuring", label: "Configuring" },
-    { value: "failed", label: "Failed" }
+    { value: "Active", label: "Active" },
+    { value: "Configuring", label: "Configuring" },
+    { value: "Failed", label: "Failed" }
   ];
 
-export const AddressListFilter: React.FunctionComponent<
-  IAddressListFilterProps
-> = ({
+export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps> = ({
   onSearch,
-  onFilterSelect,
+  setFilterValue,
   filterValue,
-  onTypeSelect,
+  setTypeValue,
   typeValue,
-  onStatusSelect,
+  setStatusValue,
   statusValue
 }) => {
   return (
     <InputGroup>
       <FilterDropdown
         value={filterValue}
-        onSelect={onFilterSelect}
+        setValue={setFilterValue}
         options={filterOptions}
       />
-      {filterValue === "Name" && (
+      {filterValue === "Name" ? (
         <InputGroup>
           <TextInput
             name="search name"
@@ -61,29 +59,30 @@ export const AddressListFilter: React.FunctionComponent<
             type="search"
             placeholder="Filter by name..."
             aria-label="search input name"
-            style={{ marginLeft: 2 }}
           />
           <Button
             variant={ButtonVariant.control}
             aria-label="search button for search input"
-            onClick={onSearch}>
+            onClick={onSearch}
+            style={{ marginRight: 10 }}
+          >
             <SearchIcon />
           </Button>
         </InputGroup>
-      )}
-      {filterValue === "Type" && (
+      ) : filterValue === "Type" ? (
         <FilterDropdown
           value={typeValue}
-          onSelect={onTypeSelect}
+          setValue={setTypeValue}
           options={typeOptions}
         />
-      )}
-      {filterValue === "Status" && (
+      ) : filterValue === "Status" ? (
         <FilterDropdown
           value={statusValue}
-          onSelect={onStatusSelect}
+          setValue={setStatusValue}
           options={statusOptions}
         />
+      ) : (
+        ""
       )}
     </InputGroup>
   );

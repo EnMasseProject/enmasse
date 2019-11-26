@@ -15,9 +15,9 @@ const protocolIconToDisplay = (protocol: string) => {
   }
 };
 
-export const ConnectionProtocolFormat: React.FunctionComponent<
-  ProtocolIcon
-> = ({ protocol }) => {
+export const ConnectionProtocolFormat: React.FunctionComponent<ProtocolIcon> = ({
+  protocol
+}) => {
   return (
     <>
       {protocol.toUpperCase()} {protocolIconToDisplay(protocol)}

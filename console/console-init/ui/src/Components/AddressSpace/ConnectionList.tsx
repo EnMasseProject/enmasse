@@ -50,8 +50,24 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
     { title: "Hostname", dataLabel: "host" },
     "Container ID",
     "Protocol",
-    { title: <span style={{display:"inline-flex"}} >Messages In<br/>{`(over last 5 min)`}</span> },
-    { title: <span style={{display:"inline-flex"}} >Messages Out<br/>{`(over last 5 min)`}</span> },
+    {
+      title: (
+        <span style={{ display: "inline-flex" }}>
+          Messages In
+          <br />
+          {`(over last 5 min)`}
+        </span>
+      )
+    },
+    {
+      title: (
+        <span style={{ display: "inline-flex" }}>
+          Messages Out
+          <br />
+          {`(over last 5 min)`}
+        </span>
+      )
+    },
     {
       title: "Senders",
       transforms: [sortable]
