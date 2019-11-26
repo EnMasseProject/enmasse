@@ -25,6 +25,7 @@ import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.utils.HttpClientUtils;
 import io.vertx.core.Vertx;
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,10 +79,13 @@ public class StandardController {
     public StandardController(StandardControllerOptions options) {
         Config config = new ConfigBuilder().build();
         OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
+        HttpLoggingInterceptor httpLogger = new HttpLoggingInterceptor();
+        httpLogger.setLevel(HttpLoggingInterceptor.Level.BODY);
         httpClient = httpClient.newBuilder()
                 .connectTimeout(options.getKubernetesApiConnectTimeout())
                 .writeTimeout(options.getKubernetesApiWriteTimeout())
                 .readTimeout(options.getKubernetesApiReadTimeout())
+                .addInterceptor(httpLogger)
                 .build();
         this.kubeClient = new DefaultKubernetesClient(httpClient, config);
         this.options = options;
