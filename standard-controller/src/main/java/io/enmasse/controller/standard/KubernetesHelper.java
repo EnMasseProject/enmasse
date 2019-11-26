@@ -197,7 +197,7 @@ public class KubernetesHelper implements Kubernetes {
 
         for (HasMetadata resource : resources.getItems()) {
             if (resource instanceof StatefulSet) {
-                client.apps().statefulSets().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).delete();
+                client.apps().statefulSets().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
             } else {
                 client.resource(resource).cascading(true).delete();
             }
