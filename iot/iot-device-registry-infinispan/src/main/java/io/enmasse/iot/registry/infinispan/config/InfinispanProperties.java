@@ -14,7 +14,7 @@ import io.enmasse.iot.registry.infinispan.InfinispanRegistry;
 @ConfigurationProperties(InfinispanRegistry.CONFIG_BASE + ".registry.infinispan")
 public class InfinispanProperties {
 
-    private static final boolean DEFAULT_TRY_CREATE = false;
+    private static final boolean DEFAULT_TRY_CREATE = true;
 
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = org.infinispan.client.hotrod.impl.ConfigurationProperties.DEFAULT_HOTROD_PORT;
