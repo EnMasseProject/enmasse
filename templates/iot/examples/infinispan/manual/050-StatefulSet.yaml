@@ -21,9 +21,14 @@ spec:
     spec:
       serviceAccount: infinispan
       containers:
-      - env:
-        - name: CONFIG_PATH
-          value: /config/infinispan.yml
+      - command: [/opt/infinispan/bin/server.sh]
+        args:
+          - -b
+          - SITE_LOCAL
+          - -c
+          - /config/infinispan.xml
+          - -Djgroups.dns.query=infinispan.enmasse-infra.svc.cluster.local-
+        env:
         - name: KUBERNETES_LABELS
           value: app=infinispan,name=infinispan
         - name: KUBERNETES_NAMESPACE
@@ -50,18 +55,18 @@ spec:
           name: infinispan
           protocol: TCP
         livenessProbe:
-          exec:
-            command:
-            - /opt/infinispan/bin/livenessProbe.sh
+          httpGet:
+            path: /rest/v2/cache-managers/clustered/health/status
+            port: infinispan
           failureThreshold: 5
           initialDelaySeconds: 10
           periodSeconds: 60
           successThreshold: 1
           timeoutSeconds: 80
         readinessProbe:
-          exec:
-            command:
-            - /opt/infinispan/bin/readinessProbe.sh
+          httpGet:
+            path: /rest/v2/cache-managers/clustered/health/status
+            port: infinispan
           failureThreshold: 5
           initialDelaySeconds: 10
           periodSeconds: 10

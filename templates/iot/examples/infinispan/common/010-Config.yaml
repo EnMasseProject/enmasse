@@ -3,20 +3,72 @@ apiVersion: v1
 metadata:
   name: infinispan-configuration
 data:
-  infinispan.yml: |
-    infinispan:
-      clusterName: infinispan
-    endpoints:
-      hotrod:
-        enabled: true
-        qop: auth
-        serverName: infinispan
-      memcached:
-        enabled: false
-      rest:
-        enabled: true
-    jgroups:
-      transport: tcp
-      dnsPing:
-        query: infinispan-dns-ping.enmasse-infra.svc.cluster.local
+  infinispan.xml: |
+    <infinispan
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="urn:infinispan:config:10.0 http://www.infinispan.org/schemas/infinispan-config-10.0.xsd
+                                urn:infinispan:server:10.0 http://www.infinispan.org/schemas/infinispan-server-10.0.xsd"
+            xmlns="urn:infinispan:config:10.0"
+            xmlns:server="urn:infinispan:server:10.0">
 
+       <cache-container name="clustered" statistics="true">
+          <transport cluster="${infinispan.cluster.name}" stack="kubernetes"/>
+
+             <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="devices">
+                <locking isolation="READ_COMMITTED"/>
+                <indexing index="PRIMARY_OWNER">
+                   <property name="default.indexmanager">
+                               org.infinispan.query.indexmanager.InfinispanIndexManager
+                   </property>
+                </indexing>
+             </distributed-cache>
+
+             <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="adapterCredentials">
+                <transaction mode="NONE"/>
+                <indexing index="NONE"/>
+             </distributed-cache>
+
+             <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="deviceStates">
+                <transaction mode="NONE"/>
+                <indexing index="NONE"/>
+             </distributed-cache>
+       </cache-container>
+
+    <server xmlns="urn:infinispan:server:10.0">
+          <interfaces>
+             <interface name="public">
+                <inet-address value="${infinispan.bind.address:127.0.0.1}"/>
+             </interface>
+          </interfaces>
+
+          <socket-bindings default-interface="public" port-offset="${infinispan.socket.binding.port-offset:0}">
+             <socket-binding name="default" port="${infinispan.bind.port:11222}"/>
+          </socket-bindings>
+
+          <security>
+             <security-realms>
+                <security-realm name="default">
+                   <properties-realm groups-attribute="Roles">
+                      <user-properties path="users.properties" relative-to="infinispan.server.config.path" />
+                      <group-properties path="groups.properties" relative-to="infinispan.server.config.path"/>
+                   </properties-realm>
+                </security-realm>
+             </security-realms>
+          </security>
+
+          <endpoints socket-binding="default" security-realm="default">
+             <hotrod-connector name="hotrod">
+                <authentication security-realm='default'>
+                    <sasl mechanisms='SCRAM-SHA-512 SCRAM-SHA-384 SCRAM-SHA-256 SCRAM-SHA-1 DIGEST-SHA-512 DIGEST-SHA-384 DIGEST-SHA-256 DIGEST-SHA DIGEST-MD5 CRAM-MD5 PLAIN' qop='auth' server-name='infinispan'>
+                      <property name='com.sun.security.sasl.digest.realm'>
+                        default
+                      </property>
+                    </sasl>
+                </authentication>
+             </hotrod-connector>
+             <rest-connector name='rest'>
+               <authentication mechanisms='DIGEST' security-realm='default'/>
+             </rest-connector>
+          </endpoints>
+       </server>
+    </infinispan>
