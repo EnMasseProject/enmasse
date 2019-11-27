@@ -9,7 +9,7 @@ interface AddressSpaceStatusProps {
   isReady: boolean;
 }
 const typeToDisplay = (type: string) => {
-  switch (type) {
+  switch (type.toLowerCase()) {
     case "standard":
       return " Standard";
     case "brokered":
@@ -17,7 +17,16 @@ const typeToDisplay = (type: string) => {
   }
 };
 export const AddressSpaceIcon = () => {
-  return <Badge style={{ backgroundColor: "#EC7A08", fontSize: 'var(--pf-c-table-cell--FontSize)' }}>AS</Badge>;
+  return (
+    <Badge
+      style={{
+        backgroundColor: "#EC7A08",
+        fontSize: "var(--pf-c-table-cell--FontSize)"
+      }}
+    >
+      AS
+    </Badge>
+  );
 };
 const statusToDisplay = (isReady: boolean) => {
   return isReady ? (
@@ -25,19 +34,19 @@ const statusToDisplay = (isReady: boolean) => {
       <CheckCircleIcon color="green" /> Active
     </>
   ) : (
-      <>
-        <TimesCircleIcon color="red" /> Failed 
+    <>
+      <TimesCircleIcon color="red" /> Failed
     </>
-    );
+  );
 };
-export const AddressSpaceType: React.FunctionComponent<
-  AddressSpaceTypeProps
-> = ({ type }) => {
+export const AddressSpaceType: React.FunctionComponent<AddressSpaceTypeProps> = ({
+  type
+}) => {
   return <>{typeToDisplay(type)}</>;
 };
 
-export const AddressSpaceStatus: React.FunctionComponent<
-  AddressSpaceStatusProps
-> = ({ isReady }) => {
+export const AddressSpaceStatus: React.FunctionComponent<AddressSpaceStatusProps> = ({
+  isReady
+}) => {
   return <>{statusToDisplay(isReady)}</>;
 };

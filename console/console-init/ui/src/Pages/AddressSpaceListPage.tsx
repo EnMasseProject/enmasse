@@ -1,7 +1,7 @@
 import React from "react";
 // import { useHistory, useLocation } from "react-router-dom";
 import { gql } from "apollo-boost";
-import { useQuery } from "@apollo/react-hooks";
+import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
 import {
   PageSection,
@@ -19,6 +19,7 @@ import {
 } from "src/Components/AddressSpaceList/AddressSpaceList";
 import { EmptyAddressSpace } from "src/Components/Common/EmptyAddressSpace";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
+import { DELETE_ADDRESS_SPACE } from "src/Queries/Quries";
 
 const ALL_ADDRESS_SPACES = gql`
   query all_address_spaces {
@@ -73,7 +74,7 @@ interface IAddressSpacesResponse {
 function AddressSpaceListFunc() {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
-
+  const client = useApolloClient();
   const [
     addressSpaceBeingEdited,
     setAddressSpaceBeingEdited
@@ -85,13 +86,39 @@ function AddressSpaceListFunc() {
     setAddressSpaceBeingDeleted
   ] = React.useState<IAddressSpace | null>();
 
+  const { loading, error, data, refetch } = useQuery<IAddressSpacesResponse>(
+    ALL_ADDRESS_SPACES,
+    { pollInterval: 20000 }
+  );
+  console.log(data);
   const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
   const handleSaving = () => void 0;
   const handleEditChange = (addressSpace: IAddressSpace) =>
     setAddressSpaceBeingEdited(addressSpace);
 
   const handleCancelDelete = () => setAddressSpaceBeingDeleted(null);
-  const handleDelete = () => void 0;
+  const handleDelete = async () => {
+    if (addressSpaceBeingDeleted) {
+      const deletedData = await client.mutate({
+        mutation: DELETE_ADDRESS_SPACE,
+        variables: {
+          a: {
+            Name: addressSpaceBeingDeleted.name,
+            Namespace: addressSpaceBeingDeleted.nameSpace
+          }
+        }
+      });
+      console.log(deletedData);
+      if (
+        deletedData &&
+        deletedData.data &&
+        deletedData.data.deleteAddressSpace === true
+      ) {
+        setAddressSpaceBeingDeleted(null);
+        refetch();
+      }
+    }
+  };
   const handleDeleteChange = (addressSpace: IAddressSpace) =>
     setAddressSpaceBeingDeleted(addressSpace);
   // const location = useLocation();
@@ -100,10 +127,6 @@ function AddressSpaceListFunc() {
   // const page = parseInt(searchParams.get("page") || "", 10) || 0;
   // const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
 
-  const { loading, error, data } = useQuery<IAddressSpacesResponse>(
-    ALL_ADDRESS_SPACES,
-    { pollInterval: 20000 }
-  );
   // const setSearchParam = React.useCallback(
   //   (name: string, value: string) => {
   //     searchParams.set(name, value.toString());
@@ -154,10 +177,21 @@ function AddressSpaceListFunc() {
     <PageSection variant={PageSectionVariants.light}>
       {/* TODO: Replace with component*/}
       {/*START*/}
-      <Button variant={ButtonVariant.primary} style={{ marginBottom: 24, marginLeft: 24 }}>Create</Button>
+      <Button
+        variant={ButtonVariant.primary}
+        style={{ marginBottom: 24, marginLeft: 24 }}
+      >
+        Create
+      </Button>
       <Dropdown
-        onSelect={() => { }}
-        toggle={<KebabToggle onToggle={() => { setIsOpen(!isOpen) }} />}
+        onSelect={() => {}}
+        toggle={
+          <KebabToggle
+            onToggle={() => {
+              setIsOpen(!isOpen);
+            }}
+          />
+        }
         isOpen={isOpen}
         isPlain={true}
         dropdownItems={[<DropdownItem key="Delete">Delete</DropdownItem>]}
@@ -170,8 +204,8 @@ function AddressSpaceListFunc() {
           onDelete={handleDeleteChange}
         />
       ) : (
-          <EmptyAddressSpace />
-        )}
+        <EmptyAddressSpace />
+      )}
       {addressSpaceBeingEdited && (
         <Modal
           title="Modal Header"

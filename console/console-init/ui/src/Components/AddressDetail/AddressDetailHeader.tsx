@@ -32,9 +32,14 @@ export interface IAddressDetailHeaderProps {
   onDelete: (name: string) => void;
 }
 
-export const AddressDetailHeader: React.FunctionComponent<
-  IAddressDetailHeaderProps
-> = ({ type, name, plan, shards, onEdit, onDelete }) => {
+export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderProps> = ({
+  type,
+  name,
+  plan,
+  shards,
+  onEdit,
+  onDelete
+}) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const onSelect = (result: any) => {
     setIsOpen(!isOpen);

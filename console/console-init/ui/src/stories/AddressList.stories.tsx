@@ -78,16 +78,16 @@ export const addressListFilterComponent = () => {
     <MemoryRouter>
       <AddressListFilter
         onSearch={action("onSearch")}
-        onFilterSelect={action("onFilterSelect")}
+        setFilterValue={action("onFilterSelect")}
         filterValue={
           select("Value Of Dropdown", options, "Name") as
             | "Name"
             | "Type"
             | "Status"
         }
-        onTypeSelect={action("onTypeSelect")}
+        setTypeValue={action("onTypeSelect")}
         typeValue={"Queue"}
-        onStatusSelect={action("onStatusSelect")}
+        setStatusValue={action("onStatusSelect")}
         statusValue={"Active"}
       />
     </MemoryRouter>

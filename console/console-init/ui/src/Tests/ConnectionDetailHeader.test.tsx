@@ -23,14 +23,14 @@ describe("Connection Detail Header with all connection details", () => {
     getByText(props.hostname);
     getByText(props.containerId);
     getByText(props.protocol);
-    const seeMoreNode = getByText("see more details");
+    const seeMoreNode = getByText("See more details");
     fireEvent.click(seeMoreNode);
 
-    getByText("hide details");
-    getByText(props.product);
-    getByText(props.version + " SNAPSHOT");
-    getByText(props.platform);
-    getByText(props.os);
+    getByText("Hide details");
+    getByText(props.product + "");
+    getByText(props.version + "");
+    getByText(props.platform + "");
+    getByText(props.os + "");
     getByText(props.messagesIn + " Message in");
     getByText(props.messagesOut + " Message out");
   });

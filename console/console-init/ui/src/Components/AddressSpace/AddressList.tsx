@@ -103,11 +103,12 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
             title: row.errorMessages ? (
               <Error message={row.errorMessages[0]} type={row.status} />
             ) : (
-                ""
-              ),
+              ""
+            ),
             props: { colSpan: 6 }
           }
-        ]
+        ],
+        originalData: row
       };
       return tableRow;
     }
@@ -116,8 +117,26 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   const tableColumns = [
     "Name",
     "Type/Plan",
-    { title: <span style={{display:"inline-flex"}} >Messages In<br/>{`(over last 5 min)`}</span>, transforms: [sortable] },
-    { title: <span style={{display:"inline-flex"}} >Messages Out<br/>{`(over last 5 min)`}</span>, transforms: [sortable] },
+    {
+      title: (
+        <span style={{ display: "inline-flex" }}>
+          Messages In
+          <br />
+          {`(over last 5 min)`}
+        </span>
+      ),
+      transforms: [sortable]
+    },
+    {
+      title: (
+        <span style={{ display: "inline-flex" }}>
+          Messages Out
+          <br />
+          {`(over last 5 min)`}
+        </span>
+      ),
+      transforms: [sortable]
+    },
     { title: "Stored Messages", transforms: [sortable] },
     "Senders",
     "Receivers",

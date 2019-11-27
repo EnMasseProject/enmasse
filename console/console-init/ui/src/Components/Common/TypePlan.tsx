@@ -1,7 +1,7 @@
 import * as React from "react";
 import {
-  Label,
-  // Tooltip, 
+  Label
+  // Tooltip,
   // TooltipPosition
 } from "@patternfly/react-core";
 

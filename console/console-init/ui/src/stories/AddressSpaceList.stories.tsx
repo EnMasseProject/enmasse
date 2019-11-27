@@ -1,7 +1,10 @@
 import * as React from "react";
 import { storiesOf } from "@storybook/react";
 import { withKnobs } from "@storybook/addon-knobs";
-import { IAddressSpace, AddressSpaceList } from "src/Components/AddressSpaceList/AddressSpaceList";
+import {
+  IAddressSpace,
+  AddressSpaceList
+} from "src/Components/AddressSpaceList/AddressSpaceList";
 import { MemoryRouter } from "react-router";
 import { action } from "@storybook/addon-actions";
 

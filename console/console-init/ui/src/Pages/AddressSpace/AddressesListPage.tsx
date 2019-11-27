@@ -17,13 +17,15 @@ import {
   InputGroup,
   Dropdown,
   DropdownPosition,
-  KebabToggle
+  KebabToggle,
+  FlexItem,
+  Flex
   // Breadcrumb,
   // BreadcrumbItem
 } from "@patternfly/react-core";
 
 import gql from "graphql-tag";
-import { useQuery } from "@apollo/react-hooks";
+import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import {
   useDocumentTitle,
   useA11yRouteChange,
@@ -32,12 +34,14 @@ import {
 } from "use-patternfly";
 import { IAddress, AddressList } from "src/Components/AddressSpace/AddressList";
 import { EmptyAddress } from "src/Components/Common/EmptyAddress";
-import { IAddressResponse, IMetrics } from "src/Types/ResponseTypes";
-import { EditAddress } from "./EditAddressPage";
+import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
+import { IAddressResponse } from "src/Types/ResponseTypes";
+import { EditAddress } from "../EditAddressPage";
 import { AddressListFilter } from "src/Components/AddressSpace/AddressListFilter";
 import { css, StyleSheet } from "@patternfly/react-styles";
-// import { IRowData, IRow } from "@patternfly/react-table";
+import { CreateAddress } from "src/Pages/CreateAddress/CreateAddressPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
+import { DELETE_ADDRESS } from "src/Queries/Quries";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   grid_bottom_border: {
@@ -99,7 +103,7 @@ const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
 };
 
 function AddressesListFunction() {
-  const { name, namespace } = useParams();
+  const { name, namespace, type } = useParams();
   useDocumentTitle("Address List");
   useA11yRouteChange();
   const [
@@ -113,21 +117,20 @@ function AddressesListFunction() {
   ] = React.useState<IAddress | null>();
 
   const [filter, setFilter] = React.useState("Name");
-
-  const onFilterSelect = (item: any) => {
-    console.log(item);
-  };
+  const [addressType, setAddressType] = React.useState("Queue");
+  const [status, setStatus] = React.useState("Active");
+  const client = useApolloClient();
   // const location = useLocation();
   // const history = useHistory();
   // const searchParams = new URLSearchParams(location.search);
   // const page = parseInt(searchParams.get("page") || "", 10) || 0;
   // const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
 
-  const { loading, error, data } = useQuery<IAddressResponse>(
+  const { loading, error, data, refetch } = useQuery<IAddressResponse>(
     RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE(name, namespace),
     { pollInterval: 20000 }
   );
-  console.log(data);
+  // console.log(data);
   // const setSearchParam = React.useCallback(
   //   (name: string, value: string) => {
   //     searchParams.set(name, value.toString());
@@ -163,14 +166,6 @@ function AddressesListFunction() {
   };
   // addresses.Total = 0;
   // addresses.Addresses = [];
-  const getFilteredValue = (object: IMetrics[], value: string) => {
-    const filtered = object.filter(obj => obj.Name === value);
-    if (filtered.length > 0) {
-      return filtered[0].Value;
-    }
-    return 0;
-  };
-
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
     name: address.ObjectMeta.Name,
     namespace: address.ObjectMeta.Namespace,
@@ -189,24 +184,40 @@ function AddressesListFunction() {
     status: address.Status.Phase,
     errorMessages: address.Status.Messages
   }));
-
   const handleEdit = (data: IAddress) => {
     if (!addressBeingEdited) {
-      console.log(data);
       setAddressBeingEdited(data);
     }
   };
-
-  // const handleCheckboxEdit = (rowsData: IRowData[]) => {
-  //   setRowsBeingEdited(rowsData)
-  // };
   const handleCancelEdit = () => setAddressBeingEdited(null);
+
   const handleSaving = () => void 0;
   const handleEditChange = (address: IAddress) =>
     setAddressBeingEdited(address);
 
   const handleCancelDelete = () => setAddressBeingDeleted(null);
-  const handleDeleting = () => void 0;
+  const handleDelete = async () => {
+    if (addressBeingDeleted) {
+      const deletedData = await client.mutate({
+        mutation: DELETE_ADDRESS,
+        variables: {
+          a: {
+            Name: addressBeingDeleted.name,
+            Namespace: addressBeingDeleted.namespace
+          }
+        }
+      });
+      console.log(deletedData);
+      if (
+        deletedData &&
+        deletedData.data &&
+        deletedData.data.deleteAddress === true
+      ) {
+        setAddressBeingDeleted(null);
+        refetch();
+      }
+    }
+  };
   const handleDeleteChange = (address: IAddress) =>
     setAddressBeingDeleted(address);
 
@@ -218,26 +229,23 @@ function AddressesListFunction() {
           className={css(GridStylesForTableHeader.filter_left_margin)}
         >
           <InputGroup>
-            {/** Add the logic for select for filter and dropdown */}
             <AddressListFilter
               onSearch={() => {
                 console.log("on Search");
               }}
-              onFilterSelect={onFilterSelect}
+              setFilterValue={setFilter}
               filterValue={filter}
-              onTypeSelect={() => {}}
-              typeValue={"Small"}
-              onStatusSelect={() => {}}
-              statusValue={"Active"}
+              setTypeValue={setAddressType}
+              typeValue={addressType}
+              setStatusValue={setStatus}
+              statusValue={status}
             />
-            <Button
-              variant="primary"
-              className={css(
-                GridStylesForTableHeader.create_button_left_margin
-              )}
-            >
-              Create address
-            </Button>
+            <CreateAddress
+              namespace={namespace || ""}
+              addressSpace={name || ""}
+              type={type || ""}
+              refetch={refetch}
+            />
             <Dropdown
               isPlain
               position={DropdownPosition.right}
@@ -267,8 +275,6 @@ function AddressesListFunction() {
         rowsData={addressesList ? addressesList : []}
         onEdit={handleEdit}
         onDelete={handleDeleteChange}
-        // onCheckboxEdit={handleCheckboxEdit}
-        // rows={rowsBeingEdited}
       />
       {addresses.Total === 0 ? <EmptyAddress /> : ""}
       {addressBeingEdited && (
@@ -295,11 +301,11 @@ function AddressesListFunction() {
       )}
       {addressBeingDeleted && (
         <DeletePrompt
-          detail={`Are you sure you want to delete ${addressBeingDeleted.name}`}
+          detail={`Are you sure you want to delete ${addressBeingDeleted.name} ?`}
           name={addressBeingDeleted.name}
-          header="Delete this address?"
+          header="Delete this Address  ?"
           handleCancelDelete={handleCancelDelete}
-          handleConfirmDelete={handleDeleting}
+          handleConfirmDelete={handleDelete}
         />
       )}
       {addresses.Total === 0 ? (

@@ -13,16 +13,12 @@ import {
 import gql from "graphql-tag";
 import { useQuery } from "@apollo/react-hooks";
 import { useParams } from "react-router";
-import {
-  Loading,
-  useA11yRouteChange,
-  useBreadcrumb
-} from "use-patternfly";
+import { Loading, useA11yRouteChange, useBreadcrumb } from "use-patternfly";
 import { ILink, LinkList } from "src/Components/LinkList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionDetailResponse } from "src/Types/ResponseTypes";
 import { css } from "@patternfly/react-styles";
-import { GridStylesForTableHeader } from "./AddressesListPage";
+import { GridStylesForTableHeader } from "./AddressSpace/AddressesListPage";
 import { Link } from "react-router-dom";
 
 const RETURN_CONNECTION_DETAIL = (
@@ -98,7 +94,6 @@ const RETURN_CONNECTION_DETAIL = (
   return CONNECTION_DETAIL;
 };
 
-
 const getProductFilteredValue = (object: any[], value: string) => {
   const filtered = object.filter(obj => obj.Key === value);
   if (filtered.length > 0) {
@@ -120,18 +115,23 @@ const getSplitValue = (value: string) => {
 };
 
 export default function ConnectionDetailPage() {
-  const { name, namespace, connectionname } = useParams();
-  const breadcrumb = React.useMemo(() => (
-    <Breadcrumb>
-      <BreadcrumbItem>
-        <Link to={"/"}>Home</Link>
-      </BreadcrumbItem>
-      <BreadcrumbItem>
-        <Link to={`/address-spaces/${namespace}/${name}/connections`}>{name}</Link>
-      </BreadcrumbItem>
-      <BreadcrumbItem isActive={true}>Connection</BreadcrumbItem>
-    </Breadcrumb>
-  ), [name, namespace])
+  const { name, namespace, type, connectionname } = useParams();
+  const breadcrumb = React.useMemo(
+    () => (
+      <Breadcrumb>
+        <BreadcrumbItem>
+          <Link to={"/"}>Home</Link>
+        </BreadcrumbItem>
+        <BreadcrumbItem>
+          <Link to={`/address-spaces/${namespace}/${name}/${type}/connections`}>
+            {name}
+          </Link>
+        </BreadcrumbItem>
+        <BreadcrumbItem isActive={true}>Connection</BreadcrumbItem>
+      </Breadcrumb>
+    ),
+    [name, namespace]
+  );
 
   useBreadcrumb(breadcrumb);
 
@@ -189,7 +189,8 @@ export default function ConnectionDetailPage() {
         <PageSection variant={PageSectionVariants.light}>
           <Title
             size={"lg"}
-            className={css(GridStylesForTableHeader.filter_left_margin)}>
+            className={css(GridStylesForTableHeader.filter_left_margin)}
+          >
             Links
           </Title>
           <LinkList rows={linkRows} />
