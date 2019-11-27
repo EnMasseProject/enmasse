@@ -70,6 +70,10 @@ public class ApiClient {
             });
         }
 
+        // Let threads run for a while
+        Thread.sleep(30_000);
+
+        System.out.println("# UnavailableErr TotalErr TotalOutageQueue 99pCreateLatencyQueue 99pReadyLatencyQueue 99pDeleteLatencyQueue TotalOutageAnycast 99pCreateLatencyAnycast 99pReadyLatencyAnycast 99pDeleteLatencyAnycast");
         double percentile = 99.9;
         // Periodically print statistics every minute
         while (true) {
@@ -86,7 +90,6 @@ public class ApiClient {
             long deleteLatencyQueue99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.DELETE).getValueAtPercentile(percentile));
             long deleteLatencyAnycast99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.DELETE).getValueAtPercentile(percentile));
 
-            System.out.println("# UnavailableErr TotalErr TotalOutageQueue 99pCreateLatencyQueue 99pReadyLatencyQueue 99pDeleteLatencyQueue TotalOutageAnycast 99pCreateLatencyAnycast 99pReadyLatencyAnycast 99pDeleteLatencyAnycast");
             System.out.println(Arrays.asList(unavailableErr, totalErr, totalOutageQueue, createLatencyQueue99p, readyLatencyQueue99p, deleteLatencyQueue99p, totalOutageAnycast, createLatencyAnycast99p, readyLatencyAnycast99p, deleteLatencyAnycast99p).stream()
                     .map(String::valueOf)
                     .collect(Collectors.joining(" ")));
