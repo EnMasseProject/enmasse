@@ -12,3 +12,19 @@ spec:
   selector:
     name: infinispan
     app: infinispan
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: infinispan
+  name: infinispan-ping
+spec:
+  clusterIP: None
+  ports:
+  - name: ping
+    port: 7800
+    protocol: TCP
+    targetPort: 7800

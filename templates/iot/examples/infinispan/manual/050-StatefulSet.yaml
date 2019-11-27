@@ -48,7 +48,7 @@ spec:
         image: quay.io/infinispan/server:10.0.1.Final
         name: infinispan-server
         ports:
-        - containerPort: 8888
+        - containerPort: 7800
           name: ping
           protocol: TCP
         - containerPort: 11222
