@@ -132,6 +132,7 @@
         <module>controller-manager</module>
         <module>console</module>
         <module>olm-manifest</module>
+        <module>external-test-clients</module>
     </modules>
 
     <dependencyManagement>
