@@ -19,10 +19,8 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import org.HdrHistogram.AtomicHistogram;
 import org.HdrHistogram.Histogram;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -30,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class ApiClient {
@@ -46,11 +45,13 @@ public class ApiClient {
 
         CustomResourceDefinition addressCrd = CoreCrd.addresses();
         var addressClient = client.customResources(addressCrd, Address.class, AddressList.class, DoneableAddress.class).inNamespace(namespace);
-        System.out.println(masterUrl);
-
 
         var histograms = createHistograms();
         Map<Integer, Integer> failures = new ConcurrentHashMap<>();
+
+        Map<AddressType, AtomicLong> sumOutage = new HashMap<>();
+        sumOutage.put(AddressType.queue, new AtomicLong(0));
+        sumOutage.put(AddressType.anycast, new AtomicLong(0));
 
         int numAddresses = 10;
         ExecutorService executor = Executors.newFixedThreadPool(numAddresses);
@@ -61,7 +62,7 @@ public class ApiClient {
 
             executor.execute(() -> {
                 try {
-                    runClient(addressClient, addressSpace, addressType, addressPlan, histograms.get(addressType), failures);
+                    runClient(addressClient, addressSpace, addressType, addressPlan, histograms.get(addressType), failures, sumOutage.get(addressType));
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
@@ -73,14 +74,19 @@ public class ApiClient {
         // Let threads run for a while
         Thread.sleep(30_000);
 
-        System.out.println("# UnavailableErr TotalErr TotalOutageQueue 99pCreateLatencyQueue 99pReadyLatencyQueue 99pDeleteLatencyQueue TotalOutageAnycast 99pCreateLatencyAnycast 99pReadyLatencyAnycast 99pDeleteLatencyAnycast");
+        System.out.println("# UnavailableErr TotalErr TotalOutageQueue 99pErrorTimeQueue 99pCreateLatencyQueue 99pReadyLatencyQueue 99pDeleteLatencyQueue TotalOutageAnycast 99pErrorTimeAnycast 99pCreateLatencyAnycast 99pReadyLatencyAnycast 99pDeleteLatencyAnycast");
         double percentile = 99.9;
         // Periodically print statistics every minute
         while (true) {
             int unavailableErr = failures.getOrDefault(503, 0);
             int totalErr = failures.values().stream().mapToInt(Integer::intValue).sum();
-            long totalOutageQueue = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.ERROR).getTotalCount());
-            long totalOutageAnycast = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.ERROR).getTotalCount());
+
+            long totalOutageQueue = TimeUnit.NANOSECONDS.toMillis(sumOutage.get(AddressType.queue).get());
+            long totalOutageAnycast = TimeUnit.NANOSECONDS.toMillis(sumOutage.get(AddressType.anycast).get());
+
+            long outageLatencyQueue99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.ERROR).getValueAtPercentile(percentile));
+            long outageLatencyAnycast99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.ERROR).getValueAtPercentile(percentile));
+
             long createLatencyQueue99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.CREATE).getValueAtPercentile(percentile));
             long createLatencyAnycast99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.CREATE).getValueAtPercentile(percentile));
 
@@ -90,7 +96,7 @@ public class ApiClient {
             long deleteLatencyQueue99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.DELETE).getValueAtPercentile(percentile));
             long deleteLatencyAnycast99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.DELETE).getValueAtPercentile(percentile));
 
-            System.out.println(Arrays.asList(unavailableErr, totalErr, totalOutageQueue, createLatencyQueue99p, readyLatencyQueue99p, deleteLatencyQueue99p, totalOutageAnycast, createLatencyAnycast99p, readyLatencyAnycast99p, deleteLatencyAnycast99p).stream()
+            System.out.println(Arrays.asList(unavailableErr, totalErr, totalOutageQueue, outageLatencyQueue99p, createLatencyQueue99p, readyLatencyQueue99p, deleteLatencyQueue99p, totalOutageAnycast, outageLatencyAnycast99p, createLatencyAnycast99p, readyLatencyAnycast99p, deleteLatencyAnycast99p).stream()
                     .map(String::valueOf)
                     .collect(Collectors.joining(" ")));
 
@@ -98,7 +104,7 @@ public class ApiClient {
         }
     }
 
-    private static void runClient(NonNamespaceOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> addressClient, String addressSpace, AddressType addressType, String addressPlan, Map<Metric, Histogram> histogram, Map<Integer, Integer> failures) throws Exception {
+    private static void runClient(NonNamespaceOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> addressClient, String addressSpace, AddressType addressType, String addressPlan, Map<Metric, Histogram> histogram, Map<Integer, Integer> failures, AtomicLong totalOutage) throws Exception {
         while (true) {
             String address = UUID.randomUUID().toString();
             String name = String.format("%s.%s", addressSpace, address);
@@ -117,13 +123,13 @@ public class ApiClient {
 
             long started = System.nanoTime();
             Histogram errorHist = histogram.get(Metric.ERROR);
-            tryUntilSuccessRecordFailure(errorHist, failures, () -> addressClient.createOrReplace(resource));
+            tryUntilSuccessRecordFailure(totalOutage, errorHist, failures, () -> addressClient.createOrReplace(resource));
             long created = System.nanoTime();
             long createTime = created - started;
 
             boolean isReady = false;
             while (!isReady) {
-                Address a = tryUntilSuccessRecordFailure(errorHist, failures, () -> addressClient.withName(name).get());
+                Address a = tryUntilSuccessRecordFailure(totalOutage, errorHist, failures, () -> addressClient.withName(name).get());
                 isReady = a.getStatus().isReady();
                 if (!isReady) {
                     Thread.sleep(1000);
@@ -132,7 +138,7 @@ public class ApiClient {
             long ready = System.nanoTime();
             long readyTime = ready - created;
 
-            tryUntilSuccessRecordFailure(errorHist, failures, () -> addressClient.delete(resource));
+            tryUntilSuccessRecordFailure(totalOutage, errorHist, failures, () -> addressClient.delete(resource));
             long deleted = System.nanoTime();
             long deleteTime = deleted - ready;
 
@@ -147,14 +153,16 @@ public class ApiClient {
         }
     }
 
-    private static <T> T tryUntilSuccessRecordFailure(Histogram errorHist, Map<Integer, Integer> failures, Callable<T> callable) throws Exception {
+    private static <T> T tryUntilSuccessRecordFailure(AtomicLong totalOutage, Histogram errorHist, Map<Integer, Integer> failures, Callable<T> callable) throws Exception {
         long errorStart = 0;
         while (true) {
             try {
                 T ret = callable.call();
                 if (errorStart > 0) {
                     long errorEnd = System.nanoTime();
-                    errorHist.recordValue(errorEnd - errorStart);
+                    long errorTime = errorEnd - errorStart;
+                    errorHist.recordValue(errorTime);
+                    totalOutage.addAndGet(errorTime);
                 }
                 return ret;
             } catch (KubernetesClientException e) {
