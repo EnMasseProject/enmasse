@@ -20,6 +20,7 @@ DOCKER_DIRS = \
 	console/console-init \
 	console/console-httpd \
 	olm-manifest \
+	external-test-clients \
 	iot/iot-tenant-service \
 	iot/iot-auth-service \
 	iot/iot-device-registry-file \
