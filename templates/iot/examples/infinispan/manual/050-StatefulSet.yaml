@@ -27,24 +27,7 @@ spec:
           - SITE_LOCAL
           - -c
           - /config/infinispan.xml
-          - -Djgroups.dns.query=infinispan.enmasse-infra.svc.cluster.local
-        env:
-        - name: KUBERNETES_LABELS
-          value: app=infinispan,name=infinispan
-        - name: KUBERNETES_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: USER
-          valueFrom:
-            secretKeyRef:
-              name: conn-auth-secret
-              key: username
-        - name: PASS
-          valueFrom:
-            secretKeyRef:
-              name: conn-auth-secret
-              key: password
+          - -Djgroups.dns.query=infinispan-ping
         image: quay.io/infinispan/server:10.0.1.Final
         name: infinispan-server
         ports:

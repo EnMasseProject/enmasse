@@ -3,12 +3,14 @@ kind: Service
 metadata:
   labels:
     app: infinispan
-  name: infinispan # align name with operator version
+  name: infinispan-ping
 spec:
+  clusterIP: None
   ports:
-  - port: 11222
-    targetPort: 11222
-    name: infinispan
+  - name: ping
+    port: 7800
+    protocol: TCP
+    targetPort: 7800
   selector:
     name: infinispan
     app: infinispan

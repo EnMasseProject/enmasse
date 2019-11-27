@@ -11,30 +11,30 @@ data:
             xmlns="urn:infinispan:config:10.0"
             xmlns:server="urn:infinispan:server:10.0">
 
-       <cache-container name="clustered" statistics="true">
-          <transport cluster="${infinispan.cluster.name}" stack="kubernetes"/>
+      <cache-container name="clustered" statistics="true">
+        <transport cluster="infinispan" stack="kubernetes"/>
 
-             <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="devices">
-                <locking isolation="READ_COMMITTED"/>
-                <indexing index="PRIMARY_OWNER">
-                   <property name="default.indexmanager">
-                               org.infinispan.query.indexmanager.InfinispanIndexManager
-                   </property>
-                </indexing>
-             </distributed-cache>
+        <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="devices">
+           <locking isolation="READ_COMMITTED"/>
+           <indexing index="PRIMARY_OWNER">
+              <property name="default.indexmanager">
+                          org.infinispan.query.indexmanager.InfinispanIndexManager
+              </property>
+           </indexing>
+        </distributed-cache>
 
-             <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="adapterCredentials">
-                <transaction mode="NONE"/>
-                <indexing index="NONE"/>
-             </distributed-cache>
+        <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="adapterCredentials">
+           <transaction mode="NONE"/>
+           <indexing index="NONE"/>
+        </distributed-cache>
 
-             <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="deviceStates">
-                <transaction mode="NONE"/>
-                <indexing index="NONE"/>
-             </distributed-cache>
-       </cache-container>
+        <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="deviceStates">
+           <transaction mode="NONE"/>
+           <indexing index="NONE"/>
+        </distributed-cache>
+      </cache-container>
 
-    <server xmlns="urn:infinispan:server:10.0">
+      <server xmlns="urn:infinispan:server:10.0">
           <interfaces>
              <interface name="public">
                 <inet-address value="${infinispan.bind.address:127.0.0.1}"/>
