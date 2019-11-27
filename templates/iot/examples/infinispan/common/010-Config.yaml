@@ -49,7 +49,7 @@ data:
              <security-realms>
                 <security-realm name="default">
                    <properties-realm groups-attribute="Roles">
-                      <user-properties path="users.properties" relative-to="infinispan.server.config.path" />
+                      <user-properties path="/infnispan-users/users.properties" plain-text="true"/>
                       <group-properties path="groups.properties" relative-to="infinispan.server.config.path"/>
                    </properties-realm>
                 </security-realm>

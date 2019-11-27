@@ -81,12 +81,20 @@ spec:
           name: infinispan-configuration
         - mountPath: /opt/infinispan/server/data
           name: infinispan-data
+        - mountPath: /infnispan-users
+          name: user-credential
       terminationGracePeriodSeconds: 120
       volumes:
       - name: infinispan-configuration
         configMap:
           defaultMode: 420
           name: infinispan-configuration
+      - name: user-credential
+        secret:
+          secretName: conn-auth-secret
+          items:
+            - key: users.properties
+              path: users.properties
   volumeClaimTemplates:
   - metadata:
       name: infinispan-data
