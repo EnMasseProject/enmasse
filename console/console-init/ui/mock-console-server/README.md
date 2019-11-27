@@ -1,28 +1,27 @@
 # mock-console-server
 
 EnMasse mock console server that serves a static data-set comprising two namespaces, three address spaces, and many
-addresses of different types.  Address spaces and address can be created, patched or deleted.
-Addresses can be purged.  Connections can be closed.
+addresses of different types. Address spaces and address can be created, patched or deleted.
+Addresses can be purged. Connections can be closed.
 
 TODO:
-* How do we signal to the console, in a data driven way, if the user is able to purge an address?
-This may be due to restrictions on the type of object itself (ie. cast address can't be purged), or
-this user does not have permission.
 
+- How do we signal to the console, in a data driven way, if the user is able to purge an address?
+  This may be due to restrictions on the type of object itself (ie. cast address can't be purged), or
+  this user does not have permission.
 
 # Running
 
-
 `node mock-console-server.js`
 
-Navigate to http://localhost:4000/ to use the GraphQL playground.  This lets you explore the schema and run queries
+Navigate to http://localhost:4000/ to use the GraphQL playground. This lets you explore the schema and run queries
 dynamically.
 
 # Filters
 
-Most queries accept a `filter` argument.  This allows filtering of the results.  The filter is specified by a
-SQL-92 style `where` clause.  JSON-path operands are supported thus allowing filtering of any leaf node of the result
-object.  A JSON-path operand in the expression are enclosed in backticks.
+Most queries accept a `filter` argument. This allows filtering of the results. The filter is specified by a
+SQL-92 style `where` clause. JSON-path operands are supported thus allowing filtering of any leaf node of the result
+object. A JSON-path operand in the expression are enclosed in backticks.
 
 e.g.
 
@@ -32,9 +31,9 @@ e.g.
 
 # Sorting
 
-Most queries accept a `orderBy` argument.  This allows the sorting of the results by one or more fields.
+Most queries accept a `orderBy` argument. This allows the sorting of the results by one or more fields.
 The sort clause is specified by a SQL-92 like `order by` clause with JSON-paths identifying the leaf node in the
-result that is to be subjected to the sort.  Sort order can be `ASC` (ascending - default) or `DESC` (descending).
+result that is to be subjected to the sort. Sort order can be `ASC` (ascending - default) or `DESC` (descending).
 
 An ascending sort:
 
@@ -52,13 +51,12 @@ A two clause sort:
 
 # Paging
 
-The queries that may return a large result accept pagination.  The pagination
+The queries that may return a large result accept pagination. The pagination
 arguments are `first` which specifies the number of rows to be returned and `offset`
-the starting index within the result set.  The object return provides a count
+the starting index within the result set. The object return provides a count
 of the number of rows in the result set in total.
 
 # Example Queries
-
 
 ## all_address_spaces
 
@@ -153,13 +151,51 @@ query all_connections_for_addressspace_view {
 }
 ```
 
+## all_address_plans
+
+```
+query all_address_plans {
+  addressPlans (
+    addressSpacePlan:"standard-small"
+  ) {
+    Spec {
+      AddressType
+      DisplayName
+      LongDescription
+      ShortDescription
+      DisplayOrder
+    }
+  }
+}
+```
+
+## all_link_names_for_connection
+
+```
+query all_link_names_for_connection {
+  connections(
+    filter: "`$.ObjectMeta.Name` = 'juno:48957' AND `$.Spec.AddressSpace.ObjectMeta.Name` = 'jupiter_as1' AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = 'app1_ns' "
+  ) {
+    Connections {
+      Links {
+        Total
+        Links {
+          ObjectMeta {
+            Name
+          }
+        }
+      }
+    }
+  }
+}
+```
 
 # Example Mutations
 
 ## Create address space
 
 To create an address space, pass an input object describing the address space
-to be created.  The return value is the new address space's metadata.
+to be created. The return value is the new address space's metadata.
 
 ```
 mutation create_as($as: AddressSpace_enmasse_io_v1beta1_Input!) {
@@ -185,8 +221,8 @@ args:
 To patch an address space, pass the input object corresponding to the address space's
 metadata and a JSON patch of the resource's spec describing the update
 to be made.
- 
- The mock server currently implements RFC 6902 application/json-patch+json.
+
+The mock server currently implements RFC 6902 application/json-patch+json.
 
 ```
 mutation patch_as(
@@ -198,14 +234,14 @@ mutation patch_as(
 }
 ```
 
-args: 
+args:
 
 ```
 {
   "a": {"Name": "wibx", "Namespace": "app1_ns" },
 "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium\"}]",
   "patchType": "application/json-patch+json"
-  
+
 
 }
 ```
@@ -228,7 +264,6 @@ args:
   "a": {"Name": "wibx", "Namespace": "app1_ns" }
 }
 ```
-
 
 ## Create address
 
@@ -282,7 +317,6 @@ args:
 To delete an address, call `deleteAddress` passing the ObjectMeta
 object associated with the address to delete.
 
-
 ```
 mutation delete_addr($a:ObjectMeta_v1_Input!) {
   deleteAddress(input:$a)
@@ -290,12 +324,12 @@ mutation delete_addr($a:ObjectMeta_v1_Input!) {
 ```
 
 args:
+
 ```
 {
   "a": {"Name": "jupiter_as1.wiby1", "Namespace": "app1_ns" }
 }
 ```
-
 
 # Purging address
 
@@ -309,12 +343,12 @@ mutation purge_addr($a:ObjectMeta_v1_Input!) {
 ```
 
 args:
+
 ```
 {
   "a": {"Name": "jupiter_as1.wiby1", "Namespace": "app1_ns" }
 }
 ```
-
 
 # Closing connection
 
