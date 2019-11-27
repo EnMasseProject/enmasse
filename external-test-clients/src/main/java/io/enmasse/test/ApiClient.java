@@ -70,20 +70,21 @@ public class ApiClient {
             });
         }
 
+        double percentile = 99.9;
         // Periodically print statistics every minute
         while (true) {
             int unavailableErr = failures.getOrDefault(503, 0);
             int totalErr = failures.values().stream().mapToInt(Integer::intValue).sum();
             long totalOutageQueue = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.ERROR).getTotalCount());
             long totalOutageAnycast = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.ERROR).getTotalCount());
-            long createLatencyQueue99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.CREATE).getValueAtPercentile(0.99));
-            long createLatencyAnycast99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.CREATE).getValueAtPercentile(0.99));
+            long createLatencyQueue99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.CREATE).getValueAtPercentile(percentile));
+            long createLatencyAnycast99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.CREATE).getValueAtPercentile(percentile));
 
-            long readyLatencyQueue99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.READY).getValueAtPercentile(0.99));
-            long readyLatencyAnycast99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.READY).getValueAtPercentile(0.99));
+            long readyLatencyQueue99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.READY).getValueAtPercentile(percentile));
+            long readyLatencyAnycast99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.READY).getValueAtPercentile(percentile));
 
-            long deleteLatencyQueue99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.DELETE).getValueAtPercentile(0.99));
-            long deleteLatencyAnycast99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.DELETE).getValueAtPercentile(0.99));
+            long deleteLatencyQueue99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.DELETE).getValueAtPercentile(percentile));
+            long deleteLatencyAnycast99p = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.DELETE).getValueAtPercentile(percentile));
 
             System.out.println("# UnavailableErr TotalErr TotalOutageQueue 99pCreateLatencyQueue 99pReadyLatencyQueue 99pDeleteLatencyQueue TotalOutageAnycast 99pCreateLatencyAnycast 99pReadyLatencyAnycast 99pDeleteLatencyAnycast");
             System.out.println(Arrays.asList(unavailableErr, totalErr, totalOutageQueue, createLatencyQueue99p, readyLatencyQueue99p, deleteLatencyQueue99p, totalOutageAnycast, createLatencyAnycast99p, readyLatencyAnycast99p, deleteLatencyAnycast99p).stream()
