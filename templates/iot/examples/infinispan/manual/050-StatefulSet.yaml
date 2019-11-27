@@ -6,7 +6,7 @@ metadata:
     app: infinispan
   name: infinispan
 spec:
-  replicas: 1
+  replicas: 3
   serviceName: infinispan-server-headless
   selector:
     matchLabels:
@@ -27,7 +27,7 @@ spec:
           - SITE_LOCAL
           - -c
           - /config/infinispan.xml
-          - -Djgroups.dns.query=infinispan.enmasse-infra.svc.cluster.local-
+          - -Djgroups.dns.query=infinispan.enmasse-infra.svc.cluster.local
         env:
         - name: KUBERNETES_LABELS
           value: app=infinispan,name=infinispan
