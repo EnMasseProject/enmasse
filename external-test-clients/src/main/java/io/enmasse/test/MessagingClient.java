@@ -1,8 +1,10 @@
+/*
+ * Copyright 2019, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
 package io.enmasse.test;
 
 public class MessagingClient {
     public static void main(String[] args) {
-        String uri=args[1];
-        System.out.println(uri);
     }
 }

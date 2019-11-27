@@ -1,3 +1,7 @@
+/*
+ * Copyright 2019, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
 package io.enmasse.test;
 
 import io.enmasse.address.model.Address;
@@ -20,7 +24,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,10 +34,10 @@ import java.util.stream.Collectors;
 
 public class ApiClient {
     public static void main(String[] args) throws InterruptedException {
-        String masterUrl = args[1];
-        String token = args[2];
-        String namespace = args[3];
-        String addressSpace = args[4];
+        String masterUrl = args[0];
+        String token = args[1];
+        String namespace = args[2];
+        String addressSpace = args[3];
 
         NamespacedKubernetesClient client = new DefaultKubernetesClient(new ConfigBuilder()
                 .withMasterUrl(masterUrl)
@@ -49,12 +52,12 @@ public class ApiClient {
         var histograms = createHistograms();
         Map<Integer, Integer> failures = new ConcurrentHashMap<>();
 
-        int numAddresses = 50;
+        int numAddresses = 10;
         ExecutorService executor = Executors.newFixedThreadPool(numAddresses);
 
         for (int i = 0; i < numAddresses; i++) {
             AddressType addressType = i % 3 == 0 ? AddressType.queue : AddressType.anycast;
-            String addressPlan = i % 3 == 0 ? "small-queue" : "small-anycast";
+            String addressPlan = i % 3 == 0 ? "standard-small-queue" : "standard-small-anycast";
 
             executor.execute(() -> {
                 try {
@@ -69,7 +72,7 @@ public class ApiClient {
 
         // Periodically print statistics every minute
         while (true) {
-            long unavailableErr = failures.get(503);
+            int unavailableErr = failures.getOrDefault(503, 0);
             int totalErr = failures.values().stream().mapToInt(Integer::intValue).sum();
             long totalOutageQueue = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.queue).get(Metric.ERROR).getTotalCount());
             long totalOutageAnycast = TimeUnit.NANOSECONDS.toMillis(histograms.get(AddressType.anycast).get(Metric.ERROR).getTotalCount());
@@ -87,14 +90,11 @@ public class ApiClient {
                     .map(String::valueOf)
                     .collect(Collectors.joining(" ")));
 
-            Thread.sleep(60_000);
+            Thread.sleep(10_000);
         }
     }
 
     private static void runClient(NonNamespaceOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> addressClient, String addressSpace, AddressType addressType, String addressPlan, Map<Metric, Histogram> histogram, Map<Integer, Integer> failures) throws Exception {
-        long failureStart = 0;
-        List<Address> failed = new ArrayList<>();
-
         while (true) {
             String address = UUID.randomUUID().toString();
             String name = String.format("%s.%s", addressSpace, address);
@@ -102,6 +102,7 @@ public class ApiClient {
             final Address resource = new AddressBuilder()
                     .editOrNewMetadata()
                     .withName(name)
+                    .addToLabels("author", "apiclient")
                     .endMetadata()
                     .editOrNewSpec()
                     .withAddress(address)
