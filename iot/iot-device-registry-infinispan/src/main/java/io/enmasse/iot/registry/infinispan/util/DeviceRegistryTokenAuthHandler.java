@@ -20,10 +20,10 @@ import org.slf4j.LoggerFactory;
 
 public class DeviceRegistryTokenAuthHandler extends AuthHandlerImpl {
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger log = LoggerFactory.getLogger(DeviceRegistryTokenAuthHandler.class);
 
-    static final HttpStatusException UNAUTHORIZED = new HttpStatusException(401);
-    static final HttpStatusException BAD_REQUEST = new HttpStatusException(400);
+    private static final HttpStatusException UNAUTHORIZED = new HttpStatusException(401);
+    private static final HttpStatusException BAD_REQUEST = new HttpStatusException(400);
 
     static final String BEARER = "Bearer";
     static final String TOKEN = "token";
@@ -63,7 +63,7 @@ public class DeviceRegistryTokenAuthHandler extends AuthHandlerImpl {
             final String[] pathElements = request.path().split("/");
             final String endpoint = pathElements[2];
             final String tenant = pathElements[3];
-            log.info("Authenticating tenant '{}' for endpoint '{}'", tenant, endpoint);
+            log.debug("Authenticating tenant '{}' for endpoint '{}'", tenant, endpoint);
             final JsonObject authInfo = new JsonObject()
                     .put(TOKEN, authorization.substring(idx + 1))
                     .put(ENDPOINT, endpoint)

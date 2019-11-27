@@ -6,9 +6,11 @@
 package io.enmasse.iot.registry.infinispan.cache;
 
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ServerConfigurationBuilder;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Index;
+import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.infinispan.transaction.TransactionMode;
 import org.infinispan.util.concurrent.IsolationLevel;
 import org.slf4j.Logger;
@@ -33,10 +35,24 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
 
     @Override
     protected void customizeServerConfiguration(ServerConfigurationBuilder configuration) {
-
         configuration.addContextInitializer(new DeviceManagementProtobufSchemaBuilderImpl());
     }
 
+    @Override
+    public void start() throws Exception {
+       super.start();
+       configureSerializer(this.remoteCacheManager);
+    }
+
+    private static void configureSerializer(RemoteCacheManager remoteCacheManager) throws Exception {
+
+        final DeviceManagementProtobufSchemaBuilderImpl schema = new DeviceManagementProtobufSchemaBuilderImpl();
+
+        remoteCacheManager
+                .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
+                .put(schema.getProtoFileName(), schema.getProtoFile());
+
+    }
 
     public org.infinispan.configuration.cache.Configuration buildConfiguration() {
         return new org.infinispan.configuration.cache.ConfigurationBuilder()
