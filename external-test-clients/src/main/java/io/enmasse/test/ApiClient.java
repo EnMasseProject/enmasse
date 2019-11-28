@@ -136,7 +136,8 @@ public class ApiClient {
             final Address resource = new AddressBuilder()
                     .editOrNewMetadata()
                     .withName(name)
-                    .addToLabels("app", "api-client")
+                    .addToLabels("client", "api-client")
+                    .addToLabels("app", "test-clients")
                     .endMetadata()
                     .editOrNewSpec()
                     .withAddress(address)
@@ -197,8 +198,4 @@ public class ApiClient {
         }
     }
 
-    public enum AddressType {
-        queue,
-        anycast
-    }
 }

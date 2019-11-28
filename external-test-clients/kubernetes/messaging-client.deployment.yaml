@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-client
+  labels:
+    app: test-clients
+    client: messaging-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-clients
+      client: messaging-client
+  template:
+    metadata:
+      labels:
+        app: test-clients
+        client: messaging-client
+    spec:
+      containers:
+        - name: messaging-client
+          image: docker.io/lulf/external-test-clients:latest
+          command: ["/bin/sh"]
+          # Edit API url and token when running against external cluster
+          args: ["-c", "java -jar /messaging-client.jar https://kubernetes.svc:8443 token upgrade-test default 10"]
+          ports:
+            - name: metrics
+              containerPort: 8080
