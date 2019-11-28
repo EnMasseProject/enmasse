@@ -170,11 +170,8 @@ public class MessagingClient extends AbstractVerticle {
                 .setTrustAll(true)
                 .setHostnameVerificationAlgorithm("");
 
-        System.err.println("Trying to connect ...");
-
         client.connect(protonClientOptions, host, port, connectResult -> {
             if (connectResult.succeeded()) {
-                System.err.println("Connection success!");
                 if (startPromise != null) {
                     startPromise.complete();
                 }
@@ -219,8 +216,6 @@ public class MessagingClient extends AbstractVerticle {
                     attachLink(connection, address);
                 }
             } else {
-                System.err.println("Connection failure!");
-                System.err.println(connectResult.cause().getMessage());
                 connectFailures.inc();
                 if (startPromise != null) {
                     startPromise.fail(connectResult.cause());
