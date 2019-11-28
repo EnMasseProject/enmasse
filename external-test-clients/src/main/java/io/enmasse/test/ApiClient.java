@@ -9,6 +9,12 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.address.model.DoneableAddress;
+import io.enmasse.metrics.api.MetricLabel;
+import io.enmasse.metrics.api.MetricType;
+import io.enmasse.metrics.api.MetricValue;
+import io.enmasse.metrics.api.Metrics;
+import io.enmasse.metrics.api.MetricsFormatter;
+import io.enmasse.metrics.api.ScalarMetric;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -19,6 +25,9 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import org.HdrHistogram.AtomicHistogram;
 import org.HdrHistogram.Histogram;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -27,8 +36,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ApiClient {
 
@@ -40,7 +47,43 @@ public class ApiClient {
     private static final Map<Integer, Integer> failures = new ConcurrentHashMap<>();
     private static final AtomicLong sumOutage = new AtomicLong(0);
 
-    public static void main(String[] args) throws InterruptedException {
+    private static final double percentile = 99.0;
+    private static final Metrics metrics = new Metrics();
+
+    static {
+        metrics.registerMetric(new ScalarMetric("enmasse_test_errors_total", "Total API errors",
+                MetricType.counter,
+                () -> Collections.singletonList(new MetricValue(failures.values().stream().mapToInt(Integer::intValue).sum()))));
+
+        metrics.registerMetric(new ScalarMetric("enmasse_test_errors_unavailable_total", "Total Service Unavailable API errors",
+                MetricType.counter,
+                () -> Collections.singletonList(new MetricValue(failures.getOrDefault(503, 0)))));
+
+        metrics.registerMetric(new ScalarMetric("enmasse_test_outage_millis_total", "Total Service Downtime",
+                MetricType.counter,
+                () -> Collections.singletonList(new MetricValue(TimeUnit.NANOSECONDS.toMillis(sumOutage.get())))));
+
+
+        metrics.registerMetric(new ScalarMetric("enmasse_test_outage_millis_99p", "Request outage 99p",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(errorHist.getValueAtPercentile(percentile)))));
+
+        metrics.registerMetric(new ScalarMetric("enmasse_test_address_create_duration_millis_99p", "Request create 99p",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(createHist.getValueAtPercentile(percentile)))));
+
+        metrics.registerMetric(new ScalarMetric("enmasse_test_time_to_ready_duration_millis_99p", "Time until address ready 99p",
+                MetricType.gauge,
+                () -> Arrays.asList(
+                        new MetricValue(queueReadyHist.getValueAtPercentile(percentile), new MetricLabel("addressType", "queue")),
+                        new MetricValue(anycastReadyHist.getValueAtPercentile(percentile), new MetricLabel("addressType", "anycast")))));
+
+        metrics.registerMetric(new ScalarMetric("enmasse_test_delete_duration_millis_99p", "Request delete 99p",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(deleteHist.getValueAtPercentile(percentile)))));
+    }
+
+    public static void main(String[] args) throws InterruptedException, IOException {
         String masterUrl = args[0];
         String token = args[1];
         String namespace = args[2];
@@ -56,7 +99,6 @@ public class ApiClient {
 
         int numAddresses = 10;
         ExecutorService executor = Executors.newFixedThreadPool(numAddresses);
-
         for (int i = 0; i < numAddresses; i++) {
             AddressType addressType = i % 3 == 0 ? AddressType.queue : AddressType.anycast;
             String addressPlan = i % 3 == 0 ? "standard-small-queue" : "standard-small-anycast";
@@ -72,33 +114,15 @@ public class ApiClient {
             });
         }
 
-        // Let threads run for a while
-        Thread.sleep(30_000);
-
-        System.out.println("# UnavailableErr TotalErr TotalOutage 99pErrorLatency 99pCreateLatency 99pReadyLatencyQueue 99pReadyLatencyAnycast 99pDeleteLatency");
-        double percentile = 99.9;
-        TimeUnit timeUnit = TimeUnit.NANOSECONDS;
+        // Start metrics endpoint
+        MetricsServer metricsServer = new MetricsServer(8080, metrics);
+        metricsServer.start();
 
         // Periodically print statistics every minute
+        MetricsFormatter consoleFormatter = new ConsoleFormatter();
         while (true) {
-            int unavailableErr = failures.getOrDefault(503, 0);
-            int totalErr = failures.values().stream().mapToInt(Integer::intValue).sum();
-
-            long totalOutage = timeUnit.toMillis(sumOutage.get());
-
-            long outageLatency99p = timeUnit.toMillis(errorHist.getValueAtPercentile(percentile));
-            long createLatency99p = timeUnit.toMillis(createHist.getValueAtPercentile(percentile));
-
-            long readyLatencyQueue99p = timeUnit.toMillis(queueReadyHist.getValueAtPercentile(percentile));
-            long readyLatencyAnycast99p = timeUnit.toMillis(anycastReadyHist.getValueAtPercentile(percentile));
-
-            long deleteLatency99p = timeUnit.toMillis(deleteHist.getValueAtPercentile(percentile));
-
-            System.out.println(Stream.of(unavailableErr, totalErr, totalOutage, outageLatency99p, createLatency99p, readyLatencyQueue99p, readyLatencyAnycast99p, deleteLatency99p)
-                    .map(String::valueOf)
-                    .collect(Collectors.joining(" ")));
-
-            Thread.sleep(10_000);
+            Thread.sleep(30_000);
+            consoleFormatter.format(metrics.getMetrics(), 0);
         }
     }
 
@@ -176,14 +200,5 @@ public class ApiClient {
     public enum AddressType {
         queue,
         anycast
-    }
-
-    public enum Metric {
-        CREATE,
-        ERROR,
-        READY,
-        DELETE,
-        OUTAGE,
-        TOTAL,
     }
 }

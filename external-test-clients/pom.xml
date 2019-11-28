@@ -23,6 +23,10 @@
       <artifactId>vertx-proton</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>metrics-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>openshift-client</artifactId>
     </dependency>
