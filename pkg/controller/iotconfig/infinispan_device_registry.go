@@ -93,6 +93,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "amqps", ContainerPort: 5671, Protocol: corev1.ProtocolTCP},
 			{Name: "http", ContainerPort: 8080, Protocol: corev1.ProtocolTCP},
 			{Name: "https", ContainerPort: 8443, Protocol: corev1.ProtocolTCP},
+			{Name: "debug", ContainerPort: 44120, Protocol: corev1.ProtocolTCP},
 		}
 
 		SetHonoProbes(container)
@@ -121,7 +122,12 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "ENMASSE_IOT_REGISTRY_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
 		}
 
-		AppendStandardHonoJavaOptions(container)
+		//AppendStandardHonoJavaOptions(container)
+		AppendEnvVarValue(
+			container,
+			"JAVA_APP_OPTS",
+			"-Ddebug -Denmasse.iot.registry.debug.port=44120 -Djava.net.preferIPv4Stack=true -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory",
+		)
 
 		// append trust stores
 
