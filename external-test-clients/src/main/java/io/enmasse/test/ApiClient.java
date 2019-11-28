@@ -66,10 +66,6 @@ public class ApiClient {
             .labelNames("status")
             .register();
 
-    private static double toSeconds(long nanos) {
-        return (double)nanos / 1_000_000_000.0;
-    }
-
     public static void main(String[] args) throws InterruptedException, IOException {
         if (args.length < 4) {
             System.err.println("Usage: java -jar api-client.jar <kubernetes api url> <kubernetes api token> <address namespace> <address space> <number of addresses>");
@@ -147,6 +143,7 @@ public class ApiClient {
                     .endSpec()
                     .build();
 
+            failureCount.inc(0);
             long started = System.nanoTime();
             var createTimer = metricCreateHist.startTimer();
             tryUntilSuccessRecordFailure(() -> addressClient.createOrReplace(resource));
