@@ -22,7 +22,7 @@ spec:
           image: docker.io/lulf/external-test-clients:latest
           command: ["/bin/sh"]
           # Edit API url and token when running against external cluster
-          args: ["-c", "java -jar /messaging-client.jar https://kubernetes.svc:8443 token upgrade-test default 10"]
+          args: ["-c", "java -jar /messaging-client.jar https://kubernetes.svc:8443 token upgrade-test default 60 10"]
           ports:
             - name: metrics
               containerPort: 8080

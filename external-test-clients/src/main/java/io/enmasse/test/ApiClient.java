@@ -100,6 +100,12 @@ public class ApiClient {
 
         var addressClient = client.customResources(CoreCrd.addresses(), Address.class, AddressList.class, DoneableAddress.class).inNamespace(namespace);
 
+        UUID instanceId = UUID.randomUUID();
+        // Attempt to clean up after ourselves
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            addressClient.withLabel("instance", instanceId.toString()).delete();
+        }));
+
         ExecutorService executor = Executors.newFixedThreadPool(numAddresses);
         for (int i = 0; i < numAddresses; i++) {
             AddressType addressType = i % 3 == 0 ? AddressType.queue : AddressType.anycast;
@@ -107,7 +113,7 @@ public class ApiClient {
 
             executor.execute(() -> {
                 try {
-                    runClient(addressClient, addressSpace, addressType, addressPlan);
+                    runClient(addressClient, addressSpace, addressType, addressPlan, instanceId);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
@@ -128,7 +134,7 @@ public class ApiClient {
         }
     }
 
-    private static void runClient(NonNamespaceOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> addressClient, String addressSpace, AddressType addressType, String addressPlan) throws Exception {
+    private static void runClient(NonNamespaceOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> addressClient, String addressSpace, AddressType addressType, String addressPlan, UUID instanceId) throws Exception {
         while (true) {
             String address = UUID.randomUUID().toString();
             String name = String.format("%s.%s", addressSpace, address);
@@ -138,6 +144,7 @@ public class ApiClient {
                     .withName(name)
                     .addToLabels("client", "api-client")
                     .addToLabels("app", "test-clients")
+                    .addToLabels("instance", instanceId.toString())
                     .endMetadata()
                     .editOrNewSpec()
                     .withAddress(address)

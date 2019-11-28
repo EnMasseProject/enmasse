@@ -140,13 +140,11 @@ public class ProbeClient extends AbstractVerticle {
         }
 
         var addressClient = client.customResources(CoreCrd.addresses(), Address.class, AddressList.class, DoneableAddress.class).inNamespace(namespace);
-        List<Address> createdAddresses = new ArrayList<>();
 
+        UUID instanceId = UUID.randomUUID();
         // Attempt to clean up after ourselves
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            for (Address address : createdAddresses) {
-                addressClient.delete(address);
-            }
+            addressClient.withLabel("instance", instanceId.toString()).delete();
         }));
 
         for (int i = 0; i < addresses.size(); i++) {
@@ -157,6 +155,7 @@ public class ProbeClient extends AbstractVerticle {
                     .withName(name)
                     .addToLabels("client", "probe-client")
                     .addToLabels("app", "test-clients")
+                    .addToLabels("instance", instanceId.toString())
                     .endMetadata()
                     .editOrNewSpec()
                     .withAddress(address)
@@ -165,7 +164,6 @@ public class ProbeClient extends AbstractVerticle {
                     .endSpec()
                     .build();
             addressClient.createOrReplace(resource);
-            createdAddresses.add(resource);
         }
 
         MetricsServer metricsServer = new MetricsServer(8080, metrics);
