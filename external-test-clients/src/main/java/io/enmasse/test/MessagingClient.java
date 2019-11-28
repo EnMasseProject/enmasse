@@ -271,6 +271,8 @@ public class MessagingClient extends AbstractVerticle {
         NamespacedKubernetesClient client = new DefaultKubernetesClient(new ConfigBuilder()
                 .withMasterUrl(masterUrl)
                 .withOauthToken(token)
+                .withDisableHostnameVerification(true)
+                .withTrustCerts(true)
                 .build());
 
         // Get endpoint info
