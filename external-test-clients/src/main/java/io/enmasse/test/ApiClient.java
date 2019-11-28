@@ -169,7 +169,7 @@ public class ApiClient {
             readyHist.recordValue(TimeUnit.NANOSECONDS.toMillis(readyTime));
             readyTimer.observeDuration();
 
-            var deleteTimer = metricDeleteHist.labels(addressType.name()).startTimer();
+            var deleteTimer = metricDeleteHist.startTimer();
             tryUntilSuccessRecordFailure(() -> addressClient.delete(resource));
             long deleted = System.nanoTime();
             long deleteTime = deleted - ready;
