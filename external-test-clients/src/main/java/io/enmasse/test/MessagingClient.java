@@ -72,7 +72,6 @@ public class MessagingClient extends AbstractVerticle {
     private static final Counter attaches = Counter.build()
             .name("test_attaches_total")
             .help("N/A")
-            .labelNames("linkType", "addressType")
             .register();
 
     private static final Counter detaches = Counter.build()
@@ -186,7 +185,6 @@ public class MessagingClient extends AbstractVerticle {
                 connection.disconnectHandler(ProtonConnection::disconnect);
 
                 connection.closeHandler(closeResult -> {
-                    System.out.println("CONNECT CLOSE");
                     disconnects.inc();
                     lastDisconnect.set(System.nanoTime());
                     Context context = vertx.getOrCreateContext();
@@ -203,7 +201,6 @@ public class MessagingClient extends AbstractVerticle {
                     attachLink(connection, address, retryDelay);
                 }
             } else {
-                System.out.println("CONNECT FAIL");
                 connectFailures.inc();
                 if (startPromise != null) {
                     startPromise.fail(connectResult.cause());
@@ -230,7 +227,6 @@ public class MessagingClient extends AbstractVerticle {
             receiver.setPrefetch(10);
             receiver.openHandler(receiverAttachResult -> {
                 if (receiverAttachResult.succeeded()) {
-                    System.out.println("Opened receiver success!");
                     attaches.inc();
                     // We've been reattached. Record how long it took
                     if (lastDetach.get(address).get() > 0) {
@@ -239,7 +235,6 @@ public class MessagingClient extends AbstractVerticle {
                         reattachHist.labels(addressType.name()).observe(toSeconds(duration));
                     }
                 } else {
-                    System.out.println("Opened receiver failed!");
                     Context context = vertx.getOrCreateContext();
                     vertx.setTimer(retryDelay, handler -> {
                         context.runOnContext(c -> {
@@ -250,7 +245,6 @@ public class MessagingClient extends AbstractVerticle {
                 }
             });
             receiver.closeHandler(closeResult -> {
-                System.out.println("CLsoed receiver!: " + receiver.getRemoteCondition());
                 detaches.inc();
                 lastDetach.get(address).set(System.nanoTime());
                 Context context = vertx.getOrCreateContext();
@@ -262,7 +256,6 @@ public class MessagingClient extends AbstractVerticle {
                 });
             });
             receiver.handler((protonDelivery, message) -> {
-                System.out.println("RECEIVED MESSAGE");
                 numReceived.labels(addressType.name()).inc();
             });
             receiver.open();
@@ -270,7 +263,6 @@ public class MessagingClient extends AbstractVerticle {
             ProtonSender sender = connection.createSender(address);
             sender.openHandler(senderAttachResult -> {
                 if (senderAttachResult.succeeded()) {
-                    System.out.println("Opened sender success");
                     // We've been reattached. Record how long it took
                     if (lastDetach.get(address).get() > 0) {
                         attaches.inc();
@@ -280,7 +272,6 @@ public class MessagingClient extends AbstractVerticle {
                     }
                     sendMessage(address, sender);
                 } else {
-                    System.out.println("Opened sender fail");
                     Context context = vertx.getOrCreateContext();
                     vertx.setTimer(retryDelay, handler -> {
                         context.runOnContext(c -> {
@@ -291,7 +282,6 @@ public class MessagingClient extends AbstractVerticle {
                 }
             });
             sender.closeHandler(closeResult -> {
-                System.out.println("CLsoed sender!: " + sender.getRemoteCondition());
                 detaches.inc();
                 lastDetach.get(address).set(System.nanoTime());
                 Context context = vertx.getOrCreateContext();
@@ -313,10 +303,8 @@ public class MessagingClient extends AbstractVerticle {
         if (addressType.equals(AddressType.queue)) {
             message.setDurable(true);
         }
-        System.out.println("Sending message");
         Context context = vertx.getOrCreateContext();
         sender.send(message, delivery -> {
-            System.out.println("Delivery accepted!");
             switch (delivery.getRemoteState().getType()) {
                 case Accepted:
                     numAccepted.labels(addressType.name()).inc();
@@ -455,6 +443,7 @@ public class MessagingClient extends AbstractVerticle {
 
         for (List<Address> group : groups) {
             List<String> addressList = group.stream().map(a -> a.getSpec().getAddress()).collect(Collectors.toList());
+
             vertx.deployVerticle(new MessagingClient(endpointHost, endpointPort, addressType, LinkType.receiver, addressList), result -> {
                 if (result.succeeded()) {
                     System.out.println("Started receiver client for addresses " + addressList);
@@ -462,12 +451,6 @@ public class MessagingClient extends AbstractVerticle {
                     System.out.println("Failed starting receiver client for addresses " + addressList);
                 }
             });
-
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
 
             vertx.deployVerticle(new MessagingClient(endpointHost, endpointPort, addressType, LinkType.sender, addressList), result -> {
                 if (result.succeeded()) {
