@@ -141,6 +141,8 @@ public class MessagingClient extends AbstractVerticle {
     private final List<String> addresses;
     private final Map<String, AtomicLong> lastDetach = new HashMap<>();
     private final AtomicLong lastDisconnect = new AtomicLong(0);
+    private final AtomicLong reconnectDelay = new AtomicLong(1);
+    private final Map<String, AtomicLong> reattachDelay = new HashMap<>();
 
     private MessagingClient(String host, int port, AddressType addressType, LinkType linkType, List<String> addresses) {
         this.host = host;
@@ -150,26 +152,32 @@ public class MessagingClient extends AbstractVerticle {
         this.addresses = new ArrayList<>(addresses);
         for (String address : addresses) {
             lastDetach.put(address, new AtomicLong(0));
+            reattachDelay.put(address, new AtomicLong(1));
         }
     }
 
     @Override
     public void start(Future<Void> startPromise) {
         ProtonClient client = ProtonClient.create(vertx);
-        connectAndAttach(client, startPromise, 1);
+        connectAndAttach(client, startPromise);
     }
 
     private static final long maxRetryDelay = 5000;
 
-    private void connectAndAttach(ProtonClient client, Future<Void> startPromise, long retryDelay) {
+    private void connectAndAttach(ProtonClient client, Future<Void> startPromise) {
         ProtonClientOptions protonClientOptions = new ProtonClientOptions()
                 .setSsl(true)
                 .setTrustAll(true)
                 .setHostnameVerificationAlgorithm("");
 
+        System.err.println("Trying to connect ...");
+
         client.connect(protonClientOptions, host, port, connectResult -> {
             if (connectResult.succeeded()) {
-                startPromise.complete();
+                System.err.println("Connection success!");
+                if (startPromise != null) {
+                    startPromise.complete();
+                }
                 connectSuccesses.inc();
                 ProtonConnection connection = connectResult.result();
 
@@ -179,34 +187,50 @@ public class MessagingClient extends AbstractVerticle {
                     reconnectTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
                     reconnectHist.labels(addressType.name()).observe(toSeconds(duration));
                 }
-                connection.disconnectHandler(ProtonConnection::disconnect);
+                connection.disconnectHandler(conn -> {
+                    disconnects.inc();
+                    lastDisconnect.set(System.nanoTime());
+                    conn.close();
+                    Context context = vertx.getOrCreateContext();
+                    vertx.setTimer(reconnectDelay.get(), id -> {
+                        context.runOnContext(c -> {
+                            reconnects.inc();
+                            reconnectDelay.set(Math.min(maxRetryDelay, reconnectDelay.get() * 2));
+                            connectAndAttach(client, null);
+                        });
+                    });
+                });
 
                 connection.closeHandler(closeResult -> {
                     disconnects.inc();
                     lastDisconnect.set(System.nanoTime());
                     Context context = vertx.getOrCreateContext();
-                    vertx.setTimer(retryDelay, id -> {
+                    vertx.setTimer(reconnectDelay.get(), id -> {
                         context.runOnContext(c -> {
                             reconnects.inc();
-                            connectAndAttach(client, null, Math.min(retryDelay * 2, maxRetryDelay));
+                            reconnectDelay.set(Math.min(maxRetryDelay, reconnectDelay.get() * 2));
+                            connectAndAttach(client, null);
                         });
                     });
                 });
 
                 connection.open();
                 for (String address : addresses) {
-                    attachLink(connection, address, retryDelay);
+                    attachLink(connection, address);
                 }
             } else {
+                System.err.println("Connection failure!");
+                System.err.println(connectResult.cause().getMessage());
                 connectFailures.inc();
                 if (startPromise != null) {
                     startPromise.fail(connectResult.cause());
                 } else {
                     Context context = vertx.getOrCreateContext();
-                    vertx.setTimer(retryDelay, handler -> {
+                    vertx.setTimer(reconnectDelay.get(), id -> {
                         context.runOnContext(c -> {
                             reconnects.inc();
-                            connectAndAttach(client, null, Math.max(retryDelay * 2, maxRetryDelay));
+                            reconnectDelay.set(Math.min(maxRetryDelay, reconnectDelay.get() * 2));
+                            connectAndAttach(client, null);
                         });
                     });
                 }
@@ -218,7 +242,7 @@ public class MessagingClient extends AbstractVerticle {
         return (double)nanos / 1_000_000_000.0;
     }
 
-    private void attachLink(ProtonConnection connection, String address, long retryDelay) {
+    private void attachLink(ProtonConnection connection, String address) {
         if (linkType.equals(LinkType.receiver)) {
             ProtonReceiver receiver = connection.createReceiver(address);
             receiver.setPrefetch(10);
@@ -233,10 +257,11 @@ public class MessagingClient extends AbstractVerticle {
                     }
                 } else {
                     Context context = vertx.getOrCreateContext();
-                    vertx.setTimer(retryDelay, handler -> {
+                    vertx.setTimer(reattachDelay.get(address).get(), handler -> {
                         context.runOnContext(c -> {
                             reattaches.inc();
-                            attachLink(connection, address, Math.min(retryDelay * 2, maxRetryDelay));
+                            reattachDelay.get(address).set(Math.min(maxRetryDelay, reattachDelay.get(address).get() * 2));
+                            attachLink(connection, address);
                         });
                     });
                 }
@@ -245,10 +270,11 @@ public class MessagingClient extends AbstractVerticle {
                 detaches.inc();
                 lastDetach.get(address).set(System.nanoTime());
                 Context context = vertx.getOrCreateContext();
-                vertx.setTimer(retryDelay, id -> {
+                vertx.setTimer(reattachDelay.get(address).get(), handler -> {
                     context.runOnContext(c -> {
                         reattaches.inc();
-                        attachLink(connection, address, Math.min(retryDelay * 2, maxRetryDelay));
+                        reattachDelay.get(address).set(Math.min(maxRetryDelay, reattachDelay.get(address).get() * 2));
+                        attachLink(connection, address);
                     });
                 });
             });
@@ -270,10 +296,11 @@ public class MessagingClient extends AbstractVerticle {
                     sendMessage(address, sender);
                 } else {
                     Context context = vertx.getOrCreateContext();
-                    vertx.setTimer(retryDelay, handler -> {
+                    vertx.setTimer(reattachDelay.get(address).get(), handler -> {
                         context.runOnContext(c -> {
                             reattaches.inc();
-                            attachLink(connection, address, Math.min(retryDelay * 2, maxRetryDelay));
+                            reattachDelay.get(address).set(Math.min(maxRetryDelay, reattachDelay.get(address).get() * 2));
+                            attachLink(connection, address);
                         });
                     });
                 }
@@ -282,10 +309,11 @@ public class MessagingClient extends AbstractVerticle {
                 detaches.inc();
                 lastDetach.get(address).set(System.nanoTime());
                 Context context = vertx.getOrCreateContext();
-                vertx.setTimer(retryDelay, id -> {
+                vertx.setTimer(reattachDelay.get(address).get(), handler -> {
                     context.runOnContext(c -> {
                         reattaches.inc();
-                        attachLink(connection, address, Math.min(retryDelay * 2, maxRetryDelay));
+                        reattachDelay.get(address).set(Math.min(maxRetryDelay, reattachDelay.get(address).get() * 2));
+                        attachLink(connection, address);
                     });
                 });
             });
@@ -373,7 +401,6 @@ public class MessagingClient extends AbstractVerticle {
         List<Address> anycastAddresses = new ArrayList<>();
         List<Address> queueAddresses = new ArrayList<>();
 
-
         for (int i = 0; i < addresses.size(); i++) {
             String address = addresses.get(i);
             String name = String.format("%s.%s", addressSpaceName, address);
@@ -421,10 +448,14 @@ public class MessagingClient extends AbstractVerticle {
                 System.out.println("Reconnect duration (queue) 99p = " + reconnectTime.get(AddressType.queue).getValueAtPercentile(percentile));
                 System.out.println("Reattach duration (anycast) 99p = " + reconnectTime.get(AddressType.anycast).getValueAtPercentile(percentile));
                 System.out.println("Reattach duration (queue) 99p = " + reconnectTime.get(AddressType.queue).getValueAtPercentile(percentile));
-                System.out.println("Num accepted = " + numAccepted.get());
-                System.out.println("Num rejected = " + numRejected.get());
-                System.out.println("Num modified = " + numModified.get());
-                System.out.println("Num released = " + numReleased.get());
+                System.out.println("Num accepted anycast = " + numAccepted.labels(AddressType.anycast.name()).get());
+                System.out.println("Num rejected anycast = " + numRejected.labels(AddressType.anycast.name()).get());
+                System.out.println("Num modified anycast = " + numModified.labels(AddressType.anycast.name()).get());
+                System.out.println("Num released anycast = " + numReleased.labels(AddressType.anycast.name()).get());
+                System.out.println("Num accepted queue = " + numAccepted.labels(AddressType.queue.name()).get());
+                System.out.println("Num rejected queue = " + numRejected.labels(AddressType.queue.name()).get());
+                System.out.println("Num modified queue = " + numModified.labels(AddressType.queue.name()).get());
+                System.out.println("Num released queue = " + numReleased.labels(AddressType.queue.name()).get());
                 System.out.println("##########");
             } catch (Exception e) {
                 e.printStackTrace();
