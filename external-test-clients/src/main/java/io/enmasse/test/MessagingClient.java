@@ -306,7 +306,7 @@ public class MessagingClient extends AbstractVerticle {
 
         for (int i = 0; i < addresses.size(); i++) {
             String address = addresses.get(i);
-            String name = String.format("%s.%s", addressSpace, address);
+            String name = String.format("%s.%s", addressSpaceName, address);
             final Address resource = new AddressBuilder()
                     .editOrNewMetadata()
                     .withName(name)
