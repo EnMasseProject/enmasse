@@ -16,8 +16,6 @@ import io.enmasse.address.model.EndpointStatus;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
-import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
 import io.prometheus.client.Counter;
 import io.prometheus.client.exporter.HTTPServer;
 import io.vertx.core.AbstractVerticle;
@@ -32,7 +30,6 @@ import io.vertx.proton.ProtonSender;
 import org.HdrHistogram.AtomicHistogram;
 import org.HdrHistogram.Histogram;
 import org.apache.qpid.proton.Proton;
-import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 
@@ -435,7 +432,7 @@ public class MessagingClient extends AbstractVerticle {
         }
     }
 
-    private static void deployClients(Vertx vertx, String endpointHost, int endpointPort, AddressType addressType, int linksPerConnection, List<Address> addresses) {
+    private static void deployClients(Vertx vertx, String endpointHost, int endpointPort, AddressType addressType, int linksPerConnection, List<Address> addresses) throws InterruptedException {
         List<List<Address>> groups = new ArrayList<>();
         for (int i = 0; i < addresses.size() / linksPerConnection; i++) {
             groups.add(addresses.subList(i * linksPerConnection, (i + 1) * linksPerConnection));
@@ -451,6 +448,8 @@ public class MessagingClient extends AbstractVerticle {
                     System.out.println("Failed starting receiver client for addresses " + addressList);
                 }
             });
+
+            Thread.sleep(10);
 
             vertx.deployVerticle(new MessagingClient(endpointHost, endpointPort, addressType, LinkType.sender, addressList), result -> {
                 if (result.succeeded()) {
