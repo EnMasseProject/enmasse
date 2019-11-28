@@ -15,7 +15,6 @@ import io.enmasse.metrics.api.MetricValue;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.metrics.api.MetricsFormatter;
 import io.enmasse.metrics.api.ScalarMetric;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -84,20 +83,23 @@ public class ApiClient {
     }
 
     public static void main(String[] args) throws InterruptedException, IOException {
+        if (args.length < 4) {
+            System.err.println("Usage: java -jar api-client.jar <kubernetes api url> <kubernetes api token> <address namespace> <address space> <number of addresses>");
+            System.exit(1);
+        }
         String masterUrl = args[0];
         String token = args[1];
         String namespace = args[2];
         String addressSpace = args[3];
+        int numAddresses = Integer.parseInt(args[4]);
 
         NamespacedKubernetesClient client = new DefaultKubernetesClient(new ConfigBuilder()
                 .withMasterUrl(masterUrl)
                 .withOauthToken(token)
                 .build());
 
-        CustomResourceDefinition addressCrd = CoreCrd.addresses();
-        var addressClient = client.customResources(addressCrd, Address.class, AddressList.class, DoneableAddress.class).inNamespace(namespace);
+        var addressClient = client.customResources(CoreCrd.addresses(), Address.class, AddressList.class, DoneableAddress.class).inNamespace(namespace);
 
-        int numAddresses = 10;
         ExecutorService executor = Executors.newFixedThreadPool(numAddresses);
         for (int i = 0; i < numAddresses; i++) {
             AddressType addressType = i % 3 == 0 ? AddressType.queue : AddressType.anycast;
@@ -134,7 +136,7 @@ public class ApiClient {
             final Address resource = new AddressBuilder()
                     .editOrNewMetadata()
                     .withName(name)
-                    .addToLabels("author", "apiclient")
+                    .addToLabels("app", "api-client")
                     .endMetadata()
                     .editOrNewSpec()
                     .withAddress(address)
@@ -162,8 +164,6 @@ public class ApiClient {
             tryUntilSuccessRecordFailure(() -> addressClient.delete(resource));
             long deleted = System.nanoTime();
             long deleteTime = deleted - ready;
-
-            long totalTime = deleted - started;
 
             createHist.recordValue(createTime);
             if (addressType.equals(AddressType.anycast)) {

@@ -4,11 +4,23 @@
  */
 package io.enmasse.test;
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressList;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceList;
+import io.enmasse.address.model.CoreCrd;
+import io.enmasse.address.model.DoneableAddress;
+import io.enmasse.address.model.DoneableAddressSpace;
+import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.metrics.api.MetricType;
 import io.enmasse.metrics.api.MetricValue;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.metrics.api.MetricsFormatter;
 import io.enmasse.metrics.api.ScalarMetric;
+import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -25,6 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -94,12 +107,64 @@ public class ProbeClient extends AbstractVerticle {
     }
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        String endpointHost = args[0];
-        int endpointPort = Integer.parseInt(args[1]);
+        if (args.length < 5) {
+            System.err.println("Usage: java -jar probe-client.jar <kubernetes api url> <kubernetes api token> <address namespace> <address space> <number of addresses>");
+            System.exit(1);
+        }
+        String masterUrl = args[0];
+        String token = args[1];
+        String namespace = args[2];
+        String addressSpaceName = args[3];
+        int numAddresses = Integer.parseInt(args[4]);
+
+        NamespacedKubernetesClient client = new DefaultKubernetesClient(new ConfigBuilder()
+                .withMasterUrl(masterUrl)
+                .withOauthToken(token)
+                .build());
+
+        // Get endpoint info
+        var addressSpaceClient = client.customResources(CoreCrd.addressSpaces(), AddressSpace.class, AddressSpaceList.class, DoneableAddressSpace.class).inNamespace(namespace);
+        AddressSpace addressSpace = addressSpaceClient.withName(addressSpaceName).get();
+        String endpointHost = "";
+        int endpointPort = 0;
+        for (EndpointStatus status : addressSpace.getStatus().getEndpointStatuses()) {
+            if (status.getName().equals("messaging")) {
+                endpointHost = status.getExternalHost();
+                endpointPort = status.getExternalPorts().get("amqps");
+            }
+        }
 
         List<String> addresses = new ArrayList<>();
-        for (int i = 2; i < args.length; i++) {
-            addresses.add(args[i]);
+        for (int i = 0; i < numAddresses; i++) {
+            addresses.add(UUID.randomUUID().toString());
+        }
+
+        var addressClient = client.customResources(CoreCrd.addresses(), Address.class, AddressList.class, DoneableAddress.class).inNamespace(namespace);
+        List<Address> createdAddresses = new ArrayList<>();
+
+        // Attempt to clean up after ourselves
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            for (Address address : createdAddresses) {
+                addressClient.delete(address);
+            }
+        }));
+
+        for (int i = 0; i < addresses.size(); i++) {
+            String address = addresses.get(i);
+            String name = String.format("%s.%s", addressSpace, address);
+            final Address resource = new AddressBuilder()
+                    .editOrNewMetadata()
+                    .withName(name)
+                    .addToLabels("app", "probe-client")
+                    .endMetadata()
+                    .editOrNewSpec()
+                    .withAddress(address)
+                    .withType(i % 2 == 0 ? "anycast" : "queue")
+                    .withPlan(i % 2 == 0 ? "standard-small-anycast" : "standard-small-queue")
+                    .endSpec()
+                    .build();
+            addressClient.createOrReplace(resource);
+            createdAddresses.add(resource);
         }
 
         MetricsServer metricsServer = new MetricsServer(8080, metrics);
