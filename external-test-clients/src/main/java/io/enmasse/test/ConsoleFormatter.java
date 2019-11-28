@@ -28,7 +28,7 @@ public class ConsoleFormatter implements MetricsFormatter {
                 if (!labels.isEmpty()) {
                     sb.append("(").append(labels).append(")");
                 }
-                sb.append(" = ").append(value.getValue());
+                sb.append(" = ").append(value.getValue()).append("\n");
             }
         }
         return sb.toString();

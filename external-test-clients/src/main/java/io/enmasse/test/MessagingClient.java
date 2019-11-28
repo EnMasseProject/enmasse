@@ -343,7 +343,7 @@ public class MessagingClient extends AbstractVerticle {
         MetricsFormatter formatter = new ConsoleFormatter();
         while (true) {
             Thread.sleep(30000);
-            formatter.format(metrics.getMetrics(), 0);
+            System.out.println(formatter.format(metrics.getMetrics(), 0));
         }
     }
 

@@ -185,7 +185,7 @@ public class ProbeClient extends AbstractVerticle {
             }
             completed.await();
             Thread.sleep(10000);
-            formatter.format(metrics.getMetrics(), 0);
+            System.out.println(formatter.format(metrics.getMetrics(), 0));
         }
     }
 }

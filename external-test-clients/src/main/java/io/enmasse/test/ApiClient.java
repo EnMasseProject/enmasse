@@ -65,21 +65,21 @@ public class ApiClient {
 
         metrics.registerMetric(new ScalarMetric("enmasse_test_outage_millis_99p", "Request outage 99p",
                 MetricType.gauge,
-                () -> Collections.singletonList(new MetricValue(errorHist.getValueAtPercentile(percentile)))));
+                () -> Collections.singletonList(new MetricValue(TimeUnit.NANOSECONDS.toMillis(errorHist.getValueAtPercentile(percentile))))));
 
         metrics.registerMetric(new ScalarMetric("enmasse_test_address_create_duration_millis_99p", "Request create 99p",
                 MetricType.gauge,
-                () -> Collections.singletonList(new MetricValue(createHist.getValueAtPercentile(percentile)))));
+                () -> Collections.singletonList(new MetricValue(TimeUnit.NANOSECONDS.toMillis(createHist.getValueAtPercentile(percentile))))));
 
         metrics.registerMetric(new ScalarMetric("enmasse_test_time_to_ready_duration_millis_99p", "Time until address ready 99p",
                 MetricType.gauge,
                 () -> Arrays.asList(
-                        new MetricValue(queueReadyHist.getValueAtPercentile(percentile), new MetricLabel("addressType", "queue")),
-                        new MetricValue(anycastReadyHist.getValueAtPercentile(percentile), new MetricLabel("addressType", "anycast")))));
+                        new MetricValue(TimeUnit.NANOSECONDS.toMillis(queueReadyHist.getValueAtPercentile(percentile)), new MetricLabel("addressType", "queue")),
+                        new MetricValue(TimeUnit.NANOSECONDS.toMillis(anycastReadyHist.getValueAtPercentile(percentile)), new MetricLabel("addressType", "anycast")))));
 
         metrics.registerMetric(new ScalarMetric("enmasse_test_delete_duration_millis_99p", "Request delete 99p",
                 MetricType.gauge,
-                () -> Collections.singletonList(new MetricValue(deleteHist.getValueAtPercentile(percentile)))));
+                () -> Collections.singletonList(new MetricValue(TimeUnit.NANOSECONDS.toMillis(deleteHist.getValueAtPercentile(percentile))))));
     }
 
     public static void main(String[] args) throws InterruptedException, IOException {
@@ -103,6 +103,7 @@ public class ApiClient {
         UUID instanceId = UUID.randomUUID();
         // Attempt to clean up after ourselves
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Running shutdown hook!");
             addressClient.withLabel("instance", instanceId.toString()).delete();
         }));
 
@@ -130,7 +131,7 @@ public class ApiClient {
         MetricsFormatter consoleFormatter = new ConsoleFormatter();
         while (true) {
             Thread.sleep(30_000);
-            consoleFormatter.format(metrics.getMetrics(), 0);
+            System.out.println(consoleFormatter.format(metrics.getMetrics(), 0));
         }
     }
 
