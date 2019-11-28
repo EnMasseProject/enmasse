@@ -340,7 +340,7 @@ public class MessagingClient extends AbstractVerticle {
                     break;
             }
             if (delivery.remotelySettled()) {
-                vertx.setTimer(500, id -> {
+                vertx.setTimer(1000, id -> {
                     context.runOnContext(c -> {
                         sendMessage(address, sender);
                     });
