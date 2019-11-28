@@ -173,8 +173,10 @@ public class ProbeClient extends AbstractVerticle {
             }
             completed.await();
             Thread.sleep(10000);
+            System.out.println("# Metrics");
             System.out.println("successCounter = " + successCounter.get());
             System.out.println("failureCounter = " + failureCounter.get());
+            System.out.println("##########");
         }
     }
 }

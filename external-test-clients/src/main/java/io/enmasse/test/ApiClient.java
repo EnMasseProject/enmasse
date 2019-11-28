@@ -119,11 +119,13 @@ public class ApiClient {
         // Periodically print statistics every minute
         while (true) {
             Thread.sleep(30_000);
+            System.out.println("# Metrics");
             System.out.println("create time 99p = " + createHist.getValueAtPercentile(99.0));
             System.out.println("ready time 99p = " + readyHist.getValueAtPercentile(99.0));
             System.out.println("delete time 99p = " + deleteHist.getValueAtPercentile(99.0));
             System.out.println("outage time 99p = " + errorHist.getValueAtPercentile(99.0));
             System.out.println("API 503 error = " + failures.get(503));
+            System.out.println("##########");
         }
     }
 

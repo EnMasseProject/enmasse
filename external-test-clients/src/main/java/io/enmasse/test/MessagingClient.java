@@ -325,6 +325,7 @@ public class MessagingClient extends AbstractVerticle {
 
         while (true) {
             Thread.sleep(30000);
+            System.out.println("# Metrics");
             System.out.println("Successful connects = " + connectSuccesses.get());
             System.out.println("Failed connects = " + connectFailures.get());
             System.out.println("Disconnects = " + disconnects.get());
@@ -337,6 +338,7 @@ public class MessagingClient extends AbstractVerticle {
             System.out.println("Num rejected = " + numRejected.get());
             System.out.println("Num modified = " + numModified.get());
             System.out.println("Num released = " + numReleased.get());
+            System.out.println("##########");
         }
     }
 
