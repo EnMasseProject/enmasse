@@ -190,6 +190,48 @@ query all_link_names_for_connection {
 }
 ```
 
+
+
+# single_address_with_links_and_metrics
+```
+query single_address_with_links_and_metrics {
+  addresses(
+    filter: "`$.Spec.AddressSpace` = 'jupiter_as1'  AND `$.ObjectMeta.Name` = 'jupiter_as1.ganymede' AND `$.ObjectMeta.Namespace` = 'app1_ns'"
+  ) {
+    Total
+    Addresses {
+      ObjectMeta {
+        Name
+      }
+      Spec {
+        AddressSpace
+      }
+      Links {
+        Total
+        Links {
+          ObjectMeta {
+            Name
+          }
+          Spec {
+            Role
+            Connection {
+              Spec {
+                ContainerId
+              }
+            }
+          }
+          Metrics {
+            Name
+            Type
+            Value
+            Units
+          }
+        }
+      }
+    }
+  }
+}
+```
 # Example Mutations
 
 ## Create address space
