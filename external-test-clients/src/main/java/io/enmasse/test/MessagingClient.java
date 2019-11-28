@@ -13,15 +13,11 @@ import io.enmasse.address.model.CoreCrd;
 import io.enmasse.address.model.DoneableAddress;
 import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.address.model.EndpointStatus;
-import io.enmasse.metrics.api.MetricLabel;
-import io.enmasse.metrics.api.MetricType;
-import io.enmasse.metrics.api.MetricValue;
-import io.enmasse.metrics.api.Metrics;
-import io.enmasse.metrics.api.MetricsFormatter;
-import io.enmasse.metrics.api.ScalarMetric;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import io.prometheus.client.Counter;
+import io.prometheus.client.exporter.HTTPServer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -38,7 +34,6 @@ import org.apache.qpid.proton.message.Message;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,89 +43,63 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class MessagingClient extends AbstractVerticle {
-    private static final AtomicLong connectSuccesses = new AtomicLong(0);
-    private static final AtomicLong connectFailures = new AtomicLong(0);
-    private static final AtomicLong disconnects = new AtomicLong(0);
-    private static final AtomicLong reconnects = new AtomicLong(0);
+    private static final Counter connectSuccesses = Counter.build()
+            .name("test_connect_success_total")
+            .register();
+
+    private static final Counter connectFailures = Counter.build()
+            .name("test_connect_failure_total")
+            .register();
+
+    private static final Counter disconnects = Counter.build()
+            .name("test_disconnects_total")
+            .register();
+
+    private static final Counter reconnects = Counter.build()
+            .name("test_disconnects_total")
+            .register();
 
     private static final Map<AddressType, Histogram> reconnectTime = Map.of(
             AddressType.anycast, new AtomicHistogram(Long.MAX_VALUE, 2),
             AddressType.queue, new AtomicHistogram(Long.MAX_VALUE, 2));
 
+    private static final io.prometheus.client.Histogram reconnectHist = io.prometheus.client.Histogram.build()
+            .name("test_reconnect_duration")
+            .buckets(1.0, 2.5, 7.5, 10.0, 25.0, 50.0, 75.0, 100.0)
+            .register();
+
     private static final Map<AddressType, Histogram> reattachTime = Map.of(
             AddressType.anycast, new AtomicHistogram(Long.MAX_VALUE, 2),
             AddressType.queue, new AtomicHistogram(Long.MAX_VALUE, 2));
 
-    private static final Map<AddressType, AtomicLong> numAccepted = Map.of(
-            AddressType.anycast, new AtomicLong(0),
-            AddressType.queue, new AtomicLong(0));
+    private static final io.prometheus.client.Histogram reattachHist = io.prometheus.client.Histogram.build()
+            .name("test_reattach_duration")
+            .labelNames("addressType")
+            .buckets(1.0, 2.5, 7.5, 10.0, 25.0, 50.0, 75.0, 100.0)
+            .register();
 
-    private static final Map<AddressType, AtomicLong> numRejected = Map.of(
-            AddressType.anycast, new AtomicLong(0),
-            AddressType.queue, new AtomicLong(0));
 
-    private static final Map<AddressType, AtomicLong> numModified = Map.of(
-            AddressType.anycast, new AtomicLong(0),
-            AddressType.queue, new AtomicLong(0));
+    private static final Counter numAccepted = Counter.build()
+            .name("test_accepted_total")
+            .labelNames("addressType")
+            .register();
 
-    private static final Map<AddressType, AtomicLong> numReleased = Map.of(
-            AddressType.anycast, new AtomicLong(0),
-            AddressType.queue, new AtomicLong(0));
+    private static final Counter numRejected = Counter.build()
+            .name("test_rejected_total")
+            .labelNames("addressType")
+            .register();
+
+    private static final Counter numReleased = Counter.build()
+            .name("test_released_total")
+            .labelNames("addressType")
+            .register();
+
+    private static final Counter numModified = Counter.build()
+            .name("test_modified_total")
+            .labelNames("addressType")
+            .register();
 
     private static final double percentile = 99.0;
-    private static final Metrics metrics = new Metrics();
-
-    static {
-        metrics.registerMetric(new ScalarMetric("enmasse_test_connect_success_total", "Connect success",
-                MetricType.counter,
-                () -> Collections.singletonList(new MetricValue(connectSuccesses.get()))));
-        metrics.registerMetric(new ScalarMetric("enmasse_test_connect_failure_total", "Connect failure",
-                MetricType.counter,
-                () -> Collections.singletonList(new MetricValue(connectFailures.get()))));
-        metrics.registerMetric(new ScalarMetric("enmasse_test_disconnects_total", "Disconnects",
-                MetricType.counter,
-                () -> Collections.singletonList(new MetricValue(disconnects.get()))));
-        metrics.registerMetric(new ScalarMetric("enmasse_test_reconnects_total", "Reconnects",
-                MetricType.counter,
-                () -> Collections.singletonList(new MetricValue(reconnects.get()))));
-
-        metrics.registerMetric(new ScalarMetric("enmasse_test_reconnect_duration_millis_99p", "Reconnect duration 99p",
-                MetricType.gauge,
-                () -> reconnectTime.entrySet().stream()
-                        .map(entry -> new MetricValue(TimeUnit.NANOSECONDS.toMillis(entry.getValue().getValueAtPercentile(percentile)), new MetricLabel("addressType", entry.getKey().name())))
-                        .collect(Collectors.toList())));
-
-        metrics.registerMetric(new ScalarMetric("enmasse_test_reattach_duration_millis_99p", "Reattach duration 99p",
-                MetricType.gauge,
-                () -> reattachTime.entrySet().stream()
-                        .map(entry -> new MetricValue(TimeUnit.NANOSECONDS.toMillis(entry.getValue().getValueAtPercentile(percentile)), new MetricLabel("addressType", entry.getKey().name())))
-                        .collect(Collectors.toList())));
-
-        metrics.registerMetric(new ScalarMetric("enmasse_test_accepted_total", "Accepted messages",
-                MetricType.counter,
-                () -> numAccepted.entrySet().stream()
-                        .map(entry -> new MetricValue(entry.getValue().get(), new MetricLabel("addressType", entry.getKey().name())))
-                        .collect(Collectors.toList())));
-
-        metrics.registerMetric(new ScalarMetric("enmasse_test_rejected_total", "Rejected messages",
-                MetricType.counter,
-                () -> numRejected.entrySet().stream()
-                        .map(entry -> new MetricValue(entry.getValue().get(), new MetricLabel("addressType", entry.getKey().name())))
-                        .collect(Collectors.toList())));
-
-        metrics.registerMetric(new ScalarMetric("enmasse_test_released_total", "Released messages",
-                MetricType.counter,
-                () -> numReleased.entrySet().stream()
-                        .map(entry -> new MetricValue(entry.getValue().get(), new MetricLabel("addressType", entry.getKey().name())))
-                        .collect(Collectors.toList())));
-
-        metrics.registerMetric(new ScalarMetric("enmasse_test_modified_total", "Modified messages",
-                MetricType.counter,
-                () -> numModified.entrySet().stream()
-                        .map(entry -> new MetricValue(entry.getValue().get(), new MetricLabel("addressType", entry.getKey().name())))
-                        .collect(Collectors.toList())));
-
-    }
 
     private final String host;
     private final int port;
@@ -167,16 +136,21 @@ public class MessagingClient extends AbstractVerticle {
 
         client.connect(protonClientOptions, host, port, connectResult -> {
             if (connectResult.succeeded()) {
+                connectSuccesses.inc();
                 ProtonConnection connection = connectResult.result();
 
                 // We've been reconnected. Record how long it took
                 if (lastDisconnect.get() > 0) {
-                    reconnectTime.get(addressType).recordValue(System.nanoTime() - lastDisconnect.get());
+                    long duration = System.nanoTime() - lastDisconnect.get();
+                    reconnectTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
+                    reconnectHist.labels(addressType.name()).observe(toSeconds(duration));
                 }
 
                 connection.closeHandler(closeResult -> {
+                    disconnects.inc();
                     lastDisconnect.set(System.nanoTime());
                     vertx.setTimer(retryDelay, id -> {
+                        reconnects.inc();
                         connectAndAttach(client, null, Math.min(retryDelay * 2, maxRetryDelay));
                     });
                 });
@@ -186,16 +160,21 @@ public class MessagingClient extends AbstractVerticle {
                 }
                 connection.open();
             } else {
-                connectFailures.incrementAndGet();
+                connectFailures.inc();
                 if (startPromise != null) {
                     startPromise.fail(connectResult.cause());
                 } else {
                     vertx.setTimer(retryDelay, handler -> {
+                        reconnects.inc();
                         connectAndAttach(client, null, Math.max(retryDelay * 2, maxRetryDelay));
                     });
                 }
             }
         });
+    }
+
+    private static double toSeconds(long nanos) {
+        return (double)nanos / 1_000_000_000.0;
     }
 
     private void attachLink(ProtonConnection connection, String address, long retryDelay) {
@@ -208,7 +187,9 @@ public class MessagingClient extends AbstractVerticle {
                 if (receiverAttachResult.succeeded()) {
                     // We've been reattached. Record how long it took
                     if (lastDetach.get(address).get() > 0) {
-                        reattachTime.get(addressType).recordValue(System.nanoTime() - lastDetach.get(address).get());
+                        long duration = System.nanoTime() - lastDetach.get(address).get();
+                        reattachTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
+                        reattachHist.labels(addressType.name()).observe(toSeconds(duration));
                     }
                 }
             });
@@ -225,7 +206,9 @@ public class MessagingClient extends AbstractVerticle {
                 if (senderAttachResult.succeeded()) {
                     // We've been reattached. Record how long it took
                     if (lastDetach.get(address).get() > 0) {
-                        reattachTime.get(addressType).recordValue(System.nanoTime() - lastDetach.get(address).get());
+                        long duration = System.nanoTime() - lastDetach.get(address).get();
+                        reattachTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
+                        reattachHist.labels(addressType.name()).observe(toSeconds(duration));
                     }
                     sendMessage(sender);
                 }
@@ -243,16 +226,16 @@ public class MessagingClient extends AbstractVerticle {
         sender.send(message, delivery -> {
             switch (delivery.getRemoteState().getType()) {
                 case Accepted:
-                    numAccepted.get(addressType).incrementAndGet();
+                    numAccepted.labels(addressType.name()).inc();
                     break;
                 case Rejected:
-                    numRejected.get(addressType).incrementAndGet();
+                    numRejected.labels(addressType.name()).inc();
                     break;
                 case Modified:
-                    numModified.get(addressType).incrementAndGet();
+                    numModified.labels(addressType.name()).inc();
                     break;
                 case Released:
-                    numReleased.get(addressType).incrementAndGet();
+                    numReleased.labels(addressType.name()).inc();
                     break;
             }
             if (delivery.remotelySettled()) {
@@ -333,18 +316,27 @@ public class MessagingClient extends AbstractVerticle {
             }
         }
 
-        MetricsServer metricsServer = new MetricsServer(8080, metrics);
-        metricsServer.start();
+        HTTPServer server = new HTTPServer(8080);
 
         Vertx vertx = Vertx.vertx();
 
         deployClients(vertx, endpointHost, endpointPort, AddressType.anycast, linksPerConnection, anycastAddresses);
         deployClients(vertx, endpointHost, endpointPort, AddressType.queue, linksPerConnection, queueAddresses);
 
-        MetricsFormatter formatter = new ConsoleFormatter();
         while (true) {
             Thread.sleep(30000);
-            System.out.println(formatter.format(metrics.getMetrics(), 0));
+            System.out.println("Successful connects = " + connectSuccesses.get());
+            System.out.println("Failed connects = " + connectFailures.get());
+            System.out.println("Disconnects = " + disconnects.get());
+            System.out.println("Reconnects = " + reconnects.get());
+            System.out.println("Reconnect duration (anycast) 99p = " + reconnectTime.get(AddressType.anycast).getValueAtPercentile(percentile));
+            System.out.println("Reconnect duration (queue) 99p = " + reconnectTime.get(AddressType.queue).getValueAtPercentile(percentile));
+            System.out.println("Reattach duration (anycast) 99p = " + reconnectTime.get(AddressType.anycast).getValueAtPercentile(percentile));
+            System.out.println("Reattach duration (queue) 99p = " + reconnectTime.get(AddressType.queue).getValueAtPercentile(percentile));
+            System.out.println("Num accepted = " + numAccepted.get());
+            System.out.println("Num rejected = " + numRejected.get());
+            System.out.println("Num modified = " + numModified.get());
+            System.out.println("Num released = " + numReleased.get());
         }
     }
 

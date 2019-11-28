@@ -13,14 +13,11 @@ import io.enmasse.address.model.CoreCrd;
 import io.enmasse.address.model.DoneableAddress;
 import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.address.model.EndpointStatus;
-import io.enmasse.metrics.api.MetricType;
-import io.enmasse.metrics.api.MetricValue;
-import io.enmasse.metrics.api.Metrics;
-import io.enmasse.metrics.api.MetricsFormatter;
-import io.enmasse.metrics.api.ScalarMetric;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import io.prometheus.client.Counter;
+import io.prometheus.client.exporter.HTTPServer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -35,11 +32,9 @@ import org.apache.qpid.proton.message.Message;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class ProbeClient extends AbstractVerticle {
     private final String host;
@@ -93,18 +88,13 @@ public class ProbeClient extends AbstractVerticle {
         });
     }
 
-    private static final AtomicLong probeSuccesses = new AtomicLong(0);
-    private static final AtomicLong probeFailures = new AtomicLong(0);
-    private static final Metrics metrics = new Metrics();
+    private static final Counter successCounter = Counter.build()
+            .name("test_probe_success_total")
+            .register();
 
-    static {
-        metrics.registerMetric(new ScalarMetric("enmasse_test_probe_success_total", "Probe success",
-                MetricType.counter,
-                () -> Collections.singletonList(new MetricValue(probeSuccesses.get()))));
-        metrics.registerMetric(new ScalarMetric("enmasse_test_probe_failure_total", "Probe failure",
-                MetricType.counter,
-                () -> Collections.singletonList(new MetricValue(probeFailures.get()))));
-    }
+    private static final Counter failureCounter = Counter.build()
+            .name("test_probe_failure_total")
+            .register();
 
     public static void main(String[] args) throws InterruptedException, IOException {
         if (args.length < 5) {
@@ -166,26 +156,25 @@ public class ProbeClient extends AbstractVerticle {
             addressClient.createOrReplace(resource);
         }
 
-        MetricsServer metricsServer = new MetricsServer(8080, metrics);
-        metricsServer.start();
+        HTTPServer httpServer = new HTTPServer(8080);
 
         Vertx vertx = Vertx.vertx();
-        MetricsFormatter formatter = new ConsoleFormatter();
         while (true) {
             CountDownLatch completed = new CountDownLatch(addresses.size());
             for (String address : addresses) {
                 vertx.deployVerticle(new ProbeClient(endpointHost, endpointPort, address), result -> {
                     if (result.succeeded()) {
-                        probeSuccesses.incrementAndGet();
+                        successCounter.inc();
                     } else {
-                        probeFailures.incrementAndGet();
+                        failureCounter.inc();
                     }
                     completed.countDown();
                 });
             }
             completed.await();
             Thread.sleep(10000);
-            System.out.println(formatter.format(metrics.getMetrics(), 0));
+            System.out.println("successCounter = " + successCounter.get());
+            System.out.println("failureCounter = " + failureCounter.get());
         }
     }
 }

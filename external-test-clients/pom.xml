@@ -8,6 +8,9 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>external-test-clients</artifactId>
+  <properties>
+    <prometheus_java.version>0.8.0</prometheus_java.version>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.hdrhistogram</groupId>
@@ -23,10 +26,6 @@
       <artifactId>vertx-proton</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.enmasse</groupId>
-      <artifactId>metrics-api</artifactId>
-    </dependency>
-    <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>openshift-client</artifactId>
     </dependency>
@@ -38,6 +37,16 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.prometheus</groupId>
+      <artifactId>simpleclient</artifactId>
+      <version>${prometheus_java.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.prometheus</groupId>
+      <artifactId>simpleclient_httpserver</artifactId>
+      <version>${prometheus_java.version}</version>
     </dependency>
   </dependencies>
 

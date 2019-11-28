@@ -9,24 +9,18 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.address.model.DoneableAddress;
-import io.enmasse.metrics.api.MetricLabel;
-import io.enmasse.metrics.api.MetricType;
-import io.enmasse.metrics.api.MetricValue;
-import io.enmasse.metrics.api.Metrics;
-import io.enmasse.metrics.api.MetricsFormatter;
-import io.enmasse.metrics.api.ScalarMetric;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.prometheus.client.Counter;
+import io.prometheus.client.exporter.HTTPServer;
 import org.HdrHistogram.AtomicHistogram;
 import org.HdrHistogram.Histogram;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -38,48 +32,43 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class ApiClient {
 
-    private static final Histogram anycastReadyHist = new AtomicHistogram(Long.MAX_VALUE, 2);
-    private static final Histogram queueReadyHist = new AtomicHistogram(Long.MAX_VALUE, 2);
+    private static final Histogram readyHist = new AtomicHistogram(Long.MAX_VALUE, 2);
     private static final Histogram createHist = new AtomicHistogram(Long.MAX_VALUE, 2);
     private static final Histogram deleteHist = new AtomicHistogram(Long.MAX_VALUE, 2);
     private static final Histogram errorHist = new AtomicHistogram(Long.MAX_VALUE, 2);
     private static final Map<Integer, Integer> failures = new ConcurrentHashMap<>();
     private static final AtomicLong sumOutage = new AtomicLong(0);
 
-    private static final double percentile = 99.0;
-    private static final Metrics metrics = new Metrics();
+    private static final io.prometheus.client.Histogram metricReadyHist = io.prometheus.client.Histogram.build()
+            .name("test_address_ready_duration")
+            .labelNames("addressType")
+            .help("Address ready")
+            .buckets(1.0, 2.5, 7.5, 10.0, 25.0, 50.0, 75.0, 100.0)
+            .register();
 
-    static {
-        metrics.registerMetric(new ScalarMetric("enmasse_test_errors_total", "Total API errors",
-                MetricType.counter,
-                () -> Collections.singletonList(new MetricValue(failures.values().stream().mapToInt(Integer::intValue).sum()))));
+    private static final io.prometheus.client.Histogram metricCreateHist = io.prometheus.client.Histogram.build()
+            .name("test_address_create_duration")
+            .help("Address create")
+            .register();
 
-        metrics.registerMetric(new ScalarMetric("enmasse_test_errors_unavailable_total", "Total Service Unavailable API errors",
-                MetricType.counter,
-                () -> Collections.singletonList(new MetricValue(failures.getOrDefault(503, 0)))));
+    private static final io.prometheus.client.Histogram metricDeleteHist = io.prometheus.client.Histogram.build()
+            .name("test_address_delete_duration")
+            .help("Address delete")
+            .register();
 
-        metrics.registerMetric(new ScalarMetric("enmasse_test_outage_millis_total", "Total Service Downtime",
-                MetricType.counter,
-                () -> Collections.singletonList(new MetricValue(TimeUnit.NANOSECONDS.toMillis(sumOutage.get())))));
+    private static final io.prometheus.client.Histogram metricOutageHist = io.prometheus.client.Histogram.build()
+            .name("test_address_outage_duration")
+            .help("Address outage")
+            .register();
 
+    private static final Counter failureCount = Counter.build()
+            .name("test_api_failures_total")
+            .help("Api failures")
+            .labelNames("status")
+            .register();
 
-        metrics.registerMetric(new ScalarMetric("enmasse_test_outage_millis_99p", "Request outage 99p",
-                MetricType.gauge,
-                () -> Collections.singletonList(new MetricValue(TimeUnit.NANOSECONDS.toMillis(errorHist.getValueAtPercentile(percentile))))));
-
-        metrics.registerMetric(new ScalarMetric("enmasse_test_address_create_duration_millis_99p", "Request create 99p",
-                MetricType.gauge,
-                () -> Collections.singletonList(new MetricValue(TimeUnit.NANOSECONDS.toMillis(createHist.getValueAtPercentile(percentile))))));
-
-        metrics.registerMetric(new ScalarMetric("enmasse_test_time_to_ready_duration_millis_99p", "Time until address ready 99p",
-                MetricType.gauge,
-                () -> Arrays.asList(
-                        new MetricValue(TimeUnit.NANOSECONDS.toMillis(queueReadyHist.getValueAtPercentile(percentile)), new MetricLabel("addressType", "queue")),
-                        new MetricValue(TimeUnit.NANOSECONDS.toMillis(anycastReadyHist.getValueAtPercentile(percentile)), new MetricLabel("addressType", "anycast")))));
-
-        metrics.registerMetric(new ScalarMetric("enmasse_test_delete_duration_millis_99p", "Request delete 99p",
-                MetricType.gauge,
-                () -> Collections.singletonList(new MetricValue(TimeUnit.NANOSECONDS.toMillis(deleteHist.getValueAtPercentile(percentile))))));
+    private static double toSeconds(long nanos) {
+        return (double)nanos / 1_000_000_000.0;
     }
 
     public static void main(String[] args) throws InterruptedException, IOException {
@@ -96,6 +85,8 @@ public class ApiClient {
         NamespacedKubernetesClient client = new DefaultKubernetesClient(new ConfigBuilder()
                 .withMasterUrl(masterUrl)
                 .withOauthToken(token)
+                .withDisableHostnameVerification(true)
+                .withTrustCerts(true)
                 .build());
 
         var addressClient = client.customResources(CoreCrd.addresses(), Address.class, AddressList.class, DoneableAddress.class).inNamespace(namespace);
@@ -123,15 +114,16 @@ public class ApiClient {
             });
         }
 
-        // Start metrics endpoint
-        MetricsServer metricsServer = new MetricsServer(8080, metrics);
-        metricsServer.start();
+        HTTPServer httpServer = new HTTPServer(8080);
 
         // Periodically print statistics every minute
-        MetricsFormatter consoleFormatter = new ConsoleFormatter();
         while (true) {
             Thread.sleep(30_000);
-            System.out.println(consoleFormatter.format(metrics.getMetrics(), 0));
+            System.out.println("create time 99p = " + createHist.getValueAtPercentile(99.0));
+            System.out.println("ready time 99p = " + readyHist.getValueAtPercentile(99.0));
+            System.out.println("delete time 99p = " + deleteHist.getValueAtPercentile(99.0));
+            System.out.println("outage time 99p = " + errorHist.getValueAtPercentile(99.0));
+            System.out.println("API 503 error = " + failures.get(503));
         }
     }
 
@@ -174,13 +166,14 @@ public class ApiClient {
             long deleted = System.nanoTime();
             long deleteTime = deleted - ready;
 
-            createHist.recordValue(createTime);
-            if (addressType.equals(AddressType.anycast)) {
-                anycastReadyHist.recordValue(readyTime);
-            } else {
-                queueReadyHist.recordValue(readyTime);
-            }
-            deleteHist.recordValue(deleteTime);
+            createHist.recordValue(TimeUnit.NANOSECONDS.toMillis(createTime));
+            metricCreateHist.observe(toSeconds(createTime));
+
+            readyHist.recordValue(TimeUnit.NANOSECONDS.toMillis(readyTime));
+            metricReadyHist.labels(addressType.name()).observe(toSeconds(readyTime));
+
+            deleteHist.recordValue(TimeUnit.NANOSECONDS.toMillis(deleteTime));
+            metricDeleteHist.observe(toSeconds(deleteTime));
 
             Thread.sleep((long) (500 + (Math.random() * 1000.0)));
         }
@@ -194,12 +187,14 @@ public class ApiClient {
                 if (errorStart > 0) {
                     long errorEnd = System.nanoTime();
                     long errorTime = errorEnd - errorStart;
-                    errorHist.recordValue(errorTime);
+                    errorHist.recordValue(TimeUnit.NANOSECONDS.toMillis(errorTime));
+                    metricOutageHist.observe(toSeconds(errorTime));
                     sumOutage.addAndGet(errorTime);
                 }
                 return ret;
             } catch (KubernetesClientException e) {
                 failures.compute(e.getCode(), (key, oldValue) -> oldValue == null ? 0 : oldValue + 1);
+                failureCount.labels(String.valueOf(e.getCode())).inc();
                 errorStart = System.nanoTime();
                 Thread.sleep(500);
             }
