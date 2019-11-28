@@ -21,7 +21,7 @@ public class MetricsServer {
 
     public MetricsServer(int port, Metrics metrics) throws IOException {
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
-        server.createContext("/metrics", new MetricsHandler(metrics));
+        server.createContext("/", new MetricsHandler(metrics));
         server.setExecutor(null);
     }
 
