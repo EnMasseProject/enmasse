@@ -104,6 +104,7 @@ public class ApiClient {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
+                    e.printStackTrace();
                     System.err.println("Exception running client: " + e.getMessage());
                 }
             });
@@ -143,7 +144,6 @@ public class ApiClient {
                     .endSpec()
                     .build();
 
-            failureCount.inc(0);
             long started = System.nanoTime();
             var createTimer = metricCreateHist.startTimer();
             tryUntilSuccessRecordFailure(() -> addressClient.createOrReplace(resource));
