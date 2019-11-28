@@ -189,7 +189,7 @@ public class MessagingClient extends AbstractVerticle {
                 if (startPromise != null) {
                     startPromise.fail(connectResult.cause());
                 } else {
-                    vertx.setTimer(1000, handler -> {
+                    vertx.setTimer(retryDelay, handler -> {
                         connectAndAttach(client, null, Math.max(retryDelay * 2, maxRetryDelay));
                     });
                 }
