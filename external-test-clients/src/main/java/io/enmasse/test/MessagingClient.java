@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -96,13 +97,13 @@ public class MessagingClient extends AbstractVerticle {
         metrics.registerMetric(new ScalarMetric("enmasse_test_reconnect_duration_millis_99p", "Reconnect duration 99p",
                 MetricType.gauge,
                 () -> reconnectTime.entrySet().stream()
-                        .map(entry -> new MetricValue(entry.getValue().getValueAtPercentile(percentile), new MetricLabel("addressType", entry.getKey().name())))
+                        .map(entry -> new MetricValue(TimeUnit.NANOSECONDS.toMillis(entry.getValue().getValueAtPercentile(percentile)), new MetricLabel("addressType", entry.getKey().name())))
                         .collect(Collectors.toList())));
 
         metrics.registerMetric(new ScalarMetric("enmasse_test_reattach_duration_millis_99p", "Reattach duration 99p",
                 MetricType.gauge,
                 () -> reattachTime.entrySet().stream()
-                        .map(entry -> new MetricValue(entry.getValue().getValueAtPercentile(percentile), new MetricLabel("addressType", entry.getKey().name())))
+                        .map(entry -> new MetricValue(TimeUnit.NANOSECONDS.toMillis(entry.getValue().getValueAtPercentile(percentile)), new MetricLabel("addressType", entry.getKey().name())))
                         .collect(Collectors.toList())));
 
         metrics.registerMetric(new ScalarMetric("enmasse_test_accepted_total", "Accepted messages",
