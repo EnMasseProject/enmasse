@@ -45,18 +45,22 @@ import java.util.stream.Collectors;
 public class MessagingClient extends AbstractVerticle {
     private static final Counter connectSuccesses = Counter.build()
             .name("test_connect_success_total")
+            .help("N/A")
             .register();
 
     private static final Counter connectFailures = Counter.build()
             .name("test_connect_failure_total")
+            .help("N/A")
             .register();
 
     private static final Counter disconnects = Counter.build()
             .name("test_disconnects_total")
+            .help("N/A")
             .register();
 
     private static final Counter reconnects = Counter.build()
             .name("test_disconnects_total")
+            .help("N/A")
             .register();
 
     private static final Map<AddressType, Histogram> reconnectTime = Map.of(
@@ -65,6 +69,7 @@ public class MessagingClient extends AbstractVerticle {
 
     private static final io.prometheus.client.Histogram reconnectHist = io.prometheus.client.Histogram.build()
             .name("test_reconnect_duration")
+            .help("N/A")
             .buckets(1.0, 2.5, 7.5, 10.0, 25.0, 50.0, 75.0, 100.0)
             .register();
 
@@ -74,6 +79,7 @@ public class MessagingClient extends AbstractVerticle {
 
     private static final io.prometheus.client.Histogram reattachHist = io.prometheus.client.Histogram.build()
             .name("test_reattach_duration")
+            .help("N/A")
             .labelNames("addressType")
             .buckets(1.0, 2.5, 7.5, 10.0, 25.0, 50.0, 75.0, 100.0)
             .register();
@@ -81,21 +87,25 @@ public class MessagingClient extends AbstractVerticle {
 
     private static final Counter numAccepted = Counter.build()
             .name("test_accepted_total")
+            .help("N/A")
             .labelNames("addressType")
             .register();
 
     private static final Counter numRejected = Counter.build()
             .name("test_rejected_total")
+            .help("N/A")
             .labelNames("addressType")
             .register();
 
     private static final Counter numReleased = Counter.build()
             .name("test_released_total")
+            .help("N/A")
             .labelNames("addressType")
             .register();
 
     private static final Counter numModified = Counter.build()
             .name("test_modified_total")
+            .help("N/A")
             .labelNames("addressType")
             .register();
 

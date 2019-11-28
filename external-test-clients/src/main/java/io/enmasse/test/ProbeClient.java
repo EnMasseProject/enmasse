@@ -90,10 +90,12 @@ public class ProbeClient extends AbstractVerticle {
 
     private static final Counter successCounter = Counter.build()
             .name("test_probe_success_total")
+            .help("N/A")
             .register();
 
     private static final Counter failureCounter = Counter.build()
             .name("test_probe_failure_total")
+            .help("N/A")
             .register();
 
     public static void main(String[] args) throws InterruptedException, IOException {
