@@ -1,5 +1,12 @@
 == Overview
 
+TODO:
+* Broker queue/storage request/lmits
+* Address space properties -> capabilities
+* Transactional -> address space plan
+* AddressPlan/Address -> group properties into address type objects
+* More details on phase 1
+
 Address spaces in EnMasse are currently isolated, i.e. they don't share infrastructure (router network, brokers). Moreover, the standard-controller and agent deployments are created per address space. Sharing infrastructure allows sharing resources and reducing the footprint when configuring multiple address spaces, and speed up the time to provision new address spaces. Furthermore, the split between `standard` and `brokered` address space types has caused a lot of quirks in the architecture, which a shared address space type may handle in a better way.
 
 See the initial discussion in issue #3420 for more details on alternatives. This document will consider the alternative with a new address space type for shared infra.
