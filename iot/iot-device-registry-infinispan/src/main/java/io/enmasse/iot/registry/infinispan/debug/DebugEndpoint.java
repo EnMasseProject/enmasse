@@ -84,7 +84,7 @@ public class DebugEndpoint extends AbstractVerticle {
                 .requestHandler(router)
                 .listen(this.port, ar -> {
                     if (ar.succeeded()) {
-                        System.err.format("Debug server listening on port %s", ar.result().actualPort());
+                        System.err.format("Debug server listening on port %s \n", ar.result().actualPort());
                         future.complete();
                     } else {
                         ar.cause().printStackTrace();

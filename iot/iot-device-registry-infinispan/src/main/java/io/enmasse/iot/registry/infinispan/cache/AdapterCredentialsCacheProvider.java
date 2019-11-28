@@ -25,8 +25,7 @@ public class AdapterCredentialsCacheProvider extends AbstractCacheProvider {
 
     @Override
     protected void customizeServerConfiguration(ServerConfigurationBuilder configuration) {
-        DeviceManagementProtobufSchemaBuilderImpl builder = new DeviceManagementProtobufSchemaBuilderImpl();
-        configuration.addContextInitializer(builder);
+        configuration.addContextInitializer(new DeviceManagementProtobufSchemaBuilderImpl());
     }
 
     public org.infinispan.configuration.cache.Configuration buildConfiguration() {
