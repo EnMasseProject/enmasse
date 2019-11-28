@@ -37,7 +37,6 @@ public class ApiClient {
     private static final Histogram deleteHist = new AtomicHistogram(Long.MAX_VALUE, 2);
     private static final Histogram errorHist = new AtomicHistogram(Long.MAX_VALUE, 2);
     private static final Map<Integer, Integer> failures = new ConcurrentHashMap<>();
-    private static final AtomicLong sumOutage = new AtomicLong(0);
 
     private static final io.prometheus.client.Histogram metricReadyHist = io.prometheus.client.Histogram.build()
             .name("test_address_ready_duration")
@@ -149,10 +148,14 @@ public class ApiClient {
                     .build();
 
             long started = System.nanoTime();
+            var createTimer = metricCreateHist.startTimer();
             tryUntilSuccessRecordFailure(() -> addressClient.createOrReplace(resource));
             long created = System.nanoTime();
             long createTime = created - started;
+            createTimer.observeDuration();
+            createHist.recordValue(TimeUnit.NANOSECONDS.toMillis(createTime));
 
+            var readyTimer = metricReadyHist.labels(addressType.name()).startTimer();
             boolean isReady = false;
             while (!isReady) {
                 Address a = tryUntilSuccessRecordFailure(() -> addressClient.withName(name).get());
@@ -163,19 +166,16 @@ public class ApiClient {
             }
             long ready = System.nanoTime();
             long readyTime = ready - created;
+            readyHist.recordValue(TimeUnit.NANOSECONDS.toMillis(readyTime));
+            readyTimer.observeDuration();
 
+            var deleteTimer = metricDeleteHist.labels(addressType.name()).startTimer();
             tryUntilSuccessRecordFailure(() -> addressClient.delete(resource));
             long deleted = System.nanoTime();
             long deleteTime = deleted - ready;
 
-            createHist.recordValue(TimeUnit.NANOSECONDS.toMillis(createTime));
-            metricCreateHist.observe(toSeconds(createTime));
-
-            readyHist.recordValue(TimeUnit.NANOSECONDS.toMillis(readyTime));
-            metricReadyHist.labels(addressType.name()).observe(toSeconds(readyTime));
-
             deleteHist.recordValue(TimeUnit.NANOSECONDS.toMillis(deleteTime));
-            metricDeleteHist.observe(toSeconds(deleteTime));
+            deleteTimer.observeDuration();
 
             Thread.sleep((long) (500 + (Math.random() * 1000.0)));
         }
@@ -183,6 +183,7 @@ public class ApiClient {
 
     private static <T> T tryUntilSuccessRecordFailure(Callable<T> callable) throws Exception {
         long errorStart = 0;
+        var outageTimer = metricOutageHist.startTimer();
         while (true) {
             try {
                 T ret = callable.call();
@@ -190,8 +191,7 @@ public class ApiClient {
                     long errorEnd = System.nanoTime();
                     long errorTime = errorEnd - errorStart;
                     errorHist.recordValue(TimeUnit.NANOSECONDS.toMillis(errorTime));
-                    metricOutageHist.observe(toSeconds(errorTime));
-                    sumOutage.addAndGet(errorTime);
+                    outageTimer.observeDuration();
                 }
                 return ret;
             } catch (KubernetesClientException e) {
