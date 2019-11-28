@@ -141,6 +141,7 @@ public class ProbeClient extends AbstractVerticle {
             addressClient.withLabel("instance", instanceId.toString()).delete();
         }));
 
+        List<Address> addressList = new ArrayList<>();
         for (int i = 0; i < addresses.size(); i++) {
             String address = addresses.get(i);
             String name = String.format("%s.%s", addressSpaceName, address);
@@ -158,7 +159,10 @@ public class ProbeClient extends AbstractVerticle {
                     .endSpec()
                     .build();
             addressClient.createOrReplace(resource);
+            addressList.add(resource);
         }
+
+        Common.waitUntilReady(addressClient, addressList);
 
         HTTPServer httpServer = new HTTPServer(8080);
 

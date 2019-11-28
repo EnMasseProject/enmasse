@@ -16,9 +16,12 @@ import io.enmasse.address.model.EndpointStatus;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.prometheus.client.Counter;
 import io.prometheus.client.exporter.HTTPServer;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
@@ -29,6 +32,7 @@ import io.vertx.proton.ProtonSender;
 import org.HdrHistogram.AtomicHistogram;
 import org.HdrHistogram.Histogram;
 import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 
@@ -41,6 +45,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+
+import static io.enmasse.test.Common.waitUntilReady;
 
 public class MessagingClient extends AbstractVerticle {
     private static final Counter connectSuccesses = Counter.build()
@@ -59,7 +65,23 @@ public class MessagingClient extends AbstractVerticle {
             .register();
 
     private static final Counter reconnects = Counter.build()
-            .name("test_disconnects_total")
+            .name("test_reconnects_total")
+            .help("N/A")
+            .register();
+
+    private static final Counter attaches = Counter.build()
+            .name("test_attaches_total")
+            .help("N/A")
+            .labelNames("linkType", "addressType")
+            .register();
+
+    private static final Counter detaches = Counter.build()
+            .name("test_detaches_total")
+            .help("N/A")
+            .register();
+
+    private static final Counter reattaches = Counter.build()
+            .name("test_reattaches_total")
             .help("N/A")
             .register();
 
@@ -84,6 +106,11 @@ public class MessagingClient extends AbstractVerticle {
             .buckets(1.0, 2.5, 7.5, 10.0, 25.0, 50.0, 75.0, 100.0)
             .register();
 
+    private static final Counter numReceived = Counter.build()
+            .name("test_received_total")
+            .help("N/A")
+            .labelNames("addressType")
+            .register();
 
     private static final Counter numAccepted = Counter.build()
             .name("test_accepted_total")
@@ -146,6 +173,7 @@ public class MessagingClient extends AbstractVerticle {
 
         client.connect(protonClientOptions, host, port, connectResult -> {
             if (connectResult.succeeded()) {
+                startPromise.complete();
                 connectSuccesses.inc();
                 ProtonConnection connection = connectResult.result();
 
@@ -155,28 +183,37 @@ public class MessagingClient extends AbstractVerticle {
                     reconnectTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
                     reconnectHist.labels(addressType.name()).observe(toSeconds(duration));
                 }
+                connection.disconnectHandler(ProtonConnection::disconnect);
 
                 connection.closeHandler(closeResult -> {
+                    System.out.println("CONNECT CLOSE");
                     disconnects.inc();
                     lastDisconnect.set(System.nanoTime());
+                    Context context = vertx.getOrCreateContext();
                     vertx.setTimer(retryDelay, id -> {
-                        reconnects.inc();
-                        connectAndAttach(client, null, Math.min(retryDelay * 2, maxRetryDelay));
+                        context.runOnContext(c -> {
+                            reconnects.inc();
+                            connectAndAttach(client, null, Math.min(retryDelay * 2, maxRetryDelay));
+                        });
                     });
                 });
 
+                connection.open();
                 for (String address : addresses) {
                     attachLink(connection, address, retryDelay);
                 }
-                connection.open();
             } else {
+                System.out.println("CONNECT FAIL");
                 connectFailures.inc();
                 if (startPromise != null) {
                     startPromise.fail(connectResult.cause());
                 } else {
+                    Context context = vertx.getOrCreateContext();
                     vertx.setTimer(retryDelay, handler -> {
-                        reconnects.inc();
-                        connectAndAttach(client, null, Math.max(retryDelay * 2, maxRetryDelay));
+                        context.runOnContext(c -> {
+                            reconnects.inc();
+                            connectAndAttach(client, null, Math.max(retryDelay * 2, maxRetryDelay));
+                        });
                     });
                 }
             }
@@ -190,50 +227,96 @@ public class MessagingClient extends AbstractVerticle {
     private void attachLink(ProtonConnection connection, String address, long retryDelay) {
         if (linkType.equals(LinkType.receiver)) {
             ProtonReceiver receiver = connection.createReceiver(address);
-            receiver.handler((protonDelivery, message) -> {
-                connection.close();
-            });
+            receiver.setPrefetch(10);
             receiver.openHandler(receiverAttachResult -> {
                 if (receiverAttachResult.succeeded()) {
+                    System.out.println("Opened receiver success!");
+                    attaches.inc();
                     // We've been reattached. Record how long it took
                     if (lastDetach.get(address).get() > 0) {
                         long duration = System.nanoTime() - lastDetach.get(address).get();
                         reattachTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
                         reattachHist.labels(addressType.name()).observe(toSeconds(duration));
                     }
+                } else {
+                    System.out.println("Opened receiver failed!");
+                    Context context = vertx.getOrCreateContext();
+                    vertx.setTimer(retryDelay, handler -> {
+                        context.runOnContext(c -> {
+                            reattaches.inc();
+                            attachLink(connection, address, Math.min(retryDelay * 2, maxRetryDelay));
+                        });
+                    });
                 }
             });
             receiver.closeHandler(closeResult -> {
+                System.out.println("CLsoed receiver!: " + receiver.getRemoteCondition());
+                detaches.inc();
                 lastDetach.get(address).set(System.nanoTime());
+                Context context = vertx.getOrCreateContext();
                 vertx.setTimer(retryDelay, id -> {
-                    attachLink(connection, address, Math.min(retryDelay * 2, maxRetryDelay));
+                    context.runOnContext(c -> {
+                        reattaches.inc();
+                        attachLink(connection, address, Math.min(retryDelay * 2, maxRetryDelay));
+                    });
                 });
+            });
+            receiver.handler((protonDelivery, message) -> {
+                System.out.println("RECEIVED MESSAGE");
+                numReceived.labels(addressType.name()).inc();
             });
             receiver.open();
         } else {
             ProtonSender sender = connection.createSender(address);
             sender.openHandler(senderAttachResult -> {
                 if (senderAttachResult.succeeded()) {
+                    System.out.println("Opened sender success");
                     // We've been reattached. Record how long it took
                     if (lastDetach.get(address).get() > 0) {
+                        attaches.inc();
                         long duration = System.nanoTime() - lastDetach.get(address).get();
                         reattachTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
                         reattachHist.labels(addressType.name()).observe(toSeconds(duration));
                     }
-                    sendMessage(sender);
+                    sendMessage(address, sender);
+                } else {
+                    System.out.println("Opened sender fail");
+                    Context context = vertx.getOrCreateContext();
+                    vertx.setTimer(retryDelay, handler -> {
+                        context.runOnContext(c -> {
+                            reattaches.inc();
+                            attachLink(connection, address, Math.min(retryDelay * 2, maxRetryDelay));
+                        });
+                    });
                 }
+            });
+            sender.closeHandler(closeResult -> {
+                System.out.println("CLsoed sender!: " + sender.getRemoteCondition());
+                detaches.inc();
+                lastDetach.get(address).set(System.nanoTime());
+                Context context = vertx.getOrCreateContext();
+                vertx.setTimer(retryDelay, id -> {
+                    context.runOnContext(c -> {
+                        reattaches.inc();
+                        attachLink(connection, address, Math.min(retryDelay * 2, maxRetryDelay));
+                    });
+                });
             });
             sender.open();
         }
     }
 
-    private void sendMessage(ProtonSender sender) {
+    private void sendMessage(String address, ProtonSender sender) {
         Message message = Proton.message();
         message.setBody(new AmqpValue("HELLO"));
+        message.setAddress(address);
         if (addressType.equals(AddressType.queue)) {
             message.setDurable(true);
         }
+        System.out.println("Sending message");
+        Context context = vertx.getOrCreateContext();
         sender.send(message, delivery -> {
+            System.out.println("Delivery accepted!");
             switch (delivery.getRemoteState().getType()) {
                 case Accepted:
                     numAccepted.labels(addressType.name()).inc();
@@ -250,7 +333,9 @@ public class MessagingClient extends AbstractVerticle {
             }
             if (delivery.remotelySettled()) {
                 vertx.setTimer(500, id -> {
-                    sendMessage(sender);
+                    context.runOnContext(c -> {
+                        sendMessage(address, sender);
+                    });
                 });
             }
         });
@@ -321,12 +406,16 @@ public class MessagingClient extends AbstractVerticle {
                     .endSpec()
                     .build();
             addressClient.createOrReplace(resource);
+            System.out.println("Created address " + address);
             if (i % 2 == 0) {
                 anycastAddresses.add(resource);
             } else {
                 queueAddresses.add(resource);
             }
         }
+
+        waitUntilReady(addressClient, anycastAddresses);
+        waitUntilReady(addressClient, queueAddresses);
 
         HTTPServer server = new HTTPServer(8080);
 
@@ -337,20 +426,24 @@ public class MessagingClient extends AbstractVerticle {
 
         while (true) {
             Thread.sleep(30000);
-            System.out.println("# Metrics");
-            System.out.println("Successful connects = " + connectSuccesses.get());
-            System.out.println("Failed connects = " + connectFailures.get());
-            System.out.println("Disconnects = " + disconnects.get());
-            System.out.println("Reconnects = " + reconnects.get());
-            System.out.println("Reconnect duration (anycast) 99p = " + reconnectTime.get(AddressType.anycast).getValueAtPercentile(percentile));
-            System.out.println("Reconnect duration (queue) 99p = " + reconnectTime.get(AddressType.queue).getValueAtPercentile(percentile));
-            System.out.println("Reattach duration (anycast) 99p = " + reconnectTime.get(AddressType.anycast).getValueAtPercentile(percentile));
-            System.out.println("Reattach duration (queue) 99p = " + reconnectTime.get(AddressType.queue).getValueAtPercentile(percentile));
-            System.out.println("Num accepted = " + numAccepted.get());
-            System.out.println("Num rejected = " + numRejected.get());
-            System.out.println("Num modified = " + numModified.get());
-            System.out.println("Num released = " + numReleased.get());
-            System.out.println("##########");
+            try {
+                System.out.println("# Metrics");
+                System.out.println("Successful connects = " + connectSuccesses.get());
+                System.out.println("Failed connects = " + connectFailures.get());
+                System.out.println("Disconnects = " + disconnects.get());
+                System.out.println("Reconnects = " + reconnects.get());
+                System.out.println("Reconnect duration (anycast) 99p = " + reconnectTime.get(AddressType.anycast).getValueAtPercentile(percentile));
+                System.out.println("Reconnect duration (queue) 99p = " + reconnectTime.get(AddressType.queue).getValueAtPercentile(percentile));
+                System.out.println("Reattach duration (anycast) 99p = " + reconnectTime.get(AddressType.anycast).getValueAtPercentile(percentile));
+                System.out.println("Reattach duration (queue) 99p = " + reconnectTime.get(AddressType.queue).getValueAtPercentile(percentile));
+                System.out.println("Num accepted = " + numAccepted.get());
+                System.out.println("Num rejected = " + numRejected.get());
+                System.out.println("Num modified = " + numModified.get());
+                System.out.println("Num released = " + numReleased.get());
+                System.out.println("##########");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -369,6 +462,12 @@ public class MessagingClient extends AbstractVerticle {
                     System.out.println("Failed starting receiver client for addresses " + addressList);
                 }
             });
+
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             vertx.deployVerticle(new MessagingClient(endpointHost, endpointPort, addressType, LinkType.sender, addressList), result -> {
                 if (result.succeeded()) {
