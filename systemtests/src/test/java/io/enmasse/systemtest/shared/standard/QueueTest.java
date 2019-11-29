@@ -24,6 +24,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -459,6 +460,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     }
 
     @Test
+    @DisplayName("testLargeMessages")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         Address addressQueue = new AddressBuilder()
                 .withNewMetadata()

@@ -17,6 +17,7 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -129,6 +130,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     }
 
     @Test
+    @DisplayName("testMessageSubscription")
     void testMessageSubscription(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
@@ -178,6 +180,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     }
 
     @Test
+    @DisplayName("testMessageDurableSubscription")
     void testMessageDurableSubscription(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
@@ -250,6 +253,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     }
 
     @Test
+    @DisplayName("testMessageDurableSubscriptionTransacted")
     void testMessageDurableSubscriptionTransacted(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
@@ -303,6 +307,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     }
 
     @Test
+    @DisplayName("testSharedDurableSubscription")
     void testSharedDurableSubscription(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
@@ -362,6 +367,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     }
 
     @Test
+    @DisplayName("testSharedNonDurableSubscription")
     void testSharedNonDurableSubscription(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
@@ -419,6 +425,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     }
 
     @Test
+    @DisplayName("testLargeMessages")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
