@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class ProbeClient extends AbstractVerticle {
     private final String host;
@@ -179,8 +180,11 @@ public class ProbeClient extends AbstractVerticle {
                     completed.countDown();
                 });
             }
-            completed.await();
-            Thread.sleep(10000);
+            if (!completed.await(1, TimeUnit.MINUTES)) {
+                System.err.println("Probe timed out after 1 minute");
+            } else {
+                Thread.sleep(10000);
+            }
             System.out.println("# Metrics");
             System.out.println("successCounter = " + successCounter.get());
             System.out.println("failureCounter = " + failureCounter.get());
