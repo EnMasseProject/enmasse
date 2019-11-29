@@ -51,7 +51,7 @@ public class Environment {
     private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String upgradeTemplates = System.getenv().getOrDefault(UPGRADE_TEPLATES_ENV,
-            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-0.26.5").toString());
+            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String monitoringNamespace = System.getenv().getOrDefault(MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
     private final String tag = System.getenv().getOrDefault(TAG_ENV, "latest");
     private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
