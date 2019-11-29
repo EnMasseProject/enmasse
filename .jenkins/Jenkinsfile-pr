@@ -97,7 +97,7 @@ pipeline {
                     for (def startVersion : params.UPGRADE_FROM.split(",")) {
                         env.START_TEMPLATES += "${WORKSPACE}/enmasse/templates/build/enmasse-${startVersion},"
                     }
-                    env.START_TEMPLATES = env.START_TEMPLATES.substring(0, .START_TEMPLATES.length() - 1)
+                    env.START_TEMPLATES = env.START_TEMPLATES.substring(0, env.START_TEMPLATES.length() - 1)
 
                     echo "TEST_ONLY: ${env.TEST_ONLY}"
                     echo "TEST_CASE: ${env.TEST_CASE}"
