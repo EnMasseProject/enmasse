@@ -171,7 +171,9 @@ pipeline {
             steps {
                 dir('enmasse') {
                     script {
-                        enmasse.downloadEnmasse(env.UPGRADE_FROM)
+                        for (def startVersion : params.UPGRADE_FROM.split(",")) {
+                            enmasse.downloadEnmasse(startVersion)
+                        }
                     }
                 }
             }
