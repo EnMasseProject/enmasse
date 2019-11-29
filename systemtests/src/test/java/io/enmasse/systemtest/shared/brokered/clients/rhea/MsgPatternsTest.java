@@ -10,6 +10,7 @@ import io.enmasse.systemtest.broker.ArtemisManagement;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.resolvers.ArtemisManagementParameterResolver;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,11 +32,13 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     }
 
     @Test
+    @DisplayName("testRoundRobinReceiver")
     void testRoundRobinReceiver(ArtemisManagement artemisManagement) throws Exception {
         doRoundRobinReceiverTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
     }
 
     @Test
+    @DisplayName("testTopicSubscribe")
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
         doTopicSubscribeTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath), false);
     }
@@ -56,6 +59,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     }
 
     @Test
+    @DisplayName("testMessageSelectorTopic")
     void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
         doMessageSelectorTopicTest(artemisManagement, new RheaClientSender(logPath), new RheaClientSender(logPath),
                 new RheaClientReceiver(logPath), new RheaClientReceiver(logPath), false);

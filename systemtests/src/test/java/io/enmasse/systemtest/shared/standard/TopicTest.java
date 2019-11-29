@@ -24,6 +24,7 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.message.Message;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -343,11 +344,11 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         Address topic = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic1"))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic-pooled"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
-                .withAddress("test-topic1")
+                .withAddress("test-topic-pooled")
                 .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
                 .endSpec()
                 .build();
@@ -391,11 +392,11 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         Address topic = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic1"))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic-sharded"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
-                .withAddress("test-topic1")
+                .withAddress("test-topic-sharded")
                 .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
                 .endSpec()
                 .build();
@@ -569,6 +570,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     }
 
     @Test
+    @DisplayName("testLargeMessages")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
@@ -596,7 +598,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     }
 
 
-    class AmqpJmsSelectorFilter implements DescribedType {
+    static class AmqpJmsSelectorFilter implements DescribedType {
 
         private final String selector;
 

@@ -11,6 +11,7 @@ import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.stomp.StompClientReceiver;
 import io.enmasse.systemtest.messagingclients.stomp.StompClientSender;
 import io.enmasse.systemtest.resolvers.ArtemisManagementParameterResolver;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -24,6 +25,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     }
 
     @Test
+    @DisplayName("testTopicSubscribe")
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
         getArguments().put(ClientArgument.DEST_TYPE, "MULTICAST");
         doTopicSubscribeTest(artemisManagement, new StompClientSender(logPath), new StompClientReceiver(logPath), new StompClientReceiver(logPath), false);

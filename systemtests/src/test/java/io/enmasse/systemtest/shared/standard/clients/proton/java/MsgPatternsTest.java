@@ -11,6 +11,7 @@ import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceive
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.resolvers.ArtemisManagementParameterResolver;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +28,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
     }
 
     @Test
+    @DisplayName("testTopicSubscribe")
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
         doTopicSubscribeTest(artemisManagement, new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath), true);
     }
@@ -38,6 +40,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
     }
 
     @Test
+    @DisplayName("testMessageSelectorTopic")
     void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
         doMessageSelectorTopicTest(artemisManagement, new ProtonJMSClientSender(logPath), new ProtonJMSClientSender(logPath),
                 new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath), true);
