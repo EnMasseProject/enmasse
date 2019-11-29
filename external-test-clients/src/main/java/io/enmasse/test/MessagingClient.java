@@ -171,6 +171,7 @@ public class MessagingClient extends AbstractVerticle {
                 .setHostnameVerificationAlgorithm("");
 
         Runnable reconnectFn = () -> {
+            // System.out.println("Reconnecting in " + reconnectDelay.get() + " ms");
             Context context = vertx.getOrCreateContext();
             vertx.setTimer(reconnectDelay.get(), id -> {
                 context.runOnContext(c -> {
@@ -181,6 +182,7 @@ public class MessagingClient extends AbstractVerticle {
             });
         };
 
+        // System.out.println("Connecting to " + host + ":" + port);
         client.connect(protonClientOptions, host, port, connectResult -> {
             if (connectResult.succeeded()) {
                 if (startPromise != null) {
@@ -192,20 +194,23 @@ public class MessagingClient extends AbstractVerticle {
                 // We've been reconnected. Record how long it took
                 if (lastDisconnect.get() > 0) {
                     long duration = System.nanoTime() - lastDisconnect.get();
+                    System.out.println("Reconnection of " + linkType + " took " + TimeUnit.NANOSECONDS.toMillis(duration) + " ms");
                     reconnectTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
-                    reconnectHist.labels(addressType.name()).observe(toSeconds(duration));
+                    reconnectHist.observe(toSeconds(duration));
                 }
 
                 connection.disconnectHandler(conn -> {
                     disconnects.inc();
                     lastDisconnect.set(System.nanoTime());
                     conn.close();
+                    System.out.println("Disconnected " + linkType + "!");
                     reconnectFn.run();
                 });
 
                 connection.closeHandler(closeResult -> {
                     disconnects.inc();
                     lastDisconnect.set(System.nanoTime());
+                    System.out.println("Closed " + linkType + "!");
                     reconnectFn.run();
                 });
 
@@ -230,6 +235,7 @@ public class MessagingClient extends AbstractVerticle {
 
     private void attachLink(ProtonConnection connection, String address) {
         Runnable reattachFn = () -> {
+            System.out.println("Reattaching " + linkType + " to " + address + " in " + reattachDelay.get(address).get() + " ms");
             Context context = vertx.getOrCreateContext();
             vertx.setTimer(reattachDelay.get(address).get(), handler -> {
                 context.runOnContext(c -> {
@@ -241,15 +247,18 @@ public class MessagingClient extends AbstractVerticle {
         };
 
         Runnable handleAttachFn = () -> {
+            // System.out.println("Attached " + linkType + " to " + address);
             attaches.inc();
             // We've been reattached. Record how long it took
             if (lastDetach.get(address).get() > 0) {
                 long duration = System.nanoTime() - lastDetach.get(address).get();
+                System.out.println("Reattach of " + linkType + " to " + address + " took " + TimeUnit.NANOSECONDS.toMillis(duration) + " ms");
                 reattachTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
                 reattachHist.labels(addressType.name()).observe(toSeconds(duration));
             }
         };
 
+        // System.out.println("Attaching " + linkType + " to " + address);
 
         if (linkType.equals(LinkType.receiver)) {
             ProtonReceiver receiver = connection.createReceiver(address);
@@ -266,6 +275,7 @@ public class MessagingClient extends AbstractVerticle {
                 reattachFn.run();
             });
             receiver.handler((protonDelivery, message) -> {
+                //System.out.println("Received message from " + address);
                 numReceived.labels(addressType.name()).inc();
             });
             receiver.open();
@@ -295,6 +305,7 @@ public class MessagingClient extends AbstractVerticle {
         if (addressType.equals(AddressType.queue)) {
             message.setDurable(true);
         }
+        //System.out.println("Sending message to " + address);
         Context context = vertx.getOrCreateContext();
         sender.send(message, delivery -> {
             switch (delivery.getRemoteState().getType()) {
@@ -312,7 +323,7 @@ public class MessagingClient extends AbstractVerticle {
                     break;
             }
             if (delivery.remotelySettled()) {
-                vertx.setTimer(1000, id -> {
+                vertx.setTimer(2000, id -> {
                     context.runOnContext(c -> {
                         sendMessage(address, sender);
                     });
