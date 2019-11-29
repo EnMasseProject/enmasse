@@ -47,6 +47,7 @@ public class ProbeClient extends AbstractVerticle {
         this.host = host;
         this.port = port;
         this.address = address;
+        this.receiveTimeout = receiveTimeout;
     }
 
     @Override
