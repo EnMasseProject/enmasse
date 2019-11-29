@@ -182,12 +182,15 @@ pipeline {
             }
             environment {
                 UPGRADE_TEMPLATES = "${WORKSPACE}/enmasse/templates/build/enmasse-${env.TAG}"
-                START_TEMPLATES = "${WORKSPACE}/enmasse/templates/build/enmasse-${env.UPGRADE_FROM}"
+                START_TEMPLATES = ""
                 DOCKER_REGISTRY = "${env.INTERNAL_REGISTRY}"
             }
             steps {
                 script {
                     dir('enmasse') {
+                        for (def startVersion : params.UPGRADE_FROM.split(",")) {
+                            env.START_TEMPLATES += "${WORKSPACE}/enmasse/templates/build/enmasse-${startVersion}"
+                        }
                         sh "make templates || true"
                         enmasse.runSystemtests('upgrade', 'upgrade.**')
                     }

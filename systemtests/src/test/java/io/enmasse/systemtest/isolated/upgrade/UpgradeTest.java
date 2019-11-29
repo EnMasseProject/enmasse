@@ -15,6 +15,7 @@ import io.enmasse.systemtest.IndicativeSentences;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -80,6 +81,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
     @ParameterizedTest(name = "testUpgradeAnsible-{0}")
     @MethodSource("provideVersions")
+    @OpenShift
     void testUpgradeAnsible(String version, String templates) throws Exception {
         doTestUpgrade(templates, version, true);
     }
