@@ -93,11 +93,18 @@ pipeline {
                         env.INSTALL_TYPE = "OLM"
                         echo "INSTALL_TYPE: ${env.INSTALL_TYPE}"
                     }
+
+                    for (def startVersion : params.UPGRADE_FROM.split(",")) {
+                        env.START_TEMPLATES += "${WORKSPACE}/enmasse/templates/build/enmasse-${startVersion},"
+                    }
+                    env.START_TEMPLATES = env.START_TEMPLATES.substring(0, .START_TEMPLATES.length() - 1)
+
                     echo "TEST_ONLY: ${env.TEST_ONLY}"
                     echo "TEST_CASE: ${env.TEST_CASE}"
                     echo "TEST_PROFILE: ${env.TEST_PROFILE}"
                     echo "UPGRADE_FROM: ${env.UPGRADE_FROM}"
-                    echo "OC_VERSION : ${env.OC_VERSION}"
+                    echo "OC_VERSION: ${env.OC_VERSION}"
+                    echo "START_TEMPLATES: ${env.START_TEMPLATES}"
                 }
             }
         }
@@ -184,15 +191,11 @@ pipeline {
             }
             environment {
                 UPGRADE_TEMPLATES = "${WORKSPACE}/enmasse/templates/build/enmasse-${env.TAG}"
-                START_TEMPLATES = ""
                 DOCKER_REGISTRY = "${env.INTERNAL_REGISTRY}"
             }
             steps {
                 script {
                     dir('enmasse') {
-                        for (def startVersion : params.UPGRADE_FROM.split(",")) {
-                            env.START_TEMPLATES += "${WORKSPACE}/enmasse/templates/build/enmasse-${startVersion}"
-                        }
                         sh "make templates || true"
                         enmasse.runSystemtests('upgrade', 'upgrade.**')
                     }
