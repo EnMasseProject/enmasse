@@ -356,8 +356,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             KubeCMDClient.deleteAddressSpace(namespace, brokered.getMetadata().getName());
             KubeCMDClient.deleteAddressSpace(namespace, standard.getMetadata().getName());
 
-            TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getMetadata().getName());
-            TestUtils.waitForNamespaceDeleted(kubernetes, standard.getMetadata().getName());
+            AddressSpaceUtils.waitForAddressSpaceDeleted(brokered);
+            AddressSpaceUtils.waitForAddressSpaceDeleted(standard);
             TestUtils.waitUntilCondition(() -> {
                 ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(namespace, Optional.empty());
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
