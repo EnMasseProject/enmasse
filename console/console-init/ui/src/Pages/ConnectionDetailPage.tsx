@@ -18,7 +18,7 @@ import { ILink, LinkList } from "src/Components/LinkList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionDetailResponse } from "src/Types/ResponseTypes";
 import { css } from "@patternfly/react-styles";
-import { GridStylesForTableHeader } from "./AddressSpace/AddressesListPage";
+import { GridStylesForTableHeader } from "./AddressSpace/AddressesListWithFilterAndPaginationPage";
 import { Link } from "react-router-dom";
 
 const RETURN_CONNECTION_DETAIL = (
@@ -130,7 +130,7 @@ export default function ConnectionDetailPage() {
         <BreadcrumbItem isActive={true}>Connection</BreadcrumbItem>
       </Breadcrumb>
     ),
-    [name, namespace]
+    [name, namespace, type]
   );
 
   useBreadcrumb(breadcrumb);

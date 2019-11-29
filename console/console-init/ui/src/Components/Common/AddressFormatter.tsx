@@ -1,5 +1,3 @@
-import * as React from "react";
-
 export const getPlanAndTypeForAddress = (
   plan: string,
   addressType: string,

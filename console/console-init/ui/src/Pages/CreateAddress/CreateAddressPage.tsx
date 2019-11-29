@@ -1,12 +1,9 @@
 import * as React from "react";
-import { Button, Wizard } from "@patternfly/react-core";
-import { GridStylesForTableHeader } from "src/Pages/AddressSpace/AddressesListPage";
-import { css } from "@patternfly/react-styles";
+import { Wizard } from "@patternfly/react-core";
 import { AddressDefinitaion } from "src/Components/AddressDetail/CreateAddressDefinition";
 import { PreviewAddress } from "./PreviewAddress";
 import gql from "graphql-tag";
-import { useMutation, useApolloClient } from "@apollo/react-hooks";
-import { Loading } from "use-patternfly";
+import { useApolloClient } from "@apollo/react-hooks";
 import { getPlanAndTypeForAddress } from "src/Components/Common/AddressFormatter";
 
 const CREATE_ADDRESS = gql`
@@ -18,20 +15,22 @@ const CREATE_ADDRESS = gql`
     }
   }
 `;
-
 interface ICreateAddressProps {
   namespace: string;
   addressSpace: string;
   type: string;
   refetch?: () => void;
+  isCreateWizardOpen: boolean;
+  setIsCreateWizardOpen: (value: boolean) => void;
 }
 export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
   namespace,
   addressSpace,
   type,
-  refetch
+  refetch,
+  isCreateWizardOpen,
+  setIsCreateWizardOpen
 }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
   const [addressName, setAddressName] = React.useState("");
   const [addressType, setAddressType] = React.useState(" ");
   const [plan, setPlan] = React.useState(" ");
@@ -51,7 +50,7 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
             },
             Spec: {
               Type: addressType.toLowerCase(),
-              Plan: getPlanAndTypeForAddress(plan, addressType, type),
+              Plan: getPlanAndTypeForAddress(plan, addressType, type || ""),
               Address: addressName,
               AddressSpace: addressSpace
             }
@@ -60,9 +59,9 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
       });
       console.log(data);
       if (data.data) {
-        setIsOpen(!isOpen);
-        setAddressType(" ");
-        setPlan(" ");
+        setIsCreateWizardOpen(false);
+        setAddressType("");
+        setPlan("");
       }
       if (refetch) refetch();
     }
@@ -89,40 +88,27 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
           name={addressName}
           plan={plan}
           type={addressType}
-          namespace={namespace}
+          namespace={namespace || ""}
         />
       ),
       nextButtonText: "Finish"
     }
   ];
   return (
-    <React.Fragment>
-      <Button
-        variant="primary"
-        className={css(GridStylesForTableHeader.create_button_left_margin)}
-        onClick={() => {
-          setIsOpen(!isOpen);
-        }}
-      >
-        Create Address
-      </Button>
-      {isOpen && (
-        <Wizard
-          isOpen={isOpen}
-          isFullHeight={true}
-          isFullWidth={true}
-          onClose={() => {
-            setIsOpen(!isOpen);
-            setAddressName("");
-          }}
-          title="Create new Address"
-          steps={steps}
-          onNext={() => {
-            console.log("next");
-          }}
-          onSave={handleSave}
-        />
-      )}
-    </React.Fragment>
+    <Wizard
+      isOpen={isCreateWizardOpen}
+      isFullHeight={true}
+      isFullWidth={true}
+      onClose={() => {
+        setIsCreateWizardOpen(!isCreateWizardOpen);
+        setAddressName("");
+      }}
+      title="Create new Address"
+      steps={steps}
+      onNext={() => {
+        console.log("next");
+      }}
+      onSave={handleSave}
+    />
   );
 };

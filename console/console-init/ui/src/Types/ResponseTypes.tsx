@@ -71,7 +71,6 @@ export interface IAddressResponse {
     }>;
   };
 }
-
 export interface IConnectionListResponse {
   connections: {
     Total: number;
@@ -85,6 +84,75 @@ export interface IConnectionListResponse {
         Protocol: string;
       };
       Metrics: Array<IMetrics>;
+    }>;
+  };
+}
+
+enum eLinkRole {
+  "sender",
+  "receiver"
+}
+export interface IAddressDetailResponse {
+  addresses: {
+    Total: number;
+    Addresses: Array<{
+      ObjectMeta: {
+        Name: string;
+        Namespace: String;
+        CreationTimestamp: string;
+      };
+      Spec: {
+        Address: string;
+        Plan: {
+          Spec: {
+            DisplayName: string;
+          };
+        };
+      };
+      Status: {
+        IsReady: string;
+        Messages: string;
+        Phase: string;
+        PlanStatus: {
+          Partitions: number;
+        };
+      };
+      Metrics: Array<IMetrics>;
+    }>;
+  };
+}
+export interface IAddressLinksResponse {
+  addresses: {
+    Total: number;
+    Addresses: Array<{
+      ObjectMeta: {
+        Name: string;
+      };
+      Spec: {
+        AddressSpace: string;
+      };
+      Links: {
+        Total: number;
+        Links: Array<{
+          ObjectMeta: {
+            Name: string;
+            Namespace: string;
+          };
+          Spec: {
+            Role: string;
+            Connection: {
+              ObjectMeta: {
+                Name: string;
+                Namespace: string;
+              };
+              Spec: {
+                ContainerId: string;
+              };
+            };
+          };
+          Metrics: IMetrics[];
+        }>;
+      };
     }>;
   };
 }

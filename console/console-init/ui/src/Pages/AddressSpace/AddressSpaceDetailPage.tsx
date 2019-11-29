@@ -31,7 +31,8 @@ const styles = StyleSheet.create({
   }
 });
 const getConnectionsList = () => import("./ConnectionsListPage");
-const getAddressesList = () => import("./AddressesListPage");
+const getAddressesList = () =>
+  import("./AddressesListWithFilterAndPaginationPage");
 
 interface IAddressSpaceDetailResponse {
   addressSpaces: {
@@ -99,7 +100,7 @@ const breadcrumb = (
   </Breadcrumb>
 );
 export default function AddressSpaceDetailPage() {
-  const { name, namespace, type, subList } = useParams();
+  const { name, namespace, subList } = useParams();
   useA11yRouteChange();
   useBreadcrumb(breadcrumb);
   useDocumentTitle("Address Space Detail");
