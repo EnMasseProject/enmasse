@@ -29,22 +29,12 @@ spec:
       "links": [],
       "panels": [
         {
+          "aliasColors": {},
+          "bars": false,
           "cacheTimeout": null,
-          "colorBackground": false,
-          "colorValue": false,
-          "colors": [
-            "#299c46",
-            "rgba(237, 129, 40, 0.89)",
-            "#d44a3a"
-          ],
-          "format": "none",
-          "gauge": {
-            "maxValue": 100,
-            "minValue": 0,
-            "show": false,
-            "thresholdLabels": false,
-            "thresholdMarkers": true
-          },
+          "dashLength": 10,
+          "dashes": false,
+          "fill": 1,
           "gridPos": {
             "h": 8,
             "w": 12,
@@ -52,64 +42,96 @@ spec:
             "y": 0
           },
           "id": 8,
-          "interval": null,
-          "links": [],
-          "mappingType": 1,
-          "mappingTypes": [
-            {
-              "name": "value to text",
-              "value": 1
-            },
-            {
-              "name": "range to text",
-              "value": 2
-            }
-          ],
-          "maxDataPoints": 100,
-          "nullPointMode": "connected",
-          "nullText": null,
-          "options": {},
-          "postfix": "",
-          "postfixFontSize": "50%",
-          "prefix": "",
-          "prefixFontSize": "50%",
-          "rangeMaps": [
-            {
-              "from": "null",
-              "text": "N/A",
-              "to": "null"
-            }
-          ],
-          "sparkline": {
-            "fillColor": "rgba(31, 118, 189, 0.18)",
-            "full": false,
-            "lineColor": "rgb(31, 120, 193)",
-            "show": false
+          "legend": {
+            "avg": true,
+            "current": false,
+            "hideZero": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": true
           },
-          "tableColumn": "",
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {}
+          ],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
           "targets": [
             {
-              "expr": "test_reconnect_duration_sum",
+              "expr": "histogram_quantile(0.99, rate(test_reconnect_duration_bucket[1m]))",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "Reconnect duration",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.99, rate(test_reattach_duration_bucket{addressType=\"anycast\"}[1m]))",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "Total reconnect time",
-              "refId": "A"
-            }
-          ],
-          "thresholds": "",
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Messaging reattach delay",
-          "type": "singlestat",
-          "valueFontSize": "80%",
-          "valueMaps": [
+              "legendFormat": "Reattach duration anycast",
+              "refId": "B"
+            },
             {
-              "op": "=",
-              "text": "N/A",
-              "value": "null"
+              "expr": "histogram_quantile(0.99, rate(test_reattach_duration_bucket{addressType=\"queue\"}[1m]))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "Reattach duration queue",
+              "refId": "C"
             }
           ],
-          "valueName": "current"
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Messaging Client Outage",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
         },
         {
           "aliasColors": {},
@@ -144,28 +166,28 @@ spec:
           "renderer": "flot",
           "seriesOverrides": [],
           "spaceLength": 10,
-          "stack": true,
+          "stack": false,
           "steppedLine": true,
           "targets": [
             {
-              "expr": "rate(test_connect_failure_total[5m])",
+              "expr": "rate(test_connect_failure_total[1m])",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "Connection failure rate",
+              "legendFormat": "Connection failures/sec",
               "refId": "A"
             },
             {
-              "expr": "rate(test_reconnects_total[5m])",
+              "expr": "rate(test_reconnects_total[1m])",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "Reconnect rate",
+              "legendFormat": "Reconnects/sec",
               "refId": "B"
             },
             {
-              "expr": "rate(test_reattaches_total[5m])",
+              "expr": "rate(test_reattaches_total[1m])",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "Reattach rate",
+              "legendFormat": "Reattaches/sec",
               "refId": "C"
             }
           ],
@@ -193,7 +215,7 @@ spec:
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             },
             {
@@ -255,25 +277,29 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "accepted",
+              "legendFormat": "Accepted/sec",
               "refId": "A"
             },
             {
               "expr": "sum(rate(test_rejected_total[1m]))\n",
               "format": "time_series",
               "intervalFactor": 1,
+              "legendFormat": "Rejected/sec",
               "refId": "B"
             },
             {
               "expr": "sum(rate(test_released_total[1m]))",
               "format": "time_series",
+              "interval": "",
               "intervalFactor": 1,
+              "legendFormat": "Released/sec",
               "refId": "C"
             },
             {
               "expr": "sum(rate(test_modified_total[1m]))",
               "format": "time_series",
               "intervalFactor": 1,
+              "legendFormat": "Modified/sec",
               "refId": "D"
             }
           ],
@@ -351,7 +377,7 @@ spec:
           "renderer": "flot",
           "seriesOverrides": [],
           "spaceLength": 10,
-          "stack": true,
+          "stack": false,
           "steppedLine": true,
           "targets": [
             {
@@ -419,7 +445,7 @@ spec:
         "list": []
       },
       "time": {
-        "from": "now-5m",
+        "from": "now-30m",
         "to": "now"
       },
       "timepicker": {

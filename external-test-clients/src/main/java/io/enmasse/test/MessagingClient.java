@@ -185,23 +185,43 @@ public class MessagingClient extends AbstractVerticle {
         // System.out.println("Connecting to " + host + ":" + port);
         client.connect(protonClientOptions, host, port, connectResult -> {
             if (connectResult.succeeded()) {
-                if (startPromise != null) {
-                    startPromise.complete();
-                }
                 connectSuccesses.inc();
                 ProtonConnection connection = connectResult.result();
+                connection.openHandler(openResult -> {
+                    if (openResult.succeeded()) {
+                        if (startPromise != null) {
+                            startPromise.complete();
+                        }
+                        System.out.println(linkType + " connected to " + connection.getRemoteContainer() + " on " + host + ":" + port);
 
-                // We've been reconnected. Record how long it took
-                if (lastDisconnect.get() > 0) {
-                    long duration = System.nanoTime() - lastDisconnect.get();
-                    System.out.println("Reconnection of " + linkType + " took " + TimeUnit.NANOSECONDS.toMillis(duration) + " ms");
-                    reconnectTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
-                    reconnectHist.observe(toSeconds(duration));
-                }
+                        // If we've been reconnected. Record how long it took
+                        if (lastDisconnect.get() > 0) {
+                            long duration = System.nanoTime() - lastDisconnect.get();
+                            System.out.println("Reconnection of " + linkType + " took " + TimeUnit.NANOSECONDS.toMillis(duration) + " ms");
+                            reconnectTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
+                            reconnectHist.observe(toSeconds(duration));
+                        }
+
+                        for (String address : addresses) {
+                            attachLink(connection, address);
+                        }
+                    } else {
+                        connectFailures.inc();
+                        if (startPromise != null) {
+                            startPromise.fail(connectResult.cause());
+                        } else {
+                            connection.disconnect();
+                        }
+                    }
+                });
 
                 connection.disconnectHandler(conn -> {
                     disconnects.inc();
-                    lastDisconnect.set(System.nanoTime());
+                    long now = System.nanoTime();
+                    lastDisconnect.set(now);
+                    for (String address : addresses) {
+                        lastDetach.get(address).set(now);
+                    }
                     conn.close();
                     System.out.println("Disconnected " + linkType + "!");
                     reconnectFn.run();
@@ -209,15 +229,17 @@ public class MessagingClient extends AbstractVerticle {
 
                 connection.closeHandler(closeResult -> {
                     disconnects.inc();
-                    lastDisconnect.set(System.nanoTime());
+                    long now = System.nanoTime();
+                    lastDisconnect.set(now);
+                    for (String address : addresses) {
+                        lastDetach.get(address).set(now);
+                    }
                     System.out.println("Closed " + linkType + "!");
                     reconnectFn.run();
                 });
 
                 connection.open();
-                for (String address : addresses) {
-                    attachLink(connection, address);
-                }
+
             } else {
                 connectFailures.inc();
                 if (startPromise != null) {
@@ -269,7 +291,14 @@ public class MessagingClient extends AbstractVerticle {
                     reattachFn.run();
                 }
             });
+            receiver.detachHandler(detachResult -> {
+                System.out.println("Detached " + linkType + " for " + address + "!");
+                detaches.inc();
+                lastDetach.get(address).set(System.nanoTime());
+                reattachFn.run();
+            });
             receiver.closeHandler(closeResult -> {
+                System.out.println("Closed " + linkType + " for " + address + "!");
                 detaches.inc();
                 lastDetach.get(address).set(System.nanoTime());
                 reattachFn.run();
@@ -289,7 +318,14 @@ public class MessagingClient extends AbstractVerticle {
                     reattachFn.run();
                 }
             });
+            sender.detachHandler(detachResult -> {
+                System.out.println("Detached " + linkType + " for " + address + "!");
+                detaches.inc();
+                lastDetach.get(address).set(System.nanoTime());
+                reattachFn.run();
+            });
             sender.closeHandler(closeResult -> {
+                System.out.println("Closed " + linkType + " for " + address + "!");
                 detaches.inc();
                 lastDetach.get(address).set(System.nanoTime());
                 reattachFn.run();
