@@ -78,11 +78,11 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         doTestUpgrade(templates, version, false);
     }
 
-//    @ParameterizedTest(name = "testUpgradeAnsible-{0}")
-//    @MethodSource("provideVersions")
-//    void testUpgradeAnsible(String version, String templates) throws Exception {
-//        doTestUpgrade(templates, version, true);
-//    }
+    @ParameterizedTest(name = "testUpgradeAnsible-{0}")
+    @MethodSource("provideVersions")
+    void testUpgradeAnsible(String version, String templates) throws Exception {
+        doTestUpgrade(templates, version, true);
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
