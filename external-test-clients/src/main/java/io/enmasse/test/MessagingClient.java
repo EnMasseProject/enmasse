@@ -170,6 +170,17 @@ public class MessagingClient extends AbstractVerticle {
                 .setTrustAll(true)
                 .setHostnameVerificationAlgorithm("");
 
+        Runnable reconnectFn = () -> {
+            Context context = vertx.getOrCreateContext();
+            vertx.setTimer(reconnectDelay.get(), id -> {
+                context.runOnContext(c -> {
+                    reconnects.inc();
+                    reconnectDelay.set(Math.min(maxRetryDelay, reconnectDelay.get() * 2));
+                    connectAndAttach(client, null);
+                });
+            });
+        };
+
         client.connect(protonClientOptions, host, port, connectResult -> {
             if (connectResult.succeeded()) {
                 if (startPromise != null) {
@@ -184,31 +195,18 @@ public class MessagingClient extends AbstractVerticle {
                     reconnectTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
                     reconnectHist.labels(addressType.name()).observe(toSeconds(duration));
                 }
+
                 connection.disconnectHandler(conn -> {
                     disconnects.inc();
                     lastDisconnect.set(System.nanoTime());
                     conn.close();
-                    Context context = vertx.getOrCreateContext();
-                    vertx.setTimer(reconnectDelay.get(), id -> {
-                        context.runOnContext(c -> {
-                            reconnects.inc();
-                            reconnectDelay.set(Math.min(maxRetryDelay, reconnectDelay.get() * 2));
-                            connectAndAttach(client, null);
-                        });
-                    });
+                    reconnectFn.run();
                 });
 
                 connection.closeHandler(closeResult -> {
                     disconnects.inc();
                     lastDisconnect.set(System.nanoTime());
-                    Context context = vertx.getOrCreateContext();
-                    vertx.setTimer(reconnectDelay.get(), id -> {
-                        context.runOnContext(c -> {
-                            reconnects.inc();
-                            reconnectDelay.set(Math.min(maxRetryDelay, reconnectDelay.get() * 2));
-                            connectAndAttach(client, null);
-                        });
-                    });
+                    reconnectFn.run();
                 });
 
                 connection.open();
@@ -220,14 +218,7 @@ public class MessagingClient extends AbstractVerticle {
                 if (startPromise != null) {
                     startPromise.fail(connectResult.cause());
                 } else {
-                    Context context = vertx.getOrCreateContext();
-                    vertx.setTimer(reconnectDelay.get(), id -> {
-                        context.runOnContext(c -> {
-                            reconnects.inc();
-                            reconnectDelay.set(Math.min(maxRetryDelay, reconnectDelay.get() * 2));
-                            connectAndAttach(client, null);
-                        });
-                    });
+                    reconnectFn.run();
                 }
             }
         });
@@ -238,40 +229,41 @@ public class MessagingClient extends AbstractVerticle {
     }
 
     private void attachLink(ProtonConnection connection, String address) {
+        Runnable reattachFn = () -> {
+            Context context = vertx.getOrCreateContext();
+            vertx.setTimer(reattachDelay.get(address).get(), handler -> {
+                context.runOnContext(c -> {
+                    reattaches.inc();
+                    reattachDelay.get(address).set(Math.min(maxRetryDelay, reattachDelay.get(address).get() * 2));
+                    attachLink(connection, address);
+                });
+            });
+        };
+
+        Runnable handleAttachFn = () -> {
+            attaches.inc();
+            // We've been reattached. Record how long it took
+            if (lastDetach.get(address).get() > 0) {
+                long duration = System.nanoTime() - lastDetach.get(address).get();
+                reattachTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
+                reattachHist.labels(addressType.name()).observe(toSeconds(duration));
+            }
+        };
+
+
         if (linkType.equals(LinkType.receiver)) {
             ProtonReceiver receiver = connection.createReceiver(address);
-            receiver.setPrefetch(10);
             receiver.openHandler(receiverAttachResult -> {
                 if (receiverAttachResult.succeeded()) {
-                    attaches.inc();
-                    // We've been reattached. Record how long it took
-                    if (lastDetach.get(address).get() > 0) {
-                        long duration = System.nanoTime() - lastDetach.get(address).get();
-                        reattachTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
-                        reattachHist.labels(addressType.name()).observe(toSeconds(duration));
-                    }
+                    handleAttachFn.run();
                 } else {
-                    Context context = vertx.getOrCreateContext();
-                    vertx.setTimer(reattachDelay.get(address).get(), handler -> {
-                        context.runOnContext(c -> {
-                            reattaches.inc();
-                            reattachDelay.get(address).set(Math.min(maxRetryDelay, reattachDelay.get(address).get() * 2));
-                            attachLink(connection, address);
-                        });
-                    });
+                    reattachFn.run();
                 }
             });
             receiver.closeHandler(closeResult -> {
                 detaches.inc();
                 lastDetach.get(address).set(System.nanoTime());
-                Context context = vertx.getOrCreateContext();
-                vertx.setTimer(reattachDelay.get(address).get(), handler -> {
-                    context.runOnContext(c -> {
-                        reattaches.inc();
-                        reattachDelay.get(address).set(Math.min(maxRetryDelay, reattachDelay.get(address).get() * 2));
-                        attachLink(connection, address);
-                    });
-                });
+                reattachFn.run();
             });
             receiver.handler((protonDelivery, message) -> {
                 numReceived.labels(addressType.name()).inc();
@@ -281,36 +273,16 @@ public class MessagingClient extends AbstractVerticle {
             ProtonSender sender = connection.createSender(address);
             sender.openHandler(senderAttachResult -> {
                 if (senderAttachResult.succeeded()) {
-                    // We've been reattached. Record how long it took
-                    if (lastDetach.get(address).get() > 0) {
-                        attaches.inc();
-                        long duration = System.nanoTime() - lastDetach.get(address).get();
-                        reattachTime.get(addressType).recordValue(TimeUnit.NANOSECONDS.toMillis(duration));
-                        reattachHist.labels(addressType.name()).observe(toSeconds(duration));
-                    }
+                    handleAttachFn.run();
                     sendMessage(address, sender);
                 } else {
-                    Context context = vertx.getOrCreateContext();
-                    vertx.setTimer(reattachDelay.get(address).get(), handler -> {
-                        context.runOnContext(c -> {
-                            reattaches.inc();
-                            reattachDelay.get(address).set(Math.min(maxRetryDelay, reattachDelay.get(address).get() * 2));
-                            attachLink(connection, address);
-                        });
-                    });
+                    reattachFn.run();
                 }
             });
             sender.closeHandler(closeResult -> {
                 detaches.inc();
                 lastDetach.get(address).set(System.nanoTime());
-                Context context = vertx.getOrCreateContext();
-                vertx.setTimer(reattachDelay.get(address).get(), handler -> {
-                    context.runOnContext(c -> {
-                        reattaches.inc();
-                        reattachDelay.get(address).set(Math.min(maxRetryDelay, reattachDelay.get(address).get() * 2));
-                        attachLink(connection, address);
-                    });
-                });
+                reattachFn.run();
             });
             sender.open();
         }
