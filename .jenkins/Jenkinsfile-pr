@@ -94,10 +94,11 @@ pipeline {
                         echo "INSTALL_TYPE: ${env.INSTALL_TYPE}"
                     }
 
-                    for (def startVersion : params.UPGRADE_FROM.split(",")) {
-                        env.START_TEMPLATES += "${WORKSPACE}/enmasse/templates/build/enmasse-${startVersion},"
+                    def startTemplates = ""
+                    for (def startVersion : env.UPGRADE_FROM.split(",")) {
+                        startTemplates += "${WORKSPACE}/enmasse/templates/build/enmasse-${startVersion},"
                     }
-                    env.START_TEMPLATES = env.START_TEMPLATES.substring(0, env.START_TEMPLATES.length() - 1)
+                    env.START_TEMPLATES = startTemplates.substring(0, startTemplates.length() - 1)
 
                     echo "TEST_ONLY: ${env.TEST_ONLY}"
                     echo "TEST_CASE: ${env.TEST_CASE}"
@@ -178,7 +179,7 @@ pipeline {
             steps {
                 dir('enmasse') {
                     script {
-                        for (def startVersion : params.UPGRADE_FROM.split(",")) {
+                        for (def startVersion : env.UPGRADE_FROM.split(",")) {
                             enmasse.downloadEnmasse(startVersion)
                         }
                     }
