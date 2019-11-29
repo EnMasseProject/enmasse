@@ -196,6 +196,10 @@ public class ApiClient {
                 failureCount.labels(String.valueOf(e.getCode())).inc();
                 errorStart = System.nanoTime();
                 Thread.sleep(500);
+            } catch (Exception e) {
+                System.out.println("Got exception performing operation: " + e.getMessage());
+                errorStart = System.nanoTime();
+                Thread.sleep(500);
             }
         }
     }

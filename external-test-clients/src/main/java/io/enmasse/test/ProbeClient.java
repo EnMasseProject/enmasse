@@ -41,8 +41,9 @@ public class ProbeClient extends AbstractVerticle {
     private final String host;
     private final int port;
     private final String address;
+    private final long receiveTimeout;
 
-    private ProbeClient(String host, int port, String address) {
+    private ProbeClient(String host, int port, String address, long receiveTimeout) {
         this.host = host;
         this.port = port;
         this.address = address;
@@ -55,6 +56,11 @@ public class ProbeClient extends AbstractVerticle {
                 .setTrustAll(true)
                 .setHostnameVerificationAlgorithm("");
 
+        vertx.setTimer(receiveTimeout, id -> {
+            if (!startPromise.isComplete()) {
+                startPromise.fail("Failed completing probe within timeout");
+            }
+        });
         ProtonClient client = ProtonClient.create(vertx);
         client.connect(protonClientOptions, host, port, connectResult -> {
             if (connectResult.succeeded()) {
@@ -167,11 +173,12 @@ public class ProbeClient extends AbstractVerticle {
 
         HTTPServer httpServer = new HTTPServer(8080);
 
+        long receiveTimeout = 30_000;
         Vertx vertx = Vertx.vertx();
         while (true) {
             CountDownLatch completed = new CountDownLatch(addresses.size());
             for (String address : addresses) {
-                vertx.deployVerticle(new ProbeClient(endpointHost, endpointPort, address), result -> {
+                vertx.deployVerticle(new ProbeClient(endpointHost, endpointPort, address, receiveTimeout), result -> {
                     if (result.succeeded()) {
                         successCounter.inc();
                     } else {
