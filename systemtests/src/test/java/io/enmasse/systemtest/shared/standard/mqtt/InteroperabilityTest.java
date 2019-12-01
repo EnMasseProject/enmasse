@@ -13,12 +13,14 @@ import io.enmasse.systemtest.bases.shared.ITestSharedWithMqtt;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.github.artsok.RepeatedIfExceptionsTest;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -39,7 +41,8 @@ class InteroperabilityTest extends TestBase implements ITestSharedWithMqtt {
     private static final String MQTT_AMQP_TOPIC = "mqtt-amqp-topic";
     private static final String AMQP_MQTT_TOPIC = "amqp-mqtt-topic";
 
-    @Test
+    @DisplayName("testSendMqttReceiveAmqp")
+    @RepeatedIfExceptionsTest(repeats = 2, name = "")
     void testSendMqttReceiveAmqp() throws Exception {
         Address mqttTopic = new AddressBuilder()
                 .withNewMetadata()
@@ -79,7 +82,8 @@ class InteroperabilityTest extends TestBase implements ITestSharedWithMqtt {
         mqttClient.close();
     }
 
-    @Test
+    @DisplayName("testSendAmqpReceiveMqtt")
+    @RepeatedIfExceptionsTest(repeats = 2, name = "")
     void testSendAmqpReceiveMqtt() throws Exception {
         Address mqttTopic = new AddressBuilder()
                 .withNewMetadata()

@@ -153,13 +153,13 @@ public class TestInfo {
     }
 
     public boolean isClassIoT() {
-        return currentTestClass.getTags().stream().anyMatch(tag -> TestTag.IOT_TAGS.contains(tag));
+        return currentTestClass.getTags().stream().anyMatch(TestTag.IOT_TAGS::contains);
     }
 
     public boolean isEndOfIotTests() {
         int currentTestIndex = getCurrentTestIndex();
         if (currentTestIndex + 1 < tests.size()) {
-            return getTags(tests.get(currentTestIndex + 1)).stream().noneMatch(tag -> TestTag.IOT_TAGS.contains(tag));
+            return getTags(tests.get(currentTestIndex + 1)).stream().noneMatch(TestTag.IOT_TAGS::contains);
         }
         return true;
     }
@@ -230,7 +230,7 @@ public class TestInfo {
     }
 
     private boolean isSameTestMethod(TestIdentifier test1, ExtensionContext test2) {
-        return test1 != null && test2 != null && test1.getDisplayName().equals(test2.getDisplayName());
+        return test1 != null && test2 != null && test1.getDisplayName().equals(test2.getDisplayName().replace("()", "").replace("\\s+", ""));
     }
 
 }

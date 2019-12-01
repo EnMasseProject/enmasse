@@ -66,6 +66,7 @@
         <junit.jupiter.version>5.5.0</junit.jupiter.version>
         <junit.platform.runner.version>1.5.0</junit.platform.runner.version>
         <junit.platform.launcher.version>1.5.0</junit.platform.launcher.version>
+        <rerunner-jupiter.version>2.1.3</rerunner-jupiter.version>
         <artemis.version>2.10.1</artemis.version>
         <ngwebdriver.version>1.1.4</ngwebdriver.version>
         <paho.version>1.2.1</paho.version>
@@ -613,6 +614,12 @@
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-runner</artifactId>
                 <version>${junit.platform.runner.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.artsok</groupId>
+                <artifactId>rerunner-jupiter</artifactId>
+                <version>${rerunner-jupiter.version}</version>
             </dependency>
 
             <dependency>
