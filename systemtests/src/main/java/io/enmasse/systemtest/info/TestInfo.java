@@ -230,6 +230,8 @@ public class TestInfo {
     }
 
     private boolean isSameTestMethod(TestIdentifier test1, ExtensionContext test2) {
-        return test1 != null && test2 != null && test1.getDisplayName().equals(test2.getDisplayName().replace("()", "").replaceAll("\\s+", ""));
+        return test1 != null && test2 != null && test1.getDisplayName().replace("()", "").replaceAll("\\s+", "")
+                .equals(test2.getDisplayName().replace("()", "").replaceAll("\\s+", ""));
     }
+
 }
