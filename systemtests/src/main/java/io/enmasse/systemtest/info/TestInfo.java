@@ -57,41 +57,41 @@ public class TestInfo {
                 .toArray(new TestIdentifier[0])[0]).toArray(new TestIdentifier[0]));
         testClasses.forEach(testIdentifier -> {
             testPlan.getChildren(testIdentifier)
-            .forEach(test -> {
-                if (test.getSource().isPresent() && test.getSource().get() instanceof MethodSource) {
-                    MethodSource testSource = (MethodSource) test.getSource().get();
-                    try {
-                        Optional<Method> testMethod = ReflectionUtils.findMethod(Class.forName(testSource.getClassName()), testSource.getMethodName(), testSource.getMethodParameterTypes());
-                        if (testMethod.isPresent()) {
-                            MethodBasedExtensionContext extensionContext = new MethodBasedExtensionContext(testMethod);
-                            ExecutionCondition[] conditions = new ExecutionCondition[] {this::disabledCondition, new SupportedInstallTypeCondition(), new AssumeKubernetesCondition(), new AssumeOpenshiftCondition()};
-                            if (evaluateTestDisabled(extensionContext, conditions)) {
-                                LOGGER.debug("Test {}.{} is disabled", testSource.getClassName(), testSource.getMethodName());
-                            } else {
-                                tests.add(test);
+                    .forEach(test -> {
+                        if (test.getSource().isPresent() && test.getSource().get() instanceof MethodSource) {
+                            MethodSource testSource = (MethodSource) test.getSource().get();
+                            try {
+                                Optional<Method> testMethod = ReflectionUtils.findMethod(Class.forName(testSource.getClassName()), testSource.getMethodName(), testSource.getMethodParameterTypes());
+                                if (testMethod.isPresent()) {
+                                    MethodBasedExtensionContext extensionContext = new MethodBasedExtensionContext(testMethod);
+                                    ExecutionCondition[] conditions = new ExecutionCondition[]{this::disabledCondition, new SupportedInstallTypeCondition(), new AssumeKubernetesCondition(), new AssumeOpenshiftCondition()};
+                                    if (evaluateTestDisabled(extensionContext, conditions)) {
+                                        LOGGER.debug("Test {}.{} is disabled", testSource.getClassName(), testSource.getMethodName());
+                                    } else {
+                                        tests.add(test);
+                                    }
+                                }
+                            } catch (ClassNotFoundException e) {
+                                throw new IllegalArgumentException(e);
                             }
+                        } else {
+                            LOGGER.warn("Test {} doesn't have MethodSource", test.getUniqueId());
                         }
-                    } catch ( ClassNotFoundException e ) {
-                        throw new IllegalArgumentException(e);
-                    }
-                } else {
-                    LOGGER.warn("Test {} doesn't have MethodSource", test.getUniqueId());
-                }
-            });
+                    });
         });
         LOGGER.debug("Final tests are {}", tests);
     }
 
     private ConditionEvaluationResult disabledCondition(ExtensionContext ctx) {
         return AnnotationSupport.findAnnotation(ctx.getElement().get(), Disabled.class)
-            .map(a -> ConditionEvaluationResult.disabled("Disabled annotation"))
-            .orElseGet(() -> ConditionEvaluationResult.enabled("No disabled annotation"));
+                .map(a -> ConditionEvaluationResult.disabled("Disabled annotation"))
+                .orElseGet(() -> ConditionEvaluationResult.enabled("No disabled annotation"));
     }
 
     private boolean evaluateTestDisabled(ExtensionContext context, ExecutionCondition... conditions) {
-        for(ExecutionCondition condition : conditions) {
+        for (ExecutionCondition condition : conditions) {
             if (condition.evaluateExecutionCondition(context).isDisabled()) {
-               return true;
+                return true;
             }
         }
         return false;
@@ -170,8 +170,8 @@ public class TestInfo {
 
     public boolean isOLMTest() {
         return AnnotationSupport.findAnnotation(currentTestClass.getElement(), SupportedInstallType.class)
-            .map(a -> a.value() == EnmasseInstallType.OLM)
-            .orElse(false);
+                .map(a -> a.value() == EnmasseInstallType.OLM)
+                .orElse(false);
     }
 
     public OLMInstallationType getOLMInstallationType() {
@@ -230,7 +230,6 @@ public class TestInfo {
     }
 
     private boolean isSameTestMethod(TestIdentifier test1, ExtensionContext test2) {
-        return test1 != null && test2 != null && test1.getDisplayName().equals(test2.getDisplayName().replace("()", "").replace("\\s+", ""));
+        return test1 != null && test2 != null && test1.getDisplayName().equals(test2.getDisplayName().replace("()", "").replaceAll("\\s+", ""));
     }
-
 }
