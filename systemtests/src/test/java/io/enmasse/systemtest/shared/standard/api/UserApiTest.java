@@ -113,11 +113,11 @@ public class UserApiTest extends TestBase implements ITestSharedStandard {
         Address queue = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue"))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue2"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
-                .withAddress("test-queue")
+                .withAddress("test-queue2")
                 .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
                 .endSpec()
                 .build();
