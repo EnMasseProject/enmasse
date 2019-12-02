@@ -559,7 +559,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         assertThat("Wrong count of messages received",
                 recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 3));
 
-        recvResults = amqpClient.recvMessages("topic/world/+", msgs.size() * 2);
+        recvResults = amqpClient.recvMessages("topic-wild/world/+", msgs.size() * 2);
 
         amqpClient.sendMessages(t0.getSpec().getAddress() + "/world/africa", msgs);
         amqpClient.sendMessages(t0.getSpec().getAddress() + "/world/europe", msgs);
