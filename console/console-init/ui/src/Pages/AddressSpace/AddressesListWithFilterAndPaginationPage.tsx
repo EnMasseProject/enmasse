@@ -42,8 +42,6 @@ function AddressesListFunction() {
   const page = parseInt(searchParams.get("page") || "", 10) || 0;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
 
-  console.log("Page", page, perPage);
-
   const setSearchParam = React.useCallback(
     (name: string, value: string) => {
       searchParams.set(name, value.toString());
@@ -52,7 +50,7 @@ function AddressesListFunction() {
   );
 
   const handlePageChange = React.useCallback(
-    (newPage: number) => {
+    (event: React.SyntheticEvent, newPage: number) => {
       setSearchParam("page", (newPage - 1).toString());
 
       history.push({
@@ -63,8 +61,10 @@ function AddressesListFunction() {
   );
 
   const handlePerPageChange = React.useCallback(
-    (newPerPage: number) => {
-      console.log("per page change");
+    (
+      event: React.MouseEvent | React.KeyboardEvent | MouseEvent,
+      newPerPage: number
+    ) => {
       setSearchParam("page", "0");
       setSearchParam("perPage", newPerPage.toString());
       history.push({
@@ -94,11 +94,9 @@ function AddressesListFunction() {
               itemCount={totalAddresses}
               perPage={perPage}
               page={page}
-              onSetPage={(_: any, page: number) => handlePageChange(page)}
+              onSetPage={handlePageChange}
               variant="top"
-              onPerPageSelect={(_: any, page: number) =>
-                handlePerPageChange(page)
-              }
+              onPerPageSelect={handlePerPageChange}
             />
           )}
         </GridItem>
@@ -119,9 +117,9 @@ function AddressesListFunction() {
           itemCount={totalAddresses}
           perPage={perPage}
           page={page}
-          onSetPage={(_: any, page: number) => handlePageChange(page)}
+          onSetPage={handlePageChange}
           variant="top"
-          onPerPageSelect={(_: any, page: number) => handlePerPageChange(page)}
+          onPerPageSelect={handlePerPageChange}
         />
       )}
     </PageSection>

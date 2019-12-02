@@ -163,7 +163,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     tableRows = rows;
     // onCheckboxEdit(rows);
   };
-  // console.log(rows);
+  
   return (
     <Table
       variant={TableVariant.compact}

@@ -81,7 +81,7 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
     }
   }
 
-  console.log("Queries page", page, perPage);
+  
   const ALL_ADDRESS_FOR_ADDRESS_SPACE = gql`
   query all_addresses_for_addressspace_view {
     addresses( first:${perPage} offset:${perPage * page}
