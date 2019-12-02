@@ -5,7 +5,8 @@ import { Redirect } from "react-router";
 const getAddressSpaceListPage = () => import("./Pages/AddressSpaceListPage");
 const getAddressSpaceDetail = () =>
   import("./Pages/AddressSpace/AddressSpaceDetailPage");
-const getAddressDetail = () => import("./Pages/AddressDetailPage");
+const getAddressDetail = () =>
+  import("./Pages/AddressDetail/AddressDetailPage");
 const getConnectionDetail = () => import("./Pages/ConnectionDetailPage");
 
 export const AppRoutes = () => (

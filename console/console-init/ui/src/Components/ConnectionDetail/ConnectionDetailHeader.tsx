@@ -80,15 +80,13 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
           <FlexItem>
             {protocol} {generateIcons()}
           </FlexItem>
-          {!isMobileView ? (
+          {!isMobileView && (
             <FlexItem
               onClick={() => {
                 setIsHidden(!isHidden);
               }}
               className={css(styles.expandable)}
-              // style={{ color: 'rgb(0, 102, 204)' }}
             >
-              {" "}
               {isHidden ? (
                 <>
                   See more details <AngleDownIcon color="black" />
@@ -100,8 +98,6 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
                 </>
               )}
             </FlexItem>
-          ) : (
-            ""
           )}
         </Flex>
         <Flex

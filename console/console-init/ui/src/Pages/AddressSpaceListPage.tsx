@@ -1,13 +1,10 @@
 import React from "react";
-// import { useHistory, useLocation } from "react-router-dom";
-import { gql } from "apollo-boost";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
 import {
   PageSection,
   PageSectionVariants,
   Button,
-  ButtonVariant,
   Dropdown,
   KebabToggle,
   Modal,
@@ -19,33 +16,8 @@ import {
 } from "src/Components/AddressSpaceList/AddressSpaceList";
 import { EmptyAddressSpace } from "src/Components/Common/EmptyAddressSpace";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { DELETE_ADDRESS_SPACE } from "src/Queries/Quries";
-
-const ALL_ADDRESS_SPACES = gql`
-  query all_address_spaces {
-    addressSpaces {
-      Total
-      AddressSpaces {
-        ObjectMeta {
-          Namespace
-          Name
-          CreationTimestamp
-        }
-        Spec {
-          Type
-          Plan {
-            Spec {
-              DisplayName
-            }
-          }
-        }
-        Status {
-          IsReady
-        }
-      }
-    }
-  }
-`;
+import { DELETE_ADDRESS_SPACE, ALL_ADDRESS_SPACES } from "src/Queries/Quries";
+import { CreateAddressSpace } from "./CreateAddressSpace.tsx/CreateAddressSpacePage";
 
 interface IAddressSpacesResponse {
   addressSpaces: {
@@ -121,39 +93,6 @@ function AddressSpaceListFunc() {
   };
   const handleDeleteChange = (addressSpace: IAddressSpace) =>
     setAddressSpaceBeingDeleted(addressSpace);
-  // const location = useLocation();
-  // const history = useHistory();
-  // const searchParams = new URLSearchParams(location.search);
-  // const page = parseInt(searchParams.get("page") || "", 10) || 0;
-  // const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
-
-  // const setSearchParam = React.useCallback(
-  //   (name: string, value: string) => {
-  //     searchParams.set(name, value.toString());
-  //   },
-  //   [searchParams]
-  // );
-
-  // const handlePageChange = React.useCallback(
-  //   (newPage: number) => {
-  //     setSearchParam("page", (newPage - 1).toString());
-  //     history.push({
-  //       search: searchParams.toString()
-  //     });
-  //   },
-  //   [setSearchParam, history, searchParams]
-  // );
-
-  // const handlePerPageChange = React.useCallback(
-  //   (newPerPage: number) => {
-  //     setSearchParam("page", "0");
-  //     setSearchParam("perPage", newPerPage.toString());
-  //     history.push({
-  //       search: searchParams.toString()
-  //     });
-  //   },
-  //   [setSearchParam, history, searchParams]
-  // );
 
   if (loading) return <Loading />;
   if (error) {
@@ -177,12 +116,13 @@ function AddressSpaceListFunc() {
     <PageSection variant={PageSectionVariants.light}>
       {/* TODO: Replace with component*/}
       {/*START*/}
-      <Button
+      {/* <Button
         variant={ButtonVariant.primary}
         style={{ marginBottom: 24, marginLeft: 24 }}
       >
         Create
-      </Button>
+      </Button> */}
+      <CreateAddressSpace />
       <Dropdown
         onSelect={() => {}}
         toggle={

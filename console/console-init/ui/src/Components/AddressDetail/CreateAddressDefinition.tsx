@@ -8,15 +8,9 @@ import {
   Dropdown,
   DropdownToggle,
   DropdownItem,
-  FormSelect,
-  FormSelectOption,
-  DropdownPosition,
-  Flex
+  DropdownPosition
 } from "@patternfly/react-core";
 import { IDropdownOption } from "../Common/FilterDropdown";
-import { css } from "@patternfly/react-styles";
-import styles from "@patternfly/react-styles/css/components/FormControl/form-control";
-import { optionalCallExpression } from "@babel/types";
 export interface IAddressDefinition {
   addressName: string;
   handleAddressChange: (name: string) => void;
@@ -111,16 +105,6 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
             </FormGroup>
 
             <FormGroup label="Type" isRequired={true} fieldId="address-type">
-              {/* <FormSelect
-            value={type}
-            onChange={onTypeSelect}
-            id="horzontal-form-title"
-            name="horizontal-form-title"
-          >
-            {typeOptions.map((option, index) => (
-              <FormSelectOption isDisabled={option.disabled} key={index} value={option.value} label=""></FormSelectOption>
-            ))}
-          </FormSelect> */}
               <br />
               <Dropdown
                 position={DropdownPosition.left}

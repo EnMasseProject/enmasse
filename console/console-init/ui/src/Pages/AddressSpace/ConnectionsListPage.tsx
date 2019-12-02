@@ -27,7 +27,7 @@ import {
   IDropdownOption
 } from "src/Components/Common/FilterDropdown";
 import { SearchIcon } from "@patternfly/react-icons";
-import { GridStylesForTableHeader } from "./AddressesListPage";
+import { GridStylesForTableHeader } from "./AddressesListWithFilterAndPaginationPage";
 const RETURN_ALL_CONECTION_LIST = (name?: string, namespace?: string) => {
   let filter = "";
   if (name) {

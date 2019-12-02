@@ -4,17 +4,17 @@ import {
   GridItem,
   Title,
   PageSection,
-  PageSectionVariants,
-  ClipboardCopy,
-  ClipboardCopyVariant
+  PageSectionVariants
 } from "@patternfly/react-core";
 import gql from "graphql-tag";
 import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
-import { CopyIcon, OutlinedCopyIcon } from "@patternfly/react-icons";
+import { OutlinedCopyIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "@patternfly/react-styles";
-import SyntaxHighlighter from "react-syntax-highlighter";
+import AceEditor from "react-ace";
 
+import "ace-builds/src-noconflict/mode-java";
+import "ace-builds/src-noconflict/theme-github";
 export interface IAddressPreview {
   name?: string;
   type?: string;
@@ -41,16 +41,7 @@ interface ObjectMeta_v1_Input {
   Namespace?: string;
   ResourceVersion?: string;
 }
-interface AddressSpaceSpec_enmasse_io_v1beta1_Input {
-  Plan?: string;
-  Type?: string;
-}
-interface Address_enmasse_io_v1beta1_Input {
-  as: {
-    ObjectMeta: ObjectMeta_v1_Input;
-    Spec: AddressSpaceSpec_enmasse_io_v1beta1_Input;
-  };
-}
+
 export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   name,
   type,
@@ -74,7 +65,6 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   if (loading) return <Loading />;
   if (error) console.log("Address Priview Query Error", error);
   console.log(data);
-  const addressPreviewCode = data;
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Title size="3xl" style={{ marginBottom: 32 }}>
@@ -102,7 +92,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem span={8}>{name}</GridItem>
               </>
             )}
-            {type && type.trim() != "" && (
+            {type && type.trim() !== "" && (
               <>
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Type
@@ -110,7 +100,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem span={8}>{type}</GridItem>
               </>
             )}
-            {plan && plan.trim() != "" && (
+            {plan && plan.trim() !== "" && (
               <>
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Plan
@@ -122,17 +112,30 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
         </GridItem>
         <GridItem span={7} className={css(Style.left_padding)}>
           <Title size={"lg"} className={css(Style.bottom_padding)}>
-            Configuration details
+            {`Configuration details  `}
             <OutlinedCopyIcon
+              size="md"
               color="blue"
               onClick={() => {
                 navigator.clipboard.writeText(data.addressSpaceCommand);
+                alert("coopied successfully");
               }}
             />
           </Title>
-          <SyntaxHighlighter language="javascript">
-            {data.addressSpaceCommand}
-          </SyntaxHighlighter>
+          <AceEditor
+            mode="xml"
+            theme="github"
+            fontSize={14}
+            onChange={() => {}}
+            value={data.addressSpaceCommand}
+            name="UNIQUE_ID_OF_DIV"
+            editorProps={{ $blockScrolling: true }}
+            style={{
+              width: 700,
+              border: "1px solid",
+              borderColor: "lightgrey"
+            }}
+          />
         </GridItem>
       </Grid>
     </PageSection>
