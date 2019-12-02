@@ -39,6 +39,8 @@ The `selfsigned` certificate provider can be used to configure endpoints with se
 certificates. The CA for these certificates can be found in the `status.caCert` field of the
 `AddressSpace` resource.
 
+NOTE: Using a self-signed certificate in production environments is not recommended.
+
 [source,yaml,options="nowrap"]
 ----
 apiVersion: enmasse.io/v1beta1
