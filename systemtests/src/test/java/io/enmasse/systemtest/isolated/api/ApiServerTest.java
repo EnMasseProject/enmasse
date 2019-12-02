@@ -529,6 +529,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             AddressSpace space1 = supplier.get();
             JsonObject space1Json = AddressSpaceUtils.addressSpaceToJson(space1);
             assertTrue(KubeCMDClient.createCR(namespace, space1Json.toString()).getRetCode());
+            resourcesManager.waitForAddressSpaceReady(space1);
             resourcesManager.deleteAddressSpace(space1);
 
             kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).cascading(true).delete();
