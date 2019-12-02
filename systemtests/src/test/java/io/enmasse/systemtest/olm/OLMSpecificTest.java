@@ -23,9 +23,19 @@ public class OLMSpecificTest extends OLMTestBase{
         return kubernetes.getInfraNamespace();
     }
 
+    @Override
+    protected String getDifferentAddressSpaceNamespace() {
+        return "systemtests-specific-olm";
+    }
+
     @Test
-    void testExampleResources() throws Exception {
-        doTestCreateExampleResources();
+    void testExampleResourcesSameNamespaceAsOperator() throws Exception {
+        doTestExampleResourcesSameNamespaceAsOperator();
+    }
+
+    @Test
+    void testExampleResourcesDifferentNamespaceThanOperator() throws Exception {
+        doTestExampleResourcesDifferentNamespaceThanOperator();
     }
 
 }

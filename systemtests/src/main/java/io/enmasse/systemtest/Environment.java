@@ -62,7 +62,8 @@ public class Environment {
     private final Duration kubernetesApiReadTimeout = Optional.ofNullable(System.getenv().get(K8S_API_READ_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
     private final Duration kubernetesApiWriteTimeout = Optional.ofNullable(System.getenv().get(K8S_API_WRITE_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
     private final EnmasseInstallType installType = Optional.ofNullable(System.getenv().get(INSTALL_TYPE)).map(EnmasseInstallType::valueOf).orElse(EnmasseInstallType.BUNDLE);
-    private final OLMInstallationType olmInstallType = Optional.ofNullable(System.getenv().get(OLM_INSTALL_TYPE)).map(OLMInstallationType::valueOf).orElse(OLMInstallationType.SPECIFIC);
+    private final OLMInstallationType olmInstallType = Optional.ofNullable(System.getenv().get(OLM_INSTALL_TYPE)).map(s->s.isEmpty() ? OLMInstallationType.SPECIFIC.name() : s)
+            .map(OLMInstallationType::valueOf).orElse(OLMInstallationType.SPECIFIC);
     protected String templatesPath = System.getenv().getOrDefault(TEMPLATES_PATH,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     protected UserCredentials managementCredentials = new UserCredentials(null, null);
