@@ -56,6 +56,7 @@ const typeDefs = gql`
         Hostname: String!
         ContainerId: String!
         Protocol: Protocol!
+        Encrypted: Boolean!
         Properties: [KeyValue!]!
     }
 

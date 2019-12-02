@@ -339,6 +339,7 @@ var connections = [];
 function createConnection(addressSpace, hostname) {
   var port = Math.floor(Math.random() * 25536) + 40000;
   var hostport = hostname + ":" + port;
+  var encrypted = (port % 2 === 0);
   return {
     ObjectMeta: {
       Name: hostport,
@@ -350,7 +351,8 @@ function createConnection(addressSpace, hostname) {
       AddressSpace: addressSpace,
       Hostname: hostport,
       ContainerId: uuidv1() + "",
-      Protocol: "amqp",
+      Protocol: encrypted ? "amqps" : "amqp",
+      Encrypted: encrypted,
       Properties: [
         {
           "Key": "platform",

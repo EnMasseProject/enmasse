@@ -145,6 +145,7 @@ query all_connections_for_addressspace_view {
         Hostname
         ContainerId
         Protocol
+        Encrypted
       }
     }
   }
