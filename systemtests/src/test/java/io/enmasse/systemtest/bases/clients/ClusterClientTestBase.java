@@ -64,7 +64,7 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
         Address dest = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "message-basic-" + ClientType.getAddressName(sender) + "-" + (websocket ? "ws" : "")))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "message-basic-" + ClientType.getAddressName(sender) + (websocket ? "-ws" : "")))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
