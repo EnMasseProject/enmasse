@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation, useHistory } from "react-router-dom";
 
 import {
   PageSection,
@@ -36,6 +36,43 @@ function AddressesListFunction() {
   const [typeValue, setTypeValue] = React.useState<string | null>(null);
   const [statusValue, setStatusValue] = React.useState<string | null>(null);
   const [totalAddresses, setTotalAddress] = React.useState<number>(0);
+  const location = useLocation();
+  const history = useHistory();
+  const searchParams = new URLSearchParams(location.search);
+  const page = parseInt(searchParams.get("page") || "", 10) || 0;
+  const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+
+  console.log("Page", page, perPage);
+
+  const setSearchParam = React.useCallback(
+    (name: string, value: string) => {
+      searchParams.set(name, value.toString());
+    },
+    [searchParams]
+  );
+
+  const handlePageChange = React.useCallback(
+    (newPage: number) => {
+      setSearchParam("page", (newPage - 1).toString());
+
+      history.push({
+        search: searchParams.toString()
+      });
+    },
+    [setSearchParam, history, searchParams]
+  );
+
+  const handlePerPageChange = React.useCallback(
+    (newPerPage: number) => {
+      console.log("per page change");
+      setSearchParam("page", "0");
+      setSearchParam("perPage", newPerPage.toString());
+      history.push({
+        search: searchParams.toString()
+      });
+    },
+    [setSearchParam, history, searchParams]
+  );
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
@@ -55,12 +92,13 @@ function AddressesListFunction() {
           {totalAddresses > 0 && (
             <Pagination
               itemCount={totalAddresses}
-              perPage={10}
-              page={1}
-              onSetPage={() => {}}
-              widgetId="pagination-options-menu-top"
-              onPerPageSelect={() => {}}
-              style={{ paddingTop: 16, paddingBottom: 16 }}
+              perPage={perPage}
+              page={page}
+              onSetPage={(_: any, page: number) => handlePageChange(page)}
+              variant="top"
+              onPerPageSelect={(_: any, page: number) =>
+                handlePerPageChange(page)
+              }
             />
           )}
         </GridItem>
@@ -73,15 +111,17 @@ function AddressesListFunction() {
         typeValue={typeValue}
         statusValue={statusValue}
         setTotalAddress={setTotalAddress}
+        page={page}
+        perPage={perPage}
       />
       {totalAddresses > 0 && (
         <Pagination
           itemCount={totalAddresses}
-          perPage={10}
-          page={1}
-          onSetPage={() => {}}
-          widgetId="pagination-options-menu-top"
-          onPerPageSelect={() => {}}
+          perPage={perPage}
+          page={page}
+          onSetPage={(_: any, page: number) => handlePageChange(page)}
+          variant="top"
+          onPerPageSelect={(_: any, page: number) => handlePerPageChange(page)}
         />
       )}
     </PageSection>
