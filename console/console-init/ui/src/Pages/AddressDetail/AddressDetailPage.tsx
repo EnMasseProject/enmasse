@@ -17,7 +17,7 @@ import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter"
 import { css } from "@patternfly/react-styles";
 import { GridStylesForTableHeader } from "../AddressSpace/AddressesListWithFilterAndPaginationPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { DELETE_ADDRESS, RETURN_ADDRESS_DETAIL } from "src/Queries/Quries";
+import { DELETE_ADDRESS, RETURN_ADDRESS_DETAIL } from "src/Queries/Queries";
 import { IObjectMeta_v1_Input } from "../AddressSpace/AddressSpaceDetailPage";
 import { AddressLinksListPage } from "./AddressLinksListPage";
 

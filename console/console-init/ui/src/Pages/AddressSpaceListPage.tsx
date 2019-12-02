@@ -16,8 +16,8 @@ import {
 } from "src/Components/AddressSpaceList/AddressSpaceList";
 import { EmptyAddressSpace } from "src/Components/Common/EmptyAddressSpace";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { DELETE_ADDRESS_SPACE, ALL_ADDRESS_SPACES } from "src/Queries/Quries";
-import { CreateAddressSpace } from "./CreateAddressSpace.tsx/CreateAddressSpacePage";
+import { DELETE_ADDRESS_SPACE, ALL_ADDRESS_SPACES } from "src/Queries/Queries";
+import { CreateAddressSpace } from "./CreateAddressSpace/CreateAddressSpacePage";
 
 interface IAddressSpacesResponse {
   addressSpaces: {
