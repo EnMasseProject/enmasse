@@ -68,22 +68,22 @@ public enum ClientType {
             case CLI_RHEA_SENDER:
             case CLI_RHEA_RECEIVER:
             case CLI_RHEA_CONNECTOR:
-                return "cli_rhea";
+                return "cli-rhea";
             case CLI_PROTON_PYTHON_SENDER:
             case CLI_PROTON_PYTHON_RECEIVER:
-                return "cli_python";
+                return "cli-python";
             case CLI_JAVA_PROTON_JMS_SENDER:
             case CLI_JAVA_PROTON_JMS_RECEIVER:
-                return "cli_jms";
+                return "cli-jms";
             case CLI_JAVA_ARTEMIS_JMS_SENDER:
             case CLI_JAVA_ARTEMIS_JMS_RECEIVER:
-                return "cli_artemis";
+                return "cli-artemis";
             case CLI_JAVA_OPENWIRE_JMS_SENDER:
             case CLI_JAVA_OPENWIRE_JMS_RECEIVER:
-                return "cli_openwire";
+                return "cli-openwire";
             case CLI_STOMP_SENDER:
             case CLI_STOMP_RECEIVER:
-                return "cli_stomp";
+                return "cli-stomp";
             default:
                 return "";
         }
