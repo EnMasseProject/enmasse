@@ -361,7 +361,7 @@ objects:
                 key: cookie-secret
                 optional: true
           image: ${AGENT_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:
             httpGet:
               path: /healthz
