@@ -23,7 +23,7 @@ import gql from "graphql-tag";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { StyleSheet, css } from "@patternfly/react-styles";
 import { useHistory } from "react-router";
-import { DOWNLOAD_CERTIFICATE, DELETE_ADDRESS_SPACE } from "src/Queries/Quries";
+import { DOWNLOAD_CERTIFICATE, DELETE_ADDRESS_SPACE } from "src/Queries/Queries";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
 const styles = StyleSheet.create({
   no_bottom_padding: {
@@ -212,12 +212,12 @@ export default function AddressSpaceDetailPage() {
         <SwitchWith404>
           <Redirect path="/" to="/address-spaces" exact={true} />
           <LazyRoute
-            path="/address-spaces/:namespace/:name/:type/addresses"
+            path="/address-spaces/:namespace/:name/:type/addresses/:page?"
             getComponent={getAddressesList}
             exact={true}
           />
           <LazyRoute
-            path="/address-spaces/:namespace/:name/:type/connections"
+            path="/address-spaces/:namespace/:name/:type/connections/:page?"
             getComponent={getConnectionsList}
             exact={true}
           />

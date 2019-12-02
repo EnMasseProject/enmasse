@@ -43,6 +43,8 @@ export const ALL_ADDRESS_SPACES = gql`
 `;
 
 export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
+  page: number,
+  perPage: number,
   name?: string,
   namespace?: string,
   filter?: string | null,
@@ -78,9 +80,11 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
       }
     }
   }
+
+  
   const ALL_ADDRESS_FOR_ADDRESS_SPACE = gql`
   query all_addresses_for_addressspace_view {
-    addresses(
+    addresses( first:${perPage} offset:${perPage * page}
       filter:"${filterString}"
     ) {
       Total

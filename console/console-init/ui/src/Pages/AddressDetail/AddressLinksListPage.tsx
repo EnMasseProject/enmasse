@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useQuery } from "@apollo/react-hooks";
-import { RETURN_ADDRESS_LINKS } from "src/Queries/Quries";
+import { RETURN_ADDRESS_LINKS } from "src/Queries/Queries";
 import { IAddressLinksResponse } from "src/Types/ResponseTypes";
 import { Loading } from "use-patternfly";
 import { IClient, ClientList } from "src/Components/ClientList";

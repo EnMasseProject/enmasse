@@ -4,7 +4,7 @@ import { IAddressResponse } from "src/Types/ResponseTypes";
 import {
   RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE,
   DELETE_ADDRESS
-} from "src/Queries/Quries";
+} from "src/Queries/Queries";
 import { IAddress, AddressList } from "src/Components/AddressSpace/AddressList";
 import { Loading } from "use-patternfly";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
@@ -12,23 +12,28 @@ import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "src/Components/Common/EmptyAddress";
 import { EditAddress } from "../EditAddressPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-export interface IAddressListPageComponent {
+import { useLocation, useHistory } from "react-router-dom";
+export interface IAddressListPageProps {
   name?: string;
   namespace?: string;
   inputValue?: string | null;
   filterValue?: string | null;
   typeValue?: string | null;
   statusValue?: string | null;
+  page: number;
+  perPage: number;
   setTotalAddress: (total: number) => void;
 }
-export const AddressListPage: React.FunctionComponent<IAddressListPageComponent> = ({
+export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = ({
   name,
   namespace,
   inputValue,
   filterValue,
   typeValue,
   statusValue,
-  setTotalAddress
+  setTotalAddress,
+  page,
+  perPage
 }) => {
   const [
     addressBeingEdited,
@@ -40,8 +45,11 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageComponent>
     setAddressBeingDeleted
   ] = React.useState<IAddress | null>();
   const client = useApolloClient();
+
   const { loading, error, data, refetch } = useQuery<IAddressResponse>(
     RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE(
+      page,
+      perPage,
       name,
       namespace,
       filterValue,
@@ -79,6 +87,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageComponent>
     status: address.Status.Phase,
     errorMessages: address.Status.Messages
   }));
+
+  
 
   const handleEdit = (data: IAddress) => {
     if (!addressBeingEdited) {
