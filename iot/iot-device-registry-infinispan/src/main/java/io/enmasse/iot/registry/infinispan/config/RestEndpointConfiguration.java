@@ -18,6 +18,12 @@ import io.enmasse.iot.utils.ConfigBase;
 public class RestEndpointConfiguration {
 
     /**
+     * Defines expiration lifespan for caching authentication tokens in seconds.
+     * Default value of 0 means that caching is disabled
+     */
+    private int tokenExpiration = 60;
+
+    /**
      * Gets properties for configuring the Device Registry's REST endpoint.
      *
      * @return The properties.
@@ -30,5 +36,11 @@ public class RestEndpointConfiguration {
         return props;
     }
 
+    public int getTokenExpiration() {
+        return tokenExpiration;
+    }
 
+    public void setTokenExpiration(int tokenExpiration) {
+        this.tokenExpiration = tokenExpiration;
+    }
 }
