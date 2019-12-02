@@ -50,7 +50,7 @@ function AddressesListFunction() {
   );
 
   const handlePageChange = React.useCallback(
-    (event: React.SyntheticEvent, newPage: number) => {
+    (_: any, newPage: number) => {
       setSearchParam("page", (newPage - 1).toString());
 
       history.push({
@@ -61,10 +61,7 @@ function AddressesListFunction() {
   );
 
   const handlePerPageChange = React.useCallback(
-    (
-      event: React.MouseEvent | React.KeyboardEvent | MouseEvent,
-      newPerPage: number
-    ) => {
+    (_: any, newPerPage: number) => {
       setSearchParam("page", "0");
       setSearchParam("perPage", newPerPage.toString());
       history.push({
