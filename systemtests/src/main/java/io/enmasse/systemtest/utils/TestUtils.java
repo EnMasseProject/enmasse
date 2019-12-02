@@ -8,11 +8,8 @@ package io.enmasse.systemtest.utils;
 import com.google.common.io.BaseEncoding;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceSchema;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -23,13 +20,10 @@ import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.vertx.core.VertxException;
-import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -473,29 +467,6 @@ public class TestUtils {
             callable.call();
             return null;
         });
-    }
-
-    /**
-     * Replace address plan in ConfigMap of already existing address
-     *
-     * @param kubernetes client for manipulation with kubernetes cluster
-     * @param addrSpace  address space which contains ConfigMap
-     * @param dest       destination which will be modified
-     * @param plan       definition of AddressPlan
-     */
-    public static void replaceAddressConfig(Kubernetes kubernetes, AddressSpace addrSpace, Address dest, AddressPlan plan) {
-        String mapKey = "config.json";
-        ConfigMap destConfigMap = kubernetes.getConfigMap(addrSpace.getMetadata().getNamespace(), dest.getSpec().getAddress());
-
-        JsonObject data = new JsonObject(destConfigMap.getData().get(mapKey));
-        log.info(data.toString());
-        data.getJsonObject("spec").remove("plan");
-        data.getJsonObject("spec").put("plan", plan.getMetadata().getName());
-
-        Map<String, String> modifiedData = new LinkedHashMap<>();
-        modifiedData.put(mapKey, data.toString());
-        destConfigMap.setData(modifiedData);
-        kubernetes.replaceConfigMap(addrSpace.getMetadata().getNamespace(), destConfigMap);
     }
 
     public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
