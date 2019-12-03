@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <parent>
+    <groupId>io.enmasse</groupId>
+    <artifactId>enmasse</artifactId>
+    <version>0.31-SNAPSHOT</version>
+  </parent>
+  <packaging>pom</packaging>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>templates</artifactId>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>dist</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <finalName>${application.bundle.prefix}-${project.version}</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+              <ignoreMissingDescriptor>false</ignoreMissingDescriptor>
+              <descriptors>
+                <descriptor>src/assembly/unix-dist.xml</descriptor>
+              </descriptors>
+              <tarLongFileMode>gnu</tarLongFileMode>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

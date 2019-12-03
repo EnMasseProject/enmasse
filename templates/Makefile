@@ -7,7 +7,7 @@ include ../Makefile.common
 
 PACKAGE_ANSIBLE_DIR=$(TOPDIR)/ansible
 BUILDDIR=build
-INSTALLNAME=enmasse-$(TAG)
+INSTALLNAME=enmasse-$(VERSION)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
 PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
 HASHMARK = $(shell echo "\#")

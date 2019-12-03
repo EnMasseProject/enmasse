@@ -48,7 +48,7 @@ templates: imageenv
 deploy: build_go
 	$(IMAGE_ENV) mvn -Prelease deploy $(MAVEN_ARGS)
 
-build_java: build_go
+build_java: build_go templates
 	$(IMAGE_ENV) mvn package -q -B $(MAVEN_ARGS)
 
 build_go: $(GO_DIRS) test_go
