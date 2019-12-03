@@ -43,8 +43,7 @@ public class InfinispanTenantCleaner implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-    }
+    public void close() throws Exception {}
 
     /**
      * Execute deleting the tenant information.
@@ -56,12 +55,11 @@ public class InfinispanTenantCleaner implements AutoCloseable {
      */
     public void run() throws Exception {
 
-        final var mgmtProvider = new DeviceManagementCacheProvider(config.getInfinispan());
-        final var deviceconProvider = new DeviceConnectionCacheProvider(config.getInfinispan());
-
         final LinkedList<Closer> cleanup = new LinkedList<>();
 
-        try {
+        try (
+                var mgmtProvider = new DeviceManagementCacheProvider(config.getInfinispan());
+                var deviceconProvider = new DeviceConnectionCacheProvider(config.getInfinispan());) {
 
             mgmtProvider.start();
             cleanup.add(mgmtProvider::stop);
