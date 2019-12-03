@@ -136,7 +136,8 @@ public class InfinispanTenantCleaner implements AutoCloseable {
 
     private Query createQuery(final CleanerConfig config, final RemoteCache<DeviceKey, DeviceInformation> devicesCache, final String tenantId) {
 
-        // don't select only the ID field due to ISPN-11013
+        // ISPN-11013: if we only select the "deviceId" field here, the we would
+        // also need to index this field. So for the moment, we fetch the full object.
 
         final QueryFactory queryFactory = Search.getQueryFactory(devicesCache);
         final Query query = queryFactory.from(DeviceInformation.class)
