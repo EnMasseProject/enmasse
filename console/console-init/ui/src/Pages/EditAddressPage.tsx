@@ -6,33 +6,72 @@ import {
   FormSelect,
   FormSelectOption
 } from "@patternfly/react-core";
+import { useQuery } from "@apollo/react-hooks";
 import { IAddress } from "../Components/AddressSpace/AddressList";
+import { RETURN_ADDRESS_PLANS } from "src/Queries/Queries";
+import { Loading } from "use-patternfly";
 
 interface IEditAddressProps {
   address: IAddress;
   onChange: (address: IAddress) => void;
 }
 
-export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
-  address
-}) => {
-  //TODO: Call GraphQL to fetch values of Type and Plan
-  const optionsType = [
-    { value: "Queue", label: "Queue", disabled: false },
-    { value: "Topic", label: "Topic", disabled: false },
-    { value: "Subscription", label: "Subscription", disabled: false },
-    { value: "Multicast", label: "Multicast", disabled: false },
-    { value: "Anycast", label: "Anycast", disabled: false }
-  ];
+interface IAddressPlans {
+  addressPlans:  Array<{
+      Spec: {
+        AddressType: string;
+        DisplayName: string;
+      };
+    }>;
+}
 
-  const optionsPlan = [
-    { value: "Small", label: "Small", disabled: false },
-    { value: "Large", label: "Large", disabled: false },
-    { value: "Medium", label: "Medium", disabled: false }
-  ];
-  const [plan, setPlan] = useState<string>("mrs");
-  const [type, setType] = useState<string>("mrs");
-  const [name, setName] = useState<string>("");
+export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
+  address, onChange
+}) => {
+
+  const [plan, setPlan] = useState<string>(address.plan.slice());
+  const type: string = address.type.slice();
+  const name: string = address.name.slice();
+  
+  let { loading, error, data } = useQuery<IAddressPlans>(
+    RETURN_ADDRESS_PLANS
+  );
+
+  if (loading) return <Loading />;
+  if (error) return <Loading />;
+  const { addressPlans } = data || {
+    addressPlans: []
+  };
+
+  let optionsType: any[] = addressPlans.map(plan => {
+    return {
+      value: plan.Spec.AddressType,
+      label: plan.Spec.AddressType.charAt(0).toUpperCase() + plan.Spec.AddressType.slice(1),
+      disabled: false
+    }
+  });
+
+  optionsType = optionsType.reduce((res, itm) => {
+    let result = res.find((item: any) => JSON.stringify(item) == JSON.stringify(itm))
+    if(!result) return res.concat(itm)
+    return res
+  }, []);
+
+  let optionsPlan: any[] = addressPlans.map(plan => {
+    if(plan.Spec.AddressType === type){
+      return {
+        value: plan.Spec.DisplayName,
+        label: plan.Spec.DisplayName,
+        disabled: false
+      }
+    }
+  }).filter(plan => plan !== undefined);
+
+  const onPlanChanged = (plan: string) => {
+    setPlan(plan);
+    address.plan = plan;
+  }
+
   return (
     <Form>
       <FormGroup label="Name" fieldId="simple-form-name">
@@ -40,15 +79,15 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
           type="text"
           id="simple-form-name"
           name="simple-form-name"
+          isDisabled
           aria-describedby="simple-form-name-helper"
           value={name}
-          onChange={value => setName(value)}
         />
       </FormGroup>
       <FormGroup label="Type" fieldId="simple-form-name">
         <FormSelect
           value={type}
-          onChange={value => setType(value)}
+          isDisabled
           aria-label="FormSelect Input"
         >
           {optionsType.map((option, index) => (
@@ -64,7 +103,7 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
       <FormGroup label="Plan" fieldId="simple-form-name">
         <FormSelect
           value={plan}
-          onChange={value => setPlan(value)}
+          onChange={value => onPlanChanged(value)}
           aria-label="FormSelect Input"
         >
           {optionsPlan.map((option, index) => (

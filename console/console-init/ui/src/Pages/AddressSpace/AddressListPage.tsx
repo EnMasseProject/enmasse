@@ -3,7 +3,8 @@ import { useApolloClient, useQuery } from "@apollo/react-hooks";
 import { IAddressResponse } from "src/Types/ResponseTypes";
 import {
   RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE,
-  DELETE_ADDRESS
+  DELETE_ADDRESS,
+  EDIT_ADDRESS
 } from "src/Queries/Queries";
 import { IAddress, AddressList } from "src/Components/AddressSpace/AddressList";
 import { Loading } from "use-patternfly";
@@ -97,7 +98,23 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   };
   const handleCancelEdit = () => setAddressBeingEdited(null);
 
-  const handleSaving = () => void 0;
+  const handleSaving = async () => {
+    if(addressBeingEdited){
+      await client.mutate({
+        mutation: EDIT_ADDRESS,
+        variables: {
+          "a": {
+            "Name": addressBeingEdited.name,
+            "Namespace": addressBeingEdited.namespace
+          },
+          //"jsonPatch": '"[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"' + addressBeingEdited.plan + '\"}]"',
+          "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium-queue\"}]",
+          "patchType": "application/json-patch+json"
+        }
+      });
+      setAddressBeingEdited(null);
+    }
+  }
   const handleEditChange = (address: IAddress) =>
     setAddressBeingEdited(address);
 
