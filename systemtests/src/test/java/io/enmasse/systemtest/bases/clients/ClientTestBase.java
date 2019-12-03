@@ -159,7 +159,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount / 2));
-        arguments.put(ClientArgument.TIMEOUT, "100");
+        arguments.put(ClientArgument.TIMEOUT, "150");
 
 
         receiver.setArguments(arguments);
@@ -215,7 +215,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         arguments.put(ClientArgument.ADDRESS, AddressUtils.getTopicPrefix(hasTopicPrefix) + dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
-        arguments.put(ClientArgument.TIMEOUT, "100");
+        arguments.put(ClientArgument.TIMEOUT, "150");
 
         sender.setArguments(arguments);
         arguments.remove(ClientArgument.MSG_CONTENT);
@@ -424,7 +424,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         arguments.put(ClientArgument.MSG_PROPERTY, "number~12.65");
         arguments.put(ClientArgument.MSG_PROPERTY, "a~true");
         arguments.put(ClientArgument.MSG_PROPERTY, "b~false");
-        arguments.put(ClientArgument.TIMEOUT, "100");
+        arguments.put(ClientArgument.TIMEOUT, "150");
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
 
         //set up senders
