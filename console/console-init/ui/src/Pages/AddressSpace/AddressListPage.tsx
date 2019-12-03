@@ -149,6 +149,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   };
   const handleDeleteChange = (address: IAddress) =>
     setAddressBeingDeleted(address);
+
+    
   return (
     <>
       <AddressList

@@ -1,6 +1,6 @@
 import React from "react";
 import { MemoryRouter } from "react-router";
-import { LinkList, ILink } from "..//Components/LinkList";
+import { LinkList, ILink } from "../Components/ConnectionDetail/LinkList";
 
 export default {
   title: "LinkList"

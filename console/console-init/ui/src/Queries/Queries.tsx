@@ -84,7 +84,7 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
   
   const ALL_ADDRESS_FOR_ADDRESS_SPACE = gql`
   query all_addresses_for_addressspace_view {
-    addresses( first:${perPage} offset:${perPage * page}
+    addresses( first:${perPage} offset:${perPage * (page-1)}
       filter:"${filterString}"
     ) {
       Total

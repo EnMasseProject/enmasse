@@ -14,7 +14,7 @@ import gql from "graphql-tag";
 import { useQuery } from "@apollo/react-hooks";
 import { useParams } from "react-router";
 import { Loading, useA11yRouteChange, useBreadcrumb } from "use-patternfly";
-import { ILink, LinkList } from "src/Components/LinkList";
+import { ILink, LinkList } from "src/Components/ConnectionDetail/LinkList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionDetailResponse } from "src/Types/ResponseTypes";
 import { css } from "@patternfly/react-styles";

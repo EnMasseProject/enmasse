@@ -27,7 +27,7 @@ export const GridStylesForTableHeader = StyleSheet.create({
   }
 });
 
-function AddressesListFunction() {
+export default function AddressesList() {
   useDocumentTitle("Address List");
   useA11yRouteChange();
   const { name, namespace,type } = useParams();
@@ -51,8 +51,7 @@ function AddressesListFunction() {
 
   const handlePageChange = React.useCallback(
     (_: any, newPage: number) => {
-      setSearchParam("page", (newPage - 1).toString());
-
+      setSearchParam("page", newPage.toString());
       history.push({
         search: searchParams.toString()
       });
@@ -70,6 +69,19 @@ function AddressesListFunction() {
     },
     [setSearchParam, history, searchParams]
   );
+
+  const renderPagination = (page: number, perPage: number) => {
+    return (
+      <Pagination
+        itemCount={totalAddresses}
+        perPage={perPage}
+        page={page}
+        onSetPage={handlePageChange}
+        variant="top"
+        onPerPageSelect={handlePerPageChange}
+      />
+    );
+  };
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
@@ -86,16 +98,7 @@ function AddressesListFunction() {
           />
         </GridItem>
         <GridItem span={5}>
-          {totalAddresses > 0 && (
-            <Pagination
-              itemCount={totalAddresses}
-              perPage={perPage}
-              page={page}
-              onSetPage={handlePageChange}
-              variant="top"
-              onPerPageSelect={handlePerPageChange}
-            />
-          )}
+          {totalAddresses > 0 && renderPagination(page, perPage)}
         </GridItem>
       </Grid>
       <AddressListPage
@@ -110,20 +113,7 @@ function AddressesListFunction() {
         perPage={perPage}
         addressSpaceType={type}
       />
-      {totalAddresses > 0 && (
-        <Pagination
-          itemCount={totalAddresses}
-          perPage={perPage}
-          page={page}
-          onSetPage={handlePageChange}
-          variant="top"
-          onPerPageSelect={handlePerPageChange}
-        />
-      )}
+      {totalAddresses > 0 && renderPagination(page, perPage)}
     </PageSection>
   );
-}
-
-export default function AddressesListPage() {
-  return <AddressesListFunction />;
 }
