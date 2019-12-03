@@ -1,3 +1,6 @@
+## 0.31.0
+*  #2714: Allow setting security context of pods using persistent volumes
+
 ## 0.30.0
 * Fix go tool vet on newer versions of go
 * #3247: Fix path to probe endpoint used when running on Kubernetes

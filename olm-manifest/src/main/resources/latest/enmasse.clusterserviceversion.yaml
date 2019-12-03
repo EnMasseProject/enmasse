@@ -697,8 +697,8 @@ spec:
                   value: "${env.CONSOLE_PROXY_KUBERNETES_IMAGE}"
                 - name: CONSOLE_HTTPD_IMAGE
                   value: "${env.CONSOLE_HTTPD_IMAGE}"
-                - name: FS_GROUP_STANDARD_AUTHSERVICE_OVERRIDE
-                  value: "1000"
+                - name: "FS_GROUP_FALLBACK_MAP"
+                  value: "{\"standard-authservice\": 1000}"
       - name: user-api-server
         spec:
           replicas: 1

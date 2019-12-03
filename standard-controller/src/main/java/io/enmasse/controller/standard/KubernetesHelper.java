@@ -225,4 +225,8 @@ public class KubernetesHelper implements Kubernetes {
         client.apps().deployments().withName(deployment.getMetadata().getName()).scale(numReplicas);
     }
 
+    @Override
+    public String getNamespace() {
+        return client.getNamespace();
+    }
 }

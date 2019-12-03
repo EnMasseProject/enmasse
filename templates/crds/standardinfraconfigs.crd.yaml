@@ -62,6 +62,8 @@ spec:
                             type: object
                         priorityClassName:
                           type: string
+                        securityContext:
+                          type: object
                         containers:
                           type: array
                           items:
@@ -89,6 +91,8 @@ spec:
                           type: array
                         priorityClassName:
                           type: string
+                        securityContext:
+                          type: object
                         resources:
                           type: object
                 resources:
@@ -133,6 +137,8 @@ spec:
                           type: array
                         priorityClassName:
                           type: string
+                        securityContext:
+                          type: object
                         resources:
                           type: object
                 resources:

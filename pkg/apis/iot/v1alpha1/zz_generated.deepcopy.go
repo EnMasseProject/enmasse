@@ -530,6 +530,11 @@ func (in *FileBasedDeviceRegistry) DeepCopyInto(out *FileBasedDeviceRegistry) {
 		**out = **in
 	}
 	in.CommonServiceConfig.DeepCopyInto(&out.CommonServiceConfig)
+	if in.SecurityContext != nil {
+		in, out := &in.SecurityContext, &out.SecurityContext
+		*out = new(v1.PodSecurityContext)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
