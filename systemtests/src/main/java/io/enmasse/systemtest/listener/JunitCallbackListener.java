@@ -47,43 +47,49 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     private SharedIoTManager sharedIoTManager = SharedIoTManager.getInstance();
     private IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
     private OperatorManager operatorManager = OperatorManager.getInstance();
+    private static Exception beforeAllException; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         testInfo.setCurrentTestClass(context);
-        handleCallBackError(context, () -> {
-            if (testInfo.isUpgradeTest()) {
-                LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
-            } else if (testInfo.isOLMTest()) {
-                LOGGER.info("Test is OLM");
-                if (operatorManager.isEnmasseOlmDeployed()) {
-                    operatorManager.deleteEnmasseOlm();
+        try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
+            handleCallBackError(context, () -> {
+                if (testInfo.isUpgradeTest()) {
+                    LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
+                } else if (testInfo.isOLMTest()) {
+                    LOGGER.info("Test is OLM");
+                    if (operatorManager.isEnmasseOlmDeployed()) {
+                        operatorManager.deleteEnmasseOlm();
+                    }
+                    if (operatorManager.isEnmasseBundleDeployed()) {
+                        operatorManager.deleteEnmasseBundle();
+                    }
+                    operatorManager.installEnmasseOlm(testInfo.getOLMInstallationType());
+                } else if (env.installType() == EnmasseInstallType.OLM) {
+                    if (!operatorManager.isEnmasseOlmDeployed()) {
+                        operatorManager.installEnmasseOlm();
+                    }
+                    if (!operatorManager.areExamplesApplied()) {
+                        operatorManager.installExamplesBundleOlm();
+                        operatorManager.waitUntilOperatorReadyOlm();
+                    }
+                } else {
+                    if (!operatorManager.isEnmasseBundleDeployed()) {
+                        operatorManager.installEnmasseBundle();
+                    }
+                    if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
+                        operatorManager.installIoTOperator();
+                    }
                 }
-                if (operatorManager.isEnmasseBundleDeployed()) {
-                    operatorManager.deleteEnmasseBundle();
-                }
-                operatorManager.installEnmasseOlm(testInfo.getOLMInstallationType());
-            } else if (env.installType() == EnmasseInstallType.OLM) {
-                if (!operatorManager.isEnmasseOlmDeployed()) {
-                    operatorManager.installEnmasseOlm();
-                }
-                if (!operatorManager.areExamplesApplied()) {
-                    operatorManager.installExamplesBundleOlm();
-                    operatorManager.waitUntilOperatorReadyOlm();
-                }
-            } else {
-                if (!operatorManager.isEnmasseBundleDeployed()) {
-                    operatorManager.installEnmasseBundle();
-                }
-                if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
-                    operatorManager.installIoTOperator();
-                }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            beforeAllException = ex; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
+        }
     }
 
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
+        beforeAllException = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
         handleCallBackError(extensionContext, () -> {
             if (env.skipCleanup() || env.skipUninstall()) {
                 LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
@@ -105,6 +111,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     public void beforeEach(ExtensionContext context) throws Exception {
         testInfo.setCurrentTest(context);
         logPodsInInfraNamespace();
+        if (beforeAllException != null) {
+            throw beforeAllException;
+        }
     }
 
     @Override
