@@ -171,12 +171,12 @@
                     <consoleOutputReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5ConsoleOutputReporter">
                         <disable>false</disable>
                         <encoding>UTF-8</encoding>
-                        <usePhrasedFileName>false</usePhrasedFileName>
+                        <usePhrasedFileName>true</usePhrasedFileName>
                     </consoleOutputReporter>
                     <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoReporter">
                         <disable>false</disable>
                         <usePhrasedFileName>false</usePhrasedFileName>
-                        <usePhrasedClassNameInRunning>true</usePhrasedClassNameInRunning>
+                        <usePhrasedClassNameInRunning>false</usePhrasedClassNameInRunning>
                         <usePhrasedClassNameInTestCaseSummary>true</usePhrasedClassNameInTestCaseSummary>
                     </statelessTestsetInfoReporter>
                 </configuration>
