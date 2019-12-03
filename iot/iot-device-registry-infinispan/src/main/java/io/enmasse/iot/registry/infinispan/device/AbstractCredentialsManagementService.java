@@ -14,7 +14,10 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PreDestroy;
 
@@ -45,6 +48,12 @@ public abstract class AbstractCredentialsManagementService implements Credential
 
     private static final Logger log = LoggerFactory.getLogger(AbstractCredentialsManagementService.class);
 
+    private static final ThreadFactory THREAD_FACTORY = new ThreadFactoryBuilder().setNameFormat("pwd-hash-thread-%d").build();
+
+    private static final int DEFAULT_MAX_CAPACITY = 16 * 1024;
+
+    private static final int DEFAULT_MAX_THREADS = Runtime.getRuntime().availableProcessors();
+
     private HonoPasswordEncoder passwordEncoder;
 
     // Adapter cache :
@@ -64,17 +73,21 @@ public abstract class AbstractCredentialsManagementService implements Credential
     public AbstractCredentialsManagementService(final DeviceManagementCacheProvider managementProvider, final HonoPasswordEncoder passwordEncoder) {
         this(managementProvider
                 .getDeviceManagementCache()
-                .orElseThrow(()-> new NoSuchElementException("Missing device management cache")),
-            managementProvider
-                .getAdapterCredentialsCache()
-                .orElseThrow(()->new NoSuchElementException("Missing adapter credentials cache")),
-                passwordEncoder, Runtime.getRuntime().availableProcessors());
+                .orElseThrow(() -> new NoSuchElementException("Missing device management cache")),
+                managementProvider
+                        .getAdapterCredentialsCache()
+                        .orElseThrow(() -> new NoSuchElementException("Missing adapter credentials cache")),
+                passwordEncoder, DEFAULT_MAX_THREADS);
     }
 
     AbstractCredentialsManagementService(final RemoteCache<DeviceKey, DeviceInformation> managementCache, final RemoteCache<CredentialKey, String> adapterCache,
             final HonoPasswordEncoder passwordEncoder, int hashThreadPoolSize) {
         log.info("Password encoder thread pool size: {}", hashThreadPoolSize);
-        this.encoderThreadPool = Executors.newFixedThreadPool(hashThreadPoolSize, new ThreadFactoryBuilder().setNameFormat("pwd-hash-thread-%d").build());
+        this.encoderThreadPool = new ThreadPoolExecutor(
+                hashThreadPoolSize, hashThreadPoolSize,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<Runnable>(DEFAULT_MAX_CAPACITY),
+                THREAD_FACTORY);
         this.adapterCache = adapterCache;
         this.managementCache = managementCache;
         this.passwordEncoder = passwordEncoder;
