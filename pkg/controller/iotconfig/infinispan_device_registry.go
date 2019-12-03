@@ -92,6 +92,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "amqps", ContainerPort: 5671, Protocol: corev1.ProtocolTCP},
 			{Name: "http", ContainerPort: 8080, Protocol: corev1.ProtocolTCP},
+			{Name: "debug", ContainerPort: 8082, Protocol: corev1.ProtocolTCP},
 			{Name: "https", ContainerPort: 8443, Protocol: corev1.ProtocolTCP},
 		}
 
@@ -119,6 +120,8 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 			{Name: "ENMASSE_IOT_REGISTRY_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
+			{Name: "debug", Value: "true"},
+			{Name: "enmasse.iot.registry.debug.port", Value: "8082"},
 		}
 
 		AppendStandardHonoJavaOptions(container)
