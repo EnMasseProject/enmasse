@@ -16,6 +16,7 @@ import (
 	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
 	"k8s.io/client-go/kubernetes/scheme"
 
+	"github.com/enmasseproject/enmasse/pkg/cache"
 	"github.com/enmasseproject/enmasse/pkg/controller"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -42,7 +43,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace})
+	mgr, err := manager.New(cfg, manager.Options{
+		Namespace: namespace,
+		NewCache:  cache.NewDelegateCacheBuilder(namespace),
+	})
 	if err != nil {
 		log.Error(err, "Failed to create manager")
 		os.Exit(1)
