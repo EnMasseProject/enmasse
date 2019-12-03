@@ -107,7 +107,7 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
         Address dest = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "basic-mqtt-" + ClientType.getAddressName(sender)))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "basic-mqtt" + ClientType.getAddressName(sender)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
