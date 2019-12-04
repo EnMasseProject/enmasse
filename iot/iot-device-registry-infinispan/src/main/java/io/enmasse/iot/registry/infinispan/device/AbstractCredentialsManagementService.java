@@ -150,14 +150,46 @@ public abstract class AbstractCredentialsManagementService implements Credential
     protected abstract CompletableFuture<OperationResult<List<CommonCredential>>> processGet(DeviceKey key, Span span);
 
     private CompletableFuture<List<CommonCredential>> verifyAndEncodePasswords(final List<CommonCredential> credentials) {
-        return CompletableFuture.supplyAsync(() -> {
-            for (final CommonCredential credential : credentials) {
-                checkCredential(credential);
+
+        // Check if we need to encode passwords
+
+        if (!needToEncode(credentials)) {
+            // ... no, so don't fork off a worker task, but inline work
+            try {
+                return CompletableFuture.completedFuture(checkCredentials(credentials));
+            } catch (Exception e) {
+                return CompletableFuture.failedFuture(e);
             }
-            return credentials;
+        }
+
+        // ... for off encoding on worker pool
+        return CompletableFuture.supplyAsync(() -> {
+            return checkCredentials(checkCredentials(credentials));
         }, this.encoderThreadPool);
     }
 
+    /**
+     * Check if we need to encode any secrets.
+     *
+     * @param credentials The credentials to check.
+     * @return {@code true} is the list contains at least one password which needs to be encoded on the
+     *         server side.
+     */
+    private static boolean needToEncode(final List<CommonCredential> credentials) {
+        return credentials
+                .stream()
+                .filter(PasswordCredential.class::isInstance)
+                .map(PasswordCredential.class::cast)
+                .flatMap(c -> c.getSecrets().stream())
+                .anyMatch(s -> s.getPasswordPlain() != null && !s.getPasswordPlain().isEmpty());
+    }
+
+    protected List<CommonCredential> checkCredentials(final List<CommonCredential> credentials) {
+        for (final CommonCredential credential : credentials) {
+            checkCredential(credential);
+        }
+        return credentials;
+    }
 
     /**
      * Validate a secret and hash the password if necessary.

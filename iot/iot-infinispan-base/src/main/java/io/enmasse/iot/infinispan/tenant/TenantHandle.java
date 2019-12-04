@@ -7,6 +7,8 @@ package io.enmasse.iot.infinispan.tenant;
 
 import java.util.Objects;
 
+import org.eclipse.hono.service.management.tenant.Tenant;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 
@@ -14,10 +16,12 @@ public class TenantHandle {
 
     private final String name;
     private final String id;
+    private final Tenant tenant;
 
-    private TenantHandle(final String name, final String id) {
+    private TenantHandle(final String name, final String id, final Tenant tenant) {
         this.name = name;
         this.id = id;
+        this.tenant = tenant;
     }
 
     public String getId() {
@@ -28,10 +32,15 @@ public class TenantHandle {
         return name;
     }
 
+    public Tenant getTenant() {
+        return tenant;
+    }
+
     protected ToStringHelper toStringHelper() {
         return MoreObjects.toStringHelper(this)
                 .add("name", this.name)
-                .add("id", this.id);
+                .add("id", this.id)
+                .add("tenant", this.tenant);
     }
 
     @Override
@@ -39,10 +48,10 @@ public class TenantHandle {
         return toStringHelper().toString();
     }
 
-    public static TenantHandle of(final String name, final String id) {
+    public static TenantHandle of(final String name, final String id, final Tenant tenant) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(id);
-        return new TenantHandle(name, id);
+        return new TenantHandle(name, id, tenant);
     }
 
 }

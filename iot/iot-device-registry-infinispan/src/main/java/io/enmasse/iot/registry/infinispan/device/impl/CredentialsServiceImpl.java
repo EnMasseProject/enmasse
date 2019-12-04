@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -28,6 +29,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PreDestroy;
 
+import org.eclipse.hono.service.management.tenant.Tenant;
 import org.eclipse.hono.util.CacheDirective;
 import org.eclipse.hono.util.CredentialsConstants;
 import org.eclipse.hono.util.CredentialsResult;
@@ -45,6 +47,7 @@ import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsService;
 import io.enmasse.iot.infinispan.device.CredentialKey;
 import io.enmasse.iot.infinispan.device.DeviceCredential;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
+import io.enmasse.iot.infinispan.tenant.TenantHandle;
 import io.enmasse.iot.registry.infinispan.util.Credentials;
 import io.opentracing.Span;
 import io.vertx.core.json.JsonObject;
@@ -83,7 +86,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     }
 
     @Override
-    protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final CredentialKey key, final Span span) {
+    protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final TenantHandle tenant, final CredentialKey key, final Span span) {
 
         return this.adapterCache
                 .getWithMetadataAsync(key)
@@ -96,7 +99,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
                         // ... try to re-create cache entry
 
                         log.debug("Entry not found - resync: {}", key);
-                        return resyncCacheEntry(key, span);
+                        return resyncCacheEntry(tenant, key, span);
                     }
 
                     // entry found and in sync ... return
@@ -105,7 +108,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
                     // get remaining ttl
 
-                    final Duration ttl = calculateRemainingTtl(result);
+                    final Duration ttl = calculateRemainingTtl(tenant, result);
 
                     log.debug("Remaining TTL: {}", ttl);
 
@@ -121,7 +124,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private Duration calculateRemainingTtl(MetadataValue<?> result) {
+    private Duration calculateRemainingTtl(final TenantHandle tenant, final MetadataValue<?> result) {
 
         if (result.getLifespan() > 0 && result.getCreated() > 0) {
 
@@ -131,11 +134,11 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
             return between(now(), eol);
 
         } else {
-            return this.defaultTtl;
+            return getStoreTtl(tenant);
         }
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final CredentialKey key, final Span span) {
+    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final TenantHandle tenant, final CredentialKey key, final Span span) {
 
         return searchCredentials(key)
                 .thenCompose(r -> {
@@ -146,25 +149,50 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
                     switch (r.size()) {
                         case 0:
-                            return storeNotFound(key);
+                            return storeNotFound(tenant, key);
                         case 1:
-                            return storeCacheEntry(key, r.getFirst());
+                            return storeCacheEntry(tenant, key, r.getFirst());
                         default:
                             log.warn("Found entry with multiple device mappings: {} -> {}", key, r);
-                            return storeInvalidEntry();
+                            return storeInvalidEntry(tenant);
                     }
 
                 });
 
     }
 
-    private <T> CompletionStage<CredentialsResult<T>> storeInvalidEntry() {
-        return completedFuture(notFound(this.defaultTtl));
+    /**
+     * Get the TTL for storing an entry in the adapter cache.
+     *
+     * @return The TTL. Must never return {@code null}.
+     */
+    private Duration getStoreTtl(final TenantHandle tenant) {
+
+        return Optional
+                .ofNullable(tenant.getTenant())
+                .map(Tenant::getDefaults)
+                .map(d -> d.get("ttl"))
+                .flatMap(v -> {
+                    if (v instanceof Number) {
+                        return Optional.of(((Number) v).longValue());
+                    } else if (v instanceof String) {
+                        return Optional.of(Long.parseLong((String) v));
+                    } else {
+                        return Optional.empty();
+                    }
+                })
+                .map(Duration::ofMillis)
+                .orElse(this.defaultTtl);
+
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final CredentialKey key, final JsonObject cacheEntry) {
+    private <T> CompletionStage<CredentialsResult<T>> storeInvalidEntry(final TenantHandle tenant) {
+        return completedFuture(notFound(getStoreTtl(tenant)));
+    }
 
-        final Duration ttl = this.defaultTtl;
+    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final TenantHandle tenant, final CredentialKey key, final JsonObject cacheEntry) {
+
+        final Duration ttl = getStoreTtl(tenant);
 
         return this.adapterCache
 
@@ -178,9 +206,9 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final CredentialKey key) {
+    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final TenantHandle tenant, final CredentialKey key) {
 
-        final Duration ttl = this.defaultTtl;
+        final Duration ttl = getStoreTtl(tenant);
 
         return this.adapterCache
 
