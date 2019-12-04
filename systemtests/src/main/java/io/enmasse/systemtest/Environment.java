@@ -49,9 +49,9 @@ public class Environment {
     private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
     private final String kubernetesDomain = System.getenv().getOrDefault(K8S_DOMAIN_ENV, "nip.io");
     private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV,
-            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse" + System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY)).toString());
+            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String upgradeTemplates = System.getenv().getOrDefault(UPGRADE_TEPLATES_ENV,
-            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-" + System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY)).toString());
+            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String monitoringNamespace = System.getenv().getOrDefault(MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
     private final String tag = System.getenv().getOrDefault(TAG_ENV, "latest");
     private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
@@ -65,7 +65,7 @@ public class Environment {
     private final OLMInstallationType olmInstallType = Optional.ofNullable(System.getenv().get(OLM_INSTALL_TYPE)).map(s->s.isEmpty() ? OLMInstallationType.SPECIFIC.name() : s)
             .map(OLMInstallationType::valueOf).orElse(OLMInstallationType.SPECIFIC);
     protected String templatesPath = System.getenv().getOrDefault(TEMPLATES_PATH,
-            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-" + System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY)).toString());
+            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     protected UserCredentials managementCredentials = new UserCredentials(null, null);
     protected UserCredentials defaultCredentials = new UserCredentials(null, null);
     protected UserCredentials sharedManagementCredentials = new UserCredentials("artemis-admin", "artemis-admin");

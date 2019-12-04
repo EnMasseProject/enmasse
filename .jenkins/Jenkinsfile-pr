@@ -22,6 +22,7 @@ pipeline {
         ansiColor('xterm')
     }
     environment {
+        TAG = "latest"
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
         KUBERNETES_NAMESPACE = "enmasse-infra"
