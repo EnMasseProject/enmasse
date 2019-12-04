@@ -138,7 +138,6 @@ install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(M
 
 package: prepare install
 	tar -czf build/$(INSTALLNAME).tgz -C build $(INSTALLNAME)
-	$(IMAGE_ENV) mvn package -DskipTests $(MAVEN_ARGS)
 
 coverage:
 
