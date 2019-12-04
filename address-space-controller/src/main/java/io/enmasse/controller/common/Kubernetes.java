@@ -5,6 +5,7 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceSpec;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -36,15 +37,6 @@ public interface Kubernetes {
 
     boolean existsAddressSpace(AddressSpace addressSpace);
 
-    static void addObjectAnnotation(HasMetadata item, String annotationKey, String annotationValue) {
-        Map<String, String> annotations = item.getMetadata().getAnnotations();
-        if (annotations == null) {
-            annotations = new LinkedHashMap<>();
-        }
-        annotations.put(annotationKey, annotationValue);
-        item.getMetadata().setAnnotations(annotations);
-    }
-
-    String getAppliedPlan(AddressSpace addressSpace);
     InfraConfig getAppliedInfraConfig(AddressSpace addressSpace) throws IOException;
+    AddressSpaceSpec getAppliedConfig(AddressSpace addressSpace) throws IOException;
 }
