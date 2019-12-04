@@ -11,3 +11,14 @@ export const getPlanAndTypeForAddress = (
     addressType.toLowerCase()
   );
 };
+
+export const getPlanAndTypeForAddressEdit = (
+  plan: string,
+  addressSpaceType: string,
+) => {
+  return (
+    addressSpaceType.toLowerCase() +
+    "-" +
+    plan.toLowerCase().replace(" ","-")
+  );
+};

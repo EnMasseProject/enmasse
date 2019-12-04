@@ -14,9 +14,11 @@ import { EmptyAddress } from "src/Components/Common/EmptyAddress";
 import { EditAddress } from "../EditAddressPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
 import { useLocation, useHistory } from "react-router-dom";
+import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
 export interface IAddressListPageProps {
   name?: string;
   namespace?: string;
+  addressSpaceType?:string;
   inputValue?: string | null;
   filterValue?: string | null;
   typeValue?: string | null;
@@ -28,6 +30,7 @@ export interface IAddressListPageProps {
 export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = ({
   name,
   namespace,
+  addressSpaceType,
   inputValue,
   filterValue,
   typeValue,
@@ -99,7 +102,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   const handleCancelEdit = () => setAddressBeingEdited(null);
 
   const handleSaving = async () => {
-    if(addressBeingEdited){
+    if(addressBeingEdited && addressSpaceType){
       await client.mutate({
         mutation: EDIT_ADDRESS,
         variables: {
@@ -107,8 +110,11 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
             "Name": addressBeingEdited.name,
             "Namespace": addressBeingEdited.namespace
           },
-          //"jsonPatch": '"[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"' + addressBeingEdited.plan + '\"}]"',
-          "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium-queue\"}]",
+          "jsonPatch": '[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"' + getPlanAndTypeForAddressEdit(
+            addressBeingEdited.plan,
+            addressSpaceType
+          ) + '\"}]',
+          // "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium-queue\"}]",
           "patchType": "application/json-patch+json"
         }
       });
