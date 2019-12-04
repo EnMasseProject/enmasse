@@ -28,47 +28,84 @@ import {
 } from "src/Components/Common/FilterDropdown";
 import { SearchIcon } from "@patternfly/react-icons";
 import { GridStylesForTableHeader } from "./AddressesListWithFilterAndPaginationPage";
-const RETURN_ALL_CONECTION_LIST = (name?: string, namespace?: string) => {
-  let filter = "";
-  if (name) {
-    filter += "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + name + "'";
-  }
-  if (namespace) {
-    filter +=
-      " AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = '" + namespace + "'";
-  }
-  const ALL_CONECTION_LIST = gql(
-    `query all_connections_for_addressspace_view {
-    connections(
-      filter: "${filter}"
-    ) {
-      Total
-      Connections {
-        ObjectMeta {
-          Name
-        }
-        Spec {
-          Hostname
-          ContainerId
-          Protocol
-        }
-        Metrics {
-          Name
-          Type
-          Value
-          Units
-        }
-      }
-    }
-  }`
-  );
-  return ALL_CONECTION_LIST;
-};
+import { useLocation, useHistory } from "react-router-dom";
+
 export default function ConnectionsListPage() {
   const { name, namespace } = useParams();
+
+  const location = useLocation();
+  const history = useHistory();
+  const searchParams = new URLSearchParams(location.search);
+  const page = parseInt(searchParams.get("page") || "", 10) || 0;
+  const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+  const RETURN_ALL_CONECTION_LIST = (name?: string, namespace?: string) => {
+    let filter = "";
+    if (name) {
+      filter += "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + name + "'";
+    }
+    if (namespace) {
+      filter +=
+        " AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = '" + namespace + "'";
+    }
+    const ALL_CONECTION_LIST = gql(
+      `query all_connections_for_addressspace_view {
+      connections(
+        filter: "${filter}" first:${perPage} offset:${perPage * (page - 1)}
+      ) {
+        Total
+        Connections {
+          ObjectMeta {
+            Name
+          }
+          Spec {
+            Hostname
+            ContainerId
+            Protocol
+          }
+          Metrics {
+            Name
+            Type
+            Value
+            Units
+          }
+        }
+      }
+    }`
+    );
+    return ALL_CONECTION_LIST;
+  };
+
   let { loading, error, data } = useQuery<IConnectionListResponse>(
     RETURN_ALL_CONECTION_LIST(name, namespace),
     { pollInterval: 20000 }
+  );
+
+  const setSearchParam = React.useCallback(
+    (name: string, value: string) => {
+      searchParams.set(name, value.toString());
+    },
+    [searchParams]
+  );
+
+  const handlePageChange = React.useCallback(
+    (_: any, newPage: number) => {
+      setSearchParam("page", newPage.toString());
+      history.push({
+        search: searchParams.toString()
+      });
+    },
+    [setSearchParam, history, searchParams]
+  );
+
+  const handlePerPageChange = React.useCallback(
+    (_: any, newPerPage: number) => {
+      setSearchParam("page", "0");
+      setSearchParam("perPage", newPerPage.toString());
+      history.push({
+        search: searchParams.toString()
+      });
+    },
+    [setSearchParam, history, searchParams]
   );
 
   if (error) console.log(error);
@@ -101,6 +138,19 @@ export default function ConnectionsListPage() {
     { value: "dr", label: "Dr", disabled: false },
     { value: "other", label: "Other", disabled: false }
   ];
+
+  const renderPagination = (page: number, perPage: number) => {
+    return (
+      <Pagination
+        itemCount={connections.Total}
+        perPage={perPage}
+        page={page}
+        onSetPage={handlePageChange}
+        variant="top"
+        onPerPageSelect={handlePerPageChange}
+      />
+    );
+  };
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
@@ -136,32 +186,14 @@ export default function ConnectionsListPage() {
           </InputGroup>
         </GridItem>
         <GridItem span={8}>
-          {connections.Total === 0 ? (
-            ""
-          ) : (
-            <Pagination
-              itemCount={523}
-              perPage={10}
-              page={1}
-              onSetPage={() => {}}
-              widgetId="pagination-options-menu-top"
-              onPerPageSelect={() => {}}
-            />
-          )}
+          {connections.Total === 0 ? "" : renderPagination(page, perPage)}
         </GridItem>
       </Grid>
       <ConnectionList rows={connectionList ? connectionList : []} />
       {connections.Total === 0 ? (
         <EmptyConnection />
       ) : (
-        <Pagination
-          itemCount={523}
-          perPage={10}
-          page={1}
-          onSetPage={() => {}}
-          widgetId="pagination-options-menu-top"
-          onPerPageSelect={() => {}}
-        />
+        renderPagination(page, perPage)
       )}
     </PageSection>
   );
