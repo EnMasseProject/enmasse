@@ -30,7 +30,7 @@ public class DeviceInformation implements Serializable {
      * <br>
      * Although this information is redundant, it is required for indexing.
      */
-    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.YES, store=Store.YES)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO, store=Store.YES)")
     @ProtoField(number = 1, required = true)
     protected String tenantId;
 
@@ -61,7 +61,7 @@ public class DeviceInformation implements Serializable {
     /**
      * The credentials, in our internal encoding.
      */
-    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.YES, store=Store.YES)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO, store=Store.YES)")
     @ProtoField(number = 5, collectionImplementation = ArrayList.class)
     protected List<DeviceCredential> credentials;
 

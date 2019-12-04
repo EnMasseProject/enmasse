@@ -22,10 +22,10 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 @ProtoDoc("@Indexed")
 public class DeviceCredential {
 
-    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.YES, store=Store.YES)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO, store=Store.YES)")
     @ProtoField(number = 1, required = true)
     protected String authId;
-    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.YES, store=Store.YES)")
+    @ProtoDoc("@Field(index=Index.YES, analyze=Analyze.NO, store=Store.YES)")
     @ProtoField(number = 2, required = true)
     protected String type;
 
