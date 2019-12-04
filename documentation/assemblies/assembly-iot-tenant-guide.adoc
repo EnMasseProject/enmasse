@@ -7,7 +7,11 @@
 [id='iot-tenant-{context}]
 = IoT for messaging tenants
 
-Messaging tenants are typically responsible for sending telemetry and events using IoT supported protocols.
+Messaging tenants are typically responsible for managing devices and writing device and back-end applications for IoT solutions.
+
+include::assembly-iot-configuring-sigfox.adoc[leveloffset=+1]
+
+include::assembly-iot-creating-device.adoc[leveloffset=+1]
 
 == Consumer applications
 
