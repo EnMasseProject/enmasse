@@ -145,6 +145,7 @@ public class CreateController implements Controller {
             eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
             InfraConfigs.setCurrentInfraConfig(addressSpace, desiredInfraConfig);
             addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
+            addressSpace.putAnnotation(AnnotationKeys.APPLIED_AUTH_SERVICE, addressSpace.getSpec().getAuthenticationService().getName());
             // TODO: Remove conditional after 0.28.0 is released
             if (addressSpace.getStatus().getPhase() != null) {
                 addressSpace.getStatus().setPhase(Phase.Configuring);
@@ -170,10 +171,12 @@ public class CreateController implements Controller {
                 eventLogger.log(AddressSpaceUpgraded, "Upgraded address space", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
                 InfraConfigs.setCurrentInfraConfig(addressSpace, desiredInfraConfig);
                 addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
+                addressSpace.putAnnotation(AnnotationKeys.APPLIED_AUTH_SERVICE, addressSpace.getSpec().getAuthenticationService().getName());
             } else {
                 log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredInfraConfig.getVersion(), version);
             }
-        } else if (!addressSpace.getSpec().getPlan().equals(addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN))) {
+        } else if (!addressSpace.getSpec().getPlan().equals(addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN)) ||
+                !addressSpace.getSpec().getAuthenticationService().getName().equals(addressSpace.getAnnotation(AnnotationKeys.APPLIED_AUTH_SERVICE))) {
             // TODO: Remove conditional after 0.28.0 is released
             if (addressSpace.getStatus().getPhase() != null) {
                 addressSpace.getStatus().setPhase(Phase.Configuring);
@@ -193,8 +196,8 @@ public class CreateController implements Controller {
             eventLogger.log(AddressSpaceChanged, "Changed address space plan", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
             InfraConfigs.setCurrentInfraConfig(addressSpace, desiredInfraConfig);
             addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
+            addressSpace.putAnnotation(AnnotationKeys.APPLIED_AUTH_SERVICE, addressSpace.getSpec().getAuthenticationService().getName());
         }
-
         return addressSpace;
     }
 

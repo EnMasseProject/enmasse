@@ -32,4 +32,5 @@ public interface AnnotationKeys {
     String APPLIED_PLAN = "enmasse.io/applied-plan";
     String GENERATION = "enmasse.io/generation";
     String VERSION = "enmasse.io/version";
+    String APPLIED_AUTH_SERVICE = "enmasse.io/applied-auth-service";
 }

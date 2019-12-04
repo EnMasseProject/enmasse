@@ -232,6 +232,7 @@ public class HttpAddressSpaceService {
                     .endMetadata()
 
                     .editOrNewSpec()
+                    .withAuthenticationService(addressSpace.getSpec().getAuthenticationService())
                     .withEndpoints(addressSpace.getSpec().getEndpoints())
                     .withNetworkPolicy(addressSpace.getSpec().getNetworkPolicy())
                     .withPlan(addressSpace.getSpec().getPlan())
@@ -267,10 +268,6 @@ public class HttpAddressSpaceService {
     private void validateChanges(AddressSpace existing, AddressSpace addressSpace) {
         if (!existing.getSpec().getType().equals(addressSpace.getSpec().getType())) {
             throw new BadRequestException("Cannot change type of address space " + addressSpace.getMetadata().getName() + " from " + existing.getSpec().getType() + " to " + addressSpace.getSpec().getType());
-        }
-
-        if (addressSpace.getSpec().getAuthenticationService() != null && !existing.getSpec().getAuthenticationService().equals(addressSpace.getSpec().getAuthenticationService())) {
-            throw new BadRequestException("Cannot change authentication service of address space " + addressSpace.getMetadata().getName() + " from " + existing.getSpec().getAuthenticationService() + " to " + addressSpace.getSpec().getAuthenticationService());
         }
 
         overrideAnnotation(existing, addressSpace, AnnotationKeys.REALM_NAME);
