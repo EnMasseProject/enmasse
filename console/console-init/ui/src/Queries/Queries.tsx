@@ -241,3 +241,26 @@ export const RETURN_ADDRESS_LINKS = (
   `;
   return query;
 };
+
+export const RETURN_ADDRESS_PLANS = gql`
+  query all_address_plans {
+    addressPlans (
+      addressSpacePlan:"standard-small"
+    ) {
+      Spec {
+        AddressType,
+        DisplayName
+      }
+    }
+  }
+`;
+
+export const EDIT_ADDRESS = gql`
+  mutation patch_addr(
+    $a: ObjectMeta_v1_Input!
+    $jsonPatch: String!
+    $patchType: String!
+  ) {
+    patchAddress(input: $a, jsonPatch: $jsonPatch, patchType: $patchType)
+  }
+`;

@@ -30,7 +30,7 @@ export const GridStylesForTableHeader = StyleSheet.create({
 function AddressesListFunction() {
   useDocumentTitle("Address List");
   useA11yRouteChange();
-  const { name, namespace } = useParams();
+  const { name, namespace,type } = useParams();
   const [inputValue, setInputValue] = React.useState<string | null>(null);
   const [filterValue, setFilterValue] = React.useState<string | null>(null);
   const [typeValue, setTypeValue] = React.useState<string | null>(null);
@@ -108,6 +108,7 @@ function AddressesListFunction() {
         setTotalAddress={setTotalAddress}
         page={page}
         perPage={perPage}
+        addressSpaceType={type}
       />
       {totalAddresses > 0 && (
         <Pagination
