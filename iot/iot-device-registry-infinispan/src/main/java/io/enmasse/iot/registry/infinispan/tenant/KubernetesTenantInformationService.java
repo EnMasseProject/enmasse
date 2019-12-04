@@ -16,7 +16,11 @@ import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.hono.client.ClientErrorException;
 import org.eclipse.hono.client.ServerErrorException;
+import org.eclipse.hono.service.management.tenant.Tenant;
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.service.base.AbstractProjectBasedService;
@@ -24,6 +28,8 @@ import io.opentracing.Span;
 
 @Component
 public class KubernetesTenantInformationService extends AbstractProjectBasedService implements TenantInformationService {
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public CompletableFuture<TenantHandle> tenantExists(final String tenantName, final int notFoundStatusCode, final Span span) {
@@ -50,7 +56,14 @@ public class KubernetesTenantInformationService extends AbstractProjectBasedServ
             return failedFuture(new ServerErrorException(HTTP_INTERNAL_ERROR, "Empty creation timestamp"));
         }
 
-        return completedFuture(of(tenantName, tenantName + "/" + project.getMetadata().getCreationTimestamp()));
+        final Tenant tenant;
+        try {
+            tenant = this.mapper.treeToValue(project.getSpec().getConfiguration(), Tenant.class);
+        } catch (JsonProcessingException e) {
+            return failedFuture(e);
+        }
+
+        return completedFuture(of(tenantName, tenantName + "/" + project.getMetadata().getCreationTimestamp(), tenant));
     }
 
     /**
