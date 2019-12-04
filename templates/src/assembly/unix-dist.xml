@@ -27,8 +27,8 @@
     <includeBaseDirectory>False</includeBaseDirectory>
     <fileSets>
       <fileSet>
-        <directory>${project.basedir}/build/enmasse-${project.version}</directory>
-        <outputDirectory>enmasse-${project.version}</outputDirectory>
+        <directory>${project.basedir}/build/enmasse-${env.IMAGE_VERSION}</directory>
+        <outputDirectory>${application.bundle.prefix}-${env.IMAGE_VERSION}</outputDirectory>
         <includes>
            <include>**/*</include>
         </includes>

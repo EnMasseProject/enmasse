@@ -7,7 +7,7 @@ include ../Makefile.common
 
 PACKAGE_ANSIBLE_DIR=$(TOPDIR)/ansible
 BUILDDIR=build
-INSTALLNAME=enmasse-$(VERSION)
+INSTALLNAME=enmasse-$(TAG)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
 PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
 HASHMARK = $(shell echo "\#")
@@ -138,6 +138,7 @@ install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(M
 
 package: prepare install
 	tar -czf build/$(INSTALLNAME).tgz -C build $(INSTALLNAME)
+	$(IMAGE_ENV) mvn package -DskipTests $(MAVEN_ARGS)
 
 coverage:
 

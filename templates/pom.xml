@@ -22,7 +22,7 @@
               <goal>single</goal>
             </goals>
             <configuration>
-              <finalName>${application.bundle.prefix}-${project.version}</finalName>
+              <finalName>${application.bundle.prefix}-${env.IMAGE_VERSION}</finalName>
               <appendAssemblyId>false</appendAssemblyId>
               <ignoreMissingDescriptor>false</ignoreMissingDescriptor>
               <descriptors>
