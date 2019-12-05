@@ -29,7 +29,14 @@ public class AddressSpaceResolver {
         return addressSpaceType.findAddressSpacePlan(plan);
     }
 
-    public boolean validate(AddressSpace addressSpace) {
+    public boolean validate(AddressSpace addressSpace, AddressSpaceSpec appliedConfig) {
+        if (appliedConfig != null && !appliedConfig.getType().equals(addressSpace.getSpec().getType())) {
+            // Don't set status false, as long as applied type is not taking effect
+            addressSpace.getStatus().appendMessage("Cannot change type of address space "
+                    + addressSpace.getMetadata().getName() + " from " + appliedConfig.getType()
+                    + " to " + addressSpace.getSpec().getType());
+            return false;
+        }
         if (addressSpace.getSpec().getAuthenticationService() != null && !schema.findAuthenticationService(addressSpace.getSpec().getAuthenticationService().getName()).isPresent()) {
             addressSpace.getStatus().setReady(false);
             addressSpace.getStatus().appendMessage("Unknown authentication service '" + addressSpace.getSpec().getAuthenticationService().getName() + "'");
