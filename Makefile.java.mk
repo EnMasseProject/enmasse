@@ -16,7 +16,7 @@ else
 	mvn test $(MAVEN_ARGS)
 endif
 
-package_java:
+package_java::
 	$(IMAGE_ENV) mvn package -DskipTests $(MAVEN_ARGS)
 
 package: package_java
