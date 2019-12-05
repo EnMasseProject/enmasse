@@ -212,12 +212,12 @@ export default function AddressSpaceDetailPage() {
         <SwitchWith404>
           <Redirect path="/" to="/address-spaces" exact={true} />
           <LazyRoute
-            path="/address-spaces/:namespace/:name/:type/addresses/:page?"
+            path="/address-spaces/:namespace/:name/:type/addresses/"
             getComponent={getAddressesList}
             exact={true}
           />
           <LazyRoute
-            path="/address-spaces/:namespace/:name/:type/connections/:page?"
+            path="/address-spaces/:namespace/:name/:type/connections/"
             getComponent={getConnectionsList}
             exact={true}
           />

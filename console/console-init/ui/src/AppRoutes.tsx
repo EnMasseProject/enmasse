@@ -18,7 +18,7 @@ export const AppRoutes = () => (
       getComponent={getAddressSpaceListPage}
     />
     <LazyRoute
-      path="/address-spaces/:namespace/:name/:type/:subList/:page?"
+      path="/address-spaces/:namespace/:name/:type/:subList"
       exact={true}
       getComponent={getAddressSpaceDetail}
     />

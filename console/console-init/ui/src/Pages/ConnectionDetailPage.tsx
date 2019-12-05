@@ -8,7 +8,8 @@ import {
   PageSectionVariants,
   Title,
   Breadcrumb,
-  BreadcrumbItem
+  BreadcrumbItem,
+  Pagination
 } from "@patternfly/react-core";
 import gql from "graphql-tag";
 import { useQuery } from "@apollo/react-hooks";
@@ -19,80 +20,7 @@ import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter"
 import { IConnectionDetailResponse } from "src/Types/ResponseTypes";
 import { css } from "@patternfly/react-styles";
 import { GridStylesForTableHeader } from "./AddressSpace/AddressesListWithFilterAndPaginationPage";
-import { Link } from "react-router-dom";
-
-const RETURN_CONNECTION_DETAIL = (
-  addressSpaceName?: string,
-  addressSpaceNameSpcae?: string,
-  connectionName?: string
-) => {
-  let filter = "";
-  if (addressSpaceName) {
-    filter +=
-      "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + addressSpaceName + "' AND ";
-  }
-  if (addressSpaceNameSpcae) {
-    filter +=
-      "`$.Spec.AddressSpace.ObjectMeta.Namespace` = '" +
-      addressSpaceNameSpcae +
-      "' AND ";
-  }
-  if (connectionName) {
-    filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
-  }
-
-  const CONNECTION_DETAIL = gql`
-  query single_connections {
-    connections(
-      filter: "${filter}"
-    ) {
-      Total
-      Connections {
-        ObjectMeta {
-          Name
-          Namespace
-          CreationTimestamp
-          ResourceVersion
-        }
-        Spec {
-          Hostname
-          ContainerId
-          Protocol,
-          Properties{
-            Key
-            Value
-          }
-        }
-        Metrics {
-          Name
-          Type
-          Value
-          Units
-        }
-        Links {
-          Total
-          Links {
-            ObjectMeta {
-              Name
-              Namespace
-            }
-            Spec {
-              Role
-            }
-            Metrics {
-              Name
-              Type
-              Value
-              Units
-            }
-          }
-        }
-      }
-    }
-  }
-  `;
-  return CONNECTION_DETAIL;
-};
+import { Link, useLocation, useHistory } from "react-router-dom";
 
 const getProductFilteredValue = (object: any[], value: string) => {
   const filtered = object.filter(obj => obj.Key === value);
@@ -101,6 +29,7 @@ const getProductFilteredValue = (object: any[], value: string) => {
   }
   return 0;
 };
+
 const getSplitValue = (value: string) => {
   let string1 = value.split(", OS: ");
   let string2 = string1[0].split("JVM:");
@@ -116,6 +45,11 @@ const getSplitValue = (value: string) => {
 
 export default function ConnectionDetailPage() {
   const { name, namespace, type, connectionname } = useParams();
+  const location = useLocation();
+  const history = useHistory();
+  const searchParams = new URLSearchParams(location.search);
+  const page = parseInt(searchParams.get("page") || "", 10) || 0;
+  const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const breadcrumb = React.useMemo(
     () => (
       <Breadcrumb>
@@ -134,6 +68,109 @@ export default function ConnectionDetailPage() {
   );
 
   useBreadcrumb(breadcrumb);
+
+  const setSearchParam = React.useCallback(
+    (name: string, value: string) => {
+      searchParams.set(name, value.toString());
+    },
+    [searchParams]
+  );
+
+  const handlePageChange = React.useCallback(
+    (_: any, newPage: number) => {
+      setSearchParam("page", newPage.toString());
+      history.push({
+        search: searchParams.toString()
+      });
+    },
+    [setSearchParam, history, searchParams]
+  );
+
+  const handlePerPageChange = React.useCallback(
+    (_: any, newPerPage: number) => {
+      setSearchParam("page", "0");
+      setSearchParam("perPage", newPerPage.toString());
+      history.push({
+        search: searchParams.toString()
+      });
+    },
+    [setSearchParam, history, searchParams]
+  );
+
+  const RETURN_CONNECTION_DETAIL = (
+    addressSpaceName?: string,
+    addressSpaceNameSpcae?: string,
+    connectionName?: string
+  ) => {
+    let filter = "";
+    if (addressSpaceName) {
+      filter +=
+        "`$.Spec.AddressSpace.ObjectMeta.Name` = '" +
+        addressSpaceName +
+        "' AND ";
+    }
+    if (addressSpaceNameSpcae) {
+      filter +=
+        "`$.Spec.AddressSpace.ObjectMeta.Namespace` = '" +
+        addressSpaceNameSpcae +
+        "' AND ";
+    }
+    if (connectionName) {
+      filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
+    }
+    console.log("page,perpage", page, perPage);
+    const CONNECTION_DETAIL = gql`
+    query single_connections {
+      connections(
+        filter: "${filter}" 
+      ) {
+        Total
+        Connections {
+          ObjectMeta {
+            Name
+            Namespace
+            CreationTimestamp
+            ResourceVersion
+          }
+          Spec {
+            Hostname
+            ContainerId
+            Protocol,
+            Properties{
+              Key
+              Value
+            }
+          }
+          Metrics {
+            Name
+            Type
+            Value
+            Units
+          }
+          Links(first:${perPage} offset:${perPage * (page - 1)}) {
+            Total
+            Links {
+              ObjectMeta {
+                Name
+                Namespace
+              }
+              Spec {
+                Role
+              }
+              Metrics {
+                Name
+                Type
+                Value
+                Units
+              }
+            }
+          }
+        }
+      }
+    }
+    `;
+    return CONNECTION_DETAIL;
+  };
 
   useA11yRouteChange();
   // useBreadcrumb(breadcrumb);
@@ -156,6 +193,7 @@ export default function ConnectionDetailPage() {
   const jvmObject = getSplitValue(
     getProductFilteredValue(connection.Spec.Properties, "platform")
   );
+
   const connectionDetail: IConnectionHeaderDetailProps = {
     hostname: connection.ObjectMeta.Name,
     containerId: connection.ObjectMeta.Namespace,
@@ -181,6 +219,19 @@ export default function ConnectionDetailPage() {
     undelivered: getFilteredValue(link.Metrics, "enmasse_undelivered")
   }));
 
+  const renderPagination = (page: number, perPage: number) => {
+    return (
+      <Pagination
+        itemCount={connection.Links.Total}
+        perPage={perPage}
+        page={page}
+        onSetPage={handlePageChange}
+        variant="top"
+        onPerPageSelect={handlePerPageChange}
+      />
+    );
+  };
+
   // useBreadcrumb(return_breadCrumb(name,namespace));
   return (
     <>
@@ -193,7 +244,9 @@ export default function ConnectionDetailPage() {
           >
             Links
           </Title>
+          {renderPagination(page, perPage)}
           <LinkList rows={linkRows} />
+          {renderPagination(page, perPage)}
         </PageSection>
       </PageSection>
     </>

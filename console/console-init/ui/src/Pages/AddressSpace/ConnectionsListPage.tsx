@@ -36,7 +36,7 @@ export default function ConnectionsListPage() {
   const location = useLocation();
   const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
-  const page = parseInt(searchParams.get("page") || "", 10) || 0;
+  const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const RETURN_ALL_CONECTION_LIST = (name?: string, namespace?: string) => {
     let filter = "";
@@ -47,6 +47,8 @@ export default function ConnectionsListPage() {
       filter +=
         " AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = '" + namespace + "'";
     }
+
+    console.log("page,perpage", page, perPage);
     const ALL_CONECTION_LIST = gql(
       `query all_connections_for_addressspace_view {
       connections(
@@ -99,7 +101,7 @@ export default function ConnectionsListPage() {
 
   const handlePerPageChange = React.useCallback(
     (_: any, newPerPage: number) => {
-      setSearchParam("page", "0");
+      setSearchParam("page", "1");
       setSearchParam("perPage", newPerPage.toString());
       history.push({
         search: searchParams.toString()

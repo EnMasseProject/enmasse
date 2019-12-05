@@ -39,7 +39,7 @@ export default function AddressesList() {
   const location = useLocation();
   const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
-  const page = parseInt(searchParams.get("page") || "", 10) || 0;
+  const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
 
   const setSearchParam = React.useCallback(
@@ -61,7 +61,7 @@ export default function AddressesList() {
 
   const handlePerPageChange = React.useCallback(
     (_: any, newPerPage: number) => {
-      setSearchParam("page", "0");
+      setSearchParam("page", "1");
       setSearchParam("perPage", newPerPage.toString());
       history.push({
         search: searchParams.toString()

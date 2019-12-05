@@ -11,9 +11,13 @@ export interface IAddressLinksListProps {
   namespace?: string;
   addressname?: string;
   type?: string;
+  page: number;
+  perPage: number;
   setAddressLinksTotal: (total: number) => void;
 }
 export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProps> = ({
+  page,
+  perPage,
   name,
   namespace,
   addressname,
@@ -21,7 +25,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   setAddressLinksTotal
 }) => {
   const { loading, error, data } = useQuery<IAddressLinksResponse>(
-    RETURN_ADDRESS_LINKS(name, namespace, addressname),
+    RETURN_ADDRESS_LINKS(page, perPage, name, namespace, addressname),
     { pollInterval: 20000 }
   );
   if (loading) return <Loading />;

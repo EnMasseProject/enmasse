@@ -81,10 +81,9 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
     }
   }
 
-  
   const ALL_ADDRESS_FOR_ADDRESS_SPACE = gql`
   query all_addresses_for_addressspace_view {
-    addresses( first:${perPage} offset:${perPage * (page-1)}
+    addresses( first:${perPage} offset:${perPage * (page - 1)}
       filter:"${filterString}"
     ) {
       Total
@@ -124,6 +123,8 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
 };
 
 export const RETURN_ADDRESS_DETAIL = (
+  page: number,
+  perPage: number,
   addressSpace?: string,
   namespace?: string,
   addressName?: string
@@ -138,10 +139,11 @@ export const RETURN_ADDRESS_DETAIL = (
   if (addressName) {
     filter += "`$.ObjectMeta.Name` = '" + addressName + "'";
   }
+  console.log("page,perpage", page, perPage);
   const ADDRESSDETAIL = gql`
   query single_addresses {
     addresses(
-      filter: "${filter}"
+      filter: "${filter}" 
     ) {
       Total
       Addresses {
@@ -180,6 +182,8 @@ export const RETURN_ADDRESS_DETAIL = (
 };
 
 export const RETURN_ADDRESS_LINKS = (
+  page:number,
+  perPage:number,
   addressSpace?: string,
   namespace?: string,
   addressName?: string
@@ -198,7 +202,7 @@ export const RETURN_ADDRESS_LINKS = (
   const query = gql`
   query single_address_with_links_and_metrics {
     addresses(
-      filter: "${filter}"
+      filter: "${filter}" 
     ) {
       Total
       Addresses {
@@ -208,7 +212,7 @@ export const RETURN_ADDRESS_LINKS = (
         Spec {
           AddressSpace
         }
-        Links {
+        Links (first:${perPage} offset:${perPage * (page - 1)}){
           Total
           Links {
             ObjectMeta {
