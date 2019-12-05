@@ -233,7 +233,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         final QueryFactory queryFactory = Search.getQueryFactory(this.managementCache);
 
         final Query query = queryFactory
-                .create(String.format("from %s where tenantId=:tenantId and credentials.authId=:authId and credentials.type=:type", DeviceInformation.class.getName()), IndexedQueryMode.BROADCAST)
+                .create(String.format("from %s d where d.tenantId=:tenantId and d.credentials.authId=:authId and d.credentials.type=:type", DeviceInformation.class.getName()), IndexedQueryMode.BROADCAST)
                 .setParameter("tenantId", key.getTenantId())
                 .setParameter("authId", key.getAuthId())
                 .setParameter("type", key.getType());
