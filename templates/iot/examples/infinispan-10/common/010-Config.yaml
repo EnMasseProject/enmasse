@@ -37,12 +37,17 @@ data:
 
           <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="adapterCredentials">
              <transaction mode="NON_XA" locking="PESSIMISTIC" complete-timeout="120000" />
+             <memory>
+                <!-- <binary strategy="REMOVE" size="134217728" eviction="MEMORY"/> -->
+                <object strategy="REMOVE" size="10000" />
+             </memory>
              <indexing index="NONE"/>
           </distributed-cache>
 
           <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="deviceStates">
              <transaction mode="NONE"/>
              <indexing index="NONE"/>
+             <binary strategy="REMOVE" size="67108864" eviction="MEMORY"/>
           </distributed-cache>
        </cache-container>
 
