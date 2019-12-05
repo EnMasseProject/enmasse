@@ -101,7 +101,8 @@ public class CreateController implements Controller {
     public AddressSpace reconcileActive(AddressSpace addressSpace) throws Exception {
         Schema schema = schemaProvider.getSchema();
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
-        if (!addressSpaceResolver.validate(addressSpace)) {
+        AddressSpaceSpec appliedConfig = kubernetes.getAppliedConfig(addressSpace);
+        if (!addressSpaceResolver.validate(addressSpace, appliedConfig)) {
             return addressSpace;
         }
 
@@ -133,13 +134,13 @@ public class CreateController implements Controller {
         AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace.getSpec().getType());
         AddressSpacePlan addressSpacePlan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace.getSpec().getPlan());
 
-        AddressSpaceSpec appliedConfig = kubernetes.getAppliedConfig(addressSpace);
         InfraConfig desiredInfraConfig = getInfraConfig(addressSpace);
         InfraConfig currentInfraConfig = kubernetes.getAppliedInfraConfig(addressSpace);
 
         // Apply changes to ensure controller logic works as expected
         InfraConfigs.setCurrentInfraConfig(addressSpace, currentInfraConfig);
         AppliedConfig.setCurrentAppliedConfig(addressSpace, appliedConfig);
+
 
         if (currentInfraConfig == null && !kubernetes.existsAddressSpace(addressSpace)) {
             KubernetesList resourceList = new KubernetesListBuilder()
