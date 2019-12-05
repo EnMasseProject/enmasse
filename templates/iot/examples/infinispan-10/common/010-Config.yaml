@@ -15,30 +15,33 @@ data:
 
        <cache-container name="clustered" statistics="true">
           <transport cluster="infinispan" stack="kubernetes"/>
+          <global-state>
+              <persistent-location path="/opt/infinispan/server/data" />
+          </global-state>
 
           <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="devices">
              <locking isolation="READ_COMMITTED"/>
              <transaction mode="NON_XA" locking="PESSIMISTIC" complete-timeout="120000" />
              <indexing index="PRIMARY_OWNER">
-                <property name="default.indexmanager">
-                            org.infinispan.query.indexmanager.InfinispanIndexManager
-                </property>
+                <property name="default.indexmanager">near-real-time</property>
+                <property name="default.indexBase">/opt/infinispan/server/data/indexDir</property>
+
                 <property name="default.worker.execution">async</property>
                 <property name="default.index_flush_interval">500</property>
              </indexing>
              <memory>
-                <!-- <binary strategy="REMOVE" size="134217728" eviction="MEMORY"/> -->
+                <!-- <binary strategy="REMOVE" size="134217728" eviction="MEMORY"/> --><!-- ISPN-11024-->
                 <object strategy="REMOVE" size="10000" />
              </memory>
              <persistence passivation="false">
-                <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.0" path="/opt/infinispan/server/data" shared="false" preload="false" />
+                <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.0" path="/opt/infinispan/server/data/devices" shared="false" preload="false" />
              </persistence>
           </distributed-cache>
 
           <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="adapterCredentials">
              <transaction mode="NON_XA" locking="PESSIMISTIC" complete-timeout="120000" />
              <memory>
-                <!-- <binary strategy="REMOVE" size="134217728" eviction="MEMORY"/> -->
+                <!-- <binary strategy="REMOVE" size="134217728" eviction="MEMORY"/> --><!-- ISPN-11024-->
                 <object strategy="REMOVE" size="10000" />
              </memory>
              <indexing index="NONE"/>
@@ -47,7 +50,9 @@ data:
           <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="deviceStates">
              <transaction mode="NONE"/>
              <indexing index="NONE"/>
-             <binary strategy="REMOVE" size="67108864" eviction="MEMORY"/>
+             <memory>
+                <binary strategy="REMOVE" size="67108864" eviction="MEMORY"/>
+             </memory>
           </distributed-cache>
        </cache-container>
 
