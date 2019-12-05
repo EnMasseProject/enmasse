@@ -36,6 +36,9 @@ public final class AppliedConfig {
         if (metadata.getMetadata().getAnnotations() == null) {
             metadata.getMetadata().setAnnotations(new HashMap<>());
         }
+        // Remove old annotation no longer used
+        metadata.getMetadata().getAnnotations().remove(AnnotationKeys.APPLIED_PLAN);
+
         metadata.getMetadata().getAnnotations().put(AnnotationKeys.APPLIED_CONFIGURATION, mapper.writeValueAsString(config));
     }
 
