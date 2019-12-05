@@ -43,6 +43,32 @@ const typeDefs = gql`
         Units: String!
     }
 
+    type AddressSpaceType_consoleapi_enmasse_io_v1beta1 {
+        ObjectMeta: ObjectMeta_v1!
+        Spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
+    }
+
+    type AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1 {
+        AddressSpaceType: AddressSpaceType!
+        DisplayName: String!
+        LongDescription: String!
+        ShortDescription: String!
+        DisplayOrder: Int!
+    }
+
+    type AddressType_consoleapi_enmasse_io_v1beta1 {
+        ObjectMeta: ObjectMeta_v1!
+        Spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
+    }
+
+    type AddressTypeSpec_consoleapi_enmasse_io_v1beta1 {
+        AddressSpaceType: AddressSpaceType!
+        DisplayName: String!
+        LongDescription: String!
+        ShortDescription: String!
+        DisplayOrder: Int!
+    }
+
     type Connection_consoleapi_enmasse_io_v1beta1 {
         ObjectMeta: ObjectMeta_v1!
         Spec: ConnectionSpec_consoleapi_enmasse_io_v1beta1!
@@ -211,13 +237,19 @@ const typeDefs = gql`
     type Query {
         hello: String
 
-        "Returns the address spaces type defined by the system"
+        "Returns the address spaces type defined by the system (DEPRECATED)"
         addressSpaceTypes: [AddressSpaceType!]!
+        "Returns the address spaces type defined by the system optionally filtereing for a single address space type"
+        addressSpaceTypes_v2: [AddressSpaceType_consoleapi_enmasse_io_v1beta1!]!
+
+        "Returns the address types defined by the system (DEPRECATED)"
+        addressTypes: [AddressType!]!
+        "Returns the address types defined by the system optionally filtereing for a single address space type"
+        addressTypes_v2(addressSpaceType: AddressSpaceType): [AddressType_consoleapi_enmasse_io_v1beta1!]!
+
         "Returns the address spaces plans defined by the system optionally filtereing for a single address space type"
         addressSpacePlans(addressSpaceType: AddressSpaceType): [AddressSpacePlan_admin_enmasse_io_v1beta2!]!
 
-        "Returns the address type defined by the system"
-        addressTypes: [AddressType!]!
         "Returns the address plans defined by the system optionally filtering for a single address space plan"
         addressPlans(addressSpacePlan: String): [AddressPlan_admin_enmasse_io_v1beta2!]!
 

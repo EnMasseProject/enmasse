@@ -58,6 +58,39 @@ of the number of rows in the result set in total.
 
 # Example Queries
 
+## all address space types
+
+```
+query addressSpaceTypes {
+  addressSpaceTypes_v2 {
+    ObjectMeta
+    {Name}
+    Spec {
+      DisplayName
+      LongDescription
+      ShortDescription
+    }
+  }
+}
+```
+
+## all address types
+
+```
+query addressTypes {
+  addressTypes_v2(addressSpaceType :standard) {
+    ObjectMeta
+    {Name}
+    Spec {
+      DisplayName
+      LongDescription
+      ShortDescription
+    }
+  }
+}
+```
+
+
 ## all_address_spaces
 
 ```
