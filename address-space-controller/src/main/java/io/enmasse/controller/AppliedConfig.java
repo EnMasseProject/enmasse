@@ -29,7 +29,7 @@ public final class AppliedConfig {
     }
 
     public static AddressSpaceSpec parseCurrentAppliedConfig(final HasMetadata resource) throws IOException {
-        return parseCurrentAppliedConfig(resource.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG));
+        return parseCurrentAppliedConfig(resource.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_CONFIGURATION));
     }
 
     public static void setCurrentAppliedConfig(final HasMetadata metadata, AddressSpaceSpec config) throws JsonProcessingException {
