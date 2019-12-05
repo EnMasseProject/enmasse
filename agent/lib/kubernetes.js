@@ -57,6 +57,7 @@ function get_options(options, path) {
     return {
         hostname: options.host || process.env.KUBERNETES_SERVICE_HOST,
         port: options.port || process.env.KUBERNETES_SERVICE_PORT,
+        resyncInterval: options.resyncInterval || process.env.RESYNC_INTERVAL,
         rejectUnauthorized: false,
         path: options.path || path,
         headers: {
@@ -238,7 +239,14 @@ Watcher.prototype.watch = function () {
             }
         });
     });
-    request.on('error', function(e) { log.error('error on watch: %s', e); });
+    request.on('error', function(e) {
+        log.error('error on watch: %s', e);
+    });
+    if (opts.resyncInterval !== undefined) {
+        request.setTimeout(opts.resyncInterval * 1000, function () {
+            request.abort();
+        });
+    }
 };
 
 function matcher(object) {
