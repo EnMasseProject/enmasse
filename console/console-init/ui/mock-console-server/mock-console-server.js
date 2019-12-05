@@ -55,7 +55,7 @@ function createAddressPlan(name, addressType, displayName, shortDescription, lon
       DisplayOrder: displayOrder,
       LongDescription: longDescription,
       Resources: resources,
-      "shortDescription": shortDescription
+      ShortDescription: shortDescription
     }
   };
 }
