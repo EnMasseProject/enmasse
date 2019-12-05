@@ -154,37 +154,6 @@ const availableAddressTypes = [
   },
 ];
 
-/*
-{
-    "standard": {
-        "address": {
-            "anycast": {
-                "longDescription": "The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but are instead forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.",
-                "shortDescription": "A scalable 'direct' address for sending messages to one consumer"
-            },
-            "multicast": {
-                "longDescription": "The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. Because message acknowledgments from consumers are not propagated to producers, only pre-settled messages can be sent to multicast addresses.",
-                "shortDescription": "A scalable 'direct' address for sending messages to multiple consumers"
-            },
-            "queue": {
-                "longDescription": "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases when you want to decouple the producer and consumer. A queue can be sharded across multiple storage units. Message ordering might be lost for queues in the standard address space.",
-                "shortDescription": "A store-and-forward queue"
-            },
-            "subscription": {
-                "longDescription": "The subscription address type allows a subscription to be created for a topic that holds messages published to the topic even if the subscriber is not attached. The subscription is accessed by the consumer using <topic-address>::<subscription-address>. For example, for a subscription `mysub` on a topic `mytopic` the consumer consumes from the address `mytopic::mysub`.",
-                "shortDescription": "A subscription on a specified topic"
-            },
-            "topic": {
-                "longDescription": "The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
-                "shortDescription": "A publish-subscribe topic"
-            }
-        }
-    }
-}
- */
-
-
-
 const availableNamespaces = [
   {
     ObjectMeta: {
