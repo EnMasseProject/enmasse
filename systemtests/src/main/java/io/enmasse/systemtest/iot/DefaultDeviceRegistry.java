@@ -5,8 +5,6 @@
 
 package io.enmasse.systemtest.iot;
 
-import java.util.Optional;
-
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfig;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfigBuilder;
 import io.enmasse.iot.model.v1.ExternalInfinispanServer;
@@ -16,10 +14,6 @@ import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
 public final class DefaultDeviceRegistry {
 
-    public static enum InfinispanVersion {
-        V9, V10,
-    }
-
     private DefaultDeviceRegistry() {}
 
     public static ExternalInfinispanServer externalServer(final InfinispanVersion version, final Endpoint infinispanEndpoint) {
@@ -28,13 +22,15 @@ public final class DefaultDeviceRegistry {
                 .withPort(infinispanEndpoint.getPort());
 
         // credentials aligned with 'templates/iot/examples/infinispan/manual'
-        builder = builder.withUsername("app")
+        builder = builder
+                .withUsername("app")
                 .withPassword("test12");
 
         switch (version) {
             case V10:
                 builder = builder.withSaslRealm("default")
                         .withSaslServerName("infinispan");
+                break;
             default:
                 builder = builder.withSaslRealm("ApplicationRealm")
                         .withSaslServerName("hotrod");
@@ -50,23 +46,11 @@ public final class DefaultDeviceRegistry {
                 .withNewInfinispan()
                 .withNewServer()
 
-                .withExternal(externalServer(version(), infinispanEndpoint))
+                .withExternal(externalServer(InfinispanVersion.current(), infinispanEndpoint))
 
                 .endServer()
                 .endInfinispan()
                 .build();
-    }
-
-    /**
-     * Get the version to use for infinispan.
-     * @return The version to use, never returns {@code null}.
-     * @throws IllegalArgumentException If a value is set, but cannot be mapped to an enum literal.
-     */
-    private static InfinispanVersion version() {
-        return Optional
-                .ofNullable(System.getenv("INFINISPAN_VERSION"))
-                .map(InfinispanVersion::valueOf)
-                .orElse(InfinispanVersion.V10);
     }
 
     public static DeviceRegistryServiceConfig newFileBased() {
