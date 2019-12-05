@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ public class StatusController implements Controller {
     }
 
     @Override
-    public AddressSpace reconcileActive(AddressSpace addressSpace) {
+    public AddressSpace reconcileActive(AddressSpace addressSpace) throws IOException {
         if (addressSpace.getStatus().isReady()) {
             checkComponentsReady(addressSpace);
             checkAuthServiceReady(addressSpace);
@@ -47,7 +48,8 @@ public class StatusController implements Controller {
         }
 
         if (addressSpace.getStatus().isReady()) {
-            if (addressSpace.getSpec().getPlan().equals(addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN))) {
+            AddressSpaceSpec appliedSpec = AppliedConfig.parseCurrentAppliedConfig(addressSpace);
+            if (addressSpace.getSpec().equals(appliedSpec)) {
                 addressSpace.getStatus().setPhase(Phase.Active);
             }
         } else {

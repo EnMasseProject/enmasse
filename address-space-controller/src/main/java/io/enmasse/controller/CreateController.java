@@ -101,7 +101,8 @@ public class CreateController implements Controller {
     public AddressSpace reconcileActive(AddressSpace addressSpace) throws Exception {
         Schema schema = schemaProvider.getSchema();
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
-        if (!addressSpaceResolver.validate(addressSpace)) {
+        AddressSpaceSpec appliedConfig = kubernetes.getAppliedConfig(addressSpace);
+        if (!addressSpaceResolver.validate(addressSpace, appliedConfig)) {
             return addressSpace;
         }
 
@@ -133,27 +134,27 @@ public class CreateController implements Controller {
         AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace.getSpec().getType());
         AddressSpacePlan addressSpacePlan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace.getSpec().getPlan());
 
-        String appliedPlan = kubernetes.getAppliedPlan(addressSpace);
         InfraConfig desiredInfraConfig = getInfraConfig(addressSpace);
         InfraConfig currentInfraConfig = kubernetes.getAppliedInfraConfig(addressSpace);
 
         // Apply changes to ensure controller logic works as expected
-        addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, appliedPlan);
         InfraConfigs.setCurrentInfraConfig(addressSpace, currentInfraConfig);
+        AppliedConfig.setCurrentAppliedConfig(addressSpace, appliedConfig);
+
 
         if (currentInfraConfig == null && !kubernetes.existsAddressSpace(addressSpace)) {
             KubernetesList resourceList = new KubernetesListBuilder()
                     .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
                     .build();
             addAppliedInfraConfigAnnotation(resourceList, desiredInfraConfig);
-            addAppliedPlanAnnotation(resourceList, addressSpace.getSpec().getPlan());
+            addAppliedConfigAnnotation(resourceList, addressSpace.getSpec());
 
             log.info("Creating address space {}", addressSpace);
 
             kubernetes.create(resourceList);
             eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
             InfraConfigs.setCurrentInfraConfig(addressSpace, desiredInfraConfig);
-            addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
+            AppliedConfig.setCurrentAppliedConfig(addressSpace, addressSpace.getSpec());
             addressSpace.getStatus().setPhase(Phase.Configuring);
         } else if (currentInfraConfig == null || !currentInfraConfig.equals(desiredInfraConfig)) {
 
@@ -166,18 +167,18 @@ public class CreateController implements Controller {
                         .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
                         .build();
                 addAppliedInfraConfigAnnotation(resourceList, desiredInfraConfig);
-                addAppliedPlanAnnotation(resourceList, addressSpace.getSpec().getPlan());
+                addAppliedConfigAnnotation(resourceList, addressSpace.getSpec());
 
                 log.info("Upgrading address space {}", addressSpace);
 
                 kubernetes.apply(resourceList,desiredInfraConfig.getUpdatePersistentVolumeClaim());
                 eventLogger.log(AddressSpaceUpgraded, "Upgraded address space", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
                 InfraConfigs.setCurrentInfraConfig(addressSpace, desiredInfraConfig);
-                addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
+                AppliedConfig.setCurrentAppliedConfig(addressSpace, addressSpace.getSpec());
             } else {
                 log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredInfraConfig.getVersion(), version);
             }
-        } else if (!addressSpace.getSpec().getPlan().equals(appliedPlan)) {
+        } else if (!addressSpace.getSpec().equals(appliedConfig)) {
             addressSpace.getStatus().setPhase(Phase.Configuring);
             if (checkExceedsQuota(addressSpaceType, addressSpacePlan, addressSpace)) {
                 return addressSpace;
@@ -187,23 +188,22 @@ public class CreateController implements Controller {
                     .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
                     .build();
             addAppliedInfraConfigAnnotation(resourceList, desiredInfraConfig);
-            addAppliedPlanAnnotation(resourceList, addressSpace.getSpec().getPlan());
+            addAppliedConfigAnnotation(resourceList, addressSpace.getSpec());
 
-            log.info("Updating address space plan {}", addressSpace);
+            log.info("Updating address space config {}", addressSpace);
 
             kubernetes.apply(resourceList, desiredInfraConfig.getUpdatePersistentVolumeClaim());
-            eventLogger.log(AddressSpaceChanged, "Changed address space plan", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
+            eventLogger.log(AddressSpaceChanged, "Changed applied config", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
             InfraConfigs.setCurrentInfraConfig(addressSpace, desiredInfraConfig);
-            addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
+            AppliedConfig.setCurrentAppliedConfig(addressSpace, addressSpace.getSpec());
         }
-
         return addressSpace;
     }
 
-    private void addAppliedPlanAnnotation(KubernetesList resourceList, String plan) {
+    private void addAppliedConfigAnnotation(KubernetesList resourceList, AddressSpaceSpec spec) throws JsonProcessingException {
         for (HasMetadata resource : resourceList.getItems()) {
             if (resource instanceof Service) {
-                Kubernetes.addObjectAnnotation(resource, AnnotationKeys.APPLIED_PLAN, plan);
+                AppliedConfig.setCurrentAppliedConfig(resource, spec);
             }
         }
     }
