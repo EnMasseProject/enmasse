@@ -106,6 +106,31 @@ public class KubeUtilTest {
     }
 
     @Test
+    public void appliesSecurityContext() {
+
+        PodTemplateSpec actual = new PodTemplateSpecBuilder()
+                .withNewSpec()
+                .endSpec()
+                .build();
+
+        final long runAsGroup = 1000L;
+        final long fsGroup = 1234L;
+        PodTemplateSpec desired = new PodTemplateSpecBuilder()
+                .withNewSpec()
+                .withNewSecurityContext()
+                .withRunAsGroup(runAsGroup)
+                .withFsGroup(fsGroup)
+                .endSecurityContext()
+                .endSpec()
+                .build();
+
+        KubeUtil.applyPodTemplate(actual, desired);
+
+        assertThat(actual.getSpec().getSecurityContext().getFsGroup(), equalTo(fsGroup));
+        assertThat(actual.getSpec().getSecurityContext().getRunAsGroup(), equalTo(runAsGroup));
+    }
+
+    @Test
     public void appliesContainerEnvVarToPodTemplate() {
         Container actualContainer = new ContainerBuilder()
                 .withName("foo")

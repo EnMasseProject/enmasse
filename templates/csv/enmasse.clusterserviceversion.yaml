@@ -609,6 +609,8 @@ spec:
                   value: "${CONSOLE_PROXY_KUBERNETES_IMAGE}"
                 - name: CONSOLE_HTTPD_IMAGE
                   value: "${CONSOLE_HTTPD_IMAGE}"
+                - name: "FS_GROUP_FALLBACK_MAP"
+                  value: "{\"standard-authservice\": 1000}"
       - name: user-api-server
         spec:
           replicas: 1

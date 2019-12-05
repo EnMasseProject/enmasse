@@ -163,6 +163,7 @@ type AuthenticationServiceConfig struct {
 type FileBasedDeviceRegistry struct {
 	NumberOfDevicesPerTenant *uint32 `json:"numberOfDevicesPerTenant,omitempty"`
 	CommonServiceConfig      `json:",inline"`
+	SecurityContext          *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 }
 
 type InfinispanDeviceRegistry struct {

@@ -60,4 +60,6 @@ public interface Kubernetes {
     void scaleStatefulSet(String name, int numReplicas);
 
     List<Pod> listBrokers(String clusterId);
+
+    String getNamespace();
 }

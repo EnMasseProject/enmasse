@@ -25,11 +25,9 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.*;
 
-import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
-import static io.enmasse.address.model.KubeUtil.lookupResource;
+import static io.enmasse.address.model.KubeUtil.*;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
-    private static final String FS_GROUP_OVERRIDE = "FS_GROUP_OVERRIDE";
     private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class);
     private final String WELL_KNOWN_CONSOLE_SERVICE_NAME = "console";
 
@@ -37,14 +35,12 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private final AuthenticationServiceResolver authenticationServiceResolver;
     private final Map<String, String> env;
     private final SchemaProvider schemaProvider;
-    private final Long fsGroupOverride;
 
     public TemplateInfraResourceFactory(Kubernetes kubernetes, AuthenticationServiceResolver authenticationServiceResolver, Map<String, String> env, SchemaProvider schemaProvider) {
         this.kubernetes = kubernetes;
         this.authenticationServiceResolver = authenticationServiceResolver;
         this.env = env;
         this.schemaProvider = schemaProvider;
-        this.fsGroupOverride = getFsGroupOverride();
     }
 
     private void prepareParameters(AddressSpace addressSpace,
@@ -186,10 +182,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         setIfEnvPresent(parameters, TemplateParameter.BROKER_PLUGIN_IMAGE);
         setIfEnvPresent(parameters, TemplateParameter.TOPIC_FORWARDER_IMAGE);
         setIfEnvPresent(parameters, TemplateParameter.IMAGE_PULL_POLICY);
-
-        if (fsGroupOverride != null) {
-            parameters.put(TemplateParameter.FS_GROUP_OVERRIDE, fsGroupOverride.toString());
-        }
+        setIfEnvPresent(parameters, TemplateParameter.FS_GROUP_FALLBACK_MAP);
 
         Map<String, String> infraAnnotations = standardInfraConfig.getMetadata().getAnnotations();
         String templateName = getAnnotation(infraAnnotations, AnnotationKeys.TEMPLATE_NAME, "standard-space-infra");
@@ -292,23 +285,9 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             PodTemplateSpec actualPodTemplate = brokerDeployment.getSpec().getTemplate();
             applyPodTemplate(actualPodTemplate, podTemplate);
         }
-
-        if (this.fsGroupOverride != null) {
-            KubeUtil.applyFsGroupOverride(Collections.singletonList(brokerDeployment), this.fsGroupOverride);
-        }
+        overrideFsGroup(brokerDeployment.getSpec().getTemplate(), "broker", kubernetes.getNamespace());
 
         return items;
-    }
-
-    private Long getFsGroupOverride() {
-        Long fsGroupOverride = null;
-        if (env.containsKey(FS_GROUP_OVERRIDE)) {
-            try {
-                fsGroupOverride = Long.parseLong(env.get(FS_GROUP_OVERRIDE));
-            } catch (NumberFormatException ignore) {
-            }
-        }
-        return fsGroupOverride;
     }
 
     private List<HasMetadata> applyStorageClassName(String storageClassName, List<HasMetadata> items) {

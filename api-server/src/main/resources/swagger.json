@@ -310,6 +310,9 @@
                         "priorityClassName": {
                             "type": "string"
                         },
+                        "securityContext": {
+                            "type": "object"
+                        },
                         "tolerations": {
                             "items": {
                                 "type": "object"

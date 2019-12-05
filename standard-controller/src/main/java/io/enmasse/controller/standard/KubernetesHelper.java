@@ -185,4 +185,13 @@ public class KubernetesHelper implements Kubernetes {
         File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
         return Templates.process(templateFile, parameters);
     }
+
+    private void scaleDeployment(Deployment deployment, int numReplicas) {
+        client.apps().deployments().withName(deployment.getMetadata().getName()).scale(numReplicas);
+    }
+
+    @Override
+    public String getNamespace() {
+        return client.getNamespace();
+    }
 }
