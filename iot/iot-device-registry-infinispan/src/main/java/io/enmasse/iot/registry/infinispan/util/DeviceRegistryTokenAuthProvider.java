@@ -32,6 +32,7 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 public class DeviceRegistryTokenAuthProvider implements AuthProvider {
@@ -47,13 +48,13 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
     private Cache<String, TokenReview> tokens;
     private Cache<String, Boolean> authorizations;
 
-    public DeviceRegistryTokenAuthProvider(Vertx vertx, int tokenExpiration) {
+    public DeviceRegistryTokenAuthProvider(Vertx vertx, Duration tokenExpiration) {
         log.info("Using token cache expiration of {}", tokenExpiration);
         this.vertx = vertx;
         this.client = new DefaultKubernetesClient();
         this.authApi = new KubeAuthApi(this.client, this.client.getConfiguration().getOauthToken());
         ConfigurationBuilder config = new ConfigurationBuilder();
-        config.expiration().lifespan(tokenExpiration, TimeUnit.SECONDS);
+        config.expiration().lifespan(tokenExpiration.toSeconds(), TimeUnit.SECONDS);
         cacheManager.defineConfiguration("tokens", config.build());
         cacheManager.defineConfiguration("subjects", config.build());
         tokens = cacheManager.getCache("tokens");

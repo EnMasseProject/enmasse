@@ -119,6 +119,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 			{Name: "ENMASSE_IOT_REGISTRY_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
+			{Name: "ENMASSE_IOT_REGISTRY_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.Infinispan.Management.AuthTokenCacheExpiration},
 		}
 
 		AppendStandardHonoJavaOptions(container)
