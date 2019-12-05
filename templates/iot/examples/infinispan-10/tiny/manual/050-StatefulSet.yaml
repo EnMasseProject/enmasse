@@ -1,0 +1,92 @@
+kind: StatefulSet
+apiVersion: apps/v1beta1
+metadata:
+  labels:
+    name: infinispan
+    app: infinispan
+  name: infinispan
+spec:
+  replicas: 1
+  podManagementPolicy: Parallel
+  serviceName: infinispan
+  selector:
+    matchLabels:
+      name: infinispan
+      app: infinispan
+  template:
+    metadata:
+      labels:
+        name: infinispan
+        app: infinispan
+      name: infinispan
+    spec:
+      serviceAccount: infinispan
+      containers:
+      - command: [/opt/infinispan/bin/server.sh]
+        args:
+          - -b
+          - SITE_LOCAL
+          - -c
+          - /config/infinispan.xml
+          - -Djgroups.dns.query=infinispan-ping
+        image: quay.io/infinispan/server:10.0.1.Final
+        name: infinispan-server
+        ports:
+        - containerPort: 7800
+          name: ping
+          protocol: TCP
+        - containerPort: 11222
+          name: infinispan
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /rest/v2/cache-managers/clustered/health/status
+            port: infinispan
+          failureThreshold: 5
+          initialDelaySeconds: 10
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 80
+        readinessProbe:
+          httpGet:
+            path: /rest/v2/cache-managers/clustered/health/status
+            port: infinispan
+          failureThreshold: 5
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 80
+        resources:
+          requests:
+            cpu: 1
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+        volumeMounts:
+        - mountPath: /config
+          name: infinispan-configuration
+        - mountPath: /opt/infinispan/server/data
+          name: infinispan-data
+        - mountPath: /infnispan-users
+          name: user-credential
+      terminationGracePeriodSeconds: 120
+      volumes:
+      - name: infinispan-configuration
+        configMap:
+          defaultMode: 420
+          name: infinispan-configuration
+      - name: user-credential
+        secret:
+          secretName: infinispan-secret
+          items:
+            - key: users.properties
+              path: users.properties
+  volumeClaimTemplates:
+  - metadata:
+      name: infinispan-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
