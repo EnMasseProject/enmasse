@@ -79,7 +79,7 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
     public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
-    public static final String INFINISPAN_PROJECT = "systemtests-infinispan";
+    public static final String INFINISPAN_PROJECT = Environment.getInstance().getInfinispanProject();
     public static final String INFINISPAN_SERVER = "infinispan";
     private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
 
