@@ -13,16 +13,13 @@ import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Probe;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -195,6 +192,10 @@ public final class KubeUtil {
                 actualPodSpec.setTolerations(podSpec.getTolerations());
             }
 
+            if (podSpec.getSecurityContext() != null) {
+                actualPodSpec.setSecurityContext(podSpec.getSecurityContext());
+            }
+
             for (Container desiredContainer : podSpec.getInitContainers()) {
                 for (Container actualContainer : actualPodSpec.getInitContainers()) {
                     if (actualContainer.getName() != null && actualContainer.getName().equals(desiredContainer.getName())) {
@@ -291,23 +292,17 @@ public final class KubeUtil {
         }
     }
 
-    public static void applyFsGroupOverride(List<HasMetadata> items, Long fsGroupOverride) {
-        items.stream().filter(i -> i instanceof Deployment || i instanceof StatefulSet).forEach(
-                i -> {
-                    PodSpec spec;
-                    if (i instanceof StatefulSet) {
-                        spec = ((StatefulSet) i).getSpec().getTemplate().getSpec();
-                    } else  {
-                        spec = ((Deployment) i).getSpec().getTemplate().getSpec();
-                    }
-
-                    PodSecurityContext securityContext = new PodSecurityContext();
-                    if (spec.getSecurityContext() != null) {
-                        securityContext = spec.getSecurityContext();
-                    }
-                    securityContext.setFsGroup(fsGroupOverride);
-                    spec.setSecurityContext(securityContext);
-                }
-        );
+    public static void overrideFsGroup(PodTemplateSpec target, String component, String namespace) {
+        final Long fsGroupOverride = FsGroupFallback.getFsGroupOverride(component);
+        if (Objects.equals(namespace, "openshift-operators") && fsGroupOverride != null) {
+            PodSecurityContext securityContext = target.getSpec().getSecurityContext();
+            if (securityContext == null) {
+                securityContext = new PodSecurityContext();
+            }
+            if (securityContext.getFsGroup() == null) {
+                securityContext.setFsGroup(fsGroupOverride);
+                target.getSpec().setSecurityContext(securityContext);
+            }
+        }
     }
 }

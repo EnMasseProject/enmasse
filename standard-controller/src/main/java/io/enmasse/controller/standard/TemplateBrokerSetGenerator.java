@@ -17,23 +17,21 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
+import static io.enmasse.address.model.KubeUtil.overrideFsGroup;
 
 /**
  * Generates sets of brokers using Openshift templates.
  */
 public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
-    private static final String FS_GROUP_OVERRIDE = "FS_GROUP_OVERRIDE";
     private static final ObjectMapper mapper = new ObjectMapper();
     private final Kubernetes kubernetes;
     private final StandardControllerOptions options;
     private final Map<String, String> env;
-    private final Long fsGroupOverride;
 
     public TemplateBrokerSetGenerator(Kubernetes kubernetes, StandardControllerOptions options, Map<String, String> env) {
         this.kubernetes = kubernetes;
         this.options = options;
         this.env = env;
-        this.fsGroupOverride = getFsGroupOverride();
     }
 
     private boolean isShardedTopic(AddressPlan addressPlan) {
@@ -154,10 +152,7 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
                     PodTemplateSpec actualPodTemplate = set.getSpec().getTemplate();
                     applyPodTemplate(actualPodTemplate, podTemplate);
                 }
-
-                if (fsGroupOverride != null) {
-                    KubeUtil.applyFsGroupOverride(Collections.singletonList(item), fsGroupOverride);
-                }
+                overrideFsGroup(set.getSpec().getTemplate(), "broker",  kubernetes.getNamespace());
             } else if (item instanceof Deployment) {
                 Deployment deployment = (Deployment) item;
                 deployment.getSpec().setReplicas(numReplicas);
@@ -178,16 +173,4 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
             parameters.put(key, env.get(key));
         }
     }
-
-    private Long getFsGroupOverride() {
-        Long fsGroupOverride = null;
-        if (env.containsKey(FS_GROUP_OVERRIDE)) {
-            try {
-                fsGroupOverride = Long.parseLong(env.get(FS_GROUP_OVERRIDE));
-            } catch (NumberFormatException ignore) {
-            }
-        }
-        return fsGroupOverride;
-    }
-
 }

@@ -158,10 +158,8 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 		install.ApplyEnvSimple(container, "ENABLE_EVENT_LOGGER", "true")
 		install.ApplyEnvSimple(container, "TEMPLATE_DIR", "/opt/templates")
 		install.ApplyEnvSimple(container, "RESOURCES_DIR", "/opt")
-
-		value, ok := os.LookupEnv("FS_GROUP_OVERRIDE")
-		if ok {
-			install.ApplyEnvSimple(container, "FS_GROUP_OVERRIDE", value)
+		if value, ok := os.LookupEnv("FS_GROUP_FALLBACK_MAP"); ok {
+			install.ApplyOrRemoveEnvSimple(container, "FS_GROUP_FALLBACK_MAP", value)
 		}
 
 		t := true
