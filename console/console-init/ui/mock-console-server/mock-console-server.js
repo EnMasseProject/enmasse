@@ -22,6 +22,138 @@ function calcLowerUpper(offset, first, len) {
   return {lower, upper};
 }
 
+const availableAddressSpaceTypes = [
+  {
+    ObjectMeta: {
+      Name: "brokered",
+      Uid: uuidv1(),
+      CreationTimestamp: getRandomCreationDate()
+    },
+    Spec: {
+      AddressSpaceType: "brokered",
+      DisplayName: "brokered",
+      ShortDescription: "The brokered address space.",
+      LongDescription: "The brokered address space type is the \"classic\" message broker in the cloud which supports AMQP, CORE, OpenWire, and MQTT protocols. It supports JMS with transactions, message groups, selectors on queues and so on.",
+      DisplayOrder: 0,
+    }
+  },
+  {
+    ObjectMeta: {
+      Name: "standard",
+      Uid: uuidv1(),
+      CreationTimestamp: getRandomCreationDate()
+    },
+    Spec: {
+      AddressSpaceType: "standard",
+      DisplayName: "standard",
+      ShortDescription: "The standard address space.",
+      LongDescription: "The standard address space type is the default type in EnMasse, and is focused on scaling in the number of connections and the throughput of the system. It supports AMQP and MQTT protocols.",
+      DisplayOrder: 1,
+    }
+  },
+];
+
+const availableAddressTypes = [
+  {
+    ObjectMeta: {
+      Name: "brokered.queue",
+      Uid: uuidv1(),
+      CreationTimestamp: getRandomCreationDate()
+    },
+    Spec: {
+      AddressSpaceType: "brokered",
+      DisplayName: "queue",
+      ShortDescription: "A store-and-forward queue",
+      LongDescription: "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue in the brokered address space supports selectors, message groups, transactions, and other JMS features. Message order can be lost with released messages.",
+      DisplayOrder: 0,
+    }
+  },
+  {
+    ObjectMeta: {
+      Name: "brokered.topic",
+      Uid: uuidv1(),
+      CreationTimestamp: getRandomCreationDate()
+    },
+    Spec: {
+      AddressSpaceType: "brokered",
+      DisplayName: "topic",
+      ShortDescription: "A publish-and-subscribe address with store-and-forward semantics",
+      LongDescription: "The topic address type supports the publish-subscribe messaging pattern in which there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
+      DisplayOrder: 1,
+    }
+  },
+  {
+    ObjectMeta: {
+      Name: "standard.anycast",
+      Uid: uuidv1(),
+      CreationTimestamp: getRandomCreationDate()
+    },
+    Spec: {
+      AddressSpaceType: "standard",
+      DisplayName: "anycast",
+      ShortDescription: "A scalable 'direct' address for sending messages to one consumer",
+      LongDescription: "The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but are instead forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.",
+      DisplayOrder: 0,
+    }
+  },
+  {
+    ObjectMeta: {
+      Name: "standard.multicast",
+      Uid: uuidv1(),
+      CreationTimestamp: getRandomCreationDate()
+    },
+    Spec: {
+      AddressSpaceType: "standard",
+      DisplayName: "multicast",
+      ShortDescription: "A scalable 'direct' address for sending messages to multiple consumers",
+      LongDescription: "The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. Because message acknowledgments from consumers are not propagated to producers, only pre-settled messages can be sent to multicast addresses.",
+      DisplayOrder: 1,
+    }
+  },
+  {
+    ObjectMeta: {
+      Name: "standard.queue",
+      Uid: uuidv1(),
+      CreationTimestamp: getRandomCreationDate()
+    },
+    Spec: {
+      AddressSpaceType: "standard",
+      DisplayName: "queue",
+      ShortDescription: "A store-and-forward queue",
+      LongDescription: "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases when you want to decouple the producer and consumer. A queue can be sharded across multiple storage units. Message ordering might be lost for queues in the standard address space.",
+      DisplayOrder: 2,
+    }
+  },
+  {
+    ObjectMeta: {
+      Name: "standard.subscription",
+      Uid: uuidv1(),
+      CreationTimestamp: getRandomCreationDate()
+    },
+    Spec: {
+      AddressSpaceType: "standard",
+      DisplayName: "subscription",
+      ShortDescription: "A subscription on a specified topic",
+      LongDescription: "The subscription address type allows a subscription to be created for a topic that holds messages published to the topic even if the subscriber is not attached. The subscription is accessed by the consumer using <topic-address>::<subscription-address>. For example, for a subscription `mysub` on a topic `mytopic` the consumer consumes from the address `mytopic::mysub`.",
+      DisplayOrder: 3,
+    }
+  },
+  {
+    ObjectMeta: {
+      Name: "standard.topic",
+      Uid: uuidv1(),
+      CreationTimestamp: getRandomCreationDate()
+    },
+    Spec: {
+      AddressSpaceType: "standard",
+      DisplayName: "topic",
+      ShortDescription: "A publish-subscribe topic",
+      LongDescription: "The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
+      DisplayOrder: 4,
+    }
+  },
+];
+
 const availableNamespaces = [
   {
     ObjectMeta: {
@@ -758,7 +890,16 @@ EOF
     namespaces: () => availableNamespaces,
 
     addressTypes: () => (['queue', 'topic', 'subscription', 'multicast', 'anycast']),
+    addressTypes_v2: (parent, args, context, info) => {
+      return availableAddressTypes
+          .filter(o => args.addressSpaceType === undefined || o.Spec.AddressSpaceType === args.addressSpaceType)
+          .sort(o => o.Spec.DisplayOrder);
+    },
     addressSpaceTypes: () => (['standard', 'brokered']),
+    addressSpaceTypes_v2: (parent, args, context, info) => {
+      return availableAddressSpaceTypes
+          .sort(o => o.Spec.DisplayOrder);
+    },
     addressSpacePlans: (parent, args, context, info) => {
       return availableAddressSpacePlans
           .filter(o => args.addressSpaceType === undefined || o.Spec.AddressSpaceType === args.addressSpaceType)
