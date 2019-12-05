@@ -628,17 +628,20 @@ addressSpaces.forEach((as) => {
 var links = [];
 connections.forEach(c => {
   var addr = addressItrs[c.Spec.AddressSpace.ObjectMeta.Uid].next().value;
-  links.push(
-      {
-        ObjectMeta: {
-          Name: uuidv1(),
-        },
-        Spec: {
-          Connection: c,
-          Address: addr.ObjectMeta.Name,
-          Role: "sender",
-        }
-      });
+
+  for (var i = 0; i< addr.ObjectMeta.Name.length; i++) {
+    links.push(
+        {
+          ObjectMeta: {
+            Name: uuidv1(),
+          },
+          Spec: {
+            Connection: c,
+            Address: addr.ObjectMeta.Name,
+            Role: i % 2 === 0 ? "sender" : "receiver",
+          }
+        });
+  }
 });
 
 function buildFilterer(filter) {
