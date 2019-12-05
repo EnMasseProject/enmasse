@@ -16,8 +16,6 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.UUID;
 
-import io.enmasse.address.model.AddressSpaceSpec;
-import io.enmasse.address.model.AddressSpaceSpecBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -96,6 +94,7 @@ public class CreateControllerTest {
                 .withName("myspace")
                 .withNamespace("mynamespace")
                 .withUid(UUID.randomUUID().toString())
+                .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "plan1")
                 .addToAnnotations(AnnotationKeys.APPLIED_INFRA_CONFIG,
                         mapper.writeValueAsString(testSchema.getSchema().findAddressSpaceType("type1").get().getInfraConfigs().get(0)))
                 .endMetadata()
@@ -108,9 +107,6 @@ public class CreateControllerTest {
                 .build();
 
 
-        AppliedConfig.setCurrentAppliedConfig(addressSpace, new AddressSpaceSpecBuilder(addressSpace.getSpec())
-                .withPlan("plan1")
-                .build());
         TestAddressSpaceApi addressSpaceApi = new TestAddressSpaceApi();
         addressSpaceApi.createAddressSpace(addressSpace);
 
