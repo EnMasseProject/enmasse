@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
+import org.infinispan.query.dsl.IndexedQueryMode;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 import org.slf4j.Logger;
@@ -134,19 +135,29 @@ public class InfinispanTenantCleaner implements AutoCloseable {
         log.info("Removed tenant ({}) from system (total: {}).", tenantId, count);
     }
 
-    private Query createQuery(final CleanerConfig config, final RemoteCache<DeviceKey, DeviceInformation> devicesCache, final String tenantId) {
+    private Query createQueryX(final CleanerConfig config, final RemoteCache<DeviceKey, DeviceInformation> devicesCache, final String tenantId) {
 
         // ISPN-11013: if we only select the "deviceId" field here, the we would
         // also need to index this field. So for the moment, we fetch the full object.
 
         final QueryFactory queryFactory = Search.getQueryFactory(devicesCache);
-        final Query query = queryFactory.from(DeviceInformation.class)
-                .having("tenantId")
-                .eq(tenantId)
+
+        return queryFactory.from(DeviceInformation.class)
+                .having("tenantId").eq(tenantId)
                 .maxResults(config.getDeletionChunkSize())
                 .build();
 
-        return query;
+    }
+
+    private Query createQuery(final CleanerConfig config, final RemoteCache<DeviceKey, DeviceInformation> devicesCache, final String tenantId) {
+
+        final QueryFactory queryFactory = Search.getQueryFactory(devicesCache);
+
+        return queryFactory
+                .create(String.format("from %s where tenantId=:tenantId", DeviceInformation.class.getName()), IndexedQueryMode.BROADCAST)
+                .maxResults(config.getDeletionChunkSize())
+                .setParameter("tenantId",tenantId);
+
     }
 
     private void deleteDevice(final RemoteCache<DeviceKey, DeviceInformation> devicesCache, final RemoteCache<DeviceConnectionKey, String> devicesConnectionCache,

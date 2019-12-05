@@ -35,6 +35,7 @@ import org.eclipse.hono.util.CredentialsConstants;
 import org.eclipse.hono.util.CredentialsResult;
 import org.infinispan.client.hotrod.MetadataValue;
 import org.infinispan.client.hotrod.Search;
+import org.infinispan.query.dsl.IndexedQueryMode;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 import org.slf4j.Logger;
@@ -229,16 +230,13 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
      */
     private CompletableFuture<LinkedList<JsonObject>> searchCredentials(final CredentialKey key) {
 
-        final QueryFactory qf = Search.getQueryFactory(this.managementCache);
+        final QueryFactory queryFactory = Search.getQueryFactory(this.managementCache);
 
-        final Query query = qf
-                .from(DeviceInformation.class)
-
-                .having("tenantId").eq(key.getTenantId())
-                .and().having("credentials.authId").eq(key.getAuthId())
-                .and().having("credentials.type").eq(key.getType())
-
-                .build();
+        final Query query = queryFactory
+                .create(String.format("from %s where tenantId=:tenantId and credentials.authId=:authId and credentials.type=:type", DeviceInformation.class.getName()), IndexedQueryMode.BROADCAST)
+                .setParameter("tenantId", key.getTenantId())
+                .setParameter("authId", key.getAuthId())
+                .setParameter("type", key.getType());
 
         return CompletableFuture
                 .supplyAsync(query::<DeviceInformation>list, this.executor)
