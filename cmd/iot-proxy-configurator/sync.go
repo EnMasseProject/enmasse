@@ -238,7 +238,7 @@ func (c *Configurator) syncProject(project *v1alpha1.IoTProject) (bool, error) {
 	connectorName := resourceName(project, "connector")
 	sslProfileName := ""
 
-	log.V(2).Info("Create project", "project", project)
+	log.Info("Sync project", "project", project)
 
 	m := util.MultiTool{}
 
