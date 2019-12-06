@@ -1,5 +1,6 @@
 ## 0.30.1
 *  #2714: Allow setting security context of pods using persistent volumes
+*  #3547: Network policies not deleted when address space is deleted
 
 ## 0.30.0
 * Fix go tool vet on newer versions of go
