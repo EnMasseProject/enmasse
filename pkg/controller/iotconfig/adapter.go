@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
@@ -26,30 +27,35 @@ import (
 
 type adapter struct {
 	Name                  string
+	EnvPrefix             string
 	AdapterConfigProvider func(*iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig
 }
 
 var adapters = []adapter{
 	{
-		Name: "mqtt",
+		Name:      "mqtt",
+		EnvPrefix: "HONO_MQTT_",
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
 			return &config.Spec.AdaptersConfig.MqttAdapterConfig.AdapterConfig
 		},
 	},
 	{
-		Name: "http",
+		Name:      "http",
+		EnvPrefix: "HONO_HTTP_",
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
 			return &config.Spec.AdaptersConfig.HttpAdapterConfig.AdapterConfig
 		},
 	},
 	{
-		Name: "lorawan",
+		Name:      "lorawan",
+		EnvPrefix: "HONO_LORAWAN_",
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
 			return &config.Spec.AdaptersConfig.LoraWanAdapterConfig.AdapterConfig
 		},
 	},
 	{
-		Name: "sigfox",
+		Name:      "sigfox",
+		EnvPrefix: "HONO_SIGFOX_",
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
 			return &config.Spec.AdaptersConfig.SigfoxAdapterConfig.AdapterConfig
 		},
@@ -190,6 +196,22 @@ func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Cont
 		{Name: "HONO_TENANT_PASSWORD", Value: password},
 	}...)
 
+	adapterConfig := adapter.AdapterConfigProvider(config)
+	options := mergeAdapterOptions(config.Spec.AdaptersConfig.DefaultOptions, adapterConfig.Options)
+
+	// set max payload size
+	if options.MaxPayloadSize > 0 {
+		appendAdapterEnvVar(container, adapter, "MAX_PAYLOAD_SIZE", strconv.FormatInt(int64(options.MaxPayloadSize), 10))
+	}
+
+	// set tenant idle timeout
+	if options.TenantIdleTimeout != "" {
+		appendAdapterEnvVar(container, adapter, "TENANT_IDLE_TIMEOUT", options.TenantIdleTimeout)
+	} else {
+		// the hono default for this historically is "no timeout", but it would be better to have a timeout
+		appendAdapterEnvVar(container, adapter, "TENANT_IDLE_TIMEOUT", "30m")
+	}
+
 	if err := AppendTrustStores(config, container, []string{
 		"HONO_CREDENTIALS_TRUST_STORE_PATH",
 		"HONO_DEVICE_CONNECTION_TRUST_STORE_PATH",
@@ -201,6 +223,10 @@ func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Cont
 
 	return nil
 
+}
+
+func appendAdapterEnvVar(container *corev1.Container, a adapter, key string, value string) {
+	install.ApplyOrRemoveEnvSimple(container, a.EnvPrefix+key, value)
 }
 
 func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *iotv1alpha1.IoTConfig, configCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
@@ -328,4 +354,26 @@ func (r *ReconcileIoTConfig) reconcileEndpointKeyCertificateSecret(ctx context.C
 func globalIsAdapterEnabled(name string) bool {
 	v := os.Getenv("IOT_ADAPTER_" + strings.ToUpper(name) + "_ENABLED")
 	return v == "" || v == "true"
+}
+
+func mergeAdapterOptions(first, second *iotv1alpha1.AdapterOptions) iotv1alpha1.AdapterOptions {
+
+	if first == nil {
+		first = &iotv1alpha1.AdapterOptions{}
+	}
+
+	result := *first
+
+	if second == nil {
+		second = &iotv1alpha1.AdapterOptions{}
+	}
+
+	if second.TenantIdleTimeout != "" {
+		result.TenantIdleTimeout = second.TenantIdleTimeout
+	}
+	if second.MaxPayloadSize > 0 {
+		result.MaxPayloadSize = second.MaxPayloadSize
+	}
+
+	return result
 }
