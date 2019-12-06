@@ -802,7 +802,7 @@ public class TestUtils {
             } catch (Exception ex) {
                 return false;
             }
-        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+        }, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
     public static void waitForSchemaInSync(String addressSpacePlan) throws Exception {
