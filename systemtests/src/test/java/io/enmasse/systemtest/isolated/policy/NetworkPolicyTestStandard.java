@@ -18,6 +18,7 @@ import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecAdminBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
@@ -107,6 +108,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
         assertFalse(blockedClientSender.run(), "Sender was successful, expected return code -1");
         assertFalse(blockedClientReceiver.run(), "Receiver was successful, expected return code -1");
 
+        deleteAddressSpace(addressSpace);
     }
 
     @Test
@@ -148,6 +150,12 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
         assertFalse(blockedClientSender.run(), "Sender was successful, expected return code -1");
         assertFalse(blockedClientReceiver.run(), "Receiver was successful, expected return code -1");
 
+        deleteAddressSpace(addressSpace);
+    }
+
+    private void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
+        isolatedResourcesManager.deleteAddressSpace(addressSpace);
+        assertTrue(Kubernetes.getInstance().getClient().network().networkPolicies().withLabel(addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID)).list().getItems().isEmpty());
     }
 
     private StandardInfraConfig prepareConfig(NetworkPolicyPeer networkPolicyPeer) {
