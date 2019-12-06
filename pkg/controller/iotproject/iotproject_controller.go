@@ -107,32 +107,51 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, project *
 
 	resourcesCreatedCondition := newProject.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeResourcesCreated)
 	resourcesReadyCondition := newProject.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeResourcesReady)
-
-	// eval ready state
-
-	newProject.Status.IsReady = currentError == nil &&
-		resourcesCreatedCondition.IsOk() &&
-		resourcesReadyCondition.IsOk() &&
-		project.Status.DownstreamEndpoint != nil
-
-	// fill main "ready" condition
-
 	readyCondition := newProject.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeReady)
-	var reason = ""
-	var message = ""
-	var status = corev1.ConditionUnknown
-	if currentError != nil {
-		reason = "ProcessingError"
-		message = currentError.Error()
-	}
-	if newProject.Status.IsReady {
-		status = corev1.ConditionTrue
-		newProject.Status.Phase = "Ready"
-		newProject.Status.PhaseReason = ""
+
+	if project.DeletionTimestamp != nil {
+
+		newProject.Status.Phase = iotv1alpha1.ProjectPhaseTerminating
+		newProject.Status.PhaseReason = "Project deleted"
+		readyCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Project is being deleted")
+		resourcesCreatedCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Project is being deleted")
+		resourcesReadyCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Project is being deleted")
+
 	} else {
-		status = corev1.ConditionFalse
+
+		// eval ready state
+
+		if currentError == nil &&
+			resourcesCreatedCondition.IsOk() &&
+			resourcesReadyCondition.IsOk() &&
+			newProject.Status.DownstreamEndpoint != nil {
+
+			newProject.Status.Phase = iotv1alpha1.ProjectPhaseReady
+			newProject.Status.PhaseReason = ""
+
+		} else {
+
+			newProject.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
+
+		}
+
+		// fill main "ready" condition
+
+		var reason = ""
+		var message = ""
+		var status = corev1.ConditionUnknown
+		if currentError != nil {
+			reason = "ProcessingError"
+			message = currentError.Error()
+		}
+		if newProject.Status.Phase == iotv1alpha1.ProjectPhaseReady {
+			status = corev1.ConditionTrue
+		} else {
+			status = corev1.ConditionFalse
+		}
+		readyCondition.SetStatus(status, reason, message)
+
 	}
-	readyCondition.SetStatus(status, reason, message)
 
 	// update status
 
@@ -176,6 +195,13 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 	// start reconcile process
 
 	rc := &recon.ReconcileContext{}
+
+	if project.DeletionTimestamp != nil && project.Status.Phase != iotv1alpha1.ProjectPhaseTerminating {
+		rc.Process(func() (result reconcile.Result, e error) {
+			return r.updateProjectStatus(ctx, project, nil)
+		})
+		return rc.Result()
+	}
 
 	rc.Process(func() (result reconcile.Result, e error) {
 		return finalizer.ProcessFinalizers(ctx, r.client, project, finalizers)

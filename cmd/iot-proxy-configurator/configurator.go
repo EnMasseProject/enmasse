@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -232,7 +234,7 @@ func (c *Configurator) syncHandler(key string) error {
 
 	}
 
-	if !project.Status.IsReady || project.Status.DownstreamEndpoint == nil {
+	if project.Status.Phase != v1alpha1.ProjectPhaseReady || project.Status.DownstreamEndpoint == nil {
 		// project is not ready yet
 		return nil
 	}
