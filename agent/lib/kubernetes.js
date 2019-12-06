@@ -57,6 +57,7 @@ function get_options(options, path) {
     return {
         hostname: options.host || process.env.KUBERNETES_SERVICE_HOST,
         port: options.port || process.env.KUBERNETES_SERVICE_PORT,
+        resyncInterval: options.resyncInterval || process.env.RESYNC_INTERVAL,
         rejectUnauthorized: false,
         path: options.path || path,
         headers: {
@@ -231,14 +232,22 @@ Watcher.prototype.watch = function () {
         response.on('data', watch_handler(self));
         response.on('end', function () {
             if (!self.closed) {
-                log.debug('response ended; reconnecting...');
+                log.debug('response %s ended; reconnecting...', opts.path);
                 self.list();
             } else {
                 self.emit('closed');
             }
         });
     });
-    request.on('error', function(e) { log.error('error on watch: %s', e); });
+    request.on('error', function(e) {
+        log.error('error on watch %s: %s', opts.path, e);
+    });
+    if (opts.resyncInterval !== undefined) {
+        request.setTimeout(opts.resyncInterval * 1000, function () {
+            log.info('response %s timeout', opts.path);
+            request.abort();
+        });
+    }
 };
 
 function matcher(object) {

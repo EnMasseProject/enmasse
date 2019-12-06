@@ -315,6 +315,8 @@ objects:
             value: /opt/agent/messaging-cert/tls.crt
           - name: HEALTH_PORT
             value: '8088'
+          - name: RESYNC_INTERVAL
+            value: ${CONTROLLER_RESYNC_INTERVAL}
           - name: AUTHENTICATION_SERVICE_HOST
             value: ${AUTHENTICATION_SERVICE_HOST}
           - name: AUTHENTICATION_SERVICE_PORT
@@ -503,3 +505,6 @@ parameters:
   name: CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME
 - description:
   name: CONSOLE_LINK
+- description: Interval (in seconds) to use between controller resync
+  name: CONTROLLER_RESYNC_INTERVAL
+  value: '600'
