@@ -69,6 +69,12 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
                                 projects.put(key, project);
                                 break;
                             }
+                            case MODIFIED: {
+                                final String key = key(project);
+                                log.info("Modified project: {}", key);
+                                projects.put(key, project);
+                                break;
+                            }
                             case DELETED: {
                                 final String key = key(project);
                                 log.info("Removed project: {}", key);
