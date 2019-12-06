@@ -68,7 +68,9 @@ public class JunitExecutionListener implements TestExecutionListener {
                     });
                     LOGGER.info("Infinispan server will be removed");
                     SystemtestsKubernetesApps.deleteInfinispanServer();
-                    kube.deleteNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+                    if (!SystemtestsKubernetesApps.INFINISPAN_PROJECT.equals(kube.getInfraNamespace())) {
+                        kube.deleteNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+                    }
                 } catch (Exception e) {
                     LOGGER.warn("Cleanup failed or no clean is needed");
                 }
