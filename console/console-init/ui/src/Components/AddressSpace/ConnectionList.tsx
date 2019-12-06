@@ -18,6 +18,7 @@ export interface IConnection {
   hostname: string;
   containerId: string;
   protocol: string;
+  encrypted: boolean;
   messagesIn: number;
   messagesOut: number;
   senders: number;
@@ -35,7 +36,14 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
           title: <Link to={`connections/${row.hostname}`}>{row.hostname}</Link>
         },
         row.containerId,
-        { title: <ConnectionProtocolFormat protocol={row.protocol} /> },
+        {
+          title: (
+            <ConnectionProtocolFormat
+              protocol={row.protocol}
+              encrypted={row.encrypted}
+            />
+          )
+        },
         row.messagesIn,
         row.messagesOut,
         row.senders,
@@ -83,8 +91,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       variant={TableVariant.compact}
       cells={tableColumns}
       rows={tableRows}
-      aria-label="connection list"
-    >
+      aria-label="connection list">
       <TableHeader />
       <TableBody />
     </Table>

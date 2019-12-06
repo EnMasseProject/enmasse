@@ -2,19 +2,9 @@ import * as React from "react";
 import { Wizard } from "@patternfly/react-core";
 import { AddressDefinitaion } from "src/Components/AddressDetail/CreateAddressDefinition";
 import { PreviewAddress } from "./PreviewAddress";
-import gql from "graphql-tag";
 import { useApolloClient } from "@apollo/react-hooks";
 import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
-
-const CREATE_ADDRESS = gql`
-  mutation create_addr($a: Address_enmasse_io_v1beta1_Input!) {
-    createAddress(input: $a) {
-      Name
-      Namespace
-      Uid
-    }
-  }
-`;
+import { CREATE_ADDRESS } from "src/Queries/Queries";
 interface ICreateAddressProps {
   namespace: string;
   addressSpace: string;

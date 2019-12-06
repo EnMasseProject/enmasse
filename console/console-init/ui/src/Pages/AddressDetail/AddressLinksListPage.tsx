@@ -5,14 +5,15 @@ import { IAddressLinksResponse } from "src/Types/ResponseTypes";
 import { Loading } from "use-patternfly";
 import { IClient, ClientList } from "src/Components/ClientList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
+import { EmptyLinks } from "src/Components/Common/EmptyLinks";
 
 export interface IAddressLinksListProps {
+  page: number;
+  perPage: number;
   name?: string;
   namespace?: string;
   addressname?: string;
   type?: string;
-  page: number;
-  perPage: number;
   setAddressLinksTotal: (total: number) => void;
 }
 export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProps> = ({
@@ -50,13 +51,6 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   }));
   console.log(clientRows);
   return (
-    <>
-      {links.Total > 0 ? (
-        <ClientList rows={clientRows} />
-      ) : (
-        // <EmptyAddressSpace />
-        ""
-      )}
-    </>
+    <>{links.Total > 0 ? <ClientList rows={clientRows} /> : <EmptyLinks />}</>
   );
 };

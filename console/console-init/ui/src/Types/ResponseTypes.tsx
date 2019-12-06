@@ -19,6 +19,7 @@ export interface IConnectionDetailResponse {
         Hostname: string;
         ContainerId: string;
         Protocol: string;
+        Encrypted: boolean;
         Properties: Array<{
           Key: string;
           Value: string;
@@ -82,6 +83,7 @@ export interface IConnectionListResponse {
         Hostname: string;
         ContainerId: string;
         Protocol: string;
+        Encrypted: boolean;
       };
       Metrics: Array<IMetrics>;
     }>;

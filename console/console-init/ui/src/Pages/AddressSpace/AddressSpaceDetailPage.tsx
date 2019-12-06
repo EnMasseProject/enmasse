@@ -23,14 +23,19 @@ import gql from "graphql-tag";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { StyleSheet, css } from "@patternfly/react-styles";
 import { useHistory } from "react-router";
-import { DOWNLOAD_CERTIFICATE, DELETE_ADDRESS_SPACE } from "src/Queries/Queries";
+import {
+  DOWNLOAD_CERTIFICATE,
+  DELETE_ADDRESS_SPACE,
+  RETURN_ADDRESS_SPACE_DETAIL
+} from "src/Queries/Queries";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
 const styles = StyleSheet.create({
   no_bottom_padding: {
     paddingBottom: 0
   }
 });
-const getConnectionsList = () => import("./ConnectionsListPage");
+const getConnectionsList = () =>
+  import("./ConnectionListWithFilterAndPaginationPage");
 const getAddressesList = () =>
   import("./AddressesListWithFilterAndPaginationPage");
 
@@ -61,36 +66,6 @@ export interface IObjectMeta_v1_Input {
   name: string;
   namespace: string;
 }
-const return_ADDRESS_SPACE_DETAIL = (name?: string, namespace?: string) => {
-  const ADDRESS_SPACE_DETAIL = gql`
-    query all_address_spaces {
-      addressSpaces(
-        filter: "\`$..Name\` = '${name}' AND \`$..Namespace\` = '${namespace}'"
-      ) {
-        AddressSpaces {
-          ObjectMeta {
-            Namespace
-            Name
-            CreationTimestamp
-          }
-          Spec {
-            Type
-            Plan {
-              Spec {
-                DisplayName
-              }   
-            }
-          }
-          Status {
-            IsReady
-            Messages
-          }
-        }
-      }
-    }`;
-  return ADDRESS_SPACE_DETAIL;
-};
-
 const breadcrumb = (
   <Breadcrumb>
     <BreadcrumbItem>
@@ -108,7 +83,7 @@ export default function AddressSpaceDetailPage() {
   const history = useHistory();
 
   const { loading, error, data } = useQuery<IAddressSpaceDetailResponse>(
-    return_ADDRESS_SPACE_DETAIL(name, namespace),
+    RETURN_ADDRESS_SPACE_DETAIL(name, namespace),
     { pollInterval: 20000 }
   );
   const client = useApolloClient();
@@ -192,12 +167,10 @@ export default function AddressSpaceDetailPage() {
     <>
       <PageSection
         variant={PageSectionVariants.light}
-        className={css(styles.no_bottom_padding)}
-      >
+        className={css(styles.no_bottom_padding)}>
         <AddressSpaceHeader {...addressSpaceDetails} />
         <AddressSpaceNavigation
-          activeItem={subList || "addresses"}
-        ></AddressSpaceNavigation>
+          activeItem={subList || "addresses"}></AddressSpaceNavigation>
         {isDeleteModalOpen && (
           <DeletePrompt
             detail={`Are you sure you want to delete ${addressSpaceDetails.name} ?`}

@@ -13,12 +13,11 @@ import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "src/Components/Common/EmptyAddress";
 import { EditAddress } from "../EditAddressPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { useLocation, useHistory } from "react-router-dom";
 import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
 export interface IAddressListPageProps {
   name?: string;
   namespace?: string;
-  addressSpaceType?:string;
+  addressSpaceType?: string;
   inputValue?: string | null;
   filterValue?: string | null;
   typeValue?: string | null;
@@ -92,8 +91,6 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     errorMessages: address.Status.Messages
   }));
 
-  
-
   const handleEdit = (data: IAddress) => {
     if (!addressBeingEdited) {
       setAddressBeingEdited(data);
@@ -102,25 +99,28 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   const handleCancelEdit = () => setAddressBeingEdited(null);
 
   const handleSaving = async () => {
-    if(addressBeingEdited && addressSpaceType){
+    if (addressBeingEdited && addressSpaceType) {
       await client.mutate({
         mutation: EDIT_ADDRESS,
         variables: {
-          "a": {
-            "Name": addressBeingEdited.name,
-            "Namespace": addressBeingEdited.namespace
+          a: {
+            Name: addressBeingEdited.name,
+            Namespace: addressBeingEdited.namespace
           },
-          "jsonPatch": '[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"' + getPlanAndTypeForAddressEdit(
-            addressBeingEdited.plan,
-            addressSpaceType
-          ) + '\"}]',
+          jsonPatch:
+            '[{"op":"replace","path":"/Plan","value":"' +
+            getPlanAndTypeForAddressEdit(
+              addressBeingEdited.plan,
+              addressSpaceType
+            ) +
+            '"}]',
           // "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium-queue\"}]",
-          "patchType": "application/json-patch+json"
+          patchType: "application/json-patch+json"
         }
       });
       setAddressBeingEdited(null);
     }
-  }
+  };
   const handleEditChange = (address: IAddress) =>
     setAddressBeingEdited(address);
 
@@ -150,7 +150,6 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   const handleDeleteChange = (address: IAddress) =>
     setAddressBeingDeleted(address);
 
-    
   return (
     <>
       <AddressList
@@ -173,8 +172,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned
-        >
+          isFooterLeftAligned>
           <EditAddress
             address={addressBeingEdited}
             onChange={handleEditChange}
