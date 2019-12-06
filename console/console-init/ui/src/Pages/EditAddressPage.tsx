@@ -17,25 +17,23 @@ interface IEditAddressProps {
 }
 
 interface IAddressPlans {
-  addressPlans:  Array<{
-      Spec: {
-        AddressType: string;
-        DisplayName: string;
-      };
-    }>;
+  addressPlans: Array<{
+    Spec: {
+      AddressType: string;
+      DisplayName: string;
+    };
+  }>;
 }
 
 export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
-  address, onChange
+  address,
+  onChange
 }) => {
-
   const [plan, setPlan] = useState<string>(address.plan.slice());
   const type: string = address.type.slice();
   const name: string = address.name.slice();
-  
-  let { loading, error, data } = useQuery<IAddressPlans>(
-    RETURN_ADDRESS_PLANS
-  );
+
+  let { loading, error, data } = useQuery<IAddressPlans>(RETURN_ADDRESS_PLANS);
 
   if (loading) return <Loading />;
   if (error) return <Loading />;
@@ -46,31 +44,37 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
   let optionsType: any[] = addressPlans.map(plan => {
     return {
       value: plan.Spec.AddressType,
-      label: plan.Spec.AddressType.charAt(0).toUpperCase() + plan.Spec.AddressType.slice(1),
+      label:
+        plan.Spec.AddressType.charAt(0).toUpperCase() +
+        plan.Spec.AddressType.slice(1),
       disabled: false
-    }
+    };
   });
 
   optionsType = optionsType.reduce((res, itm) => {
-    let result = res.find((item: any) => JSON.stringify(item) == JSON.stringify(itm))
-    if(!result) return res.concat(itm)
-    return res
+    let result = res.find(
+      (item: any) => JSON.stringify(item) == JSON.stringify(itm)
+    );
+    if (!result) return res.concat(itm);
+    return res;
   }, []);
 
-  let optionsPlan: any[] = addressPlans.map(plan => {
-    if(plan.Spec.AddressType === type){
-      return {
-        value: plan.Spec.DisplayName,
-        label: plan.Spec.DisplayName,
-        disabled: false
+  let optionsPlan: any[] = addressPlans
+    .map(plan => {
+      if (plan.Spec.AddressType === type) {
+        return {
+          value: plan.Spec.DisplayName,
+          label: plan.Spec.DisplayName,
+          disabled: false
+        };
       }
-    }
-  }).filter(plan => plan !== undefined);
+    })
+    .filter(plan => plan !== undefined);
 
   const onPlanChanged = (plan: string) => {
     setPlan(plan);
     address.plan = plan;
-  }
+  };
 
   return (
     <Form>
@@ -85,11 +89,7 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
         />
       </FormGroup>
       <FormGroup label="Type" fieldId="simple-form-name">
-        <FormSelect
-          value={type}
-          isDisabled
-          aria-label="FormSelect Input"
-        >
+        <FormSelect value={type} isDisabled aria-label="FormSelect Input">
           {optionsType.map((option, index) => (
             <FormSelectOption
               isDisabled={option.disabled}
@@ -104,8 +104,7 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
         <FormSelect
           value={plan}
           onChange={value => onPlanChanged(value)}
-          aria-label="FormSelect Input"
-        >
+          aria-label="FormSelect Input">
           {optionsPlan.map((option, index) => (
             <FormSelectOption
               isDisabled={option.disabled}

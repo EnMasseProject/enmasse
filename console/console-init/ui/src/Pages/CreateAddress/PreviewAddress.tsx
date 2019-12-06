@@ -4,7 +4,9 @@ import {
   GridItem,
   Title,
   PageSection,
-  PageSectionVariants
+  PageSectionVariants,
+  TooltipPosition,
+  Tooltip
 } from "@patternfly/react-core";
 import gql from "graphql-tag";
 import { Loading } from "use-patternfly";
@@ -12,9 +14,10 @@ import { useQuery } from "@apollo/react-hooks";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "@patternfly/react-styles";
 import AceEditor from "react-ace";
-
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
+import { ADDRESS_COMMAND_PRIVEW_DETAIL } from "src/Queries/Queries";
+
 export interface IAddressPreview {
   name?: string;
   type?: string;
@@ -30,25 +33,16 @@ const Style = StyleSheet.create({
   }
 });
 
-const ADDRESS_PRIVEW_DETAIL = gql`
-  query cmd($as: AddressSpace_enmasse_io_v1beta1_Input!) {
-    addressSpaceCommand(input: $as)
-  }
-`;
-
-interface ObjectMeta_v1_Input {
-  Name?: string;
-  Namespace?: string;
-  ResourceVersion?: string;
-}
-
 export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   name,
   type,
   plan,
   namespace
 }) => {
-  const { data, loading, error } = useQuery(ADDRESS_PRIVEW_DETAIL, {
+  const [keepInViewChecked, setKeepInViewChecked] = React.useState<boolean>(
+    false
+  );
+  const { data, loading, error } = useQuery(ADDRESS_COMMAND_PRIVEW_DETAIL, {
     variables: {
       as: {
         ObjectMeta: {
@@ -81,8 +75,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           style={{
             borderRight: "0.1em solid",
             borderRightColor: "lightgrey"
-          }}
-        >
+          }}>
           <Grid>
             {name && (
               <>
@@ -113,14 +106,19 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
         <GridItem span={7} className={css(Style.left_padding)}>
           <Title size={"lg"} className={css(Style.bottom_padding)}>
             {`Configuration details  `}
-            <OutlinedCopyIcon
-              size="md"
-              color="blue"
-              onClick={() => {
-                navigator.clipboard.writeText(data.addressSpaceCommand);
-                alert("coopied successfully");
-              }}
-            />
+            <Tooltip
+              position={TooltipPosition.top}
+              enableFlip={keepInViewChecked}
+              content={<div>Copy the configuration details on clipboard</div>}>
+              <OutlinedCopyIcon
+                size="md"
+                color="blue"
+                onClick={() => {
+                  navigator.clipboard.writeText(data.addressSpaceCommand);
+                  alert("coopied successfully");
+                }}
+              />
+            </Tooltip>
           </Title>
           <AceEditor
             mode="xml"

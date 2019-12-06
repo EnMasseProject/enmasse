@@ -11,7 +11,6 @@ import {
   BreadcrumbItem,
   Pagination
 } from "@patternfly/react-core";
-import gql from "graphql-tag";
 import { useQuery } from "@apollo/react-hooks";
 import { useParams } from "react-router";
 import { Loading, useA11yRouteChange, useBreadcrumb } from "use-patternfly";
@@ -21,6 +20,7 @@ import { IConnectionDetailResponse } from "src/Types/ResponseTypes";
 import { css } from "@patternfly/react-styles";
 import { GridStylesForTableHeader } from "./AddressSpace/AddressesListWithFilterAndPaginationPage";
 import { Link, useLocation, useHistory } from "react-router-dom";
+import { RETURN_CONNECTION_DETAIL } from "src/Queries/Queries";
 
 const getProductFilteredValue = (object: any[], value: string) => {
   const filtered = object.filter(obj => obj.Key === value);
@@ -48,6 +48,7 @@ export default function ConnectionDetailPage() {
   const location = useLocation();
   const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
+  const [totalLinks, setTotalLinks] = React.useState<number>();
   const page = parseInt(searchParams.get("page") || "", 10) || 0;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const breadcrumb = React.useMemo(
@@ -96,86 +97,16 @@ export default function ConnectionDetailPage() {
     },
     [setSearchParam, history, searchParams]
   );
-
-  const RETURN_CONNECTION_DETAIL = (
-    addressSpaceName?: string,
-    addressSpaceNameSpcae?: string,
-    connectionName?: string
-  ) => {
-    let filter = "";
-    if (addressSpaceName) {
-      filter +=
-        "`$.Spec.AddressSpace.ObjectMeta.Name` = '" +
-        addressSpaceName +
-        "' AND ";
-    }
-    if (addressSpaceNameSpcae) {
-      filter +=
-        "`$.Spec.AddressSpace.ObjectMeta.Namespace` = '" +
-        addressSpaceNameSpcae +
-        "' AND ";
-    }
-    if (connectionName) {
-      filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
-    }
-    console.log("page,perpage", page, perPage);
-    const CONNECTION_DETAIL = gql`
-    query single_connections {
-      connections(
-        filter: "${filter}" 
-      ) {
-        Total
-        Connections {
-          ObjectMeta {
-            Name
-            Namespace
-            CreationTimestamp
-            ResourceVersion
-          }
-          Spec {
-            Hostname
-            ContainerId
-            Protocol,
-            Properties{
-              Key
-              Value
-            }
-          }
-          Metrics {
-            Name
-            Type
-            Value
-            Units
-          }
-          Links(first:${perPage} offset:${perPage * (page - 1)}) {
-            Total
-            Links {
-              ObjectMeta {
-                Name
-                Namespace
-              }
-              Spec {
-                Role
-              }
-              Metrics {
-                Name
-                Type
-                Value
-                Units
-              }
-            }
-          }
-        }
-      }
-    }
-    `;
-    return CONNECTION_DETAIL;
-  };
-
   useA11yRouteChange();
   // useBreadcrumb(breadcrumb);
   const { loading, error, data } = useQuery<IConnectionDetailResponse>(
-    RETURN_CONNECTION_DETAIL(name || "", namespace || "", connectionname || ""),
+    RETURN_CONNECTION_DETAIL(
+      page,
+      perPage,
+      name || "",
+      namespace || "",
+      connectionname || ""
+    ),
     { pollInterval: 20000 }
   );
   if (loading) return <Loading />;
@@ -187,8 +118,7 @@ export default function ConnectionDetailPage() {
     connections: { Total: 0, Connections: [] }
   };
   const connection = connections.Connections[0];
-  console.log(connection);
-
+  setTotalLinks(connections.Total);
   //Change this logic
   const jvmObject = getSplitValue(
     getProductFilteredValue(connection.Spec.Properties, "platform")
@@ -199,6 +129,7 @@ export default function ConnectionDetailPage() {
     containerId: connection.ObjectMeta.Namespace,
     version: getProductFilteredValue(connection.Spec.Properties, "version"),
     protocol: connection.Spec.Protocol.toUpperCase(),
+    encrypted: connection.Spec.Encrypted || false,
     messagesIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
     messagesOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
     //Change this logic
@@ -232,7 +163,6 @@ export default function ConnectionDetailPage() {
     );
   };
 
-  // useBreadcrumb(return_breadCrumb(name,namespace));
   return (
     <>
       <ConnectionDetailHeader {...connectionDetail} />
@@ -240,8 +170,7 @@ export default function ConnectionDetailPage() {
         <PageSection variant={PageSectionVariants.light}>
           <Title
             size={"lg"}
-            className={css(GridStylesForTableHeader.filter_left_margin)}
-          >
+            className={css(GridStylesForTableHeader.filter_left_margin)}>
             Links
           </Title>
           {renderPagination(page, perPage)}

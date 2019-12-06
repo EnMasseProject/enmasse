@@ -58,7 +58,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const [typeIsExpanded, setTypeIsExpanded] = React.useState(false);
   const [statusIsExpanded, setStatusIsExpanded] = React.useState(false);
-  const [isKebabOpen, setIsKebabOpen] = React.useState();
+  const [isKebabOpen, setIsKebabOpen] = React.useState(false);
   const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
   const onFilterSelect = (event: any) => {
     console.log(event.target.value);
@@ -141,8 +141,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
         <DataToolbarFilter
           chips={filterValue && filterValue.trim() !== "" ? [filterValue] : []}
           deleteChip={onDelete}
-          categoryName="Filter"
-        >
+          categoryName="Filter">
           <Dropdown
             position="left"
             onSelect={onFilterSelect}
@@ -161,8 +160,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
                 key={option.key}
                 value={option.value}
                 itemID={option.key}
-                component={"button"}
-              >
+                component={"button"}>
                 {option.value}
               </DropdownItem>
             ))}
@@ -173,8 +171,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
             <DataToolbarFilter
               chips={inputValue && inputValue.trim() !== "" ? [inputValue] : []}
               deleteChip={onDelete}
-              categoryName="Name"
-            >
+              categoryName="Name">
               <InputGroup>
                 <TextInput
                   name="textInput2"
@@ -187,8 +184,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
                 />
                 <Button
                   variant={ButtonVariant.control}
-                  aria-label="search button for search input"
-                >
+                  aria-label="search button for search input">
                   <SearchIcon />
                 </Button>
               </InputGroup>
@@ -198,8 +194,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
           <DataToolbarFilter
             chips={typeValue && typeValue.trim() !== "" ? [typeValue] : []}
             deleteChip={onDelete}
-            categoryName="Type"
-          >
+            categoryName="Type">
             <Dropdown
               position="left"
               onSelect={onTypeSelect}
@@ -215,8 +210,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
                   key={option.key}
                   value={option.value}
                   itemID={option.key}
-                  component={"button"}
-                >
+                  component={"button"}>
                   {option.value}
                 </DropdownItem>
               ))}
@@ -228,8 +222,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
               statusValue && statusValue.trim() !== "" ? [statusValue] : []
             }
             deleteChip={onDelete}
-            categoryName="Status"
-          >
+            categoryName="Status">
             <Dropdown
               position="left"
               onSelect={onStatusSelect}
@@ -245,8 +238,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
                   key={option.key}
                   value={option.value}
                   itemID={option.key}
-                  component={"button"}
-                >
+                  component={"button"}>
                   {option.value}
                 </DropdownItem>
               ))}
@@ -261,14 +253,16 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
     <DropdownItem key="delete-all" onClick={() => console.log("deleted")}>
       Delete All
     </DropdownItem>
-    // <OverflowMenuDropdownItem key="secondary" isShared>
+    // <OverflowMenuDropdownItem key="secondary" isShared={true}>
     //   Create Address
     // </OverflowMenuDropdownItem>,
-    // <OverflowMenuDropdownItem key="delete-all">Delete All</OverflowMenuDropdownItem>
+    // <OverflowMenuDropdownItem key="delete-all">
+    //   Delete All
+    // </OverflowMenuDropdownItem>
   ];
 
   const onKebabSelect = (event: any) => {
-    setIsKebabOpen(!isKebabOpen);
+    setIsKebabOpen(isKebabOpen);
   };
   const toolbarItems = (
     <React.Fragment>
@@ -276,14 +270,25 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
         {toggleGroupItems}
       </DataToolbarToggleGroup>
       <DataToolbarItem>
+        {isCreateWizardOpen && (
+          <CreateAddress
+            namespace={namespace || ""}
+            addressSpace={name || ""}
+            type={type || ""}
+            isCreateWizardOpen={isCreateWizardOpen}
+            setIsCreateWizardOpen={setIsCreateWizardOpen}
+          />
+        )}
+      </DataToolbarItem>
+      <DataToolbarItem>
         <OverflowMenu breakpoint="lg">
           <OverflowMenuContent isPersistent>
             <OverflowMenuGroup groupType="button" isPersistent>
-              <OverflowMenuItem>
+              {/* Remove is Persistent after fixing dropdown items for overflow menu */}
+              <OverflowMenuItem isPersistent>
                 <Button
                   variant={ButtonVariant.primary}
-                  onClick={() => setIsCreateWizardOpen(!isCreateWizardOpen)}
-                >
+                  onClick={() => setIsCreateWizardOpen(!isCreateWizardOpen)}>
                   Create Address
                 </Button>
               </OverflowMenuItem>
@@ -300,27 +305,14 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
           </OverflowMenuControl>
         </OverflowMenu>
       </DataToolbarItem>
-      <DataToolbarItem>
-        {isCreateWizardOpen && (
-          <CreateAddress
-            namespace={namespace || ""}
-            addressSpace={name || ""}
-            type={type || ""}
-            isCreateWizardOpen={isCreateWizardOpen}
-            setIsCreateWizardOpen={setIsCreateWizardOpen}
-          />
-        )}
-      </DataToolbarItem>
     </React.Fragment>
   );
-
   return (
     <DataToolbar
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onDeleteAll}
-    >
+      clearAllFilters={onDeleteAll}>
       <DataToolbarContent>{toolbarItems}</DataToolbarContent>
     </DataToolbar>
   );

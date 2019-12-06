@@ -18,7 +18,6 @@ import { EmptyAddressSpace } from "src/Components/Common/EmptyAddressSpace";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
 import { DELETE_ADDRESS_SPACE, ALL_ADDRESS_SPACES } from "src/Queries/Queries";
 import { CreateAddressSpace } from "./CreateAddressSpace/CreateAddressSpacePage";
-
 interface IAddressSpacesResponse {
   addressSpaces: {
     Total: number;
@@ -114,14 +113,6 @@ function AddressSpaceListFunc() {
   }));
   return (
     <PageSection variant={PageSectionVariants.light}>
-      {/* TODO: Replace with component*/}
-      {/*START*/}
-      {/* <Button
-        variant={ButtonVariant.primary}
-        style={{ marginBottom: 24, marginLeft: 24 }}
-      >
-        Create
-      </Button> */}
       <CreateAddressSpace />
       <Dropdown
         onSelect={() => {}}
@@ -134,9 +125,8 @@ function AddressSpaceListFunc() {
         }
         isOpen={isOpen}
         isPlain={true}
-        dropdownItems={[<DropdownItem key="Delete">Delete</DropdownItem>]}
+        dropdownItems={[<DropdownItem key="Delete">Delete All</DropdownItem>]}
       />
-      {/*END*/}
       {addressSpaces.Total > 0 ? (
         <AddressSpaceList
           rows={addressSpacesList}

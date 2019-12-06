@@ -1,5 +1,5 @@
 import React from "react";
-import { text, number } from "@storybook/addon-knobs";
+import { text, number, boolean } from "@storybook/addon-knobs";
 import { MemoryRouter } from "react-router";
 import { ConnectionDetailHeader } from "src/Components/ConnectionDetail/ConnectionDetailHeader";
 
@@ -15,6 +15,7 @@ export const connectionHeader = () => (
       protocol={text("protocol", "AMQP")}
       product={text("product", "QpidJMS")}
       version={text("version", "0.31.0 SNAPSHOT")}
+      encrypted={boolean("Encrypted", false)}
       platform={text("platform", "0.8.0_152.25.125.b16, Oracle Corporation")}
       os={text("os", "Mac OS X 10.13.6,x86_64")}
       messagesIn={number("messagesIn", 0)}

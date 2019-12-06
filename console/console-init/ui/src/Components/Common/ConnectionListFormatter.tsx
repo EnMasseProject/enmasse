@@ -4,23 +4,21 @@ import { IMetrics } from "src/Types/ResponseTypes";
 
 interface ProtocolIcon {
   protocol: string;
+  encrypted: boolean;
 }
 
-const protocolIconToDisplay = (protocol: string) => {
-  switch (protocol.toLowerCase()) {
-    case "amqp":
-      return <LockIcon />;
-    default:
-      return <LockOpenIcon />;
-  }
+const protocolIconToDisplay = (encrypted: boolean) => {
+  if (encrypted) return <LockIcon />;
+  else return <LockOpenIcon />;
 };
 
 export const ConnectionProtocolFormat: React.FunctionComponent<ProtocolIcon> = ({
-  protocol
+  protocol,
+  encrypted
 }) => {
   return (
     <>
-      {protocol.toUpperCase()} {protocolIconToDisplay(protocol)}
+      {protocol.toUpperCase()} {protocolIconToDisplay(encrypted)}
     </>
   );
 };

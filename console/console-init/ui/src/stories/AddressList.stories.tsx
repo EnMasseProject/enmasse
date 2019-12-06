@@ -3,7 +3,7 @@ import { MemoryRouter } from "react-router";
 import { AddressList, IAddress } from "..//Components/AddressSpace/AddressList";
 import { action } from "@storybook/addon-actions";
 import { select } from "@storybook/addon-knobs";
-import { AddressListFilter } from "..//Components/AddressSpace/AddressListFilter";
+// import { AddressListFilter } from "..//Components/AddressSpace/AddressListFilter";
 import { EmptyAddress } from "../Components/Common/EmptyAddress";
 
 export default {
@@ -66,33 +66,6 @@ export const addressList = () => (
     />
   </MemoryRouter>
 );
-
-export const addressListFilterComponent = () => {
-  const options = {
-    Name: "Name",
-    Type: "Type",
-    Status: "Status"
-  };
-
-  return (
-    <MemoryRouter>
-      <AddressListFilter
-        onSearch={action("onSearch")}
-        setFilterValue={action("onFilterSelect")}
-        filterValue={
-          select("Value Of Dropdown", options, "Name") as
-            | "Name"
-            | "Type"
-            | "Status"
-        }
-        setTypeValue={action("onTypeSelect")}
-        typeValue={"Queue"}
-        setStatusValue={action("onStatusSelect")}
-        statusValue={"Active"}
-      />
-    </MemoryRouter>
-  );
-};
 
 export const emptyAddress = () => (
   <MemoryRouter>

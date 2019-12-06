@@ -16,6 +16,7 @@ import {
 import { ConnectionDetail } from "./ConnectionDetail";
 import { MessagesDetail } from "./MessagesDetail";
 import { css, StyleSheet } from "@patternfly/react-styles";
+import { ConnectionProtocolFormat } from "../Common/ConnectionListFormatter";
 const styles = StyleSheet.create({
   expandable: {
     color: "rgb(0, 102, 204)"
@@ -30,6 +31,7 @@ export interface IConnectionHeaderDetailProps {
   hostname: string;
   containerId: string;
   protocol: string;
+  encrypted: boolean;
   product?: string;
   version?: string;
   platform?: string;
@@ -41,6 +43,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
   hostname,
   containerId,
   protocol,
+  encrypted,
   product,
   version,
   platform,
@@ -78,15 +81,17 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
             in container <b>{containerId}</b>
           </FlexItem>
           <FlexItem>
-            {protocol} {generateIcons()}
+            <ConnectionProtocolFormat
+              protocol={protocol}
+              encrypted={encrypted}
+            />
           </FlexItem>
           {!isMobileView && (
             <FlexItem
               onClick={() => {
                 setIsHidden(!isHidden);
               }}
-              className={css(styles.expandable)}
-            >
+              className={css(styles.expandable)}>
               {isHidden ? (
                 <>
                   See more details <AngleDownIcon color="black" />
@@ -104,8 +109,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
           breakpointMods={[
             { modifier: "column", breakpoint: "sm" },
             { modifier: "row", breakpoint: "lg" }
-          ]}
-        >
+          ]}>
           {isMobileView || !isHidden ? (
             <>
               <ConnectionDetail

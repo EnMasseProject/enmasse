@@ -122,6 +122,39 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
   return ALL_ADDRESS_FOR_ADDRESS_SPACE;
 };
 
+export const RETURN_ADDRESS_SPACE_DETAIL = (
+  name?: string,
+  namespace?: string
+) => {
+  const ADDRESS_SPACE_DETAIL = gql`
+    query all_address_spaces {
+      addressSpaces(
+        filter: "\`$..Name\` = '${name}' AND \`$..Namespace\` = '${namespace}'"
+      ) {
+        AddressSpaces {
+          ObjectMeta {
+            Namespace
+            Name
+            CreationTimestamp
+          }
+          Spec {
+            Type
+            Plan {
+              Spec {
+                DisplayName
+              }   
+            }
+          }
+          Status {
+            IsReady
+            Messages
+          }
+        }
+      }
+    }`;
+  return ADDRESS_SPACE_DETAIL;
+};
+
 export const RETURN_ADDRESS_DETAIL = (
   page: number,
   perPage: number,
@@ -182,8 +215,8 @@ export const RETURN_ADDRESS_DETAIL = (
 };
 
 export const RETURN_ADDRESS_LINKS = (
-  page:number,
-  perPage:number,
+  page: number,
+  perPage: number,
   addressSpace?: string,
   namespace?: string,
   addressName?: string
@@ -252,11 +285,21 @@ export const RETURN_ADDRESS_PLANS = gql`
       addressSpacePlan:"standard-small"
     ) {
       Spec {
-        AddressType,
-        DisplayName,
-        LongDescription,
+        AddressType
+        DisplayName
+        LongDescription
         ShortDescription
       }
+    }
+  }
+`;
+
+export const CREATE_ADDRESS = gql`
+  mutation create_addr($a: Address_enmasse_io_v1beta1_Input!) {
+    createAddress(input: $a) {
+      Name
+      Namespace
+      Uid
     }
   }
 `;
@@ -270,6 +313,161 @@ export const EDIT_ADDRESS = gql`
     patchAddress(input: $a, jsonPatch: $jsonPatch, patchType: $patchType)
   }
 `;
+
+export const ADDRESS_COMMAND_PRIVEW_DETAIL = gql`
+  query cmd($as: AddressSpace_enmasse_io_v1beta1_Input!) {
+    addressSpaceCommand(input: $as)
+  }
+`;
+
+export const RETURN_ALL_CONECTION_LIST = (
+  page: number,
+  perPage: number,
+  hosts: string[],
+  containers: string[],
+  name?: string,
+  namespace?: string
+) => {
+  let filter = "";
+  if (name) {
+    filter += "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + name + "'";
+  }
+  if (namespace) {
+    filter +=
+      " AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = '" + namespace + "'";
+  }
+  if ((hosts && hosts.length > 0) || (containers && containers.length > 0)) {
+    filter += " AND ";
+  }
+  if (hosts) {
+    let i;
+    if (hosts.length > 0) {
+      filter += "`$.Spec.Hostname` ='" + hosts[0].trim() + "' ";
+      let i;
+      for (i = 1; i < hosts.length; i++) {
+        filter += "OR `$.Spec.Hostname` ='" + hosts[i].trim() + "' ";
+      }
+    }
+  }
+  if (containers) {
+    if (containers.length > 0) {
+      if (hosts && hosts.length <= 0) {
+        filter += "`$.Spec.ContainerId` ='" + containers[0].trim() + "' ";
+        let i;
+        for (i = 1; i < containers.length; i++) {
+          filter += "OR `$.Spec.ContainerId` ='" + containers[i].trim() + "' ";
+        }
+      } else {
+        let i;
+        for (i = 0; i < containers.length; i++) {
+          filter += "OR `$.Spec.ContainerId` ='" + containers[i].trim() + "' ";
+        }
+      }
+    }
+  }
+  const ALL_CONECTION_LIST = gql(
+    `query all_connections_for_addressspace_view {
+      connections(
+        filter: "${filter}" first:${perPage} offset:${perPage * (page - 1)}
+      ) {
+      Total
+      Connections {
+        ObjectMeta {
+          Name
+        }
+        Spec {
+          Hostname
+          ContainerId
+          Protocol
+          Encrypted
+        }
+        Metrics {
+          Name
+          Type
+          Value
+          Units
+        }
+      }
+    }
+  }`
+  );
+  return ALL_CONECTION_LIST;
+};
+
+export const RETURN_CONNECTION_DETAIL = (
+  page: number,
+  perPage: number,
+  addressSpaceName?: string,
+  addressSpaceNameSpcae?: string,
+  connectionName?: string
+) => {
+  let filter = "";
+  if (addressSpaceName) {
+    filter +=
+      "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + addressSpaceName + "' AND ";
+  }
+  if (addressSpaceNameSpcae) {
+    filter +=
+      "`$.Spec.AddressSpace.ObjectMeta.Namespace` = '" +
+      addressSpaceNameSpcae +
+      "' AND ";
+  }
+  if (connectionName) {
+    filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
+  }
+  console.log("page,perpage", page, perPage);
+  const CONNECTION_DETAIL = gql`
+  query single_connections {
+    connections(
+      filter: "${filter}" 
+    ) {
+      Total
+      Connections {
+        ObjectMeta {
+          Name
+          Namespace
+          CreationTimestamp
+          ResourceVersion
+        }
+        Spec {
+          Hostname
+          ContainerId
+          Protocol,
+          Properties{
+            Key
+            Value
+          }
+        }
+        Metrics {
+          Name
+          Type
+          Value
+          Units
+        }
+        Links(first:${perPage} offset:${perPage * (page - 1)}) {
+          Total
+          Links {
+            ObjectMeta {
+              Name
+              Namespace
+            }
+            Spec {
+              Role
+            }
+            Metrics {
+              Name
+              Type
+              Value
+              Units
+            }
+          }
+        }
+      }
+    }
+  }
+  `;
+  return CONNECTION_DETAIL;
+};
 
 export const RETURN_ADDRESS_TYPES = gql`
   query addressTypes {

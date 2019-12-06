@@ -1,9 +1,12 @@
 import * as React from "react";
 import {
-  Label
+  Label,
+  Tooltip,
+  TooltipPosition
   // Tooltip,
   // TooltipPosition
 } from "@patternfly/react-core";
+import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
 
 interface ITypePlanProps {
   plan: string;
@@ -34,14 +37,19 @@ export const TypePlan: React.FunctionComponent<ITypePlanProps> = address => {
       break;
     }
   }
+  const labelItem = (
+    <Label isCompact style={{ backgroundColor: iconColor }}>
+      {address.type[0].toUpperCase() + " "}
+    </Label>
+  );
   return (
     <React.Fragment>
-      {/* <Tooltip content={<div>{address.type}</div>} position={TooltipPosition.top}> */}
-      <Label isCompact style={{ backgroundColor: iconColor }}>
-        {address.type[0].toUpperCase()}
-      </Label>{" "}
+      <Tooltip
+        position={TooltipPosition.top}
+        content={<div>{address.type}</div>}>
+        {labelItem}
+      </Tooltip>
       {address.plan}
-      {/* </Tooltip> */}
     </React.Fragment>
   );
 };
