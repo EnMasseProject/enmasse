@@ -250,7 +250,8 @@ export const RETURN_ADDRESS_PLANS = gql`
       Spec {
         AddressType,
         DisplayName,
-        LongDescription
+        LongDescription,
+        ShortDescription
       }
     }
   }

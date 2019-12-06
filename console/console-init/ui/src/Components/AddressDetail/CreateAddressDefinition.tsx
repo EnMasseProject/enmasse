@@ -28,7 +28,7 @@ interface IAddressPlans {
     Spec: {
       AddressType: string;
       DisplayName: string;
-      LongDescription: string;
+      ShortDescription: string;
     };
   }>;
 }
@@ -91,8 +91,8 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
       if(plan.Spec.AddressType === type){
         return {
           value: plan.Spec.DisplayName,
-          label: plan.Spec.DisplayName,
-          disabled: false
+          label: plan.Spec.DisplayName.charAt(0).toUpperCase() + plan.Spec.DisplayName.slice(1),
+          description: plan.Spec.ShortDescription
         }
       }
     }).filter(plan => plan !== undefined) || [];
