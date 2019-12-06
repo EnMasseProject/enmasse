@@ -100,7 +100,10 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
         if (adapterClient != null) {
             adapterClient.close();
         }
-        resourcesManager.removeUser(getSharedAddressSpace(), businessApplicationUsername);
+        var addressSpace = getSharedAddressSpace();
+        if(addressSpace != null) {
+            resourcesManager.removeUser(addressSpace, businessApplicationUsername);
+        }
     }
 
     @AfterEach

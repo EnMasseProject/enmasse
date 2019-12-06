@@ -35,6 +35,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -396,6 +397,9 @@ public abstract class ResourceManager {
     //================================================================================================
 
     public User createOrUpdateUser(AddressSpace addressSpace, UserCredentials credentials) {
+        Objects.requireNonNull(addressSpace);
+        Objects.requireNonNull(credentials);
+
         User user = new UserBuilder()
                 .withNewMetadata()
                 .withName(addressSpace.getMetadata().getName() + "." + credentials.getUsername())
@@ -452,11 +456,16 @@ public abstract class ResourceManager {
     }
 
     public void removeUser(AddressSpace addressSpace, User user) {
+        Objects.requireNonNull(addressSpace);
+        Objects.requireNonNull(user);
+
         LOGGER.info("User {} in address space {} will be removed", user.getMetadata().getName(), addressSpace.getMetadata().getName());
         kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).withName(user.getMetadata().getName()).cascading(true).delete();
     }
 
     public void removeUser(AddressSpace addressSpace, String userName) {
+        Objects.requireNonNull(addressSpace);
+
         LOGGER.info("User {} in address space {} will be removed", userName, addressSpace.getMetadata().getName());
         kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).withName(String.format("%s.%s", addressSpace.getMetadata().getName(), userName)).cascading(true).delete();
     }
