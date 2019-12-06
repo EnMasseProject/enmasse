@@ -200,6 +200,18 @@ public class IsolatedResourcesManager extends ResourceManager {
         return Kubernetes.getInstance().getStandardInfraConfigClient().withName(name).get();
     }
 
+    @Override
+    public void createInfraConfig(StandardInfraConfig standardInfraConfig) {
+        standardInfraConfigs.add(standardInfraConfig);
+        super.createInfraConfig(standardInfraConfig);
+    }
+
+    @Override
+    public void createInfraConfig(BrokeredInfraConfig brokeredInfraConfig) {
+        brokeredInfraConfigs.add(brokeredInfraConfig);
+        super.createInfraConfig(brokeredInfraConfig);
+    }
+
     public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
         if (infraConfigDefinition instanceof StandardInfraConfig) {
             standardInfraConfigs.add((StandardInfraConfig) infraConfigDefinition);
