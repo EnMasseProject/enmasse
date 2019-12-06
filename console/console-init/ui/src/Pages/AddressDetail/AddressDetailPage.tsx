@@ -8,8 +8,8 @@ import {
   Pagination
 } from "@patternfly/react-core";
 import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
-import { Link } from "react-router-dom";
-import { useParams, useHistory } from "react-router";
+import { Link, useLocation, useHistory } from "react-router-dom";
+import { useParams } from "react-router";
 import { AddressDetailHeader } from "src/Components/AddressDetail/AddressDetailHeader";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { IAddressDetailResponse } from "src/Types/ResponseTypes";
@@ -23,7 +23,11 @@ import { AddressLinksListPage } from "./AddressLinksListPage";
 
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();
+  const location = useLocation();
   const history = useHistory();
+  const searchParams = new URLSearchParams(location.search);
+  const page = parseInt(searchParams.get("page") || "", 10) || 1;
+  const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const breadcrumb = React.useMemo(
     () => (
       <Breadcrumb>
@@ -40,13 +44,42 @@ export default function AddressDetailPage() {
     ),
     [name, namespace, type]
   );
+
+  const setSearchParam = React.useCallback(
+    (name: string, value: string) => {
+      searchParams.set(name, value.toString());
+    },
+    [searchParams]
+  );
+
+  const handlePageChange = React.useCallback(
+    (_: any, newPage: number) => {
+      setSearchParam("page", newPage.toString());
+      history.push({
+        search: searchParams.toString()
+      });
+    },
+    [setSearchParam, history, searchParams]
+  );
+
+  const handlePerPageChange = React.useCallback(
+    (_: any, newPerPage: number) => {
+      setSearchParam("page", "1");
+      setSearchParam("perPage", newPerPage.toString());
+      history.push({
+        search: searchParams.toString()
+      });
+    },
+    [setSearchParam, history, searchParams]
+  );
+
   useA11yRouteChange();
   useBreadcrumb(breadcrumb);
   const client = useApolloClient();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [addresLinksTotal, setAddressLinksTotal] = React.useState<number>(0);
   const { loading, error, data } = useQuery<IAddressDetailResponse>(
-    RETURN_ADDRESS_DETAIL(name, namespace, addressname),
+    RETURN_ADDRESS_DETAIL(page, perPage, name, namespace, addressname),
     { pollInterval: 20000 }
   );
   if (loading) return <Loading />;
@@ -84,6 +117,19 @@ export default function AddressDetailPage() {
     });
   };
 
+  const renderPagination = (page: number, perPage: number) => {
+    return (
+      <Pagination
+        itemCount={addresLinksTotal}
+        perPage={perPage}
+        page={page}
+        onSetPage={handlePageChange}
+        variant="top"
+        onPerPageSelect={handlePerPageChange}
+      />
+    );
+  };
+
   return (
     <>
       {addressDetail && (
@@ -107,33 +153,17 @@ export default function AddressDetailPage() {
           >
             Clients
           </Title>
-          {addresLinksTotal > 0 && (
-            <Pagination
-              itemCount={addresLinksTotal}
-              perPage={10}
-              page={1}
-              onSetPage={() => {}}
-              widgetId="pagination-options-menu-top"
-              onPerPageSelect={() => {}}
-            />
-          )}
+          {addresLinksTotal > 0 && renderPagination(page, perPage)}
           <AddressLinksListPage
+            page={page}
+            perPage={perPage}
             name={name}
             namespace={namespace}
             addressname={addressname}
             setAddressLinksTotal={setAddressLinksTotal}
             type={type}
           />
-          {addresLinksTotal > 0 && (
-            <Pagination
-              itemCount={addresLinksTotal}
-              perPage={10}
-              page={1}
-              onSetPage={() => {}}
-              widgetId="pagination-options-menu-top"
-              onPerPageSelect={() => {}}
-            />
-          )}
+          {addresLinksTotal > 0 && renderPagination(page, perPage)}
         </PageSection>
         {isDeleteModalOpen && (
           <DeletePrompt
