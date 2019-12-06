@@ -14,6 +14,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Objects;
 
 public final class AppliedConfig {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -63,5 +64,19 @@ public final class AppliedConfig {
 
     public void setAddressSpaceSpec(AddressSpaceSpec addressSpaceSpec) {
         this.addressSpaceSpec = addressSpaceSpec;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AppliedConfig that = (AppliedConfig) o;
+        return Objects.equals(authenticationServiceSettings, that.authenticationServiceSettings) &&
+                Objects.equals(addressSpaceSpec, that.addressSpaceSpec);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(authenticationServiceSettings, addressSpaceSpec);
     }
 }
