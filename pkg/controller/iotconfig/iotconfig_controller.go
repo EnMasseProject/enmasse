@@ -172,6 +172,7 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	})
 
 	if rc.Error() != nil || rc.NeedRequeue() {
+		log.Info("Re-queue after processing finalizers")
 		return rc.Result()
 	}
 

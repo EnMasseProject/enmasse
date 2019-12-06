@@ -41,7 +41,11 @@ func Add(mgr manager.Manager) error {
 }
 
 func newReconciler(mgr manager.Manager) *ReconcileIoTProject {
-	return &ReconcileIoTProject{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileIoTProject{
+		client: mgr.GetClient(),
+		reader: mgr.GetAPIReader(),
+		scheme: mgr.GetScheme(),
+	}
 }
 
 func add(mgr manager.Manager, r *ReconcileIoTProject) error {
@@ -96,6 +100,7 @@ type ReconcileIoTProject struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
+	reader client.Reader
 	scheme *runtime.Scheme
 }
 
@@ -204,10 +209,11 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	rc.Process(func() (result reconcile.Result, e error) {
-		return finalizer.ProcessFinalizers(ctx, r.client, project, finalizers)
+		return finalizer.ProcessFinalizers(ctx, r.client, r.reader, project, finalizers)
 	})
 
 	if rc.Error() != nil || rc.NeedRequeue() {
+		log.Info("Re-queue after processing finalizers")
 		// processing finalizers required to requeue already, or failed
 		return rc.Result()
 	}
@@ -271,6 +277,10 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 			return r.updateProjectStatus(ctx, project, err)
 		})
 
+	}
+
+	if rc.NeedRequeue() {
+		log.Info("Re-queue scheduled")
 	}
 
 	return rc.Result()
