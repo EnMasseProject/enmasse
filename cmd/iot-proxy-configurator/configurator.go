@@ -160,13 +160,14 @@ func (c *Configurator) processNextWorkItem() bool {
 
 		if err := c.syncHandler(key); err != nil {
 			c.workqueue.AddRateLimited(key)
+			log.Error(err, "Error syncing project", "key", key)
 			return fmt.Errorf("error syncing '%v': %v, requeuing", key, err.Error())
 		}
 
 		// handled successfully, drop from work queue
 
 		c.workqueue.Forget(obj)
-		log.Info("Successfully synced", "key", key)
+		log.V(2).Info("Successfully synced", "key", key)
 
 		return nil
 	}(obj)
@@ -190,6 +191,7 @@ func (c *Configurator) syncHandler(key string) error {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		runtime.HandleError(fmt.Errorf("invalid resource key: %v", key))
+		// don't re-queue, so error must be "nil"
 		return nil
 	}
 
@@ -206,7 +208,7 @@ func (c *Configurator) syncHandler(key string) error {
 			log.Info("Item got deleted. Deleting configuration.")
 
 			// if something went wrong deleting, then returning
-			// and error will re-queue the item
+			// an error will re-queue the item
 
 			return c.deleteProject(&metav1.ObjectMeta{
 				Namespace: namespace,
