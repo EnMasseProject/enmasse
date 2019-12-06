@@ -14,6 +14,14 @@ import { useQuery } from "@apollo/react-hooks";
 import { IDropdownOption } from "../Common/FilterDropdown";
 import { RETURN_ADDRESS_PLANS, RETURN_ADDRESS_TYPES } from "src/Queries/Queries";
 import { Loading } from "use-patternfly";
+import { css, StyleSheet } from "@patternfly/react-styles";
+
+const styles = StyleSheet.create({
+  capitalize_labels: {
+    "text-transform": "capitalize"
+  }
+});
+
 export interface IAddressDefinition {
   addressName: string;
   handleAddressChange: (name: string) => void;
@@ -79,7 +87,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
   let typeOptions: IDropdownOption[] = addressTypes_v2.map(type => {
     return {
       value: type.Spec.DisplayName,
-      label: type.Spec.DisplayName.charAt(0).toUpperCase() + type.Spec.DisplayName.slice(1),
+      label: type.Spec.DisplayName,
       description: type.Spec.ShortDescription
     }
   });
@@ -91,7 +99,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
       if(plan.Spec.AddressType === type){
         return {
           value: plan.Spec.DisplayName,
-          label: plan.Spec.DisplayName.charAt(0).toUpperCase() + plan.Spec.DisplayName.slice(1),
+          label: plan.Spec.DisplayName,
           description: plan.Spec.ShortDescription
         }
       }
@@ -135,7 +143,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                     itemID={option.value}
                     component={"button"}
                   >
-                    <b>{option.label}</b>
+                    <b className={css(styles.capitalize_labels)}>{option.label}</b>
                     <br />
                     {option.description ? option.description : ""}
                   </DropdownItem>
