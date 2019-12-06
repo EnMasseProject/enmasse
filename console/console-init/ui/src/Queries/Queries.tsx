@@ -249,7 +249,8 @@ export const RETURN_ADDRESS_PLANS = gql`
     ) {
       Spec {
         AddressType,
-        DisplayName
+        DisplayName,
+        LongDescription
       }
     }
   }
@@ -262,5 +263,19 @@ export const EDIT_ADDRESS = gql`
     $patchType: String!
   ) {
     patchAddress(input: $a, jsonPatch: $jsonPatch, patchType: $patchType)
+  }
+`;
+
+export const RETURN_ADDRESS_TYPES = gql`
+  query addressTypes {
+    addressTypes_v2(addressSpaceType :standard) {
+      ObjectMeta
+      {Name}
+      Spec {
+        DisplayName
+        LongDescription
+        ShortDescription
+      }
+    }
   }
 `;

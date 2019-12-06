@@ -10,7 +10,10 @@ import {
   DropdownItem,
   DropdownPosition
 } from "@patternfly/react-core";
+import { useQuery } from "@apollo/react-hooks";
 import { IDropdownOption } from "../Common/FilterDropdown";
+import { RETURN_ADDRESS_PLANS, RETURN_ADDRESS_TYPES } from "src/Queries/Queries";
+import { Loading } from "use-patternfly";
 export interface IAddressDefinition {
   addressName: string;
   handleAddressChange: (name: string) => void;
@@ -19,6 +22,24 @@ export interface IAddressDefinition {
   plan: string;
   setPlan: (value: any) => void;
   planDisabled?: boolean;
+}
+interface IAddressPlans {
+  addressPlans:  Array<{
+    Spec: {
+      AddressType: string;
+      DisplayName: string;
+      LongDescription: string;
+    };
+  }>;
+}
+interface IAddressTypes {
+  addressTypes_v2:  Array<{
+    Spec: {
+      DisplayName: string;
+      LongDescription: string;
+      ShortDescription: string;
+    };
+  }>;
 }
 export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = ({
   addressName,
@@ -40,54 +61,42 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
     setPlan(event.target.value);
     setIsPlanOpen(!isPlanOpen);
   };
-  const typeOptions: IDropdownOption[] = [
-      {
-        value: "Topic",
-        label: "Topic",
-        description: "A publish-subscribe topic"
-      },
-      {
-        value: "Subscripition",
-        label: "Subscripition",
-        description: "A subscription on a specifed topic"
-      },
-      {
-        value: "Queue",
-        label: "Queue",
-        description: "A store-and-forward queue"
-      },
-      {
-        value: "Multicast",
-        label: "Multicast",
-        description:
-          "A scalable 'direct' address for sending messages to mulitple consumers"
-      },
-      {
-        value: "Anycast",
-        label: "Anycast",
-        description:
-          "A scalable 'direct' address for sending messages to one consumer"
+  const { loading, error, data } = useQuery<IAddressTypes>(
+    RETURN_ADDRESS_TYPES
+  );
+  const { addressPlans } = useQuery<IAddressPlans>(
+    RETURN_ADDRESS_PLANS
+  ).data || {
+    addressPlans : []
+  };
+  
+  if (loading) return <Loading />;
+  if (error) return <Loading />;
+  const { addressTypes_v2 } = data || {
+    addressTypes_v2: []
+  };
+
+  let typeOptions: IDropdownOption[] = addressTypes_v2.map(type => {
+    return {
+      value: type.Spec.DisplayName,
+      label: type.Spec.DisplayName.charAt(0).toUpperCase() + type.Spec.DisplayName.slice(1),
+      description: type.Spec.ShortDescription
+    }
+  });
+
+  let planOptions: any[] = [];
+
+  if(type){
+    planOptions = addressPlans.map(plan => {
+      if(plan.Spec.AddressType === type){
+        return {
+          value: plan.Spec.DisplayName,
+          label: plan.Spec.DisplayName,
+          disabled: false
+        }
       }
-    ],
-    planOptions: IDropdownOption[] = [
-      {
-        value: "Small",
-        label: "Small",
-        description:
-          "Create a small topic sharing underlying broker with other topics"
-      },
-      {
-        value: "Medium",
-        label: "Medium",
-        description:
-          "Create a medium sized topic sharing underlying broker with other topics"
-      },
-      {
-        value: "Large",
-        label: "Large",
-        description: "Create a large topic backed by a dedicated broker"
-      }
-    ];
+    }).filter(plan => plan !== undefined) || [];
+  }
   return (
     <>
       <Grid>

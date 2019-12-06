@@ -4,7 +4,7 @@ import { AddressDefinitaion } from "src/Components/AddressDetail/CreateAddressDe
 import { PreviewAddress } from "./PreviewAddress";
 import gql from "graphql-tag";
 import { useApolloClient } from "@apollo/react-hooks";
-import { getPlanAndTypeForAddress } from "src/Components/Common/AddressFormatter";
+import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
 
 const CREATE_ADDRESS = gql`
   mutation create_addr($a: Address_enmasse_io_v1beta1_Input!) {
@@ -50,7 +50,7 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
             },
             Spec: {
               Type: addressType.toLowerCase(),
-              Plan: getPlanAndTypeForAddress(plan, addressType, type || ""),
+              Plan: getPlanAndTypeForAddressEdit(plan, type),
               Address: addressName,
               AddressSpace: addressSpace
             }
