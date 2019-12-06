@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableVariant,
@@ -33,20 +33,13 @@ interface IAddressListProps {
   rowsData: IAddress[];
   onEdit: (rowData: IAddress) => void;
   onDelete: (rowData: IAddress) => void;
-  // onCheckboxEdit: (rowData: IRowData[]) => void;
-  // rows: IRowData[];
 }
 
 export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   rowsData,
   onEdit,
   onDelete
-  // onCheckboxEdit,
-  // rows
 }) => {
-  //TODO: Add loading icon based on status
-  // const [tableRows, setTableRows] = useState([]);
-
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;
     return [
@@ -113,7 +106,10 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       return tableRow;
     }
   };
-  let tableRows = rowsData.map(toTableCells);
+  const [tableRows, setTableRows] = useState<IRowData[]>(
+    rowsData.map(toTableCells)
+  );
+  
   const tableColumns = [
     "Name",
     "Type/Plan",
@@ -160,10 +156,9 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       rows = [...tableRows];
       rows[rowIndex].selected = isSelected;
     }
-    tableRows = rows;
-    // onCheckboxEdit(rows);
+    setTableRows(rows);
   };
-  
+
   return (
     <Table
       variant={TableVariant.compact}
