@@ -1,7 +1,8 @@
-## 0.30.1
+## 0.30.2
 *  #2714: Allow setting security context of pods using persistent volumes
 *  #3547: Network policies not deleted when address space is deleted
 *  #3542: Add resync period for agent watches
+*  #3463: Fix permission typo on 0.30
 
 ## 0.30.0
 * Fix go tool vet on newer versions of go
