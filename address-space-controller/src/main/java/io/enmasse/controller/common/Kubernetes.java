@@ -7,6 +7,7 @@ package io.enmasse.controller.common;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceSpec;
 import io.enmasse.admin.model.v1.InfraConfig;
+import io.enmasse.controller.AppliedConfig;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -38,5 +39,5 @@ public interface Kubernetes {
     boolean existsAddressSpace(AddressSpace addressSpace);
 
     InfraConfig getAppliedInfraConfig(AddressSpace addressSpace) throws IOException;
-    AddressSpaceSpec getAppliedConfig(AddressSpace addressSpace) throws IOException;
+    AppliedConfig getAppliedConfig(AddressSpace addressSpace) throws IOException;
 }

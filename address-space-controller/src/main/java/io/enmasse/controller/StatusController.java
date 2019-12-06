@@ -29,6 +29,7 @@ public class StatusController implements Controller {
     private final SchemaProvider schemaProvider;
     private final InfraResourceFactory infraResourceFactory;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
+    private final AuthenticationServiceResolver authenticationServiceResolver;
     private final UserApi userApi;
 
     public StatusController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, AuthenticationServiceRegistry authenticationServiceRegistry, UserApi userApi) {
@@ -36,6 +37,7 @@ public class StatusController implements Controller {
         this.schemaProvider = schemaProvider;
         this.infraResourceFactory = infraResourceFactory;
         this.authenticationServiceRegistry = authenticationServiceRegistry;
+        this.authenticationServiceResolver = new AuthenticationServiceResolver(authenticationServiceRegistry);
         this.userApi = userApi;
     }
 
@@ -48,8 +50,8 @@ public class StatusController implements Controller {
         }
 
         if (addressSpace.getStatus().isReady()) {
-            AddressSpaceSpec appliedSpec = AppliedConfig.parseCurrentAppliedConfig(addressSpace);
-            if (addressSpace.getSpec().equals(appliedSpec)) {
+            AppliedConfig appliedConfig = AppliedConfig.parseCurrentAppliedConfig(addressSpace);
+            if (addressSpace.getSpec().equals(appliedConfig.getAddressSpaceSpec())) {
                 addressSpace.getStatus().setPhase(Phase.Active);
             }
         } else {
@@ -87,7 +89,7 @@ public class StatusController implements Controller {
     private void checkComponentsReady(AddressSpace addressSpace) {
         try {
             InfraConfig infraConfig = Optional.ofNullable(parseCurrentInfraConfig(addressSpace)).orElseGet(() -> getInfraConfig(addressSpace));
-            List<HasMetadata> requiredResources = infraResourceFactory.createInfraResources(addressSpace, infraConfig);
+            List<HasMetadata> requiredResources = infraResourceFactory.createInfraResources(addressSpace, infraConfig, authenticationServiceResolver.resolve(addressSpace));
 
             checkDeploymentsReady(addressSpace, requiredResources);
             checkStatefulSetsReady(addressSpace, requiredResources);

@@ -187,7 +187,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public AddressSpaceSpec getAppliedConfig(AddressSpace addressSpace) throws IOException {
+    public AppliedConfig getAppliedConfig(AddressSpace addressSpace) throws IOException {
         if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION) != null) {
             return AppliedConfig.parseCurrentAppliedConfig(addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION));
         }

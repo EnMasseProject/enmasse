@@ -16,7 +16,6 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.UUID;
 
-import io.enmasse.address.model.AddressSpaceSpec;
 import io.enmasse.address.model.AddressSpaceSpecBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -68,14 +67,14 @@ public class CreateControllerTest {
 
         EventLogger eventLogger = mock(EventLogger.class);
         InfraResourceFactory mockResourceFactory = mock(InfraResourceFactory.class);
-        when(mockResourceFactory.createInfraResources(eq(addressSpace), any())).thenReturn(Arrays.asList(new ConfigMapBuilder()
+        when(mockResourceFactory.createInfraResources(eq(addressSpace), any(), any())).thenReturn(Arrays.asList(new ConfigMapBuilder()
                 .editOrNewMetadata()
                 .withName("mymap")
                 .endMetadata()
                 .build()));
 
         SchemaProvider testSchema = new TestSchemaProvider();
-        CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, eventLogger, null, "1.0", new TestAddressSpaceApi());
+        CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, eventLogger, null, "1.0", new TestAddressSpaceApi(), mock(AuthenticationServiceResolver.class));
 
         createController.reconcileAnyState(addressSpace);
 
@@ -108,9 +107,9 @@ public class CreateControllerTest {
                 .build();
 
 
-        AppliedConfig.setCurrentAppliedConfig(addressSpace, new AddressSpaceSpecBuilder(addressSpace.getSpec())
+        AppliedConfig.setCurrentAppliedConfig(addressSpace, AppliedConfig.create(new AddressSpaceSpecBuilder(addressSpace.getSpec())
                 .withPlan("plan1")
-                .build());
+                .build(), null));
         TestAddressSpaceApi addressSpaceApi = new TestAddressSpaceApi();
         addressSpaceApi.createAddressSpace(addressSpace);
 
@@ -152,7 +151,7 @@ public class CreateControllerTest {
         EventLogger eventLogger = mock(EventLogger.class);
         when(kubernetes.existsAddressSpace(eq(addressSpace))).thenReturn(true);
 
-        CreateController createController = new CreateController(kubernetes, testSchema, null, eventLogger, null, "1.0", addressSpaceApi);
+        CreateController createController = new CreateController(kubernetes, testSchema, null, eventLogger, null, "1.0", addressSpaceApi, mock(AuthenticationServiceResolver.class));
 
         addressSpace = createController.reconcileAnyState(addressSpace);
 
