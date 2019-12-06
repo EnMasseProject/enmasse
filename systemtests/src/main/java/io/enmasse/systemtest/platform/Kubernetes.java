@@ -161,8 +161,10 @@ public abstract class Kubernetes {
     }
 
     public double getKubernetesVersion() {
-        VersionInfo versionInfo = new DefaultKubernetesClient().getVersion();
-        return Double.parseDouble(versionInfo.getMajor() + "." + versionInfo.getMinor().replace("+", ""));
+        try ( var client = new DefaultKubernetesClient() ) {
+            final VersionInfo versionInfo = client.getVersion();
+            return Double.parseDouble(versionInfo.getMajor() + "." + versionInfo.getMinor().replace("+", ""));
+        }
     }
 
     public int getOcpVersion() {
