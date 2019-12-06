@@ -320,6 +320,8 @@ objects:
             value: ${ADDRESS_SPACE_PLAN}
           - name: CERT_DIR
             value: /etc/enmasse-certs
+          - name: RESYNC_INTERVAL
+            value: ${CONTROLLER_RESYNC_INTERVAL}
           - name: AUTHENTICATION_SERVICE_HOST
             value: ${AUTHENTICATION_SERVICE_HOST}
           - name: AUTHENTICATION_SERVICE_PORT
