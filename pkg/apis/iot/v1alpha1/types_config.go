@@ -66,6 +66,8 @@ type ServicesConfig struct {
 }
 
 type AdaptersConfig struct {
+	DefaultOptions *AdapterOptions `json:"defaults,omitempty"`
+
 	HttpAdapterConfig    HttpAdapterConfig    `json:"http,omitempty"`
 	MqttAdapterConfig    MqttAdapterConfig    `json:"mqtt,omitempty"`
 	SigfoxAdapterConfig  SigfoxAdapterConfig  `json:"sigfox,omitempty"`
@@ -88,6 +90,8 @@ type AdapterEndpointConfig struct {
 
 type AdapterConfig struct {
 	Enabled *bool `json:"enabled,omitempty"`
+
+	Options *AdapterOptions `json:"options,omitempty"`
 }
 
 type KeyCertificateStrategy struct {
@@ -169,6 +173,12 @@ type FileBasedDeviceRegistry struct {
 type InfinispanDeviceRegistry struct {
 	Server              InfinispanServer `json:"server"`
 	CommonServiceConfig `json:",inline"`
+}
+
+// The adapter options should focus on functional configuration applicable to all adapters
+type AdapterOptions struct {
+	TenantIdleTimeout string `json:"tenantIdleTimeout,omitempty"`
+	MaxPayloadSize    uint32 `json:"maxPayloadSize,omitempty"`
 }
 
 // Common options for a standard 3-pod protocol adapter

@@ -28,6 +28,7 @@ public class AdapterConfig extends ServiceConfig {
     private EndpointConfig endpoint;
     private CommonAdapterContainers containers;
     private JavaContainerOptions java;
+    private AdapterOptions options;
 
     public Boolean getEnabled() {
         return enabled;
@@ -54,5 +55,12 @@ public class AdapterConfig extends ServiceConfig {
     }
     public JavaContainerOptions getJava() {
         return java;
+    }
+
+    public void setOptions(AdapterOptions options) {
+        this.options = options;
+    }
+    public AdapterOptions getOptions() {
+        return options;
     }
 }
