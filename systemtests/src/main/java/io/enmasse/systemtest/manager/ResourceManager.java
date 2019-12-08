@@ -378,10 +378,13 @@ public abstract class ResourceManager {
         logCollector.collectConfigMaps();
     }
 
-    public void setAddresses(Address... addresses) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
+    public void setAddresses(TimeoutBudget budget, Address... addresses) throws Exception {
         logCollector.collectRouterState("setAddresses");
         AddressUtils.setAddresses(budget, true, addresses);
+    }
+
+    public void setAddresses(Address... addresses) throws Exception {
+        setAddresses(new TimeoutBudget(15, TimeUnit.MINUTES), addresses);
     }
 
     public void replaceAddress(Address destination) throws Exception {
