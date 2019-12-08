@@ -53,6 +53,7 @@ public abstract class ResourceManager {
     protected String defaultAddSpaceIdentifier;
     protected String addressSpaceType;
     protected String addressSpacePlan;
+    protected List<AddressSpace> currentAddressSpaces;
 
     public void setDefaultAddSpaceIdentifier(String defaultAddSpaceIdentifier) {
         this.defaultAddSpaceIdentifier = defaultAddSpaceIdentifier;
@@ -308,7 +309,7 @@ public abstract class ResourceManager {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied, List<AddressSpace> addressSpaceList) throws Exception {
+    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS_SPACE);
         var client = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
         if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
@@ -322,7 +323,7 @@ public abstract class ResourceManager {
             }
             AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-            addressSpaceList.add(addressSpace);
+            currentAddressSpaces.add(addressSpace);
         } else {
             LOGGER.info("Address space '{}' does not exists.", addressSpace.getMetadata().getName());
         }

@@ -1045,7 +1045,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.replaceAddressSpace(replaced, false);
+        resourcesManager.replaceAddressSpace(replaced, false);
 
         String expected = String.format("Unable to apply plan [%s] to address space %s:%s: quota exceeded for resource broker",
                 afterQueuePlan.getMetadata().getName(), environment.namespace(), replaced.getMetadata().getName());

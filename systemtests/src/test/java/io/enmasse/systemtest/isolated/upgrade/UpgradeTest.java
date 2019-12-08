@@ -57,7 +57,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(UPGRADE)
 @ExternalClients
-@DisplayNameGeneration(IndicativeSentences.class)
 class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
     private static final int MESSAGE_COUNT = 50;

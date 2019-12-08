@@ -14,6 +14,7 @@ import io.enmasse.address.model.AddressSpaceStatusConnector;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.address.model.KubeUtil;
+import io.enmasse.address.model.Phase;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -24,6 +25,7 @@ import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.vertx.core.json.JsonObject;
+import org.keycloak.common.util.Time;
 import org.slf4j.Logger;
 
 import java.util.Collection;
@@ -297,31 +299,36 @@ public class AddressSpaceUtils {
         return clientAddressSpace;
     }
 
+    public static void waithForAuthServiceApplied(AddressSpace addressSpace, String expectedAuthServiceName) throws Exception {
+        TestUtils.waitUntilCondition("Auth service applied", waitPhase -> {
+            AddressSpace addrSpaceObject = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
+            return addrSpaceObject.getMetadata().getAnnotations().get("enmasse.io/applied-configuration").contains("\"authenticationService\":{\"name\":\"" + expectedAuthServiceName + "\"}")
+                    && isAddressSpaceReady(addrSpaceObject) && addrSpaceObject.getStatus().getPhase().equals(Phase.Active);
+        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+
+    }
+
     /**
      * Returns true only if all connectorStatuses report isReady=true
+     *
      * @param addressSpace
      * @return
      */
     public static boolean areAddressSpaceConnectorsReady(AddressSpace addressSpace) {
         return Optional.ofNullable(addressSpace)
-            .map(AddressSpace::getStatus)
-            .map(AddressSpaceStatus::getConnectors)
-            .map(Stream::of)
-            .orElseGet(Stream::empty)
-            .flatMap(Collection::stream)
-            .map(AddressSpaceStatusConnector::isReady)
-            .allMatch(ready -> ready == true);
+                .map(AddressSpace::getStatus)
+                .map(AddressSpaceStatus::getConnectors).stream()
+                .flatMap(Collection::stream)
+                .allMatch(AddressSpaceStatusConnector::isReady);
     }
 
     public static String getConnectorStatuses(AddressSpace addressSpace) {
         return Optional.ofNullable(addressSpace)
-            .map(AddressSpace::getStatus)
-            .map(AddressSpaceStatus::getConnectors)
-            .map(Stream::of)
-            .orElseGet(Stream::empty)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList())
-            .toString();
+                .map(AddressSpace::getStatus)
+                .map(AddressSpaceStatus::getConnectors).stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList())
+                .toString();
     }
 
 }

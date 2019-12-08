@@ -34,7 +34,6 @@ public class IsolatedResourcesManager extends ResourceManager {
 
     private static IsolatedResourcesManager managerInstance = null;
     private static Logger LOGGER;
-    protected List<AddressSpace> currentAddressSpaces;
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
     boolean reuseAddressSpace = false;
@@ -309,10 +308,6 @@ public class IsolatedResourcesManager extends ResourceManager {
 
     public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
         replaceAddressSpace(addressSpace, true);
-    }
-
-    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied) throws Exception {
-        super.replaceAddressSpace(addressSpace, waitForPlanApplied, currentAddressSpaces);
     }
 
     public void deleteAddressspacesFromList() throws Exception {

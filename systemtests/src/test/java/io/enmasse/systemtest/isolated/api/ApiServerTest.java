@@ -466,7 +466,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .done();
 
-        isolatedResourcesManager.replaceAddressSpace(replace, false, isolatedResourcesManager.getCurrentAddressSpaces());
+        resourcesManager.replaceAddressSpace(replace, false);
         TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
         AddressSpace space;
         while (!budget.timeoutExpired()) {

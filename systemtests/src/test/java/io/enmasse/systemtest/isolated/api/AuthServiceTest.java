@@ -10,25 +10,32 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AuthenticationServiceSettings;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.IndicativeSentences;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.SecretReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 
 import java.util.Collections;
@@ -379,5 +386,63 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         resourcesManager.createOrUpdateUser(addressSpace, cred);
 
         getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourcesManager);
+    }
+
+    @ParameterizedTest(name = "testSwitchAuthService-{0}-space")
+    @ValueSource(strings = {"brokered", "standard"})
+    void testSwitchAuthService(String type) throws Exception {
+        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-1", true);
+        resourcesManager.createAuthService(standardAuth);
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+
+        AuthenticationService standardAuth2 = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-2", true);
+        resourcesManager.createAuthService(standardAuth2);
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth2.getMetadata().getName())).toString());
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-auth-switch-" + type)
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(type.equals(AddressSpaceType.STANDARD.toString()) ? AddressSpaceType.STANDARD.toString() : AddressSpaceType.BROKERED.toString())
+                .withPlan(type.equals(AddressSpaceType.STANDARD.toString()) ? AddressSpacePlans.STANDARD_UNLIMITED : AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName(standardAuth.getMetadata().getName())
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(addressSpace);
+
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(type.equals(AddressSpaceType.STANDARD.toString()) ? DestinationPlan.STANDARD_SMALL_QUEUE : DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(queue);
+
+        UserCredentials cred = new UserCredentials("david", "pepinator");
+        resourcesManager.createOrUpdateUser(addressSpace, cred);
+
+        getClientUtils().sendDurableMessages(resourcesManager, addressSpace, queue, cred, 100);
+
+        addressSpace.getSpec().getAuthenticationService().setName(standardAuth2.getMetadata().getName());
+
+        resourcesManager.replaceAddressSpace(addressSpace, false);
+        AddressSpaceUtils.waithForAuthServiceApplied(addressSpace, standardAuth2.getMetadata().getName());
+
+        resourcesManager.removeAuthService(standardAuth);
+
+        UserCredentials cred2 = new UserCredentials("foo", "bar");
+        resourcesManager.createOrUpdateUser(addressSpace, cred2);
+
+        getClientUtils().receiveDurableMessages(resourcesManager, addressSpace, queue, cred2, 100);
     }
 }
