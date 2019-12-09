@@ -290,12 +290,21 @@ func (u *Upgrader) convertMessagingUsers() error {
 	return nil
 }
 
-func (u *Upgrader) delete(deploymentName string) error {
+func (u *Upgrader) delete(name string) error {
 	deploymentClient := u.client.AppsV1().Deployments(u.namespace)
 	propagationPolicy := metav1.DeletePropagationBackground
-	err := deploymentClient.Delete(deploymentName, &metav1.DeleteOptions{
+	err := deploymentClient.Delete(name, &metav1.DeleteOptions{
 		PropagationPolicy: &propagationPolicy,
 	})
+	if err != nil {
+		return err
+	}
+
+	serviceClient := u.client.CoreV1().Services(u.namespace)
+	err = serviceClient.Delete(name, &metav1.DeleteOptions{
+		PropagationPolicy: &propagationPolicy,
+	})
+
 	return err
 }
 
