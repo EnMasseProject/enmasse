@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Form,
   FormGroup,
@@ -7,13 +7,14 @@ import {
   FormSelectOption
 } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
-import { IAddress } from "../Components/AddressSpace/AddressList";
 import { RETURN_ADDRESS_PLANS } from "src/Queries/Queries";
 import { Loading } from "use-patternfly";
 
 interface IEditAddressProps {
-  address: IAddress;
-  onChange: (address: IAddress) => void;
+  name: string;
+  type: string;
+  plan: string;
+  onChange: (plan: string) => void;
 }
 
 interface IAddressPlans {
@@ -26,12 +27,11 @@ interface IAddressPlans {
 }
 
 export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
-  address,
+  name,
+  type,
+  plan,
   onChange
 }) => {
-  const [plan, setPlan] = useState<string>(address.plan.slice());
-  const type: string = address.type.slice();
-  const name: string = address.name.slice();
 
   let { loading, error, data } = useQuery<IAddressPlans>(RETURN_ADDRESS_PLANS);
 
@@ -72,8 +72,7 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
     .filter(plan => plan !== undefined);
 
   const onPlanChanged = (plan: string) => {
-    setPlan(plan);
-    address.plan = plan;
+    onChange(plan);
   };
 
   return (

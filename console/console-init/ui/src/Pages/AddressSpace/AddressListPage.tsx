@@ -119,10 +119,18 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         }
       });
       setAddressBeingEdited(null);
+      refetch();
     }
   };
   const handleEditChange = (address: IAddress) =>
     setAddressBeingEdited(address);
+
+  const handlePlanChange = (plan: string) => {
+    if(addressBeingEdited){
+      addressBeingEdited.plan = plan;
+      setAddressBeingEdited({...addressBeingEdited});
+    }
+  }
 
   const handleCancelDelete = () => setAddressBeingDeleted(null);
   const handleDelete = async () => {
@@ -174,8 +182,10 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           ]}
           isFooterLeftAligned>
           <EditAddress
-            address={addressBeingEdited}
-            onChange={handleEditChange}
+            name={addressBeingEdited.name}
+            type={addressBeingEdited.type}
+            plan={addressBeingEdited.plan}
+            onChange={handlePlanChange}
           />
         </Modal>
       )}

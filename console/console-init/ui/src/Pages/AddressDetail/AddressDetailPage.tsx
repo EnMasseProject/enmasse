@@ -5,7 +5,9 @@ import {
   BreadcrumbItem,
   Breadcrumb,
   Title,
-  Pagination
+  Pagination,
+  Modal,
+  Button
 } from "@patternfly/react-core";
 import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
 import { Link, useLocation, useHistory } from "react-router-dom";
@@ -17,9 +19,11 @@ import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter"
 import { css } from "@patternfly/react-styles";
 import { GridStylesForTableHeader } from "../AddressSpace/AddressesListWithFilterAndPaginationPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { DELETE_ADDRESS, RETURN_ADDRESS_DETAIL } from "src/Queries/Queries";
+import { DELETE_ADDRESS, RETURN_ADDRESS_DETAIL, EDIT_ADDRESS } from "src/Queries/Queries";
 import { IObjectMeta_v1_Input } from "../AddressSpace/AddressSpaceDetailPage";
 import { AddressLinksListPage } from "./AddressLinksListPage";
+import { EditAddress } from "../EditAddressPage";
+import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
 
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();
@@ -77,8 +81,10 @@ export default function AddressDetailPage() {
   useBreadcrumb(breadcrumb);
   const client = useApolloClient();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [addresLinksTotal, setAddressLinksTotal] = React.useState<number>(0);
-  const { loading, error, data } = useQuery<IAddressDetailResponse>(
+  const [addressPlan, setAddressPlan] = React.useState<string|null>(null);
+  const { loading, error, data, refetch } = useQuery<IAddressDetailResponse>(
     RETURN_ADDRESS_DETAIL(page, perPage, name, namespace, addressname),
     { pollInterval: 20000 }
   );
@@ -89,6 +95,9 @@ export default function AddressDetailPage() {
     addresses: { Total: 0, Addresses: [] }
   };
   const addressDetail = addresses && addresses.Addresses[0];
+  if(addressPlan===null){
+    setAddressPlan(addressDetail.Spec.Plan.Spec.DisplayName);
+  }
 
   const handleCancelDelete = () => {
     setIsDeleteModalOpen(!isDeleteModalOpen);
@@ -130,6 +139,29 @@ export default function AddressDetailPage() {
     );
   };
 
+  const handleSaving = async () => {
+    if(addressDetail && type){
+      await client.mutate({
+        mutation: EDIT_ADDRESS,
+        variables: {
+          a: {
+            Name: addressDetail.ObjectMeta.Name,
+            Namespace: addressDetail.ObjectMeta.Namespace.toString()
+          },
+          jsonPatch:
+            '[{"op":"replace","path":"/Plan","value":"' +
+            getPlanAndTypeForAddressEdit(
+              addressPlan || "",
+              type
+            ) +
+            '"}]',
+          patchType: "application/json-patch+json"
+        }
+      });
+    }
+    setIsEditModalOpen(!isEditModalOpen);
+  };
+
   return (
     <>
       {addressDetail && (
@@ -141,7 +173,7 @@ export default function AddressDetailPage() {
             addressDetail.Metrics,
             "enmasse_messages_stored"
           )}
-          onEdit={() => {}}
+          onEdit={() => setIsEditModalOpen(!isEditModalOpen)}
           onDelete={() => setIsDeleteModalOpen(!isDeleteModalOpen)}
         />
       )}
@@ -174,6 +206,27 @@ export default function AddressDetailPage() {
             handleConfirmDelete={handleDelete}
           />
         )}
+        <Modal
+          title="Edit"
+          isSmall
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(!isEditModalOpen)}
+          actions={[
+            <Button key="confirm" variant="primary" onClick={handleSaving}>
+              Confirm
+            </Button>,
+            <Button key="cancel" variant="link" onClick={() => setIsEditModalOpen(!isEditModalOpen)}>
+              Cancel
+            </Button>
+          ]}
+          isFooterLeftAligned>
+          <EditAddress
+            name={addressDetail.ObjectMeta.Name}
+            type={addressDetail.Spec.Plan.Spec.AddressType}
+            plan={addressPlan||""} 
+            onChange={setAddressPlan}
+          />
+        </Modal>
       </PageSection>
     </>
   );
