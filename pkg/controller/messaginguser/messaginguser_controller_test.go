@@ -25,15 +25,45 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func setup(t *testing.T, authservice *adminv1beta1.AuthenticationService, addressSpace *enmassev1beta1.AddressSpace, user *userv1beta1.MessagingUser) *ReconcileMessagingUser {
+func setup(t *testing.T) *ReconcileMessagingUser {
 	s := scheme.Scheme
-	s.AddKnownTypes(adminv1beta1.SchemeGroupVersion, authservice)
-	s.AddKnownTypes(adminv1beta1.SchemeGroupVersion, addressSpace)
-	s.AddKnownTypes(adminv1beta1.SchemeGroupVersion, user)
+
+	s.AddKnownTypes(adminv1beta1.SchemeGroupVersion, &adminv1beta1.AuthenticationService{})
+	s.AddKnownTypes(adminv1beta1.SchemeGroupVersion, &enmassev1beta1.AddressSpace{})
+	s.AddKnownTypes(adminv1beta1.SchemeGroupVersion, &userv1beta1.MessagingUser{})
 	objs := []runtime.Object{
-		authservice,
-		addressSpace,
-		user,
+		&adminv1beta1.AuthenticationService{
+			ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "standard"},
+			Spec: adminv1beta1.AuthenticationServiceSpec{
+				Type: adminv1beta1.Standard,
+				Standard: &adminv1beta1.AuthenticationServiceSpecStandard{
+					CredentialsSecret: &corev1.SecretReference{
+						Name: "creds",
+					},
+				},
+			},
+			Status: adminv1beta1.AuthenticationServiceStatus{
+				Host: "example.com",
+				Port: 5671,
+			},
+		},
+
+		&enmassev1beta1.AddressSpace{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      "myspace",
+				Annotations: map[string]string{
+					"enmasse.io/realm-name": "realm1",
+				},
+			},
+			Spec: enmassev1beta1.AddressSpaceSpec{
+				Type: "standard",
+				Plan: "standard-small",
+				AuthenticationService: &enmassev1beta1.AuthenticationService{
+					Name: "standard",
+				},
+			},
+		},
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "creds",
@@ -45,6 +75,7 @@ func setup(t *testing.T, authservice *adminv1beta1.AuthenticationService, addres
 			},
 		},
 	}
+
 	cl := fake.NewFakeClientWithScheme(s, objs...)
 	r := &ReconcileMessagingUser{
 		client: cl,
@@ -67,40 +98,7 @@ func setup(t *testing.T, authservice *adminv1beta1.AuthenticationService, addres
 }
 
 func TestReconcile(t *testing.T) {
-
-	authservice := &adminv1beta1.AuthenticationService{
-		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "standard"},
-		Spec: adminv1beta1.AuthenticationServiceSpec{
-			Type: adminv1beta1.Standard,
-			Standard: &adminv1beta1.AuthenticationServiceSpecStandard{
-				CredentialsSecret: &corev1.SecretReference{
-					Name: "creds",
-				},
-			},
-		},
-		Status: adminv1beta1.AuthenticationServiceStatus{
-			Host: "example.com",
-			Port: 5671,
-		},
-	}
-
-	addressSpace := &enmassev1beta1.AddressSpace{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "ns",
-			Name:      "myspace",
-			Annotations: map[string]string{
-				"enmasse.io/realm-name": "realm1",
-			},
-		},
-		Spec: enmassev1beta1.AddressSpaceSpec{
-			Type: "standard",
-			Plan: "standard-small",
-			AuthenticationService: &enmassev1beta1.AuthenticationService{
-				Name: "standard",
-			},
-		},
-	}
-
+	r := setup(t)
 	user := &userv1beta1.MessagingUser{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "myspace.test"},
 		Spec: userv1beta1.MessagingUserSpec{
@@ -123,8 +121,8 @@ func TestReconcile(t *testing.T) {
 			},
 		},
 	}
-
-	r := setup(t, authservice, addressSpace, user)
+	err := r.client.Create(context.TODO(), user)
+	assert.Nil(t, err)
 
 	userType := types.NamespacedName{
 		Name:      user.Name,
@@ -160,7 +158,7 @@ func TestReconcile(t *testing.T) {
 
 		if assert.True(t, ok, "Unable to find expected realm in fake client") {
 			assert.Equal(t, 1, len(userlist), "Unexpected length of user list")
-			assert.Equal(t, user, userlist[0], "Stored used does not equal reconciled user")
+			assert.Equal(t, *user, *userlist[0], "Stored used does not equal reconciled user")
 		}
 	}
 }
