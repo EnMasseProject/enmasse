@@ -103,6 +103,8 @@ github.com/operator-framework/operator-sdk/version
 github.com/pborman/uuid
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
 # github.com/prometheus/client_golang v1.0.0
 github.com/prometheus/client_golang/prometheus/promhttp
 github.com/prometheus/client_golang/prometheus
@@ -118,6 +120,8 @@ github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
+# github.com/stretchr/testify v1.4.0
+github.com/stretchr/testify/assert
 # go.uber.org/atomic v1.3.2
 go.uber.org/atomic
 # go.uber.org/multierr v1.1.0
@@ -184,7 +188,7 @@ google.golang.org/appengine/internal/remote_api
 gopkg.in/fsnotify.v1
 # gopkg.in/inf.v0 v0.9.1
 gopkg.in/inf.v0
-# gopkg.in/yaml.v2 v2.2.2
+# gopkg.in/yaml.v2 v2.2.4
 gopkg.in/yaml.v2
 # k8s.io/api v0.0.0 => k8s.io/api v0.0.0-20191004102349-159aefb8556b
 k8s.io/api/core/v1
@@ -226,13 +230,13 @@ k8s.io/api/node/v1alpha1
 k8s.io/api/node/v1beta1
 k8s.io/api/scheduling/v1
 # k8s.io/apimachinery v0.0.0 => k8s.io/apimachinery v0.0.0-20191004074956-c5d2f014d689
+k8s.io/apimachinery/pkg/runtime/schema
 k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/apis/meta/v1
 k8s.io/apimachinery/pkg/util/runtime
 k8s.io/apimachinery/pkg/util/wait
 k8s.io/apimachinery/pkg/api/resource
 k8s.io/apimachinery/pkg/runtime
-k8s.io/apimachinery/pkg/runtime/schema
 k8s.io/apimachinery/pkg/runtime/serializer
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/pkg/types
@@ -331,9 +335,9 @@ k8s.io/client-go/tools/metrics
 k8s.io/client-go/transport
 k8s.io/client-go/tools/pager
 k8s.io/client-go/dynamic
+k8s.io/client-go/restmapper
 k8s.io/client-go/tools/reference
 k8s.io/client-go/util/keyutil
-k8s.io/client-go/restmapper
 k8s.io/client-go/third_party/forked/golang/template
 k8s.io/client-go/tools/auth
 k8s.io/client-go/tools/clientcmd/api/latest
@@ -395,7 +399,10 @@ sigs.k8s.io/controller-runtime/pkg/client/config
 sigs.k8s.io/controller-runtime/pkg/manager
 sigs.k8s.io/controller-runtime/pkg/runtime/log
 sigs.k8s.io/controller-runtime/pkg/runtime/signals
+sigs.k8s.io/controller-runtime/pkg/cache
 sigs.k8s.io/controller-runtime/pkg/client
+sigs.k8s.io/controller-runtime/pkg/client/apiutil
+sigs.k8s.io/controller-runtime/pkg/log
 sigs.k8s.io/controller-runtime/pkg/controller
 sigs.k8s.io/controller-runtime/pkg/controller/controllerutil
 sigs.k8s.io/controller-runtime/pkg/handler
@@ -403,10 +410,7 @@ sigs.k8s.io/controller-runtime/pkg/reconcile
 sigs.k8s.io/controller-runtime/pkg/source
 sigs.k8s.io/controller-runtime/pkg/event
 sigs.k8s.io/controller-runtime/pkg/predicate
-sigs.k8s.io/controller-runtime/pkg/log
-sigs.k8s.io/controller-runtime/pkg/client/apiutil
 sigs.k8s.io/controller-runtime/pkg/internal/log
-sigs.k8s.io/controller-runtime/pkg/cache
 sigs.k8s.io/controller-runtime/pkg/internal/recorder
 sigs.k8s.io/controller-runtime/pkg/leaderelection
 sigs.k8s.io/controller-runtime/pkg/metrics
@@ -415,14 +419,16 @@ sigs.k8s.io/controller-runtime/pkg/runtime/inject
 sigs.k8s.io/controller-runtime/pkg/webhook
 sigs.k8s.io/controller-runtime/pkg/log/zap
 sigs.k8s.io/controller-runtime/pkg/manager/signals
+sigs.k8s.io/controller-runtime/pkg/cache/internal
+sigs.k8s.io/controller-runtime/pkg/cache/informertest
 sigs.k8s.io/controller-runtime/pkg/internal/controller
 sigs.k8s.io/controller-runtime/pkg/source/internal
 sigs.k8s.io/controller-runtime/pkg/client/fake
-sigs.k8s.io/controller-runtime/pkg/cache/internal
 sigs.k8s.io/controller-runtime/pkg/webhook/admission
 sigs.k8s.io/controller-runtime/pkg/webhook/internal/certwatcher
 sigs.k8s.io/controller-runtime/pkg/webhook/internal/metrics
-sigs.k8s.io/controller-runtime/pkg/internal/controller/metrics
 sigs.k8s.io/controller-runtime/pkg/internal/objectutil
+sigs.k8s.io/controller-runtime/pkg/controller/controllertest
+sigs.k8s.io/controller-runtime/pkg/internal/controller/metrics
 # sigs.k8s.io/yaml v1.1.0
 sigs.k8s.io/yaml

@@ -11,31 +11,31 @@ import (
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
 )
 
-type fakeClient struct {
-	users map[string][]*userv1beta1.MessagingUser
+type FakeClient struct {
+	Users map[string][]*userv1beta1.MessagingUser
 }
 
 var (
-	_ KeycloakClient = &fakeClient{}
+	_ KeycloakClient = &FakeClient{}
 )
 
-func (c *fakeClient) CreateUser(realm string, user *userv1beta1.MessagingUser) error {
-	if _, ok := c.users[realm]; !ok {
-		c.users[realm] = make([]*userv1beta1.MessagingUser, 0)
+func (c *FakeClient) CreateUser(realm string, user *userv1beta1.MessagingUser) error {
+	if _, ok := c.Users[realm]; !ok {
+		c.Users[realm] = make([]*userv1beta1.MessagingUser, 0)
 	}
-	for _, users := range c.users {
+	for _, users := range c.Users {
 		for _, existing := range users {
 			if existing.Name == user.Name {
 				return fmt.Errorf("User %s already exists!", user.Name)
 			}
 		}
 	}
-	c.users[realm] = append(c.users[realm], user)
+	c.Users[realm] = append(c.Users[realm], user)
 	return nil
 }
 
-func (c *fakeClient) GetUser(realm string, username string) (*userv1beta1.MessagingUser, error) {
-	users, ok := c.users[realm]
+func (c *FakeClient) GetUser(realm string, username string) (*userv1beta1.MessagingUser, error) {
+	users, ok := c.Users[realm]
 	if !ok {
 		return nil, fmt.Errorf("Unknown realm %s", realm)
 	}
@@ -48,8 +48,8 @@ func (c *fakeClient) GetUser(realm string, username string) (*userv1beta1.Messag
 	return nil, nil
 }
 
-func (c *fakeClient) DeleteUser(realm string, user *userv1beta1.MessagingUser) error {
-	users, ok := c.users[realm]
+func (c *FakeClient) DeleteUser(realm string, user *userv1beta1.MessagingUser) error {
+	users, ok := c.Users[realm]
 	if !ok {
 		return fmt.Errorf("Unknown realm %s", realm)
 	}
@@ -62,39 +62,39 @@ func (c *fakeClient) DeleteUser(realm string, user *userv1beta1.MessagingUser) e
 		}
 	}
 	if element >= 0 {
-		c.users[realm][element] = c.users[realm][len(c.users[realm])-1]
-		c.users[realm] = c.users[realm][:len(c.users[realm])-1]
+		c.Users[realm][element] = c.Users[realm][len(c.Users[realm])-1]
+		c.Users[realm] = c.Users[realm][:len(c.Users[realm])-1]
 	}
 	return nil
 }
 
-func (c *fakeClient) UpdateUser(realm string, _ *userv1beta1.MessagingUser, updated *userv1beta1.MessagingUser) error {
-	if _, ok := c.users[realm]; !ok {
-		c.users[realm] = make([]*userv1beta1.MessagingUser, 0)
+func (c *FakeClient) UpdateUser(realm string, _ *userv1beta1.MessagingUser, updated *userv1beta1.MessagingUser) error {
+	if _, ok := c.Users[realm]; !ok {
+		c.Users[realm] = make([]*userv1beta1.MessagingUser, 0)
 	}
-	for _, users := range c.users {
+	for _, users := range c.Users {
 		for i, existing := range users {
 			if existing.Spec.Username == updated.Spec.Username {
-				c.users[realm][i] = updated
+				c.Users[realm][i] = updated
 				return nil
 			}
 		}
 	}
-	c.users[realm] = append(c.users[realm], updated)
+	c.Users[realm] = append(c.Users[realm], updated)
 	return nil
 }
 
-func (c *fakeClient) GetUsers(realm string, filters ...AttributeFilter) ([]*userv1beta1.MessagingUser, error) {
-	users, ok := c.users[realm]
+func (c *FakeClient) GetUsers(realm string, filters ...AttributeFilter) ([]*userv1beta1.MessagingUser, error) {
+	users, ok := c.Users[realm]
 	if !ok {
 		return nil, fmt.Errorf("Unknown realm %s", realm)
 	}
 	return users, nil
 }
 
-func (c *fakeClient) GetRealms() ([]string, error) {
+func (c *FakeClient) GetRealms() ([]string, error) {
 	realms := make([]string, 0)
-	for key, _ := range c.users {
+	for key, _ := range c.Users {
 		realms = append(realms, key)
 	}
 	return realms, nil

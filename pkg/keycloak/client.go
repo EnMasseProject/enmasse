@@ -27,6 +27,7 @@ import (
 
 var log = logf.Log.WithName("keycloak")
 
+type NewKeycloakClientFunc func(string, int, string, string, []byte) (KeycloakClient, error)
 type AttributeFilter func(string, []string) bool
 
 type KeycloakClient interface {
@@ -391,21 +392,27 @@ func userRepToMessagingUser(user *gocloak.User, groups []*gocloak.UserGroup) (*u
 	}
 
 	muser.Spec.Authorization = make([]userv1beta1.AuthorizationSpec, 0)
-	muser.Spec.Authorization = append(muser.Spec.Authorization,
-		userv1beta1.AuthorizationSpec{
-			Operations: globalOperations,
-			Addresses:  make([]string, 0),
+	if len(globalOperations) > 0 {
+		muser.Spec.Authorization = append(muser.Spec.Authorization,
+			userv1beta1.AuthorizationSpec{
+				Operations: globalOperations,
+				Addresses:  make([]string, 0),
+			})
+	}
+
+	if len(sendAddresses) > 0 {
+		muser.Spec.Authorization = append(muser.Spec.Authorization, userv1beta1.AuthorizationSpec{
+			Operations: []userv1beta1.AuthorizationOperation{userv1beta1.Send},
+			Addresses:  sendAddresses,
 		})
+	}
 
-	muser.Spec.Authorization = append(muser.Spec.Authorization, userv1beta1.AuthorizationSpec{
-		Operations: []userv1beta1.AuthorizationOperation{userv1beta1.Send},
-		Addresses:  sendAddresses,
-	})
-
-	muser.Spec.Authorization = append(muser.Spec.Authorization, userv1beta1.AuthorizationSpec{
-		Operations: []userv1beta1.AuthorizationOperation{userv1beta1.Recv},
-		Addresses:  recvAddresses,
-	})
+	if len(recvAddresses) > 0 {
+		muser.Spec.Authorization = append(muser.Spec.Authorization, userv1beta1.AuthorizationSpec{
+			Operations: []userv1beta1.AuthorizationOperation{userv1beta1.Recv},
+			Addresses:  recvAddresses,
+		})
+	}
 
 	return muser, nil
 }

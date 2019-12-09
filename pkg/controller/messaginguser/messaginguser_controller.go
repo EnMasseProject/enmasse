@@ -43,11 +43,13 @@ const (
 )
 
 type ReconcileMessagingUser struct {
-	client          client.Client
-	reader          client.Reader
-	keycloakClients map[string]keycloak.KeycloakClient
-	scheme          *runtime.Scheme
-	namespace       string
+	client    client.Client
+	reader    client.Reader
+	scheme    *runtime.Scheme
+	namespace string
+
+	newKeycloakClientFunc keycloak.NewKeycloakClientFunc
+	keycloakClients       map[string]keycloak.KeycloakClient
 }
 
 // Gets called by parent "init", adding as to the manager
@@ -57,11 +59,12 @@ func Add(mgr manager.Manager) error {
 
 func newReconciler(mgr manager.Manager) *ReconcileMessagingUser {
 	return &ReconcileMessagingUser{
-		client:          mgr.GetClient(),
-		reader:          mgr.GetAPIReader(),
-		scheme:          mgr.GetScheme(),
-		keycloakClients: make(map[string]keycloak.KeycloakClient),
-		namespace:       util.GetEnvOrDefault("NAMESPACE", "enmasse-infra"),
+		client:                mgr.GetClient(),
+		reader:                mgr.GetAPIReader(),
+		scheme:                mgr.GetScheme(),
+		newKeycloakClientFunc: keycloak.NewClient,
+		keycloakClients:       make(map[string]keycloak.KeycloakClient),
+		namespace:             util.GetEnvOrDefault("NAMESPACE", "enmasse-infra"),
 	}
 }
 
@@ -163,7 +166,10 @@ func (r *ReconcileMessagingUser) createOrUpdateUser(ctx context.Context, logger 
 		return reconcile.Result{Requeue: true}, err
 	}
 
-	if authenticationService.Spec.Type == adminv1beta1.Standard && isAuthserviceAvailable(authenticationService) {
+	if authenticationService.Spec.Type == adminv1beta1.Standard {
+		if !isAuthserviceAvailable(authenticationService) {
+			return reconcile.Result{}, fmt.Errorf("Authentication service %s is not yet available", authenticationService.Name)
+		}
 		if user.Status.Phase == userv1beta1.UserPending {
 			user.Status.Phase = userv1beta1.UserConfiguring
 			err = r.client.Status().Update(ctx, user)
@@ -333,7 +339,12 @@ func (r *ReconcileMessagingUser) getKeycloakClient(ctx context.Context, authserv
 
 		adminUser := credentials.Data["admin.username"]
 		adminPassword := credentials.Data["admin.password"]
-		return keycloak.NewClient(authservice.Status.Host, 8443, string(adminUser), string(adminPassword), ca)
+		client, err := r.newKeycloakClientFunc(authservice.Status.Host, 8443, string(adminUser), string(adminPassword), ca)
+		if err != nil {
+			return nil, err
+		}
+		r.keycloakClients[authservice.Name] = client
+		return client, nil
 	}
 }
 

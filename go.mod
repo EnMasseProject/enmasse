@@ -20,15 +20,15 @@ replace (
 
 require (
 	github.com/Nerzal/gocloak/v3 v3.7.0
-	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/google/uuid v1.1.1
 	github.com/openshift/api v3.9.1-0.20190813152110-b5570061b31f+incompatible
 	// release-4.2
 	github.com/openshift/client-go v0.0.0-20190813201236-5a5508328169
 	github.com/operator-framework/operator-sdk v0.11.0
+	github.com/stretchr/testify v1.4.0
 	go.uber.org/multierr v1.1.0
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
