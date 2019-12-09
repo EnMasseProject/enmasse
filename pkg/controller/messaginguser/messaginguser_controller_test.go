@@ -97,12 +97,11 @@ func setup(t *testing.T) *ReconcileMessagingUser {
 	return r
 }
 
-func TestReconcile(t *testing.T) {
-	r := setup(t)
-	user := &userv1beta1.MessagingUser{
-		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "myspace.test"},
+func buildTestUser(name string, username string) *userv1beta1.MessagingUser {
+	return &userv1beta1.MessagingUser{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: name},
 		Spec: userv1beta1.MessagingUserSpec{
-			Username: "test",
+			Username: username,
 			Authentication: userv1beta1.AuthenticationSpec{
 				Type:     userv1beta1.Password,
 				Password: []byte("secret!"),
@@ -121,6 +120,13 @@ func TestReconcile(t *testing.T) {
 			},
 		},
 	}
+}
+
+func TestReconcile(t *testing.T) {
+	r := setup(t)
+
+	user := buildTestUser("myspace.test", "test")
+
 	err := r.client.Create(context.TODO(), user)
 	assert.Nil(t, err)
 
@@ -128,12 +134,9 @@ func TestReconcile(t *testing.T) {
 		Name:      user.Name,
 		Namespace: user.Namespace,
 	}
-	req := reconcile.Request{
-		NamespacedName: userType,
-	}
 
 	// First iteration should add the finalizer
-	result, err := r.Reconcile(req)
+	result, err := r.Reconcile(reconcile.Request{NamespacedName: userType})
 	assert.Nil(t, err, "Unexpected reconcile error")
 	assert.True(t, result.Requeue)
 
@@ -142,7 +145,7 @@ func TestReconcile(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Contains(t, user.ObjectMeta.Finalizers, FINALIZER_NAME)
 
-	result, err = r.Reconcile(req)
+	result, err = r.Reconcile(reconcile.Request{NamespacedName: userType})
 	assert.Nil(t, err, "Unexpected reconcile error")
 	assert.False(t, result.Requeue)
 
@@ -161,4 +164,29 @@ func TestReconcile(t *testing.T) {
 			assert.Equal(t, *user, *userlist[0], "Stored used does not equal reconciled user")
 		}
 	}
+
+	// Update user
+	user2 := *user
+	user2.Spec.Authentication.Password = []byte("other")
+	assert.NotEqual(t, user2, *user)
+	err = r.client.Update(context.TODO(), &user2)
+	assert.Nil(t, err)
+	assert.Equal(t, *r.keycloakClients["standard"].(*keycloak.FakeClient).Users["realm1"][0], *user)
+
+	result, err = r.Reconcile(reconcile.Request{NamespacedName: userType})
+	assert.Nil(t, err, "Unexpected reconcile error")
+	assert.False(t, result.Requeue)
+	assert.NotEqual(t, *r.keycloakClients["standard"].(*keycloak.FakeClient).Users["realm1"][0], *user)
+	assert.Equal(t, *r.keycloakClients["standard"].(*keycloak.FakeClient).Users["realm1"][0], user2)
+
+	// Delete
+	now := metav1.Now()
+	user2.ObjectMeta.SetDeletionTimestamp(&now)
+	err = r.client.Update(context.TODO(), &user2)
+	assert.Nil(t, err)
+
+	result, err = r.Reconcile(reconcile.Request{NamespacedName: userType})
+	assert.Nil(t, err, "Unexpected reconcile error")
+	assert.True(t, result.Requeue)
+	assert.Equal(t, 0, len(r.keycloakClients["standard"].(*keycloak.FakeClient).Users["realm1"]))
 }

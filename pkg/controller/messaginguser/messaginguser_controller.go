@@ -312,6 +312,7 @@ func (r *ReconcileMessagingUser) lookupAuthenticationService(ctx context.Context
 func (r *ReconcileMessagingUser) getKeycloakClient(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (keycloak.KeycloakClient, error) {
 	existing, ok := r.keycloakClients[authservice.Name]
 	if ok {
+		log.Info("Found existing keycloak client", "authservice", authservice.Name)
 		return existing, nil
 	} else {
 		var ca []byte

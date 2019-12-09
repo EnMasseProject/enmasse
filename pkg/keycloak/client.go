@@ -15,6 +15,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	gocloak "github.com/Nerzal/gocloak/v3"
 
@@ -40,11 +41,11 @@ type KeycloakClient interface {
 }
 
 type keycloakClient struct {
-	client   gocloak.GoCloak
-	username string
-	password string
-	token    *gocloak.JWT
-	loggedIn bool
+	client      gocloak.GoCloak
+	username    string
+	password    string
+	token       *gocloak.JWT
+	tokenExpiry time.Time
 }
 
 var (
@@ -88,25 +89,24 @@ func NewClient(hostname string, port int, username string, password string, caCe
 		client.RestyClient().SetRootCertificate(tmpfile.Name())
 	}
 	return &keycloakClient{
-		client:   client,
-		username: username,
-		password: password,
-		token:    nil,
-		loggedIn: false,
+		client:      client,
+		username:    username,
+		password:    password,
+		token:       nil,
+		tokenExpiry: time.Time{},
 	}, nil
 }
 
 func (c *keycloakClient) ensureLoggedIn() error {
-	// TODO: Handle expiry
-	if c.loggedIn {
-		return nil
+	now := time.Now()
+	if c.token == nil || c.tokenExpiry.Before(now) {
+		token, err := c.client.LoginAdmin(c.username, c.password, "master")
+		if err != nil {
+			return err
+		}
+		c.token = token
+		c.tokenExpiry = now.Add(time.Second * time.Duration(token.ExpiresIn-5))
 	}
-	token, err := c.client.LoginAdmin(c.username, c.password, "master")
-	if err != nil {
-		return err
-	}
-	c.token = token
-	c.loggedIn = true
 	return nil
 }
 
