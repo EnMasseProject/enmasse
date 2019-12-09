@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdaptersConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.systemtest.Endpoint;
@@ -186,7 +187,7 @@ public class IoTUtils {
     }
 
     public static boolean isIoTInstalled(Kubernetes kubernetes) {
-        return kubernetes.getCRD("iotprojects.iot.enmasse.io") != null;
+        return kubernetes.getCRD(IoTCrd.project().getMetadata().getName()) != null;
     }
 
     public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {
