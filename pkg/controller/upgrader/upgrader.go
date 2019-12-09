@@ -236,8 +236,8 @@ func (u *Upgrader) convertMessagingUsers() error {
 
 			adminUser := credentials.Data["admin.username"]
 			adminPassword := credentials.Data["admin.password"]
+			// Handle wrong host used in older versions
 			host := authenticationService.Status.Host
-			// Handle wrong host for previous auth service
 			if !strings.HasSuffix(host, fmt.Sprintf("%s.svc", authenticationService.Namespace)) {
 				host += "." + authenticationService.Namespace + ".svc"
 			}

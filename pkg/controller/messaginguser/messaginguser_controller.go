@@ -338,14 +338,20 @@ func (r *ReconcileMessagingUser) getKeycloakClient(ctx context.Context, authserv
 			return nil, err
 		}
 
+		// Handle wrong host used in older versions
+		host := authenticationService.Status.Host
+		if !strings.HasSuffix(host, fmt.Sprintf("%s.svc", authenticationService.Namespace)) {
+			host += "." + authenticationService.Namespace + ".svc"
+		}
+
 		adminUser := credentials.Data["admin.username"]
 		adminPassword := credentials.Data["admin.password"]
-		client, err := r.newKeycloakClientFunc(authservice.Status.Host, 8443, string(adminUser), string(adminPassword), ca)
+		kcClient, err := r.newKeycloakClientFunc(host, 8443, string(adminUser), string(adminPassword), ca)
 		if err != nil {
 			return nil, err
 		}
-		r.keycloakClients[authservice.Name] = client
-		return client, nil
+		r.keycloakClients[authservice.Name] = kcClient
+		return kcClient, nil
 	}
 }
 
