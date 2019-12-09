@@ -48,7 +48,7 @@ import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsService;
 import io.enmasse.iot.infinispan.device.CredentialKey;
 import io.enmasse.iot.infinispan.device.DeviceCredential;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
-import io.enmasse.iot.infinispan.tenant.TenantHandle;
+import io.enmasse.iot.infinispan.tenant.TenantInformation;
 import io.enmasse.iot.registry.infinispan.util.Credentials;
 import io.opentracing.Span;
 import io.vertx.core.json.JsonObject;
@@ -87,7 +87,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     }
 
     @Override
-    protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final TenantHandle tenant, final CredentialKey key, final Span span) {
+    protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final TenantInformation tenant, final CredentialKey key, final Span span) {
 
         return this.adapterCache
                 .getWithMetadataAsync(key)
@@ -125,7 +125,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private Duration calculateRemainingTtl(final TenantHandle tenant, final MetadataValue<?> result) {
+    private Duration calculateRemainingTtl(final TenantInformation tenant, final MetadataValue<?> result) {
 
         if (result.getLifespan() > 0 && result.getCreated() > 0) {
 
@@ -139,7 +139,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         }
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final TenantHandle tenant, final CredentialKey key, final Span span) {
+    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final TenantInformation tenant, final CredentialKey key, final Span span) {
 
         return searchCredentials(key)
                 .thenCompose(r -> {
@@ -167,10 +167,9 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
      *
      * @return The TTL. Must never return {@code null}.
      */
-    private Duration getStoreTtl(final TenantHandle tenant) {
+    private Duration getStoreTtl(final TenantInformation tenant) {
 
-        return Optional
-                .ofNullable(tenant.getTenant())
+        return tenant.getTenant()
                 .map(Tenant::getDefaults)
                 .map(d -> d.get("ttl"))
                 .flatMap(v -> {
@@ -187,11 +186,11 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private <T> CompletionStage<CredentialsResult<T>> storeInvalidEntry(final TenantHandle tenant) {
+    private <T> CompletionStage<CredentialsResult<T>> storeInvalidEntry(final TenantInformation tenant) {
         return completedFuture(notFound(getStoreTtl(tenant)));
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final TenantHandle tenant, final CredentialKey key, final JsonObject cacheEntry) {
+    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final TenantInformation tenant, final CredentialKey key, final JsonObject cacheEntry) {
 
         final Duration ttl = getStoreTtl(tenant);
 
@@ -207,7 +206,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final TenantHandle tenant, final CredentialKey key) {
+    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final TenantInformation tenant, final CredentialKey key) {
 
         final Duration ttl = getStoreTtl(tenant);
 

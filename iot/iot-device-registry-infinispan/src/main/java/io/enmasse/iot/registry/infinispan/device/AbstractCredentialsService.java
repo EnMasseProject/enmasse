@@ -20,7 +20,7 @@ import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.infinispan.device.CredentialKey;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
 import io.enmasse.iot.infinispan.device.DeviceKey;
-import io.enmasse.iot.infinispan.tenant.TenantHandle;
+import io.enmasse.iot.infinispan.tenant.TenantInformation;
 import io.enmasse.iot.registry.infinispan.tenant.TenantInformationService;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
@@ -63,11 +63,11 @@ public abstract class AbstractCredentialsService implements CredentialsService {
     protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final String tenantId, final String type, final String authId, final Span span) {
 
         return this.tenantInformationService
-                .tenantExists(tenantId, HTTP_NOT_FOUND, span )
+                .tenantExists(tenantId, HTTP_NOT_FOUND, span)
                 .thenCompose(tenantHandle -> processGet(tenantHandle, credentialKey(tenantHandle, authId, type), span));
 
     }
 
-    protected abstract CompletableFuture<CredentialsResult<JsonObject>> processGet(TenantHandle tenant, CredentialKey key, Span span);
+    protected abstract CompletableFuture<CredentialsResult<JsonObject>> processGet(TenantInformation tenant, CredentialKey key, Span span);
 
 }
