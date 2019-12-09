@@ -18,7 +18,7 @@ func (r *ReconcileIoTProject) reconcileExternal(ctx context.Context, request *re
 
 	if project.Status.Managed != nil {
 
-		project.Status.Phase = "Reconfiguring"
+		project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
 		project.Status.PhaseReason = "Change of downstream strategy"
 
 		rc := recon.ReconcileContext{}
@@ -52,7 +52,7 @@ func (r *ReconcileIoTProject) reconcileExternal(ctx context.Context, request *re
 		SetStatusOk()
 
 	project.Status.DownstreamEndpoint = project.Spec.DownstreamStrategy.ExternalDownstreamStrategy.ConnectionInformation.DeepCopy()
-	project.Status.Phase = iotv1alpha1.ProjectPhaseReady
+	project.Status.Phase = iotv1alpha1.ProjectPhaseActive
 
 	return reconcile.Result{}, nil
 

@@ -91,7 +91,7 @@ func updateManagedReadyStatus(m *managedStatus, project *iotv1alpha1.IoTProject)
 	updateFromMap(m.remainingReady, &readyCondition.CommonCondition, "Non-ready resources")
 
 	if createdCondition.Status == corev1.ConditionTrue && readyCondition.Status == corev1.ConditionTrue {
-		project.Status.Phase = iotv1alpha1.ProjectPhaseReady
+		project.Status.Phase = iotv1alpha1.ProjectPhaseActive
 	} else {
 		project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
 	}
@@ -105,7 +105,7 @@ func updateManagedStatus(managedStatus *managedStatus, project *iotv1alpha1.IoTP
 	// extract endpoint information
 
 	currentCredentials := project.Status.DownstreamEndpoint.Credentials.DeepCopy()
-	if managedStatus.addressSpace != nil && project.Status.Phase == iotv1alpha1.ProjectPhaseReady {
+	if managedStatus.addressSpace != nil && project.Status.Phase == iotv1alpha1.ProjectPhaseActive {
 
 		forceTls := true
 		endpoint, err := extractEndpointInformation("messaging", iotv1alpha1.Service, "amqps", currentCredentials, managedStatus.addressSpace, &forceTls)
@@ -154,7 +154,7 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 		return rc.Result()
 	}
 
-	project.Status.Phase = "Configuring"
+	project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
 
 	// reconcile address space
 
@@ -233,7 +233,7 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 
 			// cleanup old address space first
 
-			project.Status.Phase = "Reconfiguring"
+			project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
 			project.Status.PhaseReason = "Address Space changed"
 
 			result, err := cleanupManagedResources(ctx, r.client, project)

@@ -131,7 +131,7 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, project *
 			resourcesReadyCondition.IsOk() &&
 			newProject.Status.DownstreamEndpoint != nil {
 
-			newProject.Status.Phase = iotv1alpha1.ProjectPhaseReady
+			newProject.Status.Phase = iotv1alpha1.ProjectPhaseActive
 			newProject.Status.PhaseReason = ""
 
 		} else {
@@ -149,7 +149,7 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, project *
 			reason = "ProcessingError"
 			message = currentError.Error()
 		}
-		if newProject.Status.Phase == iotv1alpha1.ProjectPhaseReady {
+		if newProject.Status.Phase == iotv1alpha1.ProjectPhaseActive {
 			status = corev1.ConditionTrue
 		} else {
 			status = corev1.ConditionFalse
