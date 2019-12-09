@@ -435,7 +435,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
 
         addressSpace.getSpec().getAuthenticationService().setName(standardAuth2.getMetadata().getName());
 
-        resourcesManager.replaceAddressSpace(addressSpace, false);
+        resourcesManager.replaceAddressSpace(addressSpace, false, null);
         AddressSpaceUtils.waithForAuthServiceApplied(addressSpace, standardAuth2.getMetadata().getName());
 
         resourcesManager.removeAuthService(standardAuth);

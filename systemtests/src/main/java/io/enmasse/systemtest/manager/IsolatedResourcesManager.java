@@ -307,7 +307,7 @@ public class IsolatedResourcesManager extends ResourceManager {
     }
 
     public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
-        replaceAddressSpace(addressSpace, true);
+        replaceAddressSpace(addressSpace, true, null);
     }
 
     public void deleteAddressspacesFromList() throws Exception {

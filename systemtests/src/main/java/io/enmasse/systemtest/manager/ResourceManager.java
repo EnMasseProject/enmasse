@@ -309,7 +309,7 @@ public abstract class ResourceManager {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied) throws Exception {
+    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied, TimeoutBudget waitBudget) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS_SPACE);
         var client = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
         if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
@@ -321,7 +321,12 @@ public abstract class ResourceManager {
             if (waitForPlanApplied) {
                 AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
             }
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            if (waitBudget == null) {
+                AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            } else {
+                AddressSpaceUtils.waitForAddressSpaceReady(addressSpace, waitBudget);
+            }
+
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
             currentAddressSpaces.add(addressSpace);
         } else {
