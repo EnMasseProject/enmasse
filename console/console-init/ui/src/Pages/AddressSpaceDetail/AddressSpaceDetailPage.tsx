@@ -35,9 +35,9 @@ const styles = StyleSheet.create({
   }
 });
 const getConnectionsList = () =>
-  import("./ConnectionListWithFilterAndPaginationPage");
+  import("./ConnectionList/ConnectionListWithFilterAndPaginationPage");
 const getAddressesList = () =>
-  import("./AddressesListWithFilterAndPaginationPage");
+  import("./AddressList/AddressesListWithFilterAndPaginationPage");
 
 interface IAddressSpaceDetailResponse {
   addressSpaces: {

@@ -5,7 +5,6 @@ import {
   ConnectionList
 } from "src/Components/AddressSpace/ConnectionList";
 import { EmptyConnection } from "src/Components/Common/EmptyConnection";
-import { PageSection, PageSectionVariants } from "@patternfly/react-core";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionListResponse } from "src/Types/ResponseTypes";
 import { RETURN_ALL_CONECTION_LIST } from "src/Queries/Queries";

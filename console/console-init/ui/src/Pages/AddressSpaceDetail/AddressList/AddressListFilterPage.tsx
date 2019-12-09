@@ -14,7 +14,7 @@ import {
   OverflowMenuGroup,
   OverflowMenuItem,
   OverflowMenuControl
-} from "@patternfly/react-core/dist/js/experimental/index";
+} from "@patternfly/react-core/dist/js/experimental";
 import {
   Button,
   ButtonVariant,
@@ -26,7 +26,7 @@ import {
   DropdownToggle
 } from "@patternfly/react-core";
 import { SearchIcon, FilterIcon } from "@patternfly/react-icons";
-import { CreateAddress } from "../CreateAddress/CreateAddressPage";
+import { CreateAddress } from "../../CreateAddress/CreateAddressPage";
 import { useParams } from "react-router";
 interface AddressListFilterProps {
   inputValue: string | null;

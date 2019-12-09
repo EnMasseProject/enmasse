@@ -9,6 +9,7 @@ import {
 } from "@patternfly/react-table";
 import { ExternalLinkAltIcon } from "@patternfly/react-icons";
 import { Link } from "react-router-dom";
+import { Tooltip, TooltipPosition } from "@patternfly/react-core";
 
 interface IClientListProps {
   rows: IClient[];
@@ -41,7 +42,9 @@ export const ClientList: React.FunctionComponent<IClientListProps> = ({
               <Link
                 to={`/address-spaces/${row.addressSpaceNamespace}/${row.addressSpaceName}/${row.addressSpaceType}/connections/${row.connectionName}`}
               >
+                <Tooltip position={TooltipPosition.top} content={<div>Go to the link</div>}>
                 <ExternalLinkAltIcon />
+                </Tooltip>
               </Link>
             </>
           )

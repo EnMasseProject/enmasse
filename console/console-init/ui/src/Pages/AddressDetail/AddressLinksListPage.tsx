@@ -3,7 +3,7 @@ import { useQuery } from "@apollo/react-hooks";
 import { RETURN_ADDRESS_LINKS } from "src/Queries/Queries";
 import { IAddressLinksResponse } from "src/Types/ResponseTypes";
 import { Loading } from "use-patternfly";
-import { IClient, ClientList } from "src/Components/ClientList";
+import { IClient, ClientList } from "src/Components/AddressDetail/ClientList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { EmptyLinks } from "src/Components/Common/EmptyLinks";
 

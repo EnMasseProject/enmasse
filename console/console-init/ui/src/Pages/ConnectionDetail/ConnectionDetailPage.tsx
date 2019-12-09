@@ -18,7 +18,7 @@ import { ILink, LinkList } from "src/Components/ConnectionDetail/LinkList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionDetailResponse } from "src/Types/ResponseTypes";
 import { css } from "@patternfly/react-styles";
-import { GridStylesForTableHeader } from "./AddressSpace/AddressesListWithFilterAndPaginationPage";
+import { GridStylesForTableHeader } from "../AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
 import { Link, useLocation, useHistory } from "react-router-dom";
 import { RETURN_CONNECTION_DETAIL } from "src/Queries/Queries";
 
@@ -118,7 +118,7 @@ export default function ConnectionDetailPage() {
     connections: { Total: 0, Connections: [] }
   };
   const connection = connections.Connections[0];
-  setTotalLinks(connections.Total);
+  // setTotalLinks(connections.Total);
   //Change this logic
   const jvmObject = getSplitValue(
     getProductFilteredValue(connection.Spec.Properties, "platform")

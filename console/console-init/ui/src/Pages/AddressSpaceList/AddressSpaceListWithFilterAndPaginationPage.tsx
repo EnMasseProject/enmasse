@@ -1,28 +1,29 @@
 import * as React from "react";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
-import { useParams, useHistory, useLocation } from "react-router";
+import { useLocation, useHistory } from "react-router";
 import {
+  Pagination,
   PageSection,
   PageSectionVariants,
   Grid,
   GridItem,
-  Pagination
+  Dropdown,
+  KebabToggle,
+  DropdownItem
 } from "@patternfly/react-core";
-import { GridStylesForTableHeader } from "./AddressesListWithFilterAndPaginationPage";
-import { ConnectionListFilterPage } from "./ConnectionListFilterPage";
+import { GridStylesForTableHeader } from "../AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
 import { css } from "@patternfly/react-styles";
-import { ConnectionsListPage } from "./ConnectionsListPage";
+import { AddressSpaceListPage } from "./AddressSpaceListPage";
+import { AddressSpaceListFilterPage } from "./AddressSpaceListFilterPage";
 
-const ConnectionListFunction = () => {
-  useDocumentTitle("Connection List");
-
+export default function AddressSpaceListWithFilterAndPagination() {
+  useDocumentTitle("Address Space List");
   useA11yRouteChange();
-  const { name, namespace, type } = useParams();
-  const [filterValue, setFilterValue] = React.useState<string>("Hostname");
-  const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
-  const [hosts, setHosts] = React.useState<Array<string>>([]);
-  const [containerIds, setContainerIds] = React.useState<Array<string>>([]);
-  const [totalConnections, setTotalConnections] = React.useState<number>(0);
+  const [filterValue, setFilterValue] = React.useState<string | null>(null);
+  const [filterNames, setFilterNames] = React.useState<string[]>([]);
+  const [filterNamespaces, setFilterNamespaces] = React.useState<string[]>([]);
+  const [filterType, setFilterType] = React.useState<string | null>(null);
+  const [totalAddressSpaces, setTotalAddressSpaces] = React.useState<number>(0);
   const location = useLocation();
   const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
@@ -60,7 +61,7 @@ const ConnectionListFunction = () => {
   const renderPagination = (page: number, perPage: number) => {
     return (
       <Pagination
-        itemCount={totalConnections}
+        itemCount={totalAddressSpaces}
         perPage={perPage}
         page={page}
         onSetPage={handlePageChange}
@@ -69,41 +70,36 @@ const ConnectionListFunction = () => {
       />
     );
   };
-
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
-        <GridItem span={6}>
-          <ConnectionListFilterPage
+        <GridItem span={7}>
+          <AddressSpaceListFilterPage
             filterValue={filterValue}
             setFilterValue={setFilterValue}
-            filterIsExpanded={filterIsExpanded}
-            setFilterIsExpanded={setFilterIsExpanded}
-            hosts={hosts}
-            setHosts={setHosts}
-            containerIds={containerIds}
-            setContainerIds={setContainerIds}
+            filterNames={filterNames}
+            setFilterNames={setFilterNames}
+            filterNamespaces={filterNamespaces}
+            setFilterNamespaces={setFilterNamespaces}
+            filterType={filterType}
+            setFilterType={setFilterType}
           />
         </GridItem>
-        <GridItem span={6}>
-          {totalConnections > 0 && renderPagination(page, perPage)}
+        <GridItem span={5}>
+          {console.log(totalAddressSpaces)}
+          {totalAddressSpaces > 0 && renderPagination(page, perPage)}
         </GridItem>
       </Grid>
-      <ConnectionsListPage
-        name={name}
-        namespace={namespace}
-        addressSpaceType={type}
-        hosts={hosts}
-        containerIds={containerIds}
-        setTotalConnections={setTotalConnections}
+      <AddressSpaceListPage
         page={page}
         perPage={perPage}
+        totalAddressSpaces={totalAddressSpaces}
+        setTotalAddressSpaces={setTotalAddressSpaces}
+        filter_Names={filterNames}
+        filter_NameSpace={filterNamespaces}
+        filter_Type={filterType}
       />
-      {totalConnections > 0 && renderPagination(page, perPage)}
+      {totalAddressSpaces > 0 && renderPagination(page, perPage)}
     </PageSection>
   );
-};
-
-export default function ConnectionListWithFilterAndPaginationPage() {
-  return <ConnectionListFunction />;
 }

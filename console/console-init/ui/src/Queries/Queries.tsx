@@ -16,31 +16,78 @@ export const DELETE_ADDRESS = gql`
   }
 `;
 
-export const ALL_ADDRESS_SPACES = gql`
-  query all_address_spaces {
-    addressSpaces {
-      Total
-      AddressSpaces {
-        ObjectMeta {
-          Namespace
-          Name
-          CreationTimestamp
-        }
-        Spec {
-          Type
-          Plan {
-            Spec {
-              DisplayName
+export const RETURN_ALL_ADDRESS_SPACES = (
+  page: number,
+  perPage: number,
+  filter_Names?: string[],
+  filter_NameSpace?: string[],
+  filter_Type?: string | null
+) => {
+  let filter = "";
+  if (filter_Names && filter_Names.length > 0) {
+    filter += "`$.ObjectMeta.Name` ='" + filter_Names[0].trim() + "' ";
+    let i;
+    for (i = 1; i < filter_Names.length; i++) {
+      filter += "OR `$.ObjectMeta.Name` ='" + filter_Names[i].trim() + "' ";
+    }
+  }
+  if (
+    filter_Names &&
+    filter_Names.length > 0 &&
+    filter_NameSpace &&
+    filter_NameSpace.length > 0
+  ) {
+    filter += " AND ";
+  }
+  if (filter_NameSpace && filter_NameSpace.length > 0) {
+    filter += "`$.ObjectMeta.Namespace` ='" + filter_NameSpace[0].trim() + "' ";
+    let i;
+    for (i = 1; i < filter_NameSpace.length; i++) {
+      filter +=
+        "OR `$.ObjectMeta.Namespace` ='" + filter_NameSpace[i].trim() + "' ";
+    }
+  }
+  if (
+    ((filter_Names && filter_Names.length > 0) ||
+      (filter_NameSpace && filter_NameSpace.length > 0)) &&
+    filter_Type &&
+    filter_Type.trim() !== ""
+  ) {
+    filter += " AND ";
+  }
+  if (filter_Type && filter_Type.trim() != "") {
+    filter += "`$.Spec.Type` ='" + filter_Type.toLowerCase().trim() + "' ";
+  }
+  console.log(filter);
+  const ALL_ADDRESS_SPACES = gql`
+    query all_address_spaces {
+      addressSpaces(filter: "${filter}"  
+      first:${perPage} offset:${perPage * (page - 1)}) {
+        Total
+        AddressSpaces {
+          ObjectMeta {
+            Namespace
+            Name
+            CreationTimestamp
+          }
+          Spec {
+            Type
+            Plan {
+              Spec {
+                DisplayName
+              }
             }
           }
-        }
-        Status {
-          IsReady
+          Status {
+            IsReady
+          }
         }
       }
     }
-  }
-`;
+  `;
+
+  return ALL_ADDRESS_SPACES;
+};
 
 export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
   page: number,
@@ -156,8 +203,6 @@ export const RETURN_ADDRESS_SPACE_DETAIL = (
 };
 
 export const RETURN_ADDRESS_DETAIL = (
-  page: number,
-  perPage: number,
   addressSpace?: string,
   namespace?: string,
   addressName?: string
@@ -172,7 +217,6 @@ export const RETURN_ADDRESS_DETAIL = (
   if (addressName) {
     filter += "`$.ObjectMeta.Name` = '" + addressName + "'";
   }
-  console.log("page,perpage", page, perPage);
   const ADDRESSDETAIL = gql`
   query single_addresses {
     addresses(
@@ -282,9 +326,7 @@ export const RETURN_ADDRESS_LINKS = (
 
 export const RETURN_ADDRESS_PLANS = gql`
   query all_address_plans {
-    addressPlans (
-      addressSpacePlan:"standard-small"
-    ) {
+    addressPlans(addressSpacePlan: "standard-small") {
       Spec {
         AddressType
         DisplayName
@@ -472,9 +514,10 @@ export const RETURN_CONNECTION_DETAIL = (
 
 export const RETURN_ADDRESS_TYPES = gql`
   query addressTypes {
-    addressTypes_v2(addressSpaceType :standard) {
-      ObjectMeta
-      {Name}
+    addressTypes_v2(addressSpaceType: standard) {
+      ObjectMeta {
+        Name
+      }
       Spec {
         DisplayName
         LongDescription
