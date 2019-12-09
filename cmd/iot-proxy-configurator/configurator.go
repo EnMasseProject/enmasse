@@ -197,6 +197,8 @@ func (c *Configurator) syncHandler(key string) error {
 		return nil
 	}
 
+	log := log.WithValues("namespace", namespace, "name", name)
+
 	// read requested state
 	project, err := c.projectLister.IoTProjects(namespace).Get(name)
 	if err != nil {
@@ -218,6 +220,8 @@ func (c *Configurator) syncHandler(key string) error {
 			})
 
 		}
+
+		log.Error(err, "Failed to read IoTProject")
 
 		return err
 	}
