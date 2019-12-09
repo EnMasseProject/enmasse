@@ -177,26 +177,26 @@ func (r *ReconcileMessagingUser) createOrUpdateUser(ctx context.Context, logger 
 				return reconcile.Result{}, err
 			}
 		}
-		client, err := r.getKeycloakClient(ctx, authenticationService)
+		kcClient, err := r.getKeycloakClient(ctx, authenticationService)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
 		realm := addressSpace.Annotations[ANNOTATION_REALM_NAME]
 
-		existingUser, err := client.GetUser(realm, user.Spec.Username)
+		existingUser, err := kcClient.GetUser(realm, user.Spec.Username)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
 		if existingUser == nil {
-			err := client.CreateUser(realm, user)
+			err := kcClient.CreateUser(realm, user)
 			if err != nil {
 				return reconcile.Result{}, err
 			}
 
 		} else {
-			err := client.UpdateUser(realm, existingUser, user)
+			err := kcClient.UpdateUser(realm, existingUser, user)
 			if err != nil {
 				return reconcile.Result{}, err
 			}
@@ -246,19 +246,19 @@ func (r *ReconcileMessagingUser) checkFinalizer(ctx context.Context, logger logr
 					return reconcile.Result{}, err
 				}
 				if authenticationService.Spec.Type == adminv1beta1.Standard && isAuthserviceAvailable(authenticationService) {
-					client, err := r.getKeycloakClient(ctx, authenticationService)
+					kcClient, err := r.getKeycloakClient(ctx, authenticationService)
 					if err != nil {
 						return reconcile.Result{}, nil
 					}
 
 					realm := addressSpace.Annotations[ANNOTATION_REALM_NAME]
 
-					user, err := client.GetUser(realm, user.Spec.Username)
+					user, err := kcClient.GetUser(realm, user.Spec.Username)
 					if err != nil {
 						return reconcile.Result{}, nil
 					}
 					if user != nil {
-						err = client.DeleteUser(realm, user)
+						err = kcClient.DeleteUser(realm, user)
 						return reconcile.Result{}, err
 					}
 					return reconcile.Result{}, nil
