@@ -5,8 +5,9 @@
 
 package io.enmasse.iot.registry.infinispan.tenant;
 
-import io.enmasse.iot.infinispan.tenant.TenantHandle;
-import static io.enmasse.iot.infinispan.tenant.TenantHandle.of;
+import io.enmasse.iot.infinispan.tenant.TenantInformation;
+
+import static io.enmasse.iot.infinispan.tenant.TenantInformation.of;
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
@@ -32,14 +33,14 @@ public class KubernetesTenantInformationService extends AbstractProjectBasedServ
     private ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public CompletableFuture<TenantHandle> tenantExists(final String tenantName, final int notFoundStatusCode, final Span span) {
+    public CompletableFuture<TenantInformation> tenantExists(final String tenantName, final int notFoundStatusCode, final Span span) {
 
         return getProject(tenantName)
                 .thenCompose(project -> validateTenant(project, tenantName, notFoundStatusCode));
 
     }
 
-    private CompletableFuture<TenantHandle> validateTenant(final Optional<IoTProject> projectResult, final String tenantName, final int notFoundStatusCode) {
+    private CompletableFuture<TenantInformation> validateTenant(final Optional<IoTProject> projectResult, final String tenantName, final int notFoundStatusCode) {
 
         if (projectResult.isEmpty()) {
             return notFound(notFoundStatusCode, "Tenant does not exist");
@@ -73,7 +74,7 @@ public class KubernetesTenantInformationService extends AbstractProjectBasedServ
      * @param message The message to use.
      * @return The completed future, never returns {@code null}.
      */
-    private static CompletableFuture<TenantHandle> notFound(final int notFoundStatusCode, final String message) {
+    private static <T> CompletableFuture<T> notFound(final int notFoundStatusCode, final String message) {
         return failedFuture(new ClientErrorException(notFoundStatusCode, message));
     }
 

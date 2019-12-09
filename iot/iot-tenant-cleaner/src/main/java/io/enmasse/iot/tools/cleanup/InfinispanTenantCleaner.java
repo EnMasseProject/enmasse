@@ -161,7 +161,7 @@ public class InfinispanTenantCleaner implements AutoCloseable {
         // delete device registration second
 
         final DeviceKey regKey = DeviceKey
-                .deviceKey(TenantHandle.of(tenantIdToClean, tenantIdToClean, null), deviceId);
+                .deviceKey(TenantHandle.of(tenantIdToClean, tenantIdToClean), deviceId);
 
         devicesCache.remove(regKey);
     }
