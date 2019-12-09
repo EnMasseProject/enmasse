@@ -242,7 +242,7 @@ func (c *Configurator) syncHandler(key string) error {
 
 	log.Info("Change on IoTProject: " + project.Namespace + "." + project.Name)
 
-	if project.Status.Phase != v1alpha1.ProjectPhaseReady || project.Status.DownstreamEndpoint == nil {
+	if project.Status.Phase != v1alpha1.ProjectPhaseActive || project.Status.DownstreamEndpoint == nil {
 		log.Info("Project is not ready yet", "Phase", project.Status.Phase, "DownstreamEndpoint", project.Status.DownstreamEndpoint)
 		// project is not ready yet
 		return nil

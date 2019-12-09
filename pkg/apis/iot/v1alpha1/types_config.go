@@ -212,7 +212,7 @@ type IoTConfigStatus struct {
 type ConfigPhaseType string
 
 const (
-	ConfigPhaseReady       ConfigPhaseType = "Ready"
+	ConfigPhaseActive      ConfigPhaseType = "Active"
 	ConfigPhaseConfiguring ConfigPhaseType = "Configuring"
 	ConfigPhaseTerminating ConfigPhaseType = "Terminating"
 	ConfigPhaseFailed      ConfigPhaseType = "Failed"
@@ -247,12 +247,6 @@ type ServiceStatus struct {
 type EndpointStatus struct {
 	URI string `json:"uri,omitempty"`
 }
-
-const (
-	ConfigStateWrongName = "WrongName"
-	ConfigStateReady     = "Ready"
-	ConfigStateFailed    = "Failed"
-)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
