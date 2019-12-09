@@ -339,9 +339,9 @@ func (r *ReconcileMessagingUser) getKeycloakClient(ctx context.Context, authserv
 		}
 
 		// Handle wrong host used in older versions
-		host := authenticationService.Status.Host
-		if !strings.HasSuffix(host, fmt.Sprintf("%s.svc", authenticationService.Namespace)) {
-			host += "." + authenticationService.Namespace + ".svc"
+		host := authservice.Status.Host
+		if !strings.HasSuffix(host, fmt.Sprintf("%s.svc", authservice.Namespace)) {
+			host += "." + authservice.Namespace + ".svc"
 		}
 
 		adminUser := credentials.Data["admin.username"]
