@@ -144,13 +144,14 @@ public class IoTUtils {
                 Thread.sleep(10000);
             }
         }
+
+        final String jsonStatus = project.getStatus() != null ? project.getStatus().toString() : "Project doesn't have status";
         if (!isReady) {
-            String jsonStatus = project.getStatus() != null ? project.getStatus().toString() : "Project doesn't have status";
             throw new IllegalStateException("IoTProject " + project.getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
 
         // refresh
-        project = iotProjectClient.withName(project.getMetadata().getName()).get();
+        log.info("IoTProject is ready - phase: {} -> {}", project.getStatus().getPhase(), jsonStatus);
 
         if (project.getSpec().getDownstreamStrategy() != null
                 && project.getSpec().getDownstreamStrategy().getManagedStrategy() != null

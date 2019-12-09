@@ -197,6 +197,8 @@ func (c *Configurator) syncHandler(key string) error {
 		return nil
 	}
 
+	log := log.WithValues("namespace", namespace, "name", name)
+
 	// read requested state
 	project, err := c.projectLister.IoTProjects(namespace).Get(name)
 	if err != nil {
@@ -219,6 +221,8 @@ func (c *Configurator) syncHandler(key string) error {
 
 		}
 
+		log.Error(err, "Failed to read IoTProject")
+
 		return err
 	}
 
@@ -236,7 +240,10 @@ func (c *Configurator) syncHandler(key string) error {
 
 	}
 
+	log.Info("Change on IoTProject: " + project.Namespace + "." + project.Name)
+
 	if project.Status.Phase != v1alpha1.ProjectPhaseReady || project.Status.DownstreamEndpoint == nil {
+		log.Info("Project is not ready yet", "Phase", project.Status.Phase, "DownstreamEndpoint", project.Status.DownstreamEndpoint)
 		// project is not ready yet
 		return nil
 	}
@@ -247,6 +254,7 @@ func (c *Configurator) syncHandler(key string) error {
 	// something went wrong syncing the project
 	// we will re-queue this by returning the error state
 	if err != nil {
+		log.Error(err, "Failed to sync IoTProject with QDR")
 		return err
 	}
 
