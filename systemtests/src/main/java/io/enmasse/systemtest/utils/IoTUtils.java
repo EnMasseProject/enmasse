@@ -151,7 +151,6 @@ public class IoTUtils {
         }
 
         // refresh
-        project = iotProjectClient.withName(project.getMetadata().getName()).get();
         log.info("IoTProject is ready - phase: {} -> {}", project.getStatus().getPhase(), jsonStatus);
 
         if (project.getSpec().getDownstreamStrategy() != null
