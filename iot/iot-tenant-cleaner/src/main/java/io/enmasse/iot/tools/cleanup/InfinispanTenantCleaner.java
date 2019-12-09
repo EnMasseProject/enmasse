@@ -135,23 +135,11 @@ public class InfinispanTenantCleaner implements AutoCloseable {
         log.info("Removed tenant ({}) from system (total: {}).", tenantId, count);
     }
 
-    private Query createQueryX(final CleanerConfig config, final RemoteCache<DeviceKey, DeviceInformation> devicesCache, final String tenantId) {
-
-        // ISPN-11013: if we only select the "deviceId" field here, the we would
-        // also need to index this field. So for the moment, we fetch the full object.
-
-        final QueryFactory queryFactory = Search.getQueryFactory(devicesCache);
-
-        return queryFactory.from(DeviceInformation.class)
-                .having("tenantId").eq(tenantId)
-                .maxResults(config.getDeletionChunkSize())
-                .build();
-
-    }
-
     private Query createQuery(final CleanerConfig config, final RemoteCache<DeviceKey, DeviceInformation> devicesCache, final String tenantId) {
 
         final QueryFactory queryFactory = Search.getQueryFactory(devicesCache);
+
+        // we must set the "BROADCAST" flag, as we rely on the "near realtime" indexer
 
         return queryFactory
                 .create(String.format("from %s where tenantId=:tenantId", DeviceInformation.class.getName()), IndexedQueryMode.BROADCAST)
