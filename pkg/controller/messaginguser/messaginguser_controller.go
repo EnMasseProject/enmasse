@@ -43,13 +43,12 @@ const (
 )
 
 type ReconcileMessagingUser struct {
-	client    client.Client
-	reader    client.Reader
-	scheme    *runtime.Scheme
-	namespace string
-
+	client                client.Client
+	reader                client.Reader
+	scheme                *runtime.Scheme
+	namespace             string
+	keycloakCache         keycloakCache
 	newKeycloakClientFunc keycloak.NewKeycloakClientFunc
-	keycloakClients       map[string]keycloak.KeycloakClient
 }
 
 // Gets called by parent "init", adding as to the manager
@@ -62,9 +61,9 @@ func newReconciler(mgr manager.Manager) *ReconcileMessagingUser {
 		client:                mgr.GetClient(),
 		reader:                mgr.GetAPIReader(),
 		scheme:                mgr.GetScheme(),
-		newKeycloakClientFunc: keycloak.NewClient,
-		keycloakClients:       make(map[string]keycloak.KeycloakClient),
 		namespace:             util.GetEnvOrDefault("NAMESPACE", "enmasse-infra"),
+		keycloakCache:         NewKeycloakCache(),
+		newKeycloakClientFunc: keycloak.NewClient,
 	}
 }
 
@@ -310,9 +309,8 @@ func (r *ReconcileMessagingUser) lookupAuthenticationService(ctx context.Context
 }
 
 func (r *ReconcileMessagingUser) getKeycloakClient(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (keycloak.KeycloakClient, error) {
-	existing, ok := r.keycloakClients[authservice.Name]
-	if ok {
-		log.Info("Found existing keycloak client", "authservice", authservice.Name)
+	existing := r.keycloakCache.get(authservice.Name)
+	if existing != nil {
 		return existing, nil
 	} else {
 		var ca []byte
@@ -350,8 +348,7 @@ func (r *ReconcileMessagingUser) getKeycloakClient(ctx context.Context, authserv
 		if err != nil {
 			return nil, err
 		}
-		r.keycloakClients[authservice.Name] = kcClient
-		return kcClient, nil
+		return r.keycloakCache.put(authservice.Name, kcClient), nil
 	}
 }
 

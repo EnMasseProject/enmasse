@@ -88,8 +88,8 @@ func setup(t *testing.T) *ReconcileMessagingUser {
 			}, nil
 
 		},
-		keycloakClients: make(map[string]keycloak.KeycloakClient),
-		namespace:       "test",
+		keycloakCache: NewKeycloakCache(),
+		namespace:     "test",
 
 		scheme: s,
 	}
@@ -120,6 +120,10 @@ func buildTestUser(name string, username string) *userv1beta1.MessagingUser {
 			},
 		},
 	}
+}
+
+func getFake(client keycloak.KeycloakClient) *keycloak.FakeClient {
+	return client.(*cachedClient).wrapped.(*keycloak.FakeClient)
 }
 
 func TestReconcile(t *testing.T) {
@@ -153,10 +157,10 @@ func TestReconcile(t *testing.T) {
 	err = r.client.Get(context.TODO(), userType, user)
 	assert.Nil(t, err)
 
-	client, ok := r.keycloakClients["standard"]
-	if assert.True(t, ok, "Unable to find expected keycloak client") {
+	client := r.keycloakCache.get("standard")
+	if assert.NotNil(t, client, "Unable to find expected keycloak client") {
 
-		usermap := client.(*keycloak.FakeClient).Users
+		usermap := getFake(client).Users
 		userlist, ok := usermap["realm1"]
 
 		if assert.True(t, ok, "Unable to find expected realm in fake client") {
@@ -171,13 +175,13 @@ func TestReconcile(t *testing.T) {
 	assert.NotEqual(t, user2, *user)
 	err = r.client.Update(context.TODO(), &user2)
 	assert.Nil(t, err)
-	assert.Equal(t, *r.keycloakClients["standard"].(*keycloak.FakeClient).Users["realm1"][0], *user)
+	assert.Equal(t, *getFake(r.keycloakCache.get("standard")).Users["realm1"][0], *user)
 
 	result, err = r.Reconcile(reconcile.Request{NamespacedName: userType})
 	assert.Nil(t, err, "Unexpected reconcile error")
 	assert.False(t, result.Requeue)
-	assert.NotEqual(t, *r.keycloakClients["standard"].(*keycloak.FakeClient).Users["realm1"][0], *user)
-	assert.Equal(t, *r.keycloakClients["standard"].(*keycloak.FakeClient).Users["realm1"][0], user2)
+	assert.NotEqual(t, *getFake(r.keycloakCache.get("standard")).Users["realm1"][0], *user)
+	assert.Equal(t, *getFake(r.keycloakCache.get("standard")).Users["realm1"][0], user2)
 
 	// Delete
 	now := metav1.Now()
@@ -188,5 +192,5 @@ func TestReconcile(t *testing.T) {
 	result, err = r.Reconcile(reconcile.Request{NamespacedName: userType})
 	assert.Nil(t, err, "Unexpected reconcile error")
 	assert.True(t, result.Requeue)
-	assert.Equal(t, 0, len(r.keycloakClients["standard"].(*keycloak.FakeClient).Users["realm1"]))
+	assert.Equal(t, 0, len(getFake(r.keycloakCache.get("standard")).Users["realm1"]))
 }
