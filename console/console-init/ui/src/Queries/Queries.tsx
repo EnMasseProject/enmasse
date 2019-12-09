@@ -190,6 +190,7 @@ export const RETURN_ADDRESS_DETAIL = (
           Plan {
             Spec {
               DisplayName
+              AddressType
             }
           }
         }

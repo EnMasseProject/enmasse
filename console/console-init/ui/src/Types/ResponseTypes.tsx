@@ -108,6 +108,7 @@ export interface IAddressDetailResponse {
         Plan: {
           Spec: {
             DisplayName: string;
+            AddressType: string;
           };
         };
       };
