@@ -1,10 +1,6 @@
 == Overview
 
 TODO:
-* Broker queue/storage request/lmits
-* Address space properties -> capabilities
-* Transactional -> address space plan
-* AddressPlan/Address -> group properties into address type objects
 * More details on phase 1
 
 Address spaces in EnMasse are currently isolated, i.e. they don't share infrastructure (router network, brokers). Moreover, the standard-controller and agent deployments are created per address space. Sharing infrastructure allows sharing resources and reducing the footprint when configuring multiple address spaces, and speed up the time to provision new address spaces. Furthermore, the split between `standard` and `brokered` address space types has caused a lot of quirks in the architecture, which a shared address space type may handle in a better way.
@@ -97,11 +93,15 @@ metadata:
   name: shared-small
 spec:
   messagingInfraRef: shared1 // Plans may refer to the same infra - this means address spaces will run on the same infra
+  capabilities:
+    - transactions
   resources:
     requests:
-      addresses: 10
-      connections: 1
+      queueMemory: 10Mi # This mount is shared among addresses on a broker for a particular address space
+      addresses: 10 # Mainly for sizing operator
+      connections: 1 # Router limits
     limits:
+      queueMemory: 100Mi
       addresses: 100
       connections: 10
       linksPerConnection: 2
@@ -113,7 +113,7 @@ NOTE: Plans for existing address space types would continue to use the existing 
 
 For routers and brokers, the shared infra has some potential for auto-scaling. It would be the responsibility of the enmasse-operator to scale the infrastructure within the bounds set by the `MessagingInfra`, which could be based on cpu and memory usage, or the limits defined in the address space plans.
 
-Address spaces may also contain properties to indicate what sort of broker that needs to be used for the addresses:
+Address spaces may also contain capabilities to indicate what sort of broker that needs to be used for the addresses:
 
 ```
 apiVersion: enmasse.io/v1beta1
@@ -122,13 +122,13 @@ metadata:
   name: myspace
 spec:
   type: shared
-  properties:
-    transactions: true
+  capabilities:
+    - transactions
 ```
 
 The operator will ensure that addresses for this address space is always link-routed and put on the same broker (and HA replicas).
 
-Address plans allow properties to indicate the desired guarantees of a queue such as message ordering, transaction support etc. An example address plan would be:
+Address plans allow properties to indicate the desired guarantees of a queue. An example address plan would be:
 
 ```
 apiVersion: admin.enmasse.io/v1beta2
@@ -137,16 +137,14 @@ metadata:
   name: small-queue
 spec:
   addressType: queue
-  properties:
-  
   resources:
     requests:
       queueDepth: 3
     limits:
       queueDepth: 10
 
-  allowOverrides: true # true means addresses are allowed to override properties
-  properties:
+  allowOverrides: true # true means addresses are allowed to override plan settings
+  queue: # Settings related to queue types
     partitions: # Specifying a min and max allow the operator to make a decisions to split queue across multiple brokers to fit it. Setting max >= 1 may cause message affects message ordering
       min: 1
       max: 2
@@ -168,7 +166,7 @@ spec:
   address: addr1
   type: queue
   plan: small-queue
-  properties:
+  queue: // Queue settings
     ttl: 1200s
 ```
 
