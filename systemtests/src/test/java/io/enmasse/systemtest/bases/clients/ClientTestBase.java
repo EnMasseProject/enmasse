@@ -62,7 +62,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 Paths.get(
                         clientFolder,
                         info.getTestClass().get().getName(),
-                        info.getTestMethod().get().getName()));
+                        info.getDisplayName()));
 
         arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());

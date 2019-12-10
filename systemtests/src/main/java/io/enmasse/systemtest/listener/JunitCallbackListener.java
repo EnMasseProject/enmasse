@@ -198,7 +198,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             throw throwable;
         }
 
-        Method testMethod = extensionContext.getTestMethod().orElse(null);
+        String testMethod = extensionContext.getDisplayName();
         Class<?> testClass = extensionContext.getRequiredTestClass();
         try {
             Kubernetes kube = Kubernetes.getInstance();
@@ -246,13 +246,13 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         throw throwable;
     }
 
-    public static Path getPath(Method testMethod, Class<?> testClass) {
+    public static Path getPath(String testMethod, Class<?> testClass) {
         Path path = env.testLogDir().resolve(
                 Paths.get(
                         "failed_test_logs",
                         testClass.getName()));
         if (testMethod != null) {
-            path = path.resolve(testMethod.getName());
+            path = path.resolve(testMethod);
         }
         return path;
     }
