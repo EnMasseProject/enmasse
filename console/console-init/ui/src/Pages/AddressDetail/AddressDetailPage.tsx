@@ -1,37 +1,22 @@
 import * as React from "react";
-import {
-  PageSection,
-  PageSectionVariants,
-  BreadcrumbItem,
-  Breadcrumb,
-  Title,
-  Pagination,
-  Modal,
-  Button
-} from "@patternfly/react-core";
+import {BreadcrumbItem, Breadcrumb, Modal,
+  Button} from "@patternfly/react-core";
 import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
-import { Link, useLocation, useHistory } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { useParams } from "react-router";
 import { AddressDetailHeader } from "src/Components/AddressDetail/AddressDetailHeader";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { IAddressDetailResponse } from "src/Types/ResponseTypes";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
-import { css } from "@patternfly/react-styles";
-import { GridStylesForTableHeader } from "../AddressSpace/AddressesListWithFilterAndPaginationPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { DELETE_ADDRESS, RETURN_ADDRESS_DETAIL, EDIT_ADDRESS } from "src/Queries/Queries";
-import { IObjectMeta_v1_Input } from "../AddressSpace/AddressSpaceDetailPage";
-import { AddressLinksListPage } from "./AddressLinksListPage";
-import { EditAddress } from "../EditAddressPage";
+import { DELETE_ADDRESS, RETURN_ADDRESS_DETAIL, EDIT_ADDRESS  } from "src/Queries/Queries";
+import { IObjectMeta_v1_Input } from "../AddressSpaceDetail/AddressSpaceDetailPage";
 import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
+import { AddressLinksWithFilterAndPagination } from "./AddressLinksWithFilterAndPaginationPage";
+import { EditAddress } from "../EditAddressPage";
 
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();
-  const location = useLocation();
-  const history = useHistory();
-  const searchParams = new URLSearchParams(location.search);
-  const page = parseInt(searchParams.get("page") || "", 10) || 1;
-  const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const breadcrumb = React.useMemo(
     () => (
       <Breadcrumb>
@@ -48,44 +33,16 @@ export default function AddressDetailPage() {
     ),
     [name, namespace, type]
   );
-
-  const setSearchParam = React.useCallback(
-    (name: string, value: string) => {
-      searchParams.set(name, value.toString());
-    },
-    [searchParams]
-  );
-
-  const handlePageChange = React.useCallback(
-    (_: any, newPage: number) => {
-      setSearchParam("page", newPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
-
-  const handlePerPageChange = React.useCallback(
-    (_: any, newPerPage: number) => {
-      setSearchParam("page", "1");
-      setSearchParam("perPage", newPerPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
-
   useA11yRouteChange();
   useBreadcrumb(breadcrumb);
+  const history = useHistory();
   const client = useApolloClient();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [addresLinksTotal, setAddressLinksTotal] = React.useState<number>(0);
   const [addressPlan, setAddressPlan] = React.useState<string|null>(null);
-  const { loading, error, data, refetch } = useQuery<IAddressDetailResponse>(
-    RETURN_ADDRESS_DETAIL(page, perPage, name, namespace, addressname),
+  const { loading, error, data } = useQuery<IAddressDetailResponse>(
+    RETURN_ADDRESS_DETAIL(name, namespace, addressname),
     { pollInterval: 20000 }
   );
   if (loading) return <Loading />;
@@ -103,7 +60,7 @@ export default function AddressDetailPage() {
     setIsDeleteModalOpen(!isDeleteModalOpen);
   };
   // async function to delete a address space
-  const deleteAddressSpace = async (data: IObjectMeta_v1_Input) => {
+  const deleteAddress = async (data: IObjectMeta_v1_Input) => {
     const deletedData = await client.mutate({
       mutation: DELETE_ADDRESS,
       variables: {
@@ -120,24 +77,12 @@ export default function AddressDetailPage() {
     }
   };
   const handleDelete = () => {
-    deleteAddressSpace({
+    deleteAddress({
       name: addressDetail.ObjectMeta.Name,
       namespace: addressDetail.ObjectMeta.Namespace.toString()
     });
   };
 
-  const renderPagination = (page: number, perPage: number) => {
-    return (
-      <Pagination
-        itemCount={addresLinksTotal}
-        perPage={perPage}
-        page={page}
-        onSetPage={handlePageChange}
-        variant="top"
-        onPerPageSelect={handlePerPageChange}
-      />
-    );
-  };
 
   const handleSaving = async () => {
     if(addressDetail && type){
@@ -149,19 +94,18 @@ export default function AddressDetailPage() {
             Namespace: addressDetail.ObjectMeta.Namespace.toString()
           },
           jsonPatch:
-            '[{"op":"replace","path":"/Plan","value":"' +
-            getPlanAndTypeForAddressEdit(
-              addressPlan || "",
-              type
-            ) +
-            '"}]',
+              '[{"op":"replace","path":"/Plan","value":"' +
+              getPlanAndTypeForAddressEdit(
+                  addressPlan || "",
+                  type
+              ) +
+              '"}]',
           patchType: "application/json-patch+json"
         }
       });
     }
     setIsEditModalOpen(!isEditModalOpen);
   };
-
   return (
     <>
       {addressDetail && (
@@ -177,36 +121,8 @@ export default function AddressDetailPage() {
           onDelete={() => setIsDeleteModalOpen(!isDeleteModalOpen)}
         />
       )}
-      <PageSection>
-        <PageSection variant={PageSectionVariants.light}>
-          <Title
-            size={"lg"}
-            className={css(GridStylesForTableHeader.filter_left_margin)}
-          >
-            Clients
-          </Title>
-          {addresLinksTotal > 0 && renderPagination(page, perPage)}
-          <AddressLinksListPage
-            page={page}
-            perPage={perPage}
-            name={name}
-            namespace={namespace}
-            addressname={addressname}
-            setAddressLinksTotal={setAddressLinksTotal}
-            type={type}
-          />
-          {addresLinksTotal > 0 && renderPagination(page, perPage)}
-        </PageSection>
-        {isDeleteModalOpen && (
-          <DeletePrompt
-            detail={`Are you sure you want to delete ${addressDetail.ObjectMeta.Name} ?`}
-            name={addressDetail.ObjectMeta.Name}
-            header="Delete this Address ?"
-            handleCancelDelete={handleCancelDelete}
-            handleConfirmDelete={handleDelete}
-          />
-        )}
-        <Modal
+
+      <Modal
           title="Edit"
           isSmall
           isOpen={isEditModalOpen}
@@ -220,14 +136,28 @@ export default function AddressDetailPage() {
             </Button>
           ]}
           isFooterLeftAligned>
-          <EditAddress
+        <EditAddress
             name={addressDetail.ObjectMeta.Name}
             type={addressDetail.Spec.Plan.Spec.AddressType}
-            plan={addressPlan||""} 
+            plan={addressPlan||""}
             onChange={setAddressPlan}
-          />
-        </Modal>
-      </PageSection>
+        />
+      </Modal>
+      {isDeleteModalOpen && (
+        <DeletePrompt
+          detail={`Are you sure you want to delete ${addressDetail.ObjectMeta.Name} ?`}
+          name={addressDetail.ObjectMeta.Name}
+          header="Delete this Address ?"
+          handleCancelDelete={handleCancelDelete}
+          handleConfirmDelete={handleDelete}
+        />
+      )}
+      <AddressLinksWithFilterAndPagination
+        addressspace_name={name || ""}
+        addressspace_namespace={namespace || ""}
+        addressspace_type={type || " "}
+        addressname={addressname || " "}
+      />
     </>
   );
 }

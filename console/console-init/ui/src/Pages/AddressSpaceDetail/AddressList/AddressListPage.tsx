@@ -11,7 +11,7 @@ import { Loading } from "use-patternfly";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "src/Components/Common/EmptyAddress";
-import { EditAddress } from "../EditAddressPage";
+import { EditAddress } from "../../EditAddressPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
 import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
 export interface IAddressListPageProps {
@@ -118,20 +118,18 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           patchType: "application/json-patch+json"
         }
       });
-      setAddressBeingEdited(null);
       refetch();
+      setAddressBeingEdited(null);
     }
   };
   const handleEditChange = (address: IAddress) =>
     setAddressBeingEdited(address);
-
   const handlePlanChange = (plan: string) => {
-    if(addressBeingEdited){
+    if (addressBeingEdited) {
       addressBeingEdited.plan = plan;
-      setAddressBeingEdited({...addressBeingEdited});
+      setAddressBeingEdited({ ...addressBeingEdited });
     }
-  }
-
+  };
   const handleCancelDelete = () => setAddressBeingDeleted(null);
   const handleDelete = async () => {
     if (addressBeingDeleted) {

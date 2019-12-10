@@ -1,48 +1,37 @@
 import React from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
-import {
-  PageSection,
-  PageSectionVariants,
-  Button,
-  Dropdown,
-  KebabToggle,
-  Modal,
-  DropdownItem
-} from "@patternfly/react-core";
+import { Button, Modal } from "@patternfly/react-core";
 import {
   AddressSpaceList,
   IAddressSpace
 } from "src/Components/AddressSpaceList/AddressSpaceList";
 import { EmptyAddressSpace } from "src/Components/Common/EmptyAddressSpace";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { DELETE_ADDRESS_SPACE, ALL_ADDRESS_SPACES } from "src/Queries/Queries";
-import { CreateAddressSpace } from "./CreateAddressSpace/CreateAddressSpacePage";
-interface IAddressSpacesResponse {
-  addressSpaces: {
-    Total: number;
-    AddressSpaces: Array<{
-      ObjectMeta: {
-        Name: string;
-        Namespace: string;
-        CreationTimestamp: string;
-      };
-      Spec: {
-        Type: string;
-        Plan: {
-          Spec: {
-            DisplayName: string;
-          };
-        };
-      };
-      Status: {
-        IsReady: boolean;
-      };
-    }>;
-  };
-}
+import {
+  DELETE_ADDRESS_SPACE,
+  RETURN_ALL_ADDRESS_SPACES
+} from "src/Queries/Queries";
+import { IAddressSpacesResponse } from "src/Types/ResponseTypes";
 
-function AddressSpaceListFunc() {
+interface AddressSpaceListPageProps {
+  page: number;
+  perPage: number;
+  totalAddressSpaces: number;
+  setTotalAddressSpaces: (value: number) => void;
+  filter_Names: string[];
+  filter_NameSpace: string[];
+  filter_Type: string | null;
+}
+export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageProps> = ({
+  page,
+  perPage,
+  totalAddressSpaces,
+  setTotalAddressSpaces,
+  filter_Names,
+  filter_NameSpace,
+  filter_Type
+}) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
   const client = useApolloClient();
@@ -51,14 +40,19 @@ function AddressSpaceListFunc() {
     setAddressSpaceBeingEdited
   ] = React.useState<IAddressSpace | null>();
 
-  const [isOpen, setIsOpen] = React.useState(false);
   const [
     addressSpaceBeingDeleted,
     setAddressSpaceBeingDeleted
   ] = React.useState<IAddressSpace | null>();
 
   const { loading, error, data, refetch } = useQuery<IAddressSpacesResponse>(
-    ALL_ADDRESS_SPACES,
+    RETURN_ALL_ADDRESS_SPACES(
+      page,
+      perPage,
+      filter_Names,
+      filter_NameSpace,
+      filter_Type
+    ),
     { pollInterval: 20000 }
   );
   console.log(data);
@@ -93,16 +87,15 @@ function AddressSpaceListFunc() {
   const handleDeleteChange = (addressSpace: IAddressSpace) =>
     setAddressSpaceBeingDeleted(addressSpace);
 
-  if (loading) return <Loading />;
   if (error) {
     console.log(error);
-    return <Loading />;
   }
   console.log(data);
 
   const { addressSpaces } = data || {
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
+  setTotalAddressSpaces(addressSpaces.Total);
   const addressSpacesList = addressSpaces.AddressSpaces.map(addSpace => ({
     name: addSpace.ObjectMeta.Name,
     nameSpace: addSpace.ObjectMeta.Namespace,
@@ -112,22 +105,8 @@ function AddressSpaceListFunc() {
     isReady: addSpace.Status.IsReady
   }));
   return (
-    <PageSection variant={PageSectionVariants.light}>
-      <CreateAddressSpace />
-      <Dropdown
-        onSelect={() => {}}
-        toggle={
-          <KebabToggle
-            onToggle={() => {
-              setIsOpen(!isOpen);
-            }}
-          />
-        }
-        isOpen={isOpen}
-        isPlain={true}
-        dropdownItems={[<DropdownItem key="Delete">Delete All</DropdownItem>]}
-      />
-      {addressSpaces.Total > 0 ? (
+    <>
+      {totalAddressSpaces > 0 ? (
         <AddressSpaceList
           rows={addressSpacesList}
           onEdit={handleEditChange}
@@ -162,14 +141,6 @@ function AddressSpaceListFunc() {
           handleConfirmDelete={handleDelete}
         />
       )}
-    </PageSection>
+    </>
   );
-}
-
-export default function AddressSpaceListPage() {
-  return (
-    <PageSection>
-      <AddressSpaceListFunc />
-    </PageSection>
-  );
-}
+};

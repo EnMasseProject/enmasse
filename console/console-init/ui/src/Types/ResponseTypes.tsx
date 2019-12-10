@@ -159,3 +159,27 @@ export interface IAddressLinksResponse {
     }>;
   };
 }
+
+export interface IAddressSpacesResponse {
+  addressSpaces: {
+    Total: number;
+    AddressSpaces: Array<{
+      ObjectMeta: {
+        Name: string;
+        Namespace: string;
+        CreationTimestamp: string;
+      };
+      Spec: {
+        Type: string;
+        Plan: {
+          Spec: {
+            DisplayName: string;
+          };
+        };
+      };
+      Status: {
+        IsReady: boolean;
+      };
+    }>;
+  };
+}

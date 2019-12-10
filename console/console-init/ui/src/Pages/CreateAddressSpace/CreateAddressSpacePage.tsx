@@ -1,9 +1,14 @@
 import * as React from "react";
 import { Button, Wizard } from "@patternfly/react-core";
 
-export const CreateAddressSpace: React.FunctionComponent = () => {
-  const [isOpen, setIsOpen] = React.useState<boolean>(false);
-
+interface ICreateAddressSpaceProps {
+  isCreateWizardOpen: boolean;
+  setIsCreateWizardOpen: (value: boolean) => void;
+}
+export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProps> = ({
+  isCreateWizardOpen,
+  setIsCreateWizardOpen
+}) => {
   const steps = [
     {
       name: "Definition",
@@ -16,31 +21,26 @@ export const CreateAddressSpace: React.FunctionComponent = () => {
       nextButtonText: "Finish"
     }
   ];
+  const onClose = () => {
+    setIsCreateWizardOpen(!isCreateWizardOpen);
+  };
   return (
     <React.Fragment>
-      <Button
-        variant="primary"
-        onClick={() => {
-          setIsOpen(!isOpen);
+      <Wizard
+        isOpen={true}
+        isFullHeight={true}
+        isFullWidth={true}
+        onClose={onClose}
+        title="Create new Address"
+        steps={steps}
+        onNext={() => {
+          console.log("next");
         }}
-      >
-        Create Address
-      </Button>
-      {isOpen && (
-        <Wizard
-          isOpen={isOpen}
-          isFullHeight={true}
-          isFullWidth={true}
-          onClose={() => {
-            setIsOpen(!isOpen);
-          }}
-          title="Create new Address"
-          steps={steps}
-          onNext={() => {
-            console.log("next");
-          }}
-          //   onSave={handleSave}
-        />
+        onSave={() => {
+          console.log("Save");
+          setIsCreateWizardOpen(!isCreateWizardOpen);
+        }}
+      />
       )}
     </React.Fragment>
   );
