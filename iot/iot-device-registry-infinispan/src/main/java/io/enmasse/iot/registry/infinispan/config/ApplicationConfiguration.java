@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.enmasse.iot.registry.infinispan.InfinispanRegistry;
+import io.enmasse.iot.service.base.ServiceBase;
 
 @Configuration
 public class ApplicationConfiguration {
@@ -21,7 +21,7 @@ public class ApplicationConfiguration {
      * @return The properties.
      */
     @Bean
-    @ConfigurationProperties(InfinispanRegistry.CONFIG_BASE + ".app")
+    @ConfigurationProperties(ServiceBase.CONFIG_BASE + ".app")
     public ApplicationConfigProperties applicationConfigProperties(){
         return new ApplicationConfigProperties();
     }

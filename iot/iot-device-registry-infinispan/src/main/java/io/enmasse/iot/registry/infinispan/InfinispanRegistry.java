@@ -23,8 +23,6 @@ import org.springframework.context.annotation.ComponentScan;
 @EnableAutoConfiguration
 public class InfinispanRegistry extends AbstractBaseApplication {
 
-    public static final String CONFIG_BASE = "enmasse.iot";
-
     /**
      * All the verticles.
      */
