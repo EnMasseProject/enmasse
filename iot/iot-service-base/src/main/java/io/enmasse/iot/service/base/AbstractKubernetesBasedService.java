@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -106,7 +106,7 @@ public abstract class AbstractKubernetesBasedService extends AbstractVerticle im
     @Override
     public void registerLivenessChecks(final HealthCheckHandler livenessHandler) {}
 
-    protected KubernetesClient getClient() {
+    protected NamespacedKubernetesClient getClient() {
         return this.client;
     }
 

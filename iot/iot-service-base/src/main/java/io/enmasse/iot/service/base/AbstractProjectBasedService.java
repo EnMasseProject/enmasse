@@ -15,10 +15,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 
+import io.enmasse.common.model.CustomResources;
+import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
+import io.enmasse.iot.model.v1.IoTProjectList;
+import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
+import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import io.vertx.core.Future;
 
 public abstract class AbstractProjectBasedService extends AbstractKubernetesBasedService {
@@ -27,7 +29,7 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
 
     private final Map<String, IoTProject> projects = new ConcurrentHashMap<>();
 
-    private Watch watcher;
+    private SharedInformerFactory factory;
 
     /**
      * Generates a tenant name from an IoT project.
@@ -55,55 +57,45 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
 
         log.info("Starting project watcher");
 
-        this.watcher = IoTProjects.clientForProject(getClient())
-                .inAnyNamespace()
-                .watch(new Watcher<>() {
+        // create a new informer factory
+        this.factory = getClient().inAnyNamespace().informers();
+
+        // setup informer
+        this.factory.sharedIndexInformerForCustomResource(
+                CustomResources.toContext(IoTCrd.project()),
+                IoTProject.class, IoTProjectList.class, 30_000)
+                .addEventHandler(new ResourceEventHandler<IoTProject>() {
 
                     @Override
-                    public void eventReceived(final Action action, final IoTProject project) {
-                        log.debug("Watcher event - action: {}, project: {}", action, project);
-                        switch (action) {
-                            case ADDED: {
-                                final String key = key(project);
-                                log.info("Added project: {}", key);
-                                projects.put(key, project);
-                                break;
-                            }
-                            case MODIFIED: {
-                                final String key = key(project);
-                                log.info("Modified project: {}", key);
-                                projects.put(key, project);
-                                break;
-                            }
-                            case DELETED: {
-                                final String key = key(project);
-                                log.info("Removed project: {}", key);
-                                projects.remove(key);
-                                break;
-                            }
-                            default:
-                                break;
-                        }
+                    public void onUpdate(final IoTProject oldObj, final IoTProject newObj) {
+                        final String key = key(newObj);
+                        log.info("Modified project: {}", key);
+                        projects.put(key, newObj);
                     }
 
                     @Override
-                    public void onClose(final KubernetesClientException cause) {
-                        log.info("Watcher closed", cause);
+                    public void onDelete(final IoTProject obj, final boolean deletedFinalStateUnknown) {
+                        final String key = key(obj);
+                        log.info("Removed project: {}", key);
+                        projects.remove(key);
                     }
 
+                    @Override
+                    public void onAdd(final IoTProject obj) {
+                        final String key = key(obj);
+                        log.info("Added project: {}", key);
+                        projects.put(key, obj);
+                    }
                 });
 
+        // this only starts informers created by this factory instance
+        this.factory.startAllRegisteredInformers();
     }
 
     protected void stopWatcher() {
-        if (this.watcher == null) {
-            return;
-        }
-
-        try {
-            this.watcher.close();
-        } finally {
-            this.watcher = null;
+        if (this.factory != null) {
+            this.factory = null;
+            this.factory.stopAllRegisteredInformers();
         }
     }
 
