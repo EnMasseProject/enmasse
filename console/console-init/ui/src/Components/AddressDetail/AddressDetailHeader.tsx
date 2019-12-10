@@ -68,13 +68,14 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
       <CardHeader>
         <Split gutter="md">
           <SplitItem>
-            <Title headingLevel="h1" size="4xl">
+            <Title headingLevel="h1" size="4xl" id="adheader-name">
               {name}
             </Title>
           </SplitItem>
           <SplitItem isFilled></SplitItem>
           <SplitItem>
             <Dropdown
+              id="adheader-dropdown"
               onSelect={onSelect}
               position={DropdownPosition.right}
               toggle={<KebabToggle onToggle={onToggle} />}
@@ -87,10 +88,10 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
       </CardHeader>
       <CardBody>
         <Flex>
-          <FlexItem className={css(styles.flex_right_border)}>
+          <FlexItem className={css(styles.flex_right_border)} id="adheader-plans">
             <b>{plan}</b>
           </FlexItem>
-          <FlexItem>
+          <FlexItem id="adheader-shards">
             Stored in <b>{shards}</b> Shard
           </FlexItem>
         </Flex>

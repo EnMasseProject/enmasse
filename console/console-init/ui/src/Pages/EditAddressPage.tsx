@@ -80,7 +80,7 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
       <FormGroup label="Name" fieldId="simple-form-name">
         <TextInput
           type="text"
-          id="simple-form-name"
+          id="edit-addr-name"
           name="simple-form-name"
           isDisabled
           aria-describedby="simple-form-name-helper"
@@ -88,7 +88,7 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
         />
       </FormGroup>
       <FormGroup label="Type" fieldId="simple-form-name">
-        <FormSelect value={type} isDisabled aria-label="FormSelect Input">
+        <FormSelect value={type} isDisabled aria-label="FormSelect Input" id="edit-addr-type">
           {optionsType.map((option, index) => (
             <FormSelectOption
               isDisabled={option.disabled}
@@ -101,6 +101,7 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
       </FormGroup>
       <FormGroup label="Plan" fieldId="simple-form-name">
         <FormSelect
+          id="edit-addr-plan"
           value={plan}
           onChange={value => onPlanChanged(value)}
           aria-label="FormSelect Input">

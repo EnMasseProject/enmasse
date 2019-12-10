@@ -287,6 +287,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
               {/* Remove is Persistent after fixing dropdown items for overflow menu */}
               <OverflowMenuItem isPersistent>
                 <Button
+                  id="al-filter-overflow-button"
                   variant={ButtonVariant.primary}
                   onClick={() => setIsCreateWizardOpen(!isCreateWizardOpen)}>
                   Create Address
@@ -296,6 +297,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
           </OverflowMenuContent>
           <OverflowMenuControl hasAdditionalOptions>
             <Dropdown
+              id="al-filter-overflow-dropdown"
               onSelect={onKebabSelect}
               toggle={<KebabToggle onToggle={onKebabToggle} />}
               isOpen={isKebabOpen}

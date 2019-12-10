@@ -108,7 +108,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
       actionResolver={actionResolver}
       aria-label="address space list"
     >
-      <TableHeader />
+      <TableHeader id="aslist-table-header" />
       <TableBody />
     </Table>
   );
