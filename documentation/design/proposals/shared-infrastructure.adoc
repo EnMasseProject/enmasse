@@ -219,9 +219,39 @@ For router deployments, the [qdr-operator](https://github.com/interconnectedclou
 
 For broker deployments, an initial fork of the [activemq-artemis-operator](https://github.com/rh-messaging/activemq-artemis-operator) will be made, and modified to work with our requirements. The resulting changes should be submitted upstream.
 
-Router - Broker connections can be maintained either by having the operator create and maintain the router -> broker connectors, or use the broker-plugin to create connectors to the routers. The advantage of the former is that we no longer rely on custom plugin code for connections, and that we get more flexibility in choosing topology of connections (i.e. multiple routers can connect to the same broker for better HA).
+Initial requirements of shared infra:
+* Handle up to 100k addresses - possibly spread accross multiple address spaces
+* Handle up to 1000 address spaces per infra instance (with 100 addresses each)
 
-Status checks of routers and brokers for address spaces are done using the vcabbage AMQP client in the controller-manager.
+===== Configuration
+
+Router - Broker connections can be maintained either by having the operator create and maintain the router -> broker connectors, or use the broker-plugin to create connectors to the routers. The advantage of the first alternative is that we no longer rely on custom plugin code for connections, and that we get more flexibility in choosing topology of connections (i.e. multiple routers can connect to the same broker for better HA). The second alternative removes the need to create the outgoing router connector. However, we already need the capability to create connectors in the router (for external bridges), so this is not really something we get away with.
+
+The configuration can be broken down into different lifecycle 'levels':
+* Infra - configuration that is applied at all routers and brokers based on the MessagingInfra config
+* Address space - configuration that is applied for each address space
+* Address - configuration that is applied for each address
+
+For the routers:
+* Infra: Connectors to broker. Global router settings such as threads, internal certs. Pod template settings. Changes modify the router CR and require a rolling router restart (until DISPATCH-1519 is implemented)
+* Address space: Vhost policies, external connectors. Changes are applied using AMQP management.
+* Address: Address waypoints, autolinks, linkroutes. Changes are applied using AMQP management.
+
+For the brokers:
+* Infra: Global broker settings such as JVM size, global max size, storage size, global policies. Configured using a Broker CR.
+* Address level: queues and topics, per address limits. Configured using AMQP management.
+
+===== Status checks
+
+Status checks of routers and brokers for address spaces are done over AMQP using the vcabbage AMQP client in the controller-manager.
+
+Router checks:
+* Address space: Check connector status for all external connectors
+* Address: Check autolink status for queues and subscriptions (active/inactive)
+* Address: Check link status for all forwarder links
+
+Broker checks:
+* All needed checks can be done on the router
 
 ==== Tasks
 
@@ -240,41 +270,41 @@ Create the MessaginInfra CRD + OpenAPI. Update AddressSpacePlan CRD to allow ref
 * Add bundle for installing the broker operator in bundle install
 * Add dependency on broker operator CRDs in OLM manifest
 
-==== Implement messaging-infra controller in controller-manager (large)
+==== Implement messaging-infra controller in controller-manager (medium)
 
 * Watch MessagingInfra CR
-* Creates router CR to deploy router based on infra config
-* Creates broker CRs to deploy broker based on infra config
-   * Create router <-> broker connectors
-* Process address spaces configured for a particular infra instance (list entries in cache):
-   * Modify router CR to include vhost configuration according to address space and plan
-   * Modify router CR to include connector information
-   * Process addresses configured for address space:
-     * Create router address, autolink(queue) for address
-     * Create router address and linkroute for forwarders
-     * Create broker addresses using CR _or_ AMQP management
+* Creates router CR to deploy routers based on infra config
+* Creates broker CRs to deploy brokers based on infra config
+* Apply to router CR: router <-> broker connectors
+* Creates state object for each router and broker in the CR status (and delete f routers/brokers are removed)
 
-==== Implement status-checker in controller-manager (medium)
+===== State objects
 
-* Watch MessagingInfra CR
-* Requeue messaging infras periodically
-* For each infra CR:
-  * Query routers and brokers for a snapshot of their applied configuration periodically
-  * Build a map of infras and current status
+A state object encapsulates the configuration state of an underlying component such as a broker or router in memory. Whenever a new router or broker is created, a corresponding router/broker state object is initialized with configuration retrieved from querying the router/broker. If disconnected, or if a resync is pending, the state object is re-initialized. All controllers applying config to routers or brokers use the state object.
+
+The state object has methods to apply configuration. If the applied configuration is different to the internal state, the underlying component is configured.
+
+Each state object has a goroutine which periodically polls its underlying router/broker for all status information and caches it for use by controllers to update the address space/address status.
+
+==== Implement address-space controller in controller-manager (medium)
+
+* Watch AddressSpace CR
+* Lookup state objects for routers
+* For each router:
+  * Apply vhost settings+limits, external connectors, certs
+  * Fetch latest known status and update address space status
 * Expose address space metrics based on status
+* Requeue address space for processing at configurable interval
+
+==== Implement address controller in controller-manager (medium)
+
+* Watch Address CR
+* Lookup state objects for routers and brokers
+* For each router:
+  * Apply autolinks, linkroutes and addresses
+  * Fetch latest known status and update address status
 * Expose address metrics based on status
-
-==== Implement address-space controller in controller-manager (small)
-
-* Watch AddressSpace CR - populates cache
-* Requeue address spaces periodically
-* Update address space status based on status map (shared between status-checker
-
-==== Implement address controller in controller-manager (small)
-
-* Watch Address CR - populates cache
-* Requeue addresses periodically
-* Update address status based on status map (shared between status-checker
+* Requeue address for processing at configurable interval
 
 === Phase 2 (Milestone 0.33.0 ?)
 
