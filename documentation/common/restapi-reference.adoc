@@ -8,7 +8,7 @@ This is the EnMasse API specification.
 
 === Version information
 [%hardbreaks]
-__Version__ : 0.30-SNAPSHOT
+__Version__ : 0.31-SNAPSHOT
 
 
 === URI scheme
@@ -1492,6 +1492,8 @@ __optional__|object
 __optional__|< <<_io_enmasse_admin_v1beta1_infraconfigpodspec_containers,containers>> > array
 |**priorityClassName** +
 __optional__|string
+|**securityContext** +
+__optional__|object
 |**tolerations** +
 __optional__|< object > array
 |===

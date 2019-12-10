@@ -55,6 +55,8 @@ spec:
           value: "true"
         - name: CONTROLLER_ENABLE_ADDRESS_SPACE_CONTROLLER
           value: "true"
+        - name: CONTROLLER_ENABLE_MESSAGING_USER
+          value: "true"
         - name: ADDRESS_SPACE_CONTROLLER_IMAGE
           value: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
         - name: CONTROLLER_MANAGER_IMAGE

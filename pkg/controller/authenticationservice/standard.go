@@ -79,7 +79,7 @@ func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client,
 		}
 	}
 	if authservice.Spec.Standard.CertificateSecret == nil {
-		secretName := "standard-authservice-cert"
+		secretName := *authservice.Spec.Standard.ServiceName + "-cert"
 		authservice.Spec.Standard.CertificateSecret = &corev1.SecretReference{
 			Name: secretName,
 		}
@@ -214,7 +214,7 @@ func applyStandardAuthServiceService(authservice *adminv1beta1.AuthenticationSer
 	if service.Annotations == nil {
 		service.Annotations = make(map[string]string)
 	}
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = "standard-authservice-cert"
+	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = authservice.Spec.Standard.CertificateSecret.Name
 	service.Spec.Ports = []corev1.ServicePort{
 		{
 			Port:       8443,

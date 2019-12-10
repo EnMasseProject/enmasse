@@ -10,7 +10,7 @@ Restarting {ProductName} components is required to get image updates for CVEs. T
 
 == Restarting Operators
 
-Operators can be restarted without affecting the messaging system. If a single `api-server` is used, a transient downtime will occur for any new address space, address, and messaging user resource requests.
+Operators can be restarted without affecting the messaging system.
 
 .Procedure
 

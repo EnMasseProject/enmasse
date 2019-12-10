@@ -38,6 +38,7 @@ public class User extends AbstractHasMetadata<User> {
     }
 
     private UserSpec spec;
+    private UserStatus status;
 
     public void setSpec(final UserSpec spec) {
         this.spec = spec;
@@ -94,7 +95,16 @@ public class User extends AbstractHasMetadata<User> {
         StringBuilder sb = new StringBuilder("{");
         sb.append("metadata=").append(getMetadata()).append(",");
         sb.append("spec=").append(spec);
+        sb.append("status=").append(status);
         sb.append("}");
         return sb.toString();
+    }
+
+    public UserStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(UserStatus status) {
+        this.status = status;
     }
 }
