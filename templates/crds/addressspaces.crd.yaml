@@ -47,9 +47,10 @@ spec:
     priority: 0
     type: date
     JSONPath: .metadata.creationTimestamp
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
-      type: object
       properties:
         spec:
           type: object
