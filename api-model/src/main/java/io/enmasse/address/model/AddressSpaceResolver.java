@@ -37,6 +37,11 @@ public class AddressSpaceResolver {
                     + " to " + addressSpace.getSpec().getType());
             return false;
         }
+        if (addressSpace.getSpec().getAuthenticationService() == null) {
+            addressSpace.getStatus().setReady(false);
+            addressSpace.getStatus().appendMessage("Missing authentication service and default authentication service found");
+            return false;
+        }
         if (addressSpace.getSpec().getAuthenticationService() != null && !schema.findAuthenticationService(addressSpace.getSpec().getAuthenticationService().getName()).isPresent()) {
             addressSpace.getStatus().setReady(false);
             addressSpace.getStatus().appendMessage("Unknown authentication service '" + addressSpace.getSpec().getAuthenticationService().getName() + "'");
