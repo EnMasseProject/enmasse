@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import io.enmasse.address.model.AddressSpaceSpecBuilder;
+import io.enmasse.address.model.AuthenticationService;
+import io.enmasse.address.model.AuthenticationServiceBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -60,6 +62,7 @@ public class CreateControllerTest {
                 .withNewSpec()
                 .withType("type1")
                 .withPlan("myplan")
+                .withAuthenticationService(new AuthenticationServiceBuilder().withName("standard").build())
                 .endSpec()
 
                 .build();
@@ -102,6 +105,7 @@ public class CreateControllerTest {
                 .withNewSpec()
                 .withType("type1")
                 .withPlan("myplan")
+                .withAuthenticationService(new AuthenticationServiceBuilder().withName("standard").build())
                 .endSpec()
 
                 .build();
