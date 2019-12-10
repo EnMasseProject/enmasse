@@ -162,7 +162,6 @@ public class AddressSpaceUtils {
 
     private static void deleteAddressSpace(AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
         logCollector.collectEvents();
-        logCollector.collectApiServerJmapLog();
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpace");

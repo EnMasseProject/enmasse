@@ -472,7 +472,6 @@ public class TestUtils {
     public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents();
-        logCollector.collectApiServerJmapLog();
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpaceCreatedBySC");

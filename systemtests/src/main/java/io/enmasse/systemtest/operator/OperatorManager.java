@@ -114,18 +114,6 @@ public class OperatorManager {
     public void installOperators() throws Exception {
         LOGGER.info("Installing enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
-        if (kube instanceof Minikube) {
-            CertBundle apiServertCert = CertificateUtils.createCertBundle("api-server." + kube.getInfraNamespace() + ".svc.cluster.local");
-            Secret secret = new SecretBuilder()
-                    .editOrNewMetadata()
-                    .withName("api-server-cert")
-                    .endMetadata()
-                    .addToData("tls.key", apiServertCert.getKeyB64())
-                    .addToData("tls.crt", apiServertCert.getCertB64())
-
-                    .build();
-            kube.createSecret(kube.getInfraNamespace(), secret);
-        }
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
     }
 

@@ -232,11 +232,6 @@ public class GlobalLogCollector {
         }
     }
 
-    public void collectApiServerJmapLog() {
-        log.info("Collecting jmap from api server");
-        kubernetes.listPods(Collections.singletonMap("component", "api-server")).forEach(this::collectJmap);
-    }
-
     private void collectJmap(Pod pod) {
         KubeCMDClient.runOnPod(
                 pod.getMetadata().getNamespace(),

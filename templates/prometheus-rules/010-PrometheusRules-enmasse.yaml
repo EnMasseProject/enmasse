@@ -18,8 +18,6 @@ spec:
 
     - record: enmasse_component_health
       expr: up{job="address-space-controller"} or on(namespace) (1- absent(up{job="address-space-controller"}) )
-    - record: enmasse_component_health
-      expr: up{job="api-server"} or on(namespace) (1- absent(up{job="api-server"}) )
 
     - alert: ComponentHealth
       annotations: 
