@@ -9,5 +9,5 @@ rules:
     resources: [ "addressspaces" ]
     verbs: [ "get", "list", "watch" ]
   - apiGroups: [ "enmasse.io" ]
-    resources: [ "addresses", "addresses/finalizers", "addressspaces/finalizers" ]
+    resources: [ "addresses", "addresses/finalizers", "addressspaces/finalizers", "addresses/status" ]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
