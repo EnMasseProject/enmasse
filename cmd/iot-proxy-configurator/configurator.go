@@ -7,6 +7,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
@@ -67,28 +68,78 @@ func NewConfigurator(
 	projectInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			log.V(2).Info("Add", "object", obj)
-			controller.enqueueProject(obj)
+			controller.enqueueProject(obj, nil)
 		},
 		UpdateFunc: func(old, new interface{}) {
 			log.V(2).Info("Update", "old", old, "new", new)
-			controller.enqueueProject(new)
+			controller.enqueueProject(new, old)
 		},
 		DeleteFunc: func(obj interface{}) {
 			log.V(2).Info("Deleted", "object", obj)
-			controller.enqueueProject(obj)
+			controller.enqueueProject(obj, nil)
 		},
 	})
 
 	return controller
 }
 
-func (c *Configurator) enqueueProject(obj interface{}) {
-	if key, err := cache.MetaNamespaceKeyFunc(obj); err != nil {
+func (c *Configurator) enqueueProject(obj, old interface{}) {
+
+	key, err := cache.MetaNamespaceKeyFunc(obj)
+
+	if err != nil {
 		runtime.HandleError(err)
 		return
-	} else {
-		c.workqueue.AddRateLimited(key)
 	}
+
+	result := shouldQueue(obj, old)
+
+	log.Info(fmt.Sprintf("Should queue %v -> %v", key, result))
+
+	if !result {
+		return
+	}
+
+	c.workqueue.AddRateLimited(key)
+}
+
+func shouldQueue(obj, old interface{}) bool {
+
+	if old == nil {
+		// we only have the current state, no diff ... so enqueue it
+		return true
+	}
+
+	prj, ok := obj.(*v1alpha1.IoTProject)
+	if !ok {
+		runtime.HandleError(fmt.Errorf("can only handle objects of type *IoTProject, was: %T", obj))
+		return false
+	}
+
+	oldprj, ok := old.(*v1alpha1.IoTProject)
+	if !ok {
+		runtime.HandleError(fmt.Errorf("'old' must be of type *IoTProject, was: %T", old))
+		return false
+	}
+
+	if prj.Status.DownstreamEndpoint == nil || oldprj.Status.DownstreamEndpoint == nil {
+		// no endpoint ... no need to queue
+		return false
+	}
+
+	if prj.Status.Phase != oldprj.Status.Phase {
+		// always re-queue on phase change
+		return true
+	}
+
+	if reflect.DeepEqual(prj.Status.DownstreamEndpoint, oldprj.Status.DownstreamEndpoint) {
+		// downstream information did not change ... no change for us
+		return false
+	}
+
+	// requeue
+	return true
+
 }
 
 // Run main controller

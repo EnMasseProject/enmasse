@@ -8,6 +8,7 @@ package main
 import (
 	"flag"
 	"os"
+	"strconv"
 
 	"github.com/enmasseproject/enmasse/pkg/logs"
 
@@ -81,7 +82,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	enmasseInformerFactory := informers.NewSharedInformerFactory(enmasseClient, time.Second*30)
+	enmasseInformerFactory := informers.NewSharedInformerFactory(enmasseClient, refreshPeriod())
 
 	configurator := NewConfigurator(
 		kubeClient, enmasseClient,
@@ -94,6 +95,23 @@ func main() {
 	if err = configurator.Run(1, stopCh); err != nil {
 		log.Error(err, "Failed running configurator")
 	}
+}
+
+const DefaultInformerRefreshPeriod = time.Second * 60
+
+func refreshPeriod() time.Duration {
+
+	if value, present := os.LookupEnv("INFORMER_REFRESH_PERIOD_SECONDS"); present {
+		if i, err := strconv.ParseInt(value, 10, 32); err != nil {
+			return DefaultInformerRefreshPeriod
+		} else {
+			return time.Duration(i) * time.Second
+		}
+	}
+
+	// return default
+
+	return DefaultInformerRefreshPeriod
 }
 
 func init() {
