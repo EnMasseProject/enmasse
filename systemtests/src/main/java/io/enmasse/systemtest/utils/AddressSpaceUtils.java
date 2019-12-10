@@ -7,7 +7,6 @@ package io.enmasse.systemtest.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceStatus;
 import io.enmasse.address.model.AddressSpaceStatusConnector;
@@ -25,7 +24,6 @@ import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.vertx.core.json.JsonObject;
-import org.keycloak.common.util.Time;
 import org.slf4j.Logger;
 
 import java.util.Collection;
@@ -37,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class AddressSpaceUtils {
     private static Logger log = CustomLogger.getLogger();
@@ -81,7 +78,7 @@ public class AddressSpaceUtils {
         return addressSpace != null && addressSpace.getStatus().isReady();
     }
 
-    public static boolean matchAddressSpacePlan(AddressSpace received, AddressSpace expected) {
+    public static boolean matchAddressSpaceConfiguration(AddressSpace received, AddressSpace expected) {
         return received != null && received.getMetadata().getAnnotations().get("enmasse.io/applied-plan").equals(expected.getSpec().getPlan());
     }
 
@@ -132,27 +129,25 @@ public class AddressSpaceUtils {
         return addressSpace;
     }
 
-    public static void waitForAddressSpacePlanApplied(AddressSpace addressSpace) throws Exception {
-        AddressSpace addressSpaceObject = null;
+    public static void waitForAddressSpaceConfigurationApplied(AddressSpace addressSpace, String currentConfig) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
 
-        boolean isPlanApplied = false;
-        while (budget.timeLeft() >= 0 && !isPlanApplied) {
-            addressSpaceObject = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
-            isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
-            if (!isPlanApplied) {
+        boolean isConfigApplied = false;
+        while (budget.timeLeft() >= 0 && !isConfigApplied) {
+            addressSpace = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
+            isConfigApplied = !addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION).equals(currentConfig);
+            if (!isConfigApplied) {
                 Thread.sleep(2000);
             }
-            log.info("Waiting until Address space plan will be applied: '{}', current: {}",
-                    addressSpace.getSpec().getPlan(),
-                    addressSpaceObject.getMetadata().getAnnotations().get("enmasse.io/applied-plan"));
+            log.info("Waiting until Address space configuration will be applied. Current: {}",
+                    addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION));
         }
-        isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
-        if (!isPlanApplied) {
-            String jsonStatus = addressSpaceObject != null ? addressSpaceObject.getMetadata().getAnnotations().get("enmasse.io/applied-plan") : "";
-            throw new IllegalStateException("Address Space " + addressSpace + " contains wrong plan: " + jsonStatus);
+        isConfigApplied = !addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION).equals(currentConfig);
+        if (!isConfigApplied) {
+            String jsonStatus = addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
+            throw new IllegalStateException("Address Space " + addressSpace + " contains wrong configuration: " + jsonStatus);
         }
-        log.info("Address plan {} successfully applied", addressSpace.getSpec().getPlan());
+        log.info("Address space configuration for {}/{} successfully applied", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
     }
 
     public static void deleteAddressSpaceAndWait(AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {

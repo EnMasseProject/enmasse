@@ -389,7 +389,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @ParameterizedTest(name = "testSwitchAuthService-{0}-space")
-    @ValueSource(strings = {"brokered", "standard"})
+    @ValueSource(strings = {"standard"})
     void testSwitchAuthService(String type) throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-1", true);
         resourcesManager.createAuthService(standardAuth);
@@ -435,7 +435,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
 
         addressSpace.getSpec().getAuthenticationService().setName(standardAuth2.getMetadata().getName());
 
-        resourcesManager.replaceAddressSpace(addressSpace, false, null);
+        resourcesManager.replaceAddressSpace(addressSpace, true, null);
         AddressSpaceUtils.waithForAuthServiceApplied(addressSpace, standardAuth2.getMetadata().getName());
 
         resourcesManager.removeAuthService(standardAuth);
