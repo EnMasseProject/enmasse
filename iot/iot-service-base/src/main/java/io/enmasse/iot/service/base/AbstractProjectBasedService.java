@@ -8,12 +8,14 @@ package io.enmasse.iot.service.base;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import io.enmasse.common.model.CustomResources;
 import io.enmasse.iot.model.v1.IoTCrd;
@@ -25,11 +27,23 @@ import io.vertx.core.Future;
 
 public abstract class AbstractProjectBasedService extends AbstractKubernetesBasedService {
 
+    private static final Duration DEFAULT_RESYNC_PERIOD = Duration.ofMinutes(5);
+
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(AbstractProjectBasedService.class);
 
     private final Map<String, IoTProject> projects = new ConcurrentHashMap<>();
 
     private SharedInformerFactory factory;
+
+    /**
+     * The resync period of the IoTProject informer.
+     */
+    private Duration resyncPeriod = DEFAULT_RESYNC_PERIOD;
+
+    @ConfigurationProperties(ServiceBase.CONFIG_BASE + "kubernetes.informer.resyncPeriod")
+    public void setResyncPeriod(final Duration resyncPeriod) {
+        this.resyncPeriod = resyncPeriod != null ? resyncPeriod : DEFAULT_RESYNC_PERIOD;
+    }
 
     /**
      * Generates a tenant name from an IoT project.
@@ -63,7 +77,7 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
         // setup informer
         this.factory.sharedIndexInformerForCustomResource(
                 CustomResources.toContext(IoTCrd.project()),
-                IoTProject.class, IoTProjectList.class, 30_000)
+                IoTProject.class, IoTProjectList.class, this.resyncPeriod.toMillis())
                 .addEventHandler(new ResourceEventHandler<IoTProject>() {
 
                     @Override

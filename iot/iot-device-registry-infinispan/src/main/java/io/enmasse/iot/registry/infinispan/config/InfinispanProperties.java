@@ -8,10 +8,10 @@ package io.enmasse.iot.registry.infinispan.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import io.enmasse.iot.registry.infinispan.InfinispanRegistry;
+import io.enmasse.iot.service.base.ServiceBase;
 
 @Configuration
-@ConfigurationProperties(InfinispanRegistry.CONFIG_BASE + ".registry.infinispan")
+@ConfigurationProperties(ServiceBase.CONFIG_BASE + ".registry.infinispan")
 public class InfinispanProperties {
 
     private static final boolean DEFAULT_TRY_CREATE = false;

@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.registry.infinispan.InfinispanRegistry;
+import io.enmasse.iot.service.base.ServiceBase;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -26,7 +26,7 @@ import io.vertx.ext.web.RoutingContext;
 
 @Component
 @ConditionalOnProperty("debug")
-@ConfigurationProperties(InfinispanRegistry.CONFIG_BASE + ".registry.debug")
+@ConfigurationProperties(ServiceBase.CONFIG_BASE + ".registry.debug")
 public class DebugEndpoint extends AbstractVerticle {
 
     @Autowired
@@ -35,7 +35,7 @@ public class DebugEndpoint extends AbstractVerticle {
     @Autowired
     private RegistrationService registrationService;
 
-    private int port = 0; // ephermal port by default
+    private int port = 0; // ephemeral port by default
 
     public void setCrendentialService(final CredentialsService crendentialService) {
         this.crendentialService = crendentialService;
