@@ -412,7 +412,7 @@ spec:
   keywords: ${olm.csv.keywords}
   icon:
     - base64data: ${olm.csv.logo.base64}
-      mediatype: image/svg+xml
+      mediatype: ${olm.csv.logo.mediatype}
   maintainers:
   - name: ${olm.csv.maintainer.name}
     email: ${olm.csv.maintainer.email}
