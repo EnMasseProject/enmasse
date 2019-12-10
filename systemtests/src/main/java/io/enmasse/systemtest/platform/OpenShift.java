@@ -64,8 +64,7 @@ public class OpenShift extends Kubernetes {
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
         } else {
-            log.info("Route endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint("api-server", infraNamespace, "https");
+            throw new IllegalStateException("Unable to get REST endpoint");
         }
     }
 

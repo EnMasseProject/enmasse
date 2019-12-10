@@ -68,14 +68,8 @@ by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 
 #### Deploying to a Kubernetes instance assuming already logged in with cluster-admin permissions
 
-*Note*: This assumes you have [OpenSSL](https://www.openssl.org) installed.
-
     kubectl create namespace enmasse-infra
     kubectl config set-context $(kubectl config current-context) --namespace=enmasse-infra
-    
-    mkdir -p api-server-cert
-    openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.enmasse-infra.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
-    kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
     
     kubectl apply -f templates/build/enmasse-latest/install/bundles/enmasse
     kubectl apply -f templates/build/enmasse-latest/install/components/example-plans
@@ -169,7 +163,6 @@ The following deployment names are available depending on their types and EnMass
 
    * `address-space-controller`
    * `admin`
-   * `api-server`
    * `keycloak-controller`
    * `standard-controller`
    * `service-broker`

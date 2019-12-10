@@ -111,6 +111,7 @@
         <module>api-model</module>
         <module>metrics-api</module>
         <module>keycloak-user-api</module>
+        <module>documentation</module>
         <module>agent</module>
         <module>k8s-api</module>
         <module>k8s-api-testutil</module>
@@ -123,7 +124,6 @@
         <module>mqtt-lwt</module>
         <module>standard-controller</module>
         <module>address-space-controller</module>
-        <module>api-server</module>
         <module>keycloak-plugin</module>
         <module>systemtests</module>
         <module>broker-plugin</module>

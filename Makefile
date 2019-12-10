@@ -9,7 +9,6 @@ DOCKER_DIRS = \
 	agent \
 	topic-forwarder \
 	broker-plugin \
-	api-server \
 	address-space-controller \
 	none-authservice \
 	standard-controller \
