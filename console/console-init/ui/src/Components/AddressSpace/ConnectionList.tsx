@@ -92,7 +92,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       cells={tableColumns}
       rows={tableRows}
       aria-label="connection list">
-      <TableHeader />
+      <TableHeader id="connectionlist-table-header"/>
       <TableBody />
     </Table>
   );

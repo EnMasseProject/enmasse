@@ -124,14 +124,15 @@ export default function AddressDetailPage() {
 
       <Modal
           title="Edit"
+          id="addr-detail-edit-modal"
           isSmall
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(!isEditModalOpen)}
           actions={[
-            <Button key="confirm" variant="primary" onClick={handleSaving}>
+            <Button key="confirm" id="addr-detail-edit-confirm" variant="primary" onClick={handleSaving}>
               Confirm
             </Button>,
-            <Button key="cancel" variant="link" onClick={() => setIsEditModalOpen(!isEditModalOpen)}>
+            <Button key="cancel" id="addr-detail-edit-cancel" variant="link" onClick={() => setIsEditModalOpen(!isEditModalOpen)}>
               Cancel
             </Button>
           ]}

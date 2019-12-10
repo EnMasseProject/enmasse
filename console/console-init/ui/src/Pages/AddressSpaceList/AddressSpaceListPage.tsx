@@ -117,14 +117,15 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
       )}
       {addressSpaceBeingEdited && (
         <Modal
+          id="as-list-edit-modal"
           title="Modal Header"
           isOpen={true}
           onClose={handleCancelEdit}
           actions={[
-            <Button key="confirm" variant="primary" onClick={handleSaving}>
+            <Button key="confirm" id="as-list-edit-confirm" variant="primary" onClick={handleSaving}>
               Confirm
             </Button>,
-            <Button key="cancel" variant="link" onClick={handleCancelEdit}>
+            <Button key="cancel" id="as-list-edit-cancel" variant="link" onClick={handleCancelEdit}>
               Cancel
             </Button>
           ]}

@@ -171,10 +171,10 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           isOpen={true}
           onClose={handleCancelEdit}
           actions={[
-            <Button key="confirm" variant="primary" onClick={handleSaving}>
+            <Button key="confirm" id="al-edit-confirm" variant="primary" onClick={handleSaving}>
               Confirm
             </Button>,
-            <Button key="cancel" variant="link" onClick={handleCancelEdit}>
+            <Button key="cancel" id="al-edit-cancel" variant="link" onClick={handleCancelEdit}>
               Cancel
             </Button>
           ]}

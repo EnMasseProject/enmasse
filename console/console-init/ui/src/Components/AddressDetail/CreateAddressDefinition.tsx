@@ -124,6 +124,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
             <FormGroup label="Type" isRequired={true} fieldId="address-type">
               <br />
               <Dropdown
+                id="cad-type-dropdown"
                 position={DropdownPosition.left}
                 onSelect={onTypeSelect}
                 isOpen={isTypeOpen}
@@ -154,6 +155,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
             <FormGroup label="Plan" isRequired={true} fieldId="address-plan">
               <br />
               <Dropdown
+                id="cad-plan-dropdown"
                 position={DropdownPosition.left}
                 onSelect={onPlanSelect}
                 isOpen={isPlanOpen}

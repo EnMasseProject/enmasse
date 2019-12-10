@@ -88,7 +88,7 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
         <SplitItem>
           <Split gutter="md">
             <SplitItem>
-              <Title headingLevel="h1" size="4xl">
+              <Title headingLevel="h1" size="4xl" id="as-header-title">
                 {name}
               </Title>
             </SplitItem>
@@ -113,6 +113,7 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
         <SplitItem isFilled></SplitItem>
         <SplitItem className={css(styles.kebab_toggle_margin)}>
           <Dropdown
+            id="as-header-dropdown"
             onSelect={onSelect}
             position={DropdownPosition.right}
             toggle={<KebabToggle onToggle={onToggle} />}

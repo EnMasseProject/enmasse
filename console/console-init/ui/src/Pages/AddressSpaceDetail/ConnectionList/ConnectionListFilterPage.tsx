@@ -111,6 +111,7 @@ export const ConnectionListFilterPage: React.FunctionComponent<IConnectionListFi
       <DataToolbarGroup variant="filter-group">
         <DataToolbarFilter categoryName="Filter">
           <Dropdown
+            id="cl-filter-dropdown"
             position="left"
             onSelect={onFilterSelect}
             isOpen={filterIsExpanded}
@@ -151,6 +152,7 @@ export const ConnectionListFilterPage: React.FunctionComponent<IConnectionListFi
                   value={inputValue || ""}
                 />
                 <Button
+                  id="cl-filter-search-btn"
                   variant={ButtonVariant.control}
                   aria-label="search button for search input"
                   onClick={onAddInput}>

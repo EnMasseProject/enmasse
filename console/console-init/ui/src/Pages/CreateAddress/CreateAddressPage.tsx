@@ -86,6 +86,7 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
   ];
   return (
     <Wizard
+      id="create-addr-wizard"
       isOpen={isCreateWizardOpen}
       isFullHeight={true}
       isFullWidth={true}

@@ -82,7 +82,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Address name
                 </GridItem>
-                <GridItem span={8}>{name}</GridItem>
+                <GridItem id="preview-addr-name" span={8}>{name}</GridItem>
               </>
             )}
             {type && type.trim() !== "" && (
@@ -90,7 +90,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Type
                 </GridItem>
-                <GridItem span={8}>{type}</GridItem>
+                <GridItem id="preview-addr-type" span={8}>{type}</GridItem>
               </>
             )}
             {plan && plan.trim() !== "" && (
@@ -98,7 +98,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Plan
                 </GridItem>
-                <GridItem span={8}>{plan}</GridItem>
+                <GridItem id="preview-addr-plan" span={8}>{plan}</GridItem>
               </>
             )}
           </Grid>
@@ -111,6 +111,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
               enableFlip={keepInViewChecked}
               content={<div>Copy the configuration details on clipboard</div>}>
               <OutlinedCopyIcon
+                id="preview-addr-copy-btn"
                 size="md"
                 color="blue"
                 onClick={() => {

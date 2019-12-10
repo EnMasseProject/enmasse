@@ -174,7 +174,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       aria-label="Address List"
       canSelectAll={true}
     >
-      <TableHeader />
+      <TableHeader id="address-list-table-bodheader" />
       <TableBody />
     </Table>
   );

@@ -27,6 +27,7 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
   return (
     <React.Fragment>
       <Wizard
+        id="create-as-wizard"
         isOpen={true}
         isFullHeight={true}
         isFullWidth={true}
