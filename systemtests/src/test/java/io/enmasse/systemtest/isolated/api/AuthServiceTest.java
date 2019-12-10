@@ -442,6 +442,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
 
         UserCredentials cred2 = new UserCredentials("foo", "bar");
         resourcesManager.createOrUpdateUser(addressSpace, cred2);
+        Thread.sleep(120_000);
 
         getClientUtils().receiveDurableMessages(resourcesManager, addressSpace, queue, cred2, 100);
     }
