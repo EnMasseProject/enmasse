@@ -231,6 +231,24 @@ const availableAddressPlans = [
         "router": 0.001
       },
       3),
+  createAddressPlan("standard-small-topic",
+      "topic",
+      "Small Topic",
+      "Creates a small topic sharing underlying broker with other topics.",
+      "Creates a small topic sharing underlying broker with other topics.",
+      {
+        "broker": 0
+      },
+      4),
+  createAddressPlan("standard-small-subscription",
+      "subscription",
+      "Small Subscription",
+      "Creates a small durable subscription on a topic.",
+      "Creates a small durable subscription on a topic, which is then accessed as a distinct address.",
+      {
+        "broker": 0
+      },
+      5),
   createAddressPlan("brokered-queue",
       "queue",
       "Brokered Queue",
@@ -331,13 +349,14 @@ function createAddressSpace(as) {
     throw `Unrecognised namespace '${as.ObjectMeta.Namespace}', known ones are : ${knownNamespaces}`;
   }
 
-  var spacePlan = availableAddressSpacePlans.find(o => o.ObjectMeta.Name === as.Spec.Plan);
-  if (spacePlan === undefined) {
-    var knownPlansNames = availableAddressSpacePlans.map(p => p.ObjectMeta.Name);
-    throw `Unrecognised address space plan '${as.Spec.Plan}', known ones are : ${knownPlansNames}`;
-  }
   if (as.Spec.Type !== 'brokered' && as.Spec.Type !== 'standard') {
     throw `Unrecognised address space type '${(as.Spec.Type)}', known ones are : brokered, standard`;
+  }
+
+  var spacePlan = availableAddressSpacePlans.find(o => o.ObjectMeta.Name === as.Spec.Plan && as.Spec.Type === o.Spec.AddressSpaceType);
+  if (spacePlan === undefined) {
+    var knownPlansNames = availableAddressSpacePlans.filter(p => as.Spec.Type === p.Spec.AddressSpaceType).map(p => p.ObjectMeta.Name);
+    throw `Unrecognised address space plan '${as.Spec.Plan}', known plans for type '${as.Spec.Type}' are : ${knownPlansNames}`;
   }
 
   if (addressSpaces.find(existing => as.ObjectMeta.Name === existing.ObjectMeta.Name && as.ObjectMeta.Namespace === existing.ObjectMeta.Namespace) !== undefined) {
@@ -574,15 +593,31 @@ function createAddress(addr) {
     throw `Unrecognised address space '${addr.Spec.AddressSpace}', known ones are : ${addressspacenames}`;
   }
 
-  var plan = availableAddressPlans.find(o => o.ObjectMeta.Name === addr.Spec.Plan);
-  if (plan === undefined) {
-    var knownPlansNames = availableAddressPlans.map(p => p.ObjectMeta.Name);
-    throw `Unrecognised address plan '${addr.Spec.Plan}', known ones are : ${knownPlansNames}`;
-  }
-
   var knownTypes = ['queue', 'topic', 'subscription', 'multicast', 'anycast'];
   if (knownTypes.find(t => t === addr.Spec.Type) === undefined) {
     throw `Unrecognised address type '${addr.Spec.Type}', known ones are : '${knownTypes}'`;
+  }
+
+  var plan = availableAddressPlans.find(p => p.ObjectMeta.Name === addr.Spec.Plan && addr.Spec.Type === p.Spec.AddressType);
+  if (plan === undefined) {
+    var knownPlansNames = availableAddressPlans.filter(p => addr.Spec.Type === p.Spec.AddressType).map(p => p.ObjectMeta.Name);
+    throw `Unrecognised address plan '${addr.Spec.Plan}', known plans for type '${addr.Spec.Type}' are : ${knownPlansNames}`;
+  }
+
+
+  var prefix = addr.Spec.AddressSpace + ".";
+  if (addr.Spec.Type === 'subscription') {
+      var topics  = addresses.filter(a => a.ObjectMeta.Name.startsWith(prefix) && a.Spec.Type === "topic");
+      if (!addr.Spec.Topic) {
+        throw `Spec.Topic is mandatory for the subscription type`;
+      } else if (topics.find(t => t.ObjectMeta.Name === addr.Spec.Topic) === undefined) {
+        var topicNames  = topics.map(t => t.ObjectMeta.Name);
+        throw `Unrecognised topic name ${addr.Spec.Topic}', known ones are : '${topicNames}'`;
+      }
+  } else {
+      if (addr.Spec.Topic) {
+        throw `Spec.Topic is not allowed for the address type '${addr.Spec.Type}'.`;
+      }
   }
 
   var prefix = addr.Spec.AddressSpace + ".";
@@ -909,16 +944,17 @@ EOF
           .sort(o => o.Spec.DisplayOrder);
     },
     addressPlans: (parent, args, context, info) => {
-      if (args.addressSpacePlan === undefined) {
-        return availableAddressPlans.sort(o => o.Spec.DisplayOrder);
-      } else {
+      var plans = availableAddressPlans;
+      if (args.addressSpacePlan) {
         var spacePlan = availableAddressSpacePlans.find(o => o.ObjectMeta.Name === args.addressSpacePlan);
         if (spacePlan === undefined) {
           var knownPlansNames = availableAddressSpacePlans.map(p => p.ObjectMeta.Name);
           throw `Unrecognised address space plan '${args.addressSpacePlan}', known ones are : ${knownPlansNames}`;
         }
-        return spacePlan.Spec.AddressPlans.sort(o => o.Spec.DisplayOrder);
+        plans = spacePlan.Spec.AddressPlans;
       }
+
+      return plans.filter(p => (args.addressType === undefined || p.Spec.AddressType === args.addressType)).sort(o => o.Spec.DisplayOrder);
     },
     addressSpaces:(parent, args, context, info) => {
 
