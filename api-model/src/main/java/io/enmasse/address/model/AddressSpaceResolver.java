@@ -39,7 +39,7 @@ public class AddressSpaceResolver {
         }
         if (addressSpace.getSpec().getAuthenticationService() == null) {
             addressSpace.getStatus().setReady(false);
-            addressSpace.getStatus().appendMessage("Missing authentication service and default authentication service found");
+            addressSpace.getStatus().appendMessage("Missing authentication service and no default authentication service found");
             return false;
         }
         if (addressSpace.getSpec().getAuthenticationService() != null && !schema.findAuthenticationService(addressSpace.getSpec().getAuthenticationService().getName()).isPresent()) {
