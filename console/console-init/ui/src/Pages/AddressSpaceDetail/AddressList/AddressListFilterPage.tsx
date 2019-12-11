@@ -141,7 +141,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
         <DataToolbarFilter
           chips={filterValue && filterValue.trim() !== "" ? [filterValue] : []}
           deleteChip={onDelete}
-          categoryName="Filter">
+          categoryName="Filter"
+        >
           <Dropdown
             position="left"
             onSelect={onFilterSelect}
@@ -160,7 +161,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
                 key={option.key}
                 value={option.value}
                 itemID={option.key}
-                component={"button"}>
+                component={"button"}
+              >
                 {option.value}
               </DropdownItem>
             ))}
@@ -171,7 +173,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
             <DataToolbarFilter
               chips={inputValue && inputValue.trim() !== "" ? [inputValue] : []}
               deleteChip={onDelete}
-              categoryName="Name">
+              categoryName="Name"
+            >
               <InputGroup>
                 <TextInput
                   name="textInput2"
@@ -184,7 +187,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
                 />
                 <Button
                   variant={ButtonVariant.control}
-                  aria-label="search button for search input">
+                  aria-label="search button for search input"
+                >
                   <SearchIcon />
                 </Button>
               </InputGroup>
@@ -194,7 +198,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
           <DataToolbarFilter
             chips={typeValue && typeValue.trim() !== "" ? [typeValue] : []}
             deleteChip={onDelete}
-            categoryName="Type">
+            categoryName="Type"
+          >
             <Dropdown
               position="left"
               onSelect={onTypeSelect}
@@ -210,7 +215,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
                   key={option.key}
                   value={option.value}
                   itemID={option.key}
-                  component={"button"}>
+                  component={"button"}
+                >
                   {option.value}
                 </DropdownItem>
               ))}
@@ -222,7 +228,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
               statusValue && statusValue.trim() !== "" ? [statusValue] : []
             }
             deleteChip={onDelete}
-            categoryName="Status">
+            categoryName="Status"
+          >
             <Dropdown
               position="left"
               onSelect={onStatusSelect}
@@ -238,7 +245,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
                   key={option.key}
                   value={option.value}
                   itemID={option.key}
-                  component={"button"}>
+                  component={"button"}
+                >
                   {option.value}
                 </DropdownItem>
               ))}
@@ -274,7 +282,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
           <CreateAddress
             namespace={namespace || ""}
             addressSpace={name || ""}
-            type={type || ""}
+            addressSpaceType={type || ""}
             isCreateWizardOpen={isCreateWizardOpen}
             setIsCreateWizardOpen={setIsCreateWizardOpen}
           />
@@ -289,7 +297,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
                 <Button
                   id="al-filter-overflow-button"
                   variant={ButtonVariant.primary}
-                  onClick={() => setIsCreateWizardOpen(!isCreateWizardOpen)}>
+                  onClick={() => setIsCreateWizardOpen(!isCreateWizardOpen)}
+                >
                   Create Address
                 </Button>
               </OverflowMenuItem>
@@ -314,7 +323,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onDeleteAll}>
+      clearAllFilters={onDeleteAll}
+    >
       <DataToolbarContent>{toolbarItems}</DataToolbarContent>
     </DataToolbar>
   );

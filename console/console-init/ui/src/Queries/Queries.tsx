@@ -347,6 +347,16 @@ export const CREATE_ADDRESS = gql`
   }
 `;
 
+export const CREATE_ADDRESS_SPACE = gql`
+  mutation create_as($as: AddressSpace_enmasse_io_v1beta1_Input!) {
+    createAddressSpace(input: $as) {
+      Name
+      Uid
+      CreationTimestamp
+    }
+  }
+`;
+
 export const EDIT_ADDRESS = gql`
   mutation patch_addr(
     $a: ObjectMeta_v1_Input!
@@ -358,6 +368,12 @@ export const EDIT_ADDRESS = gql`
 `;
 
 export const ADDRESS_COMMAND_PRIVEW_DETAIL = gql`
+  query cmd($as: AddressSpace_enmasse_io_v1beta1_Input!) {
+    addressSpaceCommand(input: $as)
+  }
+`;
+
+export const ADDRESS_SPACE_COMMAND_REVIEW_DETAIL = gql`
   query cmd($as: AddressSpace_enmasse_io_v1beta1_Input!) {
     addressSpaceCommand(input: $as)
   }

@@ -8,7 +8,7 @@ import { CREATE_ADDRESS } from "src/Queries/Queries";
 interface ICreateAddressProps {
   namespace: string;
   addressSpace: string;
-  type: string;
+  addressSpaceType: string;
   refetch?: () => void;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
@@ -16,7 +16,7 @@ interface ICreateAddressProps {
 export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
   namespace,
   addressSpace,
-  type,
+  addressSpaceType,
   refetch,
   isCreateWizardOpen,
   setIsCreateWizardOpen
@@ -28,6 +28,7 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
   const handleAddressChange = (name: string) => {
     setAddressName(name);
   };
+  
   const handleSave = async () => {
     if (addressSpace && addressName && addressType && plan && namespace) {
       const data = await client.mutate({
@@ -40,7 +41,7 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
             },
             Spec: {
               Type: addressType.toLowerCase(),
-              Plan: getPlanAndTypeForAddressEdit(plan, type),
+              Plan: getPlanAndTypeForAddressEdit(plan, addressSpaceType),
               Address: addressName,
               AddressSpace: addressSpace
             }
