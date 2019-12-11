@@ -28,33 +28,13 @@
       <artifactId>vertx-config</artifactId>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>iot-infinispan-base</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>io.enmasse</groupId>
       <artifactId>iot-utils</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-query-dsl</artifactId>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-infinispan-base</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-client-hotrod</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-remote-query-client</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
@@ -99,5 +79,26 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>infinispan-9</id>
+      <dependencies>
+        <dependency>
+          <groupId>io.enmasse</groupId>
+          <artifactId>iot-infinispan-base-9</artifactId>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>infinispan-10</id>
+      <dependencies>
+        <dependency>
+          <groupId>io.enmasse</groupId>
+          <artifactId>iot-infinispan-base-10</artifactId>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 
 </project>

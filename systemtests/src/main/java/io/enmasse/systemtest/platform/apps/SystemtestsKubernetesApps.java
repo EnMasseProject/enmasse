@@ -71,7 +71,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class SystemtestsKubernetesApps {
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
 
     public static final String MESSAGING_CLIENTS = "systemtests-clients";
     public static final String SELENIUM_FIREFOX = "selenium-firefox";
@@ -87,7 +87,10 @@ public class SystemtestsKubernetesApps {
     private static final String[] INFINISPAN_DIRECTORIES;
 
     static {
-        switch (InfinispanVersion.current()) {
+        final InfinispanVersion version = InfinispanVersion.current();
+        log.warn("Using Infinispan: {}", version);
+
+        switch (version) {
             case V10:
                 INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan-10");
                 INFINISPAN_DIRECTORIES = new String[] {
@@ -98,7 +101,7 @@ public class SystemtestsKubernetesApps {
                 };
                 break;
             default:
-                INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+                INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan-9");
                 INFINISPAN_DIRECTORIES = new String[] {
                                 "common",
                                 "manual"
@@ -301,7 +304,7 @@ public class SystemtestsKubernetesApps {
     }
 
     private static Endpoint getInfinispanEndpoint(final String namespace) {
-        return Kubernetes.getInstance().getEndpoint(INFINISPAN_SERVER, namespace, InfinispanVersion.current().port());
+        return Kubernetes.getInstance().getEndpoint(INFINISPAN_SERVER, namespace, "infinispan");
     }
 
     public static void deleteInfinispanServer() throws Exception {

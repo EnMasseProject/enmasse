@@ -3,13 +3,15 @@ kind: Service
 metadata:
   labels:
     app: infinispan
-  name: infinispan-management
+  name: infinispan # align name with operator version
 spec:
   ports:
+  - port: 11222
+    targetPort: 11222
+    name: infinispan
   - port: 9990
     targetPort: 9990
     name: management
   selector:
-    app: infinispan-pod
-    clusterName: infinispan
-    infinispan_cr: infinispan
+    name: infinispan
+    app: infinispan

@@ -12,6 +12,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.enmasse.iot.infinispan.Infinispan;
 import io.enmasse.iot.tools.cleanup.config.CleanerConfig;
 
 public class Application {
@@ -19,6 +20,8 @@ public class Application {
     private static final Logger log = LoggerFactory.getLogger(Application.class);
 
     public static void main(final String args[]) throws Exception {
+
+        log.info("Infinispan Client Version: {}", Infinispan.version().orElse("<unknown>"));
 
         final Optional<Path> configFile = Arrays
                 .asList(args)

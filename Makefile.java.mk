@@ -1,9 +1,13 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
 MVNPROJ=$(shell realpath --relative-to="$(realpath $(TOPDIR))" "$(shell pwd)")
 include $(TOPDIR)/Makefile.common
+
 ifeq ($(SKIP_TESTS),true)
 MAVEN_ARGS="-DskipTests"
 endif
+
+INFINISPAN_VERSION ?= 10
+MAVEN_ARGS += "-Pinfinispan-$(INFINISPAN_VERSION)"
 
 ifneq ($(FULL_BUILD),true)
 build:

@@ -19,7 +19,7 @@ public class InfinispanProperties {
     private static final boolean DEFAULT_TRY_CREATE = false;
 
     private static final String DEFAULT_HOST = "localhost";
-    private static final int DEFAULT_PORT = org.infinispan.client.hotrod.impl.ConfigurationProperties.DEFAULT_HOTROD_PORT;
+    private static final int DEFAULT_PORT = 11222;
     private static final boolean DEFAULT_USE_TLS = false;
 
     private static final String DEFAULT_ADAPTER_CREDENTIALS_CACHE_NAME = "adapterCredentials";

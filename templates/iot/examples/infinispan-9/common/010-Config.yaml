@@ -34,7 +34,7 @@ data:
                           <properties path="mgmt-groups.properties" relative-to="jboss.server.config.dir"/>
                       </authorization>
                   </security-realm>
-                  <security-realm name="ApplicationRealm">
+                  <security-realm name="default">
                       <server-identities>
                           <ssl>
                               <keystore path="application.keystore" relative-to="jboss.server.config.dir" keystore-password="password" alias="server" key-password="password" generate-self-signed-certificate-host="localhost"/>
@@ -172,8 +172,8 @@ data:
                       <file-audit-log name="local-audit" path="audit.log" relative-to="jboss.server.log.dir" format="JSON"/>
                   </audit-logging>
                   <security-domains>
-                      <security-domain name="ApplicationDomain" default-realm="ApplicationRealm" permission-mapper="default-permission-mapper">
-                          <realm name="ApplicationRealm" role-decoder="groups-to-roles"/>
+                      <security-domain name="ApplicationDomain" default-realm="default" permission-mapper="default-permission-mapper">
+                          <realm name="default" role-decoder="groups-to-roles"/>
                           <realm name="local"/>
                       </security-domain>
                       <security-domain name="ManagementDomain" default-realm="ManagementRealm" permission-mapper="default-permission-mapper">
@@ -183,8 +183,8 @@ data:
                   </security-domains>
                   <security-realms>
                       <identity-realm name="local" identity="$local"/>
-                      <properties-realm name="ApplicationRealm">
-                          <users-properties path="application-users.properties" relative-to="jboss.server.config.dir" digest-realm-name="ApplicationRealm"/>
+                      <properties-realm name="default">
+                          <users-properties path="application-users.properties" relative-to="jboss.server.config.dir" digest-realm-name="default"/>
                           <groups-properties path="application-roles.properties" relative-to="jboss.server.config.dir"/>
                       </properties-realm>
                       <properties-realm name="ManagementRealm">
@@ -230,7 +230,7 @@ data:
                           <mechanism-configuration>
                               <mechanism mechanism-name="JBOSS-LOCAL-USER" realm-mapper="local"/>
                               <mechanism mechanism-name="DIGEST-MD5">
-                                  <mechanism-realm realm-name="ApplicationRealm"/>
+                                  <mechanism-realm realm-name="default"/>
                               </mechanism>
                           </mechanism-configuration>
                       </sasl-authentication-factory>
@@ -343,12 +343,12 @@ data:
               <subsystem xmlns="urn:infinispan:server:endpoint:9.4">
                   <hotrod-connector socket-binding="hotrod" cache-container="clustered">
                       <topology-state-transfer lazy-retrieval="false" lock-timeout="1000" replication-timeout="5000"/>
-                      <authentication security-realm="ApplicationRealm">
+                      <authentication security-realm="default">
                           <sasl server-name="hotrod" mechanisms="DIGEST-MD5" qop="auth" />
                       </authentication>
                   </hotrod-connector>
                   <rest-connector socket-binding="rest" cache-container="clustered">
-                      <authentication security-realm="ApplicationRealm" auth-method="BASIC"/>
+                      <authentication security-realm="default" auth-method="BASIC"/>
                   </rest-connector>
               </subsystem>
               <subsystem xmlns="urn:infinispan:server:jgroups:9.4">
@@ -543,7 +543,7 @@ data:
                   <remote-naming/>
               </subsystem>
               <subsystem xmlns="urn:jboss:domain:remoting:4.0">
-                  <http-connector name="http-remoting-connector" connector-ref="default" security-realm="ApplicationRealm"/>
+                  <http-connector name="http-remoting-connector" connector-ref="default" security-realm="default"/>
               </subsystem>
               <subsystem xmlns="urn:jboss:domain:security:2.0">
                   <security-domains>
