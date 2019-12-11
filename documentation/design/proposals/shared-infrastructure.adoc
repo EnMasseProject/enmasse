@@ -356,6 +356,85 @@ The initial version of the queue scheduler should be similar to what we have in 
 * (Optional phase 2): Take broker anti-affinity into consideration during placement
 * (Optional phase 2): Take available broker memory for queue into account during placement
 
+=== Phase 1 VARIANT b
+
+Mostly the same as the above Phase 1 with respect to management of infra, routers and brokers. However, AddressSpace vs Address has been a source of confusion for a long time, and this might be a good time to fix that.
+
+This would mean:
+
+* We remove AddressSpace resource completely and allow only 1 instance of messaging per Kubernetes namespace.
+* Create new CRDs for configuring endpoints, connectors etc.
+
+How would one configure an 'address space' without the CRD?! To enable messaging on a namespace, annotations could be used:
+
+```
+kubectl annotate namespace myapp enmasse.io/messaging=true
+# If a specific plan (i.e. not default should be used)
+kubectl annotate namespace myapp enmasse.io/messaging-plan=small
+kubectl annotate namespace myapp enmasse.io/authentication-service=standard
+```
+
+Then, other parts of the 'address space' with multiple entities, could be configured using CRDs.
+
+To configure connectors:
+
+```
+kind: MessagingConnector
+matadata:
+  name: connector
+spec:
+  # Same options as under address space .spec.connectors[]?
+```
+
+To configure endpoints for messaging:
+
+```
+kind: MessagingEndpoint
+metadata:
+  name: endpoint
+spec:
+  cert:
+    selfsigned: {}
+    secret:
+      name: endpointcert
+    letsencrypt:
+      ... #
+  ports:
+  - amqp
+  - amqps
+  - amqpws
+  - amqpwss
+  # Expose as route
+  route:
+    host: example.com
+  # OR loadbalancer
+  loadbalancer:
+    annotations: {}
+status:
+  host:
+  ports:
+  - name: amqp
+    port: 5672
+```
+
+Instead of reusing AddressSpacePlan, we could create a MessagingPlan with the desired schema sketched already for the AddressSpacePlan.
+
+The main work for shared infra would still be in the messaging-infra and state representations, but there would be no address space controller. Instead, "Task 5" would be modified. In addition, a task for creating the new CRDs would be needed.
+
+==== Task 5: Implement namespace-controller in controller-manager (medium)
+
+The namespace controller watches all namespaces on the cluster for the annotation to enable messaging:
+
+* Watch Namespaces and filter on annotations
+* Find MessagingInfra where this is placed (based on plan/default plan)
+* Lookup infra state representation
+* Lookup MessagingEndpoints in namespace
+* Lookup MessagingConnectors in namespace
+* For each router:
+** Apply vhost settings from plans+limits, external connectors from MessagingConnector, create endpoints and apply certs from MessagingEndpoint
+** Fetch latest known status and update status of connectors, endpoints etc.
+* Requeue namespace for processing at configurable interval
+
 === Phase 2 (Milestone 0.33.0 ?)
 
 The second phase will expand the supported features of the shared infra. The shared infra will gain support for deploying broker clusters and assign addresses requiring a broker cluster to them.
