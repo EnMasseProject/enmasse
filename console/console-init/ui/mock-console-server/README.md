@@ -203,6 +203,26 @@ query all_address_plans {
 }
 ```
 
+## filtered_address_plans
+
+address plans can be filtered by address space plan and/or address type.
+
+```
+query filtered_address_plans {
+  addressPlans(addressSpacePlan:"standard-medium", addressType: queue) {
+    ObjectMeta
+    {Name}
+    Spec {
+      AddressType
+      DisplayName
+      LongDescription
+      ShortDescription
+    }
+  }
+}
+```
+
+
 ## all_link_names_for_connection
 
 ```
