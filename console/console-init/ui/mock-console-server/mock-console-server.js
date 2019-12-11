@@ -612,7 +612,7 @@ function createAddress(addr) {
         throw `Spec.Topic is mandatory for the subscription type`;
       } else if (topics.find(t => t.ObjectMeta.Name === addr.Spec.Topic) === undefined) {
         var topicNames  = topics.map(t => t.ObjectMeta.Name);
-        throw `Unrecognised topic name ${addr.Spec.Topic}', known ones are : '${topicNames}'`;
+        throw `Unrecognised topic name '${addr.Spec.Topic}', known ones are : '${topicNames}'`;
       }
   } else {
       if (addr.Spec.Topic) {
@@ -648,7 +648,8 @@ function createAddress(addr) {
       Address: addr.Spec.Address,
       AddressSpace: addr.Spec.AddressSpace,
       Plan: plan,
-      Type: addr.Spec.Type
+      Type: addr.Spec.Type,
+      Topic: addr.Spec.Topic
     },
     Status: {
       IsReady: "Active" === phase,
@@ -748,6 +749,44 @@ function closeConnection(objectmeta) {
         Phase: n.startsWith("c") ? "Configuring" : (n.startsWith("p") ? "Pending" : "Active")
       }
     })));
+
+function createTopicWithSub(addressSpace, n) {
+    createAddress({
+      ObjectMeta: {
+        Name: addressSpace.ObjectMeta.Name + "." + n,
+        Namespace: addressSpace.ObjectMeta.Namespace
+      },
+      Spec: {
+        Address: n,
+        AddressSpace: addressSpace.ObjectMeta.Name,
+        Plan: "standard-small-topic",
+        Type: "topic"
+      },
+      Status: {
+        Phase: n.startsWith("c") ? "Configuring" : (n.startsWith("p") ? "Pending" : "Active")
+      }
+    });
+    var subname = n + '-sub';
+    createAddress({
+      ObjectMeta: {
+        Name: addressSpaces[0].ObjectMeta.Name + "." + subname,
+        Namespace: addressSpace.ObjectMeta.Namespace
+      },
+      Spec: {
+        Address: subname,
+        AddressSpace: addressSpace.ObjectMeta.Name,
+        Plan: "standard-small-subscription",
+        Type: "subscription",
+        Topic: addressSpace.ObjectMeta.Name + "." + n
+      },
+      Status: {
+        Phase: n.startsWith("c") ? "Configuring" : (n.startsWith("p") ? "Pending" : "Active")
+      }
+    });
+}
+
+// Topic with a subscription
+["themisto"].map(n => (createTopicWithSub(addressSpaces[0], n)));
 
 
 ["titan", "rhea", "iapetus", "dione", "tethys", "enceladus", "mimas"].map(n =>
@@ -1242,7 +1281,7 @@ EOF
 const mocks = {
   Int: () => 6,
   Float: () => 22.1,
-  String: () => 'Hello',
+  String: () => undefined,
   User_v1: () => ({
     Identities: ['fred'],
     Groups: ['admin']
