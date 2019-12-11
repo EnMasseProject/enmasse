@@ -14,9 +14,9 @@ import io.enmasse.systemtest.bases.shared.ITestBaseShared;
 import io.enmasse.systemtest.broker.ArtemisManagement;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
-import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -47,12 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExternalClients
 public abstract class ClientTestBase extends TestBase implements ITestBaseShared {
     protected Path logPath = null;
-    private ClientArgumentMap arguments = new ClientArgumentMap();
     private List<AbstractClient> clients;
-
-    public ClientArgumentMap getArguments() {
-        return arguments;
-    }
 
     @BeforeEach
     public void setUpClientBase(TestInfo info) {
@@ -63,16 +58,10 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                         clientFolder,
                         info.getTestClass().get().getName(),
                         info.getDisplayName()));
-
-        arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
-        arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());
-        arguments.put(ClientArgument.LOG_MESSAGES, "json");
-        arguments.put(ClientArgument.CONN_SSL, "true");
     }
 
     @AfterEach
     public void teardownClient() {
-        arguments.clear();
         if (clients != null) {
             clients.forEach(AbstractClient::stop);
             clients.clear();
@@ -113,28 +102,30 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace(), websocket).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
-        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
-        arguments.put(ClientArgument.TIMEOUT, "30");
-        if (websocket) {
-            arguments.put(ClientArgument.CONN_WEB_SOCKET, "true");
-            if (getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
-                arguments.put(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
-            }
-        }
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(sender)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket).toString())
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withMessageBody("msg no. %d")
+                .withTimeout(30)
+                .withAditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket);
 
-        sender.setArguments(arguments);
-        arguments.remove(ClientArgument.MSG_CONTENT);
-        receiver.setArguments(arguments);
+        ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                .withClientEngine(receiver)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket).toString())
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withTimeout(30)
+                .withAditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket);
 
-        assertTrue(sender.run(), "Sender failed, expected return code 0");
-        assertTrue(receiver.run(), "Receiver failed, expected return code 0");
 
-        assertEquals(expectedMsgCount, sender.getMessages().size(),
+        assertTrue(senderClient.run(), "Sender failed, expected return code 0");
+        assertTrue(receiverClient.run(), "Receiver failed, expected return code 0");
+
+        assertEquals(expectedMsgCount, senderClient.getMessages().size(),
                 String.format("Expected %d sent messages", expectedMsgCount));
-        assertEquals(expectedMsgCount, receiver.getMessages().size(),
+        assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
                 String.format("Expected %d received messages", expectedMsgCount));
     }
 
@@ -156,17 +147,30 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
-        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount / 2));
-        arguments.put(ClientArgument.TIMEOUT, "150");
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(sender)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withMessageBody("msg no. %d")
+                .withTimeout(30);
 
+        ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
+                .withClientEngine(receiver)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withAddress(dest)
+                .withCount(expectedMsgCount / 2)
+                .withTimeout(150);
 
-        receiver.setArguments(arguments);
-        receiver2.setArguments(arguments);
+        ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
+                .withClientEngine(receiver2)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withAddress(dest)
+                .withCount(expectedMsgCount / 2)
+                .withTimeout(150);
 
-        Future<Boolean> recResult = receiver.runAsync();
-        Future<Boolean> rec2Result = receiver2.runAsync();
+        Future<Boolean> recResult = receiverClient1.runAsync();
+        Future<Boolean> rec2Result = receiverClient2.runAsync();
 
         if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
             waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
@@ -174,22 +178,17 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
             waitForSubscribersConsole(getSharedAddressSpace(), dest, 2);
         }
 
-        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
-
-        sender.setArguments(arguments);
-
-        assertTrue(sender.run(), "Sender failed, expected return code 0");
+        assertTrue(senderClient.run(), "Sender failed, expected return code 0");
         assertTrue(recResult.get(), "Receiver failed, expected return code 0");
         assertTrue(rec2Result.get(), "Receiver failed, expected return code 0");
 
-        assertEquals(expectedMsgCount, sender.getMessages().size(),
+        assertEquals(expectedMsgCount, senderClient.getMessages().size(),
                 String.format("Expected %d sent messages", expectedMsgCount));
 
         assertAll(
-                () -> assertEquals(expectedMsgCount / 2, receiver.getMessages().size(),
+                () -> assertEquals(expectedMsgCount / 2, receiverClient1.getMessages().size(),
                         String.format("Expected %d received messages", expectedMsgCount / 2)),
-                () -> assertEquals(expectedMsgCount / 2, receiver2.getMessages().size(),
+                () -> assertEquals(expectedMsgCount / 2, receiverClient2.getMessages().size(),
                         String.format("Expected %d sent messages", expectedMsgCount / 2)));
     }
 
@@ -216,6 +215,28 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
         arguments.put(ClientArgument.TIMEOUT, "250");
+
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(sender)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withMessageBody("msg no. %d")
+                .withTimeout(30);
+
+        ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
+                .withClientEngine(subscriber)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withTimeout(150);
+
+        ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
+                .withClientEngine(subscriber2)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withTimeout(150);
 
         sender.setArguments(arguments);
         arguments.remove(ClientArgument.MSG_CONTENT);
@@ -541,13 +562,6 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), publisher);
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), consumer);
-    }
-
-    private void replaceCredArgs(UserCredentials userCredentials) {
-        arguments.remove(ClientArgument.USERNAME);
-        arguments.remove(ClientArgument.PASSWORD);
-        arguments.put(ClientArgument.USERNAME, userCredentials.getUsername());
-        arguments.put(ClientArgument.PASSWORD, userCredentials.getPassword());
     }
 
 }
