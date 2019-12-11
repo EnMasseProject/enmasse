@@ -316,8 +316,8 @@ The address-space controller manages the AddressSpace CR (filtered by shared inf
 * Find MessagingInfra where this is placed (based on plan)
 * Lookup infra state representation
 * For each router:
-  * Apply vhost settings+limits, external connectors, certs
-  * Fetch latest known status and update address space status accordingly
+** Apply vhost settings+limits, external connectors, certs
+** Fetch latest known status and update address space status accordingly
 * Expose address space metrics based on status
 * Requeue address space for processing at configurable interval
 
@@ -325,15 +325,15 @@ The address-space controller manages the AddressSpace CR (filtered by shared inf
 
 * Watch Address CR
 * if new address:
-   * Invoke queue scheduling to configure which brokers address should be placed on
+** Invoke queue scheduling to configure which brokers address should be placed on
 * Find MessagingInfra where this is placed (unless it is 
 * Lookup state objects for routers and brokers
 * For each router:
-    * Apply autolinks, linkroutes and addresses
-    * Fetch latest known status and update address status
+** Apply autolinks, linkroutes and addresses
+** Fetch latest known status and update address status
 * For each broker:
-    * Apply autolinks, linkroutes and addresses
-    * Fetch latest known status and update address status
+** Apply autolinks, linkroutes and addresses
+** Fetch latest known status and update address status
 * (Optional phase 2): Expose address metrics based on status
 * Requeue address for processing at configurable interval
 
