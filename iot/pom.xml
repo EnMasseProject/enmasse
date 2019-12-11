@@ -14,8 +14,6 @@
 
   <properties>
     <hono.version>1.0.0</hono.version>
-    <infinispan.version>10.0.1.Final</infinispan.version>
-    <infinispan-protostream.version>4.3.0.Final</infinispan-protostream.version>
 
     <!-- align with Hono compatible versions -->
     <logback.version>1.2.3</logback.version>
@@ -39,6 +37,7 @@
     <module>iot-proxy-configurator</module>
     <module>iot-device-registry-infinispan</module>
     <module>iot-infinispan-base</module>
+    <module>iot-infinispan-base-9</module>
     <module>iot-tenant-cleaner</module>
     <module>iot-utils</module>
   </modules>
@@ -54,13 +53,31 @@
       </dependency>
       <dependency>
         <groupId>io.enmasse</groupId>
+        <artifactId>iot-utils</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.enmasse</groupId>
         <artifactId>iot-infinispan-base</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>io.enmasse</groupId>
-        <artifactId>iot-utils</artifactId>
+        <artifactId>iot-infinispan-base-9</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.enmasse</groupId>
+        <artifactId>iot-infinispan-base</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+      </dependency>
+      <dependency>
+        <groupId>io.enmasse</groupId>
+        <artifactId>iot-infinispan-base-9</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
       </dependency>
 
       <dependency>
@@ -126,56 +143,7 @@
         <version>${micrometer.version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-core</artifactId>
-        <version>${infinispan.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-client-hotrod</artifactId>
-        <version>${infinispan.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-remote-query-client</artifactId>
-        <version>${infinispan.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.squareup</groupId>
-            <artifactId>protoparser</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-query-dsl</artifactId>
-        <version>${infinispan.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.infinispan.protostream</groupId>
-        <artifactId>protostream-processor</artifactId>
-        <version>${infinispan-protostream.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-server-hotrod</artifactId>
-        <version>${infinispan.version}</version>
-        <scope>test</scope>
-
-      </dependency>
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-remote-query-server</artifactId>
-        <version>${infinispan.version}</version>
-        <scope>test</scope>
-      </dependency>
-     </dependencies>
+    </dependencies>
   </dependencyManagement>
 
   <build>
@@ -209,5 +177,20 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <profiles>
+    <profile>
+      <id>infinispan-9</id>
+      <modules>
+        <module>iot-infinispan-base-9</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>infinispan-10</id>
+      <modules>
+        <module>iot-infinispan-base</module>
+      </modules>
+    </profile>
+  </profiles>
 
 </project>
