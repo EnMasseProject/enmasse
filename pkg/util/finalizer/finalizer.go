@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var log = logf.Log.WithName("controller_iotproject")
+var log = logf.Log.WithName("finalizer")
 
 type DeconstructorContext struct {
 	Context context.Context

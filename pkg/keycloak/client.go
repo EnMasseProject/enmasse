@@ -128,6 +128,7 @@ func (c *keycloakClient) CreateUser(realm string, user *userv1beta1.MessagingUse
 	if err != nil {
 		return err
 	}
+	log.V(4).Info("Created user", "username", newUser.Username, "userId", userId)
 
 	err = c.applyAuthentication(realm, user.Spec.Authentication, userId)
 	if err != nil {
@@ -172,6 +173,7 @@ func (c *keycloakClient) applyAuthentication(realm string, authSpec userv1beta1.
 	switch authSpec.Type {
 	case userv1beta1.Password:
 		if authSpec.Password != nil {
+			log.V(4).Info("Setting password", "userId", userId)
 			err := c.client.SetPassword(c.token.AccessToken, userId, realm, string(authSpec.Password), false)
 			if err != nil {
 				return err
@@ -225,7 +227,7 @@ func (c *keycloakClient) applyAuthorization(realm string, authzSpec []userv1beta
 	}
 
 	if !reflect.DeepEqual(existingGroups, desiredGroups) {
-		log.Info("Changing user groups", "user", userId, "realm", realm, "old", existingGroups, "new", desiredGroups)
+		log.V(4).Info("Changing user groups", "userId", userId, "realm", realm, "old", existingGroups, "new", desiredGroups)
 
 		for groupName := range existingGroups {
 			if !desiredGroups[groupName] {
