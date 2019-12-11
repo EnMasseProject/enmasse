@@ -5,8 +5,8 @@
 
 package io.enmasse.iot.registry.infinispan.device;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.util.Collections;

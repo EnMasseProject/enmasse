@@ -16,10 +16,6 @@
   <!-- used in the banner -->
   <name>EnMasse IoT Device Registry (Infinispan)</name>
 
-  <properties>
-    <junit4.version>4.12</junit4.version>
-  </properties>
-
   <dependencies>
 
     <dependency>
@@ -96,12 +92,6 @@
       <artifactId>hono-service-base</artifactId>
       <classifier>tests</classifier>
       <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit4.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

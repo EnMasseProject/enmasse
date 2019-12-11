@@ -40,7 +40,6 @@
     <dependency>
       <groupId>io.enmasse</groupId>
       <artifactId>iot-utils</artifactId>
-      <version>${project.version}</version>
     </dependency>
 
     <dependency>
