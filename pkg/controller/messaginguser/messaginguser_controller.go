@@ -104,7 +104,7 @@ func (r *ReconcileMessagingUser) Reconcile(request reconcile.Request) (reconcile
 
 	rc := &recon.ReconcileContext{}
 
-	reqLogger.V(2).Info("checkFinalizer", "user", user.ObjectMeta)
+	reqLogger.V(1).Info("checkFinalizer", "user", user.ObjectMeta)
 	rc.Process(func() (reconcile.Result, error) {
 		return r.checkFinalizer(ctx, reqLogger, user)
 	})
@@ -126,7 +126,7 @@ func (r *ReconcileMessagingUser) Reconcile(request reconcile.Request) (reconcile
 		return nil
 	})
 
-	reqLogger.V(2).Info("createOrUpdate", "user", user.ObjectMeta)
+	reqLogger.V(1).Info("createOrUpdate", "user", user.ObjectMeta)
 	rc.Process(func() (reconcile.Result, error) {
 		if user.Status.Phase != userv1beta1.UserTerminating {
 			return r.createOrUpdateUser(ctx, reqLogger, user)
@@ -138,7 +138,7 @@ func (r *ReconcileMessagingUser) Reconcile(request reconcile.Request) (reconcile
 		user.Status.Message = rc.Error().Error()
 	}
 
-	reqLogger.V(2).Info("updateGeneration", "user", user.ObjectMeta)
+	reqLogger.V(1).Info("updateGeneration", "user", user.ObjectMeta)
 	rc.ProcessSimple(func() error {
 		if user.Status.Message != lastMessage || user.Generation != user.Status.Generation {
 			user.Status.Generation = user.Generation
