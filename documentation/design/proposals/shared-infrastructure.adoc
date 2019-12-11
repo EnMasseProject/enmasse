@@ -266,23 +266,26 @@ The data will be stored in memory available to the address space and address con
 
 ==== Tasks
 
-===== Create MessagingInfra CRD (small)
+===== Task 1: Create MessagingInfra CRD (small)
 
-Create the MessaginInfra CRD + OpenAPI. Update AddressSpacePlan CRD to allow referencing shared infra in the spec.
+* Create the MessaginInfra CRD + OpenAPI.
+* Update AddressSpacePlan CRD to allow referencing shared infra in the spec. 
+* Address 'shared' type as an allowed address space type.
+* Add filter in AddressSpaceController loop on 'brokered' and 'standard'.
 
-==== Import router operator definitions (small)
+==== Task 2: Import router operator definitions (small)
 
-* Add bundle for installing qdrouterd operator in bundle install
-* Add dependency on qdrouterd operator CRDs in OLM manifest
-* (Optional phase 2) Add support for missing podtemplate capabilities
+* Add bundle for installing qdrouterd operator in bundle install.
+* Add dependency on qdrouterd operator CRDs in OLM manifest.
+* (Optional phase 2) Add support for missing podtemplate capabilities.
 
-==== Import artemis operator (medium)
+==== Task 3: Import artemis operator (small/medium)
 
 * Add bundle for installing the broker operator in bundle install
 * Add dependency on broker operator CRDs in OLM manifest
 * Add support for using init containers to configure broker if needed (if we don't need plugins, we could avoid this step)
 
-==== Implement messaging-infra controller in controller-manager (medium)
+==== Task 4: Implement messaging-infra controller in controller-manager (large)
 
 The messaging-infra controller is responsible for managing router and broker deployments and ensure they have the configuration as requested in the config.
 
@@ -302,7 +305,7 @@ The state object has methods to apply configuration (i.e. applyAddress, applyAdd
 
 In addition ,each state object has a goroutine which periodically polls its underlying router/broker for all status information and caches it for use by controllers to update the address space/address status.
 
-==== Implement address-space controller in controller-manager (medium)
+==== Task 5: Implement address-space controller in controller-manager (medium)
 
 The address-space controller manages the AddressSpace CR (filtered by shared infra)
 
@@ -315,7 +318,7 @@ The address-space controller manages the AddressSpace CR (filtered by shared inf
 * Expose address space metrics based on status
 * Requeue address space for processing at configurable interval
 
-==== Implement address controller in controller-manager (medium)
+==== Task 6: Implement address controller in controller-manager (medium)
 
 * Watch Address CR
 * if new address:
@@ -331,7 +334,7 @@ The address-space controller manages the AddressSpace CR (filtered by shared inf
 * (Optional phase 2): Expose address metrics based on status
 * Requeue address for processing at configurable interval
 
-==== Implement queue/topic/subscription scheduling (medium)
+==== Task 7: Implement queue/topic/subscription scheduling (medium)
 
 The initial version of the queue scheduler should be similar to what we have in the standard address space. It should:
 
