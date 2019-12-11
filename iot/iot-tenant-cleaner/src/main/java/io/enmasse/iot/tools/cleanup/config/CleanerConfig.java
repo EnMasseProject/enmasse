@@ -25,11 +25,21 @@ import java.util.concurrent.TimeUnit;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CleanerConfig {
 
-    public static final int DEFAULT_DELETION_CHUNK_SIZE = 100;
+
+    /**
+     * Default value of "indexBroadcastQuery".
+     * <br>
+     * We must set the "BROADCAST" flag, as we rely on the "near realtime" indexer.
+     */
+    private static final boolean DEFAULT_INDEX_BROADCAST_QUERY = true;
+
+    private static final int DEFAULT_DELETION_CHUNK_SIZE = 100;
 
     private String tenantId;
 
     private int deletionChunkSize = DEFAULT_DELETION_CHUNK_SIZE;
+
+    private boolean indexBroadcastQuery = DEFAULT_INDEX_BROADCAST_QUERY;
 
     private InfinispanProperties infinispan = new InfinispanProperties();
 
@@ -50,6 +60,14 @@ public class CleanerConfig {
 
     public void setDeletionChunkSize(final int deletionChunkSize) {
         this.deletionChunkSize = deletionChunkSize;
+    }
+
+    public boolean isIndexBroadcastQuery() {
+        return this.indexBroadcastQuery;
+    }
+
+    public void setIndexBroadcastQuery(boolean indexBroadcastQuery) {
+        this.indexBroadcastQuery = indexBroadcastQuery;
     }
 
     public void setInfinispan(final InfinispanProperties infinispanProperties) {
@@ -102,7 +120,6 @@ public class CleanerConfig {
                 .add("infinspanProperties", this.infinispan)
                 .toString();
     }
-
 
     public static CleanerConfig load(final Optional<Path> pathToConfig) throws Exception {
 
