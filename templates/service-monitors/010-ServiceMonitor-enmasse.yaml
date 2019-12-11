@@ -11,6 +11,8 @@ spec:
       app: enmasse
   endpoints:
   - port: health
+  - port: prometheus
+    path: /prometheus
   namespaceSelector:
     matchLabels:
       monitoring-key: middleware

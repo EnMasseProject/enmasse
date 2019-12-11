@@ -37,6 +37,9 @@ func (r *ReconcileIoTConfig) processInfinispanDeviceRegistry(ctx context.Context
 		return r.processService(ctx, nameDeviceRegistry, config, false, r.reconcileInfinispanDeviceRegistryService)
 	})
 	rc.ProcessSimple(func() error {
+		return r.processService(ctx, nameDeviceRegistry+"-metrics", config, false, r.reconcileMetricsService(nameDeviceRegistry))
+	})
+	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, r.reconcileInfinispanDeviceRegistryConfigMap)
 	})
 	if !util.IsOpenshift() {
@@ -89,12 +92,12 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 		}
 
 		container.Ports = []corev1.ContainerPort{
-			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "amqps", ContainerPort: 5671, Protocol: corev1.ProtocolTCP},
 			{Name: "http", ContainerPort: 8080, Protocol: corev1.ProtocolTCP},
 			{Name: "https", ContainerPort: 8443, Protocol: corev1.ProtocolTCP},
 		}
 
+		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
 		// eval native TLS flag

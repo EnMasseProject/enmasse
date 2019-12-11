@@ -49,6 +49,9 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 		return r.processService(ctx, nameMqttAdapter, config, !enabled, r.reconcileMqttAdapterService)
 	})
 	rc.ProcessSimple(func() error {
+		return r.processService(ctx, nameMqttAdapter+"-metrics", config, false, r.reconcileMetricsService(nameMqttAdapter))
+	})
+	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameMqttAdapter+"-config", config, !enabled, r.reconcileMqttAdapterConfigMap)
 	})
 	if !util.IsOpenshift() {
@@ -100,10 +103,10 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 		}
 
 		container.Ports = []corev1.ContainerPort{
-			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "mqtts", ContainerPort: 8883, Protocol: corev1.ProtocolTCP},
 		}
 
+		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
 		// environment

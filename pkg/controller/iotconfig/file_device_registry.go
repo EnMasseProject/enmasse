@@ -39,6 +39,9 @@ func (r *ReconcileIoTConfig) processFileDeviceRegistry(ctx context.Context, conf
 		return r.processService(ctx, nameDeviceRegistry, config, false, r.reconcileFileDeviceRegistryService)
 	})
 	rc.ProcessSimple(func() error {
+		return r.processService(ctx, nameDeviceRegistry+"-metrics", config, false, r.reconcileMetricsService(nameDeviceRegistry))
+	})
+	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, r.reconcileFileDeviceRegistryConfigMap)
 	})
 	rc.ProcessSimple(func() error {
@@ -97,12 +100,12 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 		}
 
 		container.Ports = []corev1.ContainerPort{
-			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "amqps", ContainerPort: 5671, Protocol: corev1.ProtocolTCP},
 			{Name: "http", ContainerPort: 8080, Protocol: corev1.ProtocolTCP},
 			{Name: "https", ContainerPort: 8443, Protocol: corev1.ProtocolTCP},
 		}
 
+		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
 		// environment

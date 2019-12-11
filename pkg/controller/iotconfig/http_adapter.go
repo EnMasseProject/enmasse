@@ -48,6 +48,9 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 		return r.processService(ctx, nameHttpAdapter, config, !enabled, r.reconcileHttpAdapterService)
 	})
 	rc.ProcessSimple(func() error {
+		return r.processService(ctx, nameHttpAdapter+"-metrics", config, false, r.reconcileMetricsService(nameHttpAdapter))
+	})
+	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameHttpAdapter+"-config", config, !enabled, r.reconcileHttpAdapterConfigMap)
 	})
 	if !util.IsOpenshift() {
@@ -99,10 +102,10 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 		}
 
 		container.Ports = []corev1.ContainerPort{
-			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "https", ContainerPort: 8443, Protocol: corev1.ProtocolTCP},
 		}
 
+		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
 		// environment
