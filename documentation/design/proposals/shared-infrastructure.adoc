@@ -219,10 +219,12 @@ For broker deployments, the [activemq-artemis-operator](https://github.com/rh-me
 Router - Broker connections can be maintained either by having the operator create and maintain the router -> broker connectors, or use the broker-plugin to create connectors to the routers. The advantage of the first alternative is that we no longer rely on custom plugin code for connections, and that we get more flexibility in choosing topology of connections (i.e. multiple routers can connect to the same broker for better HA). The second alternative removes the need to create the outgoing router connector. However, we already need the capability to create connectors in the router (for external bridges), so this is not really something we get away with. For this design, having the operator maintain the connectors will be the preferred alternative.
 
 Initial requirements of shared infra:
+
 * Handle up to 100k addresses - possibly spread accross multiple address spaces
 * Handle up to 1000 address spaces per infra instance (with 100 addresses each)
 
 Improtant design considerations:
+
 * Minimize management traffic with router and broker
 * Add safeguards for getting out of bad states (with proper error reporting to be able to investigate bugs later)
 * Shared infras should be able to operate independently
