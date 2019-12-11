@@ -267,6 +267,16 @@ Routers will be periodically queried (by independent goroutines) for:
 
 The data will be stored in memory available to the address space and address controller loops.
 
+===== Controllers
+
+The following controllers and components must be implemented:
+
+* Messaging-infra controller - Managing the shared infra
+** State representation model - Used by other controllers to apply configuration to shared infra
+* Address-space controller - Managing address spaces
+* Address controller - Managing addresses
+** Address scheduler - Used for placing queues on a set of brokers with different properties/capabilities
+
 ==== Tasks
 
 ===== Task 1: Create MessagingInfra CRD (small)
