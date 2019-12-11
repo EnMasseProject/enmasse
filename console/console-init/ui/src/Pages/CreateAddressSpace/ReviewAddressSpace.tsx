@@ -8,7 +8,6 @@ import {
   TooltipPosition,
   Tooltip
 } from "@patternfly/react-core";
-import gql from "graphql-tag";
 import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
@@ -16,13 +15,14 @@ import { StyleSheet, css } from "@patternfly/react-styles";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
-import { ADDRESS_COMMAND_PRIVEW_DETAIL } from "src/Queries/Queries";
+import { ADDRESS_SPACE_COMMAND_REVIEW_DETAIL } from "src/Queries/Queries";
 
-export interface IAddressPreview {
+export interface IAddressSpaceReview {
   name?: string;
   type?: string;
   plan?: string;
   namespace: string;
+  authenticationService: string;
 }
 const Style = StyleSheet.create({
   left_padding: {
@@ -33,31 +33,35 @@ const Style = StyleSheet.create({
   }
 });
 
-export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
+export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = ({
   name,
   type,
   plan,
-  namespace
+  namespace,
+  authenticationService
 }) => {
   const [keepInViewChecked, setKeepInViewChecked] = React.useState<boolean>(
     false
   );
-  const { data, loading, error } = useQuery(ADDRESS_COMMAND_PRIVEW_DETAIL, {
-    variables: {
-      as: {
-        ObjectMeta: {
-          Name: name,
-          Namespace: namespace
-        },
-        Spec: {
-          Plan: plan ? plan.toLowerCase() : "",
-          Type: type ? type.toLowerCase() : ""
+  const { data, loading, error } = useQuery(
+    ADDRESS_SPACE_COMMAND_REVIEW_DETAIL,
+    {
+      variables: {
+        as: {
+          ObjectMeta: {
+            Name: name,
+            Namespace: namespace
+          },
+          Spec: {
+            Plan: plan ? plan.toLowerCase() : "",
+            Type: type ? type.toLowerCase() : ""
+          }
         }
       }
     }
-  });
+  );
   if (loading) return <Loading />;
-  if (error) console.log("Address Priview Query Error", error);
+  if (error) console.log("Address Space Review Query Error", error);
   console.log(data);
   return (
     <PageSection variant={PageSectionVariants.light}>
@@ -81,10 +85,20 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
             {name && (
               <>
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
-                  Address name
+                  Instance name
                 </GridItem>
                 <GridItem id="preview-addr-name" span={8}>
                   {name}
+                </GridItem>
+              </>
+            )}
+            {namespace && (
+              <>
+                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                  Namespace
+                </GridItem>
+                <GridItem id="preview-addr-name" span={8}>
+                  {namespace}
                 </GridItem>
               </>
             )}
@@ -105,6 +119,16 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 </GridItem>
                 <GridItem id="preview-addr-plan" span={8}>
                   {plan}
+                </GridItem>
+              </>
+            )}
+            {authenticationService && authenticationService.trim() !== "" && (
+              <>
+                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                  Authentication Service
+                </GridItem>
+                <GridItem id="preview-addr-plan" span={8}>
+                  {authenticationService}
                 </GridItem>
               </>
             )}
