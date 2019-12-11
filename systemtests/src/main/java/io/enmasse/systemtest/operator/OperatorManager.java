@@ -191,6 +191,7 @@ public class OperatorManager {
     public void removeOlm() throws Exception {
         Consumer<String> remover = (namespace) -> {
             KubeCMDClient.runOnCluster("delete", "subscriptions", "-l", "app=enmasse", "-n", namespace);
+            KubeCMDClient.runOnCluster("delete", "operatorgroups", "-l", "app=enmasse", "-n", namespace);
             KubeCMDClient.runOnCluster("delete", "catalogsources", "-l", "app=enmasse", "-n", namespace);
             KubeCMDClient.runOnCluster("delete", "csv", "-l", "app=enmasse", "-n", namespace);
             KubeCMDClient.runOnCluster("delete", "deployments", "-l", "app=enmasse", "-n", namespace);
