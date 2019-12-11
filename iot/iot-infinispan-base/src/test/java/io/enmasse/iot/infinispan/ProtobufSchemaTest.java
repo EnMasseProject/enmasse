@@ -73,7 +73,7 @@ final class TestSerializationContext implements SerializationContext {
         return null;
     }
 
-    @Override
+    /* FIXME: add when we have Infinispan 10: @Override */
     public Map<String, GenericDescriptor> getGenericDescriptors() {
         return null;
     }

@@ -20,32 +20,11 @@
 
     <dependency>
       <groupId>io.enmasse</groupId>
-      <artifactId>iot-infinispan-base</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.enmasse</groupId>
       <artifactId>iot-service-base</artifactId>
     </dependency>
     <dependency>
       <groupId>io.enmasse</groupId>
       <artifactId>iot-utils</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-client-hotrod</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-remote-query-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-query-dsl</artifactId>
     </dependency>
 
     <dependency>
@@ -55,6 +34,15 @@
     <dependency>
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>kubernetes-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>api-common</artifactId>
     </dependency>
 
     <!-- Test dependencies -->
@@ -94,34 +82,6 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-server-hotrod</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.logging.log4j</groupId>
-          <artifactId>log4j-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.logging.log4j</groupId>
-          <artifactId>log4j-slf4j-impl</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-remote-query-server</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.enmasse</groupId>
-      <artifactId>api-common</artifactId>
-    </dependency>
   </dependencies>
 
   <build>
@@ -147,5 +107,38 @@
 
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>infinispan-9</id>
+      <dependencies>
+        <dependency>
+          <groupId>io.enmasse</groupId>
+          <artifactId>iot-infinispan-base-9</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>io.enmasse</groupId>
+          <artifactId>iot-infinispan-base-9</artifactId>
+          <type>test-jar</type>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>infinispan-10</id>
+      <dependencies>
+        <dependency>
+          <groupId>io.enmasse</groupId>
+          <artifactId>iot-infinispan-base</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>io.enmasse</groupId>
+          <artifactId>iot-infinispan-base</artifactId>
+          <type>test-jar</type>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 
 </project>
