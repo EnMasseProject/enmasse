@@ -202,6 +202,9 @@ After the first phase, the following would be supported:
 
 The following would NOT be supported:
 
+* Broker HA
+* Non-mesh router topologies
+* Features not supported by router or broker operators
 * Connectors and forwarders
 * Broker-semantics for addresses
 * Configure per-address space limits
