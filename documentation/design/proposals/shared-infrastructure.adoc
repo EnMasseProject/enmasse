@@ -215,13 +215,13 @@ The following would NOT be supported:
 
 The tasks of managing brokers and routers should be offloaded to standalone components as much as possible.
 
-For router deployments, the [qdr-operator](https://github.com/interconnectedcloud/qdr-operator) will be used and it supports all features required by AMQ Online.
+For router deployments, the https://github.com/interconnectedcloud/qdr-operator[qdr-operator] will be used and it supports all features required by AMQ Online.
 
-For broker deployments, the [activemq-artemis-operator](https://github.com/rh-messaging/activemq-artemis-operator) will be used, (and modified to work with our requirements). The resulting changes should be submitted upstream, although short term there may exist a temporary fork in order to make progress.
+For broker deployments, the https://github.com/rh-messaging/activemq-artemis-operator[activemq-artemis-operator] will be used, (and modified to work with our requirements). The resulting changes should be submitted upstream, although short term there may exist a temporary fork in order to make progress.
 
 Router - Broker connections can be maintained either by having the operator create and maintain the router -> broker connectors, or use the broker-plugin to create connectors to the routers. The advantage of the first alternative is that we no longer rely on custom plugin code for connections, and that we get more flexibility in choosing topology of connections (i.e. multiple routers can connect to the same broker for better HA). The second alternative removes the need to create the outgoing router connector. However, we already need the capability to create connectors in the router (for external bridges), so this is not really something we get away with. For this design, having the operator maintain the connectors will be the preferred alternative.
 
-Initial requirements of shared infra:
+Performance requirements of shared infra:
 
 * Handle up to 100k addresses - possibly spread accross multiple address spaces
 * Handle up to 1000 address spaces per infra instance (with 100 addresses each)
