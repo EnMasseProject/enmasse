@@ -9,6 +9,7 @@ import io.enmasse.admin.model.v1.ConsoleServiceSpec;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -22,12 +23,18 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
+import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OperatorManager {
 
@@ -233,6 +240,18 @@ public class OperatorManager {
     public void removeIoTOperator() {
         LOGGER.info("Delete enmasse IoT operator from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
+    }
+
+    public void deleteEnmasseAnsible() {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("            Enmasse operator delete by ansible");
+        LOGGER.info("***********************************************************");
+        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", "systemtests.inventory");
+        Path ansiblePlaybook = Paths.get(Environment.getInstance().getUpgradeTemplates(), "ansible", "playbooks", "openshift", "uninstall.yml");
+        List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
+                "--extra-vars", String.format("namespace=%s", kube.getInfraNamespace()));
+        assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Uninstall failed");
+        LOGGER.info("***********************************************************");
     }
 
     public void clean() throws Exception {

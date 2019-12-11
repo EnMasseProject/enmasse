@@ -6,6 +6,7 @@ package io.enmasse.systemtest;
 
 public enum EnmasseInstallType {
 
+    ANSIBLE,
     BUNDLE,
     OLM;
 
