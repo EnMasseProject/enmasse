@@ -152,6 +152,11 @@ public abstract class Kubernetes {
             try {
                 instance.olmAvailable = instance.getCRD("clusterserviceversions.operators.coreos.com") != null
                         && instance.getCRD("subscriptions.operators.coreos.com") != null;
+                if (instance.olmAvailable) {
+                    log.info("OLM is available in this cluster");
+                } else {
+                    log.info("OLM is not available in this cluster");
+                }
             } catch (Exception e) {
                 log.error("Error checking olm availability", e);
                 instance.olmAvailable = false;

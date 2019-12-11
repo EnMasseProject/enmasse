@@ -19,7 +19,7 @@ public class SupportedInstallTypeCondition implements ExecutionCondition {
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-        Optional<SupportedInstallType> annotation = findAnnotation(context.getElement(), SupportedInstallType.class);
+        Optional<SupportedInstallType> annotation = findAnnotation(context.getTestClass().get(), SupportedInstallType.class);
         if (annotation.isPresent()) {
             SupportedInstallType supports = annotation.get();
             io.enmasse.systemtest.platform.Kubernetes kube = io.enmasse.systemtest.platform.Kubernetes.getInstance();

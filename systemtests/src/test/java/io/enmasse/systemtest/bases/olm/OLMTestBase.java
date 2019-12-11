@@ -4,6 +4,8 @@
  */
 package io.enmasse.systemtest.bases.olm;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.OLM;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
@@ -23,6 +25,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
@@ -46,6 +49,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.proton.ProtonQoS;
 
+@Tag(OLM)
+@Tag(ACCEPTANCE)
 public abstract class OLMTestBase extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
     private Exception ex = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5

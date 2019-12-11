@@ -53,9 +53,10 @@ public class TestInfo {
     public void setTestPlan(TestPlan testPlan) {
         LOGGER.info("Setting testplan {}", testPlan.getRoots());
         tests = new ArrayList<>();
-        testClasses = Arrays.asList(testPlan.getChildren(testPlan.getRoots()
-                .toArray(new TestIdentifier[0])[0]).toArray(new TestIdentifier[0]));
-        testClasses.forEach(testIdentifier -> {
+        List<TestIdentifier> testPlanClasses = Arrays.asList(testPlan.getChildren(testPlan.getRoots()
+                .toArray(new TestIdentifier[0])[0])
+                .toArray(new TestIdentifier[0]));
+        testPlanClasses.forEach(testIdentifier -> {
             testPlan.getChildren(testIdentifier)
                     .forEach(test -> {
                         if (test.getSource().isPresent() && test.getSource().get() instanceof MethodSource) {
@@ -63,7 +64,7 @@ public class TestInfo {
                             try {
                                 Optional<Method> testMethod = ReflectionUtils.findMethod(Class.forName(testSource.getClassName()), testSource.getMethodName(), testSource.getMethodParameterTypes());
                                 if (testMethod.isPresent()) {
-                                    MethodBasedExtensionContext extensionContext = new MethodBasedExtensionContext(testMethod);
+                                    MethodBasedExtensionContext extensionContext = new MethodBasedExtensionContext(Class.forName(testSource.getClassName()), testMethod);
                                     ExecutionCondition[] conditions = new ExecutionCondition[]{this::disabledCondition, new SupportedInstallTypeCondition(), new AssumeKubernetesCondition(), new AssumeOpenshiftCondition()};
                                     if (evaluateTestDisabled(extensionContext, conditions)) {
                                         LOGGER.debug("Test {}.{} is disabled", testSource.getClassName(), testSource.getMethodName());
@@ -80,6 +81,28 @@ public class TestInfo {
                     });
         });
         LOGGER.debug("Final tests are {}", tests);
+        List<String> finalClasses = tests.stream()
+            .map(test -> (MethodSource) test.getSource().get())
+            .map(MethodSource::getClassName)
+            .map(t -> {
+                 try {
+                     return Class.forName(t);
+                 } catch ( ClassNotFoundException e ) {
+                     throw new IllegalArgumentException(e);
+                 }
+             })
+            .map(Class::getSimpleName)
+            .distinct()
+            .collect(Collectors.toList());
+
+        testClasses = testPlanClasses.stream()
+            .filter(testClass -> {
+               return finalClasses.stream()
+               .anyMatch(testClassName -> {
+                   return testClassName.equals(testClass.getDisplayName());
+               });
+            })
+            .collect(Collectors.toList());
     }
 
     private ConditionEvaluationResult disabledCondition(ExtensionContext ctx) {
@@ -181,6 +204,7 @@ public class TestInfo {
                 .orElseThrow();
     }
 
+    //TODO remove this method and move the logic associated with this to beforeAll callback
     public boolean isNextTestUpgrade() {
         int currentClassIndex = getCurrentClassIndex();
         if (currentClassIndex + 1 < testClasses.size()) {
