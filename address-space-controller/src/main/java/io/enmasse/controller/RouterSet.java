@@ -54,4 +54,8 @@ public class RouterSet {
     public void setModified() {
         this.modified = true;
     }
+
+    public boolean isModified() {
+        return this.modified;
+    }
 }

@@ -15,6 +15,7 @@ import java.util.Optional;
 import io.enmasse.address.model.AuthenticationService;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.address.model.AddressSpace;
@@ -58,7 +59,8 @@ public class StatusControllerTest {
 
         AuthenticationServiceRegistry authenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
         when(authenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.empty());
-        StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory, authenticationServiceRegistry, null);
+        StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory, authenticationServiceRegistry, null,
+                new RouterStatusController(mock(NamespacedKubernetesClient.class), "test", new AddressSpaceControllerOptions()));
 
         AuthenticationService authenticationService = new AuthenticationService();
         authenticationService.setType(AuthenticationServiceType.NONE);

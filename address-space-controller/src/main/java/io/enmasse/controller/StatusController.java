@@ -7,6 +7,7 @@ package io.enmasse.controller;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.InfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
@@ -31,20 +32,23 @@ public class StatusController implements Controller {
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final AuthenticationServiceResolver authenticationServiceResolver;
     private final UserApi userApi;
+    private final RouterStatusController routerStatusController;
 
-    public StatusController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, AuthenticationServiceRegistry authenticationServiceRegistry, UserApi userApi) {
+    public StatusController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, AuthenticationServiceRegistry authenticationServiceRegistry, UserApi userApi, RouterStatusController routerStatusController) {
         this.kubernetes = kubernetes;
         this.schemaProvider = schemaProvider;
         this.infraResourceFactory = infraResourceFactory;
         this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.authenticationServiceResolver = new AuthenticationServiceResolver(authenticationServiceRegistry);
         this.userApi = userApi;
+        this.routerStatusController = routerStatusController;
     }
 
     @Override
     public AddressSpace reconcileActive(AddressSpace addressSpace) throws IOException {
         if (addressSpace.getStatus().isReady()) {
             checkComponentsReady(addressSpace);
+            checkRouterStatus(addressSpace);
             checkAuthServiceReady(addressSpace);
             checkExposedEndpoints(addressSpace);
         }
@@ -159,6 +163,17 @@ public class StatusController implements Controller {
                 log.warn(msg);
                 addressSpace.getStatus().setReady(false);
                 addressSpace.getStatus().appendMessage(msg);
+            }
+        }
+    }
+
+    private void checkRouterStatus(AddressSpace addressSpace) throws IOException {
+        InfraConfig infraConfig = InfraConfigs.parseCurrentInfraConfig(addressSpace);
+        if (infraConfig instanceof StandardInfraConfig) {
+            if (!addressSpace.getStatus().getConnectors().isEmpty()) {
+                routerStatusController.checkRouterConnectorStatus(addressSpace);
+            } else {
+                routerStatusController.checkRouterMeshStatus(addressSpace);
             }
         }
     }

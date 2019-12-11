@@ -78,10 +78,6 @@ public class AddressSpaceUtils {
         return addressSpace != null && addressSpace.getStatus().isReady();
     }
 
-    public static boolean matchAddressSpaceConfiguration(AddressSpace received, AddressSpace expected) {
-        return received != null && received.getMetadata().getAnnotations().get("enmasse.io/applied-plan").equals(expected.getSpec().getPlan());
-    }
-
     public static AddressSpace waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
         return waitForAddressSpaceReady(addressSpace, new TimeoutBudget(15, TimeUnit.MINUTES));
     }
