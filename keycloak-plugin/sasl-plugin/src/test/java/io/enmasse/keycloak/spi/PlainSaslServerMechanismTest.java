@@ -73,7 +73,7 @@ public class PlainSaslServerMechanismTest {
 
     // unknown realm
     @Test
-    public void testUnknownRealm() {
+    public void testUnknownRealm() throws InterruptedException {
         final SaslServerMechanism.Instance instance =
                 (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "unknownRealm", config, null);
         byte[] response = instance.processResponse(createInitialResponse("user", "password"));
@@ -85,7 +85,7 @@ public class PlainSaslServerMechanismTest {
 
     // known realm, unknown user
     @Test
-    public void testUnknownUser() {
+    public void testUnknownUser() throws InterruptedException {
         final SaslServerMechanism.Instance instance =
                 (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config, null);
         byte[] response = instance.processResponse(createInitialResponse("unknown", "password"));
@@ -97,7 +97,7 @@ public class PlainSaslServerMechanismTest {
 
     // known user, wrong password
     @Test
-    public void testWrongPassword() {
+    public void testWrongPassword() throws InterruptedException {
         final SaslServerMechanism.Instance instance =
                 (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config, null);
         byte[] response = instance.processResponse(createInitialResponse("user", "wrong"));
@@ -109,7 +109,7 @@ public class PlainSaslServerMechanismTest {
 
     // known user, correct password
     @Test
-    public void testCorrectPassword() {
+    public void testCorrectPassword() throws InterruptedException {
         final SaslServerMechanism.Instance instance =
                 (new PlainSaslServerMechanism()).newInstance(keycloakSessionFactory, "realm", config, null);
         byte[] response = instance.processResponse(createInitialResponse("user", "password"));
