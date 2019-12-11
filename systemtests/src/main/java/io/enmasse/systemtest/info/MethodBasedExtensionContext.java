@@ -16,9 +16,11 @@ import org.junit.jupiter.api.extension.TestInstances;
 
 public class MethodBasedExtensionContext implements ExtensionContext{
 
+    private Class<?> testClass;
     private Optional<Method> method;
 
-    public MethodBasedExtensionContext(Optional<Method> method) throws ClassNotFoundException {
+    public MethodBasedExtensionContext(Class<?> testClass, Optional<Method> method) throws ClassNotFoundException {
+        this.testClass = testClass;
         this.method = method;
     }
 
@@ -39,7 +41,7 @@ public class MethodBasedExtensionContext implements ExtensionContext{
 
     @Override
     public String getDisplayName() {
-        throw new UnsupportedOperationException("not implemented");
+        return testClass.getName()+"."+method.get().getName();
     }
 
     @Override
@@ -54,7 +56,7 @@ public class MethodBasedExtensionContext implements ExtensionContext{
 
     @Override
     public Optional<Class<?>> getTestClass() {
-        throw new UnsupportedOperationException("not implemented");
+        return Optional.of(testClass);
     }
 
     @Override
@@ -74,7 +76,7 @@ public class MethodBasedExtensionContext implements ExtensionContext{
 
     @Override
     public Optional<Method> getTestMethod() {
-        throw new UnsupportedOperationException("not implemented");
+        return method;
     }
 
     @Override
