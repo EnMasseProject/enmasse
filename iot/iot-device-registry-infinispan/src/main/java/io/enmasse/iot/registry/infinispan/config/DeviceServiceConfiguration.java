@@ -79,9 +79,9 @@ public class DeviceServiceConfiguration {
      */
     @Bean
     @Autowired
-    public AuthHandler authHandler(final Vertx vertx, final RestEndpointConfiguration restEndpointConfiguration) {
+    public AuthHandler authHandler(final RestEndpointConfiguration restEndpointConfiguration) {
         return new DeviceRegistryTokenAuthHandler(
-                new DeviceRegistryTokenAuthProvider(vertx, restEndpointConfiguration.getAuthTokenCacheExpiration()
+                new DeviceRegistryTokenAuthProvider(restEndpointConfiguration.getAuthTokenCacheExpiration()
                 ));
     }
 

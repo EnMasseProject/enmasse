@@ -175,8 +175,8 @@ type FileBasedDeviceRegistry struct {
 }
 
 type InfinispanDeviceRegistry struct {
-	Server              InfinispanServer `json:"server"`
-	Management          InfinispanRegistryManagement	`json:"management"`
+	Server              InfinispanServer             `json:"server"`
+	Management          InfinispanRegistryManagement `json:"management"`
 	CommonServiceConfig `json:",inline"`
 }
 

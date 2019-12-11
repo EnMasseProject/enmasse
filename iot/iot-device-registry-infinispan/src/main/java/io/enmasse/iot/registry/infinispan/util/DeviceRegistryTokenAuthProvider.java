@@ -12,8 +12,6 @@ import io.enmasse.api.auth.TokenReview;
 import static io.enmasse.iot.registry.infinispan.util.DeviceRegistryTokenAuthHandler.METHOD;
 import static io.enmasse.iot.registry.infinispan.util.DeviceRegistryTokenAuthHandler.TENANT;
 import static io.enmasse.iot.registry.infinispan.util.DeviceRegistryTokenAuthHandler.TOKEN;
-import io.vertx.core.Vertx;
-import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
@@ -43,14 +41,12 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
 
     private final NamespacedKubernetesClient client;
     private final AuthApi authApi;
-    private final Vertx vertx;
     private final EmbeddedCacheManager cacheManager = new DefaultCacheManager();
     private Cache<String, TokenReview> tokens;
     private Cache<String, Boolean> authorizations;
 
-    public DeviceRegistryTokenAuthProvider(Vertx vertx, Duration tokenExpiration) {
+    public DeviceRegistryTokenAuthProvider(Duration tokenExpiration) {
         log.info("Using token cache expiration of {}", tokenExpiration);
-        this.vertx = vertx;
         this.client = new DefaultKubernetesClient();
         this.authApi = new KubeAuthApi(this.client, this.client.getConfiguration().getOauthToken());
         ConfigurationBuilder config = new ConfigurationBuilder();
@@ -66,81 +62,42 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
     public void authenticate(JsonObject authInfo, Handler<AsyncResult<User>> resultHandler) {
 
         final String token = authInfo.getString(TOKEN);
-
-        performTokenReview(token, tokenResult -> {
-            if (tokenResult.failed()) {
-                resultHandler.handle(Future.failedFuture(tokenResult.cause()));
-            }
-            TokenReview review = tokenResult.result();
-            if (review.isAuthenticated()) {
-                String role = getRole(authInfo, review, authApi);
-                RbacSecurityContext securityContext = new RbacSecurityContext(review, authApi, null);
-                performAuthorization(role, securityContext, authResult -> {
-                    if (authResult.failed()) {
-                         resultHandler.handle(Future.failedFuture(authResult.cause()));
-                    }
-                    if (!authResult.result()) {
-                        log.debug("Bearer token not authorized");
-                        resultHandler.handle(Future.failedFuture(UNAUTHORIZED));
-                    } else {
-                        resultHandler.handle(Future.succeededFuture());
-                    }
-
-                });
-            } else {
-                log.debug("Bearer token not authenticated");
-                resultHandler.handle(Future.failedFuture(UNAUTHORIZED));
-            }
-
-        });
-    }
-
-    private void performTokenReview(String token, Handler<AsyncResult<TokenReview>> resultHandler) {
-        tokens.getAsync(token).thenAccept(review -> {
-           if (review == null) {
-               log.debug("Authenticating token {}", token);
-               vertx.<TokenReview>executeBlocking(call -> {
-                   call.complete(authApi.performTokenReview(token));
-               }, res -> {
-                   if (res.succeeded()) {
-                       TokenReview reviewResult = res.result();
-                       tokens.putAsync(token, reviewResult).thenRun(() -> {
-                           resultHandler.handle(Future.succeededFuture(reviewResult));
-                       });
-                   } else {
-                       resultHandler.handle(Future.failedFuture(res.cause()));
-                   }
-               });
-           } else {
-               resultHandler.handle(Future.succeededFuture(review));
-           }
-        });
-    }
-
-    private void performAuthorization(String role, RbacSecurityContext securityContext, Handler<AsyncResult<Boolean>> resultHandler) {
-        authorizations.getAsync(role).thenAccept(authorized -> {
-            if (authorized == null) {
-                log.debug("Authorizing role {}", role);
-                vertx.<Boolean>executeBlocking(call -> {
-                    call.complete(securityContext.isUserInRole(role));
-                }, res -> {
-                        if (res.succeeded()) {
-                            Boolean auth = res.result();
-                            authorizations.putAsync(role, auth).thenRun(() -> {
-                                resultHandler.handle(Future.succeededFuture(auth));
-                            });
+        tokens.computeIfAbsentAsync(token, review -> authApi.performTokenReview(token))
+                .exceptionally(t -> {
+                    log.info("Error performing token review", t);
+                    return null;
+                })
+                .thenAccept(tokenReview -> {
+                    if (tokenReview != null && tokenReview.isAuthenticated()) {
+                        String role = getRole(authInfo);
+                        if (role != null) {
+                            RbacSecurityContext securityContext = new RbacSecurityContext(tokenReview, authApi, null);
+                            authorizations
+                                    .computeIfAbsentAsync(role, authorized -> securityContext.isUserInRole(role))
+                                    .exceptionally(t-> {
+                                        log.info("Error performing authorization", t);
+                                        return false;
+                                    })
+                                    .thenAccept(authResult -> {
+                                        if (authResult) {
+                                            resultHandler.handle(Future.succeededFuture());
+                                        } else {
+                                            log.debug("Bearer token not authorized");
+                                            resultHandler.handle(Future.failedFuture(UNAUTHORIZED));
+                                        }
+                                    });
                         } else {
-                            resultHandler.handle(Future.failedFuture(res.cause()));
+                            log.debug("Error parsing the role from {}", authInfo);
+                            resultHandler.handle(Future.failedFuture(UNAUTHORIZED));
                         }
+                    } else {
+                        log.debug("Bearer token not authenticated");
+                        resultHandler.handle(Future.failedFuture(UNAUTHORIZED));
+                    }
                 });
-            } else {
-                resultHandler.handle(Future.succeededFuture(authorized));
-            }
-        });
     }
 
-
-    private String getRole(JsonObject authInfo, TokenReview review, AuthApi authApi) throws HttpStatusException {
+    private String getRole(JsonObject authInfo) {
         final HttpMethod method = HttpMethod.valueOf(authInfo.getString(METHOD));
         ResourceVerb verb = ResourceVerb.update;
         if (method == HttpMethod.GET) {
@@ -149,10 +106,8 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
 
         final String[] tenant = authInfo.getString(TENANT).split("\\.");
         if (tenant.length != 2) {
-            throw new HttpStatusException(HTTP_BAD_REQUEST,
-                    new JsonObject()
-                            .put("error", "Tenant in wrong format: namespace.project")
-                            .toString());
+            log.info("Wrong tenant format (namespace.project) for value '{}'", tenant);
+            return null;
         }
         final String namespace = tenant[0];
         final String iotProject = tenant[1];
