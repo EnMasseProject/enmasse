@@ -139,12 +139,12 @@ public class InfinispanTenantCleaner implements AutoCloseable {
 
         final QueryFactory queryFactory = Search.getQueryFactory(devicesCache);
 
-        // we must set the "BROADCAST" flag, as we rely on the "near realtime" indexer
-
         return queryFactory
-                .create(String.format("from %s where tenantId=:tenantId", DeviceInformation.class.getName()), IndexedQueryMode.BROADCAST)
+                .create(
+                        String.format("from %s where tenantId=:tenantId", DeviceInformation.class.getName()),
+                        config.isIndexBroadcastQuery() ? IndexedQueryMode.BROADCAST : IndexedQueryMode.FETCH)
                 .maxResults(config.getDeletionChunkSize())
-                .setParameter("tenantId",tenantId);
+                .setParameter("tenantId", tenantId);
 
     }
 
