@@ -389,7 +389,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @ParameterizedTest(name = "testSwitchAuthService-{0}-space")
-    @ValueSource(strings = {"standard"})
+    @ValueSource(strings = {"standard", "brokered"})
     void testSwitchAuthService(String type) throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-1", true);
         resourcesManager.createAuthService(standardAuth);
