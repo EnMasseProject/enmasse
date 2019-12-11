@@ -13,11 +13,6 @@
 
   <artifactId>iot-infinispan-base</artifactId>
 
-  <properties>
-    <infinispan.version>10.0.1.Final</infinispan.version>
-    <infinispan-protostream.version>4.3.0.Final</infinispan-protostream.version>
-  </properties>
-
   <dependencies>
 
     <dependency>
@@ -26,78 +21,14 @@
     </dependency>
 
     <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-core</artifactId>
-      <version>${infinispan.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-client-hotrod</artifactId>
-      <version>${infinispan.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-remote-query-client</artifactId>
-      <version>${infinispan.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.google.protobuf</groupId>
-          <artifactId>protobuf-java</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.squareup</groupId>
-          <artifactId>protoparser</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-query-dsl</artifactId>
-      <version>${infinispan.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan.protostream</groupId>
-      <artifactId>protostream-processor</artifactId>
-      <version>${infinispan-protostream.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-server-hotrod</artifactId>
-      <version>${infinispan.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-remote-query-server</artifactId>
-      <version>${infinispan.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot</artifactId>
-      <optional>true</optional>
-    </dependency>
-
-    <dependency>
       <groupId>org.eclipse.hono</groupId>
       <artifactId>hono-service-base</artifactId>
+      <optional>true</optional>
     </dependency>
 
     <!-- testing -->

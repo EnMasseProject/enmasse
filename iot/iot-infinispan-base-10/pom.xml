@@ -11,10 +11,11 @@
     <version>0.31-SNAPSHOT</version>
   </parent>
 
-  <artifactId>iot-infinispan-base-9</artifactId>
+  <artifactId>iot-infinispan-base-10</artifactId>
 
   <properties>
-    <infinispan.version>9.4.15.Final</infinispan.version>
+    <infinispan.version>10.0.1.Final</infinispan.version>
+    <infinispan-protostream.version>4.3.0.Final</infinispan-protostream.version>
   </properties>
 
   <dependencies>
@@ -58,28 +59,23 @@
       <artifactId>infinispan-query-dsl</artifactId>
       <version>${infinispan.version}</version>
     </dependency>
-
     <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-remote-query-server</artifactId>
-      <version>${infinispan.version}</version>
-      <scope>test</scope>
+      <groupId>org.infinispan.protostream</groupId>
+      <artifactId>protostream-processor</artifactId>
+      <version>${infinispan-protostream.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.infinispan</groupId>
       <artifactId>infinispan-server-hotrod</artifactId>
       <version>${infinispan.version}</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.logging.log4j</groupId>
-          <artifactId>log4j-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.logging.log4j</groupId>
-          <artifactId>log4j-slf4j-impl</artifactId>
-        </exclusion>
-      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.infinispan</groupId>
+      <artifactId>infinispan-remote-query-server</artifactId>
+      <version>${infinispan.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -101,11 +97,6 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
       <optional>true</optional>
-    </dependency>
-
-    <dependency>
-      <groupId>org.eclipse.hono</groupId>
-      <artifactId>hono-service-base</artifactId>
     </dependency>
 
     <!-- testing -->
@@ -131,4 +122,26 @@
 
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>package-protobuf-schema</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>assembly/protobuf.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

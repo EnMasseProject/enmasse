@@ -26,6 +26,10 @@
       <groupId>io.enmasse</groupId>
       <artifactId>iot-utils</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-infinispan-base</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -129,11 +133,11 @@
       <dependencies>
         <dependency>
           <groupId>io.enmasse</groupId>
-          <artifactId>iot-infinispan-base</artifactId>
+          <artifactId>iot-infinispan-base-10</artifactId>
         </dependency>
         <dependency>
           <groupId>io.enmasse</groupId>
-          <artifactId>iot-infinispan-base</artifactId>
+          <artifactId>iot-infinispan-base-10</artifactId>
           <type>test-jar</type>
           <scope>test</scope>
         </dependency>

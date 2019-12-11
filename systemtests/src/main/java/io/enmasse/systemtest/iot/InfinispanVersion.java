@@ -8,17 +8,7 @@ package io.enmasse.systemtest.iot;
 import java.util.Optional;
 
 public enum InfinispanVersion {
-    V9("hotrod"), V10("infinispan");
-
-    private final String port;
-
-    private InfinispanVersion(final String portName) {
-        this.port = portName;
-    }
-
-    public String port() {
-        return this.port;
-    }
+    V9, V10;
 
     /**
      * Get the version to use for infinispan.
@@ -30,6 +20,6 @@ public enum InfinispanVersion {
         return Optional
                 .ofNullable(System.getenv("INFINISPAN_VERSION"))
                 .map(InfinispanVersion::valueOf)
-                .orElse(InfinispanVersion.V10);
+                .orElse(InfinispanVersion.V9);
     }
 }

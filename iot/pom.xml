@@ -69,15 +69,10 @@
       </dependency>
       <dependency>
         <groupId>io.enmasse</groupId>
-        <artifactId>iot-infinispan-base</artifactId>
-        <version>${project.version}</version>
-        <type>test-jar</type>
-      </dependency>
-      <dependency>
-        <groupId>io.enmasse</groupId>
         <artifactId>iot-infinispan-base-9</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -180,16 +175,26 @@
 
   <profiles>
     <profile>
-      <id>infinispan-9</id>
-      <modules>
-        <module>iot-infinispan-base-9</module>
-      </modules>
-    </profile>
-    <profile>
       <id>infinispan-10</id>
       <modules>
-        <module>iot-infinispan-base</module>
+        <module>iot-infinispan-base-10</module>
       </modules>
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>io.enmasse</groupId>
+            <artifactId>iot-infinispan-base-10</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>io.enmasse</groupId>
+            <artifactId>iot-infinispan-base-10</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
     </profile>
   </profiles>
 

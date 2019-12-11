@@ -24,18 +24,9 @@ public final class DefaultDeviceRegistry {
         // credentials aligned with 'templates/iot/examples/infinispan/manual'
         builder = builder
                 .withUsername("app")
-                .withPassword("test12");
-
-        switch (version) {
-            case V10:
-                builder = builder.withSaslRealm("default")
-                        .withSaslServerName("infinispan");
-                break;
-            default:
-                builder = builder.withSaslRealm("ApplicationRealm")
-                        .withSaslServerName("hotrod");
-                break;
-        }
+                .withPassword("test12")
+                .withSaslRealm("default")
+                .withSaslServerName("infinispan");
 
         return builder.build();
     }
