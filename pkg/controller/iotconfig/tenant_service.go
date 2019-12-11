@@ -36,6 +36,9 @@ func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *i
 		return r.processService(ctx, nameTenantService, config, false, r.reconcileTenantServiceService)
 	})
 	rc.ProcessSimple(func() error {
+		return r.processService(ctx, nameTenantService+"-metrics", config, false, r.reconcileMetricsService(nameTenantService))
+	})
+	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameTenantService+"-config", config, false, r.reconcileTenantServiceConfigMap)
 	})
 
@@ -66,10 +69,10 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 		}
 
 		container.Ports = []corev1.ContainerPort{
-			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "amqps", ContainerPort: 5671, Protocol: corev1.ProtocolTCP},
 		}
 
+		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
 		// environment

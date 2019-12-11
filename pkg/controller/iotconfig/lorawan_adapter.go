@@ -47,6 +47,9 @@ func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *
 		return r.processService(ctx, nameLoraWanAdapter, config, !enabled, r.reconcileLoraWanAdapterService)
 	})
 	rc.ProcessSimple(func() error {
+		return r.processService(ctx, nameLoraWanAdapter+"-metrics", config, false, r.reconcileMetricsService(nameLoraWanAdapter))
+	})
+	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameLoraWanAdapter+"-config", config, !enabled, r.reconcileLoraWanAdapterConfigMap)
 	})
 	if !util.IsOpenshift() {
@@ -97,10 +100,10 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 		}
 
 		container.Ports = []corev1.ContainerPort{
-			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "https", ContainerPort: 8443, Protocol: corev1.ProtocolTCP},
 		}
 
+		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
 		// environment

@@ -7,6 +7,7 @@ package install
 
 import (
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
@@ -42,6 +43,15 @@ func ApplyDefaultLabels(meta *v1.ObjectMeta, component string, name string) {
 func ApplyServiceDefaults(service *corev1.Service, component string, name string) {
 
 	ApplyDefaultLabels(&service.ObjectMeta, component, name)
+	if service.CreationTimestamp.IsZero() {
+		service.Spec.Selector = CreateDefaultLabels(nil, component, name)
+	}
+
+}
+
+func ApplyMetricsServiceDefaults(service *corev1.Service, component string, name string) {
+
+	ApplyDefaultLabels(&service.ObjectMeta, component, name+"-metrics")
 	if service.CreationTimestamp.IsZero() {
 		service.Spec.Selector = CreateDefaultLabels(nil, component, name)
 	}
