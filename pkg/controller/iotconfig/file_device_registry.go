@@ -69,6 +69,7 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 	deployment.Annotations[RegistryTypeAnnotation] = "file"
+	deployment.Spec.Template.Spec.ServiceAccountName = "iot-device-registry"
 	deployment.Spec.Template.Annotations[RegistryTypeAnnotation] = "file"
 
 	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig, nil)

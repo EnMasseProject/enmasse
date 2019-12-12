@@ -1,0 +1,10 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: enmasse
+  name: enmasse.io:iot-tenant-service
+rules:
+  - apiGroups: [ "iot.enmasse.io" ]
+    resources: [ "iotprojects" ]
+    verbs: [ "get", "list", "watch" ]

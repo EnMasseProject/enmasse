@@ -377,3 +377,7 @@ func mergeAdapterOptions(first, second *iotv1alpha1.AdapterOptions) iotv1alpha1.
 
 	return result
 }
+
+func applyDefaultAdapterDeploymentSpec(deployment *appsv1.Deployment) {
+	deployment.Spec.Template.Spec.ServiceAccountName = "iot-protocol-adapter"
+}

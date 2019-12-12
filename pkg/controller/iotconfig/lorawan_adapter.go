@@ -78,6 +78,7 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
+	applyDefaultAdapterDeploymentSpec(deployment)
 
 	install.DropContainer(deployment, "lorawan-adapter")
 	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
