@@ -365,7 +365,7 @@ This would mean:
 * We remove AddressSpace resource completely and allow only 1 instance of messaging per Kubernetes namespace.
 * Create new CRDs for configuring endpoints, connectors etc.
 
-How would one configure an 'address space' without the CRD?! If no configuration is given, a default authentication service and plan will be used.
+How would one configure an 'address space' without the CRD?! If no configuration is given, a default authentication service and plan will be used (we can allow the service admin to specify defaults).
 Explicit configuration of a namespace would be supported through an optional https://github.com/kubernetes-sigs/kubebuilder/issues/1074#issue-502866823[singleton resource]:
 
 ```
