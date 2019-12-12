@@ -13,6 +13,7 @@ import {
   RETURN_ALL_ADDRESS_SPACES
 } from "src/Queries/Queries";
 import { IAddressSpacesResponse } from "src/Types/ResponseTypes";
+import { EditAddressSpace } from "../EditAddressSpace";
 
 interface AddressSpaceListPageProps {
   page: number;
@@ -87,6 +88,13 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   const handleDeleteChange = (addressSpace: IAddressSpace) =>
     setAddressSpaceBeingDeleted(addressSpace);
 
+  const handlePlanChange = (plan: string) => {
+    if(addressSpaceBeingEdited){
+      addressSpaceBeingEdited.displayName = plan;
+      setAddressSpaceBeingEdited({...addressSpaceBeingEdited});
+    }
+  }
+
   if (error) {
     console.log(error);
   }
@@ -117,8 +125,9 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
       )}
       {addressSpaceBeingEdited && (
         <Modal
+          isLarge
           id="as-list-edit-modal"
-          title="Modal Header"
+          title="Edit"
           isOpen={true}
           onClose={handleCancelEdit}
           actions={[
@@ -130,8 +139,13 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
             </Button>
           ]}
           isFooterLeftAligned={true}
-          children
-        />
+        >
+          <EditAddressSpace
+            addressSpace={addressSpaceBeingEdited}
+            onPlanChange={handlePlanChange}
+          >
+          </EditAddressSpace>
+        </Modal>
       )}
       {addressSpaceBeingDeleted && (
         <DeletePrompt
