@@ -4,7 +4,8 @@ import {
   TableVariant,
   TableHeader,
   TableBody,
-  IRowData
+  IRowData,
+  sortable
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
 import {
@@ -97,7 +98,9 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
     return tableRow;
   };
   const tableRows = rows.map(toTableCells);
-  const tableColumns = ["Name/Name Space", "Type", "Status", "Time created"];
+  const tableColumns = [
+    { title: "Name/Name Space", transforms: [sortable] },
+    "Type", "Status", "Time created"];
 
   return (
     <Table
