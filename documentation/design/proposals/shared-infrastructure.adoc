@@ -268,7 +268,7 @@ After the first phase, the following would be supported:
 * Deploy shared infra using the `MessagingInfra` resource
 * Creating messaging configs and messaging endpoints in a namespace
 * Anycast, multicast, queue and non-sharded topics supported (no transactions etc. yet)
-* Management using AMQ console
+* Management using console
 
 The following would NOT be supported:
 
@@ -285,7 +285,7 @@ The following would NOT be supported:
 
 The tasks of managing brokers and routers should be offloaded to standalone components as much as possible.
 
-For router deployments, the https://github.com/interconnectedcloud/qdr-operator[qdr-operator] will be used and it supports all features required by AMQ Online.
+For router deployments, the https://github.com/interconnectedcloud/qdr-operator[qdr-operator] will be used and it supports all features required by EnMasse.
 
 For broker deployments, the https://github.com/rh-messaging/activemq-artemis-operator[activemq-artemis-operator] will be used, (and modified to work with our requirements). The resulting changes should be submitted upstream, although short term there may exist a temporary fork in order to make progress.
 
@@ -378,7 +378,7 @@ The controller should:
 * Creates broker CRs to deploy brokers based on infra config and scale on-demand
 * Apply to router CR: router <-> broker connectors
 * Creates interal state representation for each router and broker in the CR status. This state should be shared with other controllers (details below)
-* Expose metrics about connections and links used by the AMQ console.
+* Expose metrics about connections and links which is used by the console, either through HTTP or AMQP
 
 ===== Internal state representation
 
