@@ -55,7 +55,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   };
   const tableRows = rows.map(toTableCells);
   const tableColumns = [
-    { title: "Hostname", dataLabel: "host" },
+    { title: "Hostname", dataLabel: "host", transforms: [sortable] },
     "Container ID",
     "Protocol",
     {

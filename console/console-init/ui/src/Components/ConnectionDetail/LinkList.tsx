@@ -46,7 +46,7 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
   const tableRows = rows.map(toTableCells);
   const tableColumns = [
     "Role",
-    "Name",
+    { title: "Name", transforms: [sortable] },
     "Address",
     "Deliveries",
     { title: "Rejected", transforms: [sortable] },

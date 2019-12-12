@@ -60,7 +60,7 @@ export const ClientList: React.FunctionComponent<IClientListProps> = ({
   const tableColumns = [
     "Role",
     "Container ID",
-    "Name",
+    { title: "Name", transforms: [sortable] },
     { title: "Delivery Rate", transforms: [sortable] },
     { title: "Backlog", transforms: [sortable] }
   ];
