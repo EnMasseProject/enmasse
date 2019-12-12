@@ -261,82 +261,41 @@ data:
                       <global-state
                             enable="true"
                             persistent-location="global-data"/>
-                            <!--
-                      <distributed-cache-configuration name="transactional">
-                          <transaction mode="NON_XA" locking="PESSIMISTIC"/>
-                      </distributed-cache-configuration>
-                      <distributed-cache-configuration name="async" mode="ASYNC"/>
-                      <replicated-cache-configuration name="replicated"/>
-                      <distributed-cache-configuration name="persistent-file-store">
-                          <file-store shared="false" fetch-state="true" passivation="false"/>
-                      </distributed-cache-configuration>
-                      <distributed-cache-configuration name="indexed">
-                          <indexing index="LOCAL" auto-config="true"/>
-                      </distributed-cache-configuration>
-                      <distributed-cache-configuration name="memory-bounded">
-                          <memory>
-                              <binary size="10000000" eviction="MEMORY"/>
-                          </memory>
-                      </distributed-cache-configuration>
-                      <distributed-cache-configuration name="persistent-file-store-passivation">
-                          <memory>
-                              <object size="10000"/>
-                          </memory>
-                          <file-store shared="false" fetch-state="true" passivation="true">
-                              <write-behind modification-queue-size="1024" thread-pool-size="1"/>
-                          </file-store>
-                      </distributed-cache-configuration>
-                      <distributed-cache-configuration name="persistent-file-store-write-behind">
-                          <file-store shared="false" fetch-state="true" passivation="false">
-                              <write-behind modification-queue-size="1024" thread-pool-size="1"/>
-                          </file-store>
-                      </distributed-cache-configuration>
-                      <distributed-cache-configuration name="persistent-rocksdb-store">
-                          <rocksdb-store shared="false" fetch-state="true" passivation="false"/>
-                      </distributed-cache-configuration>
-                      <distributed-cache-configuration name="persistent-jdbc-string-keyed">
-                          <string-keyed-jdbc-store datasource="java:jboss/datasources/ExampleDS" fetch-state="true" preload="false" purge="false" shared="false" passivation="false">
-                              <string-keyed-table prefix="ISPN">
-                                  <id-column name="id" type="VARCHAR"/>
-                                  <data-column name="datum" type="BINARY"/>
-                                  <timestamp-column name="version" type="BIGINT"/>
-                              </string-keyed-table>
-                              <write-behind modification-queue-size="1024" thread-pool-size="1"/>
-                          </string-keyed-jdbc-store>
-                      </distributed-cache-configuration>
-                       -->
+
                       <distributed-cache name="default"/>
-                        <replicated-cache name="LuceneIndexesLocking">
-                            <indexing index="NONE" />
-                        </replicated-cache>
-                        
-                        <replicated-cache name="LuceneIndexesMetadata">
-                            <indexing index="NONE" />
-                        </replicated-cache>
-                        
-                        <distributed-cache name="LuceneIndexesData">
-                            <indexing index="NONE" />
-                        </distributed-cache>
 
-                       <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="devices" segments="10">
-                           <transaction mode="NONE"/>
-                           <locking isolation="NONE"/>
-                           <indexing index="LOCAL">
-                               <property name="default.indexmanager">
-                                   org.infinispan.query.indexmanager.InfinispanIndexManager
-                               </property>
-                           </indexing>
-                       </distributed-cache>
+                      <distributed-cache owners="1" mode="SYNC" remote-timeout="15000" name="devices">
+                         <locking isolation="READ_COMMITTED"/>
+                         <transaction mode="NON_XA" locking="PESSIMISTIC" />
+                         <indexing index="PRIMARY_OWNER">
+                            <property name="default.indexmanager">near-real-time</property>
+                            <property name="default.indexBase">/opt/infinispan/server/data/indexDir</property>
+                         </indexing>
+                         <memory>
+                            <!-- <binary strategy="REMOVE" size="134217728" eviction="MEMORY"/> --><!-- ISPN-11024-->
+                            <object strategy="REMOVE" size="10000" />
+                         </memory>
+                         <persistence passivation="false">
+                            <rocksdb-store xmlns="urn:infinispan:config:store:rocksdb:10.0" path="/opt/infinispan/server/data/devices" shared="false" preload="false" />
+                         </persistence>
+                      </distributed-cache>
 
-                       <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="adapterCredentials">
-                           <transaction mode="NONE"/>
-                           <indexing index="NONE"/>
-                       </distributed-cache>
-      
-                       <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="deviceStates">
-                           <transaction mode="NONE"/>
-                           <indexing index="NONE"/>
-                       </distributed-cache>
+                      <distributed-cache owners="1" mode="SYNC" remote-timeout="15000" name="adapterCredentials">
+                         <transaction mode="NON_XA" locking="PESSIMISTIC" />
+                         <memory>
+                            <!-- <binary strategy="REMOVE" size="134217728" eviction="MEMORY"/> --><!-- ISPN-11024-->
+                            <object strategy="REMOVE" size="10000" />
+                         </memory>
+                         <indexing index="NONE"/>
+                      </distributed-cache>
+
+                      <distributed-cache owners="1" mode="SYNC" remote-timeout="15000" name="deviceStates">
+                         <transaction mode="NONE"/>
+                         <indexing index="NONE"/>
+                         <memory>
+                            <binary strategy="REMOVE" size="67108864" eviction="MEMORY"/>
+                         </memory>
+                      </distributed-cache>
 
                   </cache-container>
               </subsystem>
