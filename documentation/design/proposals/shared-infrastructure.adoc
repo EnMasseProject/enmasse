@@ -4,13 +4,27 @@ Address spaces in EnMasse are currently isolated, i.e. they don't share infrastr
 
 See the initial discussion in issue #3420 for more details on alternatives. This document will consider the alternative with a new address space type for shared infra.
 
-== Design
+Another part of EnMasse that has been a source of confusion is Address Spaces and Namespaces. Earlier requirements around the service catalog integration led to supporting multiple AddressSpace instances per namespace. However, with CRDs, and the type of clusters EnMasse is deployed to, putting a restriction on one address space per namespace is a direction we want to go in. Doing this as part of shared infra is a good fit, as one would need to write the controller logic separately from existing code anyway.
 
-A new address space type `shared` is introduced. This address space type will not be handled by the `address-space-controller`, which will have a filter to avoid processing such address spaces. Eventually, allow `type` field of an address space to be omitted, and make the absence of this field indicate that the `shared` type should be used.
+== Design overview
 
-The `AddressSpacePlan` will also have the 'shared' addressSpaceType. A new field `messagingInfraRef` can refer to a new CRD type instace, `MessagingInfra`. This new type will contain configuration for both brokers and router.
+A new `MessagingInfra` type will be created and used to define an instance of shared infrastructure. The `MessagingInfra` will define everything related to 'global' router and broker configuration.
 
-The infrastructure is deployed is when the `MessagingInfra` instance is created. Alternatively, it could be deployed on-demand when an address space referencing it is created. This behavior could potentially be configurable to give the service admins more control.
+A new `MessagingPlan` type will be created, and will conceptually replace the `AddressSpacePlan`, but limited to shared infra configuration.
+
+AddressSpace resource is not used, and a restriction of 1 instance of messaging per Kubernetes namespace is set. New CRDs for configuring messaging endpoints, connectors and plan/authservice config us defined. The AddressSpace resource is replaced by `MessagingConfig`, `MessagingEndpoint` and `MessagingConnector` resources.
+
+The `MessagingConfig` type, which will be a singleton per namespace, is introduced to contain the messaging configuration of a namespace.
+
+The `Address` and `AddressPlan` types will remain, but the schema will be extended to support options required by the shared infrastructure.
+
+The `qdr-operator` and `activemq-artemis-operator` operators will be used for managing routers and brokers.
+
+The `MessagingPlan`, `AddressPlan` and `AuthenticationService` resource may additionally be referenced by their namespace. This allows having a service operator persona that does not manage or have access to the messaging infrastructure, but manages the plans and authentication service configurations offered to messaging tenants.
+
+MessagingUser and Address will no longer needed to be prefixed with address space name!
+
+=== MessagingInfra
 
 Example:
 
@@ -70,7 +84,7 @@ When deployed, the above would have the minimum impact of creating 3 routers and
 
 An `AddressSpacePlan` currently refers to router and broker credits to control the 'quota' of address spaces. With shared infra, the numbers would either have to change their meaning, or one could reithink and extend the schema.
 
-For instance, address space limits can be expressed in more specific terms that map to the routers per vhost policies:
+For instance, namespace limits can be expressed in more specific terms that map to the routers per vhost policies:
 
 * connections
 * links per connection
@@ -81,20 +95,20 @@ In addition, operator limits such as number of addresses can be specified:
 
 Moreover, a split into requests and limits similar to Kubernetes resources is used to allow the operator to calculate the cost of applying plans vs. infrastructure capacity when creating the plan, as well as the cost of applying the plan.
 
-The `AddressSpacePlan` would then look like this:
+The `MessagingPlan` would then look like this:
 
 ```
-apiVersion: admin.enmasse.io/v1beta2
-kind: AddressSpacePlan
+apiVersion: admin.enmasse.io/v1beta1
+kind: MessagingPlan
 metadata:
-  name: shared-small
+  name: small
 spec:
-  messagingInfraRef: shared1 // Plans may refer to the same infra - this means address spaces will run on the same infra
+  messagingInfraRef: shared1 // Plans may refer to the same infra - this means namespaces using this plan will run on the same infra
   capabilities:
     - transactions
   resources:
     requests:
-      queueMemory: 10Mi # This mount is shared among addresses on a broker for a particular address space
+      queueMemory: 10Mi # This mount is shared among addresses on a broker for a particular namespace
       addresses: 10 # Mainly for sizing operator
       connections: 1 # Router limits
     limits:
@@ -104,26 +118,84 @@ spec:
       linksPerConnection: 2
 ```
 
-This would be easier to understand and reason about than fractions. It is also easier to relate the impact of those limits to the shared infra, and allow the limits to be enforced. It would allow a shared infra to support address space plans with different limits in place. 
+This would be easier to understand and reason about than fractions. It is also easier to relate the impact of those limits to the shared infra, and allow the limits to be enforced. It would allow a shared infra to support messaging plans with different limits in place. 
 
-NOTE: Plans for existing address space types would continue to use the existing schema.
+For routers and brokers, the shared infra has some potential for auto-scaling. It would be the responsibility of the enmasse-operator to scale the infrastructure within the bounds set by the `MessagingInfra`, which could be based on cpu and memory usage, or the limits defined in the messaging plans.
 
-For routers and brokers, the shared infra has some potential for auto-scaling. It would be the responsibility of the enmasse-operator to scale the infrastructure within the bounds set by the `MessagingInfra`, which could be based on cpu and memory usage, or the limits defined in the address space plans.
+For plans with the `transactions` capability, the operator will ensure that addresses for that namespace are always link-routed and put on the same broker (and HA replicas).
 
-Address spaces may also contain capabilities to indicate what sort of broker that needs to be used for the addresses:
+The messaging tenant will create a singleton instance of `MessagingConfig` in a namespace to configure messaging:
 
 ```
-apiVersion: enmasse.io/v1beta1
-kind: AddressSpace
+kind: MessagingConfig
 metadata:
-  name: myspace
+  name: default # Singletons can be enforced using openapi validation!
 spec:
-  type: shared
-  capabilities:
-    - transactions
+  plan:
+    name: myplan
+    namespace: custom # Default is enmasse-infra
+  authenticationService:
+    name: myservice
+    namespace: custom # Default is enmasse-infra
+status:
+  message: "Unknown authenticationservice 'myservice'
 ```
 
-The operator will ensure that addresses for this address space is always link-routed and put on the same broker (and HA replicas).
+Endpoints would e configured by creating a MessagingEndpoint instance (multiple instances allowed):
+
+```
+kind: MessagingEndpoint
+metadata:
+  name: myendpoint
+  namespace: myapp
+spec:
+  cert:
+    selfsigned: {}
+    openshift: {}
+    provided:
+      secret:
+        name: mycert # Get cert from secret
+
+  # Only one of 'internal', 'route' and 'loadbalancer' may be specified for each endpoint
+  internal: # Expose as a ClusterIP service for applications on cluster
+    ports:
+    - name: amqp
+    - name: amqps
+    - name: amqpws
+      port: 8080 # Port is optional
+    - name: amqpwss
+      port: 443
+
+  route: # Expose as route
+    host: example.com
+
+  loadbalancer:
+    annotations: {}
+    ports:
+    - name: amqp
+
+  exports:
+  - name: myconfig # Same as before?
+    kind: ConfigMap
+status:
+  ca: # CA of endpoint (if selfsigned)
+  host: myendpoint-myapp.enmasse-infra.svc # Host is based on name and namespace of endpoint
+  ports:
+  - name: amqp
+    port: 5672
+```
+
+To configure connectors:
+
+```
+kind: MessagingConnector
+matadata:
+  name: connector
+spec:
+  # Same options as under address space .spec.connectors[]?
+status:
+  # Same options as under address space .spec.connectors[]?
+```
 
 Address plans allow properties to indicate the desired guarantees of a queue. An example address plan would be:
 
@@ -133,13 +205,11 @@ kind: AddressPlan
 metadata:
   name: small-queue
 spec:
-  addressType: queue
   resources:
     requests:
-      queueDepth: 3
+      queueMemory: 3Mi
     limits:
-      queueDepth: 10
-
+      queueMemory: 4Mi
   allowOverrides: true # true means addresses are allowed to override plan settings
   queue: # Settings related to queue types
     partitions: # Specifying a min and max allow the operator to make a decisions to split queue across multiple brokers to fit it. Setting max >= 1 may cause message affects message ordering
@@ -158,7 +228,7 @@ Addresses allow setting the same properties as the plan, if permitted:
 apiVersion: enmasse.io/v1beta1
 kind: Address
 metadata:
-  name: myspace.addr1
+  name: addr1
 spec:
   address: addr1
   type: queue
@@ -185,18 +255,18 @@ The following components will not be part of shared infra:
 
 === Phase 1 (Milestone 0.32.0 ?)
 
-Add support for shared infra address space type and implement basic features similar to standard address space.
+The goal of phase is to add support for shared infra and implement basic features similar to standard address space.
 
 The `MessagingInfra` resource would be managed by the enmasse-operator, which will do a reconciliation of deployments, services etc. The router-operator should be used to deploy and manage the dispatch router to simplify the interface. Depending on the maturity of the broker-operator, it should be used to deploy the brokers.
 
-The `AddressSpace` resource of type `shared` will be managed by a controller in enmasse-operator. The controller will create vhost policies in the shared router infra for each address space, and apply restrictions as specified in the address space plan.
+The `MessagingConfig` resource will be managed by a controller in enmasse-operator. The controller will create vhost policies in the shared router infra for each namespace with a config, and apply restrictions as specified in the messaging plan.
 
-The `Address` resource for `shared` address space types will be managed by a controller in enmasse-operator. The controller will watch all addresses across all address spaces, and apply the needed address configuration to brokers and routers using AMQP management.
+The `Address` resource for `shared` infra will be managed by a controller in enmasse-operator. The controller will watch all addresses across all namespaces, and apply the needed address configuration to brokers and routers using AMQP management.
 
 After the first phase, the following would be supported:
 
 * Deploy shared infra using the `MessagingInfra` resource
-* Creating 1 or more address spaces per shared infra
+* Creating messaging configs and messaging endpoints in a namespace
 * Anycast, multicast, queue and non-sharded topics supported (no transactions etc. yet)
 * Management using AMQ console
 
@@ -223,8 +293,8 @@ Router - Broker connections can be maintained either by having the operator crea
 
 Performance requirements of shared infra:
 
-* Handle up to 100k addresses - possibly spread accross multiple address spaces
-* Handle up to 1000 address spaces per infra instance (with 100 addresses each)
+* Handle up to 100k addresses - possibly spread accross multiple namespaces
+* Handle up to 1000 namespaces per infra instance (with 100 addresses each)
 
 Improtant design considerations:
 
@@ -237,13 +307,13 @@ Improtant design considerations:
 The configuration can be broken down into different lifecycle 'levels':
 
 * Infra - configuration that is applied at all routers and brokers (based on the MessagingInfra config)
-* Address space - configuration that is applied for each address space (based on AddressSpace and AddressSpacePlan)
+* Namespace - configuration that is applied for each namespace (based on MessagingConfig, MessagingPlan, MessagingEndpoint and MessagingConnector)
 * Address - configuration that is applied for each address (based on Address and AddressPlan)
 
 For the routers, each level will involve the following configuration:
 
 * Infra: Connectors to broker. Global router settings such as threads, internal certs. Pod template settings. Changes modify the router CR and require a rolling router restart (until DISPATCH-1519 is implemented)
-* Address space: Vhost policies, external connectors. Changes are applied using AMQP management to avoid router restart.
+* Namespace: Vhost policies, endpoints, external connectors. Changes are applied using AMQP management to avoid router restart.
 * Address: Address waypoints, autolinks, linkroutes. Changes are applied using AMQP management to avoid router restart
 
 For the brokers:
@@ -253,7 +323,7 @@ For the brokers:
 
 The operator will maintain open connections to all routers and brokers. The connection will be periodically closed to enforce a resync so that configuration does not drift.
 
-Once the connection is open, the operator will retrieve the applied configuration for that component and maintain an internal state representation of that components configuration. Whenever new address spaces or addresses are created or updated, the internal state will be changed, and changes applied to the router and broker.
+Once the connection is open, the operator will retrieve the applied configuration for that component and maintain an internal state representation of that components configuration. Whenever new messaging configs or addresses are created or updated, the internal state will be changed, and changes applied to the router and broker.
 
 Should the configuration of routers and brokers drift (i.e. by manual intervention or bugs), the periodic resync will correct the configuration.
 
@@ -265,7 +335,7 @@ Routers will be periodically queried (by independent goroutines) for:
 * Linkroute states
 * Link states
 
-The data will be stored in memory available to the address space and address controller loops.
+The data will be stored in memory available to the messaging config and address controller loops.
 
 ===== Controllers
 
@@ -273,18 +343,17 @@ The following controllers and components must be implemented:
 
 * Messaging-infra controller - Managing the shared infra
 ** State representation model - Used by other controllers to apply configuration to shared infra
-* Address-space controller - Managing address spaces
-* Address controller - Managing addresses
+* Messaging-config controller - Managing messaging configuration of namespaces
+* Messaging-endpoint controller - Managing messaging endpoints of namespaces
+* (Phase 2) Messaging-connector controller - Managing external connectors of namespaces
+* Address controller - Managing addresses of namespaces
 ** Address scheduler - Used for placing queues on a set of brokers with different properties/capabilities
 
 ==== Tasks
 
-===== Task 1: Create MessagingInfra CRD (small)
+===== Task 1: Create new CRDs (small)
 
-* Create the MessaginInfra CRD + OpenAPI.
-* Update AddressSpacePlan CRD to allow referencing shared infra in the spec. 
-* Address 'shared' type as an allowed address space type.
-* Add filter in AddressSpaceController loop on 'brokered' and 'standard'.
+* Create the MessaginInfra, MessagingConfig, MessagingEndpoint CRD + OpenAPI.
 
 ==== Task 2: Import router operator definitions (small)
 
@@ -309,27 +378,28 @@ The controller should:
 * Creates broker CRs to deploy brokers based on infra config and scale on-demand
 * Apply to router CR: router <-> broker connectors
 * Creates interal state representation for each router and broker in the CR status. This state should be shared with other controllers (details below)
+* Expose metrics about connections and links used by the AMQ console.
 
 ===== Internal state representation
 
 A components state encapsulates the configuration state of a broker or router in memory. Whenever a router or broker is connected, a corresponding router/broker state object is initialized with configuration retrieved from querying the router/broker. If disconnected, the state object is initialized with current state, and desired state is applied.
 
-The state object has methods to apply configuration (i.e. applyAddress, applyAddressSpace). These methods compare the actual configuration of the underlying component to the desired configuration (transformed into autolinks etc.). If the applied configuration is different to the internal state, the underlying component is updated using AMQP management.
+The state object has methods to apply configuration (i.e. applyAddress, applyMessagingEndpoint, applyMessagingConfig etc.). These methods compare the actual configuration of the underlying component to the desired configuration (transformed into autolinks etc.). If the applied configuration is different to the internal state, the underlying component is updated using AMQP management.
 
-In addition ,each state object has a goroutine which periodically polls its underlying router/broker for all status information and caches it for use by controllers to update the address space/address status.
+In addition ,each state object has a goroutine which periodically polls its underlying router/broker for all status information and caches it for use by controllers to update the status of their respective resources.
 
-==== Task 5: Implement address-space controller in controller-manager (medium)
+==== Task 5: Implement messaging-config controller in controller-manager (medium)
 
-The address-space controller manages the AddressSpace CR (filtered by shared infra)
+The messaging-config controller manages the MessagingConfig CR
 
-* Watch AddressSpace CR
-* Find MessagingInfra where this is placed (based on plan)
+* Watch MessagingConfig CR
+* Find MessagingInfra where this is placed (based on referenced MessagingPlan)
 * Lookup infra state representation
 * For each router:
-** Apply vhost settings+limits, external connectors, certs
-** Fetch latest known status and update address space status accordingly
-* Expose address space metrics based on status
-* Requeue address space for processing at configurable interval
+** Apply vhost settings+limits, authentication service information
+** Fetch latest known status and update CR status accordingly
+* Expose metrics of connections and linke based on router status.
+* Requeue for processing at configurable interval
 
 ==== Task 6: Implement address controller in controller-manager (medium)
 
@@ -347,6 +417,7 @@ The address-space controller manages the AddressSpace CR (filtered by shared inf
 * (Optional phase 2): Expose address metrics based on status
 * Requeue address for processing at configurable interval
 
+
 ==== Task 7: Implement queue/topic/subscription scheduling (medium)
 
 The initial version of the queue scheduler should be similar to what we have in the standard address space. It should:
@@ -356,131 +427,19 @@ The initial version of the queue scheduler should be similar to what we have in 
 * (Optional phase 2): Take broker anti-affinity into consideration during placement
 * (Optional phase 2): Take available broker memory for queue into account during placement
 
-=== Phase 1 VARIANT b
+==== Task 8: Implement messaging-endpoint controller in controller-manager (medium)
 
-Mostly the same as the above Phase 1 with respect to management of infra, routers and brokers. However, AddressSpace vs Address has been a source of confusion for a long time, and this might be a good time to fix that.
-
-This would mean:
-
-* We remove AddressSpace resource completely and allow only 1 instance of messaging per Kubernetes namespace.
-* Create new CRDs for configuring endpoints, connectors etc.
-
-How would one configure an 'address space' without the CRD?! If no configuration is given, a default authentication service and plan will be used (we can allow the service admin to specify defaults).
-Explicit configuration of a namespace would be supported through an optional https://github.com/kubernetes-sigs/kubebuilder/issues/1074#issue-502866823[singleton resource]:
-
-```
-kind: MessagingConfig
-metadata:
-  name: default # Singletons can be enforced using openapi validation!
-spec:
-  plan:
-    name: myplan
-    namespace: custom # Default is enmasse-infra
-  authenticationService:
-    name: myservice
-    namespace: custom # Default is enmasse-infra
-    overrides: # Not needed anymore? (I.e. define an authentication service in your own namespace!)
-status:
-  message: "Unknown authenticationservice 'myservice'
-```
-
-Then, other parts of the 'address space' with multiple entities, could also be part of the above, or be configured using CRDs.
-
-To configure connectors:
-
-```
-kind: MessagingConnector
-matadata:
-  name: connector
-spec:
-  # Same options as under address space .spec.connectors[]?
-status:
-  # Same options as under address space .spec.connectors[]?
-```
-
-To configure endpoints for messaging:
-
-```
-kind: MessagingEndpoint
-metadata:
-  name: myendpoint
-spec:
-  cert:
-    selfsigned: {}
-    openshift: {}
-    provided:
-      secret:
-        name: mycert # Get cert from secret
-    letsencrypt:
-      ... #
-
-  # Only one of 'service', 'route' and 'loadbalancer' may be specified for each endpoint
-  service: # Expose as a service for applications on cluster
-    ports:
-    - name: amqp
-    - name: amqps
-    - name: amqpws
-      port: 8080 # Port is optional
-    - name: amqpwss
-      port: 443
-
-  route: # Expose as route
-    host: example.com
-
-  loadbalancer:
-    annotations: {}
-    ports:
-    - name: amqp
-
-  exports:
-  - name: myconfig # Same as before?
-    kind: ConfigMap
-status:
-  ca: # CA of endpoint (if selfsigned)
-  host: myendpoint.enmasse-infra.svc
-  ports:
-  - name: amqp
-    port: 5672
-```
-
-Instead of reusing AddressSpacePlan, we could create a MessagingPlan with the desired schema sketched already for the AddressSpacePlan:
-
-```
-apiVersion: admin.enmasse.io/v1
-kind: MessagingPlan
-metadata:
-  name: small
-spec:
-  messagingInfraRef: shared1 // Plans may refer to the same infra - this means messaging with the same plan will run on the same infra
-  capabilities:
-    - transactions
-  resources:
-    requests:
-      queueMemory: 10Mi # This mount is shared among addresses on a broker for a particular address space
-      addresses: 10 # Mainly for sizing operator
-      connections: 1 # Router limits
-    limits:
-      queueMemory: 100Mi
-      addresses: 100
-      connections: 10
-      linksPerConnection: 2
-```
-
-The main work for shared infra would still be in the messaging-infra and state representations, but there would be no address space controller. Instead, "Task 5" would be modified. In addition, a task for creating the new CRDs would be needed.
-
-==== Task 5: Implement namespace-controller in controller-manager (medium)
-
-The namespace controller watches all namespaces on the cluster for the annotation to enable messaging:
-
-* Watch Namespaces and filter on annotations
-* Find MessagingInfra where this is placed (based on plan/default plan)
+* Watch MessagingEndpoint CR
+* Find MessagingInfra where this is placed (based on referenced MessagingPlan)
 * Lookup infra state representation
-* Lookup MessagingEndpoints in namespace
-* Lookup MessagingConnectors in namespace
+* Create corresponding service, route, loadbalancer service
 * For each router:
-** Apply vhost settings from plans+limits, external connectors from MessagingConnector, create endpoints and apply certs from MessagingEndpoint
-** Fetch latest known status and update status of connectors, endpoints etc.
-* Requeue namespace for processing at configurable interval
+** Apply endpoint configuration with certs
+** Fetch latest known status and update CR status accordingly
+* Expose metrics of endpoint
+* Requeue for processing at configurable interval
+
+
 
 === Phase 2 (Milestone 0.33.0 ?)
 
