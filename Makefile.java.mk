@@ -6,7 +6,6 @@ ifeq ($(SKIP_TESTS),true)
 MAVEN_ARGS="-DskipTests"
 endif
 
-INFINISPAN_VERSION ?= 10
 MAVEN_ARGS += "-Pinfinispan-$(INFINISPAN_VERSION)"
 
 ifneq ($(FULL_BUILD),true)
