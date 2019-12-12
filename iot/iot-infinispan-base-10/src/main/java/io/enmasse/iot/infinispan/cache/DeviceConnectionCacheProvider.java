@@ -27,7 +27,6 @@ public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
 
     @Override
     protected void customizeServerConfiguration(ServerConfigurationBuilder configuration) {
-
         configuration.addContextInitializer(new DeviceConnectionProtobufSchemaBuilderImpl());
     }
 

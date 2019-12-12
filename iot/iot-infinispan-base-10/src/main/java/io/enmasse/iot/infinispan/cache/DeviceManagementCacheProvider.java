@@ -30,25 +30,35 @@ import io.enmasse.iot.infinispan.device.DeviceKey;
 public class DeviceManagementCacheProvider extends AbstractCacheProvider {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceManagementCacheProvider.class);
+    private String schema;
+    private String schemaFileName;
 
     @Autowired
     public DeviceManagementCacheProvider(final InfinispanProperties properties) {
         super(properties);
+
+        final DeviceManagementProtobufSchemaBuilderImpl schemaBuilder = new DeviceManagementProtobufSchemaBuilderImpl();
+        this.schema = schemaBuilder.getProtoFile();
+        this.schemaFileName = schemaBuilder.getProtoFileName();
         log.info("Protobuf schema: {}", new DeviceManagementProtobufSchemaBuilderImpl().getProtoFile());
     }
 
     @Override
-    protected void customizeServerConfiguration(ServerConfigurationBuilder configuration) {
+    protected void customizeServerConfiguration(final ServerConfigurationBuilder configuration) {
         configuration.addContextInitializer(new DeviceManagementProtobufSchemaBuilderImpl());
     }
 
     @Override
     public void start() throws Exception {
-       super.start();
-       configureSerializer(this.remoteCacheManager);
+        super.start();
+        if (this.properties.isUploadSchema()) {
+            uploadProtobufSchema(this.remoteCacheManager);
+        }
     }
 
-    private static void configureSerializer(RemoteCacheManager remoteCacheManager) throws Exception {
+    private static void uploadProtobufSchema(final RemoteCacheManager remoteCacheManager) throws Exception {
+
+        log.info("Uploading protobuf schema");
 
         final DeviceManagementProtobufSchemaBuilderImpl schema = new DeviceManagementProtobufSchemaBuilderImpl();
 
@@ -69,9 +79,9 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
                 .addIndexedEntity(DeviceInformation.class)
                 .addIndexedEntity(DeviceCredential.class)
 
-//                .persistence()
-//                .addSingleFileStore()
-//                .fetchPersistentState(true)
+                // .persistence()
+                // .addSingleFileStore()
+                // .fetchPersistentState(true)
 
                 .clustering()
                 .cacheMode(CacheMode.DIST_SYNC)
@@ -121,6 +131,22 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
 
     public Optional<RemoteCache<CredentialKey, String>> getAdapterCredentialsCache() {
         return getCache(properties.getAdapterCredentialsCacheName());
+    }
+
+    public void checkSchema() {
+        final Object schema = this.remoteCacheManager
+                .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
+                .get(this.schemaFileName);
+
+        if (schema == null) {
+            throw new IllegalStateException("Schema is missing");
+        }
+        if (!(schema instanceof String)) {
+            throw new IllegalStateException("Schema has illegal content");
+        }
+        if (!schema.equals(this.schema)) {
+            throw new IllegalStateException("Schema doesn't match expected content");
+        }
     }
 
 }

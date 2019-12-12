@@ -5,18 +5,12 @@
 
 package io.enmasse.iot.infinispan.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-
 import com.google.common.base.MoreObjects;
 
-import io.enmasse.iot.utils.ConfigBase;
-
-@Configuration
-@ConfigurationProperties(ConfigBase.CONFIG_BASE + ".registry.infinispan")
 public class InfinispanProperties {
 
     private static final boolean DEFAULT_TRY_CREATE = false;
+    public static final boolean DEFAULT_UPLOAD_SCHEMA = false;
 
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 11222;
@@ -32,6 +26,7 @@ public class InfinispanProperties {
     private int port = DEFAULT_PORT;
 
     private boolean useTls = DEFAULT_USE_TLS;
+    private boolean uploadSchema = DEFAULT_UPLOAD_SCHEMA;
     private String trustStorePath;
 
     private String username;
@@ -49,6 +44,14 @@ public class InfinispanProperties {
 
     public boolean isTryCreate() {
         return tryCreate;
+    }
+
+    public void setUploadSchema(boolean uploadSchema) {
+        this.uploadSchema = uploadSchema;
+    }
+
+    public boolean isUploadSchema() {
+        return uploadSchema;
     }
 
     public void setHost(String host) {
