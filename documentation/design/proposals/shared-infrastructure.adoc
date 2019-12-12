@@ -416,7 +416,6 @@ spec:
 
   # Only one of 'service', 'route' and 'loadbalancer' may be specified for each endpoint
   service: # Expose as a service for applications on cluster
-    cert:
     ports:
     - name: amqp
     - name: amqps
