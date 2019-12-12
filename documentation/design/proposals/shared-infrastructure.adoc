@@ -365,13 +365,17 @@ This would mean:
 * We remove AddressSpace resource completely and allow only 1 instance of messaging per Kubernetes namespace.
 * Create new CRDs for configuring endpoints, connectors etc.
 
-How would one configure an 'address space' without the CRD?! To enable messaging on a namespace, annotations could be used:
+How would one configure an 'address space' without the CRD?! If no configuration is given, a default authentication service and plan will be used.
+Explicit configuration of a namespace would be supported through an optional singleton resource:
 
 ```
-kubectl annotate namespace myapp enmasse.io/messaging=true
-# If a specific plan (i.e. not default should be used)
-kubectl annotate namespace myapp enmasse.io/messaging-plan=small
-kubectl annotate namespace myapp enmasse.io/authentication-service=standard
+kind: MessagingConfig
+metadata:
+  name: default # Singletons can be enforced using openapi validation!
+spec:
+  plan: myplan
+  authenticationService:
+    name: myservice
 ```
 
 Then, other parts of the 'address space' with multiple entities, could be configured using CRDs.
