@@ -33,7 +33,7 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
   onChange
 }) => {
 
-  let { loading, error, data } = useQuery<IAddressPlans>(RETURN_ADDRESS_PLANS);
+  let { loading, error, data } = useQuery<IAddressPlans>(RETURN_ADDRESS_PLANS("standard-type","queue"));
 
   if (loading) return <Loading />;
   if (error) return <Loading />;

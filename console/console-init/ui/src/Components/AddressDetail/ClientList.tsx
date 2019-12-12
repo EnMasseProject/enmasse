@@ -5,7 +5,8 @@ import {
   TableHeader,
   TableBody,
   IRowData,
-  sortable
+  sortable,
+  ISortBy
 } from "@patternfly/react-table";
 import { ExternalLinkAltIcon } from "@patternfly/react-icons";
 import { Link } from "react-router-dom";
@@ -13,6 +14,8 @@ import { Tooltip, TooltipPosition } from "@patternfly/react-core";
 
 interface IClientListProps {
   rows: IClient[];
+  sortBy?: ISortBy;
+  onSort?: (_event: any, index: number, direction: string) => void;
 }
 
 export interface IClient {
@@ -28,7 +31,9 @@ export interface IClient {
 }
 
 export const ClientList: React.FunctionComponent<IClientListProps> = ({
-  rows
+  rows,
+  onSort,
+  sortBy
 }) => {
   const toTableCells = (row: IClient) => {
     const tableRow: IRowData = {
@@ -71,6 +76,8 @@ export const ClientList: React.FunctionComponent<IClientListProps> = ({
       cells={tableColumns}
       rows={tableRows}
       aria-label="client list"
+      onSort={onSort}
+      sortBy={sortBy}
     >
       <TableHeader />
       <TableBody />

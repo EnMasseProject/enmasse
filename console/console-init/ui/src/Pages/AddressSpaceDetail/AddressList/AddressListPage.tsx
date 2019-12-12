@@ -14,12 +14,12 @@ import { EmptyAddress } from "src/Components/Common/EmptyAddress";
 import { EditAddress } from "../../EditAddressPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
 import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
+import { ISortBy } from "@patternfly/react-table";
 export interface IAddressListPageProps {
   name?: string;
   namespace?: string;
   addressSpaceType?: string;
-  inputValue?: string | null;
-  filterValue?: string | null;
+  filterNames ?:string[];
   typeValue?: string | null;
   statusValue?: string | null;
   page: number;
@@ -30,8 +30,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   name,
   namespace,
   addressSpaceType,
-  inputValue,
-  filterValue,
+  filterNames,
   typeValue,
   statusValue,
   setTotalAddress,
@@ -48,17 +47,17 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     setAddressBeingDeleted
   ] = React.useState<IAddress | null>();
   const client = useApolloClient();
-
+  const [sortBy, setSortBy] = React.useState<ISortBy>();
   const { loading, error, data, refetch } = useQuery<IAddressResponse>(
     RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE(
       page,
       perPage,
       name,
       namespace,
-      filterValue,
-      inputValue,
+      filterNames,
       typeValue,
-      statusValue
+      statusValue,
+      sortBy
     ),
     { pollInterval: 20000, fetchPolicy: "network-only" }
   );
@@ -141,7 +140,6 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           }
         }
       });
-      console.log(deletedData);
       if (
         deletedData &&
         deletedData.data &&
@@ -154,13 +152,17 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   };
   const handleDeleteChange = (address: IAddress) =>
     setAddressBeingDeleted(address);
-
+  const onSort = (_event: any, index: any, direction: any) => {
+    setSortBy({ index: index, direction: direction });
+  };
   return (
     <>
       <AddressList
         rowsData={addressesList ? addressesList : []}
         onEdit={handleEdit}
         onDelete={handleDeleteChange}
+        sortBy={sortBy}
+        onSort={onSort}
       />
       {addresses.Total === 0 ? <EmptyAddress /> : ""}
       {addressBeingEdited && (

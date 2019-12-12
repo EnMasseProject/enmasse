@@ -1,21 +1,29 @@
 import * as React from "react";
 import { Wizard } from "@patternfly/react-core";
-import { AddressDefinitaion } from "src/Components/AddressDetail/CreateAddressDefinition";
+import { AddressDefinitaion } from "src/Pages/CreateAddress/CreateAddressDefinition";
 import { PreviewAddress } from "./PreviewAddress";
 import { useApolloClient } from "@apollo/react-hooks";
-import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
 import { CREATE_ADDRESS } from "src/Queries/Queries";
+import {
+  IDropdown,
+  IDropdownOption
+} from "src/Components/Common/FilterDropdown";
+import { type } from "os";
 interface ICreateAddressProps {
+  name: string;
   namespace: string;
   addressSpace: string;
+  addressSpacePlan: string;
   addressSpaceType: string;
   refetch?: () => void;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
 }
-export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
+export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = ({
+  name,
   namespace,
   addressSpace,
+  addressSpacePlan,
   addressSpaceType,
   refetch,
   isCreateWizardOpen,
@@ -24,31 +32,42 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
   const [addressName, setAddressName] = React.useState("");
   const [addressType, setAddressType] = React.useState(" ");
   const [plan, setPlan] = React.useState(" ");
+  const [topic, setTopic] = React.useState(" ");
   const client = useApolloClient();
+  const [addressTypes, setAddressTypes] = React.useState<IDropdownOption[]>([]);
+  const [addressPlans, setAddressPlans] = React.useState<IDropdownOption[]>([]);
+  const [topicsForSubscription, setTopicForSubscription] = React.useState<
+    IDropdownOption[]
+  >([]);
   const handleAddressChange = (name: string) => {
     setAddressName(name);
   };
-  
+
   const handleSave = async () => {
-    if (addressSpace && addressName && addressType && plan && namespace) {
+    if (addressSpace && addressName && plan && namespace) {
+      const getVariables = () => {
+        let variable:any = {
+          ObjectMeta: {
+            Name: addressSpace + "." + addressName,
+            Namespace: namespace
+          },
+          Spec: {
+            Type: addressType.toLowerCase(),
+            Plan: plan,
+            Address: addressName,
+            AddressSpace: addressSpace
+          }
+        };
+        if (addressType && addressType.trim().toLowerCase() === "subscription")
+          variable.Spec.Topic = topic;
+        return variable;
+      };
       const data = await client.mutate({
         mutation: CREATE_ADDRESS,
         variables: {
-          a: {
-            ObjectMeta: {
-              Name: addressSpace + "." + addressName,
-              Namespace: namespace
-            },
-            Spec: {
-              Type: addressType.toLowerCase(),
-              Plan: getPlanAndTypeForAddressEdit(plan, addressSpaceType),
-              Address: addressName,
-              AddressSpace: addressSpace
-            }
-          }
+          a: getVariables()
         }
       });
-      console.log(data);
       if (data.data) {
         setIsCreateWizardOpen(false);
         setAddressType("");
@@ -62,12 +81,23 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
       name: "Definition",
       component: (
         <AddressDefinitaion
+          addressspaceName={name}
+          namespace={namespace}
+          addressSpacePlan={addressSpacePlan}
           addressName={addressName}
           handleAddressChange={handleAddressChange}
           type={addressType}
           setType={setAddressType}
           plan={plan}
           setPlan={setPlan}
+          topic={topic}
+          setTopic={setTopic}
+          typeOptions={addressTypes}
+          setTypeOptions={setAddressTypes}
+          planOptions={addressPlans}
+          setPlanOptions={setAddressPlans}
+          topicsForSubscription={topicsForSubscription}
+          setTopicForSubscripitons={setTopicForSubscription}
         />
       ),
       backButton: "hide"
@@ -79,7 +109,9 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
           name={addressName}
           plan={plan}
           type={addressType}
+          topic={topic}
           namespace={namespace || ""}
+          addressspace={addressSpace}
         />
       ),
       nextButtonText: "Finish"

@@ -21,6 +21,7 @@ import { css } from "@patternfly/react-styles";
 import { GridStylesForTableHeader } from "../AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
 import { Link, useLocation, useHistory } from "react-router-dom";
 import { RETURN_CONNECTION_DETAIL } from "src/Queries/Queries";
+import { ConnectionLinksListPage } from "./ConnectionsLinksListPage";
 
 const getProductFilteredValue = (object: any[], value: string) => {
   const filtered = object.filter(obj => obj.Key === value);
@@ -48,7 +49,7 @@ export default function ConnectionDetailPage() {
   const location = useLocation();
   const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
-  const [totalLinks, setTotalLinks] = React.useState<number>();
+  const [totalLinks, setTotalLinks] = React.useState<number>(0);
   const page = parseInt(searchParams.get("page") || "", 10) || 0;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const breadcrumb = React.useMemo(
@@ -100,13 +101,7 @@ export default function ConnectionDetailPage() {
   useA11yRouteChange();
   // useBreadcrumb(breadcrumb);
   const { loading, error, data } = useQuery<IConnectionDetailResponse>(
-    RETURN_CONNECTION_DETAIL(
-      page,
-      perPage,
-      name || "",
-      namespace || "",
-      connectionname || ""
-    ),
+    RETURN_CONNECTION_DETAIL(name || "", namespace || "", connectionname || ""),
     { pollInterval: 20000 }
   );
   if (loading) return <Loading />;
@@ -137,23 +132,11 @@ export default function ConnectionDetailPage() {
     os: jvmObject.os,
     product: getProductFilteredValue(connection.Spec.Properties, "product")
   };
-  const linkRows: ILink[] = connection.Links.Links.map(link => ({
-    name: link.ObjectMeta.Name,
-    role: link.Spec.Role,
-    //change it after confiramtion
-    address: link.ObjectMeta.Namespace,
-    deliveries: getFilteredValue(link.Metrics, "enmasse_deliveries"),
-    rejected: getFilteredValue(link.Metrics, "enmasse_rejected"),
-    released: getFilteredValue(link.Metrics, "enmasse_released"),
-    modified: getFilteredValue(link.Metrics, "enmasse_modified"),
-    presettled: getFilteredValue(link.Metrics, "enmasse_presettled"),
-    undelivered: getFilteredValue(link.Metrics, "enmasse_undelivered")
-  }));
 
   const renderPagination = (page: number, perPage: number) => {
     return (
       <Pagination
-        itemCount={connection.Links.Total}
+        itemCount={totalLinks}
         perPage={perPage}
         page={page}
         onSetPage={handlePageChange}
@@ -174,7 +157,14 @@ export default function ConnectionDetailPage() {
             Links
           </Title>
           {renderPagination(page, perPage)}
-          <LinkList rows={linkRows} />
+          <ConnectionLinksListPage
+            name={name || ""}
+            namespace={namespace || ""}
+            connectionName={connectionname || ""}
+            page={page}
+            perPage={perPage}
+            setTotalLinks={setTotalLinks}
+          />
           {renderPagination(page, perPage)}
         </PageSection>
       </PageSection>

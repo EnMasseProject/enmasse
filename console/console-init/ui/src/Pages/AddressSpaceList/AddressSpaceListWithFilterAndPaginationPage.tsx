@@ -6,10 +6,7 @@ import {
   PageSection,
   PageSectionVariants,
   Grid,
-  GridItem,
-  Dropdown,
-  KebabToggle,
-  DropdownItem
+  GridItem
 } from "@patternfly/react-core";
 import { GridStylesForTableHeader } from "../AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
 import { css } from "@patternfly/react-styles";

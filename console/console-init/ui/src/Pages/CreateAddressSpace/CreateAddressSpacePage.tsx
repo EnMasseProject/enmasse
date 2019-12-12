@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Wizard } from "@patternfly/react-core";
-import { AddressSpaceConfiguration } from "src/Components/AddressSpace/CreateAddressSpaceConfiguration";
+import { AddressSpaceConfiguration } from "src/Pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
 import { ReviewAddressSpace } from "src/Pages/CreateAddressSpace/ReviewAddressSpace";
 import { useApolloClient } from "@apollo/react-hooks";
 import { CREATE_ADDRESS_SPACE } from "src/Queries/Queries";

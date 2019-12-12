@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Table,
   TableVariant,
@@ -6,7 +6,8 @@ import {
   TableBody,
   IRowData,
   sortable,
-  IExtraData
+  IExtraData,
+  ISortBy
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
 import { TypePlan } from "../Common/TypePlan";
@@ -33,12 +34,16 @@ interface IAddressListProps {
   rowsData: IAddress[];
   onEdit: (rowData: IAddress) => void;
   onDelete: (rowData: IAddress) => void;
+  sortBy?: ISortBy;
+  onSort?: (_event: any, index: number, direction: string) => void;
 }
 
 export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   rowsData,
   onEdit,
-  onDelete
+  onDelete,
+  sortBy,
+  onSort
 }) => {
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;
@@ -106,10 +111,10 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       return tableRow;
     }
   };
-  const [tableRows, setTableRows] = useState<IRowData[]>(
+  const [tableRows, setTableRows] = React.useState<IRowData[]>(
     rowsData.map(toTableCells)
   );
-  
+
   const tableColumns = [
     "Name",
     { title: "Name", transforms: [sortable] },
@@ -169,7 +174,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       actionResolver={actionResolver}
       aria-label="Address List"
       canSelectAll={true}
-    >
+      sortBy={sortBy}
+      onSort={onSort}>
       <TableHeader id="address-list-table-bodheader" />
       <TableBody />
     </Table>

@@ -83,6 +83,7 @@ const ConnectionListFunction = () => {
             setHosts={setHosts}
             containerIds={containerIds}
             setContainerIds={setContainerIds}
+            totalConnections={totalConnections}
           />
         </GridItem>
         <GridItem span={6}>

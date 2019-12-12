@@ -5,13 +5,16 @@ import {
   TableHeader,
   TableBody,
   IRowData,
-  sortable
+  sortable,
+  ISortBy
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
 import { ConnectionProtocolFormat } from "../Common/ConnectionListFormatter";
 
 interface IConnectionListProps {
   rows: IConnection[];
+  sortBy?: ISortBy;
+  onSort?: (_event: any, index: number, direction: string) => void;
 }
 
 export interface IConnection {
@@ -27,7 +30,9 @@ export interface IConnection {
 }
 
 export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
-  rows
+  rows,
+  sortBy,
+  onSort
 }) => {
   const toTableCells = (row: IConnection) => {
     const tableRow: IRowData = {
@@ -91,7 +96,9 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       variant={TableVariant.compact}
       cells={tableColumns}
       rows={tableRows}
-      aria-label="connection list">
+      aria-label="connection list"
+      sortBy={sortBy}
+      onSort={onSort}>
       <TableHeader id="connectionlist-table-header"/>
       <TableBody />
     </Table>
