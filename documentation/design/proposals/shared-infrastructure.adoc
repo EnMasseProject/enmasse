@@ -366,7 +366,7 @@ This would mean:
 * Create new CRDs for configuring endpoints, connectors etc.
 
 How would one configure an 'address space' without the CRD?! If no configuration is given, a default authentication service and plan will be used.
-Explicit configuration of a namespace would be supported through an optional singleton resource:
+Explicit configuration of a namespace would be supported through an optional https://github.com/kubernetes-sigs/kubebuilder/issues/1074#issue-502866823[singleton resource]:
 
 ```
 kind: MessagingConfig
