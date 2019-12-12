@@ -373,12 +373,18 @@ kind: MessagingConfig
 metadata:
   name: default # Singletons can be enforced using openapi validation!
 spec:
-  plan: myplan
+  plan:
+    name: myplan
+    namespace: custom # Default is enmasse-infra
   authenticationService:
     name: myservice
+    namespace: custom # Default is enmasse-infra
+    overrides: # Not needed anymore? (I.e. define an authentication service in your own namespace!)
+status:
+  message: "Unknown authenticationservice 'myservice'
 ```
 
-Then, other parts of the 'address space' with multiple entities, could be configured using CRDs.
+Then, other parts of the 'address space' with multiple entities, could also be part of the above, or be configured using CRDs.
 
 To configure connectors:
 
@@ -388,6 +394,8 @@ matadata:
   name: connector
 spec:
   # Same options as under address space .spec.connectors[]?
+status:
+  # Same options as under address space .spec.connectors[]?
 ```
 
 To configure endpoints for messaging:
@@ -395,33 +403,69 @@ To configure endpoints for messaging:
 ```
 kind: MessagingEndpoint
 metadata:
-  name: endpoint
+  name: myendpoint
 spec:
   cert:
     selfsigned: {}
-    secret:
-      name: endpointcert
+    openshift: {}
+    provided:
+      secret:
+        name: mycert # Get cert from secret
     letsencrypt:
       ... #
-  ports:
-  - amqp
-  - amqps
-  - amqpws
-  - amqpwss
-  # Expose as route
-  route:
+
+  # Only one of 'service', 'route' and 'loadbalancer' may be specified for each endpoint
+  service: # Expose as a service for applications on cluster
+    cert:
+    ports:
+    - name: amqp
+    - name: amqps
+    - name: amqpws
+      port: 8080 # Port is optional
+    - name: amqpwss
+      port: 443
+
+  route: # Expose as route
     host: example.com
-  # OR loadbalancer
+
   loadbalancer:
     annotations: {}
+    ports:
+    - name: amqp
+
+  exports:
+  - name: myconfig # Same as before?
+    kind: ConfigMap
 status:
-  host:
+  ca: # CA of endpoint (if selfsigned)
+  host: myendpoint.enmasse-infra.svc
   ports:
   - name: amqp
     port: 5672
 ```
 
-Instead of reusing AddressSpacePlan, we could create a MessagingPlan with the desired schema sketched already for the AddressSpacePlan.
+Instead of reusing AddressSpacePlan, we could create a MessagingPlan with the desired schema sketched already for the AddressSpacePlan:
+
+```
+apiVersion: admin.enmasse.io/v1
+kind: MessagingPlan
+metadata:
+  name: small
+spec:
+  messagingInfraRef: shared1 // Plans may refer to the same infra - this means messaging with the same plan will run on the same infra
+  capabilities:
+    - transactions
+  resources:
+    requests:
+      queueMemory: 10Mi # This mount is shared among addresses on a broker for a particular address space
+      addresses: 10 # Mainly for sizing operator
+      connections: 1 # Router limits
+    limits:
+      queueMemory: 100Mi
+      addresses: 100
+      connections: 10
+      linksPerConnection: 2
+```
 
 The main work for shared infra would still be in the messaging-infra and state representations, but there would be no address space controller. Instead, "Task 5" would be modified. In addition, a task for creating the new CRDs would be needed.
 
