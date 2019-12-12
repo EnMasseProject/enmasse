@@ -74,7 +74,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     @AfterEach
     void removeEnmasse() throws Exception {
         if (this.type.equals(EnmasseInstallType.BUNDLE)) {
-            OperatorManager.getInstance().deleteEnmasseBundle();
+            OperatorManager.getInstance().clean();
         } else {
             OperatorManager.getInstance().deleteEnmasseAnsible();
         }
