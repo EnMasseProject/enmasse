@@ -7,6 +7,8 @@ ifneq ($(FULL_BUILD),true)
 	mvn $(MAVEN_ARGS) package
 endif
 
+MAVEN_ARGS += "-Pinfinispan-$(INFINISPAN_VERSION)"
+
 build: build/$(CMD)
 
 build_go: build
