@@ -10,7 +10,7 @@ spec:
           external:
             host: infinispan
             port: 11222
-            username: user
+            username: app
             password: test12
             saslServerName: infinispan
             saslRealm: default
