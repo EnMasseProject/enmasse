@@ -10,7 +10,7 @@ import com.google.common.base.MoreObjects;
 public class InfinispanProperties {
 
     private static final boolean DEFAULT_TRY_CREATE = false;
-    public static final boolean DEFAULT_UPLOAD_SCHEMA = false;
+    public static final boolean DEFAULT_UPLOAD_SCHEMA = true; // FIXME: change to false
 
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 11222;
@@ -153,6 +153,7 @@ public class InfinispanProperties {
                 .add("saslServername", this.saslServerName)
                 .add("trustStorePath", this.trustStorePath)
                 .add("tryCreate", this.tryCreate)
+                .add("uploadSchema", this.uploadSchema)
                 .add("adapterCredentialsCacheName", this.adapterCredentialsCacheName)
                 .add("devicesCacheName", this.devicesCacheName)
                 .add("deviceStatesCacheName", this.deviceStatesCacheName)
