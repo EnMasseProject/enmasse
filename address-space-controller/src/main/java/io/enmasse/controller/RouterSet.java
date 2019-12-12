@@ -14,23 +14,24 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 public class RouterSet {
     private static final Logger log = LoggerFactory.getLogger(RouterSet.class);
     private final StatefulSet statefulSet;
+    private final AddressSpace addressSpace;
     private final String namespace;
     private boolean modified;
 
-    public RouterSet(StatefulSet statefulSet, String namespace) {
+    public RouterSet(StatefulSet statefulSet, String namespace, AddressSpace addressSpace) {
         this.statefulSet = statefulSet;
         this.namespace = namespace;
+        this.addressSpace = addressSpace;
         this.modified = false;
     }
 
     public static RouterSet create(String namespace, AddressSpace addressSpace, NamespacedKubernetesClient client) {
         StatefulSet router = client.apps().statefulSets().withName(KubeUtil.getRouterSetName(addressSpace)).get();
-        return new RouterSet(router, namespace);
+        return new RouterSet(router, namespace, addressSpace);
     }
 
     public StatefulSet getStatefulSet() {
@@ -44,8 +45,7 @@ public class RouterSet {
             if (annotations == null) {
                 annotations = new HashMap<>();
             }
-            long generation = Optional.ofNullable(annotations.get(AnnotationKeys.GENERATION)).map(Long::parseLong).orElse(0L);
-            annotations.put(AnnotationKeys.GENERATION, String.valueOf(generation + 1));
+            annotations.put(AnnotationKeys.APPLIED_CONFIGURATION, addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION));
             statefulSet.getSpec().getTemplate().getMetadata().setAnnotations(annotations);
             client.apps().statefulSets().inNamespace(namespace).withName(statefulSet.getMetadata().getName()).cascading(false).patch(statefulSet);
         }

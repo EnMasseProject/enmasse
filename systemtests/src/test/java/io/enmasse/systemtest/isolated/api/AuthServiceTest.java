@@ -438,6 +438,12 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         resourcesManager.replaceAddressSpace(addressSpace, true, null);
         AddressSpaceUtils.waithForAuthServiceApplied(addressSpace, standardAuth2.getMetadata().getName());
 
+        // For standard address space, wait until router pods have gotten the new applied config
+        if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
+            AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
+            TestUtils.waitForRoutersInSync(addressSpace);
+        }
+
         resourcesManager.removeAuthService(standardAuth);
 
         UserCredentials cred2 = new UserCredentials("foo", "bar");

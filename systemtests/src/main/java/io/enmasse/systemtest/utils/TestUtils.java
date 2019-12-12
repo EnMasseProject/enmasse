@@ -10,6 +10,8 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -782,6 +784,22 @@ public class TestUtils {
                                 .anyMatch(plan -> plan.getName().contains(addressSpacePlan))),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
+
+    public static void waitForRoutersInSync(AddressSpace addressSpace) throws Exception {
+        String appliedConfig = addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
+        TestUtils.waitUntilCondition(String.format("Router configuration in sync for {}/{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName()),
+                waitPhase -> {
+                    int inSync = 0;
+                    List<Pod> routerPods = listRouterPods(Kubernetes.getInstance(), addressSpace);
+                    for (Pod pod : routerPods) {
+                        if (appliedConfig.equals(pod.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_CONFIGURATION))) {
+                            inSync++;
+                        }
+                    }
+                    return inSync == routerPods.size();
+                }, new TimeoutBudget(10, TimeUnit.MINUTES));
+    }
+
 
     @FunctionalInterface
     public static interface ThrowingCallable {
