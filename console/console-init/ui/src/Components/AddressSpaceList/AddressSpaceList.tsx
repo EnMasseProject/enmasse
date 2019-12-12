@@ -5,7 +5,8 @@ import {
   TableHeader,
   TableBody,
   IRowData,
-  sortable
+  sortable,
+  IExtraData
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
 import {
@@ -97,15 +98,40 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
     };
     return tableRow;
   };
-  const tableRows = rows.map(toTableCells);
+  const [tableRows, setTableRows] = React.useState<IRowData[]>(
+    rows.map(toTableCells)
+  );
   const tableColumns = [
     { title: "Name/Name Space", transforms: [sortable] },
-    "Type", "Status", "Time created"];
+    "Type",
+    "Status",
+    "Time created"
+  ];
+
+  const onSelect = (
+    event: React.MouseEvent,
+    isSelected: boolean,
+    rowIndex: number,
+    rowData: IRowData,
+    extraData: IExtraData
+  ) => {
+    let rows;
+    if (rowIndex === -1) {
+      rows = tableRows.map(oneRow => {
+        oneRow.selected = isSelected;
+        return oneRow;
+      });
+    } else {
+      rows = [...tableRows];
+      rows[rowIndex].selected = isSelected;
+    }
+    setTableRows(rows);
+  };
 
   return (
     <Table
       variant={TableVariant.compact}
-      onSelect={() => {}}
+      onSelect={onSelect}
       cells={tableColumns}
       rows={tableRows}
       actionResolver={actionResolver}
