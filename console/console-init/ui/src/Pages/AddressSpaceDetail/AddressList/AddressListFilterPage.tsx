@@ -23,98 +23,48 @@ import {
   DropdownItem,
   KebabToggle,
   TextInput,
-  DropdownToggle
+  DropdownToggle,
+  Badge
 } from "@patternfly/react-core";
 import { SearchIcon, FilterIcon } from "@patternfly/react-icons";
-import { CreateAddress } from "../../CreateAddress/CreateAddressPage";
+import { CreateAddressPage } from "../../CreateAddress/CreateAddressPage";
 import { useParams } from "react-router";
+import { useApolloClient } from "@apollo/react-hooks";
+import { RETURN_ADDRESS_SPACE_DETAIL } from "src/Queries/Queries";
+import { IAddressSpace } from "src/Components/AddressSpaceList/AddressSpaceList";
+import { IAddressSpacesResponse } from "src/Types/ResponseTypes";
 interface AddressListFilterProps {
-  inputValue: string | null;
-  setInputValue: (value: string | null) => void;
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;
+  filterNames: string[];
+  setFilterNames: (value: Array<string>) => void;
   typeValue: string | null;
   setTypeValue: (value: string | null) => void;
   statusValue: string | null;
   setStatusValue: (value: string | null) => void;
+  totalAddresses: number;
 }
 export const AddressListFilterPage: React.FunctionComponent<AddressListFilterProps> = ({
-  inputValue,
-  setInputValue,
   filterValue,
   setFilterValue,
+  filterNames,
+  setFilterNames,
   typeValue,
   setTypeValue,
   statusValue,
-  setStatusValue
+  setStatusValue,
+  totalAddresses
 }) => {
   const { name, namespace, type } = useParams();
-  const onInputChange = (newValue: string) => {
-    if (!filterValue || filterValue !== "Name") {
-      setFilterValue("Name");
-    }
-    setInputValue(newValue);
-  };
+  const [inputValue, setInputValue] = React.useState<string | null>(null);
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const [typeIsExpanded, setTypeIsExpanded] = React.useState(false);
   const [statusIsExpanded, setStatusIsExpanded] = React.useState(false);
   const [isKebabOpen, setIsKebabOpen] = React.useState(false);
   const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
-  const onFilterSelect = (event: any) => {
-    console.log(event.target.value);
-    setFilterValue(event.target.value);
-    if (event.target.value === "Name") {
-      setTypeValue("");
-      setStatusValue("");
-    } else if (event.target.value === "Type") {
-      setInputValue("");
-      setStatusValue("");
-    } else {
-      setInputValue("");
-      setTypeValue("");
-    }
-    setFilterIsExpanded(!filterIsExpanded);
-  };
-  const onTypeSelect = (event: any) => {
-    setTypeValue(event.target.value);
-    setTypeIsExpanded(!typeIsExpanded);
-  };
+  const [addressSpacePlan, setAddressSpacePlan] = React.useState();
 
-  const onStatusSelect = (event: any) => {
-    setStatusValue(event.target.value);
-    setStatusIsExpanded(!statusIsExpanded);
-  };
-  const onDelete = (
-    type: string | DataToolbarChip,
-    id: string | DataToolbarChip
-  ) => {
-    switch (type) {
-      case "Filter":
-        setFilterValue(null);
-        setInputValue(null);
-        setTypeValue(null);
-        setStatusValue(null);
-        break;
-      case "Type":
-        setTypeValue(null);
-        break;
-      case "Name":
-        setInputValue(null);
-        break;
-      case "Status":
-        setStatusValue(null);
-        break;
-    }
-  };
-  const onDeleteAll = () => {
-    setFilterValue(null);
-    setTypeValue(null);
-    setStatusValue(null);
-    setInputValue(null);
-  };
-  const onKebabToggle = (isOpen: boolean) => {
-    setIsKebabOpen(isOpen);
-  };
+  const client = useApolloClient();
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
     { key: "filterType", value: "Type" },
@@ -135,14 +85,104 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
     { key: "statusFailed", value: "Failed" }
   ];
 
+  const onInputChange = (newValue: string) => {
+    setInputValue(newValue);
+  };
+
+  const onAddInput = (event: any) => {
+    if (filterValue && filterValue === "Name") {
+      if (inputValue && inputValue.trim() != "")
+        if (filterNames.indexOf(inputValue.trim()) < 0) {
+          setFilterNames([...filterNames, inputValue.trim()]);
+        }
+    }
+    setInputValue(null);
+  };
+
+  const onFilterSelect = (event: any) => {
+    setFilterValue(event.target.value);
+    setFilterIsExpanded(!filterIsExpanded);
+  };
+  const onTypeSelect = (event: any) => {
+    setTypeValue(event.target.value);
+    setTypeIsExpanded(!typeIsExpanded);
+  };
+
+  const onStatusSelect = (event: any) => {
+    setStatusValue(event.target.value);
+    setStatusIsExpanded(!statusIsExpanded);
+  };
+
+  const checkIsFilterApplied = () => {
+    if (
+      (filterNames && filterNames.length > 0) ||
+      (typeValue && typeValue.trim() !== "") ||
+      (statusValue && statusValue.trim() !== "")
+    ) {
+      return true;
+    }
+    return false;
+  };
+
+  const onDelete = (
+    type: string | DataToolbarChip,
+    id: string | DataToolbarChip
+  ) => {
+    switch (type) {
+      case "Name":
+        let index;
+        if (filterNames && id) {
+          index = filterNames.indexOf(id.toString());
+          if (index >= 0) filterNames.splice(index, 1);
+          setFilterNames([...filterNames]);
+        }
+        break;
+      case "Type":
+        setTypeValue(null);
+        break;
+      case "Status":
+        setStatusValue(null);
+        break;
+    }
+  };
+  const onDeleteAll = () => {
+    setFilterValue(null);
+    setTypeValue(null);
+    setStatusValue(null);
+    setFilterNames([]);
+  };
+  const onKebabToggle = (isOpen: boolean) => {
+    setIsKebabOpen(isOpen);
+  };
+
+  const onKebabSelect = (event: any) => {
+    setIsKebabOpen(isKebabOpen);
+  };
+  const createAddressOnClick = async () => {
+    setIsCreateWizardOpen(!isCreateWizardOpen);
+    if (name && namespace) {
+      const addressSpace = await client.query<IAddressSpacesResponse>({
+        query: RETURN_ADDRESS_SPACE_DETAIL(name, namespace)
+      });
+      console.log(addressSpace);
+      if (
+        addressSpace.data &&
+        addressSpace.data.addressSpaces &&
+        addressSpace.data.addressSpaces.AddressSpaces.length > 0
+      ) {
+        const plan =
+          addressSpace.data.addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta
+            .Name;
+        if (plan) {
+          setAddressSpacePlan(plan);
+        }
+      }
+    }
+  };
   const toggleGroupItems = (
     <React.Fragment>
       <DataToolbarGroup variant="filter-group">
-        <DataToolbarFilter
-          chips={filterValue && filterValue.trim() !== "" ? [filterValue] : []}
-          deleteChip={onDelete}
-          categoryName="Filter"
-        >
+        <DataToolbarFilter categoryName="Filter">
           <Dropdown
             position="left"
             onSelect={onFilterSelect}
@@ -161,97 +201,122 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
                 key={option.key}
                 value={option.value}
                 itemID={option.key}
-                component={"button"}
-              >
+                component={"button"}>
                 {option.value}
               </DropdownItem>
             ))}
           />
         </DataToolbarFilter>
-        {!filterValue || filterValue === "Name" || filterValue.trim() === "" ? (
+        {filterValue && filterValue.trim() !== "" ? (
+          <>
+            <DataToolbarItem>
+              <DataToolbarFilter
+                chips={filterNames}
+                deleteChip={onDelete}
+                categoryName="Name">
+                {filterValue && filterValue === "Name" && (
+                  <InputGroup>
+                    <TextInput
+                      name="name"
+                      id="name"
+                      type="search"
+                      aria-label="search input name"
+                      placeholder="Filter By Name ..."
+                      onChange={onInputChange}
+                      value={inputValue || ""}
+                    />
+                    <Button
+                      variant={ButtonVariant.control}
+                      aria-label="search button for search input"
+                      onClick={onAddInput}>
+                      <SearchIcon />
+                    </Button>
+                  </InputGroup>
+                )}
+              </DataToolbarFilter>
+            </DataToolbarItem>
+            <DataToolbarItem>
+              <DataToolbarFilter
+                chips={typeValue ? [typeValue] : []}
+                deleteChip={onDelete}
+                categoryName="Type">
+                {filterValue === "Type" && (
+                  <Dropdown
+                    position="left"
+                    onSelect={onTypeSelect}
+                    isOpen={typeIsExpanded}
+                    toggle={
+                      <DropdownToggle onToggle={setTypeIsExpanded}>
+                        <FilterIcon />
+                        &nbsp;{typeValue}
+                      </DropdownToggle>
+                    }
+                    dropdownItems={typeMenuItems.map(option => (
+                      <DropdownItem
+                        key={option.key}
+                        value={option.value}
+                        itemID={option.key}
+                        component={"button"}>
+                        {option.value}
+                      </DropdownItem>
+                    ))}
+                  />
+                )}
+              </DataToolbarFilter>
+            </DataToolbarItem>
+            <DataToolbarItem>
+              <DataToolbarFilter
+                chips={statusValue ? [statusValue] : []}
+                deleteChip={onDelete}
+                categoryName="Status">
+                {filterValue === "Status" && (
+                  <Dropdown
+                    position="left"
+                    onSelect={onStatusSelect}
+                    isOpen={statusIsExpanded}
+                    toggle={
+                      <DropdownToggle onToggle={setStatusIsExpanded}>
+                        <FilterIcon />
+                        &nbsp;{statusValue}
+                      </DropdownToggle>
+                    }
+                    dropdownItems={statusMenuItems.map(option => (
+                      <DropdownItem
+                        key={option.key}
+                        value={option.value}
+                        itemID={option.key}
+                        component={"button"}>
+                        {option.value}
+                      </DropdownItem>
+                    ))}
+                  />
+                )}
+              </DataToolbarFilter>
+            </DataToolbarItem>
+          </>
+        ) : (
           <DataToolbarItem>
-            <DataToolbarFilter
-              chips={inputValue && inputValue.trim() !== "" ? [inputValue] : []}
-              deleteChip={onDelete}
-              categoryName="Name"
-            >
+            <DataToolbarFilter categoryName="">
               <InputGroup>
                 <TextInput
-                  name="textInput2"
-                  id="textInput2"
+                  name="search diabled"
+                  id="search disabled"
                   type="search"
-                  aria-label="search input example"
-                  placeholder="Filter by Name ..."
+                  aria-label="search input diabled"
+                  placeholder="Search By filter ..."
                   onChange={onInputChange}
+                  isDisabled={true}
                   value={inputValue || ""}
                 />
                 <Button
                   variant={ButtonVariant.control}
                   aria-label="search button for search input"
-                >
+                  isDisabled={true}>
                   <SearchIcon />
                 </Button>
               </InputGroup>
             </DataToolbarFilter>
           </DataToolbarItem>
-        ) : filterValue === "Type" ? (
-          <DataToolbarFilter
-            chips={typeValue && typeValue.trim() !== "" ? [typeValue] : []}
-            deleteChip={onDelete}
-            categoryName="Type"
-          >
-            <Dropdown
-              position="left"
-              onSelect={onTypeSelect}
-              isOpen={typeIsExpanded}
-              toggle={
-                <DropdownToggle onToggle={setTypeIsExpanded}>
-                  <FilterIcon />
-                  &nbsp;{typeValue}
-                </DropdownToggle>
-              }
-              dropdownItems={typeMenuItems.map(option => (
-                <DropdownItem
-                  key={option.key}
-                  value={option.value}
-                  itemID={option.key}
-                  component={"button"}
-                >
-                  {option.value}
-                </DropdownItem>
-              ))}
-            />
-          </DataToolbarFilter>
-        ) : (
-          <DataToolbarFilter
-            chips={
-              statusValue && statusValue.trim() !== "" ? [statusValue] : []
-            }
-            deleteChip={onDelete}
-            categoryName="Status"
-          >
-            <Dropdown
-              position="left"
-              onSelect={onStatusSelect}
-              isOpen={statusIsExpanded}
-              toggle={
-                <DropdownToggle onToggle={setStatusIsExpanded}>
-                  <FilterIcon />
-                  &nbsp;{statusValue}
-                </DropdownToggle>
-              }
-              dropdownItems={statusMenuItems.map(option => (
-                <DropdownItem
-                  key={option.key}
-                  value={option.value}
-                  itemID={option.key}
-                  component={"button"}
-                >
-                  {option.value}
-                </DropdownItem>
-              ))}
-            />
-          </DataToolbarFilter>
         )}
       </DataToolbarGroup>
     </React.Fragment>
@@ -269,19 +334,29 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
     // </OverflowMenuDropdownItem>
   ];
 
-  const onKebabSelect = (event: any) => {
-    setIsKebabOpen(isKebabOpen);
-  };
   const toolbarItems = (
     <React.Fragment>
-      <DataToolbarToggleGroup toggleIcon={<FilterIcon />} breakpoint="xl">
+      <DataToolbarToggleGroup
+        toggleIcon={
+          <>
+            <FilterIcon />
+            {checkIsFilterApplied() && (
+              <Badge key={1} isRead>
+                {totalAddresses}
+              </Badge>
+            )}
+          </>
+        }
+        breakpoint="xl">
         {toggleGroupItems}
       </DataToolbarToggleGroup>
       <DataToolbarItem>
         {isCreateWizardOpen && (
-          <CreateAddress
+          <CreateAddressPage
+            name={name || ""}
             namespace={namespace || ""}
             addressSpace={name || ""}
+            addressSpacePlan={addressSpacePlan || ""}
             addressSpaceType={type || ""}
             isCreateWizardOpen={isCreateWizardOpen}
             setIsCreateWizardOpen={setIsCreateWizardOpen}
@@ -297,8 +372,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
                 <Button
                   id="al-filter-overflow-button"
                   variant={ButtonVariant.primary}
-                  onClick={() => setIsCreateWizardOpen(!isCreateWizardOpen)}
-                >
+                  onClick={createAddressOnClick}>
                   Create Address
                 </Button>
               </OverflowMenuItem>
@@ -323,8 +397,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onDeleteAll}
-    >
+      clearAllFilters={onDeleteAll}>
       <DataToolbarContent>{toolbarItems}</DataToolbarContent>
     </DataToolbar>
   );

@@ -12,7 +12,7 @@ import {
   Radio
 } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
-import { IDropdownOption } from "../Common/FilterDropdown";
+import { IDropdownOption } from "../../Components/Common/FilterDropdown";
 import {
   RETURN_ADDRESS_PLANS,
   RETURN_ADDRESS_TYPES
@@ -38,7 +38,7 @@ export interface IAddressSpaceConfiguration {
   authenticationService: string;
   setAuthenticationService: (authenticationService: string) => void;
 }
-export interface IAddressSpacePlans {
+interface IAddressSpacePlans {
   addressPlans: Array<{
     Spec: {
       AddressType: string;
@@ -89,29 +89,29 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   };
 
   const { loading, error, data } = useQuery<INamespaces>(RETURN_ADDRESS_TYPES);
-  // const { addressPlans } = useQuery<IAddressSpacePlans>(RETURN_ADDRESS_PLANS)
+  const adressPlans =[];
+  // // const { addressPlans } = useQuery<IAddressSpacePlans>(RETURN_ADDRESS_PLANS)
   //   .data || {
   //   addressPlans: []
   // };
 
   // if (loading) return <Loading />;
   // if (error) return <Loading />;
-  // const { addressTypes_v2 } = data || {
-  //   addressTypes_v2: []
-  // };
+  const { addressTypes_v2 } = data || {
+    addressTypes_v2: []
+  };
 
-  let namespaceOptions: IDropdownOption[] ;
-  // = addressTypes_v2.map(type => {
-  //   return {
-  //     value: type.Spec.DisplayName,
-  //     label: type.Spec.DisplayName,
-  //     description: type.Spec.ShortDescription
-  //   };
-  // });
+  let namespaceOptions: IDropdownOption[] = addressTypes_v2.map(type => {
+    return {
+      value: type.Spec.DisplayName,
+      label: type.Spec.DisplayName,
+      description: type.Spec.ShortDescription
+    };
+  });
 
   let planOptions: any[] = [];
   let authenticationServiceOptions: any[] = [];
-  namespaceOptions=[]
+
   // if(type){
   //   planOptions = addressPlans.map(plan => {
   //     if(plan.Spec.AddressType === type){

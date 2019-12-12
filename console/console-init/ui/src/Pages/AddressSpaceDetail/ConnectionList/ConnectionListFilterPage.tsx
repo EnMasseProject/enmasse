@@ -15,7 +15,8 @@ import {
   InputGroup,
   TextInput,
   Button,
-  ButtonVariant
+  ButtonVariant,
+  Badge
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 
@@ -33,6 +34,7 @@ export interface IConnectionListFilterProps {
   setHosts: (value: Array<string>) => void;
   containerIds?: Array<string>;
   setContainerIds: (value: Array<string>) => void;
+  totalConnections: number;
 }
 
 export const ConnectionListFilterPage: React.FunctionComponent<IConnectionListFilterProps> = ({
@@ -43,7 +45,8 @@ export const ConnectionListFilterPage: React.FunctionComponent<IConnectionListFi
   hosts,
   setHosts,
   containerIds,
-  setContainerIds
+  setContainerIds,
+  totalConnections
 }) => {
   const [inputValue, setInputValue] = React.useState<string | null>();
   const onFilterSelect = (event: any) => {
@@ -106,6 +109,17 @@ export const ConnectionListFilterPage: React.FunctionComponent<IConnectionListFi
     setHosts([]);
     setContainerIds([]);
   };
+
+  const checkIsFilterApplied = () => {
+    if (
+      (containerIds && containerIds.length > 0) ||
+      (hosts && hosts.length > 0)
+    ) {
+      return true;
+    }
+    return false;
+  };
+
   const toggleGroupItems = (
     <>
       <DataToolbarGroup variant="filter-group">
@@ -192,7 +206,18 @@ export const ConnectionListFilterPage: React.FunctionComponent<IConnectionListFi
     </>
   );
   const toolbarItems = (
-    <DataToolbarToggleGroup toggleIcon={<FilterIcon />} breakpoint="xl">
+    <DataToolbarToggleGroup
+      toggleIcon={
+        <>
+          <FilterIcon />
+          {checkIsFilterApplied() && (
+            <Badge key={1} isRead>
+              {totalConnections}
+            </Badge>
+          )}
+        </>
+      }
+      breakpoint="xl">
       {toggleGroupItems}
     </DataToolbarToggleGroup>
   );

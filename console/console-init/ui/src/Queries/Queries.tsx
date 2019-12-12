@@ -1,4 +1,5 @@
 import gql from "graphql-tag";
+import { ISortBy } from "@patternfly/react-table";
 
 export const DOWNLOAD_CERTIFICATE = gql`
   query messagingCertificateChain($as: ObjectMeta_v1_Input!) {
@@ -94,10 +95,10 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
   perPage: number,
   name?: string,
   namespace?: string,
-  filter?: string | null,
-  inputValue?: string | null,
+  filterNames?: string[],
   typeValue?: string | null,
-  statusValue?: string | null
+  statusValue?: string | null,
+  sortBy?: ISortBy
 ) => {
   let filterString = "";
   if (name && name.trim() !== "") {
@@ -106,25 +107,48 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
   if (namespace && namespace.trim() !== "") {
     filterString += "`$.ObjectMeta.Namespace` = '" + namespace + "'";
   }
-  if (filter) {
-    if (filter.trim().toLowerCase() === "name") {
-      if (inputValue && inputValue.trim() !== "") {
-        filterString += "AND `$.ObjectMeta.Name` = '" + inputValue + "'";
-      }
-    } else if (filter.trim().toLowerCase() === "type") {
-      if (typeValue) {
-        filterString += "AND `$.Spec.Type` = '" + typeValue.toLowerCase() + "'";
-      }
-    } else if (filter.trim().toLowerCase() === "status") {
-      if (statusValue) {
-        let status = "";
-        if (statusValue === "Failed") {
-          status = "Pending";
-        } else {
-          status = statusValue;
-        }
-        filterString += "AND `$.Status.Phase` = '" + status + "'";
-      }
+  if ((filterNames && filterNames.length > 0) || typeValue || statusValue) {
+    filterString += " AND ";
+  }
+  if (filterNames && filterNames.length > 0) {
+    filterString += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
+    let i;
+    for (i = 1; i < filterNames.length; i++) {
+      filterString +=
+        "OR `$.ObjectMeta.Name` ='" + filterNames[i].trim() + "' ";
+    }
+  }
+  if (filterNames && filterNames.length > 0 && (typeValue || statusValue)) {
+    filterString += " AND ";
+  }
+  if (typeValue) {
+    filterString += "`$.Spec.Type` = '" + typeValue.toLowerCase() + "'";
+  }
+  if (typeValue && statusValue) {
+    filterString += " AND ";
+  }
+  if (statusValue) {
+    let status = "";
+    if (statusValue === "Failed") {
+      status = "Pending";
+    } else {
+      status = statusValue;
+    }
+    filterString += "`$.Status.Phase` = '" + status + "'";
+  }
+  if (sortBy) {
+    let sort_filter = "";
+    switch (sortBy.index) {
+      case 3:
+        break;
+      case 4:
+        break;
+      case 5:
+        break;
+    }
+    if (sortBy.direction === "desc") {
+      //Change
+    } else if (sortBy.direction === "asc") {
     }
   }
 
@@ -187,6 +211,9 @@ export const RETURN_ADDRESS_SPACE_DETAIL = (
           Spec {
             Type
             Plan {
+              ObjectMeta {
+                Name
+              }
               Spec {
                 DisplayName
               }   
@@ -276,7 +303,6 @@ export const RETURN_ADDRESS_LINKS = (
   if (addressName) {
     filter += "`$.ObjectMeta.Name` = '" + addressName + "'";
   }
-  console.log(filter);
   const query = gql`
   query single_address_with_links_and_metrics {
     addresses(
@@ -295,7 +321,6 @@ export const RETURN_ADDRESS_LINKS = (
           Links {
             ObjectMeta {
               Name
-              Namespace
             }
             Spec {
               Role
@@ -324,9 +349,16 @@ export const RETURN_ADDRESS_LINKS = (
   return query;
 };
 
-export const RETURN_ADDRESS_PLANS = gql`
+export const RETURN_ADDRESS_PLANS = (
+  addressSpacePlan: string,
+  addressType: string
+) => {
+  const ADDRESS_PLANS = gql`
   query all_address_plans {
-    addressPlans(addressSpacePlan: "standard-small") {
+    addressPlans(addressSpacePlan: "${addressSpacePlan}", addressType: ${addressType}) {
+      ObjectMeta {
+        Name
+      }
       Spec {
         AddressType
         DisplayName
@@ -336,6 +368,8 @@ export const RETURN_ADDRESS_PLANS = gql`
     }
   }
 `;
+  return ADDRESS_PLANS;
+};
 
 export const CREATE_ADDRESS = gql`
   mutation create_addr($a: Address_enmasse_io_v1beta1_Input!) {
@@ -368,8 +402,8 @@ export const EDIT_ADDRESS = gql`
 `;
 
 export const ADDRESS_COMMAND_PRIVEW_DETAIL = gql`
-  query cmd($as: AddressSpace_enmasse_io_v1beta1_Input!) {
-    addressSpaceCommand(input: $as)
+  query cmd($a: Address_enmasse_io_v1beta1_Input!) {
+    addressCommand(input: $a)
   }
 `;
 
@@ -454,8 +488,6 @@ export const RETURN_ALL_CONECTION_LIST = (
 };
 
 export const RETURN_CONNECTION_DETAIL = (
-  page: number,
-  perPage: number,
   addressSpaceName?: string,
   addressSpaceNameSpcae?: string,
   connectionName?: string
@@ -474,7 +506,6 @@ export const RETURN_CONNECTION_DETAIL = (
   if (connectionName) {
     filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
   }
-  console.log("page,perpage", page, perPage);
   const CONNECTION_DETAIL = gql`
   query single_connections {
     connections(
@@ -503,6 +534,60 @@ export const RETURN_CONNECTION_DETAIL = (
           Value
           Units
         }
+      }
+    }
+  }
+  `;
+  return CONNECTION_DETAIL;
+};
+
+export const RETURN_ADDRESS_TYPES = gql`
+  query addressTypes {
+    addressTypes_v2(addressSpaceType: standard) {
+      ObjectMeta {
+        Name
+      }
+      Spec {
+        DisplayName
+        LongDescription
+        ShortDescription
+      }
+    }
+  }
+`;
+
+export const RETURN_CONNECTION_LINKS = (
+  page: number,
+  perPage: number,
+  addressSpaceName?: string,
+  addressSpaceNameSpcae?: string,
+  connectionName?: string
+) => {
+  let filter = "";
+  if (addressSpaceName) {
+    filter +=
+      "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + addressSpaceName + "' AND ";
+  }
+  if (addressSpaceNameSpcae) {
+    filter +=
+      "`$.Spec.AddressSpace.ObjectMeta.Namespace` = '" +
+      addressSpaceNameSpcae +
+      "' AND ";
+  }
+  if (connectionName) {
+    filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
+  }
+  const CONNECTION_DETAIL = gql`
+  query single_connections {
+    connections(
+      filter: "${filter}" 
+    ) {
+      Total
+      Connections {
+        ObjectMeta {
+          Name
+          Namespace
+        }
         Links(first:${perPage} offset:${perPage * (page - 1)}) {
           Total
           Links {
@@ -528,17 +613,44 @@ export const RETURN_CONNECTION_DETAIL = (
   return CONNECTION_DETAIL;
 };
 
-export const RETURN_ADDRESS_TYPES = gql`
-  query addressTypes {
-    addressTypes_v2(addressSpaceType: standard) {
-      ObjectMeta {
-        Name
-      }
-      Spec {
-        DisplayName
-        LongDescription
-        ShortDescription
+export const RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION = (
+  name: string,
+  namespace: string,
+  type: string
+) => {
+  let filterString = "";
+  if (name && name.trim() !== "") {
+    filterString += "`$.Spec.AddressSpace` = '" + name + "' AND";
+  }
+  if (namespace && namespace.trim() !== "") {
+    filterString += "`$.ObjectMeta.Namespace` = '" + namespace + "'";
+  }
+  if (type.trim().toLowerCase() === "subscription") {
+    filterString += " AND `$.Spec.Type` = 'topic'";
+  }
+  const ALL_TOPICS_FOR_ADDRESS_SPACE = gql`
+  query all_addresses_for_addressspace_view {
+    addresses(
+      filter:"${filterString}"
+    ) {
+      Total
+      Addresses {
+        ObjectMeta {
+          Namespace
+          Name
+        }
+        Spec {
+          Address
+          Type
+          Plan {
+            Spec {
+              DisplayName
+            }
+          }
+        }
       }
     }
   }
 `;
+  return ALL_TOPICS_FOR_ADDRESS_SPACE;
+};

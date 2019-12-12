@@ -8,6 +8,7 @@ import { EmptyConnection } from "src/Components/Common/EmptyConnection";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionListResponse } from "src/Types/ResponseTypes";
 import { RETURN_ALL_CONECTION_LIST } from "src/Queries/Queries";
+import { ISortBy } from "@patternfly/react-table";
 
 export interface IConnectionListPageProps {
   name?: string;
@@ -30,6 +31,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
   page,
   perPage
 }) => {
+  const [sortBy, setSortBy] = React.useState<ISortBy>();
   let { loading, error, data } = useQuery<IConnectionListResponse>(
     RETURN_ALL_CONECTION_LIST(
       page,
@@ -66,10 +68,18 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
       status: "running"
     })
   );
+
+  const onSort = (_event: any, index: any, direction: any) => {
+    setSortBy({ index: index, direction: direction });
+  };
   return (
     <>
       {connections.Total > 0 ? (
-        <ConnectionList rows={connectionList ? connectionList : []} />
+        <ConnectionList
+          rows={connectionList ? connectionList : []}
+          sortBy={sortBy}
+          onSort={onSort}
+        />
       ) : (
         <EmptyConnection />
       )}

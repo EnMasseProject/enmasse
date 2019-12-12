@@ -39,7 +39,6 @@ export default function AddressDetailPage() {
   const client = useApolloClient();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  const [addresLinksTotal, setAddressLinksTotal] = React.useState<number>(0);
   const [addressPlan, setAddressPlan] = React.useState<string|null>(null);
   const { loading, error, data } = useQuery<IAddressDetailResponse>(
     RETURN_ADDRESS_DETAIL(name, namespace, addressname),
@@ -70,7 +69,6 @@ export default function AddressDetailPage() {
         }
       }
     });
-    console.log(deletedData);
     if (deletedData.data && deletedData.data.deleteAddress) {
       setIsDeleteModalOpen(!isDeleteModalOpen);
       history.push(`/address-spaces/${namespace}/${name}/${type}/addresses`);

@@ -119,7 +119,7 @@ export default function AddressSpaceDetailPage() {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `${name}&${namespace}.pem`);
+    link.setAttribute("download", `${name}.crt`);
     document.body.appendChild(link);
     link.click();
     if (link.parentNode) link.parentNode.removeChild(link);

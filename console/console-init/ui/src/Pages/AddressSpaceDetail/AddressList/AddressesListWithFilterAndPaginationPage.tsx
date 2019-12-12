@@ -31,8 +31,8 @@ export default function AddressesList() {
   useDocumentTitle("Address List");
   useA11yRouteChange();
   const { name, namespace,type } = useParams();
-  const [inputValue, setInputValue] = React.useState<string | null>(null);
   const [filterValue, setFilterValue] = React.useState<string | null>(null);
+  const [filterNames, setFilterNames] = React.useState<string[]>([]);
   const [typeValue, setTypeValue] = React.useState<string | null>(null);
   const [statusValue, setStatusValue] = React.useState<string | null>(null);
   const [totalAddresses, setTotalAddress] = React.useState<number>(0);
@@ -87,14 +87,15 @@ export default function AddressesList() {
       <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
         <GridItem span={7}>
           <AddressListFilterPage
-            inputValue={inputValue}
-            setInputValue={setInputValue}
             filterValue={filterValue}
             setFilterValue={setFilterValue}
+            filterNames={filterNames}
+            setFilterNames={setFilterNames}
             typeValue={typeValue}
             setTypeValue={setTypeValue}
             statusValue={statusValue}
             setStatusValue={setStatusValue}
+            totalAddresses={totalAddresses}
           />
         </GridItem>
         <GridItem span={5}>
@@ -104,8 +105,7 @@ export default function AddressesList() {
       <AddressListPage
         name={name}
         namespace={namespace}
-        inputValue={inputValue}
-        filterValue={filterValue}
+        filterNames={filterNames}
         typeValue={typeValue}
         statusValue={statusValue}
         setTotalAddress={setTotalAddress}

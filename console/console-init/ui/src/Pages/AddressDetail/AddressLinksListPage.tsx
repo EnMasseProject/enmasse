@@ -6,6 +6,7 @@ import { Loading } from "use-patternfly";
 import { IClient, ClientList } from "src/Components/AddressDetail/ClientList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { EmptyLinks } from "src/Components/Common/EmptyLinks";
+import { ISortBy } from "@patternfly/react-table";
 
 export interface IAddressLinksListProps {
   page: number;
@@ -25,6 +26,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   type,
   setAddressLinksTotal
 }) => {
+  const [sortBy, setSortBy] = React.useState<ISortBy>();
   const { loading, error, data } = useQuery<IAddressLinksResponse>(
     RETURN_ADDRESS_LINKS(page, perPage, name, namespace, addressname),
     { pollInterval: 20000 }
@@ -35,12 +37,24 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };
-  console.log(addresses);
-  const links = addresses.Addresses[0].Links;
-  setAddressLinksTotal(addresses.Addresses[0].Links.Total);
+
+  if (
+    addresses &&
+    addresses.Addresses.length > 0 &&
+    addresses.Addresses[0].Links.Total > 0
+  ) {
+    setAddressLinksTotal(addresses.Addresses[0].Links.Total);
+  }
+  const links =
+    addresses &&
+    addresses.Addresses.length > 0 &&
+    addresses.Addresses[0].Links.Total > 0 &&
+    addresses.Addresses[0].Links;
+
+  console.log(links);
   let clientRows: IClient[] = addresses.Addresses[0].Links.Links.map(link => ({
     role: link.Spec.Role.toString(),
-    containerId: link.ObjectMeta.Namespace,
+    containerId: link.Spec.Connection.Spec.ContainerId,
     name: link.ObjectMeta.Name,
     deliveryRate: getFilteredValue(link.Metrics, "enmasse_messages_in"),
     backlog: getFilteredValue(link.Metrics, "enmasse_messages_backlog"),
@@ -49,8 +63,16 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
     addressSpaceNamespace: namespace,
     addressSpaceType: type
   }));
-  console.log(clientRows);
+  const onSort = (_event: any, index: any, direction: any) => {
+    setSortBy({ index: index, direction: direction });
+  };
   return (
-    <>{links.Total > 0 ? <ClientList rows={clientRows} /> : <EmptyLinks />}</>
+    <>
+      {links && links.Total > 0 ? (
+        <ClientList rows={clientRows} onSort={onSort} sortBy={sortBy} />
+      ) : (
+        <EmptyLinks />
+      )}
+    </>
   );
 };

@@ -26,19 +26,6 @@ export interface IConnectionDetailResponse {
         }>;
       };
       Metrics: Array<IMetrics>;
-      Links: {
-        Total: number;
-        Links: Array<{
-          ObjectMeta: {
-            Name: string;
-            Namespace: string;
-          };
-          Spec: {
-            Role: string;
-          };
-          Metrics: Array<IMetrics>;
-        }>;
-      };
     }>;
   };
 }
@@ -139,7 +126,6 @@ export interface IAddressLinksResponse {
         Links: Array<{
           ObjectMeta: {
             Name: string;
-            Namespace: string;
           };
           Spec: {
             Role: string;
@@ -172,6 +158,9 @@ export interface IAddressSpacesResponse {
       Spec: {
         Type: string;
         Plan: {
+          ObjectMeta:{
+            Name:string;
+          }
           Spec: {
             DisplayName: string;
           };
@@ -179,6 +168,31 @@ export interface IAddressSpacesResponse {
       };
       Status: {
         IsReady: boolean;
+      };
+    }>;
+  };
+}
+
+export interface IConnectionLinksResponse {
+  connections: {
+    Total: number;
+    Connections: Array<{
+      ObjectMeta: {
+        Name: string;
+        Namespace: string;
+      };
+      Links: {
+        Total: number;
+        Links: Array<{
+          ObjectMeta: {
+            Name: string;
+            Namespace: string;
+          };
+          Spec: {
+            Role: string;
+          };
+          Metrics: Array<IMetrics>;
+        }>;
       };
     }>;
   };

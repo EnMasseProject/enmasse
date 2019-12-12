@@ -1,7 +1,10 @@
 import React from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
-import { Button, Modal } from "@patternfly/react-core";
+import {
+  Button,
+  Modal
+} from "@patternfly/react-core";
 import {
   AddressSpaceList,
   IAddressSpace
@@ -74,7 +77,6 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           }
         }
       });
-      console.log(deletedData);
       if (
         deletedData &&
         deletedData.data &&
@@ -95,7 +97,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     }
   }
 
-  if (error) {
+  if(error) {
     console.log(error);
   }
   console.log(data);

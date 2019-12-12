@@ -8,7 +8,6 @@ import {
   TooltipPosition,
   Tooltip
 } from "@patternfly/react-core";
-import gql from "graphql-tag";
 import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
@@ -22,7 +21,9 @@ export interface IAddressPreview {
   name?: string;
   type?: string;
   plan?: string;
+  topic?: string;
   namespace: string;
+  addressspace: string;
 }
 const Style = StyleSheet.create({
   left_padding: {
@@ -37,25 +38,31 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   name,
   type,
   plan,
-  namespace
+  topic,
+  namespace,
+  addressspace
 }) => {
   const [keepInViewChecked, setKeepInViewChecked] = React.useState<boolean>(
     false
   );
   const { data, loading, error } = useQuery(ADDRESS_COMMAND_PRIVEW_DETAIL, {
     variables: {
-      as: {
+      a: {
         ObjectMeta: {
-          Name: name,
+          Name: addressspace + "." + name,
           Namespace: namespace
         },
         Spec: {
           Plan: plan ? plan.toLowerCase() : "",
-          Type: type ? type.toLowerCase() : ""
+          Type: type ? type.toLowerCase() : "",
+          Topic: topic,
+          AddressSpace: addressspace,
+          Address: name
         }
       }
     }
   });
+  console.log(data);
   if (loading) return <Loading />;
   if (error) console.log("Address Priview Query Error", error);
   console.log(data);
@@ -78,7 +85,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           }}
         >
           <Grid>
-            {name && (
+            {name && name.trim() !== "" && (
               <>
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Address name
@@ -108,6 +115,14 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 </GridItem>
               </>
             )}
+            {topic && topic.trim() !== "" && (
+              <>
+                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                  Topic
+                </GridItem>
+                <GridItem span={8}>{topic}</GridItem>
+              </>
+            )}
           </Grid>
         </GridItem>
         <GridItem span={7} className={css(Style.left_padding)}>
@@ -123,8 +138,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 size="md"
                 color="blue"
                 onClick={() => {
-                  navigator.clipboard.writeText(data.addressSpaceCommand);
-                  alert("coopied successfully");
+                  navigator.clipboard.writeText(data.addressCommand);
                 }}
               />
             </Tooltip>
@@ -133,8 +147,8 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
             mode="xml"
             theme="github"
             fontSize={14}
-            onChange={() => {}}
-            value={data.addressSpaceCommand}
+            readOnly={true}
+            value={data.addressCommand}
             name="UNIQUE_ID_OF_DIV"
             editorProps={{ $blockScrolling: true }}
             style={{
