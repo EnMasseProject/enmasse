@@ -38,7 +38,7 @@ export interface IAddressSpaceConfiguration {
   authenticationService: string;
   setAuthenticationService: (authenticationService: string) => void;
 }
-interface IAddressSpacePlans {
+export interface IAddressSpacePlans {
   addressPlans: Array<{
     Spec: {
       AddressType: string;
