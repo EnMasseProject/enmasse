@@ -4,9 +4,11 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.InfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceSpecConnector;
+import io.enmasse.address.model.AddressSpaceSpecConnectorEndpoint;
+import io.enmasse.address.model.AddressSpaceStatusConnector;
+import io.enmasse.address.model.KubeUtil;
 import io.enmasse.amqp.RouterEntity;
 import io.enmasse.amqp.RouterManagement;
 import io.enmasse.config.AnnotationKeys;
@@ -22,10 +24,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-public class RouterStatusController implements Controller {
+public class RouterStatusController {
     private static final Logger log = LoggerFactory.getLogger(RouterStatusController.class);
 
     private final Vertx vertx = Vertx.vertx();
@@ -41,21 +49,17 @@ public class RouterStatusController implements Controller {
         this.queryTimeout = options.getManagementQueryTimeout();
     }
 
-    public AddressSpace reconcileActive(AddressSpace addressSpace) throws Exception {
-        InfraConfig infraConfig = InfraConfigs.parseCurrentInfraConfig(addressSpace);
-
-        if (infraConfig instanceof StandardInfraConfig) {
-            if (!addressSpace.getStatus().getConnectors().isEmpty()) {
-                checkRouterStatus(addressSpace, connection, node);
-            } else {
-                checkRouterStatus(addressSpace, node);
-            }
-        }
-        return addressSpace;
-    }
 
     private static final RouterEntity connection = new RouterEntity( "org.apache.qpid.dispatch.connection", "operStatus", "opened", "host");
     private static final RouterEntity node = new RouterEntity("org.apache.qpid.dispatch.router.node", "id");
+
+    void checkRouterConnectorStatus(AddressSpace addressSpace) {
+        checkRouterStatus(addressSpace, connection, node);
+    }
+
+    void checkRouterMeshStatus(AddressSpace addressSpace) {
+        checkRouterStatus(addressSpace, node);
+    }
 
     private void checkRouterStatus(AddressSpace addressSpace, RouterEntity ... entities) {
         String addressSpaceCaSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace);

@@ -10,6 +10,7 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.DoneableAddressSpace;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
@@ -94,19 +95,19 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         createCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
         isolatedResourcesManager.addToAddressSpaces(standard);
         resourcesManager.waitForAddressSpaceReady(standard);
-        resourcesManager.waitForAddressSpacePlanApplied(standard);
+        String currentConfig = resourcesManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
 
         standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_UNLIMITED).endSpec().done();
         updateCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
-        resourcesManager.waitForAddressSpaceReady(standard);
-        resourcesManager.waitForAddressSpacePlanApplied(standard);
+        AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(standard, currentConfig);
         assertThat(resourcesManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_UNLIMITED));
+        currentConfig = resourcesManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
 
         // Patch back to small plan
         assertTrue(patchCR(standard.getKind().toLowerCase(), standard.getMetadata().getName(), "{\"spec\":{\"plan\":\"" + AddressSpacePlans.STANDARD_SMALL + "\"}}").getRetCode());
         standard = resourcesManager.getAddressSpace(standard.getMetadata().getName());
         resourcesManager.waitForAddressSpaceReady(standard);
-        resourcesManager.waitForAddressSpacePlanApplied(standard);
+        AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(standard, currentConfig);
         assertThat(resourcesManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_SMALL));
     }
 

@@ -7,12 +7,12 @@ package io.enmasse.systemtest.manager;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.Phase;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -53,6 +53,7 @@ public abstract class ResourceManager {
     protected String defaultAddSpaceIdentifier;
     protected String addressSpaceType;
     protected String addressSpacePlan;
+    protected List<AddressSpace> currentAddressSpaces;
 
     public void setDefaultAddSpaceIdentifier(String defaultAddSpaceIdentifier) {
         this.defaultAddSpaceIdentifier = defaultAddSpaceIdentifier;
@@ -308,30 +309,33 @@ public abstract class ResourceManager {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied, List<AddressSpace> addressSpaceList) throws Exception {
+    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForConfigApplied, TimeoutBudget waitBudget) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS_SPACE);
         var client = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
         if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             LOGGER.info("Address space '{}' exists and will be updated.", addressSpace);
-            final String currentResourceVersion = client.withName(addressSpace.getMetadata().getName()).get().getMetadata().getResourceVersion();
+            final AddressSpace current = client.withName(addressSpace.getMetadata().getName()).get();
+            final String currentResourceVersion = current.getMetadata().getResourceVersion();
+            final String currentConfig = current.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
             client.createOrReplace(addressSpace);
             Thread.sleep(10_000);
             TestUtils.waitForChangedResourceVersion(ofDuration(ofMinutes(5)), addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), currentResourceVersion);
-            if (waitForPlanApplied) {
-                AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
+            if (waitForConfigApplied) {
+                AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(addressSpace, currentConfig);
             }
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            if (waitBudget == null) {
+                AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            } else {
+                AddressSpaceUtils.waitForAddressSpaceReady(addressSpace, waitBudget);
+            }
+
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-            addressSpaceList.add(addressSpace);
+            currentAddressSpaces.add(addressSpace);
         } else {
             LOGGER.info("Address space '{}' does not exists.", addressSpace.getMetadata().getName());
         }
         LOGGER.info("Address space updated: {}", addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    public void waitForAddressSpacePlanApplied(AddressSpace addressSpace) throws Exception {
-        AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
     }
 
     public AddressSpace getAddressSpace(String namespace, String addressSpaceName) {

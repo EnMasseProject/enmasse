@@ -7,13 +7,13 @@ package io.enmasse.systemtest.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceStatus;
 import io.enmasse.address.model.AddressSpaceStatusConnector;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.address.model.KubeUtil;
+import io.enmasse.address.model.Phase;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class AddressSpaceUtils {
     private static Logger log = CustomLogger.getLogger();
@@ -77,10 +76,6 @@ public class AddressSpaceUtils {
 
     public static boolean isAddressSpaceReady(AddressSpace addressSpace) {
         return addressSpace != null && addressSpace.getStatus().isReady();
-    }
-
-    public static boolean matchAddressSpacePlan(AddressSpace received, AddressSpace expected) {
-        return received != null && received.getMetadata().getAnnotations().get("enmasse.io/applied-plan").equals(expected.getSpec().getPlan());
     }
 
     public static AddressSpace waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
@@ -130,27 +125,25 @@ public class AddressSpaceUtils {
         return addressSpace;
     }
 
-    public static void waitForAddressSpacePlanApplied(AddressSpace addressSpace) throws Exception {
-        AddressSpace addressSpaceObject = null;
+    public static void waitForAddressSpaceConfigurationApplied(AddressSpace addressSpace, String currentConfig) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
 
-        boolean isPlanApplied = false;
-        while (budget.timeLeft() >= 0 && !isPlanApplied) {
-            addressSpaceObject = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
-            isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
-            if (!isPlanApplied) {
+        boolean isConfigApplied = false;
+        while (budget.timeLeft() >= 0 && !isConfigApplied) {
+            addressSpace = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
+            isConfigApplied = !addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION).equals(currentConfig);
+            if (!isConfigApplied) {
                 Thread.sleep(2000);
             }
-            log.info("Waiting until Address space plan will be applied: '{}', current: {}",
-                    addressSpace.getSpec().getPlan(),
-                    addressSpaceObject.getMetadata().getAnnotations().get("enmasse.io/applied-plan"));
+            log.info("Waiting until Address space configuration will be applied. Current: {}",
+                    addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION));
         }
-        isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
-        if (!isPlanApplied) {
-            String jsonStatus = addressSpaceObject != null ? addressSpaceObject.getMetadata().getAnnotations().get("enmasse.io/applied-plan") : "";
-            throw new IllegalStateException("Address Space " + addressSpace + " contains wrong plan: " + jsonStatus);
+        isConfigApplied = !addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION).equals(currentConfig);
+        if (!isConfigApplied) {
+            String jsonStatus = addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
+            throw new IllegalStateException("Address Space " + addressSpace + " contains wrong configuration: " + jsonStatus);
         }
-        log.info("Address plan {} successfully applied", addressSpace.getSpec().getPlan());
+        log.info("Address space configuration for {}/{} successfully applied", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
     }
 
     public static void deleteAddressSpaceAndWait(AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
@@ -297,31 +290,36 @@ public class AddressSpaceUtils {
         return clientAddressSpace;
     }
 
+    public static void waithForAuthServiceApplied(AddressSpace addressSpace, String expectedAuthServiceName) throws Exception {
+        TestUtils.waitUntilCondition("Auth service applied", waitPhase -> {
+            AddressSpace addrSpaceObject = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
+            return addrSpaceObject.getMetadata().getAnnotations().get("enmasse.io/applied-configuration").contains("\"authenticationService\":{\"name\":\"" + expectedAuthServiceName + "\"}")
+                    && isAddressSpaceReady(addrSpaceObject) && addrSpaceObject.getStatus().getPhase().equals(Phase.Active);
+        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+
+    }
+
     /**
      * Returns true only if all connectorStatuses report isReady=true
+     *
      * @param addressSpace
      * @return
      */
     public static boolean areAddressSpaceConnectorsReady(AddressSpace addressSpace) {
         return Optional.ofNullable(addressSpace)
-            .map(AddressSpace::getStatus)
-            .map(AddressSpaceStatus::getConnectors)
-            .map(Stream::of)
-            .orElseGet(Stream::empty)
-            .flatMap(Collection::stream)
-            .map(AddressSpaceStatusConnector::isReady)
-            .allMatch(ready -> ready == true);
+                .map(AddressSpace::getStatus)
+                .map(AddressSpaceStatus::getConnectors).stream()
+                .flatMap(Collection::stream)
+                .allMatch(AddressSpaceStatusConnector::isReady);
     }
 
     public static String getConnectorStatuses(AddressSpace addressSpace) {
         return Optional.ofNullable(addressSpace)
-            .map(AddressSpace::getStatus)
-            .map(AddressSpaceStatus::getConnectors)
-            .map(Stream::of)
-            .orElseGet(Stream::empty)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList())
-            .toString();
+                .map(AddressSpace::getStatus)
+                .map(AddressSpaceStatus::getConnectors).stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList())
+                .toString();
     }
 
 }

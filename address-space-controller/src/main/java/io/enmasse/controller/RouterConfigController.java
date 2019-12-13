@@ -44,6 +44,9 @@ public class RouterConfigController implements Controller {
             RouterSet routerSet = RouterSet.create(namespace, addressSpace, client);
             reconcileRouterSetSecrets(addressSpace, routerSet);
             reconcileRouterConfig(addressSpace, routerSet, (StandardInfraConfig) infraConfig);
+            if (routerSet.isModified()) {
+                addressSpace.getStatus().setPhase(Phase.Configuring);
+            }
             routerSet.apply(client);
         }
         return addressSpace;
