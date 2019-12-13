@@ -56,7 +56,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master      
-    
+
+    - name: Set version
+      id: version
+      run: | 
+        echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+        echo "::set-output name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+
     - name: setup-docker
       run: ./.github/scripts/setup_docker.sh
     
@@ -80,12 +86,13 @@ jobs:
       run: ./.travis/setup-olm.sh
 
     - name: Build
+      id: build
       run: |
         export REGISTRY_PASS=${{ secrets.REGISTRY_PASS }}
-        echo $REGISTRY_PASS
         ./.github/scripts/build.sh
 
     - name: Smoke tests
+      id: smoke
       run: ./.github/scripts/test.sh
 
     - name: Collect logs
@@ -100,7 +107,7 @@ jobs:
         path: artifacts
 
     - name: Create Release
-      if: success() && contains(github.ref, 'refs/tags/v')
+      if: job.status == success && contains(github.ref, 'refs/tags/v')
       id: create_release
       uses: actions/create-release@v1.0.0
       env:
@@ -112,15 +119,15 @@ jobs:
         prerelease: false
 
     - name: Upload Release Asset
-      if: success() && contains(github.ref, 'refs/tags/v')
+      if: job.status == success && contains(github.ref, 'refs/tags/v')
       id: upload-release-asset 
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: templates/build/enmasse-${{ steps.release.outputs.tag }}.tgz
-        asset_name: enmasse-${{ steps.release.outputs.tag }}.tgz
+        asset_path: templates/build/enmasse-${{ steps.create_release.outputs.tag }}.tgz
+        asset_name: enmasse-${{ steps.version.VERSION }}.tgz
         asset_content_type: application/gzip
 
     
