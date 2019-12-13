@@ -267,7 +267,7 @@ After the first phase, the following would be supported:
 
 * Deploy shared infra using the `MessagingInfra` resource
 * Creating messaging configs and messaging endpoints in a namespace
-* Anycast, multicast, queue and non-sharded topics supported (no transactions etc. yet)
+* Anycast, multicast, queue, non-sharded topics supported, subscription (no transactions etc. yet)
 * Management using console
 
 The following would NOT be supported:
@@ -296,7 +296,7 @@ Performance requirements of shared infra:
 * Handle up to 100k addresses - possibly spread accross multiple namespaces
 * Handle up to 1000 namespaces per infra instance (with 100 addresses each)
 
-Improtant design considerations:
+Important design considerations:
 
 * Minimize management traffic with router and broker
 * Add safeguards for getting out of bad states (with proper error reporting to be able to investigate bugs later)
