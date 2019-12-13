@@ -56,7 +56,7 @@ jobs:
           path: artifacts
 
       - name: Smoke tests
-          run: ./.github/scripts/smoke_test.sh
+        run: ./.github/scripts/smoke_test.sh
 
       - name: OLM tests
         run: ./.github/scripts/olm_test.sh
