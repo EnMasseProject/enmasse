@@ -14,12 +14,14 @@ import java.util.UUID;
 
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoMessage;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 
 import io.vertx.core.json.JsonObject;
 
+@ProtoMessage
 @ProtoDoc("@Indexed")
 public class DeviceInformation implements Serializable {
 

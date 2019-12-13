@@ -25,12 +25,16 @@ import io.enmasse.iot.infinispan.device.DeviceKey;
 import io.opentracing.Span;
 import io.opentracing.noop.NoopSpan;
 
+/**
+ * Tests for {@link AbstractCredentialsManagementService}.
+ *
+ */
 public class AbstractCredentialsManagementServiceTest {
 
     private AbstractCredentialsManagementService service;
 
     @BeforeEach
-    public void setup () {
+    public void setup() {
         this.service = new AbstractCredentialsManagementService(null, null, null, 1) {
 
             @Override
@@ -41,7 +45,8 @@ public class AbstractCredentialsManagementServiceTest {
             @Override
             protected CompletableFuture<OperationResult<List<CommonCredential>>> processGet(DeviceKey key, Span span) {
                 return CompletableFuture.completedFuture(null);
-            }};
+            }
+        };
     }
 
     @AfterEach
@@ -49,6 +54,15 @@ public class AbstractCredentialsManagementServiceTest {
         this.service.close();
     }
 
+    /**
+     * Test if the abstract implementation detects the invalid credential information.
+     * <br>
+     * This test checks if the {@link AbstractCredentialsManagementService} detects, and rejects an
+     * invalid credential set. For that the actual implementation of the service can simply return
+     * {@code null}.
+     *
+     * @throws Exception if something goes wrong. It should not.
+     */
     @Test
     public void testValidationFailure() throws Exception {
         final PasswordCredential invalidCredentials = new PasswordCredential();

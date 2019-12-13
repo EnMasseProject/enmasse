@@ -162,7 +162,7 @@ public abstract class AbstractCredentialsManagementService implements Credential
             }
         }
 
-        // ... for off encoding on worker pool
+        // ... fork off encoding on worker pool
         return CompletableFuture.supplyAsync(() -> {
             return checkCredentials(checkCredentials(credentials));
         }, this.encoderThreadPool);

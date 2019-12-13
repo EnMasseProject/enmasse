@@ -71,11 +71,12 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
 
         final String generatedSchema = new ProtoSchemaBuilder()
 
+                .addClass(CredentialKey.class)
                 .addClass(DeviceKey.class)
                 .addClass(DeviceInformation.class)
                 .addClass(DeviceCredential.class)
 
-                .packageName("io.enmasse.iot.registry.infinispan.data")
+                .packageName(DeviceInformation.class.getPackageName())
                 .fileName(GENERATED_PROTOBUF_FILE_NAME)
                 .build(serCtx);
 

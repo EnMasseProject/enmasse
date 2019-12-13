@@ -11,6 +11,7 @@ import java.util.Objects;
 
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoMessage;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
@@ -19,6 +20,7 @@ import com.google.common.base.MoreObjects.ToStringHelper;
  * Internal encoding of credentials for each device.
  *
  */
+@ProtoMessage
 @ProtoDoc("@Indexed")
 public class DeviceCredential {
 
