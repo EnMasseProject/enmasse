@@ -141,7 +141,7 @@ public class InfinispanTenantCleaner implements AutoCloseable {
 
         return queryFactory
                 .create(
-                        String.format("from %s where tenantId=:tenantId", DeviceInformation.class.getName()),
+                        String.format("from %s d where d.tenantId=:tenantId", DeviceInformation.class.getName()),
                         config.isIndexBroadcastQuery() ? IndexedQueryMode.BROADCAST : IndexedQueryMode.FETCH)
                 .maxResults(config.getDeletionChunkSize())
                 .setParameter("tenantId", tenantId);
