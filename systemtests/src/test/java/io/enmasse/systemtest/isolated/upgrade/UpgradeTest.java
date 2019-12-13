@@ -51,6 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.UPGRADE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -73,7 +74,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     @AfterEach
     void removeEnmasse() throws Exception {
         if (this.type.equals(EnmasseInstallType.BUNDLE)) {
-            OperatorManager.getInstance().clean();
+            assertTrue(OperatorManager.getInstance().clean());
         } else {
             OperatorManager.getInstance().deleteEnmasseAnsible();
         }

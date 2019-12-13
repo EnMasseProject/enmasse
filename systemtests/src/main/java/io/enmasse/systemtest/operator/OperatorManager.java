@@ -11,6 +11,7 @@ import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -34,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OperatorManager {
@@ -255,8 +257,11 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void clean() throws Exception {
-        KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse");
+    public boolean clean() throws Exception {
+        ExecutionResultData result = KubeCMDClient.runOnCluster("delete", "-v", "10", "crd", "-l", "app=enmasse");
+        if (!result.getRetCode()) {
+            return false;
+        }
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
@@ -265,6 +270,7 @@ public class OperatorManager {
         if (!kube.getInfraNamespace().equals(kube.getOlmNamespace())) {
             kube.deleteNamespace(kube.getInfraNamespace());
         }
+        return true;
     }
 
     public void waitUntilOperatorReadyOlm() throws Exception {
