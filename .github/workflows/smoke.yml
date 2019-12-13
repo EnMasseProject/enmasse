@@ -1,12 +1,11 @@
-name: Smoke tests
+name: PR job
 env:
   DOCKER_REGISTRY: "localhost:5000"
   TAG: "latest"
   DOCKER_ORG: enmasse
   KUBERNETES_NAMESPACE: "enmasse-infra"
-  SYSTEMTEST_PROFILE: smoke
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   build:
@@ -16,6 +15,11 @@ jobs:
     steps:
     - uses: actions/checkout@master      
     
+    - name: Set version
+      run: | 
+        echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+
+
     - name: setup-docker
       run: ./.github/scripts/setup_docker.sh
     
@@ -41,6 +45,17 @@ jobs:
     - name: Build
       run: ./.github/scripts/build.sh
 
+    - name: Collect logs
+      if: failure()
+      run: ./.github/scripts/collectLogs.sh
+
+    - name: Upload artifacts
+      if: failure()
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: unit-test-logs
+        path: artifacts
+
     - name: Smoke tests
       run: ./.github/scripts/test.sh
 
@@ -52,5 +67,5 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v1.0.0
       with:
-        name: test-logs
+        name: smoke-test-logs
         path: artifacts
