@@ -8,7 +8,7 @@ env:
 on: [pull_request]
 
 jobs:
-  build:
+  pr_job:
 
     runs-on: ubuntu-latest
 
