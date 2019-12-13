@@ -5,19 +5,14 @@
 
 package io.enmasse.iot.registry.infinispan;
 
-import io.enmasse.iot.infinispan.Infinispan;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Verticle;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
 import org.eclipse.hono.service.AbstractBaseApplication;
 import org.eclipse.hono.service.HealthCheckProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -30,8 +25,6 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan("io.enmasse.iot.infinispan")
 @EnableAutoConfiguration
 public class Application extends AbstractBaseApplication {
-
-    private static final Logger log = LoggerFactory.getLogger(Application.class);
 
     /**
      * All the verticles.
@@ -51,11 +44,6 @@ public class Application extends AbstractBaseApplication {
     @Autowired
     public void setHealthCheckProviders(final List<HealthCheckProvider> healthCheckProviders) {
         this.healthCheckProviders = healthCheckProviders;
-    }
-
-    @PostConstruct
-    protected void showInfinispanInfo() {
-        log.info("Infinispan Client Version: {}", Infinispan.version().orElse("<unknown>"));
     }
 
     @Override

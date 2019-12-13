@@ -13,7 +13,6 @@
         <groups></groups>
         <excludeGroups></excludeGroups>
         <skip.tests>true</skip.tests>
-        <test.infinispan.version>V9</test.infinispan.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -158,9 +157,6 @@
                     <systemProperties>
                         <enmasse.version>${release.version}</enmasse.version>
                     </systemProperties>
-                    <environmentVariables>
-                        <INFINISPAN_VERSION>${test.infinispan.version}</INFINISPAN_VERSION>
-                    </environmentVariables>
                     <includes>
                         <include>io.enmasse.systemtest.**</include>
                     </includes>
@@ -310,12 +306,6 @@
             <properties>
                 <groups>acceptance &amp; !soak &amp; !upgrade &amp; !shared-iot &amp; !isolated-iot</groups>
                 <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>infinispan-10</id>
-            <properties>
-                <test.infinispan.version>V10</test.infinispan.version>
             </properties>
         </profile>
     </profiles>
