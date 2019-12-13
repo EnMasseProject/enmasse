@@ -1,4 +1,4 @@
-name: Release build
+name: Release job
 env:
   TAG: "latest"
   DOCKER_ORG: enmasse
