@@ -142,6 +142,10 @@ type ExternalInfinispanServer struct {
 	CacheNames *ExternalCacheNames `json:"cacheNames,omitempty"`
 }
 
+type InfinispanRegistryManagement struct {
+	AuthTokenCacheExpiration string `json:"authTokenCacheExpiration,omitempty"`
+}
+
 type ExternalCacheNames struct {
 	Devices            string `json:"devices,omitempty"`
 	DeviceStates       string `json:"deviceStates,omitempty"`
@@ -171,7 +175,8 @@ type FileBasedDeviceRegistry struct {
 }
 
 type InfinispanDeviceRegistry struct {
-	Server              InfinispanServer `json:"server"`
+	Server              InfinispanServer             `json:"server"`
+	Management          InfinispanRegistryManagement `json:"management"`
 	CommonServiceConfig `json:",inline"`
 }
 

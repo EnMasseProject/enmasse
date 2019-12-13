@@ -78,8 +78,11 @@ public class DeviceServiceConfiguration {
      * @return The handler.
      */
     @Bean
-    public AuthHandler authHandler() {
-        return new DeviceRegistryTokenAuthHandler(new DeviceRegistryTokenAuthProvider());
+    @Autowired
+    public AuthHandler authHandler(final RestEndpointConfiguration restEndpointConfiguration) {
+        return new DeviceRegistryTokenAuthHandler(
+                new DeviceRegistryTokenAuthProvider(restEndpointConfiguration.getAuthTokenCacheExpiration()
+                ));
     }
 
     /**
