@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -30,7 +30,7 @@ import (
 )
 
 type Configurator struct {
-	ephermalCertBase string
+	ephemeralCertBase string
 
 	kubeclientset    kubernetes.Interface
 	enmasseclientset clientset.Interface
@@ -47,7 +47,7 @@ func NewConfigurator(
 	kubeclientset kubernetes.Interface,
 	iotclientset clientset.Interface,
 	projectInformer iotinformers.IoTProjectInformer,
-	ephermalCertBase string,
+	ephemeralCertBase string,
 ) *Configurator {
 
 	controller := &Configurator{
@@ -57,9 +57,9 @@ func NewConfigurator(
 		projectLister:  projectInformer.Lister(),
 		projectsSynced: projectInformer.Informer().HasSynced,
 
-		workqueue:        workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "IoTProjects"),
-		manage:           qdr.NewManage(),
-		ephermalCertBase: ephermalCertBase,
+		workqueue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "IoTProjects"),
+		manage:            qdr.NewManage(),
+		ephemeralCertBase: ephemeralCertBase,
 	}
 
 	log.Info("Setting up event handlers")

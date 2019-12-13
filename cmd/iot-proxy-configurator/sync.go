@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -100,7 +100,7 @@ func (c *Configurator) certificatePath(object metav1.Object, certificate []byte)
 
 	checksum := fmt.Sprintf("%x", sha256.Sum256(certificate))
 	name := certFilePrefix(object) + checksum + "-cert.crt"
-	return path.Join(c.ephermalCertBase, name)
+	return path.Join(c.ephemeralCertBase, name)
 
 }
 
@@ -109,7 +109,7 @@ func (c *Configurator) deleteCertificatesForProject(object metav1.Object) error 
 
 	// TODO: don't put all certs into a single folder
 
-	files, err := ioutil.ReadDir(c.ephermalCertBase)
+	files, err := ioutil.ReadDir(c.ephemeralCertBase)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (c *Configurator) deleteCertificatesForProject(object metav1.Object) error 
 		log.V(2).Info("Checking file", "file", f.Name())
 		if strings.HasPrefix(f.Name(), prefix) {
 			log.Info("Deleting file", "file", f.Name())
-			removeErr := os.Remove(filepath.Join(c.ephermalCertBase, f.Name()))
+			removeErr := os.Remove(filepath.Join(c.ephemeralCertBase, f.Name()))
 			if !os.IsNotExist(removeErr) {
 				err = multierr.Append(err, removeErr)
 			}
@@ -179,14 +179,14 @@ func toMapStringString(v interface{}) (map[string]string, error) {
 func (c *Configurator) syncSslProfile(object metav1.Object, certificate []byte) (bool, error) {
 
 	hasCert := certificate != nil && len(certificate) > 0
-	if hasCert && c.ephermalCertBase == "" {
+	if hasCert && c.ephemeralCertBase == "" {
 		return false, fmt.Errorf("unable to configure custom certificate, emphermal base directory is not configured")
 	}
 
 	certFile := c.certificatePath(object, certificate)
 	log.V(2).Info("Certificate path", "path", certFile)
 
-	if !hasCert && c.ephermalCertBase != "" {
+	if !hasCert && c.ephemeralCertBase != "" {
 
 		// TODO: improve performance, we iterate over all custom certs at this point
 
