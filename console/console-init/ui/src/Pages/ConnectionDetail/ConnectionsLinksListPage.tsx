@@ -40,7 +40,6 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
   const { connections } = data || {
     connections: { Total: 0, Connections: [] }
   };
-
   const connection = connections.Connections[0];
   let linkRows: ILink[] = [];
   if (connection && connection.Links.Total > 0) {
@@ -48,8 +47,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
     linkRows = connection.Links.Links.map(link => ({
       name: link.ObjectMeta.Name,
       role: link.Spec.Role,
-      //change it after confiramtion
-      address: link.ObjectMeta.Namespace,
+      address: link.Spec.Address,
       deliveries: getFilteredValue(link.Metrics, "enmasse_deliveries"),
       rejected: getFilteredValue(link.Metrics, "enmasse_rejected"),
       released: getFilteredValue(link.Metrics, "enmasse_released"),

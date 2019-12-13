@@ -1,6 +1,10 @@
 import * as React from "react";
-import {BreadcrumbItem, Breadcrumb, Modal,
-  Button} from "@patternfly/react-core";
+import {
+  BreadcrumbItem,
+  Breadcrumb,
+  Modal,
+  Button
+} from "@patternfly/react-core";
 import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
 import { Link, useHistory } from "react-router-dom";
 import { useParams } from "react-router";
@@ -9,7 +13,11 @@ import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { IAddressDetailResponse } from "src/Types/ResponseTypes";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { DELETE_ADDRESS, RETURN_ADDRESS_DETAIL, EDIT_ADDRESS  } from "src/Queries/Queries";
+import {
+  DELETE_ADDRESS,
+  RETURN_ADDRESS_DETAIL,
+  EDIT_ADDRESS
+} from "src/Queries/Queries";
 import { IObjectMeta_v1_Input } from "../AddressSpaceDetail/AddressSpaceDetailPage";
 import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
 import { AddressLinksWithFilterAndPagination } from "./AddressLinksWithFilterAndPaginationPage";
@@ -39,7 +47,7 @@ export default function AddressDetailPage() {
   const client = useApolloClient();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  const [addressPlan, setAddressPlan] = React.useState<string|null>(null);
+  const [addressPlan, setAddressPlan] = React.useState<string | null>(null);
   const { loading, error, data } = useQuery<IAddressDetailResponse>(
     RETURN_ADDRESS_DETAIL(name, namespace, addressname),
     { pollInterval: 20000 }
@@ -51,7 +59,7 @@ export default function AddressDetailPage() {
     addresses: { Total: 0, Addresses: [] }
   };
   const addressDetail = addresses && addresses.Addresses[0];
-  if(addressPlan===null){
+  if (addressPlan === null) {
     setAddressPlan(addressDetail.Spec.Plan.Spec.DisplayName);
   }
 
@@ -81,9 +89,8 @@ export default function AddressDetailPage() {
     });
   };
 
-
   const handleSaving = async () => {
-    if(addressDetail && type){
+    if (addressDetail && type) {
       await client.mutate({
         mutation: EDIT_ADDRESS,
         variables: {
@@ -92,12 +99,9 @@ export default function AddressDetailPage() {
             Namespace: addressDetail.ObjectMeta.Namespace.toString()
           },
           jsonPatch:
-              '[{"op":"replace","path":"/Plan","value":"' +
-              getPlanAndTypeForAddressEdit(
-                  addressPlan || "",
-                  type
-              ) +
-              '"}]',
+            '[{"op":"replace","path":"/Plan","value":"' +
+            getPlanAndTypeForAddressEdit(addressPlan || "", type) +
+            '"}]',
           patchType: "application/json-patch+json"
         }
       });
@@ -121,25 +125,33 @@ export default function AddressDetailPage() {
       )}
 
       <Modal
-          title="Edit"
-          id="addr-detail-edit-modal"
-          isSmall
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(!isEditModalOpen)}
-          actions={[
-            <Button key="confirm" id="addr-detail-edit-confirm" variant="primary" onClick={handleSaving}>
-              Confirm
-            </Button>,
-            <Button key="cancel" id="addr-detail-edit-cancel" variant="link" onClick={() => setIsEditModalOpen(!isEditModalOpen)}>
-              Cancel
-            </Button>
-          ]}
-          isFooterLeftAligned>
+        title="Edit"
+        id="addr-detail-edit-modal"
+        isSmall
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(!isEditModalOpen)}
+        actions={[
+          <Button
+            key="confirm"
+            id="addr-detail-edit-confirm"
+            variant="primary"
+            onClick={handleSaving}>
+            Confirm
+          </Button>,
+          <Button
+            key="cancel"
+            id="addr-detail-edit-cancel"
+            variant="link"
+            onClick={() => setIsEditModalOpen(!isEditModalOpen)}>
+            Cancel
+          </Button>
+        ]}
+        isFooterLeftAligned>
         <EditAddress
-            name={addressDetail.ObjectMeta.Name}
-            type={addressDetail.Spec.Plan.Spec.AddressType}
-            plan={addressPlan||""}
-            onChange={setAddressPlan}
+          name={addressDetail.ObjectMeta.Name}
+          type={addressDetail.Spec.Plan.Spec.AddressType}
+          plan={addressPlan || ""}
+          onChange={setAddressPlan}
         />
       </Modal>
       {isDeleteModalOpen && (

@@ -517,7 +517,6 @@ export const RETURN_CONNECTION_DETAIL = (
           Name
           Namespace
           CreationTimestamp
-          ResourceVersion
         }
         Spec {
           Hostname
@@ -593,10 +592,10 @@ export const RETURN_CONNECTION_LINKS = (
           Links {
             ObjectMeta {
               Name
-              Namespace
             }
             Spec {
               Role
+              Address
             }
             Metrics {
               Name
