@@ -195,6 +195,7 @@ public class IoTUtils {
             }
             return updated == null;
         }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "IoT project failed to delete in time");
+        log.info("IoTProject {}/{} deleted", project.getMetadata().getNamespace(), project.getMetadata().getName());
     }
 
     public static boolean isIoTInstalled(Kubernetes kubernetes) {
