@@ -13,7 +13,6 @@ export interface IConnectionDetailResponse {
         Name: string;
         Namespace: string;
         CreationTimeStamp: string;
-        ResourceVersion: string;
       };
       Spec: {
         Hostname: string;
@@ -186,10 +185,10 @@ export interface IConnectionLinksResponse {
         Links: Array<{
           ObjectMeta: {
             Name: string;
-            Namespace: string;
           };
           Spec: {
             Role: string;
+            Address:string;
           };
           Metrics: Array<IMetrics>;
         }>;

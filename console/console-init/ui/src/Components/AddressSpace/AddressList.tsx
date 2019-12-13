@@ -116,7 +116,6 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   );
 
   const tableColumns = [
-    "Name",
     { title: "Name", transforms: [sortable] },
     "Type/Plan",
     {
