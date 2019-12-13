@@ -554,6 +554,33 @@ export const RETURN_ADDRESS_TYPES = gql`
     }
   }
 `;
+export const RETURN_NAMESPACES = gql`
+  query all_namespaces {
+    namespaces {
+      ObjectMeta {
+        Name
+      }
+      Status {
+        Phase
+      }
+    }
+  }
+`;
+
+export const RETURN_ADDRESS_SPACE_PLANS = gql`
+  query all_address_space_plans {
+    addressSpacePlans {
+      ObjectMeta {
+        Name
+        Uid
+        CreationTimestamp
+      }
+      Spec {
+        AddressSpaceType
+      }
+    }
+  }
+`;
 
 export const RETURN_CONNECTION_LINKS = (
   page: number,

@@ -3,7 +3,7 @@ import { useQuery } from "@apollo/react-hooks";
 import { RETURN_ADDRESS_PLANS } from "src/Queries/Queries";
 import { Form, TextContent, Text, TextVariants, FormGroup, FormSelect, FormSelectOption, TextInput, Radio } from "@patternfly/react-core";
 import { IAddressSpace } from "src/Components/AddressSpaceList/AddressSpaceList";
-import { IAddressSpacePlans } from "src/Components/AddressSpace/CreateAddressSpaceConfiguration";
+import { IAddressSpacePlans } from "../Pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
 
 interface IEditAddressSpaceProps {
   addressSpace: IAddressSpace;

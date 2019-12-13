@@ -99,6 +99,7 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
   const onClose = () => {
     setIsCreateWizardOpen(!isCreateWizardOpen);
   };
+
   return (
     <React.Fragment>
       <Wizard
@@ -112,10 +113,7 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
         onNext={() => {
           console.log("next");
         }}
-        onSave={() => {
-          console.log("Save");
-          setIsCreateWizardOpen(!isCreateWizardOpen);
-        }}
+        onSave={handleSave}
       />
       )}
     </React.Fragment>
