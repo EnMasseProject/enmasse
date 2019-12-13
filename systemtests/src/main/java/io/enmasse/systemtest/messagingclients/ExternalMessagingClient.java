@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.messagingclients;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.vertx.core.json.JsonArray;
 
@@ -32,7 +33,7 @@ public class ExternalMessagingClient {
         return this;
     }
 
-    public ExternalMessagingClient withAditionalArgument(ClientArgument argName, Object value) {
+    public ExternalMessagingClient withAdditionalArgument(ClientArgument argName, Object value) {
         Objects.requireNonNull(value);
         this.arguments.put(argName, String.valueOf(value));
         return this;
@@ -41,6 +42,11 @@ public class ExternalMessagingClient {
 
     public ExternalMessagingClient withMessagingRoute(String route) {
         this.arguments.put(ClientArgument.BROKER, route);
+        return this;
+    }
+
+    public ExternalMessagingClient withMessagingRoute(Endpoint route) {
+        this.arguments.put(ClientArgument.BROKER, route.toString());
         return this;
     }
 

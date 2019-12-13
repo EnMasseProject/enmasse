@@ -104,20 +104,24 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket).toString())
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d")
                 .withTimeout(30)
-                .withAditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket);
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
+                .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
 
         ExternalMessagingClient receiverClient = new ExternalMessagingClient()
                 .withClientEngine(receiver)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket).toString())
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withTimeout(30)
-                .withAditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket);
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
+                .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
 
 
         assertTrue(senderClient.run(), "Sender failed, expected return code 0");
@@ -149,7 +153,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d")
@@ -157,14 +161,14 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
                 .withClientEngine(receiver)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
                 .withCount(expectedMsgCount / 2)
                 .withTimeout(150);
 
         ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
                 .withClientEngine(receiver2)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
                 .withCount(expectedMsgCount / 2)
                 .withTimeout(150);
@@ -210,41 +214,33 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
-        arguments.put(ClientArgument.ADDRESS, AddressUtils.getTopicPrefix(hasTopicPrefix) + dest.getSpec().getAddress());
-        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
-        arguments.put(ClientArgument.TIMEOUT, "250");
-
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d")
-                .withTimeout(30);
+                .withTimeout(30)
+                .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST");
 
         ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
                 .withClientEngine(subscriber)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
                 .withCount(expectedMsgCount)
-                .withTimeout(150);
+                .withTimeout(150)
+                .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST");
 
         ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
                 .withClientEngine(subscriber2)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()).toString())
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
                 .withCount(expectedMsgCount)
-                .withTimeout(150);
+                .withTimeout(150)
+                .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST");
 
-        sender.setArguments(arguments);
-        arguments.remove(ClientArgument.MSG_CONTENT);
-        subscriber.setArguments(arguments);
-        subscriber2.setArguments(arguments);
-
-        Future<Boolean> recResult = subscriber.runAsync();
-        Future<Boolean> recResult2 = subscriber2.runAsync();
+        Future<Boolean> recResult = receiverClient1.runAsync();
+        Future<Boolean> recResult2 = receiverClient2.runAsync();
 
         if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
             waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
@@ -253,15 +249,15 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         }
 
         assertAll(
-                () -> assertTrue(sender.run(), "Producer failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, sender.getMessages().size(),
+                () -> assertTrue(senderClient.run(), "Producer failed, expected return code 0"),
+                () -> assertEquals(expectedMsgCount, senderClient.getMessages().size(),
                         String.format("Expected %d sent messages", expectedMsgCount)));
         assertAll(
                 () -> assertTrue(recResult.get(), "Subscriber failed, expected return code 0"),
                 () -> assertTrue(recResult2.get(), "Subscriber failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, subscriber.getMessages().size(),
+                () -> assertEquals(expectedMsgCount, receiverClient1.getMessages().size(),
                         String.format("Expected %d received messages", expectedMsgCount)),
-                () -> assertEquals(expectedMsgCount, subscriber2.getMessages().size(),
+                () -> assertEquals(expectedMsgCount, receiverClient2.getMessages().size(),
                         String.format("Expected %d received messages", expectedMsgCount)));
     }
 
@@ -283,30 +279,37 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
-        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(sender)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withMessageBody("msg no. %d");
 
-        sender.setArguments(arguments);
-        arguments.remove(ClientArgument.MSG_CONTENT);
+        ExternalMessagingClient receiverClientBrowse = new ExternalMessagingClient()
+                .withClientEngine(receiver_browse)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withAdditionalArgument(ClientArgument.RECV_BROWSE, "true");
 
-        arguments.put(ClientArgument.RECV_BROWSE, "true");
-        receiver_browse.setArguments(arguments);
-
-        arguments.put(ClientArgument.RECV_BROWSE, "false");
-        receiver_receive.setArguments(arguments);
+        ExternalMessagingClient receiverClientReceive = new ExternalMessagingClient()
+                .withClientEngine(receiver_receive)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withAdditionalArgument(ClientArgument.RECV_BROWSE, "false");
 
         assertAll(
-                () -> assertTrue(sender.run(), "Sender failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, sender.getMessages().size(),
+                () -> assertTrue(senderClient.run(), "Sender failed, expected return code 0"),
+                () -> assertEquals(expectedMsgCount, senderClient.getMessages().size(),
                         String.format("Expected %d sent messages", expectedMsgCount)));
         assertAll(
-                () -> assertTrue(receiver_browse.run(), "Browse receiver failed, expected return code 0"),
-                () -> assertTrue(receiver_receive.run(), "Receiver failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, receiver_browse.getMessages().size(),
+                () -> assertTrue(receiverClientBrowse.run(), "Browse receiver failed, expected return code 0"),
+                () -> assertTrue(receiverClientReceive.run(), "Receiver failed, expected return code 0"),
+                () -> assertEquals(expectedMsgCount, receiverClientBrowse.getMessages().size(),
                         String.format("Expected %d browsed messages", expectedMsgCount)),
-                () -> assertEquals(expectedMsgCount, receiver_receive.getMessages().size(),
+                () -> assertEquals(expectedMsgCount, receiverClientReceive.getMessages().size(),
                         String.format("Expected %d received messages", expectedMsgCount)));
     }
 
@@ -327,24 +330,26 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 50;
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
-        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(sender)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withMessageBody("msg no. %d");
 
-        sender.setArguments(arguments);
-        arguments.remove(ClientArgument.MSG_CONTENT);
+        ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                .withClientEngine(receiver)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
+                .withAddress(dest)
+                .withCount(0)
+                .withTimeout(10);
 
-        arguments.put(ClientArgument.COUNT, "0");
-        arguments.put(ClientArgument.TIMEOUT, "10");  // In seconds, maximum time the consumer waits for a single message
-        receiver.setArguments(arguments);
+        assertTrue(senderClient.run(), "Sender failed, expected return code 0");
+        assertTrue(receiverClient.run(), "Drain receiver failed, expected return code 0");
 
-        assertTrue(sender.run(), "Sender failed, expected return code 0");
-        assertTrue(receiver.run(), "Drain receiver failed, expected return code 0");
-
-        assertEquals(expectedMsgCount, sender.getMessages().size(),
+        assertEquals(expectedMsgCount, senderClient.getMessages().size(),
                 String.format("Expected %d sent messages", expectedMsgCount));
-        assertEquals(expectedMsgCount, receiver.getMessages().size(),
+        assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
                 String.format("Expected %d received messages", expectedMsgCount));
     }
 
@@ -365,58 +370,58 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(queue);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
-        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.ADDRESS, queue.getSpec().getAddress());
-        arguments.put(ClientArgument.MSG_PROPERTY, "colour~red");
-        arguments.put(ClientArgument.MSG_PROPERTY, "number~12.65");
-        arguments.put(ClientArgument.MSG_PROPERTY, "a~true");
-        arguments.put(ClientArgument.MSG_PROPERTY, "b~false");
-        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(sender)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
+                .withCount(expectedMsgCount)
+                .withAddress(queue)
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~red")
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~12.65")
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "a~true")
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "b~false")
+                .withMessageBody("msg no. %d");
 
         //send messages
-        sender.setArguments(arguments);
-        assertTrue(sender.run(), "Sender failed, expected return code 0");
-        assertEquals(expectedMsgCount, sender.getMessages().size(),
+        assertTrue(senderClient.run(), "Sender failed, expected return code 0");
+        assertEquals(expectedMsgCount, senderClient.getMessages().size(),
                 String.format("Expected %d sent messages", expectedMsgCount));
 
-        arguments.remove(ClientArgument.MSG_PROPERTY);
-        arguments.remove(ClientArgument.MSG_CONTENT);
-        arguments.put(ClientArgument.RECV_BROWSE, "true");
-        arguments.put(ClientArgument.COUNT, "0");
+        ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                .withClientEngine(receiver)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
+                .withCount(0)
+                .withAddress(queue)
+                .withAdditionalArgument(ClientArgument.RECV_BROWSE, "true");
 
         //receiver with selector colour = red
-        arguments.put(ClientArgument.SELECTOR, "colour = 'red'");
-        receiver.setArguments(arguments);
-        final Executable executable = () -> assertEquals(expectedMsgCount, receiver.getMessages().size(),
+        receiverClient.withAdditionalArgument(ClientArgument.SELECTOR, "colour = 'red'");
+        final Executable executable = () -> assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
                 String.format("Expected %d received messages 'colour = red'", expectedMsgCount));
         assertAll(
-                () -> assertTrue(receiver.run(), "Receiver 'colour = red' failed, expected return code 0"),
+                () -> assertTrue(receiverClient.run(), "Receiver 'colour = red' failed, expected return code 0"),
                 executable);
 
         //receiver with selector number > 12.5
-        arguments.put(ClientArgument.SELECTOR, "number > 12.5");
-        receiver.setArguments(arguments);
+        receiverClient.withAdditionalArgument(ClientArgument.SELECTOR, "number > 12.5");
         assertAll(
-                () -> assertTrue(receiver.run(), "Receiver 'number > 12.5' failed, expected return code 0"),
+                () -> assertTrue(receiverClient.run(), "Receiver 'number > 12.5' failed, expected return code 0"),
                 executable);
 
 
         //receiver with selector a AND b
-        arguments.put(ClientArgument.SELECTOR, "a AND b");
-        receiver.setArguments(arguments);
+        receiverClient.withAdditionalArgument(ClientArgument.SELECTOR, "a AND b");
         assertAll(
-                () -> assertTrue(receiver.run(), "Receiver 'a AND b' failed, expected return code 0"),
-                () -> assertEquals(0, receiver.getMessages().size(),
+                () -> assertTrue(receiverClient.run(), "Receiver 'a AND b' failed, expected return code 0"),
+                () -> assertEquals(0, receiverClient.getMessages().size(),
                         String.format("Expected %d received messages 'a AND b'", 0)));
 
         //receiver with selector a OR b
-        arguments.put(ClientArgument.RECV_BROWSE, "false");
-        arguments.put(ClientArgument.SELECTOR, "a OR b");
-        receiver.setArguments(arguments);
+        receiverClient.withAdditionalArgument(ClientArgument.RECV_BROWSE, "false");
+        receiverClient.withAdditionalArgument(ClientArgument.SELECTOR, "a OR b");
+
         assertAll(
-                () -> assertTrue(receiver.run(), "Receiver 'a OR b' failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, receiver.getMessages().size(),
+                () -> assertTrue(receiverClient.run(), "Receiver 'a OR b' failed, expected return code 0"),
+                () -> assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
                         String.format("Expected %d received messages 'a OR b'", expectedMsgCount)));
     }
 
@@ -438,38 +443,49 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(topic);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
-        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.ADDRESS, AddressUtils.getTopicPrefix(hasTopicPrefix) + topic.getSpec().getAddress());
-        arguments.put(ClientArgument.MSG_PROPERTY, "colour~red");
-        arguments.put(ClientArgument.MSG_PROPERTY, "number~12.65");
-        arguments.put(ClientArgument.MSG_PROPERTY, "a~true");
-        arguments.put(ClientArgument.MSG_PROPERTY, "b~false");
-        arguments.put(ClientArgument.TIMEOUT, "150");
-        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
-
         //set up senders
-        sender.setArguments(arguments);
+        ExternalMessagingClient senderClient1 = new ExternalMessagingClient()
+                .withClientEngine(sender)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
+                .withCount(expectedMsgCount)
+                .withAddress(topic)
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~red")
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~12.65")
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "a~true")
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "b~false")
+                .withTimeout(150)
+                .withMessageBody("msg no. %d");
 
-        arguments.remove(ClientArgument.MSG_PROPERTY);
-        arguments.put(ClientArgument.MSG_PROPERTY, "colour~blue");
-        arguments.put(ClientArgument.MSG_PROPERTY, "number~11.65");
-
-        sender2.setArguments(arguments);
-
-        arguments.remove(ClientArgument.MSG_PROPERTY);
-        arguments.remove(ClientArgument.MSG_CONTENT);
+        ExternalMessagingClient senderClient2 = new ExternalMessagingClient()
+                .withClientEngine(sender2)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
+                .withCount(expectedMsgCount)
+                .withAddress(topic)
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~blue")
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~11.65")
+                .withTimeout(150)
+                .withMessageBody("msg no. %d");
 
         //set up subscriber1
-        arguments.put(ClientArgument.SELECTOR, "colour = 'red' AND a");
-        subscriber.setArguments(arguments);
+        ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
+                .withClientEngine(subscriber)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
+                .withCount(expectedMsgCount)
+                .withAddress(topic)
+                .withTimeout(150)
+                .withAdditionalArgument(ClientArgument.SELECTOR, "colour = 'red' AND a");
 
         //set up subscriber2
-        arguments.put(ClientArgument.SELECTOR, "number < 12.5");
-        subscriber2.setArguments(arguments);
+        ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
+                .withClientEngine(subscriber2)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
+                .withCount(expectedMsgCount)
+                .withAddress(topic)
+                .withTimeout(150)
+                .withAdditionalArgument(ClientArgument.SELECTOR, "number < 12.5");
 
-        Future<Boolean> result1 = subscriber.runAsync();
-        Future<Boolean> result2 = subscriber2.runAsync();
+        Future<Boolean> result1 = receiverClient1.runAsync();
+        Future<Boolean> result2 = receiverClient2.runAsync();
 
         if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
             waitForSubscribers(artemisManagement, getSharedAddressSpace(), topic.getSpec().getAddress(), 2);
@@ -477,18 +493,18 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
             waitForSubscribersConsole(getSharedAddressSpace(), topic, 2);
         }
 
-        assertTrue(sender.run(), "Sender failed, expected return code 0");
-        assertTrue(sender2.run(), "Sender2 failed, expected return code 0");
+        assertTrue(senderClient1.run(), "Sender failed, expected return code 0");
+        assertTrue(senderClient2.run(), "Sender2 failed, expected return code 0");
         assertTrue(result1.get(), "Receiver 'colour = red' failed, expected return code 0");
         assertTrue(result2.get(), "Receiver 'number < 12.5' failed, expected return code 0");
 
-        assertEquals(expectedMsgCount, sender.getMessages().size(),
+        assertEquals(expectedMsgCount, senderClient1.getMessages().size(),
                 String.format("Expected %d sent messages", expectedMsgCount));
-        assertEquals(expectedMsgCount, sender2.getMessages().size(),
+        assertEquals(expectedMsgCount, senderClient2.getMessages().size(),
                 String.format("Expected %d sent messages", expectedMsgCount));
-        assertEquals(expectedMsgCount, subscriber.getMessages().size(),
+        assertEquals(expectedMsgCount, receiverClient1.getMessages().size(),
                 String.format("Expected %d received messages 'colour = red' AND a", expectedMsgCount));
-        assertEquals(expectedMsgCount, subscriber2.getMessages().size(),
+        assertEquals(expectedMsgCount, receiverClient2.getMessages().size(),
                 String.format("Expected %d received messages 'number < 12.5'", expectedMsgCount));
     }
 
@@ -511,33 +527,39 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace(), false).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
-        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
-        arguments.put(ClientArgument.TIMEOUT, "30");
-        replaceCredArgs(consumCred);
-        sender.setArguments(arguments);
-        arguments.remove(ClientArgument.MSG_CONTENT);
-        replaceCredArgs(publishCred);
-        receiver.setArguments(arguments);
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(sender)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), false))
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withMessageBody("msg no. %d")
+                .withTimeout(30)
+                .withCredentials(consumCred)
+                .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
+
+        ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), false))
+                .withAddress(dest)
+                .withCount(expectedMsgCount)
+                .withTimeout(30)
+                .withCredentials(publishCred)
+                .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
+
 
         assertAll(
-                () -> assertFalse(sender.run(), "Sender failed. Specified user is not allowed to write"),
-                () -> assertFalse(receiver.run(), "Receiver failed. Specified user is not allowed to read"));
-        replaceCredArgs(publishCred);
-        arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
-        sender.setArguments(arguments);
-        arguments.remove(ClientArgument.MSG_CONTENT);
-        replaceCredArgs(consumCred);
-        receiver.setArguments(arguments);
+                () -> assertFalse(senderClient.run(), "Sender failed. Specified user is not allowed to write"),
+                () -> assertFalse(receiverClient.run(), "Receiver failed. Specified user is not allowed to read"));
 
-        assertTrue(sender.run(), "Sender failed, expected return code 0");
-        assertTrue(receiver.run(), "Receiver failed, expected return code 0");
+        senderClient.withCredentials(publishCred);
 
-        assertEquals(expectedMsgCount, sender.getMessages().size(),
+        receiverClient.withCredentials(consumCred);
+
+        assertTrue(senderClient.run(), "Sender failed, expected return code 0");
+        assertTrue(receiverClient.run(), "Receiver failed, expected return code 0");
+
+        assertEquals(expectedMsgCount, senderClient.getMessages().size(),
                 String.format("Expected %d sent messages", expectedMsgCount));
-        assertEquals(expectedMsgCount, receiver.getMessages().size(),
+        assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
                 String.format("Expected %d received messages", expectedMsgCount));
     }
 

@@ -118,6 +118,7 @@ public class OperatorManager {
 
     public void installOperators() throws Exception {
         LOGGER.info("Installing enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
+        generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
     }
@@ -286,6 +287,13 @@ public class OperatorManager {
         if (kube instanceof OpenShift) {
             // Kubernetes does not make a console service available by default.
             awaitConsoleReadiness(namespace);
+        }
+    }
+
+    private void generateTemplates() {
+        if (Files.notExists(Paths.get(Environment.getInstance().getTemplatesPath()))) {
+            LOGGER.info("Generating templates.");
+            Exec.execute(Arrays.asList("make", "-C", "..", "templates"));
         }
     }
 
