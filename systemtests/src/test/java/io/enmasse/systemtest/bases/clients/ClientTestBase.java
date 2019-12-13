@@ -215,7 +215,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         arguments.put(ClientArgument.ADDRESS, AddressUtils.getTopicPrefix(hasTopicPrefix) + dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
-        arguments.put(ClientArgument.TIMEOUT, "150");
+        arguments.put(ClientArgument.TIMEOUT, "250");
 
         sender.setArguments(arguments);
         arguments.remove(ClientArgument.MSG_CONTENT);

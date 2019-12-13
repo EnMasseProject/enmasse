@@ -30,7 +30,7 @@ import java.util.concurrent.Future;
 public abstract class AbstractClient {
     private static Logger log = CustomLogger.getLogger();
     private final Object lock = new Object();
-    private final int DEFAULT_ASYNC_TIMEOUT = 180_000;
+    private final int DEFAULT_ASYNC_TIMEOUT = 300_000;
     private final int DEFAULT_SYNC_TIMEOUT = 60_000;
     protected ArrayList<ClientArgument> allowedArgs = new ArrayList<>();
     private Exec executor;
