@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@master      
     
-    - name: Set version
+    - name: Set ver!sion
       run: | 
         echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
 
