@@ -1052,7 +1052,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         replaced = AddressSpaceUtils.waitForAddressSpaceStatusMessage(replaced, expected, new TimeoutBudget(2, TimeUnit.MINUTES));
 
         assertEquals(beforeAddressSpacePlan.getMetadata().getName(),
-                replaced.getMetadata().getAnnotations().get("enmasse.io/applied-plan"));
+                replaced.getMetadata().getAnnotations().get("enmasse.io/applied-configuration"));
     }
 
     @Test
