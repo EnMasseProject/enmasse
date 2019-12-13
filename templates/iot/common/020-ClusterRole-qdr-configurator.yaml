@@ -19,7 +19,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: io.enmasse:iot-protocol-adapter-${NAMESPACE}
+  name: enmasse.io:iot-protocol-adapter-${NAMESPACE}
   labels:
     app: enmasse
     component: iot
