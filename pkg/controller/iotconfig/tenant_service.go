@@ -53,7 +53,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-tenant-service"
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, nil)
 
-	err := install.ApplyContainerWithError(deployment, "tenant-service", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "tenant-service", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-tenant-service", config); err != nil {
 			return err

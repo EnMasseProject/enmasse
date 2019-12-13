@@ -613,7 +613,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 	}
 
 	if util.IsOpenshift() {
-		if err := install.ApplyContainerWithError(deployment, "console-proxy", func(container *corev1.Container) error {
+		if err := install.ApplyDeploymentContainerWithError(deployment, "console-proxy", func(container *corev1.Container) error {
 			if err := install.ApplyContainerImage(container, "console-proxy-openshift", nil); err != nil {
 				return err
 			}
@@ -625,7 +625,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			return err
 		}
 
-		if err := install.ApplyContainerWithError(deployment, "console-httpd", func(container *corev1.Container) error {
+		if err := install.ApplyDeploymentContainerWithError(deployment, "console-httpd", func(container *corev1.Container) error {
 			if err := install.ApplyContainerImage(container, "console-httpd", nil); err != nil {
 				return err
 			}
@@ -660,7 +660,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			return err
 		}
 	} else {
-		if err := install.ApplyContainerWithError(deployment, "console-proxy", func(container *corev1.Container) error {
+		if err := install.ApplyDeploymentContainerWithError(deployment, "console-proxy", func(container *corev1.Container) error {
 			if err := install.ApplyContainerImage(container, "console-proxy-kubernetes", nil); err != nil {
 				return err
 			}

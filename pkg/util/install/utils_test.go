@@ -46,7 +46,7 @@ func TestApplyDeploymentDefaults(t *testing.T) {
 func TestAddContainer(t *testing.T) {
 	d := appv1.Deployment{}
 
-	_ = ApplyContainerWithError(&d, "foo", func(container *corev1.Container) error {
+	_ = ApplyDeploymentContainerWithError(&d, "foo", func(container *corev1.Container) error {
 		container.Image = "bar"
 		return nil
 	})
@@ -68,11 +68,11 @@ func TestAddContainer(t *testing.T) {
 func TestReplaceContainer(t *testing.T) {
 	d := appv1.Deployment{}
 
-	_ = ApplyContainerWithError(&d, "foo", func(container *corev1.Container) error {
+	_ = ApplyDeploymentContainerWithError(&d, "foo", func(container *corev1.Container) error {
 		container.Image = "bar"
 		return nil
 	})
-	_ = ApplyContainerWithError(&d, "foo", func(container *corev1.Container) error {
+	_ = ApplyDeploymentContainerWithError(&d, "foo", func(container *corev1.Container) error {
 		container.Image = "baz"
 		return nil
 	})
@@ -94,15 +94,15 @@ func TestReplaceContainer(t *testing.T) {
 func TestTwoContainers(t *testing.T) {
 	d := appv1.Deployment{}
 
-	_ = ApplyContainerWithError(&d, "foo", func(container *corev1.Container) error {
+	_ = ApplyDeploymentContainerWithError(&d, "foo", func(container *corev1.Container) error {
 		container.Image = "bar"
 		return nil
 	})
-	_ = ApplyContainerWithError(&d, "foo2", func(container *corev1.Container) error {
+	_ = ApplyDeploymentContainerWithError(&d, "foo2", func(container *corev1.Container) error {
 		container.Image = "baz"
 		return nil
 	})
-	_ = ApplyContainerWithError(&d, "foo", func(container *corev1.Container) error {
+	_ = ApplyDeploymentContainerWithError(&d, "foo", func(container *corev1.Container) error {
 		container.Image = "baz2"
 		return nil
 	})

@@ -27,7 +27,7 @@ func (r *ReconcileIoTConfig) reconcileProjectOperator(config *iotv1alpha1.IoTCon
 
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-operator"
 
-	err := install.ApplyContainerWithError(deployment, "operator", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "operator", func(container *corev1.Container) error {
 		if err := install.SetContainerImage(container, "controller-manager", config); err != nil {
 			return err
 		}
