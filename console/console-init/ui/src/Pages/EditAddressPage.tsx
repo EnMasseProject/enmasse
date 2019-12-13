@@ -14,11 +14,15 @@ interface IEditAddressProps {
   name: string;
   type: string;
   plan: string;
+  addressSpacePlan: string | null;
   onChange: (plan: string) => void;
 }
 
 interface IAddressPlans {
   addressPlans: Array<{
+    ObjectMeta: {
+      Name: String;
+    };
     Spec: {
       AddressType: string;
       DisplayName: string;
@@ -30,10 +34,11 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
   name,
   type,
   plan,
+  addressSpacePlan,
   onChange
 }) => {
 
-  let { loading, error, data } = useQuery<IAddressPlans>(RETURN_ADDRESS_PLANS("standard-small","queue"));
+  let { loading, error, data } = useQuery<IAddressPlans>(RETURN_ADDRESS_PLANS(addressSpacePlan || "", type));
 
   if (loading) return <Loading />;
   if (error) return <Loading />;
@@ -41,33 +46,14 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
     addressPlans: []
   };
 
-  let optionsType: any[] = addressPlans.map(plan => {
-    return {
-      value: plan.Spec.AddressType,
-      label:
-        plan.Spec.AddressType.charAt(0).toUpperCase() +
-        plan.Spec.AddressType.slice(1),
-      disabled: false
-    };
-  });
-
-  optionsType = optionsType.reduce((res, itm) => {
-    let result = res.find(
-      (item: any) => JSON.stringify(item) == JSON.stringify(itm)
-    );
-    if (!result) return res.concat(itm);
-    return res;
-  }, []);
 
   let optionsPlan: any[] = addressPlans
     .map(plan => {
-      if (plan.Spec.AddressType === type) {
-        return {
-          value: plan.Spec.DisplayName,
-          label: plan.Spec.DisplayName,
-          disabled: false
-        };
-      }
+      return {
+        value: plan.ObjectMeta.Name,
+        label: plan.Spec.DisplayName,
+        disabled: false
+      };
     })
     .filter(plan => plan !== undefined);
 
@@ -88,15 +74,11 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
         />
       </FormGroup>
       <FormGroup label="Type" fieldId="simple-form-name">
-        <FormSelect value={type} isDisabled aria-label="FormSelect Input" id="edit-addr-type">
-          {optionsType.map((option, index) => (
-            <FormSelectOption
-              isDisabled={option.disabled}
-              key={index}
-              value={option.value}
-              label={option.label}
-            />
-          ))}
+        <FormSelect isDisabled aria-label="FormSelect Input" id="edit-addr-type">
+          <FormSelectOption
+            value={type}
+            label={type}
+          />
         </FormSelect>
       </FormGroup>
       <FormGroup label="Plan" fieldId="simple-form-name">

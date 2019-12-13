@@ -13,15 +13,11 @@ import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { IAddressDetailResponse } from "src/Types/ResponseTypes";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import {
-  DELETE_ADDRESS,
-  RETURN_ADDRESS_DETAIL,
-  EDIT_ADDRESS
-} from "src/Queries/Queries";
+import { DELETE_ADDRESS, RETURN_ADDRESS_DETAIL, EDIT_ADDRESS, CURRENT_ADDRESS_SPACE_PLAN  } from "src/Queries/Queries";
 import { IObjectMeta_v1_Input } from "../AddressSpaceDetail/AddressSpaceDetailPage";
-import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
 import { AddressLinksWithFilterAndPagination } from "./AddressLinksWithFilterAndPaginationPage";
 import { EditAddress } from "../EditAddressPage";
+import { IAddressSpacePlanResponse } from "../AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
 
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();
@@ -47,11 +43,21 @@ export default function AddressDetailPage() {
   const client = useApolloClient();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  const [addressPlan, setAddressPlan] = React.useState<string | null>(null);
-  const { loading, error, data } = useQuery<IAddressDetailResponse>(
+  const [addressPlan, setAddressPlan] = React.useState<string|null>(null);
+  const [addressSpacePlan, setAddressSpacePlan] = React.useState<string|null>(null);
+  const { loading, error, data, refetch } = useQuery<IAddressDetailResponse>(
     RETURN_ADDRESS_DETAIL(name, namespace, addressname),
     { pollInterval: 20000 }
   );
+
+  const addressSpaces = useQuery<IAddressSpacePlanResponse>(
+    CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
+  ).data || {addressSpaces: { AddressSpaces: [] }};
+
+  if(!addressSpacePlan && addressSpaces.addressSpaces.AddressSpaces[0]){
+    setAddressSpacePlan(addressSpaces.addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta.Name);
+  }
+
   if (loading) return <Loading />;
   if (error) console.log(error);
   console.log(data);
@@ -98,14 +104,12 @@ export default function AddressDetailPage() {
             Name: addressDetail.ObjectMeta.Name,
             Namespace: addressDetail.ObjectMeta.Namespace.toString()
           },
-          jsonPatch:
-            '[{"op":"replace","path":"/Plan","value":"' +
-            getPlanAndTypeForAddressEdit(addressPlan || "", type) +
-            '"}]',
+          jsonPatch: '[{"op":"replace","path":"/Plan","value":"' + addressPlan + '"}]',
           patchType: "application/json-patch+json"
         }
       });
     }
+    refetch();
     setIsEditModalOpen(!isEditModalOpen);
   };
   return (
@@ -150,7 +154,8 @@ export default function AddressDetailPage() {
         <EditAddress
           name={addressDetail.ObjectMeta.Name}
           type={addressDetail.Spec.Plan.Spec.AddressType}
-          plan={addressPlan || ""}
+          plan={addressPlan||""}
+          addressSpacePlan={addressSpacePlan}
           onChange={setAddressPlan}
         />
       </Modal>
