@@ -7,8 +7,9 @@ const { ApolloServer, gql } = require('apollo-server');
 const typeDefs = require('./schema');
 const { applyPatch, compare } = require('fast-json-patch');
 const parser = require('./filter_parser.js');
-const jp = require('jsonpath');
-const firstBy = require('thenby');
+const clone = require('clone');
+const orderer = require('./orderer.js');
+const _ = require('lodash');
 
 function calcLowerUpper(offset, first, len) {
   var lower = 0;
@@ -854,37 +855,171 @@ function buildFilterer(filter) {
   return filter ? parser.parse(filter) : {evaluate: () => true};
 }
 
-function buildOrderBy(sort_spec) {
-  if (sort_spec) {
-    return (r1, r2)  => {
-      var by = firstBy.firstBy((a, b) => 0);
-
-      sort_spec.split(/\s*,\s*/).forEach(spec => {
-        var match = /^`(.+)`\s*(asc|desc)?$/i.exec(spec);
-        var compmul = match.length > 2 && match[2] && match[2].toLowerCase() === "desc" ? -1 : 1;
-
-        var path = match[1];
-        var result1 = jp.query(r1, path, 1);
-        var result2 = jp.query(r2, path, 1);
-
-        var value1 = result1.length ? result1[0] : undefined;
-        var value2 = result2.length ? result2[0] : undefined;
-
-        by = by.thenBy((a,b) => ( value1 < value2 ) ? -1 * compmul : ( value1 > value2 ? compmul : 0 ));
-      });
-
-      return by(r1, r2);
-    };
-  } else {
-    return (r1, r2) => (a, b) => 0;
-  }
-}
 
 function init(input) {
   if (input.ObjectMeta) {
     input.ObjectMeta.CreationTimestamp = new Date();
   }
   return input;
+}
+
+function makeMockAddressMetrics() {
+  return [
+    {
+      Name: "enmasse_messages_stored",
+      Type: "gauge",
+      Value: Math.floor(Math.random() * 10),
+      Units: "messages"
+    },
+    {
+      Name: "enmasse-senders",
+      Type: "gauge",
+      Value: Math.floor(Math.random() * 3),
+      Units: "links"
+    },
+    {
+      Name: "enmasse-receivers",
+      Type: "gauge",
+      Value: Math.floor(Math.random() * 3),
+      Units: "links"
+    },
+    {
+      Name: "enmasse_messages_in",
+      Type: "gauge",
+      Value: Math.floor(Math.random() * 10),
+      Units: "msg/s"
+    },
+    {
+      Name: "enmasse_messages_out",
+      Type: "gauge",
+      Value: Math.floor(Math.random() * 10),
+      Units: "msg/s"
+    },
+
+  ];
+}
+
+function makeMockConnectionMetrics() {
+  return [
+    {
+      Name: "enmasse_messages_in",
+      Type: "gauge",
+      Value: Math.floor(Math.random() * 10),
+      Units: "msg/s"
+    },
+    {
+      Name: "enmasse_messages_out",
+      Type: "gauge",
+      Value: Math.floor(Math.random() * 10),
+      Units: "msg/s"
+    },
+    {
+      Name: "enmasse_senders",
+      Type: "gauge",
+      Value: Math.floor(Math.random() * 10),
+      Units: "total"
+    },
+    {
+      Name: "enmasse_receivers",
+      Type: "gauge",
+      Value: Math.floor(Math.random() * 10),
+      Units: "total"
+    },
+  ];
+}
+
+function makeMockLinkMetrics(is_addr_query, link) {
+  if (is_addr_query) {
+
+    return [
+      {
+        Name: link.Spec.Role === "sender" ? "enmasse_messages_in" : "enmasse_messages_out",
+        Type: "gauge",
+        Value: Math.floor(Math.random() * 10),
+        Units: "msg/s"
+      },
+      {
+        Name: "enmasse_messages_backlog",
+        Type: "gauge",
+        Value: Math.floor(Math.random() * 15),
+        Units: "msg"
+      },
+    ];
+  } else {
+
+    var as = link.Spec.Connection.Spec.AddressSpace;
+    if (as.Spec.Type === "brokered") {
+      return [
+        {
+          Name: "enmasse_deliveries",
+          Type: "counter",
+          Value: Math.floor(Math.random() * 10),
+          Units: "deliveries"
+        }
+      ];
+    } else {
+      return [
+        {
+          Name: "enmasse_deliveries",
+          Type: "counter",
+          Value: Math.floor(Math.random() * 10),
+          Units: "deliveries"
+        },
+        {
+          Name: "enmasse_rejected",
+          Type: "counter",
+          Value: Math.floor(Math.random() * 10),
+          Units: "deliveries"
+        },
+        {
+          Name: "enmasse_released",
+          Type: "counter",
+          Value: Math.floor(Math.random() * 10),
+          Units: "deliveries"
+        },
+        {
+          Name: "enmasse_modified",
+          Type: "counter",
+          Value: Math.floor(Math.random() * 10),
+          Units: "deliveries"
+        },
+        {
+          Name: "enmasse_presettled",
+          Type: "counter",
+          Value: Math.floor(Math.random() * 10),
+          Units: "deliveries"
+        },
+        {
+          Name: "enmasse_undelivered",
+          Type: "counter",
+          Value: Math.floor(Math.random() * 10),
+          Units: "deliveries"
+        },
+      ];
+
+    }
+  }
+}
+
+function makeAddressSpaceMetrics(as) {
+  var cons = as.ObjectMeta.Uid in addressspace_connection ? addressspace_connection[as.ObjectMeta.Uid] : [];
+  var addrs = addresses.filter((a) => as.ObjectMeta.Namespace === a.ObjectMeta.Namespace &&
+      a.ObjectMeta.Name.startsWith(as.ObjectMeta.Name + "."));
+
+  return [
+    {
+      Name: "enmasse-connections",
+      Type: "gauge",
+      Value: cons.length,
+      Units: "connections"
+    },
+    {
+      Name: "enmasse-addresses",
+      Type: "gauge",
+      Value: addrs.length,
+      Units: "addresses"
+    },
+  ];
 }
 
 // A map of functions which return data for the schema.
@@ -998,8 +1133,13 @@ EOF
     addressSpaces:(parent, args, context, info) => {
 
       var filterer = buildFilterer(args.filter);
-      var orderBy = buildOrderBy(args.orderBy);
-      var as = addressSpaces.filter(as => filterer.evaluate(as)).sort(orderBy);
+      var orderBy = orderer(args.orderBy);
+
+      var copy = clone(addressSpaces);
+      copy.forEach(as => {
+        as.Metrics = makeAddressSpaceMetrics(as);
+      });
+      var as = copy.filter(as => filterer.evaluate(as)).sort(orderBy);
       var paginationBounds = calcLowerUpper(args.offset, args.first, as.length);
       var page = as.slice(paginationBounds.lower, paginationBounds.upper);
 
@@ -1011,8 +1151,15 @@ EOF
     addresses:(parent, args, context, info) => {
 
       var filterer = buildFilterer(args.filter);
-      var orderBy = buildOrderBy(args.orderBy);
-      var a = addresses.filter(a => filterer.evaluate(a)).sort(orderBy);
+      var orderBy = orderer(args.orderBy);
+
+
+      var copy = clone(addresses);
+      copy.forEach(a => {
+        a.Metrics = makeMockAddressMetrics();
+      });
+
+      var a = copy.filter(a => filterer.evaluate(a)).sort(orderBy);
       var paginationBounds = calcLowerUpper(args.offset, args.first, a.length);
       var page = a.slice(paginationBounds.lower, paginationBounds.upper);
 
@@ -1023,8 +1170,12 @@ EOF
     },
     connections:(parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
-      var orderBy = buildOrderBy(args.orderBy);
-      var cons = connections.filter(c => filterer.evaluate(c)).sort(orderBy);
+      var orderBy = orderer(args.orderBy);
+      var copy = clone(connections);
+      copy.forEach(c => {
+        c.Metrics = makeMockConnectionMetrics();
+      });
+      var cons = copy.filter(c => filterer.evaluate(c)).sort(orderBy);
 
       var paginationBounds = calcLowerUpper(args.offset, args.first, cons.length);
       var page = cons.slice(paginationBounds.lower, paginationBounds.upper);
@@ -1040,102 +1191,52 @@ EOF
   AddressSpace_consoleapi_enmasse_io_v1beta1: {
     Connections:(parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
-      var orderBy = buildOrderBy(args.orderBy);
+      var orderBy = orderer(args.orderBy);
 
       var as = parent;
       var cons = as.ObjectMeta.Uid in addressspace_connection ? addressspace_connection[as.ObjectMeta.Uid] : [];
-      cons = cons.filter(c => filterer.evaluate(c)).sort(orderBy);
+      var copy = clone(cons);
+      copy.forEach(c => {
+        c.Metrics = makeMockConnectionMetrics();
+      });
 
-      var paginationBounds = calcLowerUpper(args.offset, args.first, cons.length);
-      var page = cons.slice(paginationBounds.lower, paginationBounds.upper);
-      return {Total: cons.length, Connections: page};
+      copy = copy.filter(c => filterer.evaluate(c)).sort(orderBy);
+
+      var paginationBounds = calcLowerUpper(args.offset, args.first, copy.length);
+      var page = copy.slice(paginationBounds.lower, paginationBounds.upper);
+      return {Total: copy.length, Connections: page};
     },
     Addresses:(parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
-      var orderBy = buildOrderBy(args.orderBy);
+      var orderBy = orderer(args.orderBy);
 
       var as = parent;
 
-      var addrs = addresses.filter(
-          a => as.ObjectMeta.Namespace === a.ObjectMeta.Namespace && a.ObjectMeta.Name.startsWith(as.ObjectMeta.Name + "."))
-          .filter(a => filterer.evaluate(a)).sort(orderBy);
+      var copy = clone(addresses.filter(a => as.ObjectMeta.Namespace === a.ObjectMeta.Namespace && a.ObjectMeta.Name.startsWith(as.ObjectMeta.Name + ".")));
+      copy.forEach(a => {
+        a.Metrics = makeMockAddressMetrics();
+      });
+
+      var addrs = copy.filter(a => filterer.evaluate(a)).sort(orderBy);
 
       var paginationBounds = calcLowerUpper(args.offset, args.first, addrs.length);
       var page = addrs.slice(paginationBounds.lower, paginationBounds.upper);
       return {Total: addrs.length,
         Addresses: page};
     },
-    Metrics: (parent, args, context, info) => {
-      var as = parent;
-      var cons = as.ObjectMeta.Uid in addressspace_connection ? addressspace_connection[as.ObjectMeta.Uid] : [];
-      var addrs = addresses.filter((a) => as.ObjectMeta.Namespace === a.ObjectMeta.Namespace &&
-                                          a.ObjectMeta.Name.startsWith(as.ObjectMeta.Name + "."));
-
-      return [
-        {
-          Name: "enmasse-connections",
-          Type: "gauge",
-          Value: cons.length,
-          Units: "connections"
-        },
-        {
-          Name: "enmasse-addresses",
-          Type: "gauge",
-          Value: addrs.length,
-          Units: "addresses"
-        },
-      ];
-    }
-
   },
   Address_consoleapi_enmasse_io_v1beta1: {
-    Metrics: (parent, args, context, info) => {
-      var as = parent;
-      var cons = as.ObjectMeta.Uid in addressspace_connection ? addressspace_connection[as.ObjectMeta.Uid] : [];
-      var addrs = addresses.filter((a) => as.ObjectMeta.Namespace === a.ObjectMeta.Namespace &&
-                                          a.ObjectMeta.Name.startsWith(as.ObjectMeta.Name + "."));
-
-      return [
-        {
-          Name: "enmasse_messages_stored",
-          Type: "gauge",
-          Value: Math.floor(Math.random() * 10),
-          Units: "messages"
-        },
-        {
-          Name: "enmasse-senders",
-          Type: "gauge",
-          Value: Math.floor(Math.random() * 3),
-          Units: "links"
-        },
-        {
-          Name: "enmasse-receivers",
-          Type: "gauge",
-          Value: Math.floor(Math.random() * 3),
-          Units: "links"
-        },
-        {
-          Name: "enmasse_messages_in",
-          Type: "gauge",
-          Value: Math.floor(Math.random() * 10),
-          Units: "msg/s"
-        },
-        {
-          Name: "enmasse_messages_out",
-          Type: "gauge",
-          Value: Math.floor(Math.random() * 10),
-          Units: "msg/s"
-        },
-
-      ];
-    },
     Links: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
-      var orderBy = buildOrderBy(args.orderBy);
+      var orderBy = orderer(args.orderBy);
+
 
       var addr = parent;
-      var addrlinks = links.filter((l) => l.Spec.Connection.Spec.AddressSpace.ObjectMeta.Namespace === addr.ObjectMeta.Namespace &&   addr.ObjectMeta.Name.startsWith(l.Spec.Connection.Spec.AddressSpace.ObjectMeta.Name + "."))
-          .filter(l => filterer.evaluate(l)).sort(orderBy);
+      var copy = clone(links.filter((l) => l.Spec.Connection.Spec.AddressSpace.ObjectMeta.Namespace === addr.ObjectMeta.Namespace && addr.ObjectMeta.Name.startsWith(l.Spec.Connection.Spec.AddressSpace.ObjectMeta.Name + ".")));
+      copy.forEach(l => {
+        l.Metrics = makeMockLinkMetrics(true, l);
+      });
+      var addrlinks = copy.filter(l => filterer.evaluate(l)).sort(orderBy);
 
       var paginationBounds = calcLowerUpper(args.offset, args.first, addrlinks.length);
       var page = addrlinks.slice(paginationBounds.lower, paginationBounds.upper);
@@ -1149,11 +1250,15 @@ EOF
   Connection_consoleapi_enmasse_io_v1beta1: {
     Links: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
-      var orderBy = buildOrderBy(args.orderBy);
+      var orderBy = orderer(args.orderBy);
 
       var con = parent;
-      var connlinks = links.filter((l) => l.Spec.Connection === con).filter(l => filterer.evaluate(l)).sort(orderBy);
+      var copy = clone(links.filter((l) => _.isEqual(l.Spec.Connection.ObjectMeta, con.ObjectMeta)));
+      copy.forEach(l => {
+        l.Metrics = makeMockLinkMetrics(false, l);
+      });
 
+      var connlinks = copy.filter(l => filterer.evaluate(l)).sort(orderBy);
       var paginationBounds = calcLowerUpper(args.offset, args.first, connlinks.length);
       var page = connlinks.slice(paginationBounds.lower, paginationBounds.upper);
 
@@ -1162,113 +1267,8 @@ EOF
         Links: page
       };
     },
-    Metrics: (parent, args, context, info) => {
-      return [
-        {
-          Name: "enmasse_messages_in",
-          Type: "gauge",
-          Value: Math.floor(Math.random() * 10),
-          Units: "msg/s"
-        },
-        {
-          Name: "enmasse_messages_out",
-          Type: "gauge",
-          Value: Math.floor(Math.random() * 10),
-          Units: "msg/s"
-        },
-        {
-          Name: "enmasse_senders",
-          Type: "gauge",
-          Value: Math.floor(Math.random() * 10),
-          Units: "total"
-        },
-        {
-          Name: "enmasse_receivers",
-          Type: "gauge",
-          Value: Math.floor(Math.random() * 10),
-          Units: "total"
-        },
-      ];
-    }
   },
   Link_consoleapi_enmasse_io_v1beta1: {
-    Metrics: (parent, args, context, info) => {
-      var nodes = traverse(info.path).nodes().filter(n => typeof(n) === "object");
-      var is_addr_query = nodes.find(n =>  "key" in n && n["key"] === "Addresses") !== undefined;
-
-      var link = parent;
-      if (is_addr_query) {
-
-        return [
-          {
-            Name: link.Spec.Role === "sender" ? "enmasse_messages_in" : "enmasse_messages_out",
-            Type: "gauge",
-            Value: Math.floor(Math.random() * 10),
-            Units: "msg/s"
-          },
-          {
-            Name: "enmasse_messages_backlog",
-            Type: "gauge",
-            Value: Math.floor(Math.random() * 15),
-            Units: "msg"
-          },
-        ];
-      } else {
-
-        var as = link.Spec.Connection.Spec.AddressSpace;
-        if (as.Spec.Type === "brokered") {
-          return [
-            {
-              Name: "enmasse_deliveries",
-              Type: "counter",
-              Value: Math.floor(Math.random() * 10),
-              Units: "deliveries"
-            }
-          ];
-        } else {
-          return [
-            {
-              Name: "enmasse_deliveries",
-              Type: "counter",
-              Value: Math.floor(Math.random() * 10),
-              Units: "deliveries"
-            },
-            {
-              Name: "enmasse_rejected",
-              Type: "counter",
-              Value: Math.floor(Math.random() * 10),
-              Units: "deliveries"
-            },
-            {
-              Name: "enmasse_released",
-              Type: "counter",
-              Value: Math.floor(Math.random() * 10),
-              Units: "deliveries"
-            },
-            {
-              Name: "enmasse_modified",
-              Type: "counter",
-              Value: Math.floor(Math.random() * 10),
-              Units: "deliveries"
-            },
-            {
-              Name: "enmasse_presettled",
-              Type: "counter",
-              Value: Math.floor(Math.random() * 10),
-              Units: "deliveries"
-            },
-            {
-              Name: "enmasse_undelivered",
-              Type: "counter",
-              Value: Math.floor(Math.random() * 10),
-              Units: "deliveries"
-            },
-          ];
-
-        }
-      }
-    }
-
   },
   ObjectMeta_v1 : {
     CreationTimestamp: (parent, args, context, info) => {

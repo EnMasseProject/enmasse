@@ -162,6 +162,47 @@ query all_addresses_for_addressspace_view {
 
 ```
 
+## addresses with ordering
+
+Illustrates order on a metric (note the uses a JSON path filter to identify the metric of interest by name):
+
+```
+query addr {
+ addresses(orderBy: "`$.Metrics[?(@.Name=='enmasse_messages_stored')].Value` ASC"){
+    Total
+    Addresses
+    {
+      ObjectMeta {
+        Name
+      }
+      Metrics {
+        Name
+        Value
+      }
+    }
+  }
+}
+```
+
+And a two-column order:
+
+```
+query addr {
+ addresses(orderBy: "`$.Status.Phase` DESC, `$.ObjectMeta.Name` ASC"){
+    Total
+    Addresses
+    {
+      ObjectMeta {
+        Name
+      }
+      Status {
+        Phase
+      }
+    }
+  }
+}
+```
+
 ## all_connections_for_addressspace_view
 
 ```
