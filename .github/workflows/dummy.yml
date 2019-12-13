@@ -1,0 +1,19 @@
+name: Release build
+env:
+  TAG: "latest"
+  DOCKER_ORG: enmasse
+  KUBERNETES_NAMESPACE: "enmasse-infra"
+  REGISTRY_USER: "enmasse+ci "
+
+on: [pull_request]
+
+jobs:
+  smoke:
+      name: Smoke tests and Release
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@master      
+
+      - name: SDummy
+        run: | 
+          echo dummy

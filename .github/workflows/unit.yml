@@ -1,0 +1,19 @@
+name: Unit tests
+env:
+  TAG: "latest"
+  DOCKER_ORG: enmasse
+  KUBERNETES_NAMESPACE: "enmasse-infra"
+  REGISTRY_USER: "enmasse+ci "
+
+on: [pull_request]
+
+jobs:
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+    
+    - name: Print ...
+      run: echo !!!
