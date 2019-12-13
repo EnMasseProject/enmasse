@@ -58,9 +58,11 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
 
         log.debug("Generated protobuf schema - {}", this.schema);
 
-        remoteCacheManager
-                .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
-                .put(GENERATED_PROTOBUF_FILE_NAME, this.schema);
+        if (this.properties.isUploadSchema()) {
+            remoteCacheManager
+                    .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
+                    .put(GENERATED_PROTOBUF_FILE_NAME, this.schema);
+        }
 
     }
 
@@ -146,6 +148,10 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
     }
 
     public void checkSchema() {
+        if (!this.properties.isUploadSchema()) {
+            return;
+        }
+
         final Object schema = this.remoteCacheManager
                 .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
                 .get(GENERATED_PROTOBUF_FILE_NAME);
@@ -156,7 +162,7 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
         if (!(schema instanceof String)) {
             throw new IllegalStateException("Schema has illegal content");
         }
-        if(!schema.equals(this.schema)) {
+        if (!schema.equals(this.schema)) {
             throw new IllegalStateException("Schema doesn't match expected content");
         }
     }

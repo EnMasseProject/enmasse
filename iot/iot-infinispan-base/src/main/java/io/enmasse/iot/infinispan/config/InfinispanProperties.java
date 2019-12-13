@@ -10,7 +10,7 @@ import com.google.common.base.MoreObjects;
 public class InfinispanProperties {
 
     private static final boolean DEFAULT_TRY_CREATE = false;
-    public static final boolean DEFAULT_UPLOAD_SCHEMA = true; // FIXME: change to false
+    public static final boolean DEFAULT_UPLOAD_SCHEMA = true;
 
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 11222;

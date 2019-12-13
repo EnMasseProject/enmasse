@@ -43,11 +43,11 @@ public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
 
     @Override
     public void start() throws Exception {
-       super.start();
-       configureSerializer(this.remoteCacheManager);
+        super.start();
+        configureSerializer(this.remoteCacheManager);
     }
 
-    private static void configureSerializer(RemoteCacheManager remoteCacheManager) throws Exception {
+    private void configureSerializer(RemoteCacheManager remoteCacheManager) throws Exception {
         final SerializationContext serCtx = ProtoStreamMarshaller.getSerializationContext(remoteCacheManager);
 
         final String generatedSchema = new ProtoSchemaBuilder()
@@ -59,9 +59,11 @@ public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
 
         log.debug("Generated protobuf schema - {}", generatedSchema);
 
-        remoteCacheManager
-                .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
-                .put(GENERATED_PROTOBUF_FILE_NAME, generatedSchema);
+        if (this.properties.isUploadSchema()) {
+            remoteCacheManager
+                    .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
+                    .put(GENERATED_PROTOBUF_FILE_NAME, generatedSchema);
+        }
 
     }
 
