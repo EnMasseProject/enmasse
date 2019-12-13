@@ -9,7 +9,6 @@ on:
   push:
     branches:
       - master
-      - actions
     tags:
       - 'v*'
 
@@ -59,7 +58,7 @@ jobs:
     - uses: actions/checkout@master      
     
     - name: setup-docker
-      uses: docker-practice/actions-setup-docker@0.0.1
+      run: ./.github/scripts/setup_docker.sh
     
     - name: Minikube setup with registry
       uses: EnMasseProject/minikube-setup@V1.0.0

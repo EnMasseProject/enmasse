@@ -17,7 +17,7 @@ jobs:
       uses: clupprich/ruby-build-action@v1.0.0
 
     - name: Install dependencies
-      run: ./.github/scripts/install_dep.sh
+      run: ./.github/scripts/install_dep.sh 
 
     - name: Run unit tests
       run: make
