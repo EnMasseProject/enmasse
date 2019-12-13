@@ -75,7 +75,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	service := config.Spec.ServicesConfig.DeviceRegistry
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, nil)
 
-	err := install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-device-registry-infinispan", config); err != nil {
 			return err

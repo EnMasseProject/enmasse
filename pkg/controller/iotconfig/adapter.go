@@ -89,7 +89,7 @@ func findAdapter(name string) adapter {
 
 func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, containers iotv1alpha1.CommonAdapterContainers) error {
 
-	err := install.ApplyContainerWithError(deployment, "qdr-cfg", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "qdr-cfg", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-proxy-configurator", config); err != nil {
 			return err
@@ -124,7 +124,7 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		return err
 	}
 
-	err = install.ApplyContainerWithError(deployment, "qdr-proxy", func(container *corev1.Container) error {
+	err = install.ApplyDeploymentContainerWithError(deployment, "qdr-proxy", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "router", config); err != nil {
 			return err

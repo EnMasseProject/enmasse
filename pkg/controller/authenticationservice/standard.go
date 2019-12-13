@@ -117,7 +117,7 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		return err
 	}
 
-	if err := install.ApplyContainerWithError(deployment, "keycloak", func(container *corev1.Container) error {
+	if err := install.ApplyDeploymentContainerWithError(deployment, "keycloak", func(container *corev1.Container) error {
 		if err := install.ApplyContainerImage(container, "keycloak", authservice.Spec.Standard.Image); err != nil {
 			return err
 		}

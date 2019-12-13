@@ -86,7 +86,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 	applyDefaultAdapterDeploymentSpec(deployment)
 
 	install.DropContainer(deployment, "mqtt-adapter")
-	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-mqtt-adapter", config); err != nil {
 			return err

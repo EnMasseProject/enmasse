@@ -61,7 +61,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 	service := config.Spec.ServicesConfig.Authentication
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, configCtx)
 
-	err := install.ApplyContainerWithError(deployment, "auth-service", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "auth-service", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-auth-service", config); err != nil {
 			return err
