@@ -20,7 +20,7 @@ jobs:
         echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
 
 
-    - name: setup-docker
+    - name: se!tup-docker
       run: ./.github/scripts/setup_docker.sh
     
     - name: Minikube setup with registry
