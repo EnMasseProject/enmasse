@@ -258,7 +258,9 @@ public class OperatorManager {
     }
 
     public boolean clean() throws Exception {
-        ExecutionResultData result = KubeCMDClient.runOnCluster("delete", "-v", "10", "crd", "-l", "app=enmasse");
+        // Delete addressspace CRD first as deleting via label will not wait for finalizers
+        ExecutionResultData result = KubeCMDClient.runOnCluster("delete", "-v", "10", "crd", "addressspaces.enmasse.io");
+        result = KubeCMDClient.runOnCluster("delete", "-v", "10", "crd", "-l", "app=enmasse");
         if (!result.getRetCode()) {
             return false;
         }
