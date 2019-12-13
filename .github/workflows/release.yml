@@ -1,9 +1,9 @@
-name: Release build
+name: Release job
 env:
   TAG: "latest"
   DOCKER_ORG: enmasse
   KUBERNETES_NAMESPACE: "enmasse-infra"
-  REGISTRY_USER: "enmasse+ci "
+  REGISTRY_USER: "enmasse+ci"
 
 on:
   push:
@@ -107,7 +107,7 @@ jobs:
         path: artifacts
 
     - name: Create Release
-      if: job.status == success && contains(github.ref, 'refs/tags/v')
+      if: job.status == 'success' && contains(github.ref, 'refs/tags/v')
       id: create_release
       uses: actions/create-release@v1.0.0
       env:
@@ -119,7 +119,7 @@ jobs:
         prerelease: false
 
     - name: Upload Release Asset
-      if: job.status == success && contains(github.ref, 'refs/tags/v')
+      if: job.status == 'success' && contains(github.ref, 'refs/tags/v')
       id: upload-release-asset 
       uses: actions/upload-release-asset@v1.0.1
       env:
