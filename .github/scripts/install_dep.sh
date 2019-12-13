@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 echo "Install maven"
 
 sudo apt install maven
