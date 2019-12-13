@@ -17,11 +17,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/qdr"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"go.uber.org/multierr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+var (
+	nameIdNamespace = uuid.MustParse("11db97c2-1d87-11ea-976f-c85b762e5a2c")
 )
 
 func (c *Configurator) syncResource(currentPointer interface{}, resource interface{}) (bool, error) {
@@ -86,8 +92,14 @@ func fileExists(file string) bool {
 	return true
 }
 
-func certFilePrefix(object metav1.Object) string {
-	return object.GetNamespace() + "." + object.GetName() + "-"
+func certPathAndPrefix(object metav1.Object) (string, string) {
+	name := object.GetNamespace() + "." + object.GetName()
+
+	nameId := uuid.NewSHA1(nameIdNamespace, []byte(name)).String()
+	l1 := nameId[0:2] // we know it is ASCII only
+	l2 := nameId[0:4] // we know it is ASCII only
+
+	return filepath.Join(l1, l2), name
 }
 
 func (c *Configurator) certificatePath(object metav1.Object, certificate []byte) string {
@@ -96,21 +108,24 @@ func (c *Configurator) certificatePath(object metav1.Object, certificate []byte)
 		return ""
 	}
 
-	// TODO: don't put all certs into a single folder
-
-	checksum := fmt.Sprintf("%x", sha256.Sum256(certificate))
-	name := certFilePrefix(object) + checksum + "-cert.crt"
-	return path.Join(c.ephemeralCertBase, name)
+	suffix := fmt.Sprintf("-%x-cert.crt", sha256.Sum256(certificate))
+	dir, prefix := certPathAndPrefix(object)
+	return path.Join(c.ephemeralCertBase, dir, prefix+suffix)
 
 }
 
 func (c *Configurator) deleteCertificatesForProject(object metav1.Object) error {
-	prefix := certFilePrefix(object)
+	dir, prefix := certPathAndPrefix(object)
 
-	// TODO: don't put all certs into a single folder
+	p := path.Join(c.ephemeralCertBase, dir)
+	log.V(2).Info("Scanning base directory", "base", p)
 
-	files, err := ioutil.ReadDir(c.ephemeralCertBase)
+	files, err := ioutil.ReadDir(p)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		log.Error(err, "Failed to read directory", "path", p)
 		return err
 	}
 
@@ -180,15 +195,13 @@ func (c *Configurator) syncSslProfile(object metav1.Object, certificate []byte) 
 
 	hasCert := certificate != nil && len(certificate) > 0
 	if hasCert && c.ephemeralCertBase == "" {
-		return false, fmt.Errorf("unable to configure custom certificate, emphermal base directory is not configured")
+		return false, fmt.Errorf("unable to configure custom certificate, ephemeral base directory is not configured")
 	}
 
 	certFile := c.certificatePath(object, certificate)
 	log.V(2).Info("Certificate path", "path", certFile)
 
 	if !hasCert && c.ephemeralCertBase != "" {
-
-		// TODO: improve performance, we iterate over all custom certs at this point
 
 		// delete all certificates for this project
 		if err := c.deleteCertificatesForProject(object); err != nil {
@@ -202,8 +215,12 @@ func (c *Configurator) syncSslProfile(object metav1.Object, certificate []byte) 
 			return false, err
 		}
 
+		if err := os.MkdirAll(filepath.Dir(certFile), 0777); err != nil {
+			return false, err
+		}
+
 		// cert file currently does not exists, write to file system
-		if err := ioutil.WriteFile(certFile, certificate, 0777); err != nil {
+		if err := ioutil.WriteFile(certFile, certificate, 0666); err != nil {
 			return false, err
 		}
 	}
