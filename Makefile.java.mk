@@ -6,8 +6,6 @@ ifeq ($(SKIP_TESTS),true)
 MAVEN_ARGS="-DskipTests"
 endif
 
-MAVEN_ARGS += "-Pinfinispan-$(INFINISPAN_VERSION)"
-
 ifneq ($(FULL_BUILD),true)
 build:
 	cd $(TOPDIR); $(IMAGE_ENV) mvn -pl $(MVNPROJ) -am clean install $(MAVEN_ARGS)

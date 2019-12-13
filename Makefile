@@ -40,8 +40,6 @@ ifeq ($(SKIP_TESTS),true)
 	MAVEN_ARGS=-DskipTests -Dmaven.test.skip=true
 endif
 
-MAVEN_ARGS += "-Pinfinispan-$(INFINISPAN_VERSION)"
-
 all: build_java build_go templates
 
 templates: imageenv

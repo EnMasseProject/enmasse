@@ -14,6 +14,7 @@
 
   <properties>
     <hono.version>1.0.0</hono.version>
+    <infinispan.version>9.4.15.Final</infinispan.version>
 
     <!-- align with Hono compatible versions -->
     <logback.version>1.2.3</logback.version>
@@ -37,7 +38,6 @@
     <module>iot-proxy-configurator</module>
     <module>iot-device-registry-infinispan</module>
     <module>iot-infinispan-base</module>
-    <module>iot-infinispan-base-9</module>
     <module>iot-tenant-cleaner</module>
     <module>iot-utils</module>
   </modules>
@@ -53,26 +53,14 @@
       </dependency>
       <dependency>
         <groupId>io.enmasse</groupId>
-        <artifactId>iot-utils</artifactId>
+        <artifactId>iot-infinispan-base</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.enmasse</groupId>
-        <artifactId>iot-infinispan-base</artifactId>
+        <artifactId>iot-utils</artifactId>
         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.enmasse</groupId>
-        <artifactId>iot-infinispan-base-9</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.enmasse</groupId>
-        <artifactId>iot-infinispan-base-9</artifactId>
-        <version>${project.version}</version>
-        <type>test-jar</type>
-        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -138,7 +126,56 @@
         <version>${micrometer.version}</version>
       </dependency>
 
-    </dependencies>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-core</artifactId>
+        <version>${infinispan.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-client-hotrod</artifactId>
+        <version>${infinispan.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-remote-query-client</artifactId>
+        <version>${infinispan.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.squareup</groupId>
+            <artifactId>protoparser</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-query-dsl</artifactId>
+        <version>${infinispan.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan.protostream</groupId>
+        <artifactId>protostream-processor</artifactId>
+        <version>${infinispan-protostream.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-server-hotrod</artifactId>
+        <version>${infinispan.version}</version>
+        <scope>test</scope>
+
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-remote-query-server</artifactId>
+        <version>${infinispan.version}</version>
+        <scope>test</scope>
+      </dependency>
+     </dependencies>
   </dependencyManagement>
 
   <build>
@@ -172,30 +209,5 @@
       </plugins>
     </pluginManagement>
   </build>
-
-  <profiles>
-    <profile>
-      <id>infinispan-10</id>
-      <modules>
-        <module>iot-infinispan-base-10</module>
-      </modules>
-      <dependencyManagement>
-        <dependencies>
-          <dependency>
-            <groupId>io.enmasse</groupId>
-            <artifactId>iot-infinispan-base-10</artifactId>
-            <version>${project.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>io.enmasse</groupId>
-            <artifactId>iot-infinispan-base-10</artifactId>
-            <version>${project.version}</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-          </dependency>
-        </dependencies>
-      </dependencyManagement>
-    </profile>
-  </profiles>
 
 </project>

@@ -8,7 +8,6 @@ package io.enmasse.systemtest.platform.apps;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
-import io.enmasse.systemtest.iot.InfinispanVersion;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
@@ -87,27 +86,11 @@ public class SystemtestsKubernetesApps {
     private static final String[] INFINISPAN_DIRECTORIES;
 
     static {
-        final InfinispanVersion version = InfinispanVersion.current();
-        log.warn("Using Infinispan: {}", version);
-
-        switch (version) {
-            case V10:
-                INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan-10");
-                INFINISPAN_DIRECTORIES = new String[] {
-                                "common/common",
-                                "common/manual",
-                                "tiny/common",
-                                "tiny/manual",
-                };
-                break;
-            default:
-                INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan-9");
-                INFINISPAN_DIRECTORIES = new String[] {
-                                "common",
-                                "manual"
-                };
-                break;
-        }
+        INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+        INFINISPAN_DIRECTORIES = new String[] {
+                        "common",
+                        "manual"
+        };
     }
 
     public static String getMessagingAppPodName() throws Exception {

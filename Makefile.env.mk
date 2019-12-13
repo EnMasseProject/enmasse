@@ -15,8 +15,6 @@ GOPATH          := $(abspath $(TOPDIR))/go
 GOPRJ           := $(GOPATH)/src/github.com/enmasseproject/enmasse
 export GOPATH
 
-INFINISPAN_VERSION ?= 10
-
 # Image settings
 DOCKER_REGISTRY_PREFIX ?= $(DOCKER_REGISTRY)/
 IMAGE_VERSION          ?= $(TAG)

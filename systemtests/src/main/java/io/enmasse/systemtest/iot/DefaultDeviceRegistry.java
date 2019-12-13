@@ -16,7 +16,7 @@ public final class DefaultDeviceRegistry {
 
     private DefaultDeviceRegistry() {}
 
-    public static ExternalInfinispanServer externalServer(final InfinispanVersion version, final Endpoint infinispanEndpoint) {
+    public static ExternalInfinispanServer externalServer(final Endpoint infinispanEndpoint) {
         var builder = new ExternalInfinispanServerBuilder()
                 .withHost(infinispanEndpoint.getHost())
                 .withPort(infinispanEndpoint.getPort());
@@ -37,7 +37,7 @@ public final class DefaultDeviceRegistry {
                 .withNewInfinispan()
                 .withNewServer()
 
-                .withExternal(externalServer(InfinispanVersion.current(), infinispanEndpoint))
+                .withExternal(externalServer(infinispanEndpoint))
 
                 .endServer()
                 .endInfinispan()

@@ -29,9 +29,9 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan("io.enmasse.iot.service.base")
 @ComponentScan("io.enmasse.iot.infinispan")
 @EnableAutoConfiguration
-public class InfinispanRegistry extends AbstractBaseApplication {
+public class Application extends AbstractBaseApplication {
 
-    private static final Logger log = LoggerFactory.getLogger(InfinispanRegistry.class);
+    private static final Logger log = LoggerFactory.getLogger(Application.class);
 
     /**
      * All the verticles.
@@ -100,6 +100,6 @@ public class InfinispanRegistry extends AbstractBaseApplication {
      * @param args command line arguments to pass to the server.
      */
     public static void main(final String[] args) {
-        SpringApplication.run(InfinispanRegistry.class, args);
+        SpringApplication.run(Application.class, args);
     }
 }
