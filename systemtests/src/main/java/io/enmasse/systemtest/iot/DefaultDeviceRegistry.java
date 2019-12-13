@@ -25,8 +25,8 @@ public final class DefaultDeviceRegistry {
         builder = builder
                 .withUsername("app")
                 .withPassword("test12")
-                .withSaslRealm("default")
-                .withSaslServerName("infinispan");
+                .withSaslRealm("ApplicationRealm")
+                .withSaslServerName("hotrod");
 
         return builder.build();
     }
