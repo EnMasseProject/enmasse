@@ -13,59 +13,61 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@master      
-    
-    - name: Set version
-      run: | 
-        echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+      - uses: actions/checkout@master
 
+      - name: Set version
+        run: |
+          echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
 
-    - name: setup-docker
-      run: ./.github/scripts/setup_docker.sh
-    
-    - name: Minikube setup with registry
-      uses: EnMasseProject/minikube-setup@V1.0.0
-      with:
-        k8s-version: 1.15.0
-    
-    - name: Set up JDK 11
-      uses: actions/setup-java@v1
-      with:
-        java-version: 11.0.2
+      - name: setup-docker
+        run: ./.github/scripts/setup_docker.sh
 
-    - name: Setup Ruby environment with ruby-build
-      uses: clupprich/ruby-build-action@v1.0.0
-  
-    - name: Install dependencies
-      run: ./.github/scripts/install_dep.sh
-    
-    - name: Setup OLM
-      run: ./.travis/setup-olm.sh
+      - name: Minikube setup with registry
+        uses: EnMasseProject/minikube-setup@V1.0.0
+        with:
+          k8s-version: 1.15.0
 
-    - name: Build
-      run: ./.github/scripts/build.sh
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11.0.2
 
-    - name: Collect logs
-      if: failure()
-      run: ./.github/scripts/collectLogs.sh
+      - name: Setup Ruby environment with ruby-build
+        uses: clupprich/ruby-build-action@v1.0.0
 
-    - name: Upload artifacts
-      if: failure()
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: unit-test-logs
-        path: artifacts
+      - name: Install dependencies
+        run: ./.github/scripts/install_dep.sh
 
-    - name: Smoke tests
-      run: ./.github/scripts/test.sh
+      - name: Setup OLM
+        run: ./.travis/setup-olm.sh
 
-    - name: Collect logs
-      if: failure()
-      run: ./.github/scripts/collectLogs.sh
+      - name: Build
+        run: ./.github/scripts/build.sh
 
-    - name: Upload artifacts
-      if: failure()
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: smoke-test-logs
-        path: artifacts
+      - name: Collect logs
+        if: failure()
+        run: ./.github/scripts/collectLogs.sh
+
+      - name: Upload artifacts
+        if: failure()
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: unit-test-logs
+          path: artifacts
+
+      - name: Smoke tests
+        run: ./.github/scripts/smoke_test.sh
+
+      - name: OLM tests
+        run: ./.github/scripts/olm_test.sh
+
+      - name: Collect logs
+        if: failure()
+        run: ./.github/scripts/collectLogs.sh
+
+      - name: Upload artifacts
+        if: failure()
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: smoke-test-logs
+          path: artifacts

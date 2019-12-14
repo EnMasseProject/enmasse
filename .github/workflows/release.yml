@@ -18,32 +18,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@master
+      - uses: actions/checkout@master
 
-    - name: Set up JDK 11
-      uses: actions/setup-java@v1
-      with:
-        java-version: 11.0.2
-    
-    - name: Setup Ruby environment with ruby-build
-      uses: clupprich/ruby-build-action@v1.0.0
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11.0.2
 
-    - name: Install dependencies
-      run: ./.github/scripts/install_dep.sh
+      - name: Setup Ruby environment with ruby-build
+        uses: clupprich/ruby-build-action@v1.0.0
 
-    - name: Run unit tests
-      run: make
+      - name: Install dependencies
+        run: ./.github/scripts/install_dep.sh
 
-    - name: Collect logs
-      if: failure()
-      run: ./.github/scripts/collectLogs.sh
+      - name: Run unit tests
+        run: make
 
-    - name: Upload artifacts
-      if: failure()
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: unit-logs
-        path: artifacts
+      - name: Collect logs
+        if: failure()
+        run: ./.github/scripts/collectLogs.sh
+
+      - name: Upload artifacts
+        if: failure()
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: unit-logs
+          path: artifacts
 
 
   smoke:
@@ -55,79 +55,81 @@ jobs:
       RELEASE: true
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master      
+      - uses: actions/checkout@master
 
-    - name: Set version
-      id: version
-      run: | 
-        echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
-        echo "::set-output name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+      - name: Set version
+        id: version
+        run: |
+          echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+          echo "::set-output name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
 
-    - name: setup-docker
-      run: ./.github/scripts/setup_docker.sh
-    
-    - name: Minikube setup with registry
-      uses: EnMasseProject/minikube-setup@V1.0.0
-      with:
-        k8s-version: 1.15.0
-    
-    - name: Set up JDK 11
-      uses: actions/setup-java@v1
-      with:
-        java-version: 11.0.2
+      - name: setup-docker
+        run: ./.github/scripts/setup_docker.sh
 
-    - name: Setup Ruby environment with ruby-build
-      uses: clupprich/ruby-build-action@v1.0.0
-  
-    - name: Install dependencies
-      run: ./.github/scripts/install_dep.sh
-    
-    - name: Setup OLM
-      run: ./.travis/setup-olm.sh
+      - name: Minikube setup with registry
+        uses: EnMasseProject/minikube-setup@V1.0.0
+        with:
+          k8s-version: 1.15.0
 
-    - name: Build
-      id: build
-      run: |
-        export REGISTRY_PASS=${{ secrets.REGISTRY_PASS }}
-        ./.github/scripts/build.sh
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11.0.2
 
-    - name: Smoke tests
-      id: smoke
-      run: ./.github/scripts/test.sh
+      - name: Setup Ruby environment with ruby-build
+        uses: clupprich/ruby-build-action@v1.0.0
 
-    - name: Collect logs
-      if: failure()
-      run: ./.github/scripts/collectLogs.sh
+      - name: Install dependencies
+        run: ./.github/scripts/install_dep.sh
 
-    - name: Upload artifacts
-      if: failure()
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: smoke-logs
-        path: artifacts
+      - name: Setup OLM
+        run: ./.travis/setup-olm.sh
 
-    - name: Create Release
-      if: job.status == 'success' && contains(github.ref, 'refs/tags/v')
-      id: create_release
-      uses: actions/create-release@v1.0.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
+      - name: Build
+        id: build
+        run: |
+          export REGISTRY_PASS=${{ secrets.REGISTRY_PASS }}
+          ./.github/scripts/build.sh
 
-    - name: Upload Release Asset
-      if: job.status == 'success' && contains(github.ref, 'refs/tags/v')
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: templates/build/enmasse-${{ steps.create_release.outputs.tag }}.tgz
-        asset_name: enmasse-${{ steps.version.VERSION }}.tgz
-        asset_content_type: application/gzip
+      - name: Smoke tests
+        run: ./.github/scripts/smoke_test.sh
+
+      - name: OLM tests
+        run: ./.github/scripts/olm_test.sh
+
+      - name: Collect logs
+        if: failure()
+        run: ./.github/scripts/collectLogs.sh
+
+      - name: Upload artifacts
+        if: failure()
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: smoke-logs
+          path: artifacts
+
+      - name: Create Release
+        if: job.status == 'success' && contains(github.ref, 'refs/tags/v')
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        if: job.status == 'success' && contains(github.ref, 'refs/tags/v')
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: templates/build/enmasse-${{ steps.create_release.outputs.tag }}.tgz
+          asset_name: enmasse-${{ steps.version.VERSION }}.tgz
+          asset_content_type: application/gzip
 
     
