@@ -129,7 +129,7 @@ objects:
               - sh
               - -c
               - $ARTEMIS_HOME/custom/bin/probe.sh
-            initialDelaySeconds: 120
+            initialDelaySeconds: 300
           name: broker
           ports:
           - containerPort: 5673
