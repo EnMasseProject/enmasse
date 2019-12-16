@@ -1,9 +1,10 @@
 import React from "react";
 import { useQuery } from "@apollo/react-hooks";
-import { RETURN_ADDRESS_PLANS } from "src/Queries/Queries";
+import { RETURN_ADDRESS_SPACE_PLANS } from "src/Queries/Queries";
 import { Form, TextContent, Text, TextVariants, FormGroup, FormSelect, FormSelectOption, TextInput, Radio } from "@patternfly/react-core";
 import { IAddressSpace } from "src/Components/AddressSpaceList/AddressSpaceList";
 import { IAddressSpacePlans } from "../Pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
+import { Loading } from "use-patternfly";
 
 interface IEditAddressSpaceProps {
   addressSpace: IAddressSpace;
@@ -14,17 +15,30 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
   addressSpace, onPlanChange
 }) => {
 
-  // const { addressPlans } = useQuery<IAddressSpacePlans>(RETURN_ADDRESS_PLANS)
-  //   .data || {
-  //   addressPlans: []
-  // };
-  // TODO populate using data from backend
+  const { loading, error, data } = useQuery<IAddressSpacePlans>(RETURN_ADDRESS_SPACE_PLANS);
 
-  let planOptions: any[] = [
-    {value: "small queue", label: "Small queue", isDisabled: false},
-    {value: "medium queue", label: "Medium queue", isDisabled: false},
-    {value: "large queue", label: "Large queue", isDisabled: false},
-  ];
+  if (loading) return <Loading />;
+  if (error) return <Loading />;
+
+  const { addressSpacePlans } = data || {
+    addressSpacePlans: []
+  };
+
+  let planOptions: any[] = [];
+
+  if (addressSpace.type) {
+    planOptions =
+      addressSpacePlans
+        .map(plan => {
+          if (plan.Spec.AddressSpaceType === addressSpace.type) {
+            return {
+              value: plan.ObjectMeta.Name,
+              label: plan.ObjectMeta.Name
+            };
+          }
+        })
+        .filter(plan => plan !== undefined) || [];
+  }
 
   return (
     <Form>

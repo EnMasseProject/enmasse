@@ -53,7 +53,7 @@ export interface IAddressSpacePlans {
     };
   }>;
 }
-interface INamespaces {
+export interface INamespaces {
   namespaces: Array<{
     ObjectMeta: {
       Name: string;

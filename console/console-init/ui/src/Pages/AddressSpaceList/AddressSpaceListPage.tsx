@@ -13,7 +13,8 @@ import { EmptyAddressSpace } from "src/Components/Common/EmptyAddressSpace";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
 import {
   DELETE_ADDRESS_SPACE,
-  RETURN_ALL_ADDRESS_SPACES
+  RETURN_ALL_ADDRESS_SPACES,
+  EDIT_ADDRESS_SPACE
 } from "src/Queries/Queries";
 import { IAddressSpacesResponse } from "src/Types/ResponseTypes";
 import { EditAddressSpace } from "../EditAddressSpace";
@@ -61,7 +62,21 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   );
   console.log(data);
   const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
-  const handleSaving = () => void 0;
+  const handleSaving = async () => {
+    addressSpaceBeingEdited && await client.mutate({
+      mutation: EDIT_ADDRESS_SPACE,
+      variables: {
+        a: {
+          Name: addressSpaceBeingEdited.name,
+          Namespace: addressSpaceBeingEdited.nameSpace
+        },
+        jsonPatch: '[{"op":"replace","path":"/Plan","value":"' + addressSpaceBeingEdited.displayName + '"}]',
+        patchType: "application/json-patch+json"
+      }
+    });
+    setAddressSpaceBeingEdited(null);
+  }
+
   const handleEditChange = (addressSpace: IAddressSpace) =>
     setAddressSpaceBeingEdited(addressSpace);
 
