@@ -63,12 +63,10 @@ public class InfinispanTenantCleaner implements AutoCloseable {
                 var deviceconProvider = new DeviceConnectionCacheProvider(config.getInfinispan());) {
 
             mgmtProvider.start();
-            cleanup.add(mgmtProvider::stop);
             final var devicesCache = mgmtProvider.getOrCreateDeviceManagementCache();
             cleanup.add(devicesCache::stop);
 
             deviceconProvider.start();
-            cleanup.add(deviceconProvider::stop);
             final var devicesConnectionCache = deviceconProvider.getDeviceStateCache().orElse(null);
             cleanup.add(devicesConnectionCache::stop);
 

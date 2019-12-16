@@ -8,7 +8,6 @@ package io.enmasse.iot.infinispan.cache;
 import java.util.Optional;
 
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ServerConfigurationBuilder;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
 import org.infinispan.configuration.cache.CacheMode;
@@ -44,26 +43,32 @@ public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
     @Override
     public void start() throws Exception {
         super.start();
-        configureSerializer(this.remoteCacheManager);
+        uploadSchema();
     }
 
-    private void configureSerializer(RemoteCacheManager remoteCacheManager) throws Exception {
-        final SerializationContext serCtx = ProtoStreamMarshaller.getSerializationContext(remoteCacheManager);
+    private void uploadSchema() throws Exception {
 
-        final String generatedSchema = new ProtoSchemaBuilder()
+        if (this.properties.isUploadSchema()) {
+
+            final String generatedSchema = createSchema();
+            log.info("Generated protobuf schema - {}", generatedSchema);
+
+            this.remoteCacheManager
+                    .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
+                    .put(GENERATED_PROTOBUF_FILE_NAME, generatedSchema);
+        }
+
+    }
+
+    private String createSchema() throws Exception {
+        final SerializationContext serCtx = ProtoStreamMarshaller.getSerializationContext(this.remoteCacheManager);
+
+        return new ProtoSchemaBuilder()
 
                 .addClass(DeviceConnectionKey.class)
                 .packageName(DeviceConnectionKey.class.getPackageName())
                 .fileName(GENERATED_PROTOBUF_FILE_NAME)
                 .build(serCtx);
-
-        log.debug("Generated protobuf schema - {}", generatedSchema);
-
-        if (this.properties.isUploadSchema()) {
-            remoteCacheManager
-                    .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
-                    .put(GENERATED_PROTOBUF_FILE_NAME, generatedSchema);
-        }
 
     }
 

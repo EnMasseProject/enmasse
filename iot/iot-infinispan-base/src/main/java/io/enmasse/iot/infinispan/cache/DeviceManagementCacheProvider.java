@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ServerConfigurationBuilder;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
 import org.infinispan.configuration.cache.CacheMode;
@@ -50,24 +49,24 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
     @Override
     public void start() throws Exception {
         super.start();
-        this.schema = generateSchema(this.remoteCacheManager);
-        configureSerializer(this.remoteCacheManager);
+        this.schema = generateSchema();
+        uploadSchema();
     }
 
-    private void configureSerializer(final RemoteCacheManager remoteCacheManager) throws Exception {
-
-        log.debug("Generated protobuf schema - {}", this.schema);
+    private void uploadSchema() throws Exception {
 
         if (this.properties.isUploadSchema()) {
-            remoteCacheManager
+            log.info("Generated protobuf schema - {}", this.schema);
+
+            this.remoteCacheManager
                     .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
                     .put(GENERATED_PROTOBUF_FILE_NAME, this.schema);
         }
 
     }
 
-    private static String generateSchema(final RemoteCacheManager remoteCacheManager) throws IOException {
-        final SerializationContext serCtx = ProtoStreamMarshaller.getSerializationContext(remoteCacheManager);
+    private String generateSchema() throws IOException {
+        final SerializationContext serCtx = ProtoStreamMarshaller.getSerializationContext(this.remoteCacheManager);
 
         final String generatedSchema = new ProtoSchemaBuilder()
 
