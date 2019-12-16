@@ -5,6 +5,7 @@ import { RETURN_CONNECTION_LINKS } from "src/Queries/Queries";
 import { Loading } from "use-patternfly";
 import { ILink, LinkList } from "src/Components/ConnectionDetail/LinkList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
+import { ISortBy } from "@patternfly/react-table";
 
 interface IConnectionLinksListPageProps {
   name: string;
@@ -22,13 +23,15 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
   perPage,
   setTotalLinks
 }) => {
+  const [sortBy, setSortBy] = React.useState<ISortBy>();
   const { loading, error, data } = useQuery<IConnectionLinksResponse>(
     RETURN_CONNECTION_LINKS(
       page,
       perPage,
       name || "",
       namespace || "",
-      connectionName || ""
+      connectionName || "",
+      sortBy
     ),
     { pollInterval: 20000 }
   );
@@ -41,6 +44,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
     connections: { Total: 0, Connections: [] }
   };
   const connection = connections.Connections[0];
+  console.log(connection.Links.Links)
   let linkRows: ILink[] = [];
   if (connection && connection.Links.Total > 0) {
     setTotalLinks(connection.Links.Total);
@@ -56,9 +60,14 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
       undelivered: getFilteredValue(link.Metrics, "enmasse_undelivered")
     }));
   }
+
+  const onSort = (_event: any, index: any, direction: any) => {
+    setSortBy({ index: index, direction: direction });
+  };
+
   return (
     <>
-      <LinkList rows={linkRows} />
+      <LinkList rows={linkRows} onSort={onSort} sortBy={sortBy} />
     </>
   );
 };

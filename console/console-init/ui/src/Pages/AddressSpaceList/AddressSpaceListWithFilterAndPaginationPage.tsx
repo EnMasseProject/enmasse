@@ -8,15 +8,14 @@ import {
   Grid,
   GridItem
 } from "@patternfly/react-core";
-import { GridStylesForTableHeader } from "../AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
-import { css } from "@patternfly/react-styles";
 import { AddressSpaceListPage } from "./AddressSpaceListPage";
 import { AddressSpaceListFilterPage } from "./AddressSpaceListFilterPage";
+import { Divider } from "@patternfly/react-core/dist/js/experimental";
 
 export default function AddressSpaceListWithFilterAndPagination() {
   useDocumentTitle("Address Space List");
   useA11yRouteChange();
-  const [filterValue, setFilterValue] = React.useState<string | null>(null);
+  const [filterValue, setFilterValue] = React.useState<string | null>("Name");
   const [filterNames, setFilterNames] = React.useState<string[]>([]);
   const [filterNamespaces, setFilterNamespaces] = React.useState<string[]>([]);
   const [filterType, setFilterType] = React.useState<string | null>(null);
@@ -69,7 +68,7 @@ export default function AddressSpaceListWithFilterAndPagination() {
   };
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
+      <Grid>
         <GridItem span={7}>
           <AddressSpaceListFilterPage
             filterValue={filterValue}
@@ -83,10 +82,10 @@ export default function AddressSpaceListWithFilterAndPagination() {
           />
         </GridItem>
         <GridItem span={5}>
-          {console.log(totalAddressSpaces)}
           {totalAddressSpaces > 0 && renderPagination(page, perPage)}
         </GridItem>
       </Grid>
+      <Divider/>
       <AddressSpaceListPage
         page={page}
         perPage={perPage}

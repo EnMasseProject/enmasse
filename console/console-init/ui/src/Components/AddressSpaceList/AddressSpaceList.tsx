@@ -6,7 +6,8 @@ import {
   TableBody,
   IRowData,
   sortable,
-  IExtraData
+  IExtraData,
+  ISortBy
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
 import {
@@ -30,12 +31,16 @@ interface IAddressListProps {
   rows: IAddressSpace[];
   onEdit: (rowData: IAddressSpace) => void;
   onDelete: (rowData: IAddressSpace) => void;
+  sortBy?: ISortBy;
+  onSort?: (_event: any, index: number, direction: string) => void;
 }
 
 export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   rows,
   onEdit,
-  onDelete
+  onDelete,
+  sortBy,
+  onSort
 }) => {
   //TODO: Add loading icon based on status
   const actionResolver = (rowData: IRowData) => {
@@ -136,6 +141,8 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
       rows={tableRows}
       actionResolver={actionResolver}
       aria-label="address space list"
+      onSort={onSort}
+      sortBy={sortBy}
     >
       <TableHeader id="aslist-table-header" />
       <TableBody />

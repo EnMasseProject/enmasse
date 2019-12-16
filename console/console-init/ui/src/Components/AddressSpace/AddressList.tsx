@@ -45,6 +45,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   sortBy,
   onSort
 }) => {
+  console.log(rowsData)
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;
     return [
@@ -61,6 +62,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
 
   //TODO: Display error after the phase variable is exposed from backend.
   const toTableCells = (row: IAddress) => {
+    console.log(row.name + row.type)
     if (row.isReady) {
       const tableRow: IRowData = {
         cells: [
@@ -111,6 +113,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       return tableRow;
     }
   };
+  // const [recievedData,setRecievedData] = React.useState(rowsData);
   const [tableRows, setTableRows] = React.useState<IRowData[]>(
     rowsData.map(toTableCells)
   );

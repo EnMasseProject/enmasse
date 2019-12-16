@@ -9,18 +9,14 @@ import {
   Grid
 } from "@patternfly/react-core";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet } from "@patternfly/react-styles";
 import { AddressListFilterPage } from "./AddressListFilterPage";
 import { AddressListPage } from "./AddressListPage";
+import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { useQuery } from "@apollo/react-hooks";
 import { CURRENT_ADDRESS_SPACE_PLAN } from "src/Queries/Queries";
 
 export const GridStylesForTableHeader = StyleSheet.create({
-  grid_bottom_border: {
-    paddingBottom: "1em",
-    borderBottom: "0.05em solid",
-    borderBottomColor: "lightgrey"
-  },
   filter_left_margin: {
     marginLeft: 24
   },
@@ -36,7 +32,7 @@ export interface IAddressSpacePlanResponse {
         Plan: {
           ObjectMeta: {
             Name: string
-          }   
+          }
         }
       }
     }>
@@ -47,7 +43,7 @@ export default function AddressesList() {
   useDocumentTitle("Address List");
   useA11yRouteChange();
   const { name, namespace,type } = useParams();
-  const [filterValue, setFilterValue] = React.useState<string | null>(null);
+  const [filterValue, setFilterValue] = React.useState<string | null>("Name");
   const [filterNames, setFilterNames] = React.useState<string[]>([]);
   const [typeValue, setTypeValue] = React.useState<string | null>(null);
   const [statusValue, setStatusValue] = React.useState<string | null>(null);
@@ -113,7 +109,7 @@ export default function AddressesList() {
   };
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
+      <Grid>
         <GridItem span={7}>
           <AddressListFilterPage
             filterValue={filterValue}
@@ -131,6 +127,7 @@ export default function AddressesList() {
           {totalAddresses > 0 && renderPagination(page, perPage)}
         </GridItem>
       </Grid>
+      <Divider/>
       <AddressListPage
         name={name}
         namespace={namespace}
@@ -138,6 +135,7 @@ export default function AddressesList() {
         filterNames={filterNames}
         typeValue={typeValue}
         statusValue={statusValue}
+        totalAddresses={totalAddresses}
         setTotalAddress={setTotalAddress}
         page={page}
         perPage={perPage}

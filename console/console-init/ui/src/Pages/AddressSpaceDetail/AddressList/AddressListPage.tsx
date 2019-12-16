@@ -18,11 +18,12 @@ export interface IAddressListPageProps {
   name?: string;
   namespace?: string;
   addressSpaceType?: string;
-  filterNames ?:string[];
+  filterNames?: string[];
   typeValue?: string | null;
   statusValue?: string | null;
   page: number;
   perPage: number;
+  totalAddresses: number;
   setTotalAddress: (total: number) => void;
   addressSpacePlan: string | null;
 }
@@ -33,11 +34,13 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   filterNames,
   typeValue,
   statusValue,
+  totalAddresses,
   setTotalAddress,
   page,
   perPage,
   addressSpacePlan
 }) => {
+  console.log("totalAddresses", totalAddresses);
   const [
     addressBeingEdited,
     setAddressBeingEdited
@@ -49,6 +52,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   ] = React.useState<IAddress | null>();
   const client = useApolloClient();
   const [sortBy, setSortBy] = React.useState<ISortBy>();
+  
   const { loading, error, data, refetch } = useQuery<IAddressResponse>(
     RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE(
       page,
@@ -70,7 +74,6 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     addresses: { Total: 0, Addresses: [] }
   };
   setTotalAddress(addresses.Total);
-
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
     name: address.ObjectMeta.Name,
     namespace: address.ObjectMeta.Namespace,
@@ -89,7 +92,6 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     status: address.Status.Phase,
     errorMessages: address.Status.Messages
   }));
-
   const handleEdit = (data: IAddress) => {
     if (!addressBeingEdited) {
       setAddressBeingEdited(data);
@@ -134,23 +136,20 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           }
         }
       });
-      if (
-        deletedData &&
-        deletedData.data &&
-        deletedData.data.deleteAddress === true
-      ) {
-        setAddressBeingDeleted(null);
-        refetch();
-      }
+      refetch();
+      setAddressBeingDeleted(null);
     }
   };
-  const handleDeleteChange = (address: IAddress) =>
+  const handleDeleteChange = (address: IAddress) => {
+    console.log("Delete address name " + address.name);
     setAddressBeingDeleted(address);
+  };
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
   };
   return (
     <>
+      {console.log("totalAddressSpaces", addressesList)}
       <AddressList
         rowsData={addressesList ? addressesList : []}
         onEdit={handleEdit}
@@ -166,10 +165,18 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           isOpen={true}
           onClose={handleCancelEdit}
           actions={[
-            <Button key="confirm" id="al-edit-confirm" variant="primary" onClick={handleSaving}>
+            <Button
+              key="confirm"
+              id="al-edit-confirm"
+              variant="primary"
+              onClick={handleSaving}>
               Confirm
             </Button>,
-            <Button key="cancel" id="al-edit-cancel" variant="link" onClick={handleCancelEdit}>
+            <Button
+              key="cancel"
+              id="al-edit-cancel"
+              variant="link"
+              onClick={handleCancelEdit}>
               Cancel
             </Button>
           ]}

@@ -6,7 +6,9 @@ import {
   PageSection,
   PageSectionVariants,
   TooltipPosition,
-  Tooltip
+  Tooltip,
+  Button,
+  ButtonVariant
 } from "@patternfly/react-core";
 import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
@@ -73,7 +75,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
       </Title>
       <Title size="xl" style={{ marginBottom: 32 }}>
         {" "}
-        Review the information below and Click Finish to create the new address.
+        Review the information below and click Finish to create the new address.
         Use the Back button to make changes.
       </Title>
       <Grid>
@@ -82,8 +84,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           style={{
             borderRight: "0.1em solid",
             borderRightColor: "lightgrey"
-          }}
-        >
+          }}>
           <Grid>
             {name && name.trim() !== "" && (
               <>
@@ -131,16 +132,15 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
             <Tooltip
               position={TooltipPosition.top}
               enableFlip={keepInViewChecked}
-              content={<div>Copy the configuration details on clipboard</div>}
-            >
-              <OutlinedCopyIcon
-                id="preview-addr-copy-btn"
-                size="md"
-                color="blue"
+              content={<div>Copy the configuration details on clipboard</div>}>
+              <Button
+                variant={ButtonVariant.link}
+                aria-label="copy-configuration"
                 onClick={() => {
                   navigator.clipboard.writeText(data.addressCommand);
-                }}
-              />
+                }}>
+                <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
+              </Button>
             </Tooltip>
           </Title>
           <AceEditor

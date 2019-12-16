@@ -9,6 +9,7 @@ import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter"
 import { IConnectionListResponse } from "src/Types/ResponseTypes";
 import { RETURN_ALL_CONECTION_LIST } from "src/Queries/Queries";
 import { ISortBy } from "@patternfly/react-table";
+import { Loading } from "use-patternfly";
 
 export interface IConnectionListPageProps {
   name?: string;
@@ -39,14 +40,14 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
       hosts,
       containerIds,
       name,
-      namespace
+      namespace,
+      sortBy
     ),
     { pollInterval: 20000 }
   );
 
   if (error) console.log(error);
-  if (loading) console.log("page is loading:", loading);
-  // if (loading) return <Loading />;
+  if (loading) return <Loading />;
   const { connections } = data || {
     connections: { Total: 0, Connections: [] }
   };

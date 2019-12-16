@@ -61,8 +61,8 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   const tableRows = rows.map(toTableCells);
   const tableColumns = [
     { title: "Hostname", dataLabel: "host", transforms: [sortable] },
-    "Container ID",
-    "Protocol",
+    { title: "Container ID", transforms: [sortable] },
+    { title: "Protocol", transforms: [sortable] },
     {
       title: (
         <span style={{ display: "inline-flex" }}>
@@ -70,7 +70,8 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
           <br />
           {`(over last 5 min)`}
         </span>
-      )
+      ),
+      transforms: [sortable]
     },
     {
       title: (
@@ -79,7 +80,8 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
           <br />
           {`(over last 5 min)`}
         </span>
-      )
+      ),
+      transforms: [sortable]
     },
     {
       title: "Senders",

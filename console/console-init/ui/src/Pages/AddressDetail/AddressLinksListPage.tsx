@@ -28,7 +28,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
 }) => {
   const [sortBy, setSortBy] = React.useState<ISortBy>();
   const { loading, error, data } = useQuery<IAddressLinksResponse>(
-    RETURN_ADDRESS_LINKS(page, perPage, name, namespace, addressname),
+    RETURN_ADDRESS_LINKS(page, perPage, name, namespace, addressname,sortBy),
     { pollInterval: 20000 }
   );
   if (loading) return <Loading />;
