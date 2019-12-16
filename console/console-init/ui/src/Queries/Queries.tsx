@@ -229,6 +229,29 @@ export const RETURN_ADDRESS_SPACE_DETAIL = (
   return ADDRESS_SPACE_DETAIL;
 };
 
+export const CURRENT_ADDRESS_SPACE_PLAN = (
+  name?: string,
+  namespace?: string
+) => {
+  const ADDRESS_SPACE_PLAN = gql`
+    query all_address_spaces {
+      addressSpaces(
+        filter: "\`$..Name\` = '${name}' AND \`$..Namespace\` = '${namespace}'"
+      ) {
+        AddressSpaces {
+          Spec {
+            Plan {
+              ObjectMeta {
+                Name
+              }   
+            }
+          }
+        }
+      }
+    }`;
+  return ADDRESS_SPACE_PLAN;
+};
+
 export const RETURN_ADDRESS_DETAIL = (
   addressSpace?: string,
   namespace?: string,

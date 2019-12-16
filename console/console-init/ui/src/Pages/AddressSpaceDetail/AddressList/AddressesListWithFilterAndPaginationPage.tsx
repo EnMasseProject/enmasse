@@ -12,6 +12,8 @@ import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { AddressListFilterPage } from "./AddressListFilterPage";
 import { AddressListPage } from "./AddressListPage";
+import { useQuery } from "@apollo/react-hooks";
+import { CURRENT_ADDRESS_SPACE_PLAN } from "src/Queries/Queries";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   grid_bottom_border: {
@@ -27,6 +29,20 @@ export const GridStylesForTableHeader = StyleSheet.create({
   }
 });
 
+export interface IAddressSpacePlanResponse {
+  addressSpaces : {
+    AddressSpaces : Array<{
+      Spec: {
+        Plan: {
+          ObjectMeta: {
+            Name: string
+          }   
+        }
+      }
+    }>
+  }
+};
+
 export default function AddressesList() {
   useDocumentTitle("Address List");
   useA11yRouteChange();
@@ -36,11 +52,24 @@ export default function AddressesList() {
   const [typeValue, setTypeValue] = React.useState<string | null>(null);
   const [statusValue, setStatusValue] = React.useState<string | null>(null);
   const [totalAddresses, setTotalAddress] = React.useState<number>(0);
+  const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(null);
   const location = useLocation();
   const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+
+  const { data } = useQuery<IAddressSpacePlanResponse>(
+    CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
+  );
+
+  const { addressSpaces } = data || {
+    addressSpaces: { AddressSpaces: [] }
+  };
+
+  if(!addressSpacePlan && addressSpaces.AddressSpaces[0]){
+    setAddressSpacePlan(addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta.Name);
+  }
 
   const setSearchParam = React.useCallback(
     (name: string, value: string) => {
@@ -105,6 +134,7 @@ export default function AddressesList() {
       <AddressListPage
         name={name}
         namespace={namespace}
+        addressSpacePlan={addressSpacePlan}
         filterNames={filterNames}
         typeValue={typeValue}
         statusValue={statusValue}

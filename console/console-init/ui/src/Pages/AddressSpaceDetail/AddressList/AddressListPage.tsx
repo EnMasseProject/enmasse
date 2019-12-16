@@ -13,7 +13,6 @@ import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "src/Components/Common/EmptyAddress";
 import { EditAddress } from "../../EditAddressPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
 import { ISortBy } from "@patternfly/react-table";
 export interface IAddressListPageProps {
   name?: string;
@@ -25,6 +24,7 @@ export interface IAddressListPageProps {
   page: number;
   perPage: number;
   setTotalAddress: (total: number) => void;
+  addressSpacePlan: string | null;
 }
 export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = ({
   name,
@@ -35,7 +35,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   statusValue,
   setTotalAddress,
   page,
-  perPage
+  perPage,
+  addressSpacePlan
 }) => {
   const [
     addressBeingEdited,
@@ -105,14 +106,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
             Name: addressBeingEdited.name,
             Namespace: addressBeingEdited.namespace
           },
-          jsonPatch:
-            '[{"op":"replace","path":"/Plan","value":"' +
-            getPlanAndTypeForAddressEdit(
-              addressBeingEdited.plan,
-              addressSpaceType
-            ) +
-            '"}]',
-          // "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium-queue\"}]",
+          jsonPatch: '[{"op":"replace","path":"/Plan","value":"' + addressBeingEdited.plan + '"}]',
           patchType: "application/json-patch+json"
         }
       });
@@ -184,6 +178,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
             name={addressBeingEdited.name}
             type={addressBeingEdited.type}
             plan={addressBeingEdited.plan}
+            addressSpacePlan={addressSpacePlan}
             onChange={handlePlanChange}
           />
         </Modal>
