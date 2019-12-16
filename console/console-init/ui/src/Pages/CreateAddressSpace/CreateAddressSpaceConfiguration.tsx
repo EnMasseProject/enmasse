@@ -14,11 +14,14 @@ import {
 import { useQuery } from "@apollo/react-hooks";
 import { IDropdownOption } from "../../Components/Common/FilterDropdown";
 import {
-  RETURN_ADDRESS_PLANS,
-  RETURN_ADDRESS_TYPES
+  RETURN_ADDRESS_TYPES,
+  RETURN_ADDRESS_SPACE_PLANS,
+  RETURN_NAMESPACES
 } from "src/Queries/Queries";
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
+import { strict } from "assert";
+import { string } from "prop-types";
 
 const styles = StyleSheet.create({
   capitalize_labels: {
@@ -38,21 +41,25 @@ export interface IAddressSpaceConfiguration {
   authenticationService: string;
   setAuthenticationService: (authenticationService: string) => void;
 }
-interface IAddressSpacePlans {
-  addressPlans: Array<{
+export interface IAddressSpacePlans {
+  addressSpacePlans: Array<{
+    ObjectMeta: {
+      Name: string;
+      Uid: string;
+      CreationTimestamp: Date;
+    };
     Spec: {
-      AddressType: string;
-      DisplayName: string;
-      ShortDescription: string;
+      AddressSpaceType: string;
     };
   }>;
 }
 interface INamespaces {
-  addressTypes_v2: Array<{
-    Spec: {
-      DisplayName: string;
-      LongDescription: string;
-      ShortDescription: string;
+  namespaces: Array<{
+    ObjectMeta: {
+      Name: string;
+    };
+    Status: {
+      Phase: string;
     };
   }>;
 }
@@ -69,9 +76,12 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   authenticationService,
   setAuthenticationService
 }) => {
+  //TODO: Fix namespace value on the textbox
   const [isNameSpaceOpen, setIsNameSpaceOpen] = React.useState(false);
+  const [isStandardChecked, setIsStandardChecked] = React.useState(false);
+  const [isBrokeredChecked, setIsBrokeredChecked] = React.useState(false);
   const onNameSpaceSelect = (event: any) => {
-    setType(event.target.value);
+    setNamespace(event.target.value);
     setIsNameSpaceOpen(!isNameSpaceOpen);
   };
   const [isPlanOpen, setIsPlanOpen] = React.useState(false);
@@ -79,6 +89,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
     setPlan(event.target.value);
     setIsPlanOpen(!isPlanOpen);
   };
+
   const [
     isAuthenticationServiceOpen,
     setIsAuthenticationServiceOpen
@@ -88,41 +99,60 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
     setIsAuthenticationServiceOpen(!isAuthenticationServiceOpen);
   };
 
-  const { loading, error, data } = useQuery<INamespaces>(RETURN_ADDRESS_TYPES);
-  const adressPlans =[];
-  // // const { addressPlans } = useQuery<IAddressSpacePlans>(RETURN_ADDRESS_PLANS)
-  //   .data || {
-  //   addressPlans: []
-  // };
-
-  // if (loading) return <Loading />;
-  // if (error) return <Loading />;
-  const { addressTypes_v2 } = data || {
-    addressTypes_v2: []
+  const { loading, error, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
+  const { addressSpacePlans } = useQuery<IAddressSpacePlans>(
+    RETURN_ADDRESS_SPACE_PLANS
+  ).data || {
+    addressSpacePlans: []
   };
 
-  let namespaceOptions: IDropdownOption[] = addressTypes_v2.map(type => {
-    return {
-      value: type.Spec.DisplayName,
-      label: type.Spec.DisplayName,
-      description: type.Spec.ShortDescription
-    };
-  });
+  if (loading) return <Loading />;
+  if (error) return <Loading />;
+  const { namespaces } = data || {
+    namespaces: []
+  };
+
+  let namespaceOptions: IDropdownOption[];
 
   let planOptions: any[] = [];
   let authenticationServiceOptions: any[] = [];
+  namespaceOptions = namespaces.map(namespace => {
+    return {
+      value: namespace.ObjectMeta.Name,
+      label: namespace.ObjectMeta.Name
+    };
+  });
+  if (type) {
+    planOptions =
+      addressSpacePlans
+        .map(plan => {
+          if (plan.Spec.AddressSpaceType === type) {
+            return {
+              value: plan.ObjectMeta.Name,
+              label: plan.ObjectMeta.Name
+              // description: plan.Spec.ShortDescription
+            };
+          }
+        })
+        .filter(plan => plan !== undefined) || [];
+  }
 
-  // if(type){
-  //   planOptions = addressPlans.map(plan => {
-  //     if(plan.Spec.AddressType === type){
-  //       return {
-  //         value: plan.Spec.DisplayName,
-  //         label: plan.Spec.DisplayName,
-  //         description: plan.Spec.ShortDescription
-  //       }
-  //     }
-  //   }).filter(plan => plan !== undefined) || [];
-  // }
+  const handleBrokeredChange = () => {
+    setIsBrokeredChecked(true);
+    setIsStandardChecked(false);
+    setType("brokered");
+  };
+
+  const handleStandardChange = () => {
+    setIsStandardChecked(true);
+    setIsBrokeredChecked(false);
+    setType("standard");
+  };
+
+  const handleNameChange = (name: string) => {
+    setName(name);
+  };
+
   return (
     <>
       <Grid>
@@ -140,7 +170,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                     style={{ flex: "1" }}
                     onToggle={() => setIsNameSpaceOpen(!isNameSpaceOpen)}
                   >
-                    {type}
+                    {namespace}
                   </DropdownToggle>
                 }
                 dropdownItems={namespaceOptions.map(option => (
@@ -165,7 +195,8 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                 type="text"
                 id="address-space"
                 name="address-space"
-                // onChange={handleAddressChange}
+                onChange={handleNameChange}
+                value={name}
               />
             </FormGroup>
             <FormGroup
@@ -174,8 +205,20 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
               fieldId="simple-form-name"
               isRequired={true}
             >
-              <Radio id="cas-standard-radio" label="Standard" name="radio-5" />
-              <Radio id="cas-brokered-radio" label="Brokered" name="radio-6" />
+              <Radio
+                isChecked={isStandardChecked}
+                onChange={handleStandardChange}
+                id="cas-standard-radio"
+                label="Standard"
+                name="radio-5"
+              />
+              <Radio
+                isChecked={isBrokeredChecked}
+                onChange={handleBrokeredChange}
+                id="cas-brokered-radio"
+                label="Brokered"
+                name="radio-6"
+              />
             </FormGroup>
             <FormGroup
               label="Address space plan"
