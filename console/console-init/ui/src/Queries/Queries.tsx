@@ -414,6 +414,16 @@ export const CREATE_ADDRESS_SPACE = gql`
   }
 `;
 
+export const EDIT_ADDRESS_SPACE = gql`
+  mutation patch_as(
+    $a: ObjectMeta_v1_Input!
+    $jsonPatch: String!
+    $patchType: String!
+  ) {
+    patchAddressSpace(input: $a, jsonPatch: $jsonPatch, patchType: $patchType)
+  }
+`;
+
 export const EDIT_ADDRESS = gql`
   mutation patch_addr(
     $a: ObjectMeta_v1_Input!
