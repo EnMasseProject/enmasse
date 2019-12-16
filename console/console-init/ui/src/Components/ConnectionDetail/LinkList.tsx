@@ -5,11 +5,14 @@ import {
   TableHeader,
   TableBody,
   IRowData,
-  sortable
+  sortable,
+  ISortBy
 } from "@patternfly/react-table";
 
 interface ILinkListProps {
   rows: ILink[];
+  sortBy?: ISortBy;
+  onSort?: (_event: any, index: number, direction: string) => void;
 }
 
 export interface ILink {
@@ -25,7 +28,11 @@ export interface ILink {
   status?: "creating" | "deleting" | "running";
 }
 
-export const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
+export const LinkList: React.FunctionComponent<ILinkListProps> = ({
+  rows,
+  sortBy,
+  onSort
+}) => {
   const toTableCells = (row: ILink) => {
     const tableRow: IRowData = {
       cells: [
@@ -47,8 +54,8 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
   const tableColumns = [
     "Role",
     { title: "Name", transforms: [sortable] },
-    "Address",
-    "Deliveries",
+    { title: "Address", transforms: [sortable] },
+    { title: "Deliveries", transforms: [sortable] },
     { title: "Rejected", transforms: [sortable] },
     { title: "Released", transforms: [sortable] },
     { title: "Modified", transforms: [sortable] },
@@ -62,7 +69,9 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
       cells={tableColumns}
       rows={tableRows}
       aria-label="links list"
-    >
+      onSort={onSort}
+      sortBy={sortBy}
+      >
       <TableHeader />
       <TableBody />
     </Table>

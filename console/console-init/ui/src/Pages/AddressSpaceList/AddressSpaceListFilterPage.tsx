@@ -86,7 +86,7 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
     }
   };
   const onClearAllFilters = () => {
-    setFilterValue(null);
+    setFilterValue("Name");
     setFilterNamespaces([]);
     setFilterNames([]);
     setFilterType(null);

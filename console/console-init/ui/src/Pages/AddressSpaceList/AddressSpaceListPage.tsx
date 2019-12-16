@@ -1,10 +1,7 @@
 import React from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
-import {
-  Button,
-  Modal
-} from "@patternfly/react-core";
+import { Button, Modal } from "@patternfly/react-core";
 import {
   AddressSpaceList,
   IAddressSpace
@@ -18,6 +15,7 @@ import {
 } from "src/Queries/Queries";
 import { IAddressSpacesResponse } from "src/Types/ResponseTypes";
 import { EditAddressSpace } from "../EditAddressSpace";
+import { ISortBy } from "@patternfly/react-table";
 
 interface AddressSpaceListPageProps {
   page: number;
@@ -50,15 +48,17 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     setAddressSpaceBeingDeleted
   ] = React.useState<IAddressSpace | null>();
 
+  const [sortBy, setSortBy] = React.useState<ISortBy>();
   const { loading, error, data, refetch } = useQuery<IAddressSpacesResponse>(
     RETURN_ALL_ADDRESS_SPACES(
       page,
       perPage,
       filter_Names,
       filter_NameSpace,
-      filter_Type
+      filter_Type,
+      sortBy
     ),
-    { pollInterval: 20000 }
+    { pollInterval: 20000, fetchPolicy: "network-only" }
   );
   console.log(data);
   const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
@@ -106,20 +106,20 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     setAddressSpaceBeingDeleted(addressSpace);
 
   const handlePlanChange = (plan: string) => {
-    if(addressSpaceBeingEdited){
+    if (addressSpaceBeingEdited) {
       addressSpaceBeingEdited.displayName = plan;
-      setAddressSpaceBeingEdited({...addressSpaceBeingEdited});
+      setAddressSpaceBeingEdited({ ...addressSpaceBeingEdited });
     }
-  }
+  };
 
-  if(error) {
+  if (error) {
     console.log(error);
   }
-  console.log(data);
-
+  
   const { addressSpaces } = data || {
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
+  console.log(addressSpaces.AddressSpaces);
   setTotalAddressSpaces(addressSpaces.Total);
   const addressSpacesList = addressSpaces.AddressSpaces.map(addSpace => ({
     name: addSpace.ObjectMeta.Name,
@@ -129,6 +129,12 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     displayName: addSpace.Spec.Plan.Spec.DisplayName,
     isReady: addSpace.Status.IsReady
   }));
+
+
+  const onSort = (_event: any, index: any, direction: any) => {
+    setSortBy({ index: index, direction: direction });
+  };
+
   return (
     <>
       {totalAddressSpaces > 0 ? (
@@ -136,6 +142,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           rows={addressSpacesList}
           onEdit={handleEditChange}
           onDelete={handleDeleteChange}
+          onSort={onSort} sortBy={sortBy} 
         />
       ) : (
         <EmptyAddressSpace />
@@ -148,20 +155,25 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           isOpen={true}
           onClose={handleCancelEdit}
           actions={[
-            <Button key="confirm" id="as-list-edit-confirm" variant="primary" onClick={handleSaving}>
+            <Button
+              key="confirm"
+              id="as-list-edit-confirm"
+              variant="primary"
+              onClick={handleSaving}>
               Confirm
             </Button>,
-            <Button key="cancel" id="as-list-edit-cancel" variant="link" onClick={handleCancelEdit}>
+            <Button
+              key="cancel"
+              id="as-list-edit-cancel"
+              variant="link"
+              onClick={handleCancelEdit}>
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned={true}
-        >
+          isFooterLeftAligned={true}>
           <EditAddressSpace
             addressSpace={addressSpaceBeingEdited}
-            onPlanChange={handlePlanChange}
-          >
-          </EditAddressSpace>
+            onPlanChange={handlePlanChange}></EditAddressSpace>
         </Modal>
       )}
       {addressSpaceBeingDeleted && (

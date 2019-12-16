@@ -49,7 +49,7 @@ export const TypePlan: React.FunctionComponent<ITypePlanProps> = address => {
         content={<div>{address.type}</div>}>
         {labelItem}
       </Tooltip>
-      {address.plan}
+      {" " + address.plan}
     </React.Fragment>
   );
 };

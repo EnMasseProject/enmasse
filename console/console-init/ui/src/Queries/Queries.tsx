@@ -22,7 +22,8 @@ export const RETURN_ALL_ADDRESS_SPACES = (
   perPage: number,
   filter_Names?: string[],
   filter_NameSpace?: string[],
-  filter_Type?: string | null
+  filter_Type?: string | null,
+  sortBy?: ISortBy
 ) => {
   let filter = "";
   if (filter_Names && filter_Names.length > 0) {
@@ -59,11 +60,26 @@ export const RETURN_ALL_ADDRESS_SPACES = (
   if (filter_Type && filter_Type.trim() != "") {
     filter += "`$.Spec.Type` ='" + filter_Type.toLowerCase().trim() + "' ";
   }
-  console.log(filter);
+  let orderByString = "";
+  console.log(sortBy);
+  if (sortBy) {
+    switch (sortBy.index) {
+      case 1:
+        orderByString = "`$.ObjectMeta.Name` ";
+        break;
+      default:
+        break;
+    }
+    if (sortBy.direction) {
+      orderByString += sortBy.direction;
+    }
+  }
+  console.log(orderByString);
   const ALL_ADDRESS_SPACES = gql`
     query all_address_spaces {
       addressSpaces(filter: "${filter}"  
-      first:${perPage} offset:${perPage * (page - 1)}) {
+      first:${perPage} offset:${perPage *
+    (page - 1)} orderBy:"${orderByString}") {
         Total
         AddressSpaces {
           ObjectMeta {
@@ -86,6 +102,8 @@ export const RETURN_ALL_ADDRESS_SPACES = (
       }
     }
   `;
+
+  console.log(ALL_ADDRESS_SPACES);
 
   return ALL_ADDRESS_SPACES;
 };
@@ -136,20 +154,13 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
     }
     filterString += "`$.Status.Phase` = '" + status + "'";
   }
+  let orderByString="";
   if (sortBy) {
-    let sort_filter = "";
     switch (sortBy.index) {
-      case 3:
-        break;
-      case 4:
-        break;
-      case 5:
-        break;
+      case 0:
+        orderByString=""
     }
-    if (sortBy.direction === "desc") {
-      //Change
-    } else if (sortBy.direction === "asc") {
-    }
+    
   }
 
   const ALL_ADDRESS_FOR_ADDRESS_SPACE = gql`
@@ -314,7 +325,8 @@ export const RETURN_ADDRESS_LINKS = (
   perPage: number,
   addressSpace?: string,
   namespace?: string,
-  addressName?: string
+  addressName?: string,
+  sortBy?: ISortBy
 ) => {
   let filter = "";
   if (addressSpace) {
@@ -326,10 +338,32 @@ export const RETURN_ADDRESS_LINKS = (
   if (addressName) {
     filter += "`$.ObjectMeta.Name` = '" + addressName + "'";
   }
+  let orderByString = "";
+  if (sortBy) {
+    switch (sortBy.index) {
+      case 0:
+        orderByString = "";
+        break;
+      case 1:
+        orderByString = "";
+        break;
+      case 2:
+        orderByString = "`$.ObjectMeta.Name` ";
+        break;
+      case 3:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_in')].Value` ";
+        break;
+      case 4:
+        orderByString =
+          "`$.Metrics[?(@.Name=='enmasse_messages_backlog')].Value` ";
+        break;
+    }
+    orderByString += sortBy.direction;
+  }
   const query = gql`
   query single_address_with_links_and_metrics {
     addresses(
-      filter: "${filter}" 
+      filter: "${filter}"
     ) {
       Total
       Addresses {
@@ -339,7 +373,8 @@ export const RETURN_ADDRESS_LINKS = (
         Spec {
           AddressSpace
         }
-        Links (first:${perPage} offset:${perPage * (page - 1)}){
+        Links (first:${perPage} offset:${perPage *
+    (page - 1)}  orderBy:"${orderByString}"){
           Total
           Links {
             ObjectMeta {
@@ -452,7 +487,8 @@ export const RETURN_ALL_CONECTION_LIST = (
   hosts: string[],
   containers: string[],
   name?: string,
-  namespace?: string
+  namespace?: string,
+  sortBy?: ISortBy
 ) => {
   let filter = "";
   if (name) {
@@ -491,10 +527,40 @@ export const RETURN_ALL_CONECTION_LIST = (
       }
     }
   }
+
+  let orderByString = "";
+  if (sortBy) {
+    switch (sortBy.index) {
+      case 0:
+        orderByString = "`$.Spec.Hostname` ";
+        break;
+      case 1:
+        orderByString = "`$.Spec.ContainerId` ";
+        break;
+      case 2:
+        orderByString = "`$.Spec.Protocol` ";
+        break;
+      case 3:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_in')].Value` ";
+        break;
+      case 4:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_out')].Value` ";
+        break;
+      case 5:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_senders')].Value` ";
+        break;
+      case 6:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_receivers')].Value` ";
+        break;
+    }
+    orderByString += sortBy.direction;
+  }
+
   const ALL_CONECTION_LIST = gql(
     `query all_connections_for_addressspace_view {
       connections(
-        filter: "${filter}" first:${perPage} offset:${perPage * (page - 1)}
+        filter: "${filter}" first:${perPage} offset:${perPage *
+      (page - 1)} orderBy:"${orderByString}" 
       ) {
       Total
       Connections {
@@ -620,7 +686,8 @@ export const RETURN_CONNECTION_LINKS = (
   perPage: number,
   addressSpaceName?: string,
   addressSpaceNameSpcae?: string,
-  connectionName?: string
+  connectionName?: string,
+  sortBy?: ISortBy
 ) => {
   let filter = "";
   if (addressSpaceName) {
@@ -636,6 +703,41 @@ export const RETURN_CONNECTION_LINKS = (
   if (connectionName) {
     filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
   }
+  let orderByString = "";
+  if (sortBy) {
+    switch (sortBy.index) {
+      case 0:
+        orderByString = "";
+        break;
+      case 1:
+        orderByString = "";
+        break;
+      case 2:
+        orderByString = "";
+        break;
+      case 3:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_deliveries')].Value` ";
+        break;
+      case 4:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_rejected')].Value` ";
+        break;
+      case 5:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_released')].Value` ";
+        break;
+      case 6:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_modified')].Value` ";
+        break;
+      case 7:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_presettled')].Value` ";
+        break;
+      case 8:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_undelivered')].Value` ";
+        break;
+    }
+    if (sortBy.direction && orderByString!=="") {
+      orderByString += sortBy.direction;
+    }
+  }
   const CONNECTION_DETAIL = gql`
   query single_connections {
     connections(
@@ -647,7 +749,8 @@ export const RETURN_CONNECTION_LINKS = (
           Name
           Namespace
         }
-        Links(first:${perPage} offset:${perPage * (page - 1)}) {
+        Links(first:${perPage} offset:${perPage *
+    (page - 1)} orderBy:"${orderByString}") {
           Total
           Links {
             ObjectMeta {

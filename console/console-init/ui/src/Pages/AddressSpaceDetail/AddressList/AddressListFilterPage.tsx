@@ -146,7 +146,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
     }
   };
   const onDeleteAll = () => {
-    setFilterValue(null);
+    setFilterValue("Name");
     setTypeValue(null);
     setStatusValue(null);
     setFilterNames([]);

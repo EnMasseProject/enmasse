@@ -8,10 +8,9 @@ import {
   GridItem,
   Pagination
 } from "@patternfly/react-core";
-import { GridStylesForTableHeader } from "../AddressList/AddressesListWithFilterAndPaginationPage";
 import { ConnectionListFilterPage } from "./ConnectionListFilterPage";
-import { css } from "@patternfly/react-styles";
 import { ConnectionsListPage } from "./ConnectionsListPage";
+import { Divider } from "@patternfly/react-core/dist/js/experimental";
 
 const ConnectionListFunction = () => {
   useDocumentTitle("Connection List");
@@ -72,7 +71,7 @@ const ConnectionListFunction = () => {
 
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Grid className={css(GridStylesForTableHeader.grid_bottom_border)}>
+      <Grid>
         <GridItem span={6}>
           <ConnectionListFilterPage
             filterValue={filterValue}
@@ -90,6 +89,7 @@ const ConnectionListFunction = () => {
           {totalConnections > 0 && renderPagination(page, perPage)}
         </GridItem>
       </Grid>
+      <Divider/>
       <ConnectionsListPage
         name={name}
         namespace={namespace}
