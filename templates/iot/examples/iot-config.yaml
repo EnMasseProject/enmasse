@@ -19,3 +19,18 @@ spec:
       endpoint:
         secretNameStrategy:
           secretName: iot-mqtt-adapter-tls
+    http:
+      enabled: true
+      replicas: 3
+      containers:
+        adapter:
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+    lorawan:
+      enabled: false
+      replicas: 1
+    sigfox:
+      enabled: false
+      replicas: 1
