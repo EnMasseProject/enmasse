@@ -112,11 +112,13 @@ export default function AddressDetailPage() {
     refetch();
     setIsEditModalOpen(!isEditModalOpen);
   };
+
+  console.log(addressDetail)
   return (
     <>
       {addressDetail && (
         <AddressDetailHeader
-          type={type || ""}
+          type={addressDetail.Spec.Plan.Spec.AddressType}
           name={addressDetail.Spec.Address}
           plan={addressDetail.Spec.Plan.Spec.DisplayName}
           shards={getFilteredValue(

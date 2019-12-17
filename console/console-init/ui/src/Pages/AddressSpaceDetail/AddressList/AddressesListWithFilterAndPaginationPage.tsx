@@ -139,7 +139,6 @@ export default function AddressesList() {
         filterNames={filterNames}
         typeValue={typeValue}
         statusValue={statusValue}
-        totalAddresses={totalAddresses}
         setTotalAddress={setTotalAddress}
         page={page}
         perPage={perPage}
