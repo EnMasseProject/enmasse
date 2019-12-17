@@ -1,0 +1,14 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-service-admin-guide.adoc
+
+[id='iotconfig-example-{context}']
+= Minimal IoT configuration example
+
+This IoT configuration example shows only the required options to create an `iotConfig`.
+
+[source,yaml,options="nowrap"]
+----
+include::../common/iot-config-default.yaml[]
+----
+<1> The {DataGridProductName} service must be provided.
