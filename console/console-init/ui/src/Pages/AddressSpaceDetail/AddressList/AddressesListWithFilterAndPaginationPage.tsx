@@ -26,29 +26,31 @@ export const GridStylesForTableHeader = StyleSheet.create({
 });
 
 export interface IAddressSpacePlanResponse {
-  addressSpaces : {
-    AddressSpaces : Array<{
+  addressSpaces: {
+    AddressSpaces: Array<{
       Spec: {
         Plan: {
           ObjectMeta: {
-            Name: string
-          }
-        }
-      }
-    }>
-  }
-};
+            Name: string;
+          };
+        };
+      };
+    }>;
+  };
+}
 
 export default function AddressesList() {
   useDocumentTitle("Address List");
   useA11yRouteChange();
-  const { name, namespace,type } = useParams();
+  const { name, namespace, type } = useParams();
   const [filterValue, setFilterValue] = React.useState<string | null>("Name");
   const [filterNames, setFilterNames] = React.useState<string[]>([]);
   const [typeValue, setTypeValue] = React.useState<string | null>(null);
   const [statusValue, setStatusValue] = React.useState<string | null>(null);
   const [totalAddresses, setTotalAddress] = React.useState<number>(0);
-  const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(null);
+  const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(
+    null
+  );
   const location = useLocation();
   const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
@@ -63,8 +65,10 @@ export default function AddressesList() {
     addressSpaces: { AddressSpaces: [] }
   };
 
-  if(!addressSpacePlan && addressSpaces.AddressSpaces[0]){
-    setAddressSpacePlan(addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta.Name);
+  if (!addressSpacePlan && addressSpaces.AddressSpaces[0]) {
+    setAddressSpacePlan(
+      addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta.Name
+    );
   }
 
   const setSearchParam = React.useCallback(
@@ -127,7 +131,7 @@ export default function AddressesList() {
           {totalAddresses > 0 && renderPagination(page, perPage)}
         </GridItem>
       </Grid>
-      <Divider/>
+      <Divider />
       <AddressListPage
         name={name}
         namespace={namespace}

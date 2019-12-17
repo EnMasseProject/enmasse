@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Table,
   TableVariant,
@@ -45,7 +45,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   sortBy,
   onSort
 }) => {
-  console.log(rowsData)
+  const [tableRows, setTableRows] = React.useState<IRowData[]>([]);
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;
     return [
@@ -59,10 +59,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       }
     ];
   };
-
   //TODO: Display error after the phase variable is exposed from backend.
   const toTableCells = (row: IAddress) => {
-    console.log(row.name + row.type)
     if (row.isReady) {
       const tableRow: IRowData = {
         cells: [
@@ -113,11 +111,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       return tableRow;
     }
   };
-  // const [recievedData,setRecievedData] = React.useState(rowsData);
-  const [tableRows, setTableRows] = React.useState<IRowData[]>(
-    rowsData.map(toTableCells)
-  );
-
+  useEffect(() => setTableRows(rowsData.map(toTableCells)), [rowsData]);
   const tableColumns = [
     { title: "Name", transforms: [sortable] },
     "Type/Plan",
@@ -156,7 +150,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   ) => {
     let rows;
     if (rowIndex === -1) {
-      rows = tableRows.map(oneRow => {
+      rows = tableRows.map((oneRow: IRowData) => {
         oneRow.selected = isSelected;
         return oneRow;
       });
@@ -177,7 +171,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       aria-label="Address List"
       canSelectAll={true}
       sortBy={sortBy}
-      onSort={onSort}>
+      onSort={onSort}
+    >
       <TableHeader id="address-list-table-bodheader" />
       <TableBody />
     </Table>

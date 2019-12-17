@@ -50,9 +50,10 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     addressBeingDeleted,
     setAddressBeingDeleted
   ] = React.useState<IAddress | null>();
-  const client = useApolloClient();
+
+    const client = useApolloClient();
   const [sortBy, setSortBy] = React.useState<ISortBy>();
-  
+
   const { loading, error, data, refetch } = useQuery<IAddressResponse>(
     RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE(
       page,
@@ -66,10 +67,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     ),
     { pollInterval: 20000, fetchPolicy: "network-only" }
   );
-
   if (loading) return <Loading />;
   if (error) return <Loading />;
-  console.log(data);
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };
@@ -108,7 +107,10 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
             Name: addressBeingEdited.name,
             Namespace: addressBeingEdited.namespace
           },
-          jsonPatch: '[{"op":"replace","path":"/Plan","value":"' + addressBeingEdited.plan + '"}]',
+          jsonPatch:
+            '[{"op":"replace","path":"/Plan","value":"' +
+            addressBeingEdited.plan +
+            '"}]',
           patchType: "application/json-patch+json"
         }
       });
@@ -118,6 +120,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   };
   const handleEditChange = (address: IAddress) =>
     setAddressBeingEdited(address);
+
   const handlePlanChange = (plan: string) => {
     if (addressBeingEdited) {
       addressBeingEdited.plan = plan;
@@ -147,6 +150,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
   };
+
+  console.log("Addresses List", addressesList);
   return (
     <>
       {console.log("totalAddressSpaces", addressesList)}
@@ -169,18 +174,21 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
               key="confirm"
               id="al-edit-confirm"
               variant="primary"
-              onClick={handleSaving}>
+              onClick={handleSaving}
+            >
               Confirm
             </Button>,
             <Button
               key="cancel"
               id="al-edit-cancel"
               variant="link"
-              onClick={handleCancelEdit}>
+              onClick={handleCancelEdit}
+            >
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned>
+          isFooterLeftAligned
+        >
           <EditAddress
             name={addressBeingEdited.name}
             type={addressBeingEdited.type}
