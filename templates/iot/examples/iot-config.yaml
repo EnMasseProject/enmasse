@@ -16,21 +16,23 @@ spec:
             saslRealm: ApplicationRealm
   adapters:
     mqtt:
+      enabled: true
+      replicas: 1
       endpoint:
         secretNameStrategy:
           secretName: iot-mqtt-adapter-tls
     http:
       enabled: true
-      replicas: 3
+      replicas: 1
       containers:
         adapter:
           resources:
             limits:
-              memory: "128Mi"
-              cpu: "500m"
+              memory: 128Mi
+              cpu: 500m
     lorawan:
-      enabled: false
+      enabled: true
       replicas: 1
     sigfox:
-      enabled: false
+      enabled: true
       replicas: 1
