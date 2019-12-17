@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Table,
   TableVariant,
@@ -43,6 +43,8 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   onSort
 }) => {
   //TODO: Add loading icon based on status
+  const [tableRows, setTableRows] = React.useState<IRowData[]>([]);
+
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddressSpace;
     const status = originalData.status;
@@ -103,9 +105,10 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
     };
     return tableRow;
   };
-  const [tableRows, setTableRows] = React.useState<IRowData[]>(
-    rows.map(toTableCells)
-  );
+  // const [tableRows, setTableRows] = React.useState<IRowData[]>(
+  //   rows.map(toTableCells)
+  // );
+  useEffect(() => setTableRows(rows.map(toTableCells)), [rows]);
   const tableColumns = [
     { title: "Name/Name Space", transforms: [sortable] },
     "Type",
