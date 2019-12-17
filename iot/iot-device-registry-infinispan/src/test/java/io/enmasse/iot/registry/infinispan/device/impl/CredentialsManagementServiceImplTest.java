@@ -5,19 +5,19 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
-import static io.enmasse.iot.registry.infinispan.device.data.CredentialKey.credentialKey;
+import static io.enmasse.iot.infinispan.device.CredentialKey.credentialKey;
 import static io.enmasse.iot.registry.infinispan.device.impl.CredentialsManagementServiceImpl.calculateDifference;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
-import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.hamcrest.core.IsIterableContaining.hasItem;
 
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
+import io.enmasse.iot.infinispan.device.DeviceCredential;
 
 public class CredentialsManagementServiceImplTest {
 

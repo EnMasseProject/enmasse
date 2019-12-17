@@ -37,6 +37,9 @@
     <module>iot-tenant-service</module>
     <module>iot-proxy-configurator</module>
     <module>iot-device-registry-infinispan</module>
+    <module>iot-infinispan-base</module>
+    <module>iot-tenant-cleaner</module>
+    <module>iot-utils</module>
   </modules>
 
   <dependencyManagement>
@@ -46,6 +49,17 @@
       <dependency>
         <groupId>io.enmasse</groupId>
         <artifactId>iot-service-base</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.enmasse</groupId>
+        <artifactId>iot-infinispan-base</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.enmasse</groupId>
+        <artifactId>iot-utils</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -70,6 +84,11 @@
         <scope>test</scope>
       </dependency>
 
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot</artifactId>
+        <version>${spring.boot.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-logging</artifactId>
@@ -136,6 +155,11 @@
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-query-dsl</artifactId>
         <version>${infinispan.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan.protostream</groupId>
+        <artifactId>protostream-processor</artifactId>
+        <version>${infinispan-protostream.version}</version>
       </dependency>
 
       <dependency>

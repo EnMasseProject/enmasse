@@ -6,7 +6,6 @@
 package io.enmasse.iot.registry.infinispan.util;
 
 import static io.vertx.core.json.Json.decodeValue;
-import java.util.ArrayList;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
@@ -20,11 +19,10 @@ import java.util.stream.Stream;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.service.management.credentials.GenericCredential;
 import org.eclipse.hono.service.management.credentials.PasswordCredential;
-import org.eclipse.hono.service.management.credentials.PasswordSecret;
 import org.eclipse.hono.util.Constants;
 import org.eclipse.hono.util.CredentialsConstants;
 
-import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
+import io.enmasse.iot.infinispan.device.DeviceCredential;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -158,7 +156,7 @@ public final class Credentials {
         return credentials
                 .stream()
                 .map(Credentials::fromInternal)
-                // this breaks the gut - > put operation flows.
+                // this breaks the get -> put operation flows.
                 // This should be re-enabled when the `id` feature for secret is implemented.
                 //.map(Credentials::removePasswordDetails)
                 .collect(Collectors.toList());
@@ -168,6 +166,7 @@ public final class Credentials {
     /**
      * Strips the hashed-password details from the secret if needed.
      */
+    @SuppressWarnings("unused")
     private static CommonCredential removePasswordDetails(final CommonCredential credential) {
 
         if (JsonObject.mapFrom(credential).getString(CredentialsConstants.FIELD_TYPE).equals(CredentialsConstants.SECRETS_TYPE_HASHED_PASSWORD)) {

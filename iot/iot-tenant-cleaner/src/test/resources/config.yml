@@ -1,0 +1,8 @@
+tenantId: myapp.iot/2019-09-17T14:03:14Z
+numberOfDevicesToCreate: 10
+deletionChuckSize: 2000
+host: localhost
+username: app
+password: test12
+saslServer: hotrod
+saslRealm: ApplicationRealm

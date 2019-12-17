@@ -5,7 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
-import static io.enmasse.iot.registry.infinispan.device.data.CredentialKey.credentialKey;
+import static io.enmasse.iot.infinispan.device.CredentialKey.credentialKey;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.fromInternal;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.toInternal;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -32,34 +32,24 @@ import org.eclipse.hono.auth.HonoPasswordEncoder;
 import org.eclipse.hono.client.ServiceInvocationException;
 import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
-import org.eclipse.hono.service.management.credentials.PasswordCredential;
-import org.eclipse.hono.service.management.credentials.PasswordSecret;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
-import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsManagementService;
-import io.enmasse.iot.registry.infinispan.device.data.CredentialKey;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
-import io.enmasse.iot.service.base.utils.MoreFutures;
+import io.enmasse.iot.infinispan.device.CredentialKey;
+import io.enmasse.iot.infinispan.device.DeviceCredential;
+import io.enmasse.iot.infinispan.device.DeviceInformation;
+import io.enmasse.iot.infinispan.device.DeviceKey;
+import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 
 @Component
 public class CredentialsManagementServiceImpl extends AbstractCredentialsManagementService {
 
-    private HonoPasswordEncoder passwordEncoder;
-
     @Autowired
-    public void setPasswordEncoder(final HonoPasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
-    }
-
-    @Autowired
-    public CredentialsManagementServiceImpl(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider) {
-        super(managementProvider, adapterProvider);
+    public CredentialsManagementServiceImpl(final DeviceManagementCacheProvider cacheProvider, final HonoPasswordEncoder passwordEncoder) {
+        super(cacheProvider, passwordEncoder);
     }
 
     @Override
@@ -80,13 +70,6 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
                     }
 
                     final DeviceInformation newValue = currentValue.getValue().newVersion();
-                    for(CommonCredential credential : credentials){
-                        try {
-                            checkCredential(credential);
-                        } catch (IllegalStateException e){
-                            return completedFuture(OperationResult.empty(HTTP_BAD_REQUEST));
-                        }
-                    }
                     newValue.setCredentials(toInternal(credentials));
 
                     final Collection<CredentialKey> affectedKeys;
@@ -221,19 +204,4 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
     }
 
-    /**
-     * Validate a secret and hash the password if necessary.
-     *
-     * @param credential The secret to validate.
-     * @throws IllegalStateException if the secret is not valid.
-     */
-    private void checkCredential(final CommonCredential credential) {
-        credential.checkValidity();
-        if (credential instanceof PasswordCredential) {
-            for (final PasswordSecret passwordSecret : ((PasswordCredential) credential).getSecrets()) {
-                passwordSecret.encode(passwordEncoder);
-                passwordSecret.checkValidity();
-            }
-        }
-    }
 }

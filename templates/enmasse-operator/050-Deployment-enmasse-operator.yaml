@@ -79,6 +79,8 @@ spec:
           value: ${IOT_LORAWAN_ADAPTER_IMAGE}
         - name: IOT_SIGFOX_ADAPTER_IMAGE
           value: ${IOT_SIGFOX_ADAPTER_IMAGE}
+        - name: IOT_TENANT_CLEANER_IMAGE
+          value: ${IOT_TENANT_CLEANER_IMAGE}
         - name: IOT_TENANT_SERVICE_IMAGE
           value: ${IOT_TENANT_SERVICE_IMAGE}
         - name: IOT_PROXY_CONFIGURATOR_IMAGE

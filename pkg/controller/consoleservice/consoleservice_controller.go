@@ -10,11 +10,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
+
 	"net"
 	"net/url"
 	"reflect"
-	"strconv"
-	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	enmasse_v1beta1_client "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"

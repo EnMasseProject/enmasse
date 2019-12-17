@@ -6,11 +6,17 @@
 package iotproject
 
 import (
+	"context"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/enmasseproject/enmasse/pkg/util"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
 const annotationBase = "iot.enmasse.io"
@@ -35,4 +41,35 @@ func StringOrDefault(value string, defaultValue string) string {
 	} else {
 		return value
 	}
+}
+
+func getIoTConfigName() (string, error) {
+	return util.GetEnvOrError("IOT_CONFIG_NAME")
+}
+
+func getInfrastructureNamespace() (string, error) {
+	return util.GetEnvOrError("K8S_NAMESPACE")
+}
+
+// get infrastructure config
+func getIoTConfigInstance(ctx context.Context, r client.Reader) (*iotv1alpha1.IoTConfig, error) {
+
+	namespace, err := getInfrastructureNamespace()
+	if err != nil {
+		return nil, err
+	}
+	name, err := getIoTConfigName()
+	if err != nil {
+		return nil, err
+	}
+
+	config := &iotv1alpha1.IoTConfig{}
+	if err := r.Get(ctx, client.ObjectKey{
+		Namespace: namespace,
+		Name:      name,
+	}, config); err != nil {
+		return nil, err
+	}
+
+	return config, err
 }

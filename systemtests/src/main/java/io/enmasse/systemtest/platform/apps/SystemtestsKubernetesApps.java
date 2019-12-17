@@ -61,6 +61,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,7 +70,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class SystemtestsKubernetesApps {
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
 
     public static final String MESSAGING_CLIENTS = "systemtests-clients";
     public static final String SELENIUM_FIREFOX = "selenium-firefox";
@@ -81,7 +82,16 @@ public class SystemtestsKubernetesApps {
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_PROJECT = Environment.getInstance().getInfinispanProject();
     public static final String INFINISPAN_SERVER = "infinispan";
-    private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+    private static final Path INFINISPAN_EXAMPLE_BASE;
+    private static final String[] INFINISPAN_DIRECTORIES;
+
+    static {
+        INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+        INFINISPAN_DIRECTORIES = new String[] {
+                        "common",
+                        "manual"
+        };
+    }
 
     public static String getMessagingAppPodName() throws Exception {
         return getMessagingAppPodName(MESSAGING_PROJECT);
@@ -238,6 +248,13 @@ public class SystemtestsKubernetesApps {
         return in -> ReplaceValueStream.replaceValues(in, values);
     }
 
+    public static Path[] resolveAll(final Path base, final String ... localPaths) {
+        return Arrays.asList(localPaths)
+                .stream()
+                .map(l -> base.resolve(l))
+                .toArray(Path[]::new);
+    }
+
     public static Endpoint deployInfinispanServer() throws Exception {
 
         if (Environment.getInstance().isSkipDeployInfinispan()) {
@@ -254,8 +271,7 @@ public class SystemtestsKubernetesApps {
         // apply "common" and "manual" folders
 
         applyDirectories(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
-                INFINISPAN_EXAMPLE_BASE.resolve("common"),
-                INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+                resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_DIRECTORIES));
 
         // wait for the deployment
 
@@ -271,7 +287,7 @@ public class SystemtestsKubernetesApps {
     }
 
     private static Endpoint getInfinispanEndpoint(final String namespace) {
-        return Kubernetes.getInstance().getEndpoint(INFINISPAN_SERVER, namespace, "hotrod");
+        return Kubernetes.getInstance().getEndpoint(INFINISPAN_SERVER, namespace, "infinispan");
     }
 
     public static void deleteInfinispanServer() throws Exception {
@@ -292,8 +308,9 @@ public class SystemtestsKubernetesApps {
 
             log.info("Infinispan server will be removed");
 
-            KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, INFINISPAN_EXAMPLE_BASE.resolve("common"));
-            KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+            for(final Path path : resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_DIRECTORIES)) {
+                KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, path);
+            }
 
         }
     }

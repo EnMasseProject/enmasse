@@ -24,11 +24,13 @@ import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.client.utils.Serialization;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -146,7 +148,7 @@ public class IoTUtils {
             }
         }
 
-        final String jsonStatus = project.getStatus() != null ? project.getStatus().toString() : "Project doesn't have status";
+        final String jsonStatus = project.getStatus() != null ? Serialization.asJson(project.getStatus()) : "Project doesn't have status";
         if (!isReady) {
             throw new IllegalStateException("IoTProject " + project.getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
@@ -185,6 +187,15 @@ public class IoTUtils {
                 AddressSpaceUtils.waitForAddressSpaceDeleted(addressSpace);
             }
         }
+        var client = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
+        TestUtils.waitUntilConditionOrFail(() -> {
+            var updated = client.withName(project.getMetadata().getName()).get();
+            if (updated != null) {
+                log.info("IoTProject {}/{} still exists -> {}", project.getMetadata().getNamespace(), project.getMetadata().getName(), updated.getStatus().getPhase());
+            }
+            return updated == null;
+        }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "IoT project failed to delete in time");
+        log.info("IoTProject {}/{} deleted", project.getMetadata().getNamespace(), project.getMetadata().getName());
     }
 
     public static boolean isIoTInstalled(Kubernetes kubernetes) {

@@ -27,6 +27,7 @@ DOCKER_DIRS = \
 	iot/iot-mqtt-adapter \
 	iot/iot-lorawan-adapter \
 	iot/iot-sigfox-adapter \
+	iot/iot-tenant-cleaner \
 
 FULL_BUILD       = true
 
@@ -97,7 +98,7 @@ clean_go:
 	@rm -Rf $(GOPATH)
 
 clean_java:
-	mvn -B -q clean
+	mvn -B -q clean $(MAVEN_ARGS)
 
 template_clean:
 	$(MAKE) -C templates clean

@@ -521,6 +521,14 @@ spec:
         - apiGroups: [ "admin.enmasse.io" ]
           resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs", "authenticationservices", "consoleservices"]
           verbs: [ "get", "list", "watch" ]
+      - serviceAccountName: iot-operator
+        rules:
+        - apiGroups: [ "batch" ]
+          resources: [ "jobs" ]
+          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+        - apiGroups: [ "iot.enmasse.io" ]
+          resources: [ "iotconfigs" ]
+          verbs: [ "get", "list", "watch" ]
       clusterPermissions:
       - serviceAccountName: address-space-controller
         rules:

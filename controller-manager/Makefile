@@ -16,6 +16,7 @@ build/operatorImageMap.yaml:
 	echo "iot-mqtt-adapter: $(IOT_MQTT_ADAPTER_IMAGE)" >> "$@"
 	echo "iot-lorawan-adapter: $(IOT_LORAWAN_ADAPTER_IMAGE)" >> "$@"
 	echo "iot-sigfox-adapter: $(IOT_SIGFOX_ADAPTER_IMAGE)" >> "$@"
+	echo "iot-tenant-cleaner: $(IOT_TENANT_CLEANER_IMAGE)" >> "$@"
 	echo "iot-tenant-service: $(IOT_TENANT_SERVICE_IMAGE)" >> "$@"
 	echo "iot-proxy-configurator: $(IOT_PROXY_CONFIGURATOR_IMAGE)" >> "$@"
 	echo "router: $(ROUTER_IMAGE)" >> "$@"
