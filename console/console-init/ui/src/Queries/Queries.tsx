@@ -154,19 +154,42 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
     }
     filterString += "`$.Status.Phase` = '" + status + "'";
   }
-  let orderByString="";
+  let orderByString = "";
   if (sortBy) {
     switch (sortBy.index) {
       case 0:
-        orderByString=""
+        break;
+      case 1:
+        orderByString = "`$.ObjectMeta.Name` ";
+        break;
+      case 2:
+        break;
+      case 3:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_in')].Value` ";
+        break;
+      case 4:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_out')].Value` ";
+        break;
+      case 5:
+        orderByString =
+          "`$.Metrics[?(@.Name=='enmasse_messages_stored')].Value` ";
+        break;
+      case 6:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_senders')].Value` ";
+        break;
+      case 7:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_receivers')].Value` ";
+        break;
     }
-    
+    if (orderByString != "" && sortBy.direction) {
+      orderByString += sortBy.direction;
+    }
   }
-
   const ALL_ADDRESS_FOR_ADDRESS_SPACE = gql`
   query all_addresses_for_addressspace_view {
     addresses( first:${perPage} offset:${perPage * (page - 1)}
       filter:"${filterString}"
+      orderBy:"${orderByString}"
     ) {
       Total
       Addresses {
@@ -734,7 +757,7 @@ export const RETURN_CONNECTION_LINKS = (
         orderByString = "`$.Metrics[?(@.Name=='enmasse_undelivered')].Value` ";
         break;
     }
-    if (sortBy.direction && orderByString!=="") {
+    if (sortBy.direction && orderByString !== "") {
       orderByString += sortBy.direction;
     }
   }

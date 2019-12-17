@@ -23,7 +23,6 @@ export interface IAddressListPageProps {
   statusValue?: string | null;
   page: number;
   perPage: number;
-  totalAddresses: number;
   setTotalAddress: (total: number) => void;
   addressSpacePlan: string | null;
 }
@@ -34,13 +33,11 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   filterNames,
   typeValue,
   statusValue,
-  totalAddresses,
   setTotalAddress,
   page,
   perPage,
   addressSpacePlan
 }) => {
-  console.log("totalAddresses", totalAddresses);
   const [
     addressBeingEdited,
     setAddressBeingEdited
@@ -51,7 +48,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     setAddressBeingDeleted
   ] = React.useState<IAddress | null>();
 
-    const client = useApolloClient();
+  const client = useApolloClient();
   const [sortBy, setSortBy] = React.useState<ISortBy>();
 
   const { loading, error, data, refetch } = useQuery<IAddressResponse>(
@@ -144,14 +141,12 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     }
   };
   const handleDeleteChange = (address: IAddress) => {
-    console.log("Delete address name " + address.name);
     setAddressBeingDeleted(address);
   };
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
   };
 
-  console.log("Addresses List", addressesList);
   return (
     <>
       {console.log("totalAddressSpaces", addressesList)}
@@ -174,21 +169,18 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
               key="confirm"
               id="al-edit-confirm"
               variant="primary"
-              onClick={handleSaving}
-            >
+              onClick={handleSaving}>
               Confirm
             </Button>,
             <Button
               key="cancel"
               id="al-edit-cancel"
               variant="link"
-              onClick={handleCancelEdit}
-            >
+              onClick={handleCancelEdit}>
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned
-        >
+          isFooterLeftAligned>
           <EditAddress
             name={addressBeingEdited.name}
             type={addressBeingEdited.type}

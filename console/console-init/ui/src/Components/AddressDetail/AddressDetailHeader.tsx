@@ -6,22 +6,14 @@ import {
   DropdownItem,
   DropdownPosition,
   KebabToggle,
-  Card,
-  CardHeader,
   Title,
-  CardBody,
   Flex,
-  FlexItem
+  FlexItem,
+  PageSectionVariants,
+  PageSection
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
-
-const styles = StyleSheet.create({
-  flex_right_border: {
-    paddingRight: "1em",
-    borderRight: "0.1em solid",
-    borderRightColor: "lightgrey"
-  }
-});
+import { TypeBadge } from "../Common/TypePlan";
 
 export interface IAddressDetailHeaderProps {
   type: string;
@@ -31,6 +23,33 @@ export interface IAddressDetailHeaderProps {
   onEdit: (name: string) => void;
   onDelete: (name: string) => void;
 }
+const styles = StyleSheet.create({
+  flex_right_border: {
+    paddingRight: "1em",
+    borderRight: "0.05em solid",
+    borderRightColor: "lightgrey"
+  },
+  address_space_icon_margin: {
+    backgroundColor: "#EC7A08",
+    fontSize: 25
+  },
+  address_icon_align: {
+    paddingTop: 5,
+    paddingRight: 16
+  },
+  kebab_toggle_margin: {
+    marginTop: 20,
+    marginLeft: 10,
+    fontSize: 15
+  },
+  namespace_info_margin: {
+    marginTop: 16,
+    marginBottom: 24
+  },
+  no_bottom_padding: {
+    paddingBottom: 0
+  }
+});
 
 export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderProps> = ({
   type,
@@ -51,51 +70,56 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
     <DropdownItem
       key="download"
       aria-label="download"
-      onClick={() => onEdit(name)}
-    >
+      onClick={() => onEdit(name)}>
       Edit
     </DropdownItem>,
     <DropdownItem
       key="delete"
       aria-label="delete"
-      onClick={() => onDelete(name)}
-    >
+      onClick={() => onDelete(name)}>
       Delete
     </DropdownItem>
   ];
   return (
-    <Card>
-      <CardHeader>
-        <Split gutter="md">
-          <SplitItem>
-            <Title headingLevel="h1" size="4xl" id="adheader-name">
-              {name}
-            </Title>
-          </SplitItem>
-          <SplitItem isFilled></SplitItem>
-          <SplitItem>
-            <Dropdown
-              id="adheader-dropdown"
-              onSelect={onSelect}
-              position={DropdownPosition.right}
-              toggle={<KebabToggle onToggle={onToggle} />}
-              isOpen={isOpen}
-              isPlain={true}
-              dropdownItems={dropdownItems}
-            />
-          </SplitItem>
-        </Split>
-      </CardHeader>
-      <CardBody>
-        <Flex>
-          <FlexItem className={css(styles.flex_right_border)} id="adheader-plans">
-            <b>{plan}</b>
-          </FlexItem>
-          <FlexItem id="adheader-shards">
-            Stored in <b>{shards}</b> Shard
-          </FlexItem>
-        </Flex>
-      </CardBody>
-    </Card>
+    <PageSection
+      variant={PageSectionVariants.light}
+      className={css(styles.no_bottom_padding)}>
+      <Split>
+        <SplitItem className={css(styles.address_icon_align)}>
+          <TypeBadge type={type} />
+        </SplitItem>
+        <SplitItem>
+          <Split gutter="md">
+            <SplitItem>
+              <Title headingLevel="h1" size="4xl" id="adheader-name">
+                {name}
+              </Title>
+            </SplitItem>
+          </Split>
+          <Flex className={css(styles.namespace_info_margin)}>
+            <FlexItem
+              className={css(styles.flex_right_border)}
+              id="adheader-plans">
+              <b>{plan}</b>
+            </FlexItem>
+            <FlexItem id="adheader-shards">
+              Stored in <b>{shards}</b> Shard
+            </FlexItem>
+          </Flex>
+        </SplitItem>
+        <SplitItem isFilled></SplitItem>
+        <SplitItem className={css(styles.kebab_toggle_margin)}>
+          <Dropdown
+            id="adheader-dropdown"
+            onSelect={onSelect}
+            position={DropdownPosition.right}
+            toggle={<KebabToggle onToggle={onToggle} />}
+            isOpen={isOpen}
+            isPlain={true}
+            dropdownItems={dropdownItems}
+          />
+        </SplitItem>
+      </Split>
+    </PageSection>
   );
 };

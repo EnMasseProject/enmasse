@@ -2,7 +2,8 @@ import * as React from "react";
 import {
   Label,
   Tooltip,
-  TooltipPosition
+  TooltipPosition,
+  Badge
   // Tooltip,
   // TooltipPosition
 } from "@patternfly/react-core";
@@ -13,9 +14,9 @@ interface ITypePlanProps {
   type: string;
 }
 
-export const TypePlan: React.FunctionComponent<ITypePlanProps> = address => {
+export const getTypeColor = (type: string) => {
   let iconColor = "";
-  switch (address.type[0].toUpperCase()) {
+  switch (type.toUpperCase()) {
     case "Q": {
       iconColor = "#8A8D90";
       break;
@@ -37,10 +38,38 @@ export const TypePlan: React.FunctionComponent<ITypePlanProps> = address => {
       break;
     }
   }
+  return iconColor;
+};
+
+interface ITypeString {
+  type: string;
+}
+
+export const TypeBadge: React.FunctionComponent<ITypeString> = ({ type }) => {
+  console.log(type);
+  const iconColor = getTypeColor(type[0]);
+  console.log("color", iconColor);
+  return (
+    <Badge
+      style={{
+        backgroundColor: iconColor,
+        fontSize: 25,
+        paddingLeft: 15,
+        paddingRight: 15,
+        paddingTop: 5,
+        paddingBottom: 5
+      }}>
+      {type[0].toUpperCase()}
+    </Badge>
+  );
+};
+
+export const TypePlan: React.FunctionComponent<ITypePlanProps> = address => {
+  const iconColor = getTypeColor(address.type[0]);
   const labelItem = (
-    <Label isCompact style={{ backgroundColor: iconColor }}>
+    <Badge style={{ backgroundColor: iconColor, fontSize: 12, padding: 5 }}>
       {address.type[0].toUpperCase() + " "}
-    </Label>
+    </Badge>
   );
   return (
     <React.Fragment>
