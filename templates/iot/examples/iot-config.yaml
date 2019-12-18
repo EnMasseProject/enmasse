@@ -19,15 +19,14 @@ spec:
       enabled: true
       replicas: 1
       options:
-        tenantIdleTimeout: "30m"
+        tenantIdleTimeout: 30m
+        maxPayloadSize: 2048
       endpoint:
         secretNameStrategy:
           secretName: iot-mqtt-adapter-tls
     http:
       enabled: true
       replicas: 1
-      options:
-        tenantIdleTimeout: "30m"
       containers:
         adapter:
           resources:
