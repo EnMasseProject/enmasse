@@ -1,0 +1,17 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-service-admin-guide.adoc
+
+[id='iot-adapters-example-{context}']
+= Iot adapters example
+
+This iot config example shows how the protocol adapters can be individually tuned.
+
+[source,yaml,options="nowrap"]
+----
+include::../common/iot-config-example1.yaml[]
+----
+<1> Protocols adapters can be disabled if necessary. Default value is `true`.
+<2> The duration for which client connection are kept alive for.
+<3> The maximum allowed size of an incoming message in bytes.
+<4> Containers resources and instances can be adjusted if necessary.

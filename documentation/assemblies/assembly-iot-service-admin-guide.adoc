@@ -11,4 +11,6 @@ Service administrators typically install and configure the Internet of Things (I
 
 include::../modules/proc-iot-installing-services.adoc[leveloffset=+1]
 
+include::../modules/ref-iot-config-example.adoc[leveloffset=+1]
 
+include::../modules/ref-iot-config-example-adapters.adoc[leveloffset=+1]

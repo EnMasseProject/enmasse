@@ -16,27 +16,24 @@ spec:
             saslRealm: ApplicationRealm
   adapters:
     mqtt:
-      enabled: true
+      enabled: true <1>
       replicas: 1
       options:
-        tenantIdleTimeout: "30m"
-      endpoint:
-        secretNameStrategy:
-          secretName: iot-mqtt-adapter-tls
+        tenantIdleTimeout: 30m <2>
+        maxPayloadSize: 2048
     http:
       enabled: true
-      replicas: 1
+      replicas: 1 <4>
       options:
-        tenantIdleTimeout: "30m"
+        tenantIdleTimeout: 30m
+        maxPayloadSize: 2048 <3>
       containers:
         adapter:
-          resources:
+          resources: <4>
             limits:
               memory: 128Mi
               cpu: 500m
     lorawan:
-      enabled: true
-      replicas: 1
+      enabled: false
     sigfox:
-      enabled: true
-      replicas: 1
+      enabled: false

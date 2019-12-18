@@ -7,7 +7,7 @@ spec:
     deviceRegistry:
       infinispan:
         server:
-          external:
+          external: <1>
             host: infinispan
             port: 11222
             username: app
@@ -16,27 +16,6 @@ spec:
             saslRealm: ApplicationRealm
   adapters:
     mqtt:
-      enabled: true
-      replicas: 1
-      options:
-        tenantIdleTimeout: "30m"
       endpoint:
         secretNameStrategy:
           secretName: iot-mqtt-adapter-tls
-    http:
-      enabled: true
-      replicas: 1
-      options:
-        tenantIdleTimeout: "30m"
-      containers:
-        adapter:
-          resources:
-            limits:
-              memory: 128Mi
-              cpu: 500m
-    lorawan:
-      enabled: true
-      replicas: 1
-    sigfox:
-      enabled: true
-      replicas: 1

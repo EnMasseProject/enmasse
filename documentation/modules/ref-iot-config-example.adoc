@@ -1,0 +1,16 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-service-admin-guide.adoc
+
+[id='iotconfig-example-{context}']
+= Iot Config example
+
+This iot config example shows only the required options to create an `iotConfig`.
+
+[source,yaml,options="nowrap"]
+----
+include::../common/iot-config-default.yaml[]
+----
+<1> The infinispan service must be provided.
+
+
