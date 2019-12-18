@@ -1,0 +1,25 @@
+// Module included in the following assemblies:
+//
+// assembly-rules.adoc
+
+[id='ref-rules-alerts-{context}']
+= Alerts
+
+Alerts are a type of Prometheus rule that are expressions that trigger an alert when evaluated as true. The following alerts are available for {ProductName}.
+
+`ComponentHealth`::
+Description::: Triggers when a component is not in a healthy state.
+Expression:::
+`component_health == 0`
+
+`AddressSpaceHealth`::
+Description::: Triggers when one or more address spaces are not in a `ready` state.
+Expression:::
+`enmasse_address_spaces_not_ready_total > 0`
+
+`AddressHealth`::
+Description::: Triggers when one or more addresses are not in a `ready` state.
+Expressions:::
+`enmasse_addresses_not_ready_total > 0`
+
+

@@ -1,0 +1,60 @@
+// Module included in the following assemblies:
+//
+// assembly-metrics.adoc
+
+[id='ref-metrics-address-space-controller-{context}']
+= Address space controller metrics
+
+The following metrics for `address-space-controller` are available for {ProductName}.
+
+== Summary
+For every metric exported of the type `enmasse_address_space_status_ready` there is a corresponding metric of type `enmasse_address_space_status_not_ready`. The values of each can never be the same.
+
+For example:
+[source,options="nowrap"]
+----
+enmasse_address_space_status_ready{name="my-address-space"} 1
+enmasse_address_space_status_not_ready{name="my-address-space"} 0
+----
+
+The total number of address spaces equals the sum of all address spaces in the ready state plus the sum of all address spaces in the not ready state:
+`enmasse_address_spaces_total == (sum(enmasse_address_space_status_ready) + sum(enmasse_address_space_status_not_ready))`
+
+
+
+`enmasse_address_space_status_ready`::
+Type::: Boolean
+Description::: Indicates each address space that is in a `ready` state.
+Example:::
+[source,options="nowrap"]
+----
+enmasse_address_space_status_ready{name="prod-space"} 1
+enmasse_address_space_status_ready{name="dev-space"} 0
+----
+
+`enmasse_address_space_status_not_ready`::
+Type::: Boolean
+Description::: Indicates each address space that is in a `not ready` state.
+Example:::
+[source,options="nowrap"]
+----
+enmasse_address_space_status_not_ready{name="prod-space"} 0
+enmasse_address_space_status_not_ready{name="dev-space"} 1
+----
+
+`enmasse_address_spaces_total`::
+Type::: Gauge
+Description::: Returns the total number of address spaces, regardless of whether they are in a `ready` or `not ready` state.
+Example:::
+`enmasse_address_spaces_total 1`
+
+`enmasse_address_space_connectors_total`::
+Type::: Gauge
+Description::: Returns the total number of address space connectors in each address space.
+Example:::
+[source,options="nowrap"]
+----
+enmasse_address_space_connectors_total{name="space-one"} 0
+enmasse_address_space_connectors_total{name="space-two"} 2
+----
+

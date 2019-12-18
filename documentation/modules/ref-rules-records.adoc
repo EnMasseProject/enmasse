@@ -1,0 +1,39 @@
+// Module included in the following assemblies:
+//
+// assembly-rules.adoc
+
+[id='ref-rules-records-{context}']
+= Records
+
+Records are a type of Prometheus rule that are pre-computed expressions saved as a new set of time series. The following records are available for {ProductName}.
+
+`enmasse_address_spaces_ready_total`::
+Description::: Aggregates the `enmasse_address_space_status_ready` in a single gauge-type metric that provides the total number of addresses in a `ready` state.
+Expression:::
+`sum by(service, exported_namespace) (enmasse_address_space_status_ready)`
+Example:::
+`enmasse_address_spaces_ready_total{exported_namespace="prod_namespace",service="address-space-controller"} 1`
+
+`enmasse_address_spaces_not_ready_total`::
+Description::: Aggregates the `enmasse_address_space_not_status_ready` in a single gauge-type metric that provides the total number of addresses in a `not ready` state.
+Expression:::
+`sum by(service, exported_namespace) (enmasse_address_space_status_not_ready)`
+Example:::
+`enmasse_address_spaces_not_ready_total{exported_namespace="prod_namespace",service="address-space-controller"} 1`
+
+`enmasse_component_health`::
+Description::: Provides a Boolean-style metric for each `address-space-controller` and `api-server` indicating if they are up and running.
+Expression:::
+[source,options="nowrap"]
+----
+up{job="address-space-controller"} or on(namespace) (1 - absent(up{job="address-space-controller"}))
+up{job="api-server"} or on(namespace) (1 - absent(up{job="api-server"}))
+----
+
+Example:::
+[source,options="nowrap"]
+----
+enmasse_component_health{job="address-space-controller"}	1
+enmasse_component_health{job="api-server"}	1
+----
+
