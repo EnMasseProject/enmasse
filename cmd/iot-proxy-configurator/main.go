@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	ephermalCertBase string
+	ephemeralCertBase string
 )
 
 var log = logf.Log.WithName("cmd")
@@ -47,8 +47,8 @@ func main() {
 
 	log.Info("Starting up...")
 
-	if ephermalCertBase != "" {
-		fi, err := os.Stat(ephermalCertBase)
+	if ephemeralCertBase != "" {
+		fi, err := os.Stat(ephemeralCertBase)
 		if err != nil {
 			log.Error(err, "Ephemeral certificate base is configured, but unable to access: %v", err.Error())
 			os.Exit(1)
@@ -87,7 +87,7 @@ func main() {
 	configurator := NewConfigurator(
 		kubeClient, enmasseClient,
 		enmasseInformerFactory.Iot().V1alpha1().IoTProjects(),
-		ephermalCertBase,
+		ephemeralCertBase,
 	)
 
 	enmasseInformerFactory.Start(stopCh)
@@ -116,10 +116,10 @@ func refreshPeriod() time.Duration {
 
 func init() {
 
-	ephermalCertBase = "/var/qdr-certs"
+	ephemeralCertBase = "/var/qdr-certs"
 
-	if value, present := os.LookupEnv("EPHERMAL_CERT_BASE"); present {
-		ephermalCertBase = value
+	if value, present := os.LookupEnv("EPHEMERAL_CERT_BASE"); present {
+		ephemeralCertBase = value
 	}
 
 }
