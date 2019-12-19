@@ -168,7 +168,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount / 2)
-                .withTimeout(150);
+                .withTimeout(250);
 
         ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
                 .withClientEngine(receiver2)
@@ -176,7 +176,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount / 2)
-                .withTimeout(150);
+                .withTimeout(250);
 
         Future<Boolean> recResult = receiverClient1.runAsync();
         Future<Boolean> rec2Result = receiverClient2.runAsync();
