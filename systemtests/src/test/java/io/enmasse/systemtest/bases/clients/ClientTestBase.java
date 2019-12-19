@@ -155,6 +155,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(sender)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d")
                 .withTimeout(30);
@@ -163,6 +164,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(receiver)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount / 2)
                 .withTimeout(150);
 
@@ -170,6 +172,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(receiver2)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount / 2)
                 .withTimeout(150);
 
@@ -218,6 +221,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(sender)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d")
                 .withTimeout(30)
@@ -227,6 +231,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(subscriber)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withTimeout(150)
                 .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST");
@@ -235,6 +240,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(subscriber2)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withTimeout(150)
                 .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST");
@@ -283,6 +289,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(sender)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d");
 
@@ -290,6 +297,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(receiver_browse)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withAdditionalArgument(ClientArgument.RECV_BROWSE, "true");
 
@@ -297,6 +305,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(receiver_receive)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withAdditionalArgument(ClientArgument.RECV_BROWSE, "false");
 
@@ -334,6 +343,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(sender)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d");
 
@@ -341,6 +351,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(receiver)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
+                .withCredentials(defaultCredentials)
                 .withCount(0)
                 .withTimeout(10);
 
@@ -375,6 +386,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withCount(expectedMsgCount)
                 .withAddress(queue)
+                .withCredentials(defaultCredentials)
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~red")
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~12.65")
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "a~true")
@@ -390,6 +402,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(receiver)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withCount(0)
+                .withCredentials(defaultCredentials)
                 .withAddress(queue)
                 .withAdditionalArgument(ClientArgument.RECV_BROWSE, "true");
 
@@ -449,6 +462,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withCount(expectedMsgCount)
                 .withAddress(topic)
+                .withCredentials(defaultCredentials)
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~red")
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~12.65")
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "a~true")
@@ -461,6 +475,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withCount(expectedMsgCount)
                 .withAddress(topic)
+                .withCredentials(defaultCredentials)
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~blue")
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~11.65")
                 .withTimeout(150)
@@ -471,6 +486,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(subscriber)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withCount(expectedMsgCount)
+                .withCredentials(defaultCredentials)
                 .withAddress(topic)
                 .withTimeout(150)
                 .withAdditionalArgument(ClientArgument.SELECTOR, "colour = 'red' AND a");
@@ -480,6 +496,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(subscriber2)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace()))
                 .withCount(expectedMsgCount)
+                .withCredentials(defaultCredentials)
                 .withAddress(topic)
                 .withTimeout(150)
                 .withAdditionalArgument(ClientArgument.SELECTOR, "number < 12.5");
@@ -531,6 +548,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withClientEngine(sender)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), false))
                 .withAddress(dest)
+                .withCredentials(publishCred)
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d")
                 .withTimeout(30)
@@ -540,6 +558,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         ExternalMessagingClient receiverClient = new ExternalMessagingClient()
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), false))
                 .withAddress(dest)
+                .withCredentials(consumCred)
                 .withCount(expectedMsgCount)
                 .withTimeout(30)
                 .withCredentials(publishCred)

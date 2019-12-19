@@ -8,7 +8,6 @@ import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.ConsoleServiceSpec;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
-import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -22,13 +21,11 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
 
-import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;

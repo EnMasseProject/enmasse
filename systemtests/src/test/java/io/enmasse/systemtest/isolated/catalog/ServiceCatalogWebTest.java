@@ -15,9 +15,8 @@ import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.messagingclients.ClientArgument;
-import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -331,23 +330,18 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         consolePage.login(ocTestUser);
         consolePage.createAddressWebConsole(queue, true);
 
-        ProtonJMSClientSender msgClient = new ProtonJMSClientSender();
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withMessagingRoute(String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()))
+                .withAddress(queue)
+                .withCredentials(credentials.getUsername(), credentials.getPassword())
+                .withCount(10)
+                .withMessageBody("msg no. %d")
+                .withTimeout(30);
 
-        ClientArgumentMap arguments = new ClientArgumentMap();
-        arguments.put(ClientArgument.BROKER, String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()));
-        arguments.put(ClientArgument.ADDRESS, queue.getSpec().getAddress());
-        arguments.put(ClientArgument.COUNT, "10");
-        arguments.put(ClientArgument.CONN_RECONNECT, "false");
-        arguments.put(ClientArgument.USERNAME, credentials.getUsername());
-        arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
-        arguments.put(ClientArgument.CONN_SSL, "true");
-        arguments.put(ClientArgument.TIMEOUT, "10");
-        arguments.put(ClientArgument.LOG_MESSAGES, "json");
-        msgClient.setArguments(arguments);
+        assertTrue(senderClient.run());
 
-        assertTrue(msgClient.run());
-
-        assertEquals(10, msgClient.getMessages().size(),
+        assertEquals(10, senderClient.getMessages().size(),
                 String.format("Expected %d sent messages", 10));
 
     }

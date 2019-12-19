@@ -131,4 +131,8 @@ public class ExternalMessagingClient {
         this.client.setArguments(arguments);
         return this.client.runAsync(logToOutput);
     }
+
+    public void stop() {
+        this.client.stop();
+    }
 }
