@@ -1,16 +1,16 @@
 import * as React from "react";
 import {
+  DataToolbarChip,
   DataToolbarGroup,
   DataToolbarFilter,
   DataToolbarItem,
+  DataToolbarToggleGroup,
   DataToolbar,
-  DataToolbarContent,
-  DataToolbarChip,
-  DataToolbarToggleGroup
+  DataToolbarContent
 } from "@patternfly/react-core/dist/js/experimental";
 import {
-  DropdownToggle,
   Dropdown,
+  DropdownToggle,
   DropdownItem,
   InputGroup,
   TextInput,
@@ -20,35 +20,26 @@ import {
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 
-export interface IOption {
-  value: string;
-  id: string;
-}
-
-export interface IConnectionListFilterProps {
+interface IConnectionListFilterProps {
   filterValue?: string | null;
   setFilterValue: (value: string) => void;
-  filterIsExpanded: boolean;
-  setFilterIsExpanded: (value: boolean) => void;
-  hosts?: Array<string>;
-  setHosts: (value: Array<string>) => void;
+  hostnames?: Array<string>;
+  setHostnames: (value: Array<string>) => void;
   containerIds?: Array<string>;
   setContainerIds: (value: Array<string>) => void;
   totalConnections: number;
 }
-
-export const ConnectionListFilterPage: React.FunctionComponent<IConnectionListFilterProps> = ({
+export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilterProps> = ({
   filterValue,
   setFilterValue,
-  filterIsExpanded,
-  setFilterIsExpanded,
-  hosts,
-  setHosts,
+  hostnames,
+  setHostnames,
   containerIds,
   setContainerIds,
   totalConnections
 }) => {
   const [inputValue, setInputValue] = React.useState<string | null>();
+  const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const onFilterSelect = (event: any) => {
     setFilterValue(event.target.value);
     setFilterIsExpanded(!filterIsExpanded);
@@ -65,16 +56,16 @@ export const ConnectionListFilterPage: React.FunctionComponent<IConnectionListFi
   const onAddInput = (event: any) => {
     if (filterValue)
       if (filterValue === "Container") {
-        if (inputValue && inputValue.trim() != "" && containerIds) {
+        if (inputValue && inputValue.trim() !== "" && containerIds) {
           if (containerIds.indexOf(inputValue) < 0) {
             setContainerIds([...containerIds, inputValue]);
           }
           setInputValue(null);
         }
       } else if (filterValue === "Hostname") {
-        if (inputValue && inputValue.trim() != "" && hosts) {
-          if (hosts.indexOf(inputValue) < 0) {
-            setHosts([...hosts, inputValue]);
+        if (inputValue && inputValue.trim() !== "" && hostnames) {
+          if (hostnames.indexOf(inputValue) < 0) {
+            setHostnames([...hostnames, inputValue]);
           }
           setInputValue(null);
         }
@@ -89,10 +80,10 @@ export const ConnectionListFilterPage: React.FunctionComponent<IConnectionListFi
 
     switch (type) {
       case "Hostname":
-        if (hosts && id) {
-          index = hosts.indexOf(id.toString());
-          if (index >= 0) hosts.splice(index, 1);
-          setHosts([...hosts]);
+        if (hostnames && id) {
+          index = hostnames.indexOf(id.toString());
+          if (index >= 0) hostnames.splice(index, 1);
+          setHostnames([...hostnames]);
         }
         break;
       case "Container":
@@ -106,14 +97,14 @@ export const ConnectionListFilterPage: React.FunctionComponent<IConnectionListFi
     }
   };
   const clearAllFilters = () => {
-    setHosts([]);
+    setHostnames([]);
     setContainerIds([]);
   };
 
   const checkIsFilterApplied = () => {
     if (
       (containerIds && containerIds.length > 0) ||
-      (hosts && hosts.length > 0)
+      (hostnames && hostnames.length > 0)
     ) {
       return true;
     }
@@ -151,7 +142,7 @@ export const ConnectionListFilterPage: React.FunctionComponent<IConnectionListFi
         </DataToolbarFilter>
         <DataToolbarItem>
           <DataToolbarFilter
-            chips={hosts}
+            chips={hostnames}
             deleteChip={onDelete}
             categoryName="Hostname">
             {filterValue && filterValue === "Hostname" && (

@@ -1,6 +1,6 @@
 import React from "react";
 import { MemoryRouter } from "react-router";
-import { AddressList, IAddress } from "..//Components/AddressSpace/AddressList";
+import { AddressList, IAddress } from "../Components/AddressSpace/Address/AddressList";
 import { action } from "@storybook/addon-actions";
 import { select } from "@storybook/addon-knobs";
 // import { AddressListFilter } from "..//Components/AddressSpace/AddressListFilter";

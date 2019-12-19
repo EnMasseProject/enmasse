@@ -10,9 +10,9 @@ import {
   ISortBy
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
-import { TypePlan } from "../Common/TypePlan";
-import { Messages } from "../Common/Messages";
-import { Error } from "../Common/Error";
+import { TypePlan } from "../../Common/TypePlan";
+import { Messages } from "../../Common/Messages";
+import { Error } from "../../Common/Error";
 
 export interface IAddress {
   name: string;

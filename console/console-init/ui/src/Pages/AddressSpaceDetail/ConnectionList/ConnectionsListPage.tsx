@@ -3,19 +3,17 @@ import { useQuery } from "@apollo/react-hooks";
 import {
   IConnection,
   ConnectionList
-} from "src/Components/AddressSpace/ConnectionList";
+} from "src/Components/AddressSpace/Connection/ConnectionList";
 import { EmptyConnection } from "src/Components/Common/EmptyConnection";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionListResponse } from "src/Types/ResponseTypes";
 import { RETURN_ALL_CONECTION_LIST } from "src/Queries/Queries";
 import { ISortBy } from "@patternfly/react-table";
-import { Loading } from "use-patternfly";
 
 export interface IConnectionListPageProps {
   name?: string;
   namespace?: string;
-  addressSpaceType?: string;
-  hosts: string[];
+  hostnames: string[];
   containerIds: string[];
   setTotalConnections: (total: number) => void;
   page: number;
@@ -25,8 +23,7 @@ export interface IConnectionListPageProps {
 export const ConnectionsListPage: React.FunctionComponent<IConnectionListPageProps> = ({
   name,
   namespace,
-  addressSpaceType,
-  hosts,
+  hostnames,
   containerIds,
   setTotalConnections,
   page,
@@ -37,7 +34,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
     RETURN_ALL_CONECTION_LIST(
       page,
       perPage,
-      hosts,
+      hostnames,
       containerIds,
       name,
       namespace,
@@ -46,16 +43,15 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
     { pollInterval: 20000 }
   );
 
-  if (error) console.log(error);
-  if (loading) return <Loading />;
+  if (error) {
+    console.log(error);
+  }
+  // if (loading) return <Loading />;
   const { connections } = data || {
     connections: { Total: 0, Connections: [] }
   };
 
-  console.log(connections);
   setTotalConnections(connections.Total);
-  // connections.Total=0;
-  // connections.Connections=[];
   const connectionList: IConnection[] = connections.Connections.map(
     connection => ({
       hostname: connection.Spec.Hostname,
@@ -75,15 +71,12 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
   };
   return (
     <>
-      {connections.Total > 0 ? (
-        <ConnectionList
-          rows={connectionList ? connectionList : []}
-          sortBy={sortBy}
-          onSort={onSort}
-        />
-      ) : (
-        <EmptyConnection />
-      )}
+      <ConnectionList
+        rows={connectionList ? connectionList : []}
+        sortBy={sortBy}
+        onSort={onSort}
+      />
+      {connections.Total > 0 ? " " : <EmptyConnection />}
     </>
   );
 };

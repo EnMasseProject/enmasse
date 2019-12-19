@@ -1,13 +1,5 @@
 import * as React from "react";
-import {
-  Label,
-  Tooltip,
-  TooltipPosition,
-  Badge
-  // Tooltip,
-  // TooltipPosition
-} from "@patternfly/react-core";
-import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
+import { Tooltip, TooltipPosition, Badge, ClipboardCopy } from "@patternfly/react-core";
 
 interface ITypePlanProps {
   plan: string;
@@ -72,13 +64,13 @@ export const TypePlan: React.FunctionComponent<ITypePlanProps> = address => {
     </Badge>
   );
   return (
-    <React.Fragment>
+    <>
       <Tooltip
         position={TooltipPosition.top}
         content={<div>{address.type}</div>}>
         {labelItem}
       </Tooltip>
       {" " + address.plan}
-    </React.Fragment>
+    </>
   );
 };

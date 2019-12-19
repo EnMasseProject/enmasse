@@ -9,7 +9,7 @@ import {
   ISortBy
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
-import { ConnectionProtocolFormat } from "../Common/ConnectionListFormatter";
+import { ConnectionProtocolFormat } from "../../Common/ConnectionListFormatter";
 
 interface IConnectionListProps {
   rows: IConnection[];

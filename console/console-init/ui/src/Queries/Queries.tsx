@@ -57,7 +57,7 @@ export const RETURN_ALL_ADDRESS_SPACES = (
   ) {
     filter += " AND ";
   }
-  if (filter_Type && filter_Type.trim() != "") {
+  if (filter_Type && filter_Type.trim() !== "") {
     filter += "`$.Spec.Type` ='" + filter_Type.toLowerCase().trim() + "' ";
   }
   let orderByString = "";
@@ -181,7 +181,7 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
         orderByString = "`$.Metrics[?(@.Name=='enmasse_receivers')].Value` ";
         break;
     }
-    if (orderByString != "" && sortBy.direction) {
+    if (orderByString !== "" && sortBy.direction) {
       orderByString += sortBy.direction;
     }
   }
@@ -507,7 +507,7 @@ export const ADDRESS_SPACE_COMMAND_REVIEW_DETAIL = gql`
 export const RETURN_ALL_CONECTION_LIST = (
   page: number,
   perPage: number,
-  hosts: string[],
+  hostnames: string[],
   containers: string[],
   name?: string,
   namespace?: string,
@@ -521,22 +521,21 @@ export const RETURN_ALL_CONECTION_LIST = (
     filter +=
       " AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = '" + namespace + "'";
   }
-  if ((hosts && hosts.length > 0) || (containers && containers.length > 0)) {
+  if ((hostnames && hostnames.length > 0) || (containers && containers.length > 0)) {
     filter += " AND ";
   }
-  if (hosts) {
-    let i;
-    if (hosts.length > 0) {
-      filter += "`$.Spec.Hostname` ='" + hosts[0].trim() + "' ";
+  if (hostnames) {
+    if (hostnames.length > 0) {
+      filter += "`$.Spec.Hostname` ='" + hostnames[0].trim() + "' ";
       let i;
-      for (i = 1; i < hosts.length; i++) {
-        filter += "OR `$.Spec.Hostname` ='" + hosts[i].trim() + "' ";
+      for (i = 1; i < hostnames.length; i++) {
+        filter += "OR `$.Spec.Hostname` ='" + hostnames[i].trim() + "' ";
       }
     }
   }
   if (containers) {
     if (containers.length > 0) {
-      if (hosts && hosts.length <= 0) {
+      if (hostnames && hostnames.length <= 0) {
         filter += "`$.Spec.ContainerId` ='" + containers[0].trim() + "' ";
         let i;
         for (i = 1; i < containers.length; i++) {

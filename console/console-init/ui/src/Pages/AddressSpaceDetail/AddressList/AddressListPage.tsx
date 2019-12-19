@@ -6,7 +6,10 @@ import {
   DELETE_ADDRESS,
   EDIT_ADDRESS
 } from "src/Queries/Queries";
-import { IAddress, AddressList } from "src/Components/AddressSpace/AddressList";
+import {
+  IAddress,
+  AddressList
+} from "src/Components/AddressSpace/Address/AddressList";
 import { Loading } from "use-patternfly";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { Modal, Button } from "@patternfly/react-core";
@@ -157,7 +160,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         sortBy={sortBy}
         onSort={onSort}
       />
-      {addresses.Total === 0 ? <EmptyAddress /> : ""}
+      {addresses.Total > 0 ? " " : <EmptyAddress />}
       {addressBeingEdited && (
         <Modal
           title="Edit"
