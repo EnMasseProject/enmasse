@@ -72,7 +72,8 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d")
                 .withTimeout(30)
-                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket);
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "");
 
         ExternalMessagingClient receiverClient = new ExternalMessagingClient()
                 .withClientEngine(receiver)
@@ -81,7 +82,8 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withTimeout(30)
-                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket);
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "");
 
         assertTrue(senderClient.run());
         assertTrue(receiverClient.run());

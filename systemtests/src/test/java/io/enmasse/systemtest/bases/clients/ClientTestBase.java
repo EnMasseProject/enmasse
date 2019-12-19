@@ -111,6 +111,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withMessageBody("msg no. %d")
                 .withTimeout(30)
                 .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "")
                 .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
 
         ExternalMessagingClient receiverClient = new ExternalMessagingClient()
@@ -121,6 +122,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withCount(expectedMsgCount)
                 .withTimeout(30)
                 .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "")
                 .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
 
 
