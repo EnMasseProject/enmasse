@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router";
 import {
   IConnection,
   ConnectionList
-} from "../Components/AddressSpace/ConnectionList";
+} from "../Components/AddressSpace/Connection/ConnectionList";
 
 describe("Connection List", () => {
   test("it renders a list of connections", () => {
@@ -17,7 +17,8 @@ describe("Connection List", () => {
         messagesOut: 2,
         senders: 3,
         receivers: 4,
-        status: "running"
+        status: "running",
+        encrypted:true
       },
       {
         hostname: "foo2",
@@ -27,7 +28,8 @@ describe("Connection List", () => {
         messagesOut: 5,
         senders: 6,
         receivers: 7,
-        status: "running"
+        status: "running",
+        encrypted:true
       }
     ];
 

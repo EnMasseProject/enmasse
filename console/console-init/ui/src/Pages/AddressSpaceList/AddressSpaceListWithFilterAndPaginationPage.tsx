@@ -79,13 +79,14 @@ export default function AddressSpaceListWithFilterAndPagination() {
             setFilterNamespaces={setFilterNamespaces}
             filterType={filterType}
             setFilterType={setFilterType}
+            totalAddressSpaces={totalAddressSpaces}
           />
         </GridItem>
         <GridItem span={5}>
           {totalAddressSpaces > 0 && renderPagination(page, perPage)}
         </GridItem>
       </Grid>
-      <Divider/>
+      <Divider />
       <AddressSpaceListPage
         page={page}
         perPage={perPage}

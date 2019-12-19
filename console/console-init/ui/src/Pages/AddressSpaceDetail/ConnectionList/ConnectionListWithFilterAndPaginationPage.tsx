@@ -8,18 +8,17 @@ import {
   GridItem,
   Pagination
 } from "@patternfly/react-core";
-import { ConnectionListFilterPage } from "./ConnectionListFilterPage";
 import { ConnectionsListPage } from "./ConnectionsListPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
+import { ConnectionListFilter } from "src/Components/AddressSpace/Connection/ConnectionListFilter";
 
 const ConnectionListFunction = () => {
   useDocumentTitle("Connection List");
 
   useA11yRouteChange();
-  const { name, namespace, type } = useParams();
+  const { name, namespace } = useParams();
   const [filterValue, setFilterValue] = React.useState<string>("Hostname");
-  const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
-  const [hosts, setHosts] = React.useState<Array<string>>([]);
+  const [hostnames, setHostnames] = React.useState<Array<string>>([]);
   const [containerIds, setContainerIds] = React.useState<Array<string>>([]);
   const [totalConnections, setTotalConnections] = React.useState<number>(0);
   const location = useLocation();
@@ -73,13 +72,11 @@ const ConnectionListFunction = () => {
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
         <GridItem span={6}>
-          <ConnectionListFilterPage
+          <ConnectionListFilter
             filterValue={filterValue}
             setFilterValue={setFilterValue}
-            filterIsExpanded={filterIsExpanded}
-            setFilterIsExpanded={setFilterIsExpanded}
-            hosts={hosts}
-            setHosts={setHosts}
+            hostnames={hostnames}
+            setHostnames={setHostnames}
             containerIds={containerIds}
             setContainerIds={setContainerIds}
             totalConnections={totalConnections}
@@ -89,12 +86,11 @@ const ConnectionListFunction = () => {
           {totalConnections > 0 && renderPagination(page, perPage)}
         </GridItem>
       </Grid>
-      <Divider/>
+      <Divider />
       <ConnectionsListPage
         name={name}
         namespace={namespace}
-        addressSpaceType={type}
-        hosts={hosts}
+        hostnames={hostnames}
         containerIds={containerIds}
         setTotalConnections={setTotalConnections}
         page={page}

@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
-import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
+import { useA11yRouteChange, useDocumentTitle } from "use-patternfly";
 import { Button, Modal } from "@patternfly/react-core";
 import {
   AddressSpaceList,
@@ -60,7 +60,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     ),
     { pollInterval: 20000, fetchPolicy: "network-only" }
   );
-  console.log(data);
+  // console.log(data);
   const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
   const handleSaving = async () => {
     addressSpaceBeingEdited && await client.mutate({

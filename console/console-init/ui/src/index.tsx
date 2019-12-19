@@ -9,7 +9,9 @@ import * as serviceWorker from "./serviceWorker";
 ReactDOM.render(
   <Router>
     <LastLocationProvider>
-      <App />
+      <div className={"pf-m-redhat-font"}>
+        <App />
+      </div>
     </LastLocationProvider>
   </Router>,
   document.getElementById("root")

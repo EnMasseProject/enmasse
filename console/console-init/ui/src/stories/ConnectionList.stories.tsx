@@ -3,7 +3,7 @@ import { MemoryRouter } from "react-router";
 import {
   ConnectionList,
   IConnection
-} from "..//Components/AddressSpace/ConnectionList";
+} from "../Components/AddressSpace/Connection/ConnectionList";
 import { EmptyConnection } from "../Components/Common/EmptyConnection";
 
 export default {
