@@ -5,23 +5,17 @@ import {
 } from "src/Components/ConnectionDetail/ConnectionDetailHeader";
 import {
   PageSection,
-  PageSectionVariants,
-  Title,
   Breadcrumb,
-  BreadcrumbItem,
-  Pagination
+  BreadcrumbItem
 } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
 import { useParams } from "react-router";
 import { Loading, useA11yRouteChange, useBreadcrumb } from "use-patternfly";
-import { ILink, LinkList } from "src/Components/ConnectionDetail/LinkList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionDetailResponse } from "src/Types/ResponseTypes";
-import { css } from "@patternfly/react-styles";
-import { GridStylesForTableHeader } from "../AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
-import { Link, useLocation, useHistory } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { RETURN_CONNECTION_DETAIL } from "src/Queries/Queries";
-import { ConnectionLinksListPage } from "./ConnectionsLinksListPage";
+import { ConnectionLinksWithFilterAndPaginationPage } from "./ConnectionLinksWithFilterAndPaginationPage";
 
 const getProductFilteredValue = (object: any[], value: string) => {
   const filtered = object.filter(obj => obj.Key === value);
@@ -46,12 +40,6 @@ const getSplitValue = (value: string) => {
 
 export default function ConnectionDetailPage() {
   const { name, namespace, type, connectionname } = useParams();
-  const location = useLocation();
-  const history = useHistory();
-  const searchParams = new URLSearchParams(location.search);
-  const [totalLinks, setTotalLinks] = React.useState<number>(0);
-  const page = parseInt(searchParams.get("page") || "", 10) || 0;
-  const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const breadcrumb = React.useMemo(
     () => (
       <Breadcrumb>
@@ -70,34 +58,6 @@ export default function ConnectionDetailPage() {
   );
 
   useBreadcrumb(breadcrumb);
-
-  const setSearchParam = React.useCallback(
-    (name: string, value: string) => {
-      searchParams.set(name, value.toString());
-    },
-    [searchParams]
-  );
-
-  const handlePageChange = React.useCallback(
-    (_: any, newPage: number) => {
-      setSearchParam("page", newPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
-
-  const handlePerPageChange = React.useCallback(
-    (_: any, newPerPage: number) => {
-      setSearchParam("page", "0");
-      setSearchParam("perPage", newPerPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
   useA11yRouteChange();
   // useBreadcrumb(breadcrumb);
   const { loading, error, data } = useQuery<IConnectionDetailResponse>(
@@ -133,40 +93,15 @@ export default function ConnectionDetailPage() {
     product: getProductFilteredValue(connection.Spec.Properties, "product")
   };
 
-  const renderPagination = (page: number, perPage: number) => {
-    return (
-      <Pagination
-        itemCount={totalLinks}
-        perPage={perPage}
-        page={page}
-        onSetPage={handlePageChange}
-        variant="top"
-        onPerPageSelect={handlePerPageChange}
-      />
-    );
-  };
-
   return (
     <>
       <ConnectionDetailHeader {...connectionDetail} />
       <PageSection>
-        <PageSection variant={PageSectionVariants.light}>
-          <Title
-            size={"lg"}
-            className={css(GridStylesForTableHeader.filter_left_margin)}>
-            Links
-          </Title>
-          {renderPagination(page, perPage)}
-          <ConnectionLinksListPage
-            name={name || ""}
-            namespace={namespace || ""}
-            connectionName={connectionname || ""}
-            page={page}
-            perPage={perPage}
-            setTotalLinks={setTotalLinks}
-          />
-          {renderPagination(page, perPage)}
-        </PageSection>
+        <ConnectionLinksWithFilterAndPaginationPage
+          name={name}
+          namespace={namespace}
+          connectionname={connectionname}
+        />
       </PageSection>
     </>
   );

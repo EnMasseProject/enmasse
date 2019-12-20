@@ -14,6 +14,9 @@ interface IConnectionLinksListPageProps {
   page: number;
   perPage: number;
   setTotalLinks: (value: number) => void;
+  filterNames: string[];
+  filterAddresses: string[];
+  filterRole?: string;
 }
 export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksListPageProps> = ({
   name,
@@ -21,17 +24,23 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
   connectionName,
   page,
   perPage,
-  setTotalLinks
+  setTotalLinks,
+  filterNames,
+  filterAddresses,
+  filterRole
 }) => {
   const [sortBy, setSortBy] = React.useState<ISortBy>();
   const { loading, error, data } = useQuery<IConnectionLinksResponse>(
     RETURN_CONNECTION_LINKS(
       page,
       perPage,
+      filterNames,
+      filterAddresses,
       name || "",
       namespace || "",
       connectionName || "",
-      sortBy
+      sortBy,
+      filterRole
     ),
     { pollInterval: 20000 }
   );
@@ -44,7 +53,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
     connections: { Total: 0, Connections: [] }
   };
   const connection = connections.Connections[0];
-  console.log(connection.Links.Links)
+  console.log(connection.Links.Links);
   let linkRows: ILink[] = [];
   if (connection && connection.Links.Total > 0) {
     setTotalLinks(connection.Links.Total);
