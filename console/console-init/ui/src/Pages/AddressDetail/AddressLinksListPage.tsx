@@ -16,6 +16,9 @@ export interface IAddressLinksListProps {
   addressname?: string;
   type?: string;
   setAddressLinksTotal: (total: number) => void;
+  filterNames: string[];
+  filterContainers: string[];
+  filterRole?: string;
 }
 export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProps> = ({
   page,
@@ -24,11 +27,24 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   namespace,
   addressname,
   type,
-  setAddressLinksTotal
+  setAddressLinksTotal,
+  filterNames,
+  filterContainers,
+  filterRole
 }) => {
   const [sortBy, setSortBy] = React.useState<ISortBy>();
   const { loading, error, data } = useQuery<IAddressLinksResponse>(
-    RETURN_ADDRESS_LINKS(page, perPage, name, namespace, addressname,sortBy),
+    RETURN_ADDRESS_LINKS(
+      page,
+      perPage,
+      filterNames,
+      filterContainers,
+      name,
+      namespace,
+      addressname,
+      sortBy,
+      filterRole
+    ),
     { pollInterval: 20000 }
   );
   if (loading) return <Loading />;

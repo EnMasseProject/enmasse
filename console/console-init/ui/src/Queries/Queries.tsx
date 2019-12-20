@@ -346,10 +346,13 @@ export const RETURN_ADDRESS_DETAIL = (
 export const RETURN_ADDRESS_LINKS = (
   page: number,
   perPage: number,
+  filterNames: string[],
+  filterAddresses: string[],
   addressSpace?: string,
   namespace?: string,
   addressName?: string,
-  sortBy?: ISortBy
+  sortBy?: ISortBy,
+  filterRole?: string
 ) => {
   let filter = "";
   if (addressSpace) {
@@ -706,10 +709,13 @@ export const RETURN_ADDRESS_SPACE_PLANS = gql`
 export const RETURN_CONNECTION_LINKS = (
   page: number,
   perPage: number,
+  filterNames: string[],
+  filterAddresses: string[],
   addressSpaceName?: string,
   addressSpaceNameSpcae?: string,
   connectionName?: string,
-  sortBy?: ISortBy
+  sortBy?: ISortBy,
+  filterRole?: string
 ) => {
   let filter = "";
   if (addressSpaceName) {

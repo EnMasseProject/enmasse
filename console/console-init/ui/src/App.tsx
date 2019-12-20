@@ -17,7 +17,7 @@ const client = new ApolloClient({
 
 const avatar = (
   <React.Fragment>
-    <Text component={TextVariants.p}>Ramakrishna Pattnaik</Text>
+    <Text component={TextVariants.p}>User</Text>
     <Avatar src={avatarImg} alt="avatar" />
   </React.Fragment>
 );

@@ -1,0 +1,118 @@
+import * as React from "react";
+import {
+  PageSection,
+  PageSectionVariants,
+  Title,
+  Pagination,
+  GridItem,
+  Grid
+} from "@patternfly/react-core";
+import { GridStylesForTableHeader } from "../AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
+import { ConnectionLinksListPage } from "./ConnectionsLinksListPage";
+import { useLocation, useHistory } from "react-router";
+import { css } from "@patternfly/react-styles";
+import { ConnectionListFilter } from "src/Components/AddressSpace/Connection/ConnectionListFilter";
+import { ConnectionLinksFilter } from "src/Components/ConnectionDetail/ConnectionLinksFilter";
+interface IConnectionLinksWithFilterAndPaginationPageProps {
+  name?: string;
+  namespace?: string;
+  connectionname?: string;
+}
+export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent<IConnectionLinksWithFilterAndPaginationPageProps> = ({
+  name,
+  namespace,
+  connectionname
+}) => {
+  const location = useLocation();
+  const history = useHistory();
+  const searchParams = new URLSearchParams(location.search);
+  const [totalLinks, setTotalLinks] = React.useState<number>(0);
+  const page = parseInt(searchParams.get("page") || "", 10) || 0;
+  const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+  const [filterValue, setFilterValue] = React.useState<string>("Name");
+  const [filterNames, setFilterNames] = React.useState<Array<string>>([]);
+  const [filterAddresses, setFilterAddresses] = React.useState<Array<string>>(
+    []
+  );
+  const [filterRole, setFilterRole] = React.useState<string>();
+
+  const setSearchParam = React.useCallback(
+    (name: string, value: string) => {
+      searchParams.set(name, value.toString());
+    },
+    [searchParams]
+  );
+
+  const handlePageChange = React.useCallback(
+    (_: any, newPage: number) => {
+      setSearchParam("page", newPage.toString());
+      history.push({
+        search: searchParams.toString()
+      });
+    },
+    [setSearchParam, history, searchParams]
+  );
+
+  const handlePerPageChange = React.useCallback(
+    (_: any, newPerPage: number) => {
+      setSearchParam("page", "0");
+      setSearchParam("perPage", newPerPage.toString());
+      history.push({
+        search: searchParams.toString()
+      });
+    },
+    [setSearchParam, history, searchParams]
+  );
+
+  const renderPagination = (page: number, perPage: number) => {
+    return (
+      <Pagination
+        itemCount={totalLinks}
+        perPage={perPage}
+        page={page}
+        onSetPage={handlePageChange}
+        variant="top"
+        onPerPageSelect={handlePerPageChange}
+      />
+    );
+  };
+
+  return (
+    <PageSection variant={PageSectionVariants.light}>
+      <Title
+        size={"lg"}
+        className={css(GridStylesForTableHeader.filter_left_margin)}>
+        Links
+      </Title>
+      <br />
+      <Grid>
+        <GridItem span={6}>
+          <ConnectionLinksFilter
+            filterValue={filterValue}
+            setFilterValue={setFilterValue}
+            filterNames={filterNames}
+            setFilterNames={setFilterNames}
+            filterAddresses={filterAddresses}
+            setFilterAddresses={setFilterAddresses}
+            filterRole={filterRole}
+            setFilterRole={setFilterRole}
+            totalLinks={totalLinks}
+          />
+        </GridItem>
+        <GridItem span={6}>{renderPagination(page, perPage)}</GridItem>
+      </Grid>
+      <ConnectionLinksListPage
+        name={name || ""}
+        namespace={namespace || ""}
+        connectionName={connectionname || ""}
+        page={page}
+        perPage={perPage}
+        setTotalLinks={setTotalLinks}
+        filterNames={filterNames}
+        filterAddresses={filterAddresses}
+        filterRole={filterRole}
+      />
+      {renderPagination(page, perPage)}
+    </PageSection>
+  );
+};
