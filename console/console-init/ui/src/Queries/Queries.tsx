@@ -347,7 +347,7 @@ export const RETURN_ADDRESS_LINKS = (
   page: number,
   perPage: number,
   filterNames: string[],
-  filterAddresses: string[],
+  filterContainers: string[],
   addressSpace?: string,
   namespace?: string,
   addressName?: string,
@@ -386,6 +386,44 @@ export const RETURN_ADDRESS_LINKS = (
     }
     orderByString += sortBy.direction;
   }
+
+  let filterForLink = "";
+  if (filterNames && filterNames.length > 0) {
+    filterForLink += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
+    let i;
+    for (i = 1; i < filterNames.length; i++) {
+      filterForLink +=
+        "OR `$.ObjectMeta.Name` ='" + filterNames[i].trim() + "' ";
+    }
+    if (
+      (filterContainers && filterContainers.length > 0) ||
+      (filterRole && filterRole.trim() != "")
+    ) {
+      filterForLink = " AND ";
+    }
+  }
+  if (filterContainers && filterContainers.length > 0) {
+    filterForLink +=
+      "`$.Spec.Connection.Spec.ContainerId` ='" +
+      filterContainers[0].trim() +
+      "' ";
+    let i;
+    for (i = 1; i < filterContainers.length; i++) {
+      filterForLink +=
+        "OR `$.Spec.Connection.Spec.ContainerId` ='" +
+        filterContainers[i].trim() +
+        "' ";
+    }
+    if (filterRole && filterRole.trim() != "") {
+      filterForLink += " AND ";
+    }
+  }
+
+  if (filterRole && filterRole.trim() != "") {
+    filterForLink +=
+      "`$.Spec.Role` = '" + filterRole.trim().toLowerCase() + "' ";
+  }
+
   const query = gql`
   query single_address_with_links_and_metrics {
     addresses(
@@ -400,7 +438,7 @@ export const RETURN_ADDRESS_LINKS = (
           AddressSpace
         }
         Links (first:${perPage} offset:${perPage *
-    (page - 1)}  orderBy:"${orderByString}"){
+    (page - 1)}  orderBy:"${orderByString}" filter:"${filterForLink}"){
           Total
           Links {
             ObjectMeta {
@@ -524,7 +562,10 @@ export const RETURN_ALL_CONECTION_LIST = (
     filter +=
       " AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = '" + namespace + "'";
   }
-  if ((hostnames && hostnames.length > 0) || (containers && containers.length > 0)) {
+  if (
+    (hostnames && hostnames.length > 0) ||
+    (containers && containers.length > 0)
+  ) {
     filter += " AND ";
   }
   if (hostnames) {
@@ -766,6 +807,38 @@ export const RETURN_CONNECTION_LINKS = (
       orderByString += sortBy.direction;
     }
   }
+  let filterForLink = "";
+  if (filterNames && filterNames.length > 0) {
+    filterForLink += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
+    let i;
+    for (i = 1; i < filterNames.length; i++) {
+      filterForLink +=
+        "OR `$.ObjectMeta.Name` ='" + filterNames[i].trim() + "' ";
+    }
+    if (
+      (filterAddresses && filterAddresses.length > 0) ||
+      (filterRole && filterRole.trim() != "")
+    ) {
+      filterForLink = " AND ";
+    }
+  }
+  if (filterAddresses && filterAddresses.length > 0) {
+    filterForLink += "`$.Spec.Address` ='" + filterAddresses[0].trim() + "' ";
+    let i;
+    for (i = 1; i < filterAddresses.length; i++) {
+      filterForLink +=
+        "OR `$.Spec.Address` ='" + filterAddresses[i].trim() + "' ";
+    }
+    if (filterRole && filterRole.trim() != "") {
+      filterForLink += " AND ";
+    }
+  }
+
+  if (filterRole && filterRole.trim() != "") {
+    filterForLink +=
+      "`$.Spec.Role` = '" + filterRole.trim().toLowerCase() + "' ";
+  }
+
   const CONNECTION_DETAIL = gql`
   query single_connections {
     connections(
@@ -778,7 +851,8 @@ export const RETURN_CONNECTION_LINKS = (
           Namespace
         }
         Links(first:${perPage} offset:${perPage *
-    (page - 1)} orderBy:"${orderByString}") {
+    (page - 1)} orderBy:"${orderByString}"
+    filter:"${filterForLink}") {
           Total
           Links {
             ObjectMeta {
