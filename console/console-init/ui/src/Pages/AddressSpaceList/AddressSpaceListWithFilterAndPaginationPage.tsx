@@ -17,6 +17,7 @@ export default function AddressSpaceListWithFilterAndPagination() {
   useA11yRouteChange();
   const [filterValue, setFilterValue] = React.useState<string | null>("Name");
   const [filterNames, setFilterNames] = React.useState<string[]>([]);
+  const [onCreationRefetch, setOnCreationRefetch] = React.useState<boolean>(false);
   const [filterNamespaces, setFilterNamespaces] = React.useState<string[]>([]);
   const [filterType, setFilterType] = React.useState<string | null>(null);
   const [totalAddressSpaces, setTotalAddressSpaces] = React.useState<number>(0);
@@ -80,6 +81,7 @@ export default function AddressSpaceListWithFilterAndPagination() {
             filterType={filterType}
             setFilterType={setFilterType}
             totalAddressSpaces={totalAddressSpaces}
+            setOnCreationRefetch={setOnCreationRefetch}
           />
         </GridItem>
         <GridItem span={5}>
@@ -95,6 +97,8 @@ export default function AddressSpaceListWithFilterAndPagination() {
         filter_Names={filterNames}
         filter_NameSpace={filterNamespaces}
         filter_Type={filterType}
+        onCreationRefetch={onCreationRefetch}
+        setOnCreationRefetch={setOnCreationRefetch}
       />
       {totalAddressSpaces > 0 && renderPagination(page, perPage)}
     </PageSection>

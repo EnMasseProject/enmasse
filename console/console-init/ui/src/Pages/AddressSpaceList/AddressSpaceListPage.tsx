@@ -25,6 +25,8 @@ interface AddressSpaceListPageProps {
   filter_Names: string[];
   filter_NameSpace: string[];
   filter_Type: string | null;
+  onCreationRefetch?: boolean;
+  setOnCreationRefetch: (value: boolean) => void;
 }
 export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageProps> = ({
   page,
@@ -33,7 +35,9 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   setTotalAddressSpaces,
   filter_Names,
   filter_NameSpace,
-  filter_Type
+  filter_Type,
+  onCreationRefetch,
+  setOnCreationRefetch
 }) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
@@ -61,6 +65,10 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     { pollInterval: 20000, fetchPolicy: "network-only" }
   );
   // console.log(data);
+  if(onCreationRefetch){
+    refetch();
+    setOnCreationRefetch(false);
+  }
   const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
   const handleSaving = async () => {
     addressSpaceBeingEdited && await client.mutate({

@@ -14,11 +14,13 @@ interface ICreateAddressSpaceProps {
 interface ICreateAddressSpaceProps {
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
+  setOnCreationRefetch?: (value: boolean) => void;
 }
 export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProps> = ({
   isCreateWizardOpen,
   setIsCreateWizardOpen,
-  refetch
+  refetch,
+  setOnCreationRefetch
 }) => {
   const [addressSpaceName, setAddressSpaceName] = React.useState("");
   const [addressSpaceType, setAddressSpaceType] = React.useState(" ");
@@ -58,6 +60,8 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
         setAddressSpaceName("");
         setNamespace("");
         setAuthenticationService("");
+
+        if (setOnCreationRefetch) setOnCreationRefetch(true);
       }
       if (refetch) refetch();
     }
