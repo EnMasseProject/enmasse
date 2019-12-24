@@ -9,8 +9,6 @@
 
 Messaging tenants are typically responsible for managing devices and writing device and back-end applications for IoT solutions.
 
-include::assembly-iot-configuring-sigfox.adoc[leveloffset=+1]
-
 include::assembly-iot-creating-device.adoc[leveloffset=+1]
 
 == Consumer applications
@@ -21,13 +19,19 @@ include::../modules/proc-iot-starting-telemetry-consumer.adoc[leveloffset=+1]
 
 include::../modules/proc-iot-starting-events-consumer.adoc[leveloffset=+1]
 
+include::../modules/proc-iot-starting-command-sender.adoc[leveloffset=+1]
+
 == Device applications
 
 include::../modules/proc-iot-sending-telemetry-http.adoc[leveloffset=+2]
 
 include::../modules/proc-iot-sending-events-http.adoc[leveloffset=+2]
 
+include::../modules/proc-iot-receiving-commands-http.adoc[leveloffset=+2]
+
 include::../modules/proc-iot-sending-telemetry-mqtt.adoc[leveloffset=+2]
 
 include::../modules/proc-iot-sending-events-mqtt.adoc[leveloffset=+2]
+
+include::assembly-iot-configuring-sigfox.adoc[leveloffset=+1]
 
