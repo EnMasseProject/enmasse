@@ -171,8 +171,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       aria-label="Address List"
       canSelectAll={true}
       sortBy={sortBy}
-      onSort={onSort}
-    >
+      onSort={onSort}>
       <TableHeader id="address-list-table-bodheader" />
       <TableBody />
     </Table>
