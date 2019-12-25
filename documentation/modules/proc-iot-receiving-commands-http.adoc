@@ -1,9 +1,7 @@
 // Module included in the following assemblies:
 //
-// assembly-service-admin.adoc
-// assembly-iot-getting-started.adoc
-
-:api: telemetry
+// assembly-iot-tenant-guide.adoc
+// assembly-iot-solution-developers-guide.adoc
 
 [id='proc-iot-receiving-commands-http-{context}']
 = Receiving commands using HTTP protocol

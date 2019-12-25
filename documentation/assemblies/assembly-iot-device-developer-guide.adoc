@@ -24,5 +24,7 @@ include::../modules/proc-iot-sending-telemetry-mqtt.adoc[leveloffset=+2]
 
 include::../modules/proc-iot-sending-events-mqtt.adoc[leveloffset=+2]
 
+include::../modules/proc-iot-receiving-commands-mqtt.adoc[leveloffset=+2]
+
 //Sigfox
 include::assembly-iot-configuring-sigfox.adoc[leveloffset=+1]
