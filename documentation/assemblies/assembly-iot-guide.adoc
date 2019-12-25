@@ -13,6 +13,10 @@ include::../assemblies/assembly-iot-getting-started.adoc[leveloffset=+1]
 
 include::../assemblies/assembly-iot-service-admin-guide.adoc[leveloffset=+1]
 
-include::../assemblies/assembly-iot-tenant-guide.adoc[leveloffset=+1]
+include::../assemblies/assembly-iot-device-manager.adoc[leveloffset=+1]
+
+include::../assemblies/assembly-iot-solution-developers.adoc[leveloffset=+1]
+
+include::../assemblies/assembly-iot-device-developer-guide.adoc[leveloffset=+1]
 
 :context: {parent-context}
