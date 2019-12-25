@@ -1,0 +1,18 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+
+:context: {context}-iot
+
+[id='iot-solution-developers-{context}]
+= IoT for solution developers
+
+IoT solution developers are typically responsible for writing IoT cloud applications.
+
+include::../modules/proc-iot-installing-cli.adoc[leveloffset=+1]
+
+include::../modules/proc-iot-starting-telemetry-consumer.adoc[leveloffset=+1]
+
+include::../modules/proc-iot-starting-events-consumer.adoc[leveloffset=+1]
+
+include::../modules/proc-iot-starting-command-sender.adoc[leveloffset=+1]
