@@ -40,6 +40,7 @@ interface IAddressSpaceListFilterPageProps {
   filterType?: string | null;
   setFilterType: (value: string | null) => void;
   totalAddressSpaces: number;
+  setOnCreationRefetch?: (value: boolean) => void;
 }
 export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceListFilterPageProps> = ({
   filterValue,
@@ -50,7 +51,8 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
   setFilterNamespaces,
   filterType,
   setFilterType,
-  totalAddressSpaces
+  totalAddressSpaces,
+  setOnCreationRefetch
 }) => {
   const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
   const onClearAllFilters = () => {
@@ -80,6 +82,7 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
           <CreateAddressSpace
             isCreateWizardOpen={isCreateWizardOpen}
             setIsCreateWizardOpen={setIsCreateWizardOpen}
+            setOnCreationRefetch={setOnCreationRefetch}
           />
         )}
       </DataToolbarItem>
