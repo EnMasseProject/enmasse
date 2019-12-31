@@ -8,8 +8,6 @@ import {
   CardBody
 } from "@patternfly/react-core";
 import {
-  LockIcon,
-  LockOpenIcon,
   AngleDownIcon,
   AngleUpIcon
 } from "@patternfly/react-icons";

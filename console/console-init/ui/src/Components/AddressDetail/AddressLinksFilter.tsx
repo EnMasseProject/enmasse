@@ -103,6 +103,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
           setFilterContainers([...filterContainers, inputValue.trim()]);
         }
     }
+    setInputValue(undefined);
   };
 
   const onFilterSelect = (event: any) => {
