@@ -12,6 +12,7 @@ import { AddressLinksListPage } from "./AddressLinksListPage";
 import { useHistory, useLocation } from "react-router";
 import { css } from "emotion";
 import { AddressLinksFilter } from "src/Components/AddressDetail/AddressLinksFilter";
+import { ISortBy } from "@patternfly/react-table";
 interface IAddressLinksWithFilterAndPaginationProps {
   addressspace_name: string;
   addressspace_namespace: string;
@@ -32,6 +33,7 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
   const [addresLinksTotal, setAddressLinksTotal] = React.useState<number>(0);
   const [filterValue, setFilterValue] = React.useState<string>("Name");
   const [filterNames, setFilterNames] = React.useState<Array<string>>([]);
+  const [sortDropDownValue,setSortDropdownValue] = React.useState<ISortBy>();
   const [filterContainers, setFilterContainers] = React.useState<Array<string>>(
     []
   );
@@ -77,6 +79,8 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
       />
     );
   };
+  const nameOptions = [{ value: "" }];
+  const onNameChange = (newValue: string) => {};
   return (
     <PageSection>
       <PageSection variant={PageSectionVariants.light}>
@@ -97,6 +101,10 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
               filterRole={filterRole}
               setFilterRole={setFilterRole}
               totalLinks={addresLinksTotal}
+              namesOptions={nameOptions}
+              onNameChange={onNameChange}
+              sortValue={sortDropDownValue}
+              setSortValue={setSortDropdownValue}
             />
           </GridItem>
           <GridItem span={6}>
@@ -113,6 +121,7 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
           type={addressspace_type}
           filterNames={filterNames}
           filterContainers={filterContainers}
+          sortValue={sortDropDownValue}
           filterRole={filterRole}
         />
         {addresLinksTotal > 0 && renderPagination(page, perPage)}

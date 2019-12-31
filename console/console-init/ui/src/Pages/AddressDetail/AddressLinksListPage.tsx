@@ -18,6 +18,7 @@ export interface IAddressLinksListProps {
   setAddressLinksTotal: (total: number) => void;
   filterNames: string[];
   filterContainers: string[];
+  sortValue?: ISortBy;
   filterRole?: string;
 }
 export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProps> = ({
@@ -30,9 +31,13 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   setAddressLinksTotal,
   filterNames,
   filterContainers,
+  sortValue,
   filterRole
 }) => {
   const [sortBy, setSortBy] = React.useState<ISortBy>();
+  if (sortValue && sortBy != sortValue) {
+    setSortBy(sortValue);
+  }
   const { loading, error, data } = useQuery<IAddressLinksResponse>(
     RETURN_ADDRESS_LINKS(
       page,

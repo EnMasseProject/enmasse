@@ -16,9 +16,21 @@ import {
   TextInput,
   Button,
   ButtonVariant,
-  Badge
+  Badge,
+  Split,
+  SplitItem
 } from "@patternfly/react-core";
-import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
+import {
+  FilterIcon,
+  SearchIcon,
+  SortAlphaDownAltIcon,
+  SortAmountDownIcon,
+  SortAmountUpAltIcon,
+  SortAmountDownAltIcon
+} from "@patternfly/react-icons";
+import { ISortBy } from "@patternfly/react-table";
+import useWindowDimensions from "../Common/WindowDimension";
+import style from "react-syntax-highlighter/dist/styles/hljs/atelier-dune-light";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -28,8 +40,12 @@ interface IAddressLinksFilterProps {
   filterContainers: string[];
   setFilterContainers: (value: Array<string>) => void;
   filterRole?: string;
-  setFilterRole: (role: string|undefined) => void;
+  setFilterRole: (role: string | undefined) => void;
   totalLinks: number;
+  sortValue?: ISortBy;
+  setSortValue: (value: ISortBy) => void;
+  namesOptions: Array<{ value: string }>;
+  onNameChange: (newValue: string) => void;
 }
 
 export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProps> = ({
@@ -41,12 +57,19 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   setFilterContainers,
   filterRole,
   setFilterRole,
-  totalLinks
+  totalLinks,
+  sortValue,
+  setSortValue,
+  namesOptions,
+  onNameChange
 }) => {
   const [inputValue, setInputValue] = React.useState<string>();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const [roleIsExpanded, setRoleIsExpanded] = React.useState(false);
-
+  const [sortIsExpanded, setSortIsExpanded] = React.useState<boolean>(false);
+  const { width } = useWindowDimensions();
+  const [sortData, setSortData] = React.useState();
+  const [sortDirection, setSortDirection] = React.useState<string>();
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
     { key: "filterContainers", value: "Container" },
@@ -58,6 +81,11 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     { key: "roleReceiver", value: "Receiver" }
   ];
 
+  const sortMenuItems = [
+    { key: "name", value: "Name", index: 2 },
+    { key: "deliveryRate", value: "DeliveryRate", index: 3 },
+    { key: "backlog", value: "Backlog", index: 4 }
+  ];
   const onInputChange = (newValue: string) => {
     setInputValue(newValue);
   };
@@ -68,6 +96,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
         if (filterNames.indexOf(inputValue.trim()) < 0) {
           setFilterNames([...filterNames, inputValue.trim()]);
         }
+      setInputValue(undefined);
     } else if (filterValue && filterValue === "Container") {
       if (inputValue && inputValue.trim() !== "")
         if (filterContainers.indexOf(inputValue.trim()) < 0) {
@@ -126,6 +155,44 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     setFilterContainers([]);
     setFilterRole(undefined);
   };
+
+  const onSortSelect = (event: any) => {
+    setSortData(event.target.value);
+    setSortDirection(undefined);
+    setSortIsExpanded(!sortIsExpanded);
+  };
+
+  const onSortUp = () => {
+    if (sortData) {
+      const sortItem = sortMenuItems.filter(
+        object => object.value === sortData
+      );
+      setSortValue({ index: sortItem[0].index, direction: "asc" });
+      setSortDirection("asc");
+    }
+  };
+  const onSortDown = () => {
+    if (sortData) {
+      const sortItem = sortMenuItems.filter(
+        object => object.value === sortData
+      );
+      setSortValue({ index: sortItem[0].index, direction: "desc" });
+      setSortDirection("desc");
+    }
+  };
+
+  const SortIcons = (
+    <>
+      {!sortDirection ? (
+        <SortAmountDownAltIcon color="grey" onClick={onSortUp} />
+      ) : sortDirection === "asc" ? (
+        <SortAmountUpAltIcon color="blue" onClick={onSortDown} />
+      ) : (
+        <SortAmountDownAltIcon color="blue" onClick={onSortUp} />
+      )}
+    </>
+  );
+
   const toggleGroupItems = (
     <>
       <DataToolbarGroup variant="filter-group">
@@ -234,6 +301,33 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                 />
               )}
             </DataToolbarFilter>
+          </DataToolbarItem>
+          <DataToolbarItem>
+            {width < 769 && (
+              <>
+                Sort &nbsp;
+                <Dropdown
+                  position="left"
+                  onSelect={onSortSelect}
+                  isOpen={sortIsExpanded}
+                  toggle={
+                    <DropdownToggle onToggle={setSortIsExpanded}>
+                      {sortData}
+                    </DropdownToggle>
+                  }
+                  dropdownItems={sortMenuItems.map(option => (
+                    <DropdownItem
+                      key={option.key}
+                      value={option.value}
+                      itemID={option.key}
+                      component={"button"}>
+                      {option.value}
+                    </DropdownItem>
+                  ))}
+                />
+                {SortIcons}
+              </>
+            )}
           </DataToolbarItem>
         </>
       </DataToolbarGroup>
