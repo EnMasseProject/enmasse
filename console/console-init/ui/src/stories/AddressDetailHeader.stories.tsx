@@ -41,6 +41,9 @@ export const AddressLinksFilterStory = () => {
       filterRole={select("Role ", options, "")}
       setFilterRole={action("setFilterRole")}
       totalLinks={number("total links", 1)}
+      setSortValue={()=>{}}
+      namesOptions={[]}
+      onNameChange={(value:string)=>console.log(":")}
     />
   </MemoryRouter>
   );

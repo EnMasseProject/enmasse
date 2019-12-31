@@ -51,14 +51,6 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
   messagesIn,
   messagesOut
 }) => {
-  const generateIcons = () => {
-    switch (protocol) {
-      case "AMQP":
-        return <LockIcon />;
-      default:
-        return <LockOpenIcon />;
-    }
-  };
   const [isHidden, setIsHidden] = React.useState(true);
   const [isMobileView, setIsMobileView] = React.useState(false);
   window.addEventListener("resize", () => {
