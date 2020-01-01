@@ -8,6 +8,7 @@ package io.enmasse.systemtest.messagingclients;
 import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.vertx.core.json.JsonArray;
 
 import java.util.Objects;
@@ -51,7 +52,7 @@ public class ExternalMessagingClient {
     }
 
     public ExternalMessagingClient withAddress(Address address) {
-        this.arguments.put(ClientArgument.ADDRESS, address.getSpec().getAddress());
+        this.arguments.put(ClientArgument.ADDRESS, AddressUtils.getTopicPrefix(client) + address.getSpec().getAddress());
         return this;
     }
 

@@ -201,8 +201,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                         String.format("Expected %d sent messages", expectedMsgCount / 2)));
     }
 
-    protected void doTopicSubscribeTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2,
-                                        boolean hasTopicPrefix) throws Exception {
+    protected void doTopicSubscribeTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2) throws Exception {
         clients.addAll(Arrays.asList(sender, subscriber, subscriber2));
         int expectedMsgCount = 10;
 
@@ -441,7 +440,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
     }
 
     protected void doMessageSelectorTopicTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient sender2,
-                                              AbstractClient subscriber, AbstractClient subscriber2, boolean hasTopicPrefix) throws Exception {
+                                              AbstractClient subscriber, AbstractClient subscriber2) throws Exception {
         clients.addAll(Arrays.asList(sender, sender2, subscriber, subscriber2));
         int expectedMsgCount = 5;
 
@@ -558,6 +557,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
 
         ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                .withClientEngine(receiver)
                 .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), false))
                 .withAddress(dest)
                 .withCredentials(consumCred)
