@@ -235,7 +235,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
-                .withTimeout(150)
+                .withTimeout(250)
                 .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST");
 
         ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
@@ -244,7 +244,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
-                .withTimeout(150)
+                .withTimeout(250)
                 .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST");
 
         Future<Boolean> recResult = receiverClient1.runAsync();
@@ -469,7 +469,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~12.65")
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "a~true")
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "b~false")
-                .withTimeout(150)
+                .withTimeout(250)
                 .withMessageBody("msg no. %d");
 
         ExternalMessagingClient senderClient2 = new ExternalMessagingClient()
@@ -480,7 +480,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withCredentials(defaultCredentials)
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~blue")
                 .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~11.65")
-                .withTimeout(150)
+                .withTimeout(250)
                 .withMessageBody("msg no. %d");
 
         //set up subscriber1
@@ -490,7 +490,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withCount(expectedMsgCount)
                 .withCredentials(defaultCredentials)
                 .withAddress(topic)
-                .withTimeout(150)
+                .withTimeout(250)
                 .withAdditionalArgument(ClientArgument.SELECTOR, "colour = 'red' AND a");
 
         //set up subscriber2
@@ -500,7 +500,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withCount(expectedMsgCount)
                 .withCredentials(defaultCredentials)
                 .withAddress(topic)
-                .withTimeout(150)
+                .withTimeout(250)
                 .withAdditionalArgument(ClientArgument.SELECTOR, "number < 12.5");
 
         Future<Boolean> result1 = receiverClient1.runAsync();
