@@ -40,19 +40,15 @@ public enum ClientType {
             case CLI_PROTON_PYTHON_RECEIVER:
                 return "cli-proton-python-receiver";
             case CLI_JAVA_PROTON_JMS_SENDER:
-                return "./client_executable/cli-qpid-jms.jar";
             case CLI_JAVA_PROTON_JMS_RECEIVER:
                 return "./client_executable/cli-qpid-jms.jar";
             case CLI_JAVA_ARTEMIS_JMS_SENDER:
-                return "./client_executable/cli-artemis-jms.jar";
             case CLI_JAVA_ARTEMIS_JMS_RECEIVER:
                 return "./client_executable/cli-artemis-jms.jar";
             case CLI_JAVA_OPENWIRE_JMS_SENDER:
-                return "./client_executable/cli-activemq.jar";
             case CLI_JAVA_OPENWIRE_JMS_RECEIVER:
                 return "./client_executable/cli-activemq.jar";
             case CLI_JAVA_PAHO_MQTT_SENDER:
-                return "./client_executable/cli-paho-java.jar";
             case CLI_JAVA_PAHO_MQTT_RECEIVER:
                 return "./client_executable/cli-paho-java.jar";
             case CLI_STOMP_SENDER:
@@ -84,6 +80,9 @@ public enum ClientType {
             case CLI_STOMP_SENDER:
             case CLI_STOMP_RECEIVER:
                 return "cli-stomp";
+            case CLI_JAVA_PAHO_MQTT_SENDER:
+            case CLI_JAVA_PAHO_MQTT_RECEIVER:
+                return "cli-paho";
             default:
                 return "";
         }

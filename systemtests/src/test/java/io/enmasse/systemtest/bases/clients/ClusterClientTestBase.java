@@ -58,7 +58,7 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
-                .withAddress("message-basic-" + ClientType.getAddressName(sender) + "-" + (websocket ? "ws" : ""))
+                .withAddress("message-basic-" + ClientType.getAddressName(sender) + (websocket ? "-ws" : ""))
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
@@ -106,7 +106,7 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
-                .withAddress("basic-mqtt-" + ClientType.getAddressName(sender))
+                .withAddress("basic-mqtt" + ClientType.getAddressName(sender))
                 .withPlan(getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? DestinationPlan.STANDARD_LARGE_TOPIC : getDefaultPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();

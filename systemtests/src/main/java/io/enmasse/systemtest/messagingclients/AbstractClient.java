@@ -137,9 +137,7 @@ public abstract class AbstractClient {
                     arguments.add(value);
                 }
             } else {
-                log.warn(String.format("Argument '%s' is not allowed for '%s'",
-                        arg.command(),
-                        this.getClass().getSimpleName()));
+                log.debug("Argument {} is not allowed for '{}'", arg.command(), this.getClass().getSimpleName());
             }
         }
     }
@@ -321,7 +319,7 @@ public abstract class AbstractClient {
                     try {
                         messages.add(new JsonObject(line));
                     } catch (Exception ignored) {
-                        log.warn("{} - Failed to parse client output '{}' as JSON", clientType, line);
+                        log.debug("{} - Failed to parse client output '{}' as JSON", clientType, line);
                     }
                 }
             }

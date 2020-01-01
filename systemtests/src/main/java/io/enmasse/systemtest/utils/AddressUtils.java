@@ -16,6 +16,8 @@ import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
+import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -268,8 +270,8 @@ public class AddressUtils {
     }
 
     public static String getTopicPrefix(AbstractClient clientEngine) {
-        return clientEngine instanceof ProtonJMSClientReceiver ||
-                clientEngine instanceof ProtonJMSClientSender ? "topic://" : "";
+        return (clientEngine instanceof ProtonJMSClientReceiver || clientEngine instanceof ProtonJMSClientSender) &&
+                !(clientEngine instanceof PahoMQTTClientReceiver || clientEngine instanceof PahoMQTTClientSender) ? "topic://" : "";
     }
 
     interface AddressListMatcher {
