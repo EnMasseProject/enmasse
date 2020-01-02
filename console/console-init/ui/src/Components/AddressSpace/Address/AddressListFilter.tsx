@@ -304,6 +304,9 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
   const dropdownItems = [
     <DropdownItem key="delete-all" onClick={() => console.log("deleted")}>
       Delete All
+    </DropdownItem>,
+    <DropdownItem key="purge-all" onClick={() => console.log("purged")}>
+      Purge All
     </DropdownItem>
     // <OverflowMenuDropdownItem key="secondary" isShared={true}>
     //   Create Address
