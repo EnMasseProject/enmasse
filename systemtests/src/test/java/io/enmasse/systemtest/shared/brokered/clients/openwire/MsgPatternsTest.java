@@ -31,7 +31,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     @Test
     @DisplayName("testTopicSubscribe")
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
-        doTopicSubscribeTest(artemisManagement, new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
+        doTopicSubscribeTest(artemisManagement, new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver());
     }
 
     @Test
@@ -53,6 +53,6 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     @DisplayName("testMessageSelectorTopic")
     void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
         doMessageSelectorTopicTest(artemisManagement, new OpenwireJMSClientSender(), new OpenwireJMSClientSender(),
-                new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver(), true);
+                new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver());
     }
 }

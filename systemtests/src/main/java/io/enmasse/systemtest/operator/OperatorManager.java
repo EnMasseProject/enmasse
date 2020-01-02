@@ -8,39 +8,29 @@ import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.ConsoleServiceSpec;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
-import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.Minikube;
 import io.enmasse.systemtest.platform.OpenShift;
 import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
-import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OperatorManager {
-
-//    private static final OLMInstallationType SYSTEMTESTS_OLM_INSTALLATION_TYPE = OLMInstallationType.DEFAULT;
 
     private static Logger LOGGER = CustomLogger.getLogger();
     private Kubernetes kube = Kubernetes.getInstance();
@@ -122,6 +112,7 @@ public class OperatorManager {
 
     public void installOperators() throws Exception {
         LOGGER.info("Installing enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
+        generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
     }
@@ -293,6 +284,13 @@ public class OperatorManager {
         }
     }
 
+    private void generateTemplates() {
+        if (Files.notExists(Paths.get(Environment.getInstance().getTemplatesPath()))) {
+            LOGGER.info("Generating templates.");
+            Exec.execute(Arrays.asList("make", "-C", "..", "templates"));
+        }
+    }
+
     private void awaitConsoleReadiness(String namespace) throws Exception {
         final String serviceName = "console";
 
@@ -333,10 +331,7 @@ public class OperatorManager {
         if (isEnmasseOlmDeployed(kube.getOlmNamespace())) {
             return true;
         }
-        if (kube.namespaceExists(kube.getInfraNamespace()) && isEnmasseOlmDeployed(kube.getInfraNamespace())) {
-            return true;
-        }
-        return false;
+        return kube.namespaceExists(kube.getInfraNamespace()) && isEnmasseOlmDeployed(kube.getInfraNamespace());
     }
 
     public boolean areExamplesApplied() {
@@ -348,14 +343,13 @@ public class OperatorManager {
 
     private boolean isEnmasseOlmDeployed(String namespace) {
         ExecutionResultData res = KubeCMDClient.runOnCluster("get", "subscriptions", "-n", namespace);
-        if(res.getRetCode()) {
-            return res.getStdOut().contains(productName+"-sub");
+        if (res.getRetCode()) {
+            return res.getStdOut().contains(productName + "-sub");
         }
         return false;
     }
 
     private String getNamespaceByOlmInstallationType(OLMInstallationType installation) {
-        String namespace = installation == OLMInstallationType.DEFAULT ? kube.getOlmNamespace() : kube.getInfraNamespace();
-        return namespace;
+        return installation == OLMInstallationType.DEFAULT ? kube.getOlmNamespace() : kube.getInfraNamespace();
     }
 }

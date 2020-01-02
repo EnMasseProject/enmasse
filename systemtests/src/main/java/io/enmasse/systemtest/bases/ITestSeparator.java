@@ -42,7 +42,7 @@ public interface ITestSeparator {
         TimeMeasuringSystem.setTestName(testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName());
         TimeMeasuringSystem.startOperation(SystemtestsOperation.TEST_EXECUTION);
         log.info(String.join("", Collections.nCopies(100, separatorChar)));
-        log.info(String.format("%s.%s-STARTED", testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName()));
+        log.info(String.format("%s.%s-STARTED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName()));
     }
 
     @AfterEach
@@ -57,7 +57,7 @@ public interface ITestSeparator {
             }
         }
         TimeMeasuringSystem.stopOperation(SystemtestsOperation.TEST_EXECUTION);
-        log.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName()));
+        log.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName()));
         log.info(String.join("", Collections.nCopies(100, separatorChar)));
     }
 }
