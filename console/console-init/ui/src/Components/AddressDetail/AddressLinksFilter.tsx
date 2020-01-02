@@ -86,6 +86,17 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     { key: "deliveryRate", value: "DeliveryRate", index: 3 },
     { key: "backlog", value: "Backlog", index: 4 }
   ];
+
+  React.useEffect(() => {
+    if (sortValue) {
+      const data = sortMenuItems.filter(data => data.index === sortValue.index);
+      if (data && sortData != data[0].value) {
+        setSortData(data[0].value);
+        setSortDirection(sortValue.direction);
+      }
+    }
+  }, [sortValue]);
+
   const onInputChange = (newValue: string) => {
     setInputValue(newValue);
   };
@@ -96,7 +107,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
         if (filterNames.indexOf(inputValue.trim()) < 0) {
           setFilterNames([...filterNames, inputValue.trim()]);
         }
-      setInputValue(undefined);
     } else if (filterValue && filterValue === "Container") {
       if (inputValue && inputValue.trim() !== "")
         if (filterContainers.indexOf(inputValue.trim()) < 0) {
@@ -155,7 +165,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     setFilterContainers([]);
     setFilterRole(undefined);
   };
-
   const onSortSelect = (event: any) => {
     setSortData(event.target.value);
     setSortDirection(undefined);

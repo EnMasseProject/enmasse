@@ -27,6 +27,8 @@ interface AddressSpaceListPageProps {
   filter_Type: string | null;
   onCreationRefetch?: boolean;
   setOnCreationRefetch: (value: boolean) => void;
+  sortValue?: ISortBy;
+  setSortValue: (value: ISortBy) => void;
 }
 export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageProps> = ({
   page,
@@ -37,7 +39,9 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   filter_NameSpace,
   filter_Type,
   onCreationRefetch,
-  setOnCreationRefetch
+  setOnCreationRefetch,
+  sortValue,
+  setSortValue
 }) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
@@ -53,6 +57,9 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   ] = React.useState<IAddressSpace | null>();
 
   const [sortBy, setSortBy] = React.useState<ISortBy>();
+  if (sortValue && sortBy != sortValue) {
+    setSortBy(sortValue);
+  }
   const { loading, error, data, refetch } = useQuery<IAddressSpacesResponse>(
     RETURN_ALL_ADDRESS_SPACES(
       page,
@@ -65,25 +72,29 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     { pollInterval: 20000, fetchPolicy: "network-only" }
   );
   // console.log(data);
-  if(onCreationRefetch){
+  if (onCreationRefetch) {
     refetch();
     setOnCreationRefetch(false);
   }
   const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
   const handleSaving = async () => {
-    addressSpaceBeingEdited && await client.mutate({
-      mutation: EDIT_ADDRESS_SPACE,
-      variables: {
-        a: {
-          Name: addressSpaceBeingEdited.name,
-          Namespace: addressSpaceBeingEdited.nameSpace
-        },
-        jsonPatch: '[{"op":"replace","path":"/Plan","value":"' + addressSpaceBeingEdited.displayName + '"}]',
-        patchType: "application/json-patch+json"
-      }
-    });
+    addressSpaceBeingEdited &&
+      (await client.mutate({
+        mutation: EDIT_ADDRESS_SPACE,
+        variables: {
+          a: {
+            Name: addressSpaceBeingEdited.name,
+            Namespace: addressSpaceBeingEdited.nameSpace
+          },
+          jsonPatch:
+            '[{"op":"replace","path":"/Plan","value":"' +
+            addressSpaceBeingEdited.displayName +
+            '"}]',
+          patchType: "application/json-patch+json"
+        }
+      }));
     setAddressSpaceBeingEdited(null);
-  }
+  };
 
   const handleEditChange = (addressSpace: IAddressSpace) =>
     setAddressSpaceBeingEdited(addressSpace);
@@ -123,7 +134,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   if (error) {
     console.log(error);
   }
-  
+
   const { addressSpaces } = data || {
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
@@ -138,9 +149,9 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     isReady: addSpace.Status.IsReady
   }));
 
-
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
+    setSortValue({ index: index, direction: direction });
   };
 
   return (
@@ -150,7 +161,8 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           rows={addressSpacesList}
           onEdit={handleEditChange}
           onDelete={handleDeleteChange}
-          onSort={onSort} sortBy={sortBy} 
+          onSort={onSort}
+          sortBy={sortBy}
         />
       ) : (
         <EmptyAddressSpace />

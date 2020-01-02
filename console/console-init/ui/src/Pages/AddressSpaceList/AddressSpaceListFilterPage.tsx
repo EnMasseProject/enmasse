@@ -29,6 +29,7 @@ import {
   AddressSpaceListFilter,
   AddressSpaceListKebab
 } from "src/Components/AddressSpaceList/AddressSpaceListFilter";
+import { ISortBy } from "@patternfly/react-table";
 
 interface IAddressSpaceListFilterPageProps {
   filterValue?: string | null;
@@ -41,6 +42,8 @@ interface IAddressSpaceListFilterPageProps {
   setFilterType: (value: string | null) => void;
   totalAddressSpaces: number;
   setOnCreationRefetch?: (value: boolean) => void;
+  sortValue?: ISortBy;
+  setSortValue: (value: ISortBy) => void;
 }
 export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceListFilterPageProps> = ({
   filterValue,
@@ -52,7 +55,9 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
   filterType,
   setFilterType,
   totalAddressSpaces,
-  setOnCreationRefetch
+  setOnCreationRefetch,
+  sortValue,
+  setSortValue
 }) => {
   const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
   const onClearAllFilters = () => {
@@ -76,6 +81,8 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
         filterType={filterType}
         setFilterType={setFilterType}
         totalAddressSpaces={totalAddressSpaces}
+        sortValue={sortValue}
+        setSortValue={setSortValue}
       />
       <DataToolbarItem>
         {isCreateWizardOpen && (

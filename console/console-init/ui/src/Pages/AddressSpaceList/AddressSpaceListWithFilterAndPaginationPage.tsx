@@ -11,6 +11,7 @@ import {
 import { AddressSpaceListPage } from "./AddressSpaceListPage";
 import { AddressSpaceListFilterPage } from "./AddressSpaceListFilterPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
+import { ISortBy } from "@patternfly/react-table";
 
 export default function AddressSpaceListWithFilterAndPagination() {
   useDocumentTitle("Address Space List");
@@ -21,6 +22,7 @@ export default function AddressSpaceListWithFilterAndPagination() {
   const [filterNamespaces, setFilterNamespaces] = React.useState<string[]>([]);
   const [filterType, setFilterType] = React.useState<string | null>(null);
   const [totalAddressSpaces, setTotalAddressSpaces] = React.useState<number>(0);
+  const [sortDropDownValue,setSortDropdownValue] = React.useState<ISortBy>();
   const location = useLocation();
   const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
@@ -82,6 +84,8 @@ export default function AddressSpaceListWithFilterAndPagination() {
             setFilterType={setFilterType}
             totalAddressSpaces={totalAddressSpaces}
             setOnCreationRefetch={setOnCreationRefetch}
+            sortValue={sortDropDownValue}
+            setSortValue={setSortDropdownValue}
           />
         </GridItem>
         <GridItem span={5}>
@@ -99,6 +103,8 @@ export default function AddressSpaceListWithFilterAndPagination() {
         filter_Type={filterType}
         onCreationRefetch={onCreationRefetch}
         setOnCreationRefetch={setOnCreationRefetch}
+        sortValue={sortDropDownValue}
+        setSortValue={setSortDropdownValue}
       />
       {totalAddressSpaces > 0 && renderPagination(page, perPage)}
     </PageSection>

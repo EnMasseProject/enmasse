@@ -1,15 +1,10 @@
 import * as React from "react";
-import { Flex, FlexItem } from "@patternfly/react-core";
+import { Split, SplitItem } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 
 const styles = StyleSheet.create({
-  message_in_flex: {
+  message_split: {
     paddingTop: 15,
-    textAlign: "center",
-    paddingLeft: 48,
-    fontSize: 21
-  },
-  message_out_flex: {
     textAlign: "center",
     paddingLeft: 48,
     fontSize: 21
@@ -27,15 +22,15 @@ export const MessagesDetail: React.FunctionComponent<IMessagesDetail> = ({
   isMobileView
 }) => {
   return (
-    <Flex breakpointMods={[{ modifier: "row", breakpoint: "sm" }]}>
-      <FlexItem className={css(styles.message_in_flex)}>
+    <Split>
+      <SplitItem span={6} className={css(styles.message_split)}>
         {messagesIn || messagesIn === 0 ? messagesIn : "-"}{" "}
         {isMobileView ? "" : <br />} Message in
-      </FlexItem>
-      <FlexItem className={css(styles.message_out_flex)}>
+      </SplitItem>
+      <SplitItem span={6} className={css(styles.message_split)}>
         {messagesOut || messagesOut === 0 ? messagesOut : "-"}{" "}
         {isMobileView ? "" : <br />} Message out
-      </FlexItem>
-    </Flex>
+      </SplitItem>
+    </Split>
   );
 };

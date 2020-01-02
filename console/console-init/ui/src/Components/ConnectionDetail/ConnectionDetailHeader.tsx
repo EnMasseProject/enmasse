@@ -7,14 +7,12 @@ import {
   CardHeader,
   CardBody
 } from "@patternfly/react-core";
-import {
-  AngleDownIcon,
-  AngleUpIcon
-} from "@patternfly/react-icons";
+import { AngleDownIcon, AngleUpIcon } from "@patternfly/react-icons";
 import { ConnectionDetail } from "./ConnectionDetail";
 import { MessagesDetail } from "./MessagesDetail";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { ConnectionProtocolFormat } from "../Common/ConnectionListFormatter";
+import useWindowDimensions from "../Common/WindowDimension";
 const styles = StyleSheet.create({
   expandable: {
     color: "rgb(0, 102, 204)"
@@ -50,14 +48,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
   messagesOut
 }) => {
   const [isHidden, setIsHidden] = React.useState(true);
-  const [isMobileView, setIsMobileView] = React.useState(false);
-  window.addEventListener("resize", () => {
-    if (window.innerWidth < 992) {
-      setIsMobileView(true);
-    } else {
-      setIsMobileView(false);
-    }
-  });
+  const { width } = useWindowDimensions();
   return (
     <Card>
       <CardHeader>
@@ -76,7 +67,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
               encrypted={encrypted}
             />
           </FlexItem>
-          {!isMobileView && (
+          {width > 992 && (
             <FlexItem
               onClick={() => {
                 setIsHidden(!isHidden);
@@ -100,19 +91,19 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
             { modifier: "column", breakpoint: "sm" },
             { modifier: "row", breakpoint: "lg" }
           ]}>
-          {isMobileView || !isHidden ? (
+          {width < 992 || !isHidden ? (
             <>
               <ConnectionDetail
                 product={product}
                 version={version}
                 jvm={platform}
                 os={os}
-                isMobileView={isMobileView}
+                isMobileView={width < 992 ? true : false}
               />
               <MessagesDetail
                 messagesIn={messagesIn}
                 messagesOut={messagesOut}
-                isMobileView={isMobileView}
+                isMobileView={width < 992 ? true : false}
               />
             </>
           ) : (
