@@ -4,7 +4,7 @@ import {
   ConnectionList,
   IConnection
 } from "../Components/AddressSpace/Connection/ConnectionList";
-import { EmptyConnection } from "../Components/Common/EmptyConnection";
+import { EmptyConnection } from "../Components/AddressSpace/Connection/EmptyConnection";
 
 export default {
   title: "Connection"

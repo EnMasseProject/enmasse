@@ -1,6 +1,6 @@
 import * as React from "react";
 import { render } from "@testing-library/react";
-import { EmptyAddress } from "src/Components/Common/EmptyAddress";
+import { EmptyAddress } from "src/Components/AddressSpace/Address/EmptyAddress";
 
 describe("Empty Page with Empty state for Addresses", () => {
   test("it renders empty address state instead of list of addresses", () => {

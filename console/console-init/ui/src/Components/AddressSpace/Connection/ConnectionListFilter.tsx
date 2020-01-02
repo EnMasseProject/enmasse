@@ -19,6 +19,9 @@ import {
   Badge
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
+import useWindowDimensions from "src/Components/Common/WindowDimension";
+import { ISortBy } from "@patternfly/react-table";
+import { SortForMobileView } from "src/Components/Common/SortForMobileView";
 
 interface IConnectionListFilterProps {
   filterValue?: string | null;
@@ -27,6 +30,8 @@ interface IConnectionListFilterProps {
   setHostnames: (value: Array<string>) => void;
   containerIds?: Array<string>;
   setContainerIds: (value: Array<string>) => void;
+  sortValue?: ISortBy;
+  setSortValue: (value: ISortBy) => void;
   totalConnections: number;
 }
 export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilterProps> = ({
@@ -36,8 +41,11 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   setHostnames,
   containerIds,
   setContainerIds,
-  totalConnections
+  totalConnections,
+  sortValue,
+  setSortValue
 }) => {
+  const { width } = useWindowDimensions();
   const [inputValue, setInputValue] = React.useState<string | null>();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const onFilterSelect = (event: any) => {
@@ -48,6 +56,16 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   const filterMenuItems = [
     { key: "filterHostName", value: "Hostname" },
     { key: "filterContainer", value: "Container" }
+  ];
+
+  const sortMenuItems = [
+    { key: "hostname", value: "Hostname", index: 0 },
+    { key: "containerId", value: "Container ID", index: 1 },
+    { key: "protocol", value: "Protocol", index: 2 },
+    { key: "messageIn", value: "Messages In", index: 3 },
+    { key: "messageOut", value: "Messages Out", index: 4 },
+    { key: "sender", value: "Senders", index: 5 },
+    { key: "receiver", value: "Receivers", index: 6 }
   ];
 
   const onInputChange = (newValue: string) => {
@@ -197,20 +215,29 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
     </>
   );
   const toolbarItems = (
-    <DataToolbarToggleGroup
-      toggleIcon={
-        <>
-          <FilterIcon />
-          {checkIsFilterApplied() && (
-            <Badge key={1} isRead>
-              {totalConnections}
-            </Badge>
-          )}
-        </>
-      }
-      breakpoint="xl">
-      {toggleGroupItems}
-    </DataToolbarToggleGroup>
+    <>
+      <DataToolbarToggleGroup
+        toggleIcon={
+          <>
+            <FilterIcon />
+            {checkIsFilterApplied() && (
+              <Badge key={1} isRead>
+                {totalConnections}
+              </Badge>
+            )}
+          </>
+        }
+        breakpoint="xl">
+        {toggleGroupItems}
+      </DataToolbarToggleGroup>
+      {width < 769 && (
+        <SortForMobileView
+          sortMenu={sortMenuItems}
+          sortValue={sortValue}
+          setSortValue={setSortValue}
+        />
+      )}
+    </>
   );
   return (
     <>

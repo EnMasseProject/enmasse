@@ -4,7 +4,7 @@ import {
   IConnection,
   ConnectionList
 } from "src/Components/AddressSpace/Connection/ConnectionList";
-import { EmptyConnection } from "src/Components/Common/EmptyConnection";
+import { EmptyConnection } from "src/Components/AddressSpace/Connection/EmptyConnection";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionListResponse } from "src/Types/ResponseTypes";
 import { RETURN_ALL_CONECTION_LIST } from "src/Queries/Queries";
@@ -18,6 +18,8 @@ export interface IConnectionListPageProps {
   setTotalConnections: (total: number) => void;
   page: number;
   perPage: number;
+  sortValue?: ISortBy;
+  setSortValue: (value?: ISortBy) => void;
 }
 
 export const ConnectionsListPage: React.FunctionComponent<IConnectionListPageProps> = ({
@@ -27,9 +29,14 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
   containerIds,
   setTotalConnections,
   page,
-  perPage
+  perPage,
+  sortValue,
+  setSortValue
 }) => {
   const [sortBy, setSortBy] = React.useState<ISortBy>();
+  if (sortValue && sortBy != sortValue) {
+    setSortBy(sortValue);
+  }
   let { loading, error, data } = useQuery<IConnectionListResponse>(
     RETURN_ALL_CONECTION_LIST(
       page,
@@ -68,6 +75,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
 
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
+    setSortValue({index:index,direction:direction});
   };
   return (
     <>

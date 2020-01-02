@@ -14,6 +14,9 @@ import {
   AddressListFilter,
   AddressListKebab
 } from "src/Components/AddressSpace/Address/AddressListFilter";
+import useWindowDimensions from "src/Components/Common/WindowDimension";
+import { SortForMobileView } from "src/Components/Common/SortForMobileView";
+import { ISortBy } from "@patternfly/react-table";
 interface AddressListFilterProps {
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;
@@ -23,6 +26,8 @@ interface AddressListFilterProps {
   setTypeValue: (value: string | null) => void;
   statusValue: string | null;
   setStatusValue: (value: string | null) => void;
+  sortValue?: ISortBy;
+  setSortValue: (value: ISortBy) => void;
   totalAddresses: number;
 }
 export const AddressListFilterPage: React.FunctionComponent<AddressListFilterProps> = ({
@@ -34,13 +39,15 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
   setTypeValue,
   statusValue,
   setStatusValue,
+  sortValue,
+  setSortValue,
   totalAddresses
 }) => {
   const { name, namespace, type } = useParams();
   const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
   const [addressSpacePlan, setAddressSpacePlan] = React.useState();
-
   const client = useApolloClient();
+  const { width } = useWindowDimensions();
 
   const onDeleteAll = () => {
     setFilterValue("Name");
@@ -48,6 +55,12 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
     setStatusValue(null);
     setFilterNames([]);
   };
+  const sortMenuItems = [
+    { key: "name", value: "Name", index: 1 },
+    { key: "messageIn", value: "Messages In", index: 3 },
+    { key: "messageOut", value: "Messages Out", index: 4 },
+    { key: "storedMessage", value: "Stored Messages", index: 5 }
+  ];
 
   const createAddressOnClick = async () => {
     setIsCreateWizardOpen(!isCreateWizardOpen);
@@ -83,6 +96,13 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
         setStatusValue={setStatusValue}
         totalAddresses={totalAddresses}
       />
+      {width < 769 && (
+        <SortForMobileView
+          sortMenu={sortMenuItems}
+          sortValue={sortValue}
+          setSortValue={setSortValue}
+        />
+      )}
       <DataToolbarItem>
         {isCreateWizardOpen && (
           <CreateAddressPage

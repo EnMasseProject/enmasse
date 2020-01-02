@@ -16,21 +16,17 @@ import {
   TextInput,
   Button,
   ButtonVariant,
-  Badge,
-  Split,
-  SplitItem
+  Badge
 } from "@patternfly/react-core";
 import {
   FilterIcon,
   SearchIcon,
-  SortAlphaDownAltIcon,
-  SortAmountDownIcon,
   SortAmountUpAltIcon,
   SortAmountDownAltIcon
 } from "@patternfly/react-icons";
 import { ISortBy } from "@patternfly/react-table";
 import useWindowDimensions from "../Common/WindowDimension";
-import style from "react-syntax-highlighter/dist/styles/hljs/atelier-dune-light";
+import { SortForMobileView } from "../Common/SortForMobileView";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -63,13 +59,10 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   namesOptions,
   onNameChange
 }) => {
+  const { width } = useWindowDimensions();
   const [inputValue, setInputValue] = React.useState<string>();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const [roleIsExpanded, setRoleIsExpanded] = React.useState(false);
-  const [sortIsExpanded, setSortIsExpanded] = React.useState<boolean>(false);
-  const { width } = useWindowDimensions();
-  const [sortData, setSortData] = React.useState();
-  const [sortDirection, setSortDirection] = React.useState<string>();
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
     { key: "filterContainers", value: "Container" },
@@ -86,16 +79,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     { key: "deliveryRate", value: "DeliveryRate", index: 3 },
     { key: "backlog", value: "Backlog", index: 4 }
   ];
-
-  React.useEffect(() => {
-    if (sortValue) {
-      const data = sortMenuItems.filter(data => data.index === sortValue.index);
-      if (data && sortData != data[0].value) {
-        setSortData(data[0].value);
-        setSortDirection(sortValue.direction);
-      }
-    }
-  }, [sortValue]);
 
   const onInputChange = (newValue: string) => {
     setInputValue(newValue);
@@ -165,42 +148,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     setFilterContainers([]);
     setFilterRole(undefined);
   };
-  const onSortSelect = (event: any) => {
-    setSortData(event.target.value);
-    setSortDirection(undefined);
-    setSortIsExpanded(!sortIsExpanded);
-  };
-
-  const onSortUp = () => {
-    if (sortData) {
-      const sortItem = sortMenuItems.filter(
-        object => object.value === sortData
-      );
-      setSortValue({ index: sortItem[0].index, direction: "asc" });
-      setSortDirection("asc");
-    }
-  };
-  const onSortDown = () => {
-    if (sortData) {
-      const sortItem = sortMenuItems.filter(
-        object => object.value === sortData
-      );
-      setSortValue({ index: sortItem[0].index, direction: "desc" });
-      setSortDirection("desc");
-    }
-  };
-
-  const SortIcons = (
-    <>
-      {!sortDirection ? (
-        <SortAmountDownAltIcon color="grey" onClick={onSortUp} />
-      ) : sortDirection === "asc" ? (
-        <SortAmountUpAltIcon color="blue" onClick={onSortDown} />
-      ) : (
-        <SortAmountDownAltIcon color="blue" onClick={onSortUp} />
-      )}
-    </>
-  );
 
   const toggleGroupItems = (
     <>
@@ -311,33 +258,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
               )}
             </DataToolbarFilter>
           </DataToolbarItem>
-          <DataToolbarItem>
-            {width < 769 && (
-              <>
-                Sort &nbsp;
-                <Dropdown
-                  position="left"
-                  onSelect={onSortSelect}
-                  isOpen={sortIsExpanded}
-                  toggle={
-                    <DropdownToggle onToggle={setSortIsExpanded}>
-                      {sortData}
-                    </DropdownToggle>
-                  }
-                  dropdownItems={sortMenuItems.map(option => (
-                    <DropdownItem
-                      key={option.key}
-                      value={option.value}
-                      itemID={option.key}
-                      component={"button"}>
-                      {option.value}
-                    </DropdownItem>
-                  ))}
-                />
-                {SortIcons}
-              </>
-            )}
-          </DataToolbarItem>
         </>
       </DataToolbarGroup>
     </>
@@ -350,20 +270,29 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onDeleteAll}>
       <DataToolbarContent>
-        <DataToolbarToggleGroup
-          toggleIcon={
-            <>
-              <FilterIcon />
-              {checkIsFilterApplied() && (
-                <Badge key={1} isRead>
-                  {totalLinks}
-                </Badge>
-              )}
-            </>
-          }
-          breakpoint="xl">
-          {toggleGroupItems}
-        </DataToolbarToggleGroup>
+        <>
+          <DataToolbarToggleGroup
+            toggleIcon={
+              <>
+                <FilterIcon />
+                {checkIsFilterApplied() && (
+                  <Badge key={1} isRead>
+                    {totalLinks}
+                  </Badge>
+                )}
+              </>
+            }
+            breakpoint="xl">
+            {toggleGroupItems}
+          </DataToolbarToggleGroup>
+          {width < 769 && (
+            <SortForMobileView
+              sortMenu={sortMenuItems}
+              sortValue={sortValue}
+              setSortValue={setSortValue}
+            />
+          )}
+        </>
       </DataToolbarContent>
     </DataToolbar>
   );

@@ -72,6 +72,7 @@ export const ConnectionLinksFilterStory = () => {
       filterRole={select("Role ", options, "")}
       setFilterRole={action("setFilterRole")}
       totalLinks={number("total links", 1)}
+      setSortValue={()=>{}}
     />
   </MemoryRouter>
   );

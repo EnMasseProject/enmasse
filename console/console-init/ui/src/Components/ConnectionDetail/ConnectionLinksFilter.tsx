@@ -19,6 +19,9 @@ import {
   Badge
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
+import { ISortBy } from "@patternfly/react-table";
+import useWindowDimensions from "../Common/WindowDimension";
+import { SortForMobileView } from "../Common/SortForMobileView";
 
 interface IConnectionLinksFilterProps {
   filterValue: string;
@@ -29,6 +32,8 @@ interface IConnectionLinksFilterProps {
   setFilterAddresses: (value: Array<string>) => void;
   filterRole?: string;
   setFilterRole: (role: string | undefined) => void;
+  sortValue?: ISortBy;
+  setSortValue: (value: ISortBy) => void;
   totalLinks: number;
 }
 
@@ -41,11 +46,14 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
   setFilterAddresses,
   filterRole,
   setFilterRole,
+  sortValue,
+  setSortValue,
   totalLinks
 }) => {
   const [inputValue, setInputValue] = React.useState<string>();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const [roleIsExpanded, setRoleIsExpanded] = React.useState(false);
+  const { width } = useWindowDimensions();
 
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
@@ -56,6 +64,17 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
   const roleMenuItems = [
     { key: "roleSender", value: "Sender" },
     { key: "roleReceiver", value: "Receiver" }
+  ];
+
+  const sortMenuItems = [
+    { key: "name", value: "Name", index: 1 },
+    { key: "address", value: "Address", index: 2 },
+    { key: "deliveries", value: "Deliveries", index: 3 },
+    { key: "rejected", value: "Rejected", index: 4 },
+    { key: "released", value: "Released", index: 6 },
+    { key: "modified", value: "Modified", index: 6 },
+    { key: "presettled", value: "Presettled", index: 7 },
+    { key: "undelievered", value: "Undelievered", index: 8 }
   ];
 
   const onInputChange = (newValue: string) => {
@@ -261,6 +280,13 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
           breakpoint="xl">
           {toggleGroupItems}
         </DataToolbarToggleGroup>
+        {width < 769 && (
+        <SortForMobileView
+          sortMenu={sortMenuItems}
+          sortValue={sortValue}
+          setSortValue={setSortValue}
+        />
+      )}
       </DataToolbarContent>
     </DataToolbar>
   );

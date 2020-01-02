@@ -6,7 +6,7 @@ import {
   AddressSpaceList,
   IAddressSpace
 } from "src/Components/AddressSpaceList/AddressSpaceList";
-import { EmptyAddressSpace } from "src/Components/Common/EmptyAddressSpace";
+import { EmptyAddressSpace } from "src/Components/AddressSpaceList/EmptyAddressSpace";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
 import {
   DELETE_ADDRESS_SPACE,

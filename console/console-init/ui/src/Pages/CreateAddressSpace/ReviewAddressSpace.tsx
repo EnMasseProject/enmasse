@@ -148,7 +148,7 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
                 color="blue"
                 onClick={() => {
                   navigator.clipboard.writeText(data.addressSpaceCommand);
-                  alert("coopied successfully");
+                  // alert("coopied successfully");
                 }}
               />
             </Tooltip>

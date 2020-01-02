@@ -30,6 +30,8 @@ import {
   AddressSpaceListKebab
 } from "src/Components/AddressSpaceList/AddressSpaceListFilter";
 import { ISortBy } from "@patternfly/react-table";
+import { SortForMobileView } from "../../Components/Common/SortForMobileView";
+import useWindowDimensions from "src/Components/Common/WindowDimension";
 
 interface IAddressSpaceListFilterPageProps {
   filterValue?: string | null;
@@ -60,6 +62,7 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
   setSortValue
 }) => {
   const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
+  const { width } = useWindowDimensions();
   const onClearAllFilters = () => {
     setFilterValue("Name");
     setFilterNamespaces([]);
@@ -69,6 +72,7 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
   const createAddressSpaceOnClick = async () => {
     setIsCreateWizardOpen(!isCreateWizardOpen);
   };
+  const sortMenuItems = [{ key: "name", value: "Name", index: 1 }];
   const toolbarItems = (
     <>
       <AddressSpaceListFilter
@@ -81,9 +85,14 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
         filterType={filterType}
         setFilterType={setFilterType}
         totalAddressSpaces={totalAddressSpaces}
-        sortValue={sortValue}
-        setSortValue={setSortValue}
       />
+      {width < 769 && (
+        <SortForMobileView
+          sortMenu={sortMenuItems}
+          sortValue={sortValue}
+          setSortValue={setSortValue}
+        />
+      )}
       <DataToolbarItem>
         {isCreateWizardOpen && (
           <CreateAddressSpace

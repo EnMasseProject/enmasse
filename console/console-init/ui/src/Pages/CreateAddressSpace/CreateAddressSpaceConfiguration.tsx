@@ -14,15 +14,11 @@ import {
 import { useQuery } from "@apollo/react-hooks";
 import { IDropdownOption } from "../../Components/Common/FilterDropdown";
 import {
-  RETURN_ADDRESS_TYPES,
   RETURN_ADDRESS_SPACE_PLANS,
   RETURN_NAMESPACES
 } from "src/Queries/Queries";
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { strict } from "assert";
-import { string } from "prop-types";
-
 const styles = StyleSheet.create({
   capitalize_labels: {
     "text-transform": "capitalize"
@@ -168,8 +164,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                 toggle={
                   <DropdownToggle
                     style={{ flex: "1" }}
-                    onToggle={() => setIsNameSpaceOpen(!isNameSpaceOpen)}
-                  >
+                    onToggle={() => setIsNameSpaceOpen(!isNameSpaceOpen)}>
                     {namespace}
                   </DropdownToggle>
                 }
@@ -178,8 +173,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                     key={option.value}
                     value={option.value}
                     itemID={option.value}
-                    component={"button"}
-                  >
+                    component={"button"}>
                     <b className={css(styles.capitalize_labels)}>
                       {option.label}
                     </b>
@@ -203,8 +197,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
               isInline
               label="Type"
               fieldId="simple-form-name"
-              isRequired={true}
-            >
+              isRequired={true}>
               <Radio
                 isChecked={isStandardChecked}
                 onChange={handleStandardChange}
@@ -223,8 +216,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
             <FormGroup
               label="Address space plan"
               isRequired={true}
-              fieldId="address-space-plan"
-            >
+              fieldId="address-space-plan">
               <br />
               <Dropdown
                 position={DropdownPosition.left}
@@ -234,8 +226,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                 toggle={
                   <DropdownToggle
                     style={{ flex: "1", position: "inherit" }}
-                    onToggle={() => setIsPlanOpen(!isPlanOpen)}
-                  >
+                    onToggle={() => setIsPlanOpen(!isPlanOpen)}>
                     {plan}
                   </DropdownToggle>
                 }
@@ -244,8 +235,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                     key={option.value}
                     value={option.value}
                     itemID={option.value}
-                    component={"button"}
-                  >
+                    component={"button"}>
                     <b>{option.label}</b>
                     <br />
                     {option.description}
@@ -256,8 +246,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
             <FormGroup
               label="Authentication service"
               isRequired={true}
-              fieldId="authentication-service"
-            >
+              fieldId="authentication-service">
               <br />
               <Dropdown
                 position={DropdownPosition.right}
@@ -271,8 +260,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                       setIsAuthenticationServiceOpen(
                         !isAuthenticationServiceOpen
                       )
-                    }
-                  >
+                    }>
                     {authenticationService}
                   </DropdownToggle>
                 }
@@ -281,8 +269,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                     key={option.value}
                     value={option.value}
                     itemID={option.value}
-                    component={"button"}
-                  >
+                    component={"button"}>
                     <b>{option.label}</b>
                     <br />
                     {option.description}

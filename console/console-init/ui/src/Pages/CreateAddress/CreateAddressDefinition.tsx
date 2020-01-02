@@ -20,7 +20,6 @@ import {
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { IAddressResponse } from "src/Types/ResponseTypes";
-import { types } from "@babel/core";
 
 const styles = StyleSheet.create({
   capitalize_labels: {
