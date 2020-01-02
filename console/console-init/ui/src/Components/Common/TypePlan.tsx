@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Tooltip, TooltipPosition, Badge, ClipboardCopy } from "@patternfly/react-core";
+import { Tooltip, TooltipPosition, Badge } from "@patternfly/react-core";
 
 interface ITypePlanProps {
   plan: string;

@@ -4,7 +4,7 @@ import { AddressList, IAddress } from "../Components/AddressSpace/Address/Addres
 import { action } from "@storybook/addon-actions";
 import { select } from "@storybook/addon-knobs";
 // import { AddressListFilter } from "..//Components/AddressSpace/AddressListFilter";
-import { EmptyAddress } from "../Components/Common/EmptyAddress";
+import { EmptyAddress } from "../Components/AddressSpace/Address/EmptyAddress";
 
 export default {
   title: "Address list"

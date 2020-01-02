@@ -11,6 +11,7 @@ import {
 import { ConnectionsListPage } from "./ConnectionsListPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ConnectionListFilter } from "src/Components/AddressSpace/Connection/ConnectionListFilter";
+import { ISortBy } from "@patternfly/react-table";
 
 const ConnectionListFunction = () => {
   useDocumentTitle("Connection List");
@@ -26,6 +27,7 @@ const ConnectionListFunction = () => {
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+  const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
 
   const setSearchParam = React.useCallback(
     (name: string, value: string) => {
@@ -80,6 +82,8 @@ const ConnectionListFunction = () => {
             containerIds={containerIds}
             setContainerIds={setContainerIds}
             totalConnections={totalConnections}
+            sortValue={sortDropDownValue}
+            setSortValue={setSortDropdownValue}
           />
         </GridItem>
         <GridItem span={6}>
@@ -95,6 +99,8 @@ const ConnectionListFunction = () => {
         setTotalConnections={setTotalConnections}
         page={page}
         perPage={perPage}
+        sortValue={sortDropDownValue}
+        setSortValue={setSortDropdownValue}
       />
       {totalConnections > 0 && renderPagination(page, perPage)}
     </PageSection>

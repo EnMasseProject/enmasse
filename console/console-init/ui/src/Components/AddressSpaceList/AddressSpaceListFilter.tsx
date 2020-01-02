@@ -41,8 +41,6 @@ interface IAddressSpaceListFilterProps {
   filterType?: string | null;
   setFilterType: (value: string | null) => void;
   totalAddressSpaces: number;
-  sortValue?: ISortBy;
-  setSortValue: (value: ISortBy) => void;
 }
 
 interface IAddressSpaceListKebabProps {
@@ -58,8 +56,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   filterType,
   setFilterType,
   totalAddressSpaces,
-  sortValue,
-  setSortValue
 }) => {
   const [inputValue, setInputValue] = React.useState<string | null>(null);
   const [filterIsExpanded, setFilterIsExpanded] = React.useState<boolean>(
@@ -68,10 +64,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const [typeFilterIsExpanded, setTypeFilterIsExpanded] = React.useState<
     boolean
   >(false);
-  const [sortIsExpanded, setSortIsExpanded] = React.useState<boolean>(false);
-  const { width } = useWindowDimensions();
-  const [sortData, setSortData] = React.useState();
-  const [sortDirection, setSortDirection] = React.useState<string>();
 
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
@@ -84,16 +76,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   ];
 
   const sortMenuItems = [{ key: "name", value: "Name", index: 1 }];
-
-  React.useEffect(() => {
-    if (sortValue) {
-      const data = sortMenuItems.filter(data => data.index === sortValue.index);
-      if (data && sortData != data[0].value) {
-        setSortData(data[0].value);
-        setSortDirection(sortValue.direction);
-      }
-    }
-  }, [sortValue]);
   
   const onInputChange = (newValue: string) => {
     setInputValue(newValue);
@@ -152,43 +134,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     setTypeFilterIsExpanded(!typeFilterIsExpanded);
   };
 
-  const onSortSelect = (event: any) => {
-    setSortData(event.target.value);
-    setSortDirection(undefined);
-    setSortIsExpanded(!sortIsExpanded);
-  };
-
-  const onSortUp = () => {
-    if (sortData) {
-      const sortItem = sortMenuItems.filter(
-        object => object.value === sortData
-      );
-      setSortValue({ index: sortItem[0].index, direction: "asc" });
-      setSortDirection("asc");
-    }
-  };
-  const onSortDown = () => {
-    if (sortData) {
-      const sortItem = sortMenuItems.filter(
-        object => object.value === sortData
-      );
-      setSortValue({ index: sortItem[0].index, direction: "desc" });
-      setSortDirection("desc");
-    }
-  };
-
-  const SortIcons = (
-    <>
-      {!sortDirection ? (
-        <SortAmountDownAltIcon color="grey" onClick={onSortUp} />
-      ) : sortDirection === "asc" ? (
-        <SortAmountUpAltIcon color="blue" onClick={onSortDown} />
-      ) : (
-        <SortAmountDownAltIcon color="blue" onClick={onSortUp} />
-      )}
-    </>
-  );
-
+ 
   const checkIsFilterApplied = () => {
     if (
       (filterNames && filterNames.length > 0) ||
@@ -340,33 +286,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
             </DataToolbarFilter>
           </DataToolbarItem>
         )}
-        <DataToolbarItem>
-          {width < 769 && (
-            <>
-              Sort &nbsp;
-              <Dropdown
-                position="left"
-                onSelect={onSortSelect}
-                isOpen={sortIsExpanded}
-                toggle={
-                  <DropdownToggle onToggle={setSortIsExpanded}>
-                    {sortData}
-                  </DropdownToggle>
-                }
-                dropdownItems={sortMenuItems.map(option => (
-                  <DropdownItem
-                    key={option.key}
-                    value={option.value}
-                    itemID={option.key}
-                    component={"button"}>
-                    {option.value}
-                  </DropdownItem>
-                ))}
-              />
-              {SortIcons}
-            </>
-          )}
-        </DataToolbarItem>
       </DataToolbarGroup>
     </>
   );

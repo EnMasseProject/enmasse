@@ -19,7 +19,6 @@ import {
   IAddressSpaceHeaderProps,
   AddressSpaceHeader
 } from "src/Components/AddressSpace/AddressSpaceHeader";
-import gql from "graphql-tag";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { StyleSheet, css } from "@patternfly/react-styles";
 import { useHistory } from "react-router";

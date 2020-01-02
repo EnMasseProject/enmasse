@@ -15,6 +15,7 @@ import { AddressListPage } from "./AddressListPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { useQuery } from "@apollo/react-hooks";
 import { CURRENT_ADDRESS_SPACE_PLAN } from "src/Queries/Queries";
+import { ISortBy } from "@patternfly/react-table";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -56,6 +57,7 @@ export default function AddressesList() {
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+  const [sortDropDownValue,setSortDropdownValue] = React.useState<ISortBy>();
 
   const { data } = useQuery<IAddressSpacePlanResponse>(
     CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
@@ -125,6 +127,8 @@ export default function AddressesList() {
             statusValue={statusValue}
             setStatusValue={setStatusValue}
             totalAddresses={totalAddresses}
+            sortValue={sortDropDownValue}
+            setSortValue={setSortDropdownValue}
           />
         </GridItem>
         <GridItem span={5}>
@@ -143,6 +147,8 @@ export default function AddressesList() {
         page={page}
         perPage={perPage}
         addressSpaceType={type}
+        sortValue={sortDropDownValue}
+        setSortValue={setSortDropdownValue}
       />
       {totalAddresses > 0 && renderPagination(page, perPage)}
     </PageSection>

@@ -17,6 +17,8 @@ interface IConnectionLinksListPageProps {
   filterNames: string[];
   filterAddresses: string[];
   filterRole?: string;
+  sortValue?: ISortBy;
+  setSortValue: (value: ISortBy) => void;
 }
 export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksListPageProps> = ({
   name,
@@ -27,9 +29,14 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
   setTotalLinks,
   filterNames,
   filterAddresses,
-  filterRole
+  filterRole,
+  sortValue,
+  setSortValue
 }) => {
   const [sortBy, setSortBy] = React.useState<ISortBy>();
+  if (sortValue && sortBy != sortValue) {
+    setSortBy(sortValue);
+  }
   const { loading, error, data } = useQuery<IConnectionLinksResponse>(
     RETURN_CONNECTION_LINKS(
       page,
@@ -72,6 +79,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
 
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
+    setSortValue({ index: index, direction: direction });
   };
 
   return (

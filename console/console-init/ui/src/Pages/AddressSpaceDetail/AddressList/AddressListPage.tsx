@@ -13,7 +13,7 @@ import {
 import { Loading } from "use-patternfly";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { Modal, Button } from "@patternfly/react-core";
-import { EmptyAddress } from "src/Components/Common/EmptyAddress";
+import { EmptyAddress } from "src/Components/AddressSpace/Address/EmptyAddress";
 import { EditAddress } from "../../EditAddressPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
 import { ISortBy } from "@patternfly/react-table";
@@ -28,6 +28,8 @@ export interface IAddressListPageProps {
   perPage: number;
   setTotalAddress: (total: number) => void;
   addressSpacePlan: string | null;
+  sortValue?: ISortBy;
+  setSortValue: (value: ISortBy) => void;
 }
 export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = ({
   name,
@@ -39,7 +41,9 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   setTotalAddress,
   page,
   perPage,
-  addressSpacePlan
+  addressSpacePlan,
+  sortValue,
+  setSortValue
 }) => {
   const [
     addressBeingEdited,
@@ -54,6 +58,9 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   const client = useApolloClient();
   const [sortBy, setSortBy] = React.useState<ISortBy>();
 
+  if (sortValue && sortBy != sortValue) {
+    setSortBy(sortValue);
+  }
   const { loading, error, data, refetch } = useQuery<IAddressResponse>(
     RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE(
       page,
@@ -118,8 +125,6 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       setAddressBeingEdited(null);
     }
   };
-  const handleEditChange = (address: IAddress) =>
-    setAddressBeingEdited(address);
 
   const handlePlanChange = (plan: string) => {
     if (addressBeingEdited) {
@@ -148,6 +153,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   };
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
+    setSortValue({ index: index, direction: direction });
   };
 
   return (

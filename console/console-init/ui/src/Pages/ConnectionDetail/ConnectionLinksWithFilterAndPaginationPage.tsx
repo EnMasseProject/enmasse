@@ -11,8 +11,8 @@ import { GridStylesForTableHeader } from "../AddressSpaceDetail/AddressList/Addr
 import { ConnectionLinksListPage } from "./ConnectionsLinksListPage";
 import { useLocation, useHistory } from "react-router";
 import { css } from "@patternfly/react-styles";
-import { ConnectionListFilter } from "src/Components/AddressSpace/Connection/ConnectionListFilter";
 import { ConnectionLinksFilter } from "src/Components/ConnectionDetail/ConnectionLinksFilter";
+import { ISortBy } from "@patternfly/react-table";
 interface IConnectionLinksWithFilterAndPaginationPageProps {
   name?: string;
   namespace?: string;
@@ -35,6 +35,7 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
     []
   );
   const [filterRole, setFilterRole] = React.useState<string>();
+  const [sortDropDownValue,setSortDropdownValue] = React.useState<ISortBy>();
 
   const setSearchParam = React.useCallback(
     (name: string, value: string) => {
@@ -97,6 +98,8 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
             filterRole={filterRole}
             setFilterRole={setFilterRole}
             totalLinks={totalLinks}
+            sortValue={sortDropDownValue}
+            setSortValue={setSortDropdownValue}
           />
         </GridItem>
         <GridItem span={6}>{renderPagination(page, perPage)}</GridItem>
@@ -111,6 +114,8 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
         filterNames={filterNames}
         filterAddresses={filterAddresses}
         filterRole={filterRole}
+        sortValue={sortDropDownValue}
+        setSortValue={setSortDropdownValue}
       />
       {renderPagination(page, perPage)}
     </PageSection>
