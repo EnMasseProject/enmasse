@@ -122,6 +122,7 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
           filterNames={filterNames}
           filterContainers={filterContainers}
           sortValue={sortDropDownValue}
+          setSortValue={setSortDropdownValue}
           filterRole={filterRole}
         />
         {addresLinksTotal > 0 && renderPagination(page, perPage)}

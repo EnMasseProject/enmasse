@@ -11,7 +11,12 @@ import {
   OverflowMenuItem,
   OverflowMenuControl
 } from "@patternfly/react-core/dist/js/experimental";
-import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
+import {
+  FilterIcon,
+  SearchIcon,
+  SortAmountDownAltIcon,
+  SortAmountUpAltIcon
+} from "@patternfly/react-icons";
 import {
   Dropdown,
   DropdownToggle,
@@ -23,6 +28,8 @@ import {
   Badge,
   KebabToggle
 } from "@patternfly/react-core";
+import useWindowDimensions from "../Common/WindowDimension";
+import { ISortBy } from "@patternfly/react-table";
 
 interface IAddressSpaceListFilterProps {
   filterValue?: string | null;
@@ -34,6 +41,8 @@ interface IAddressSpaceListFilterProps {
   filterType?: string | null;
   setFilterType: (value: string | null) => void;
   totalAddressSpaces: number;
+  sortValue?: ISortBy;
+  setSortValue: (value: ISortBy) => void;
 }
 
 interface IAddressSpaceListKebabProps {
@@ -48,7 +57,9 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   setFilterNamespaces,
   filterType,
   setFilterType,
-  totalAddressSpaces
+  totalAddressSpaces,
+  sortValue,
+  setSortValue
 }) => {
   const [inputValue, setInputValue] = React.useState<string | null>(null);
   const [filterIsExpanded, setFilterIsExpanded] = React.useState<boolean>(
@@ -57,6 +68,10 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const [typeFilterIsExpanded, setTypeFilterIsExpanded] = React.useState<
     boolean
   >(false);
+  const [sortIsExpanded, setSortIsExpanded] = React.useState<boolean>(false);
+  const { width } = useWindowDimensions();
+  const [sortData, setSortData] = React.useState();
+  const [sortDirection, setSortDirection] = React.useState<string>();
 
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
@@ -67,6 +82,19 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     { key: "typeStandard", value: "Standard" },
     { key: "typeBrokered", value: "Brokered" }
   ];
+
+  const sortMenuItems = [{ key: "name", value: "Name", index: 1 }];
+
+  React.useEffect(() => {
+    if (sortValue) {
+      const data = sortMenuItems.filter(data => data.index === sortValue.index);
+      if (data && sortData != data[0].value) {
+        setSortData(data[0].value);
+        setSortDirection(sortValue.direction);
+      }
+    }
+  }, [sortValue]);
+  
   const onInputChange = (newValue: string) => {
     setInputValue(newValue);
   };
@@ -122,6 +150,54 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const onTypeFilterSelect = (event: any) => {
     setFilterType(event.target.value);
     setTypeFilterIsExpanded(!typeFilterIsExpanded);
+  };
+
+  const onSortSelect = (event: any) => {
+    setSortData(event.target.value);
+    setSortDirection(undefined);
+    setSortIsExpanded(!sortIsExpanded);
+  };
+
+  const onSortUp = () => {
+    if (sortData) {
+      const sortItem = sortMenuItems.filter(
+        object => object.value === sortData
+      );
+      setSortValue({ index: sortItem[0].index, direction: "asc" });
+      setSortDirection("asc");
+    }
+  };
+  const onSortDown = () => {
+    if (sortData) {
+      const sortItem = sortMenuItems.filter(
+        object => object.value === sortData
+      );
+      setSortValue({ index: sortItem[0].index, direction: "desc" });
+      setSortDirection("desc");
+    }
+  };
+
+  const SortIcons = (
+    <>
+      {!sortDirection ? (
+        <SortAmountDownAltIcon color="grey" onClick={onSortUp} />
+      ) : sortDirection === "asc" ? (
+        <SortAmountUpAltIcon color="blue" onClick={onSortDown} />
+      ) : (
+        <SortAmountDownAltIcon color="blue" onClick={onSortUp} />
+      )}
+    </>
+  );
+
+  const checkIsFilterApplied = () => {
+    if (
+      (filterNames && filterNames.length > 0) ||
+      (filterNamespaces && filterNamespaces.length > 0) ||
+      (filterType && filterType.trim() !== "")
+    ) {
+      return true;
+    }
+    return false;
   };
   const toggleGroupItems = (
     <>
@@ -264,6 +340,33 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
             </DataToolbarFilter>
           </DataToolbarItem>
         )}
+        <DataToolbarItem>
+          {width < 769 && (
+            <>
+              Sort &nbsp;
+              <Dropdown
+                position="left"
+                onSelect={onSortSelect}
+                isOpen={sortIsExpanded}
+                toggle={
+                  <DropdownToggle onToggle={setSortIsExpanded}>
+                    {sortData}
+                  </DropdownToggle>
+                }
+                dropdownItems={sortMenuItems.map(option => (
+                  <DropdownItem
+                    key={option.key}
+                    value={option.value}
+                    itemID={option.key}
+                    component={"button"}>
+                    {option.value}
+                  </DropdownItem>
+                ))}
+              />
+              {SortIcons}
+            </>
+          )}
+        </DataToolbarItem>
       </DataToolbarGroup>
     </>
   );
@@ -272,11 +375,11 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       toggleIcon={
         <>
           <FilterIcon />
-          {/* {checkIsFilterApplied() && ( */}
+          {checkIsFilterApplied() && (
             <Badge key={1} isRead>
               {totalAddressSpaces}
             </Badge>
-          {/* )} */}
+          )}
         </>
       }
       breakpoint="xl">
@@ -285,57 +388,55 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   );
 };
 
-
-
 export const AddressSpaceListKebab: React.FunctionComponent<IAddressSpaceListKebabProps> = ({
-    createAddressSpaceOnClick
-  }) => {
-    const [isKebabOpen, setIsKebabOpen] = React.useState(false);
-    const dropdownItems = [
-      <DropdownItem key="delete-all" onClick={() => console.log("deleted")}>
-        Delete All
-      </DropdownItem>
-      // <OverflowMenuDropdownItem key="secondary" isShared={true}>
-      //   Create Address
-      // </OverflowMenuDropdownItem>,
-      // <OverflowMenuDropdownItem key="delete-all">
-      //   Delete All
-      // </OverflowMenuDropdownItem>
-    ];
-    const onKebabToggle = (isOpen: boolean) => {
-      setIsKebabOpen(isOpen);
-    };
-  
-    const onKebabSelect = (event: any) => {
-      setIsKebabOpen(isKebabOpen);
-    };
-    return (
-      <>
-        <OverflowMenu breakpoint="lg">
-          <OverflowMenuContent isPersistent>
-            <OverflowMenuGroup groupType="button" isPersistent>
-              {/* Remove is Persistent after fixing dropdown items for overflow menu */}
-              <OverflowMenuItem isPersistent>
-                <Button
-                  id="al-filter-overflow-button"
-                  variant={ButtonVariant.primary}
-                  onClick={createAddressSpaceOnClick}>
-                  Create Address Space
-                </Button>
-              </OverflowMenuItem>
-            </OverflowMenuGroup>
-          </OverflowMenuContent>
-          <OverflowMenuControl hasAdditionalOptions>
-            <Dropdown
-              id="al-filter-overflow-dropdown"
-              onSelect={onKebabSelect}
-              toggle={<KebabToggle onToggle={onKebabToggle} />}
-              isOpen={isKebabOpen}
-              isPlain
-              dropdownItems={dropdownItems}
-            />
-          </OverflowMenuControl>
-        </OverflowMenu>
-      </>
-    );
+  createAddressSpaceOnClick
+}) => {
+  const [isKebabOpen, setIsKebabOpen] = React.useState(false);
+  const dropdownItems = [
+    <DropdownItem key="delete-all" onClick={() => console.log("deleted")}>
+      Delete All
+    </DropdownItem>
+    // <OverflowMenuDropdownItem key="secondary" isShared={true}>
+    //   Create Address
+    // </OverflowMenuDropdownItem>,
+    // <OverflowMenuDropdownItem key="delete-all">
+    //   Delete All
+    // </OverflowMenuDropdownItem>
+  ];
+  const onKebabToggle = (isOpen: boolean) => {
+    setIsKebabOpen(isOpen);
   };
+
+  const onKebabSelect = (event: any) => {
+    setIsKebabOpen(isKebabOpen);
+  };
+  return (
+    <>
+      <OverflowMenu breakpoint="lg">
+        <OverflowMenuContent isPersistent>
+          <OverflowMenuGroup groupType="button" isPersistent>
+            {/* Remove is Persistent after fixing dropdown items for overflow menu */}
+            <OverflowMenuItem isPersistent>
+              <Button
+                id="al-filter-overflow-button"
+                variant={ButtonVariant.primary}
+                onClick={createAddressSpaceOnClick}>
+                Create Address Space
+              </Button>
+            </OverflowMenuItem>
+          </OverflowMenuGroup>
+        </OverflowMenuContent>
+        <OverflowMenuControl hasAdditionalOptions>
+          <Dropdown
+            id="al-filter-overflow-dropdown"
+            onSelect={onKebabSelect}
+            toggle={<KebabToggle onToggle={onKebabToggle} />}
+            isOpen={isKebabOpen}
+            isPlain
+            dropdownItems={dropdownItems}
+          />
+        </OverflowMenuControl>
+      </OverflowMenu>
+    </>
+  );
+};
