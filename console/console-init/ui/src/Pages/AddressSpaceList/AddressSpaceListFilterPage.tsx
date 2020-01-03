@@ -2,28 +2,8 @@ import * as React from "react";
 import {
   DataToolbarContent,
   DataToolbar,
-  DataToolbarToggleGroup,
-  DataToolbarChip,
-  DataToolbarGroup,
-  DataToolbarFilter,
-  DataToolbarItem,
-  OverflowMenu,
-  OverflowMenuContent,
-  OverflowMenuGroup,
-  OverflowMenuItem,
-  OverflowMenuControl
+  DataToolbarItem
 } from "@patternfly/react-core/dist/js/experimental";
-import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import {
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
-  InputGroup,
-  TextInput,
-  Button,
-  ButtonVariant,
-  KebabToggle
-} from "@patternfly/react-core";
 import { CreateAddressSpace } from "../CreateAddressSpace/CreateAddressSpacePage";
 import {
   AddressSpaceListFilter,
@@ -46,6 +26,7 @@ interface IAddressSpaceListFilterPageProps {
   setOnCreationRefetch?: (value: boolean) => void;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
+  
 }
 export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceListFilterPageProps> = ({
   filterValue,
@@ -59,7 +40,8 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
   totalAddressSpaces,
   setOnCreationRefetch,
   sortValue,
-  setSortValue
+  setSortValue,
+  
 }) => {
   const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
   const { width } = useWindowDimensions();
@@ -107,6 +89,7 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
           createAddressSpaceOnClick={createAddressSpaceOnClick}
         />
       </DataToolbarItem>
+      
     </>
   );
   return (
@@ -114,7 +97,8 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onClearAllFilters}>
+      clearAllFilters={onClearAllFilters}
+    >
       <DataToolbarContent>{toolbarItems}</DataToolbarContent>
     </DataToolbar>
   );

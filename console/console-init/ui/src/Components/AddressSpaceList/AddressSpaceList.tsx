@@ -105,9 +105,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
     };
     return tableRow;
   };
-  // const [tableRows, setTableRows] = React.useState<IRowData[]>(
-  //   rows.map(toTableCells)
-  // );
+
   useEffect(() => setTableRows(rows.map(toTableCells)), [rows]);
   const tableColumns = [
     { title: "Name/Name Space", transforms: [sortable] },
