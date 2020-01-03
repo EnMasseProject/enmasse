@@ -27,10 +27,16 @@ export const RETURN_ALL_ADDRESS_SPACES = (
 ) => {
   let filter = "";
   if (filter_Names && filter_Names.length > 0) {
-    filter += "`$.ObjectMeta.Name` ='" + filter_Names[0].trim() + "' ";
-    let i;
-    for (i = 1; i < filter_Names.length; i++) {
-      filter += "OR `$.ObjectMeta.Name` ='" + filter_Names[i].trim() + "' ";
+    if (filter_Names.length > 1) {
+      filter += "(";
+      filter += "`$.ObjectMeta.Name` ='" + filter_Names[0].trim() + "' ";
+      let i;
+      for (i = 1; i < filter_Names.length; i++) {
+        filter += "OR `$.ObjectMeta.Name` ='" + filter_Names[i].trim() + "' ";
+      }
+      filter += ")";
+    } else {
+      filter += "`$.ObjectMeta.Name` ='" + filter_Names[0].trim() + "' ";
     }
   }
   if (
@@ -42,12 +48,18 @@ export const RETURN_ALL_ADDRESS_SPACES = (
     filter += " AND ";
   }
   if (filter_NameSpace && filter_NameSpace.length > 0) {
-    filter += "`$.ObjectMeta.Namespace` ='" + filter_NameSpace[0].trim() + "' ";
-    let i;
-    for (i = 1; i < filter_NameSpace.length; i++) {
-      filter +=
-        "OR `$.ObjectMeta.Namespace` ='" + filter_NameSpace[i].trim() + "' ";
-    }
+    if (filter_NameSpace.length > 0){
+      filter += "(";
+      filter += "`$.ObjectMeta.Namespace` ='" + filter_NameSpace[0].trim() + "' ";
+      let i;
+      for (i = 1; i < filter_NameSpace.length; i++) {
+        filter +=
+          "OR `$.ObjectMeta.Namespace` ='" + filter_NameSpace[i].trim() + "' ";
+      }
+      filter += ")";
+    } else {
+      filter += "`$.ObjectMeta.Namespace` ='" + filter_NameSpace[0].trim() + "' ";
+    }    
   }
   if (
     ((filter_Names && filter_Names.length > 0) ||
@@ -129,12 +141,18 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
     filterString += " AND ";
   }
   if (filterNames && filterNames.length > 0) {
-    filterString += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
-    let i;
-    for (i = 1; i < filterNames.length; i++) {
-      filterString +=
-        "OR `$.ObjectMeta.Name` ='" + filterNames[i].trim() + "' ";
-    }
+    if (filterNames.length > 0) {
+      filterString += "(";
+      filterString += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
+      let i;
+      for (i = 1; i < filterNames.length; i++) {
+        filterString +=
+          "OR `$.ObjectMeta.Name` ='" + filterNames[i].trim() + "' ";
+      }
+      filterString += ")";
+    } else {
+      filterString += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
+    }    
   }
   if (filterNames && filterNames.length > 0 && (typeValue || statusValue)) {
     filterString += " AND ";
@@ -389,11 +407,17 @@ export const RETURN_ADDRESS_LINKS = (
 
   let filterForLink = "";
   if (filterNames && filterNames.length > 0) {
-    filterForLink += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
-    let i;
-    for (i = 1; i < filterNames.length; i++) {
-      filterForLink +=
-        "OR `$.ObjectMeta.Name` ='" + filterNames[i].trim() + "' ";
+    if (filterNames.length > 1) {
+      filterForLink += "(";
+      filterForLink += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
+      let i;
+      for (i = 1; i < filterNames.length; i++) {
+        filterForLink +=
+          "OR `$.ObjectMeta.Name` ='" + filterNames[i].trim() + "' ";
+      }
+      filterForLink += ")";
+    } else {
+      filterForLink += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
     }
     if (
       (filterContainers && filterContainers.length > 0) ||
@@ -403,15 +427,24 @@ export const RETURN_ADDRESS_LINKS = (
     }
   }
   if (filterContainers && filterContainers.length > 0) {
-    filterForLink +=
-      "`$.Spec.Connection.Spec.ContainerId` ='" +
-      filterContainers[0].trim() +
-      "' ";
-    let i;
-    for (i = 1; i < filterContainers.length; i++) {
+    if (filterContainers.length > 1) {
+      filterForLink += "(";
       filterForLink +=
-        "OR `$.Spec.Connection.Spec.ContainerId` ='" +
-        filterContainers[i].trim() +
+        "`$.Spec.Connection.Spec.ContainerId` ='" +
+        filterContainers[0].trim() +
+        "' ";
+      let i;
+      for (i = 1; i < filterContainers.length; i++) {
+        filterForLink +=
+          "OR `$.Spec.Connection.Spec.ContainerId` ='" +
+          filterContainers[i].trim() +
+          "' ";
+      }
+      filterForLink += ")";
+    } else {
+      filterForLink +=
+        "`$.Spec.Connection.Spec.ContainerId` ='" +
+        filterContainers[0].trim() +
         "' ";
     }
     if (filterRole && filterRole.trim() != "") {
@@ -570,20 +603,34 @@ export const RETURN_ALL_CONECTION_LIST = (
   }
   if (hostnames) {
     if (hostnames.length > 0) {
-      filter += "`$.Spec.Hostname` ='" + hostnames[0].trim() + "' ";
-      let i;
-      for (i = 1; i < hostnames.length; i++) {
-        filter += "OR `$.Spec.Hostname` ='" + hostnames[i].trim() + "' ";
+      if (hostnames.length > 1) {
+        filter += "(";
+        filter += "`$.Spec.Hostname` ='" + hostnames[0].trim() + "' ";
+        let i;
+        for (i = 1; i < hostnames.length; i++) {
+          filter += "OR `$.Spec.Hostname` ='" + hostnames[i].trim() + "' ";
+        }
+        filter += ")";
+      }
+      else {
+        filter += "`$.Spec.Hostname` ='" + hostnames[0].trim() + "' ";
       }
     }
   }
+
   if (containers) {
     if (containers.length > 0) {
       if (hostnames && hostnames.length <= 0) {
-        filter += "`$.Spec.ContainerId` ='" + containers[0].trim() + "' ";
-        let i;
-        for (i = 1; i < containers.length; i++) {
-          filter += "OR `$.Spec.ContainerId` ='" + containers[i].trim() + "' ";
+        if (containers.length > 1) {
+          filter += "(";
+          filter += "`$.Spec.ContainerId` ='" + containers[0].trim() + "' ";
+          let i;
+          for (i = 1; i < containers.length; i++) {
+            filter += "OR `$.Spec.ContainerId` ='" + containers[i].trim() + "' ";
+          }
+          filter += ")";
+        } else {
+          filter += "`$.Spec.ContainerId` ='" + containers[0].trim() + "' ";
         }
       } else {
         let i;
@@ -809,11 +856,17 @@ export const RETURN_CONNECTION_LINKS = (
   }
   let filterForLink = "";
   if (filterNames && filterNames.length > 0) {
-    filterForLink += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
-    let i;
-    for (i = 1; i < filterNames.length; i++) {
-      filterForLink +=
-        "OR `$.ObjectMeta.Name` ='" + filterNames[i].trim() + "' ";
+    if (filterNames.length > 1) {
+      filterForLink += "(";
+      filterForLink += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
+      let i;
+      for (i = 1; i < filterNames.length; i++) {
+        filterForLink +=
+          "OR `$.ObjectMeta.Name` ='" + filterNames[i].trim() + "' ";
+      }
+      filterForLink += ")";
+    } else {
+      filterForLink += "`$.ObjectMeta.Name` ='" + filterNames[0].trim() + "' ";
     }
     if (
       (filterAddresses && filterAddresses.length > 0) ||
@@ -823,12 +876,17 @@ export const RETURN_CONNECTION_LINKS = (
     }
   }
   if (filterAddresses && filterAddresses.length > 0) {
-    filterForLink += "`$.Spec.Address` ='" + filterAddresses[0].trim() + "' ";
-    let i;
-    for (i = 1; i < filterAddresses.length; i++) {
-      filterForLink +=
-        "OR `$.Spec.Address` ='" + filterAddresses[i].trim() + "' ";
-    }
+    if (filterAddresses.length > 1) {
+      filterForLink += "(";
+      filterForLink += "`$.Spec.Address` ='" + filterAddresses[0].trim() + "' ";
+      let i;
+      for (i = 1; i < filterAddresses.length; i++) {
+        filterForLink +=
+          "OR `$.Spec.Address` ='" + filterAddresses[i].trim() + "' ";
+      }
+    } else {
+      filterForLink += "`$.Spec.Address` ='" + filterAddresses[0].trim() + "' ";
+    } 
     if (filterRole && filterRole.trim() != "") {
       filterForLink += " AND ";
     }
