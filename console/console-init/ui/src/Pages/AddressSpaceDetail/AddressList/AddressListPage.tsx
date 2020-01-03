@@ -189,7 +189,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned>
+          isFooterLeftAligned
+        >
           <EditAddress
             name={addressBeingEdited.name}
             type={addressBeingEdited.type}
