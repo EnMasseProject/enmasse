@@ -69,7 +69,7 @@ public abstract class ResourceManager {
 
     public abstract void setup() throws Exception;
 
-    abstract void tearDown(ExtensionContext context) throws Exception;
+    public abstract void tearDown(ExtensionContext context) throws Exception;
 
     public abstract AmqpClientFactory getAmqpClientFactory();
 
@@ -183,7 +183,7 @@ public abstract class ResourceManager {
     // Authentication services
     //------------------------------------------------------------------------------------------------
 
-    public AuthenticationService getAuthService(String name) throws Exception {
+    public AuthenticationService getAuthService(String name) {
         return Kubernetes.getInstance().getAuthenticationServiceClient().withName(name).get();
     }
 
@@ -245,14 +245,13 @@ public abstract class ResourceManager {
             if (waitUntilReady) {
                 AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
             }
-            AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         } else {
             if (waitUntilReady) {
                 AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
             }
             LOGGER.info("Address space '" + addressSpace + "' already exists.");
-            AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         }
+        AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         syncAddressSpaceAndCollectLogs(addressSpace, operationID);
     }
 
@@ -351,7 +350,7 @@ public abstract class ResourceManager {
     //====================================== Address methods =========================================
     //================================================================================================
 
-    public void deleteAddresses(Address... destinations) throws Exception {
+    public void deleteAddresses(Address... destinations) {
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddresses");
         AddressUtils.delete(destinations);

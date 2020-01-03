@@ -53,8 +53,7 @@ public class SharedIoTManager extends ResourceManager {
     public AddressSpace getSharedAddressSpace() {
         if (sharedIoTProject == null) return null;
         String addSpaceName = sharedIoTProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-        AddressSpace addressSpace = kubernetes.getAddressSpaceClient(sharedIoTProject.getMetadata().getNamespace()).withName(addSpaceName).get();
-        return addressSpace;
+        return kubernetes.getAddressSpaceClient(sharedIoTProject.getMetadata().getNamespace()).withName(addSpaceName).get();
     }
 
     @Override
@@ -92,7 +91,7 @@ public class SharedIoTManager extends ResourceManager {
         }
     }
 
-    void initFactories(AddressSpace addressSpace, UserCredentials credentials) {
+    void initFactories(UserCredentials credentials) {
         amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(), credentials);
         mqttClientFactory = new MqttClientFactory(getSharedAddressSpace(), credentials);
     }
@@ -114,7 +113,7 @@ public class SharedIoTManager extends ResourceManager {
             sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project", defaultAddSpaceIdentifier, IOT_PROJECT_NAMESPACE, addressSpacePlan);
             createIoTProject(sharedIoTProject);
         }
-        initFactories(getSharedAddressSpace(), credentials);
+        initFactories(credentials);
         createOrUpdateUser(getSharedAddressSpace(), credentials);
         this.amqpClient = amqpClientFactory.createQueueClient();
     }

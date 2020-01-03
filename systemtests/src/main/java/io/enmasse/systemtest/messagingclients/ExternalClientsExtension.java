@@ -35,7 +35,7 @@ public class ExternalClientsExtension implements BeforeTestExecutionCallback, Af
     @Override
     public void afterTestExecution(ExtensionContext extensionContext) throws Exception {
         if (extensionContext.getExecutionException().isPresent()) {
-            Path path = JunitCallbackListener.getPath(extensionContext.getDisplayName(), extensionContext.getTestClass().get());
+            Path path = JunitCallbackListener.getPath(extensionContext.getDisplayName(), extensionContext.getRequiredTestClass());
             SystemtestsKubernetesApps.collectMessagingClientAppLogs(path);
         }
         if (!isFullClass) {

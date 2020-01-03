@@ -9,12 +9,9 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
@@ -44,15 +41,6 @@ public class SharedResourceManager extends ResourceManager {
         return sharedAddressSpace;
     }
 
-    public void setSharedAddressSpace(AddressSpace sharedAddressSpace) {
-        this.sharedAddressSpace = sharedAddressSpace;
-    }
-
-    public void initFactories(UserCredentials userCredentials) {
-        amqpClientFactory = new AmqpClientFactory(sharedAddressSpace, userCredentials);
-        mqttClientFactory = new MqttClientFactory(sharedAddressSpace, userCredentials);
-    }
-
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
@@ -60,8 +48,8 @@ public class SharedResourceManager extends ResourceManager {
                 LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
             } else {
                 LOGGER.info(String.format("test failed: %s.%s",
-                        context.getTestClass().get().getName(),
-                        context.getTestMethod().get().getName()));
+                        context.getRequiredTestClass().getName(),
+                        context.getRequiredTestMethod().getName()));
                 LOGGER.info("shared address space '{}' will be removed", sharedAddressSpace);
                 try {
                     if (sharedAddressSpace != null) {
@@ -130,27 +118,6 @@ public class SharedResourceManager extends ResourceManager {
     @Override
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         super.createAddressSpace(addressSpace);
-    }
-
-    public void deleteSharedAddressSpace() {
-        if (sharedAddressSpace != null && TestInfo.getInstance().isAddressSpaceDeleteable()) {
-            LOGGER.info("Shared address {} space will be removed", sharedAddressSpace.getMetadata().getName());
-            if (environment.skipCleanup()) {
-                LOGGER.warn("Remove address spaces when test run finished - SKIPPED!");
-            } else {
-                GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes, environment.testLogDir());
-                try {
-                    AddressSpaceUtils.deleteAddressSpaceAndWait(sharedAddressSpace, logCollector);
-                    sharedAddressSpace = null;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        } else {
-            if (sharedAddressSpace != null) {
-                LOGGER.info("Shared address {} space will be reused", sharedAddressSpace.getMetadata().getName());
-            }
-        }
     }
 
     public void tearDownShared() throws Exception {
