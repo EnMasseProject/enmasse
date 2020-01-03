@@ -113,7 +113,8 @@ func TestQueryAddressSpaceMetrics(t *testing.T) {
 	assert.NotNil(t, connectionMetric, "Connections metric is absent")
 
 	expectedNumberConnections := float64(2)
-	assert.Equal(t, expectedNumberConnections, connectionMetric.MetricValue, "Unexpected connection metric")
+	value, _, _ := connectionMetric.Value.GetValue()
+	assert.Equal(t, expectedNumberConnections, value, "Unexpected connection metric")
 
 	addressesMetric := getMetric("enmasse-addresses", metrics)
 	assert.NotNil(t, addressesMetric, "Addresses metric is absent")

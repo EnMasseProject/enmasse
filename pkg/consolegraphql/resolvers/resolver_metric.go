@@ -18,9 +18,15 @@ func (r *Resolver) Metric_consoleapi_enmasse_io_v1beta1() Metric_consoleapi_enma
 
 type metricK8sResolver struct{ *Resolver }
 
-func (m metricK8sResolver) MetricType(ctx context.Context, obj *consolegraphql.Metric) (MetricType, error) {
+func (m metricK8sResolver) Name(ctx context.Context, obj *consolegraphql.Metric) (string, error) {
+	value := obj.Value
+	return value.GetName(), nil
+}
+
+func (m metricK8sResolver) Type(ctx context.Context, obj *consolegraphql.Metric) (MetricType, error) {
 	if obj != nil {
-		switch obj.MetricType {
+		t := obj.Value.GetType()
+		switch t {
 		case "gauge":
 			return MetricTypeGauge, nil
 		case "counter":
@@ -28,8 +34,17 @@ func (m metricK8sResolver) MetricType(ctx context.Context, obj *consolegraphql.M
 		case "rate":
 			return MetricTypeRate, nil
 		default:
-			panic(fmt.Sprintf("unrecognized metric type : %s for object %+v", obj.MetricType, obj))
+			panic(fmt.Sprintf("unrecognized metric type : %s for object %+v", t, obj))
 		}
 	}
 	return MetricTypeGauge, nil
+}
+
+func (m metricK8sResolver) Units(ctx context.Context, obj *consolegraphql.Metric) (string, error) {
+	return obj.Value.GetUnit(), nil
+}
+
+func (m metricK8sResolver) Value(ctx context.Context, obj *consolegraphql.Metric) (float64, error) {
+	value, _, err := obj.Value.GetValue()
+	return value, err
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	time2 "time"
 )
 
 type connectionK8sResolver struct{ *Resolver }
@@ -76,14 +77,17 @@ func (cr connectionK8sResolver) Metrics(ctx context.Context, obj *ConnectionCons
 		metrics := make([]*consolegraphql.Metric, 2)
 
 		metrics[0] = &consolegraphql.Metric{
-			MetricName:  "enmasse_senders",
-			MetricType:  "gauge",
-			MetricValue: float64(linkCounts["sender"]),
+			Value:        consolegraphql.NewSimpleMetricValue("enmasse_senders", "gauge", float64(linkCounts["sender"]), "", time2.Now()),
+			//
+			//MetricName:  "enmasse_senders",
+			//MetricType:  "gauge",
+			//MetricValue: float64(linkCounts["sender"]),
 		}
 		metrics[1] = &consolegraphql.Metric{
-			MetricName:  "enmasse_receivers",
-			MetricType:  "gauge",
-			MetricValue: float64(linkCounts["receiver"]),
+			Value:        consolegraphql.NewSimpleMetricValue("enmasse_receivers", "gauge", float64(linkCounts["receiver"]), "", time2.Now()),
+			//MetricName:  "enmasse_receivers",
+			//MetricType:  "gauge",
+			//MetricValue: float64(linkCounts["receiver"]),
 		}
 
 		for _, i := range dynamic {
