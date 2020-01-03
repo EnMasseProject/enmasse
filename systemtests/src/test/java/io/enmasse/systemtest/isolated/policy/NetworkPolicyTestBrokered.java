@@ -17,17 +17,13 @@ import io.enmasse.admin.model.v1.BrokeredInfraConfigSpecAdminBuilder;
 import io.enmasse.admin.model.v1.BrokeredInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecAdminBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -50,6 +46,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -91,10 +88,8 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         SystemtestsKubernetesApps.deployMessagingClientApp(blockedSpace);
         SystemtestsKubernetesApps.deployMessagingClientApp(allowedSpace);
 
-        RheaClientSender allowedClientSender = new RheaClientSender(allowedSpace);
-        RheaClientReceiver allowedClientReceiver = new RheaClientReceiver(allowedSpace);
-
-        ClientUtils.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
+        ExternalMessagingClient allowedClientSender = ClientUtils.getPolicyClient(new RheaClientSender(allowedSpace), dest, addressSpace);
+        ExternalMessagingClient allowedClientReceiver = ClientUtils.getPolicyClient(new RheaClientReceiver(allowedSpace), dest, addressSpace);
 
         assertTrue(allowedClientSender.run(), "Sender failed, expected return code 0");
         assertTrue(allowedClientReceiver.run(), "Receiver failed, expected return code 0");
@@ -104,11 +99,11 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         assertEquals(expectedMsgCount, allowedClientReceiver.getMessages().size(),
                 String.format("Expected %d received messages", expectedMsgCount));
 
-        RheaClientSender blockedClientSender = new RheaClientSender(blockedSpace);
-        RheaClientReceiver blockedClientReceiver = new RheaClientReceiver(blockedSpace);
+        ExternalMessagingClient blockedClientSender = ClientUtils.getPolicyClient(new RheaClientSender(blockedSpace), dest, addressSpace);
+        ExternalMessagingClient blockedClientReceiver = ClientUtils.getPolicyClient(new RheaClientReceiver(blockedSpace), dest, addressSpace);
 
-        assertFalse(blockedClientSender.run(), "Sender was successful, expected return code -1");
-        assertFalse(blockedClientReceiver.run(), "Receiver was successful, expected return code -1");
+        assertFalse(blockedClientSender.run(10), "Sender was successful, expected return code -1");
+        assertFalse(blockedClientReceiver.run(10), "Receiver was successful, expected return code -1");
 
     }
 
@@ -132,10 +127,8 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         SystemtestsKubernetesApps.deployMessagingClientApp(blockedSpace);
         SystemtestsKubernetesApps.deployMessagingClientApp(allowedSpace);
 
-        RheaClientSender allowedClientSender = new RheaClientSender(allowedSpace);
-        RheaClientReceiver allowedClientReceiver = new RheaClientReceiver(allowedSpace);
-
-        ClientUtils.preparePolicyClients(allowedClientSender, allowedClientReceiver, dest, addressSpace);
+        ExternalMessagingClient allowedClientSender = ClientUtils.getPolicyClient(new RheaClientSender(allowedSpace), dest, addressSpace);
+        ExternalMessagingClient allowedClientReceiver = ClientUtils.getPolicyClient(new RheaClientReceiver(allowedSpace), dest, addressSpace);
 
         assertTrue(allowedClientSender.run(), "Sender failed, expected return code 0");
         assertTrue(allowedClientReceiver.run(), "Receiver failed, expected return code 0");
@@ -145,11 +138,11 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         assertEquals(expectedMsgCount, allowedClientReceiver.getMessages().size(),
                 String.format("Expected %d received messages", expectedMsgCount));
 
-        RheaClientSender blockedClientSender = new RheaClientSender(blockedSpace);
-        RheaClientReceiver blockedClientReceiver = new RheaClientReceiver(blockedSpace);
+        ExternalMessagingClient blockedClientSender = ClientUtils.getPolicyClient(new RheaClientSender(blockedSpace), dest, addressSpace);
+        ExternalMessagingClient blockedClientReceiver = ClientUtils.getPolicyClient(new RheaClientReceiver(blockedSpace), dest, addressSpace);
 
-        assertFalse(blockedClientSender.run(), "Sender was successful, expected return code -1");
-        assertFalse(blockedClientReceiver.run(), "Receiver was successful, expected return code -1");
+        assertFalse(blockedClientSender.run(10), "Sender was successful, expected return code -1");
+        assertFalse(blockedClientReceiver.run(10), "Receiver was successful, expected return code -1");
 
     }
 
@@ -201,10 +194,8 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
                 .withAddressSpaceType(AddressSpaceType.BROKERED.toString())
                 .withShortDescription("Custom systemtests defined address space plan")
                 .withInfraConfigRef(brokeredInfraConfig.getMetadata().getName())
-                .withResourceLimits(Collections.singletonList(new ResourceAllowance("broker", 3.0))
-                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
-                .withAddressPlans(Collections.singletonList(addressPlan)
-                        .stream().map(addressPlan1 -> addressPlan1.getMetadata().getName()).collect(Collectors.toList()))
+                .withResourceLimits(Stream.of(new ResourceAllowance("broker", 3.0)).collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Stream.of(addressPlan).map(addressPlan1 -> addressPlan1.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
         isolatedResourcesManager.createAddressSpacePlan(exampleSpacePlan);

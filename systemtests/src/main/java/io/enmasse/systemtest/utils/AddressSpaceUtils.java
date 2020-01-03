@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceStatus;

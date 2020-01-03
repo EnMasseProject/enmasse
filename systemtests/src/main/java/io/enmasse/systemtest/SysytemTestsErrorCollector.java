@@ -4,9 +4,7 @@
  */
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.logs.CustomLogger;
 import org.hamcrest.Matcher;
-import org.slf4j.Logger;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -17,8 +15,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 
 public class SysytemTestsErrorCollector {
-    static final Logger log = CustomLogger.getLogger();
-
     private List<Exception> collector = new ArrayList<>();
 
     public static String getStackTrace(final Throwable throwable) {

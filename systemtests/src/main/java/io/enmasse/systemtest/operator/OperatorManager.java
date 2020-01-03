@@ -102,7 +102,7 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void deleteEnmasseOlm() throws Exception {
+    public void deleteEnmasseOlm() {
         LOGGER.info("***********************************************************");
         LOGGER.info("                  Enmasse OLM delete");
         LOGGER.info("***********************************************************");
@@ -110,7 +110,7 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void installOperators() throws Exception {
+    public void installOperators() {
         LOGGER.info("Installing enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
         generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
@@ -168,7 +168,7 @@ public class OperatorManager {
         KubeCMDClient.applyFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
     }
 
-    public void installIoTOperator() throws Exception {
+    public void installIoTOperator() {
         LOGGER.info("***********************************************************");
         LOGGER.info("                Enmasse IoT operator install");
         LOGGER.info("***********************************************************");
@@ -188,7 +188,7 @@ public class OperatorManager {
         KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
     }
 
-    public void removeOlm() throws Exception {
+    public void removeOlm() {
         Consumer<String> remover = (namespace) -> {
             KubeCMDClient.runOnCluster("delete", "subscriptions", "-l", "app=enmasse", "-n", namespace);
             KubeCMDClient.runOnCluster("delete", "operatorgroups", "-l", "app=enmasse", "-n", namespace);
@@ -250,9 +250,8 @@ public class OperatorManager {
 
     public boolean clean() throws Exception {
         // Delete addressspace CRD first as deleting via label will not wait for finalizers
-        ExecutionResultData result = KubeCMDClient.runOnCluster("delete", "-v", "10", "crd", "addressspaces.enmasse.io");
-        result = KubeCMDClient.runOnCluster("delete", "-v", "10", "crd", "-l", "app=enmasse");
-        if (!result.getRetCode()) {
+        KubeCMDClient.runOnCluster("delete", "-v", "10", "crd", "addressspaces.enmasse.io");
+        if (!KubeCMDClient.runOnCluster("delete", "-v", "10", "crd", "-l", "app=enmasse").getRetCode()) {
             return false;
         }
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
