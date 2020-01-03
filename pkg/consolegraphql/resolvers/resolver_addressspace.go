@@ -12,6 +12,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	time2 "time"
 )
 
 func (r *Resolver) AddressSpace_consoleapi_enmasse_io_v1beta1() AddressSpace_consoleapi_enmasse_io_v1beta1Resolver {
@@ -131,14 +132,14 @@ func (r *addressSpaceK8sResolver) Metrics(ctx context.Context, obj *AddressSpace
 		}
 
 		metrics[0] = &consolegraphql.Metric{
-			MetricName:  "enmasse-connections",
-			MetricType:  "gauge",
-			MetricValue: float64(connections),
+			Value:        consolegraphql.NewSimpleMetricValue("enmasse-connections", "gauge", float64(connections), "", time2.Now()),
+			//
+			//MetricName:  "enmasse-connections",
+			//MetricType:  "gauge",
+			//MetricValue: float64(connections),
 		}
 		metrics[1] = &consolegraphql.Metric{
-			MetricName:  "enmasse-addresses",
-			MetricType:  "gauge",
-			MetricValue: float64(addresses),
+			Value:        consolegraphql.NewSimpleMetricValue("enmasse-addresses", "gauge", float64(addresses), "", time2.Now()),
 		}
 		return metrics, nil
 	} else {

@@ -15,6 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"testing"
+	time2 "time"
 )
 
 func newTestConnectionResolver(t *testing.T) *Resolver {
@@ -161,9 +162,7 @@ func TestQueryConnectionMetrics(t *testing.T) {
 			Namespace:    namespace,
 			AddressSpace: addressspace,
 			Name:         con,
-			MetricName:   metricName,
-			MetricType:   "gauge",
-			MetricValue:  metricValue,
+			Value:        consolegraphql.NewSimpleMetricValue(metricName, "gauge", float64(metricValue), "", time2.Now()),
 		}
 	}
 
@@ -192,14 +191,18 @@ func TestQueryConnectionMetrics(t *testing.T) {
 
 	sendersMetric := getMetric("enmasse_senders", objs)
 	assert.NotNil(t, sendersMetric, "Senders metric is absent")
-	assert.Equal(t, float64(2), sendersMetric.MetricValue, "Unexpected senders metric value")
+	value, _, _ := sendersMetric.Value.GetValue()
+	assert.Equal(t, float64(2), value, "Unexpected senders metric value")
 	receiversMetric := getMetric("enmasse_receivers", objs)
 	assert.NotNil(t, receiversMetric, "Receivers metric is absent")
-	assert.Equal(t, float64(1), receiversMetric.MetricValue, "Unexpected receivers metric value")
+	value, _, _ = receiversMetric.Value.GetValue()
+	assert.Equal(t, float64(1), value, "Unexpected receivers metric value")
 	messagesInMetric := getMetric("enmasse_messages_in", objs)
 	assert.NotNil(t, messagesInMetric, "Messages In metric is absent")
-	assert.Equal(t, float64(10), messagesInMetric.MetricValue, "Unexpected messages in metric value")
+	value, _, _ = messagesInMetric.Value.GetValue()
+	assert.Equal(t, float64(10), value, "Unexpected messages in metric value")
 	messagesOutMetric := getMetric("enmasse_messages_out", objs)
 	assert.NotNil(t, messagesOutMetric, "Messages In metric is absent")
-	assert.Equal(t, float64(20), messagesOutMetric.MetricValue, "Unexpected messages out metric value")
+	value, _, _ = messagesOutMetric.Value.GetValue()
+	assert.Equal(t, float64(20), value, "Unexpected messages out metric value")
 }

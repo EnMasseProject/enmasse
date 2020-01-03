@@ -19,6 +19,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	time "time"
 )
 
 type AgentCollectorCreator = func() agent.AgentCollector
@@ -241,7 +242,7 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 		}
 
 	case agent.AgentConnectionEventType:
-		con, links, metrics := agent.ToConnectionK8Style(event.Object.(*agent.AgentConnection))
+		con, links, metrics := agent.ToConnectionK8Style(event.Object.(*agent.AgentConnection), clw.getExistingMetricOrNew)
 
 		// TODO Currently removes all links/link metrics for this connection - ought to remove only that relate to link that have gone.
 		linkKey := fmt.Sprintf("Link/%s/%s/%s", con.Namespace, con.Spec.AddressSpace, con.Name)
@@ -283,7 +284,7 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 		}
 	case agent.AgentConnectionEventTypeDelete:
 		// we don't really need the full object, only the skeletal form to get the indexes.
-		con, _, _ := agent.ToConnectionK8Style(event.Object.(*agent.AgentConnection))
+		con, _, _ := agent.ToConnectionK8Style(event.Object.(*agent.AgentConnection), clw.getExistingMetricOrNew)
 
 		err := clw.Cache.Delete(con)
 		if err != nil {
@@ -312,36 +313,40 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 
 	case agent.AgentAddressEventType:
 		addr := event.Object.(*agent.AgentAddress)
+		now := time.Now()
 
 		storedMetric := &consolegraphql.Metric{
 			Kind:         "Address",
 			Namespace:    addr.AddressSpaceNamespace,
 			AddressSpace: addr.AddressSpace,
 			Name:         addr.Address,
-			MetricName:   "enmasse_messages_stored",
-			MetricValue:  float64(addr.Depth),
-			MetricType:   "gauge",
+			Value:        consolegraphql.NewSimpleMetricValue("enmasse_messages_stored", "gauge", float64(addr.Depth), "", now),
 		}
-		messagesInMetric := &consolegraphql.Metric{
+		messagesInMetric, err := clw.getExistingMetricOrNew(&consolegraphql.Metric{
 			Kind:         "Address",
 			Namespace:    addr.AddressSpaceNamespace,
 			AddressSpace: addr.AddressSpace,
 			Name:         addr.Address,
-			MetricName:   "enmasse_messages_in",
-			MetricValue:  float64(addr.MessagesIn),
-			MetricType:   "gauge",
+			Value:        consolegraphql.NewRateCalculatingMetricValue("enmasse_messages_in", "gauge", ""),
+		})
+		if err != nil {
+			return err
 		}
-		messagesOutMetric := &consolegraphql.Metric{
-			Kind:         "Address",
-			Namespace:    addr.AddressSpaceNamespace,
-			AddressSpace: addr.AddressSpace,
-			Name:         addr.Address,
-			MetricName:   "enmasse_messages_out",
-			MetricValue:  float64(addr.MessagesOut),
-			MetricType:   "gauge",
-		}
+		messagesInMetric.Value.SetValue(float64(addr.MessagesIn), now)
 
-		err := clw.MetricCache.Add(storedMetric, messagesInMetric, messagesOutMetric)
+		messagesOutMetric, err := clw.getExistingMetricOrNew(&consolegraphql.Metric{
+			Kind:         "Address",
+			Namespace:    addr.AddressSpaceNamespace,
+			AddressSpace: addr.AddressSpace,
+			Name:         addr.Address,
+			Value:        consolegraphql.NewRateCalculatingMetricValue("enmasse_messages_out", "gauge", ""),
+		})
+		if err != nil {
+			return err
+		}
+		messagesOutMetric.Value.SetValue(float64(addr.MessagesOut), now)
+
+		err = clw.MetricCache.Add(storedMetric, messagesInMetric, messagesOutMetric)
 		if err != nil {
 			return err
 		}
@@ -354,6 +359,18 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 		}
 	}
 	return nil
+}
+
+func (clw *ConnectionAndLinkWatcher) getExistingMetricOrNew(proto *consolegraphql.Metric) (*consolegraphql.Metric, error) {
+	key := fmt.Sprintf("%s/%s/%s/%s/%s", proto.Kind, proto.Namespace, proto.AddressSpace, proto.Name, proto.Value.GetName())
+	objs, err := clw.MetricCache.Get("id", key, nil)
+	if err != nil {
+		return nil, err
+	} else if len(objs) > 0 {
+		return objs[0].(*consolegraphql.Metric), nil
+	} else {
+		return proto, nil
+	}
 }
 
 func getServiceDetails(service tp.Service) (*string, *string, *string, error) {

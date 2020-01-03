@@ -10,7 +10,7 @@ import "github.com/enmasseproject/enmasse/pkg/consolegraphql"
 
 func getMetric(name string, metrics []*consolegraphql.Metric) *consolegraphql.Metric {
 	for _, m := range metrics {
-		if m.MetricName == name {
+		if m.Value.GetName() == name {
 			return m
 		}
 	}

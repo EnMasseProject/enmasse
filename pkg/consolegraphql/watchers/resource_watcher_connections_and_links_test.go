@@ -170,7 +170,6 @@ func TestWatchConnection(t *testing.T) {
 
 	messagesInMetric := getMetric("enmasse_messages_in", conmetrics)
 	assert.NotNil(t, messagesInMetric, "MessagesIn metric is absent")
-	assert.Equal(t, float64(5), messagesInMetric.MetricValue, "Unexpected messagesIn metric value")
 
 	linkmetrics, err := w.MetricCache.Get("id", "Link", nil)
 	assert.NoError(t, err)
@@ -179,7 +178,8 @@ func TestWatchConnection(t *testing.T) {
 
 	releasedMetric := getMetric("enmasse_released", linkmetrics)
 	assert.NotNil(t, releasedMetric, "Released metric is absent")
-	assert.Equal(t, float64(6), releasedMetric.MetricValue, "Unexpected released metric value")
+	value, _, _ := releasedMetric.Value.GetValue()
+	assert.Equal(t, float64(6), value, "Unexpected released metric value")
 }
 
 func TestWatchConnectionWithChangingLinks(t *testing.T) {
@@ -460,7 +460,7 @@ func getMetric(name string, metrics []interface{}) *consolegraphql.Metric {
 	for _, m := range metrics {
 		switch m := m.(type) {
 		case *consolegraphql.Metric:
-			if m.MetricName == name {
+			if m.Value.GetName() == name {
 				return m
 			}
 		default:

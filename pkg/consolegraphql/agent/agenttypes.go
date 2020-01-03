@@ -54,6 +54,7 @@ type AgentConnection struct {
 	Outcomes              map[string]AgentOutcome
 	Senders               []AgentAddressLink
 	Receivers             []AgentAddressLink
+	LastUpdated           int64
 }
 
 type AgentOutcome struct {
@@ -138,3 +139,4 @@ func FromAgentAddressBody(agentConnectionMap map[string]interface{}) (*AgentAddr
 	}
 
 }
+

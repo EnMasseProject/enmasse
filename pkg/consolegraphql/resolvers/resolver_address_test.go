@@ -16,6 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"testing"
+	time2 "time"
 )
 
 func newTestAddressResolver(t *testing.T) *Resolver {
@@ -177,9 +178,7 @@ func TestQueryAddressMetrics(t *testing.T) {
 			Namespace:    namespace,
 			AddressSpace: addressspace,
 			Name:         addr1,
-			MetricName:   metricName,
-			MetricType:   "gauge",
-			MetricValue:  metricValue,
+			Value:        consolegraphql.NewSimpleMetricValue(metricName, "gauge", float64(metricValue), "", time2.Now()),
 		}
 	}
 
@@ -223,11 +222,14 @@ func TestQueryAddressMetrics(t *testing.T) {
 
 	sendersMetric := getMetric("enmasse_senders", objs)
 	assert.NotNil(t, sendersMetric, "Senders metric is absent")
-	assert.Equal(t, float64(2), sendersMetric.MetricValue, "Unexpected senders metric value")
+	value, _, _ := sendersMetric.Value.GetValue()
+	assert.Equal(t, float64(2), value, "Unexpected senders metric value")
 	receiversMetric := getMetric("enmasse_receivers", objs)
 	assert.NotNil(t, receiversMetric, "Receivers metric is absent")
-	assert.Equal(t, float64(1), receiversMetric.MetricValue, "Unexpected receivers metric value")
+	value, _, _ = receiversMetric.Value.GetValue()
+	assert.Equal(t, float64(1), value, "Unexpected receivers metric value")
 	storedMetric := getMetric("enmasse_messages_stored", objs)
 	assert.NotNil(t, storedMetric, "Stored metric is absent")
-	assert.Equal(t, float64(100), storedMetric.MetricValue, "Unexpected stored metric value")
+	value, _, _ = storedMetric.Value.GetValue()
+	assert.Equal(t, float64(100), value, "Unexpected stored metric value")
 }

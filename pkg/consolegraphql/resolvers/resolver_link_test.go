@@ -17,6 +17,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"testing"
+	time2 "time"
 )
 
 func newTestLinkResolver(t *testing.T) *Resolver {
@@ -104,9 +105,7 @@ func TestLinkMetrics(t *testing.T) {
 			Namespace:   namespace,
 			AddressSpace: addressspace,
 			Name:        link,
-			MetricName:  metricName,
-			MetricType:  "gauge",
-			MetricValue: metricValue,
+			Value:        consolegraphql.NewSimpleMetricValue(metricName, "gauge", float64(metricValue), "", time2.Now()),
 		}
 	}
 
@@ -138,7 +137,8 @@ func TestLinkMetrics(t *testing.T) {
 
 	backlogMetric := getMetric("enmasse_messages_backlog", metrics)
 	assert.NotNil(t, backlogMetric, "Backlog metric is absent")
-	assert.Equal(t, float64(100), backlogMetric.MetricValue, "Unexpected baclog metric value")
+	value, _, _ := backlogMetric.Value.GetValue()
+	assert.Equal(t, float64(100), value, "Unexpected backlog metric value")
 
 }
 

@@ -9,9 +9,12 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"time"
 )
 
-func ToConnectionK8Style(connection *AgentConnection) (*consolegraphql.Connection, []*consolegraphql.Link, []*consolegraphql.Metric) {
+type MetricCreator = func (proto *consolegraphql.Metric) (*consolegraphql.Metric, error)
+
+func ToConnectionK8Style(connection *AgentConnection, metricCreator MetricCreator) (*consolegraphql.Connection, []*consolegraphql.Link, []*consolegraphql.Metric) {
 
 	links := make([]*consolegraphql.Link, 0)
 
@@ -41,34 +44,42 @@ func ToConnectionK8Style(connection *AgentConnection) (*consolegraphql.Connectio
 
 	metrics := make([]*consolegraphql.Metric, 0)
 
-	messagesInMetric := &consolegraphql.Metric{
+	lastUpdated := time.Now()
+	if connection.LastUpdated > 0 {
+		lastUpdated = millisToTime(connection.LastUpdated)
+	}
+
+	messagesInMetric, err := metricCreator(&consolegraphql.Metric{
 		Kind:         "Connection",
 		Namespace:    connection.AddressSpaceNamespace,
 		AddressSpace: connection.AddressSpace,
 		Name:         connection.Uuid,
-		MetricName:   "enmasse_messages_in",
-		MetricValue:  float64(connection.MessagesIn),
-		MetricType:   "gauge",
+		Value: consolegraphql.NewRateCalculatingMetricValue("enmasse_messages_in", "gauge", ""),
+	})
+	if err != nil {
+		panic(err)
 	}
-	messagesOutMetric := &consolegraphql.Metric{
+	messagesInMetric.Value.SetValue(float64(connection.MessagesIn), lastUpdated)
+
+	messagesOutMetric, err := metricCreator(&consolegraphql.Metric{
 		Kind:         "Connection",
 		Namespace:    connection.AddressSpaceNamespace,
 		AddressSpace: connection.AddressSpace,
 		Name:         connection.Uuid,
-		MetricName:   "enmasse_messages_out",
-		MetricValue:  float64(connection.MessagesOut),
-		MetricType:   "gauge",
-	}
+		Value: consolegraphql.NewRateCalculatingMetricValue("enmasse_messages_out", "gauge", ""),
+	})
+	messagesOutMetric.Value.SetValue(float64(connection.MessagesOut), lastUpdated)
+
 	metrics = append(metrics, messagesInMetric, messagesOutMetric)
 
 
 	for _, sender := range connection.Senders {
-		link, sender_metrics := convertAgentLink(sender, "sender", connection)
+		link, sender_metrics := convertAgentLink(sender, "sender", connection, metricCreator)
 		links = append(links, link)
 		metrics = append(metrics, sender_metrics...)
 	}
 	for _, receiver := range connection.Receivers {
-		link, receiver_metrics := convertAgentLink(receiver, "receiver", connection)
+		link, receiver_metrics := convertAgentLink(receiver, "receiver", connection, metricCreator)
 		links = append(links, link)
 		metrics = append(metrics, receiver_metrics...)
 	}
@@ -76,7 +87,7 @@ func ToConnectionK8Style(connection *AgentConnection) (*consolegraphql.Connectio
 	return con, links, metrics
 }
 
-func convertAgentLink(l AgentAddressLink, role string, connection *AgentConnection) (*consolegraphql.Link, []*consolegraphql.Metric) {
+func convertAgentLink(l AgentAddressLink, role string, connection *AgentConnection, metricCreator MetricCreator) (*consolegraphql.Link, []*consolegraphql.Metric) {
 	link := &consolegraphql.Link{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Link",
@@ -102,13 +113,11 @@ func convertAgentLink(l AgentAddressLink, role string, connection *AgentConnecti
 			Name:         l.Uuid,
 			ConnectionName: &connection.Uuid,
 
-			MetricType:   "counter",
-			MetricName:   name,
-			MetricValue:  float64(value),
+			Value: consolegraphql.NewSimpleMetricValue(name, "counter", float64(value), "", millisToTime(connection.LastUpdated)),
 		}
 	}
 
-	metrics := make([]*consolegraphql.Metric, 0);
+	metrics := make([]*consolegraphql.Metric, 0)
 	switch connection.AddressSpaceType {
 	case "standard":
 		metrics = append(metrics,
@@ -128,8 +137,11 @@ func convertAgentLink(l AgentAddressLink, role string, connection *AgentConnecti
 	default:
 		panic(fmt.Sprintf("unexpected address space type : %s", connection.AddressSpaceType))
 
-
 	}
 
 	return link, metrics
+}
+
+func millisToTime(ms int64) time.Time {
+	return  time.Unix(0, ms* int64(time.Millisecond))
 }

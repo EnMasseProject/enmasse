@@ -20,7 +20,7 @@ type metricIndex struct {
 func MetricIndex() (*metricIndex) {
 	return &metricIndex{
 		IndexFunc: func(m *consolegraphql.Metric) (bool, []byte, error) {
-			key := fmt.Sprintf("%s/%s/%s/%s/%s/\x00", m.Kind, m.Namespace, m.AddressSpace, m.Name, m.MetricName)
+			key := fmt.Sprintf("%s/%s/%s/%s/%s/\x00", m.Kind, m.Namespace, m.AddressSpace, m.Name, m.Value.GetName())
 			return true, []byte(key), nil
 		},
 	}
@@ -32,7 +32,7 @@ func ConnectionLinkMetricIndex()  (*metricIndex) {
 			if m.ConnectionName == nil {
 				return false, nil, nil
 			}
-			key := fmt.Sprintf("%s/%s/%s/%s/%s/%s/\x00", m.Kind, m.Namespace, m.AddressSpace, *m.ConnectionName, m.Name, m.MetricName)
+			key := fmt.Sprintf("%s/%s/%s/%s/%s/%s/\x00", m.Kind, m.Namespace, m.AddressSpace, *m.ConnectionName, m.Name, m.Value.GetName())
 			return true, []byte(key), nil
 		},
 	}

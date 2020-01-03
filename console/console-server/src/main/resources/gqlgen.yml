@@ -83,12 +83,12 @@ models:
 
   Metric_consoleapi_enmasse_io_v1beta1:
     model: consolegraphql.Metric
-    fields:
-      Name:
-        fieldName: MetricName
-      Type:
-        fieldName: MetricType
-      Units:
-        fieldName: MetricUnit
-      Value:
-        fieldName: MetricValue
+#    fields:
+#      Name:
+#        model: github.com/enmasseproject/enmasse/pkg/consolegraphql.GetMetricName
+#      Type:
+#        model: github.com/enmasseproject/enmasse/pkg/consolegraphql.GetMetricType
+#      Units:
+#        model: github.com/enmasseproject/enmasse/pkg/consolegraphql.GetMetricUnit
+#      Value:
+#        model: github.com/enmasseproject/enmasse/pkg/consolegraphql.GetMetricValue
