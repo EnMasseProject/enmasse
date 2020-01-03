@@ -19,5 +19,7 @@ include::../modules/proc-deploy-monitoring-using-ansible.adoc[leveloffset=+1]
 
 include::../modules/proc-configure-alerts.adoc[leveloffset=+1]
 
+include::assemblies/assembly-metrics-rules.adoc[leveloffset=+1]
+
 :context: {parent-context}
 

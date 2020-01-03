@@ -18,8 +18,10 @@ enmasse_address_space_status_not_ready{name="my-address-space"} 0
 ----
 
 The total number of address spaces equals the sum of all address spaces in the ready state plus the sum of all address spaces in the not ready state:
-`enmasse_address_spaces_total == (sum(enmasse_address_space_status_ready) + sum(enmasse_address_space_status_not_ready))`
-
+[source,options="nowrap"]
+----
+enmasse_address_spaces_total == (sum(enmasse_address_space_status_ready) + sum(enmasse_address_space_status_not_ready))
+----
 
 
 `enmasse_address_space_status_ready`::

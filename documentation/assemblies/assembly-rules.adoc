@@ -1,6 +1,6 @@
 // This assembly is included in the following assemblies:
 //
-// assembly-.adoc
+// assembly-metrics-rules.adoc
 
 [id='assembly-rules-{context}]
 = Rules

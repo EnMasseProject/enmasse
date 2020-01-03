@@ -10,16 +10,28 @@ Records are a type of Prometheus rule that are pre-computed expressions saved as
 `enmasse_address_spaces_ready_total`::
 Description::: Aggregates the `enmasse_address_space_status_ready` in a single gauge-type metric that provides the total number of addresses in a `ready` state.
 Expression:::
-`sum by(service, exported_namespace) (enmasse_address_space_status_ready)`
+[source,options="nowrap"]
+----
+sum by(service, exported_namespace) (enmasse_address_space_status_ready)
+----
 Example:::
-`enmasse_address_spaces_ready_total{exported_namespace="prod_namespace",service="address-space-controller"} 1`
+[source,options="nowrap"]
+----
+enmasse_address_spaces_ready_total{exported_namespace="prod_namespace",service="address-space-controller"} 1
+----
 
 `enmasse_address_spaces_not_ready_total`::
 Description::: Aggregates the `enmasse_address_space_not_status_ready` in a single gauge-type metric that provides the total number of addresses in a `not ready` state.
 Expression:::
-`sum by(service, exported_namespace) (enmasse_address_space_status_not_ready)`
+[source,options="nowrap"]
+----
+sum by(service, exported_namespace) (enmasse_address_space_status_not_ready)
+----
 Example:::
-`enmasse_address_spaces_not_ready_total{exported_namespace="prod_namespace",service="address-space-controller"} 1`
+[source,options="nowrap"]
+----
+enmasse_address_spaces_not_ready_total{exported_namespace="prod_namespace",service="address-space-controller"} 1
+----
 
 `enmasse_component_health`::
 Description::: Provides a Boolean-style metric for each `address-space-controller` and `api-server` indicating if they are up and running.
