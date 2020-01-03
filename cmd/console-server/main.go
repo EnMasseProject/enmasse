@@ -59,6 +59,8 @@ Major items that are unfinished:
 9) Auth services.
 10) Implement the Improved Address type API
 11) Implement addressSpaceTypes_v2/addressTypes_v2
+12) Refactor agent -> model conversion - currently ugly code and poor division of responsibilities
+13) Refactor cachedb index specification to avoid spreading of knowledge of the indices throughout the code
 
 
 */
@@ -177,8 +179,9 @@ func main() {
 		duration, err := time.ParseDuration(dumpCachePeriod)
 		if err == nil {
 			schedule(func() {
-				_ = objectCache.Dump()
-				_ = metricCache.Dump()
+				//_ = objectCache.Dump()
+				//objectCache.Dump()
+				//_ = metricCache.Dump()
 			}, duration)
 
 		}

@@ -40,7 +40,7 @@ enum Protocol {
 }
 
 type Metric_consoleapi_enmasse_io_v1beta1 {
-  Name: String!
+  Name: String! @goField(forceResolver: true)
   Type: MetricType!
   Value: Float!
   Units: String!

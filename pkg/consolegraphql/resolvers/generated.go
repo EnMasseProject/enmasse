@@ -190,10 +190,10 @@ type ComplexityRoot struct {
 	}
 
 	MetricConsoleapiEnmasseIoV1beta1 struct {
-		MetricName  func(childComplexity int) int
-		MetricType  func(childComplexity int) int
-		MetricUnit  func(childComplexity int) int
-		MetricValue func(childComplexity int) int
+		Name  func(childComplexity int) int
+		Type  func(childComplexity int) int
+		Units func(childComplexity int) int
+		Value func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -290,7 +290,10 @@ type Link_consoleapi_enmasse_io_v1beta1Resolver interface {
 	Metrics(ctx context.Context, obj *LinkConsoleapiEnmasseIoV1beta1) ([]*consolegraphql.Metric, error)
 }
 type Metric_consoleapi_enmasse_io_v1beta1Resolver interface {
-	MetricType(ctx context.Context, obj *consolegraphql.Metric) (MetricType, error)
+	Name(ctx context.Context, obj *consolegraphql.Metric) (string, error)
+	Type(ctx context.Context, obj *consolegraphql.Metric) (MetricType, error)
+	Value(ctx context.Context, obj *consolegraphql.Metric) (float64, error)
+	Units(ctx context.Context, obj *consolegraphql.Metric) (string, error)
 }
 type MutationResolver interface {
 	CreateAddressSpace(ctx context.Context, input v1beta1.AddressSpace) (*v1.ObjectMeta, error)
@@ -838,32 +841,32 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		return e.complexity.LinkConsoleapiEnmasseIoV1beta1.Spec(childComplexity), true
 
 	case "Metric_consoleapi_enmasse_io_v1beta1.Name":
-		if e.complexity.MetricConsoleapiEnmasseIoV1beta1.MetricName == nil {
+		if e.complexity.MetricConsoleapiEnmasseIoV1beta1.Name == nil {
 			break
 		}
 
-		return e.complexity.MetricConsoleapiEnmasseIoV1beta1.MetricName(childComplexity), true
+		return e.complexity.MetricConsoleapiEnmasseIoV1beta1.Name(childComplexity), true
 
 	case "Metric_consoleapi_enmasse_io_v1beta1.Type":
-		if e.complexity.MetricConsoleapiEnmasseIoV1beta1.MetricType == nil {
+		if e.complexity.MetricConsoleapiEnmasseIoV1beta1.Type == nil {
 			break
 		}
 
-		return e.complexity.MetricConsoleapiEnmasseIoV1beta1.MetricType(childComplexity), true
+		return e.complexity.MetricConsoleapiEnmasseIoV1beta1.Type(childComplexity), true
 
 	case "Metric_consoleapi_enmasse_io_v1beta1.Units":
-		if e.complexity.MetricConsoleapiEnmasseIoV1beta1.MetricUnit == nil {
+		if e.complexity.MetricConsoleapiEnmasseIoV1beta1.Units == nil {
 			break
 		}
 
-		return e.complexity.MetricConsoleapiEnmasseIoV1beta1.MetricUnit(childComplexity), true
+		return e.complexity.MetricConsoleapiEnmasseIoV1beta1.Units(childComplexity), true
 
 	case "Metric_consoleapi_enmasse_io_v1beta1.Value":
-		if e.complexity.MetricConsoleapiEnmasseIoV1beta1.MetricValue == nil {
+		if e.complexity.MetricConsoleapiEnmasseIoV1beta1.Value == nil {
 			break
 		}
 
-		return e.complexity.MetricConsoleapiEnmasseIoV1beta1.MetricValue(childComplexity), true
+		return e.complexity.MetricConsoleapiEnmasseIoV1beta1.Value(childComplexity), true
 
 	case "Mutation.closeConnection":
 		if e.complexity.Mutation.CloseConnection == nil {
@@ -1280,7 +1283,7 @@ enum Protocol {
 }
 
 type Metric_consoleapi_enmasse_io_v1beta1 {
-  Name: String!
+  Name: String! @goField(forceResolver: true)
   Type: MetricType!
   Value: Float!
   Units: String!
@@ -4763,13 +4766,13 @@ func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_Name(ctx conte
 		Object:   "Metric_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.MetricName, nil
+		return ec.resolvers.Metric_consoleapi_enmasse_io_v1beta1().Name(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4806,7 +4809,7 @@ func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_Type(ctx conte
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Metric_consoleapi_enmasse_io_v1beta1().MetricType(rctx, obj)
+		return ec.resolvers.Metric_consoleapi_enmasse_io_v1beta1().Type(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4837,13 +4840,13 @@ func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_Value(ctx cont
 		Object:   "Metric_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.MetricValue, nil
+		return ec.resolvers.Metric_consoleapi_enmasse_io_v1beta1().Value(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4874,13 +4877,13 @@ func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_Units(ctx cont
 		Object:   "Metric_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.MetricUnit, nil
+		return ec.resolvers.Metric_consoleapi_enmasse_io_v1beta1().Units(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8509,10 +8512,19 @@ func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1(ctx context.Co
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Metric_consoleapi_enmasse_io_v1beta1")
 		case "Name":
-			out.Values[i] = ec._Metric_consoleapi_enmasse_io_v1beta1_Name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Metric_consoleapi_enmasse_io_v1beta1_Name(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "Type":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -8528,15 +8540,33 @@ func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1(ctx context.Co
 				return res
 			})
 		case "Value":
-			out.Values[i] = ec._Metric_consoleapi_enmasse_io_v1beta1_Value(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Metric_consoleapi_enmasse_io_v1beta1_Value(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "Units":
-			out.Values[i] = ec._Metric_consoleapi_enmasse_io_v1beta1_Units(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Metric_consoleapi_enmasse_io_v1beta1_Units(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
