@@ -134,23 +134,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return kubernetes.getSchemaClient().list();
     }
 
-    /**
-     * scale up/down deployment to count of replicas, includes waiting for expected replicas
-     *
-     * @param deployment  name of deployment
-     * @param numReplicas count of replicas
-     * @throws InterruptedException
-     */
-    protected void scaleDeployment(String deployment, int numReplicas) throws InterruptedException {
-        if (numReplicas >= 0) {
-            TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
-            TestUtils.setReplicas(kubernetes, null, deployment, numReplicas, budget);
-        } else {
-            throw new IllegalArgumentException("'numReplicas' must be greater than 0");
-        }
-
-    }
-
     protected Endpoint getMessagingRoute(AddressSpace addressSpace) throws Exception {
         Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "messaging");
         if (messagingEndpoint == null) {

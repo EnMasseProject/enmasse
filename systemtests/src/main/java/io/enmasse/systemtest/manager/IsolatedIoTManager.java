@@ -55,7 +55,7 @@ public class IsolatedIoTManager extends ResourceManager {
     }
 
     @Override
-    public void setup() throws Exception {
+    public void setup() {
         if (!kubernetes.namespaceExists(IOT_PROJECT_NAMESPACE)) {
             kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
         }
