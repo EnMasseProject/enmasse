@@ -53,9 +53,6 @@ jobs:
           name: unit-test-logs
           path: artifacts
 
-      - name: Deploy IoT certs
-        run: ./.github/scripts/deploy_iot_certs.sh
-
       - name: IoT tests
         run: ./.github/scripts/iot_test.sh
 

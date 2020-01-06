@@ -7,6 +7,7 @@ package io.enmasse.systemtest.listener;
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.ThrowableRunner;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -17,6 +18,8 @@ import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
+import io.fabric8.kubernetes.api.model.Cluster;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -33,7 +36,11 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class JunitCallbackListener implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler,
@@ -80,7 +87,17 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                     if (!operatorManager.isEnmasseBundleDeployed()) {
                         operatorManager.installEnmasseBundle();
                     }
-                    if (testInfo.isClassIoT()) {
+                    if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
+                        LOGGER.warn("Before certs " + Kubernetes.getInstance().getCluster().getClass() + " == " + MinikubeCluster.class);
+                        if (Kubernetes.getInstance().getCluster() instanceof MinikubeCluster) {
+                            LOGGER.warn("Installing certs!");
+                            List<String> create = Arrays.asList(Paths.get(Environment.getInstance().getTemplatesPath(), "install",
+                                    "components", "iot", "examples", "k8s-tls", "create").toString());
+                            assertTrue(Exec.execute(create, 300_000, true).getRetCode(), "Cannot create certs!");
+                            List<String> deploy = Arrays.asList(Paths.get(Environment.getInstance().getTemplatesPath(), "install",
+                                    "components", "iot", "examples", "k8s-tls", "deploy").toString());
+                            assertTrue(Exec.execute(deploy, 300_000, true).getRetCode(), "Cannot deploy certs!");
+                        }
                         operatorManager.installIoTOperator();
                     }
                 }
