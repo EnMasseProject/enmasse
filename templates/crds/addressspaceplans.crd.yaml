@@ -26,6 +26,14 @@ spec:
   validation:
     openAPIV3Schema:
       properties:
+        status:
+          properties:
+            phase:
+              type: string
+              description: "Phase of the address space plan."
+            message:
+              type: string
+              description: "Status and error messages for the address space plan."
         spec:
           type: object
           required:
