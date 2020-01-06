@@ -39,9 +39,6 @@ jobs:
       - name: Install dependencies
         run: ./.github/scripts/install_dep.sh
 
-      - name: Setup OLM
-        run: ./.github/scripts/setup-olm.sh
-
       - name: Build
         run: ./.github/scripts/build.sh
 
