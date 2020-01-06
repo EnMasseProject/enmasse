@@ -25,7 +25,8 @@ type AddressPlan struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec AddressPlanSpec `json:"spec"`
+	Spec   AddressPlanSpec   `json:"spec"`
+	Status AddressPlanStatus `json:"status,omitempty"`
 }
 
 type AddressPlanSpec struct {
@@ -35,6 +36,19 @@ type AddressPlanSpec struct {
 	ShortDescription string             `json:"shortDescription,omitempty"`
 	DisplayOrder     int                `json:"displayOrder,omitempty"`
 	Resources        map[string]float64 `json:"resources,omitempty"`
+}
+
+type AddressPlanPhase string
+
+const (
+	AddressPlanPending     AddressPlanPhase = "Pending"
+	AddressPlanConfiguring AddressPlanPhase = "Configuring"
+	AddressPlanActive      AddressPlanPhase = "Active"
+)
+
+type AddressPlanStatus struct {
+	Phase   AddressPlanPhase `json:"phase,omitempty"`
+	Message string           `json:"message,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -56,7 +70,8 @@ type AddressSpacePlan struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec AddressSpacePlanSpec `json:"spec"`
+	Spec   AddressSpacePlanSpec   `json:"spec"`
+	Status AddressSpacePlanStatus `json:"status,omitempty"`
 }
 
 type AddressSpacePlanSpec struct {
@@ -68,6 +83,19 @@ type AddressSpacePlanSpec struct {
 	InfraConfigRef   string             `json:"infraConfigRef,omitempty"`
 	DisplayOrder     int                `json:"displayOrder,omitempty"`
 	ResourceLimits   map[string]float64 `json:"resourceLimits,omitempty"`
+}
+
+type AddressSpacePlanPhase string
+
+const (
+	AddressSpacePlanPending     AddressSpacePlanPhase = "Pending"
+	AddressSpacePlanConfiguring AddressSpacePlanPhase = "Configuring"
+	AddressSpacePlanActive      AddressSpacePlanPhase = "Active"
+)
+
+type AddressSpacePlanStatus struct {
+	Phase   AddressSpacePlanPhase `json:"phase,omitempty"`
+	Message string                `json:"message,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

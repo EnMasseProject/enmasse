@@ -32,6 +32,7 @@ public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<Add
     public static final String KIND = "AddressPlan";
 
     private AddressPlanSpec spec;
+    private AddressPlanStatus status;
 
     // Deprecated format
     private String shortDescription;
@@ -138,5 +139,13 @@ public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<Add
     @JsonProperty("requiredResources")
     public void setRequiredResources(List<ResourceRequest> requiredResources) {
         this.requiredResources = requiredResources;
+    }
+
+    public AddressPlanStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AddressPlanStatus status) {
+        this.status = status;
     }
 }

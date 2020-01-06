@@ -100,11 +100,21 @@ type AuthenticationServiceSpecExternal struct {
 	AllowOverride    bool                    `json:"allowOverride,omitempty"`
 }
 
+type AuthenticationServicePhase string
+
+const (
+	AuthenticationServicePending     AuthenticationServicePhase = "Pending"
+	AuthenticationServiceConfiguring AuthenticationServicePhase = "Configuring"
+	AuthenticationServiceActive      AuthenticationServicePhase = "Active"
+)
+
 type AuthenticationServiceStatus struct {
-	Host             string                  `json:"host,omitempty"`
-	Port             int                     `json:"port,omitempty"`
-	CaCertSecret     *corev1.SecretReference `json:"caCertSecret,omitempty"`
-	ClientCertSecret *corev1.SecretReference `json:"clientCertSecret,omitempty"`
+	Phase            AuthenticationServicePhase `json:"phase,omitempty"`
+	Message          string                     `json:"message,omitempty"`
+	Host             string                     `json:"host,omitempty"`
+	Port             int                        `json:"port,omitempty"`
+	CaCertSecret     *corev1.SecretReference    `json:"caCertSecret,omitempty"`
+	ClientCertSecret *corev1.SecretReference    `json:"clientCertSecret,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
