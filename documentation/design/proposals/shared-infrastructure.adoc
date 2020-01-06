@@ -2,17 +2,21 @@
 
 Address spaces in EnMasse are currently isolated, i.e. they don't share infrastructure (router network, brokers). Moreover, the standard-controller and agent deployments are created per address space. Sharing infrastructure allows sharing resources and reducing the footprint when configuring multiple address spaces, and speed up the time to provision new address spaces. Furthermore, the split between `standard` and `brokered` address space types has caused a lot of quirks in the architecture, which a shared address space type may handle in a better way.
 
-See the initial discussion in issue #3420 for more details on alternatives. This document will consider the alternative with a new address space type for shared infra.
+See the initial discussion in issue #3420 for more details on alternatives.
 
 Another part of EnMasse that has been a source of confusion is Address Spaces and Namespaces. Earlier requirements around the service catalog integration led to supporting multiple AddressSpace instances per namespace. However, with CRDs, and the type of clusters EnMasse is deployed to, putting a restriction on one address space per namespace is a direction we want to go in. Doing this as part of shared infra is a good fit, as one would need to write the controller logic separately from existing code anyway.
 
+Finally, the new design will take into account the service operator persona, which may be different from the service admin. The service operator may create plans, authentication services that is used by the tenants.
+
+This document will consider the alternative with a new address space type + an alternative breaking API.
+
 == Design overview
 
-A new `MessagingInfra` type will be created and used to define an instance of shared infrastructure. The `MessagingInfra` will define everything related to 'global' router and broker configuration.
+A new `MessagingInfra` type will be created and used to define an instance of shared infrastructure. The `MessagingInfra` will define everything related to router and broker configuration that applies to all tenants.
 
-A new `MessagingPlan` type will be created, and will conceptually replace the `AddressSpacePlan`, but limited to shared infra configuration.
+A new `MessagingPlan` type will be created, and will conceptually replace the `AddressSpacePlan`, but be limited to shared infra configuration.
 
-AddressSpace resource is not used, and a restriction of 1 instance of messaging per Kubernetes namespace is set. New CRDs for configuring messaging endpoints, connectors and plan/authservice config us defined. The AddressSpace resource is replaced by `MessagingConfig`, `MessagingEndpoint` and `MessagingConnector` resources.
+AddressSpace resource will be deprecated, and a restriction of 1 instance of messaging per Kubernetes namespace is mandated. New CRDs for configuring messaging endpoints, connectors and plan/authservice config is defined. The AddressSpace resource is replaced by `MessagingConfig`, `MessagingEndpoint` and `MessagingConnector` resources.
 
 The `MessagingConfig` type, which will be a singleton per namespace, is introduced to contain the messaging configuration of a namespace.
 
@@ -20,11 +24,16 @@ The `Address` and `AddressPlan` types will remain, but the schema will be extend
 
 The `qdr-operator` and `activemq-artemis-operator` operators will be used for managing routers and brokers.
 
-The `MessagingPlan`, `AddressPlan` and `AuthenticationService` resource may additionally be referenced by their namespace. This allows having a service operator persona that does not manage or have access to the messaging infrastructure, but manages the plans and authentication service configurations offered to messaging tenants.
+The `MessagingPlan`, `AddressPlan` and `AuthenticationService` resources may additionally be referenced by their namespace. This allows having a service operator persona that does not manage or have access to the messaging infrastructure, but manages the plans and authentication service configurations offered to messaging tenants.
 
 MessagingUser and Address will no longer needed to be prefixed with address space name!
 
-=== MessagingInfra
+
+=== Resources
+
+==== MessagingInfra
+
+The MessagingInfra describes an instance of shared infrastructure managed by the enmasse operator.
 
 Example:
 
@@ -42,16 +51,6 @@ spec:
       max: 3 # Max replicas that maybe scaled to
       minReady: 1 # Allows 1 router to not be ready before alerting
 
-    topology: mesh | ring # Optional (default: mesh) How routers should be connected.
-
-    # Optional (default: 1 entry with defaults set). Allows creating additional router groups, each with identical group configuration applied. Strict anti-affinity rules based on name will be applied to each group to enforce they are not running in the same zone
-    groups: 
-    - name: grp1
-      linkWeight: 30 # Optional (default: same as internal weight). Allows controlling the weight of links to other router groups
-    - name: grp2
-      linkWeight: 60
-
-    linkWeight: 100 # The weight of internal router links
     podTemplate: # Same as in standard infra config today. Based on Kubernetes spec
       spec:
         affinity: # Allow setting affinity rules to ensure routers do not run the same node etc.
@@ -67,8 +66,7 @@ spec:
     max: 5 // Will never create more brokers than this
     replicas: 1 // Must be >= 1, defaults to 1. Larger values creates HA replicas
     addressFullPolicy: BLOCK
-    storageClassName: #
-
+    storageClassName: # Storage class name to use for PVCs.
     podTemplate:
       metadata:
       spec:
@@ -81,6 +79,8 @@ spec:
 ```
 
 When deployed, the above would have the minimum impact of creating 3 routers and 1 brokers. The brokers may be configured according to the address spaces they need to support.
+
+==== MessagingPlan
 
 An `AddressSpacePlan` currently refers to router and broker credits to control the 'quota' of address spaces. With shared infra, the numbers would either have to change their meaning, or one could reithink and extend the schema.
 
@@ -124,7 +124,9 @@ For routers and brokers, the shared infra has some potential for auto-scaling. I
 
 For plans with the `transactions` capability, the operator will ensure that addresses for that namespace are always link-routed and put on the same broker (and HA replicas).
 
-The messaging tenant will create a singleton instance of `MessagingConfig` in a namespace to configure messaging:
+==== MessagingConfig
+
+The messaging tenant will create a singleton instance of `MessagingConfig` in a namespace to configure messaging. Creating the MessagingConfig may be optional: the operator can create it with defaults if endpoints are created for instance.
 
 ```
 kind: MessagingConfig
@@ -141,7 +143,9 @@ status:
   message: "Unknown authenticationservice 'myservice'
 ```
 
-Endpoints would e configured by creating a MessagingEndpoint instance (multiple instances allowed):
+==== MessagingEndpoint
+
+A MessagingEndpoint configures access to the messaging infrastructure via different mechanisms. It is also the place where tenants put any custom certificates that should be used, or configure how an endpoint should be exposed. An endpoint can either be exposed internally (as a ClusterIP service), as a loadbalancer service (LoadBalancer service) or as an OpenShift route. Multiple endpoints may be created to expose service in multiple ways. All addresses in a namespace are exposed through all endpoints.
 
 ```
 kind: MessagingEndpoint
@@ -185,17 +189,21 @@ status:
     port: 5672
 ```
 
-To configure connectors:
+==== MessagingConnector
+
+For phase 2, but to configure connectors:
 
 ```
 kind: MessagingConnector
 matadata:
   name: connector
 spec:
-  # Same options as under address space .spec.connectors[]?
+  # Same options as under address space .spec.connectors[]
 status:
-  # Same options as under address space .spec.connectors[]?
+  # Same options as under address space .spec.connectors[]
 ```
+
+==== AddressPlan
 
 Address plans allow properties to indicate the desired guarantees of a queue. An example address plan would be:
 
@@ -222,7 +230,11 @@ spec:
     
 ```
 
-Addresses allow setting the same properties as the plan, if permitted:
+For instance, the resources spec will be used when scheduling the queue to ensure it is placed on a broker that meets the memory requirements for the queue.
+
+Other properties are specified for each type. I.e. queue properties are under .spec.queue, topic properties are under .spec.topic etc.
+
+Addresses allow setting the same properties as the plan, if permitted by the allowOverrides setting in the plan.
 
 ```
 apiVersion: enmasse.io/v1beta1
@@ -243,6 +255,8 @@ This can be translated to limits that can be enforced in the broker, and that ca
 
 NOTE: Plans for existing address types would continue to use the existing schema.
 
+==== Other considerations and removed components
+
 The following components will not be part of shared infra:
 
 * MQTT Gateway
@@ -253,9 +267,28 @@ The following components will not be part of shared infra:
 * Standard-controller
 * Topic-forwarder (The implication is that partitioned/sharded topics will not be supported - at least initially)
 
+=== Service operator
+
+The service operator persona is introduced to allow managing messaging plans, address plans, and authentication services separately from the rest of main infrastructure. Any reference to plans and authentication services will require using an object with name and namespace referencing the resource.
+
+=== Operations
+
+With shared infrastructure, monitoring and alerting of routers and brokers is requires as today, but the visibility into the per-namespace 'slice' of the infrastructure is also needed to debug and observe the system. The operator need the ability to:
+
+* Locate routers and brokers serving a namespace
+* Locate broker(s) for a given address
+* Inspect the current version of a shared infrastructure instance
+* Determine requested and actual resource usage of a namespace
+
+=== IoT
+
+With shared infra, IoT will not be able to create multiple managed IoTProject resources per namespace. One could work to allow multiple iot projects per namespace sharing the messaging resources, but it is probably not something important in the first instance.
+
+At present, the IoTConfig resource deploying the protocol adapters is a singleton in the infrastructure namespace. It could be desirable to support multiple instance of this resource, potentially deployed and managed in different namespaces to the messaging namespace and be managed by a separate persona than the messaging service admin. The IoTProject singleton of a namespace can then refer to the iot config for the project in the same way a messaging plan.
+
 === Phase 1 (Milestone 0.32.0 ?)
 
-The goal of phase is to add support for shared infra and implement basic features similar to standard address space.
+The goal of phase 1 is to add support for shared infra and implement basic features similar to standard address space.
 
 The `MessagingInfra` resource would be managed by the enmasse-operator, which will do a reconciliation of deployments, services etc. The router-operator should be used to deploy and manage the dispatch router to simplify the interface. Depending on the maturity of the broker-operator, it should be used to deploy the brokers.
 
@@ -281,7 +314,7 @@ The following would NOT be supported:
 * Configure per-address limits
 * MQTT, Core, STOMP
 
-==== Design
+==== Detailed design
 
 The tasks of managing brokers and routers should be offloaded to standalone components as much as possible.
 
@@ -289,9 +322,9 @@ For router deployments, the https://github.com/interconnectedcloud/qdr-operator[
 
 For broker deployments, the https://github.com/rh-messaging/activemq-artemis-operator[activemq-artemis-operator] will be used, (and modified to work with our requirements). The resulting changes should be submitted upstream, although short term there may exist a temporary fork in order to make progress.
 
-Router - Broker connections can be maintained either by having the operator create and maintain the router -> broker connectors, or use the broker-plugin to create connectors to the routers. The advantage of the first alternative is that we no longer rely on custom plugin code for connections, and that we get more flexibility in choosing topology of connections (i.e. multiple routers can connect to the same broker for better HA). The second alternative removes the need to create the outgoing router connector. However, we already need the capability to create connectors in the router (for external bridges), so this is not really something we get away with. For this design, having the operator maintain the connectors will be the preferred alternative.
+Router - Broker connections are maintained by having the operator create and maintain the router -> broker connectors. The advantage is that we no longer rely on custom plugin code for connections, and that we get more flexibility in choosing topology of connections (i.e. multiple routers can connect to the same broker for better HA). 
 
-Performance requirements of shared infra:
+Performance goals of a shared infra instance:
 
 * Handle up to 100k addresses - possibly spread accross multiple namespaces
 * Handle up to 1000 namespaces per infra instance (with 100 addresses each)
