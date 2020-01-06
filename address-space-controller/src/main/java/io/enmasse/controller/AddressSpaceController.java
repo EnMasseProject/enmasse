@@ -74,7 +74,7 @@ public class AddressSpaceController {
 
     public void start() throws Exception {
         boolean isOpenShift = OpenShift.isOpenShift(controllerClient);
-        KubeSchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace(), options.getVersion(), isOpenShift);
+        KubeSchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace(), options.getVersion(), isOpenShift, true);
 
         log.info("AddressSpaceController starting with options: {}", options);
         if (options.isInstallDefaultResources()) {

@@ -5,6 +5,8 @@
 
 package io.enmasse.admin.model.v1;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.enmasse.address.model.Phase;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -18,6 +20,7 @@ import java.util.Objects;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AddressPlanStatus extends AbstractWithAdditionalProperties {
     private Phase phase;
     private String message;
@@ -58,5 +61,14 @@ public class AddressPlanStatus extends AbstractWithAdditionalProperties {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    @JsonIgnore
+    public void appendMessage(String message) {
+        if (this.message == null) {
+            this.message = message;
+        } else {
+            this.message = this.message + ". " + message;
+        }
     }
 }

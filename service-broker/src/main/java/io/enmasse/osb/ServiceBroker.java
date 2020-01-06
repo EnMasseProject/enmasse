@@ -60,7 +60,7 @@ public class ServiceBroker extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) throws Exception {
-        SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace(), options.getVersion(), true);
+        SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace(), options.getVersion(), true, false);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 

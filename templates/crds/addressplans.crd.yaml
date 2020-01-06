@@ -23,6 +23,21 @@ spec:
     - name: v1alpha1
       served: true
       storage: false
+  additionalPrinterColumns:
+  - name: Phase
+    type: string
+    priority: 0
+    description: The phase of the address plan
+    JSONPath: .status.phase
+  - name: Status
+    type: string
+    priority: 1
+    description: The status of the address plan
+    JSONPath: .status.message
+  - name: Age
+    priority: 0
+    type: date
+    JSONPath: .metadata.creationTimestamp
   validation:
     openAPIV3Schema:
       properties:
