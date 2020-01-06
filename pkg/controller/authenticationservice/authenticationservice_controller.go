@@ -12,6 +12,8 @@ import (
 
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/recon"
+
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -103,6 +105,12 @@ func (r *ReconcileAuthenticationService) Reconcile(request reconcile.Request) (r
 		return reconcile.Result{}, err
 	}
 
+	if authservice.Status.Phase == "" {
+		authservice.Status.Phase = adminv1beta1.AuthenticationServicePending
+	} else if authservice.Status.Phase == adminv1beta1.AuthenticationServicePending {
+		authservice.Status.Phase = adminv1beta1.AuthenticationServiceConfiguring
+	}
+
 	if authservice.Spec.Type == adminv1beta1.None {
 		return r.reconcileNoneAuthService(ctx, authservice)
 	} else if authservice.Spec.Type == adminv1beta1.Standard {
@@ -114,92 +122,84 @@ func (r *ReconcileAuthenticationService) Reconcile(request reconcile.Request) (r
 }
 
 func (r *ReconcileAuthenticationService) reconcileNoneAuthService(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (reconcile.Result, error) {
-
-	err := applyNoneAuthServiceDefaults(ctx, r.client, r.scheme, authservice)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	var requeue = false
-	result, err := r.reconcileDeployment(ctx, authservice, authservice.Name, applyNoneAuthServiceDeployment)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	requeue = requeue || result.Requeue
-
-	result, err = r.reconcileService(ctx, authservice, authservice.Name, applyNoneAuthServiceService)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	requeue = requeue || result.Requeue
-
-	result, err = r.updateStatus(ctx, authservice, func(status *adminv1beta1.AuthenticationServiceStatus) error {
-		status.Host = fmt.Sprintf("%s.%s.svc", authservice.Name, authservice.Namespace)
-		status.Port = 5671
-		status.CaCertSecret = authservice.Spec.None.CertificateSecret
-		return nil
+	rc := &recon.ReconcileContext{}
+	rc.ProcessSimple(func() error {
+		return applyNoneAuthServiceDefaults(ctx, r.client, r.scheme, authservice)
 	})
 
-	if err != nil {
-		return reconcile.Result{}, err
+	rc.Process(func() (reconcile.Result, error) {
+		return r.reconcileDeployment(ctx, authservice, authservice.Name, applyNoneAuthServiceDeployment)
+	})
+
+	rc.Process(func() (reconcile.Result, error) {
+		return r.reconcileService(ctx, authservice, authservice.Name, applyNoneAuthServiceService)
+	})
+
+	if rc.Error() != nil || rc.NeedRequeue() {
+		return rc.Result()
 	}
 
-	return reconcile.Result{Requeue: requeue}, nil
+	rc.Process(func() (reconcile.Result, error) {
+		return r.updateStatus(ctx, authservice, func(status *adminv1beta1.AuthenticationServiceStatus) error {
+			status.Phase = adminv1beta1.AuthenticationServiceActive
+			status.Host = fmt.Sprintf("%s.%s.svc", authservice.Name, authservice.Namespace)
+			status.Port = 5671
+			status.CaCertSecret = authservice.Spec.None.CertificateSecret
+			return nil
+		})
+	})
+
+	return rc.Result()
 }
 
 func (r *ReconcileAuthenticationService) reconcileStandardAuthService(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (reconcile.Result, error) {
 
-	err := applyStandardAuthServiceDefaults(ctx, r.client, r.scheme, authservice)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	var requeue = false
-	result, err := r.reconcileService(ctx, authservice, *authservice.Spec.Standard.ServiceName, applyStandardAuthServiceService)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	requeue = requeue || result.Requeue
-
-	result, err = r.reconcileStandardVolume(ctx, *authservice.Spec.Standard.Storage.ClaimName, authservice)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	requeue = requeue || result.Requeue
-
-	result, err = r.reconcileStandardRoute(ctx, *authservice.Spec.Standard.RouteName, authservice)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	requeue = requeue || result.Requeue
-
-	result, err = r.reconcileDeployment(ctx, authservice, *authservice.Spec.Standard.DeploymentName, applyStandardAuthServiceDeployment)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	requeue = requeue || result.Requeue
-
-	result, err = r.updateStatus(ctx, authservice, func(status *adminv1beta1.AuthenticationServiceStatus) error {
-		status.Host = fmt.Sprintf("%s.%s.svc", authservice.Name, authservice.Namespace)
-		status.Port = 5671
-		status.CaCertSecret = authservice.Spec.Standard.CertificateSecret
-		return nil
+	rc := &recon.ReconcileContext{}
+	rc.ProcessSimple(func() error {
+		return applyStandardAuthServiceDefaults(ctx, r.client, r.scheme, authservice)
 	})
-	if err != nil {
-		return reconcile.Result{}, err
+
+	rc.Process(func() (reconcile.Result, error) {
+		return r.reconcileService(ctx, authservice, *authservice.Spec.Standard.ServiceName, applyStandardAuthServiceService)
+	})
+
+	rc.Process(func() (reconcile.Result, error) {
+
+		return r.reconcileStandardVolume(ctx, *authservice.Spec.Standard.Storage.ClaimName, authservice)
+	})
+
+	rc.Process(func() (reconcile.Result, error) {
+		return r.reconcileStandardRoute(ctx, *authservice.Spec.Standard.RouteName, authservice)
+	})
+
+	rc.Process(func() (reconcile.Result, error) {
+		return r.reconcileDeployment(ctx, authservice, *authservice.Spec.Standard.DeploymentName, applyStandardAuthServiceDeployment)
+	})
+
+	if rc.Error() != nil || rc.NeedRequeue() {
+		return rc.Result()
 	}
 
-	result, err = r.removeKeycloakController(ctx, authservice)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	requeue = requeue || result.Requeue
+	rc.Process(func() (reconcile.Result, error) {
+		return r.updateStatus(ctx, authservice, func(status *adminv1beta1.AuthenticationServiceStatus) error {
+			status.Phase = adminv1beta1.AuthenticationServiceActive
+			status.Host = fmt.Sprintf("%s.%s.svc", authservice.Name, authservice.Namespace)
+			status.Port = 5671
+			status.CaCertSecret = authservice.Spec.Standard.CertificateSecret
+			return nil
+		})
+	})
 
-	return reconcile.Result{Requeue: requeue}, nil
+	rc.Process(func() (reconcile.Result, error) {
+		return r.removeKeycloakController(ctx, authservice)
+	})
+
+	return rc.Result()
 }
 
 func (r *ReconcileAuthenticationService) reconcileExternalAuthService(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (reconcile.Result, error) {
 	return r.updateStatus(ctx, authservice, func(status *adminv1beta1.AuthenticationServiceStatus) error {
+		status.Phase = adminv1beta1.AuthenticationServiceActive
 		status.Host = authservice.Spec.External.Host
 		status.Port = authservice.Spec.External.Port
 		status.CaCertSecret = authservice.Spec.External.CaCertSecret
