@@ -16,13 +16,26 @@ public class TenantInformation extends TenantHandle {
 
     private final Optional<Tenant> tenant;
 
-    protected TenantInformation(final String name, final String id, final Tenant tenant) {
-        super(name,id);
+    private final String namespace;
+    private final String projectName;
+
+    protected TenantInformation(final String namespace, final String projectName, final String id, final Tenant tenant) {
+        super(namespace + "." + projectName, id);
+        this.namespace = namespace;
+        this.projectName = projectName;
         this.tenant = Optional.ofNullable(tenant);
     }
 
     public Optional<Tenant> getTenant() {
         return this.tenant;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public String getProjectName() {
+        return projectName;
     }
 
     @Override
@@ -31,10 +44,11 @@ public class TenantInformation extends TenantHandle {
                 .add("tenant", this.tenant);
     }
 
-    public static TenantInformation of(final String name, final String id, final Tenant tenant) {
-        Objects.requireNonNull(name);
+    public static TenantInformation of(final String namespace, final String projectName, final String id, final Tenant tenant) {
+        Objects.requireNonNull(namespace);
+        Objects.requireNonNull(projectName);
         Objects.requireNonNull(id);
-        return new TenantInformation(name, id, tenant);
+        return new TenantInformation(namespace, projectName, id, tenant);
     }
 
 }

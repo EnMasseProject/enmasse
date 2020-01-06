@@ -11,7 +11,13 @@ import org.junit.jupiter.api.Test;
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newInfinispanBased;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
+import java.net.HttpURLConnection;
+
 class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
+
+    static {
+        TENANT_DOESNT_EXISTS_CODE = HttpURLConnection.HTTP_UNAUTHORIZED;
+    }
 
     @Override
     protected IoTConfigBuilder provideIoTConfig() throws Exception {

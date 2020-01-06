@@ -12,6 +12,7 @@ import org.eclipse.hono.service.management.device.Device;
 import io.enmasse.systemtest.Endpoint;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.client.HttpResponse;
 
@@ -48,7 +49,11 @@ public class DeviceRegistryClient extends HonoApiClient {
         if (result == null) {
             return null;
         }
-        return Json.decodeValue(result, Device.class);
+        try {
+            return Json.decodeValue(result, Device.class);
+        } catch (DecodeException de) {
+            return null;
+        }
     }
 
     public void updateDeviceRegistration(String tenantId, String deviceId, Device payload) throws Exception {

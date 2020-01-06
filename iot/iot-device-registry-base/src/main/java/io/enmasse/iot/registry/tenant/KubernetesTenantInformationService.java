@@ -62,7 +62,7 @@ public class KubernetesTenantInformationService extends AbstractProjectBasedServ
             return failedFuture(e);
         }
 
-        return completedFuture(of(tenantName, tenantName + "/" + project.getMetadata().getCreationTimestamp(), tenant));
+        return completedFuture(of(project.getMetadata().getNamespace(), project.getMetadata().getName(), tenantName + "/" + project.getMetadata().getCreationTimestamp(), tenant));
     }
 
     /**
