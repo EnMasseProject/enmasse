@@ -62,7 +62,7 @@ jobs:
         run: ./.github/scripts/olm_test.sh
 
       - name: IoT acceptance tests
-        run: ./github/scripts/iot_acceptance.sh
+        run: ./.github/scripts/iot_acceptance.sh
 
       - name: Collect logs
         if: failure()
