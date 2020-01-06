@@ -231,9 +231,10 @@ public class OperatorManager {
         KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
     }
 
-    public void removeIoTOperator() {
-        LOGGER.info("Delete enmasse IoT operator from: {}", Environment.getInstance().getTemplatesPath());
+    public void removeIoT() {
+        LOGGER.info("Delete enmasse IoT from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
+        KubeCMDClient.runOnCluster("delete", "iotconfigs", "--all-namespaces=true");
     }
 
     public void deleteEnmasseAnsible() {
@@ -320,12 +321,6 @@ public class OperatorManager {
     public boolean isEnmasseBundleDeployed() {
         return kube.namespaceExists(kube.getInfraNamespace())
                 && kube.listPods(kube.getInfraNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("enmasse-operator")).count() == 1;
-    }
-
-    public boolean isIoTOperatorDeployed() {
-        return kube.getCRD("iotprojects.iot.enmasse.io") != null
-                && kube.getCRD("iotconfigs.iot.enmasse.io") != null
-                && kube.getServiceAccount(kube.getInfraNamespace(), "iot-operator") != null;
     }
 
     public boolean isEnmasseOlmDeployed() {

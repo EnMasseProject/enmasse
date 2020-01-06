@@ -85,7 +85,8 @@ func add(mgr manager.Manager, r *ReconcileIoTProject) error {
 	// Watch for address spaces
 
 	err = c.Watch(&source.Kind{Type: &enmassev1beta1.AddressSpace{}}, &handler.EnqueueRequestForOwner{
-		OwnerType: &iotv1alpha1.IoTProject{},
+		IsController: true,
+		OwnerType:    &iotv1alpha1.IoTProject{},
 	})
 	if err != nil {
 		return err
