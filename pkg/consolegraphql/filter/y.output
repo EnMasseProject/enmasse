@@ -1,0 +1,339 @@
+
+state 0
+	$accept: .expression $end 
+
+	NOT  shift 4
+	'('  shift 3
+	STRING  shift 8
+	INTEGRAL  shift 9
+	FLOAT  shift 10
+	NULL  shift 11
+	TRUE  shift 12
+	FALSE  shift 13
+	.  error
+
+	expression  goto 1
+	condition  goto 2
+	value  goto 6
+	value_expression  goto 5
+	boolean_value  goto 7
+
+state 1
+	$accept:  expression.$end 
+	expression:  expression.AND expression 
+	expression:  expression.OR expression 
+
+	$end  accept
+	OR  shift 15
+	AND  shift 14
+	.  error
+
+
+state 2
+	expression:  condition.    (1)
+
+	.  reduce 1 (src line 50)
+
+
+state 3
+	expression:  '('.expression ')' 
+
+	NOT  shift 4
+	'('  shift 3
+	STRING  shift 8
+	INTEGRAL  shift 9
+	FLOAT  shift 10
+	NULL  shift 11
+	TRUE  shift 12
+	FALSE  shift 13
+	.  error
+
+	expression  goto 16
+	condition  goto 2
+	value  goto 6
+	value_expression  goto 5
+	boolean_value  goto 7
+
+state 4
+	expression:  NOT.expression 
+
+	NOT  shift 4
+	'('  shift 3
+	STRING  shift 8
+	INTEGRAL  shift 9
+	FLOAT  shift 10
+	NULL  shift 11
+	TRUE  shift 12
+	FALSE  shift 13
+	.  error
+
+	expression  goto 17
+	condition  goto 2
+	value  goto 6
+	value_expression  goto 5
+	boolean_value  goto 7
+
+state 5
+	expression:  value_expression.    (6)
+	condition:  value_expression.compare value_expression 
+	condition:  value_expression.LIKE value_expression 
+	condition:  value_expression.NOT LIKE value_expression 
+
+	NOT  shift 20
+	'='  shift 21
+	'<'  shift 22
+	'>'  shift 23
+	LE  shift 24
+	GE  shift 25
+	NE  shift 26
+	LIKE  shift 19
+	.  reduce 6 (src line 71)
+
+	compare  goto 18
+
+state 6
+	value_expression:  value.    (10)
+
+	.  reduce 10 (src line 91)
+
+
+state 7
+	value_expression:  boolean_value.    (11)
+
+	.  reduce 11 (src line 96)
+
+
+state 8
+	value:  STRING.    (18)
+
+	.  reduce 18 (src line 127)
+
+
+state 9
+	value:  INTEGRAL.    (19)
+
+	.  reduce 19 (src line 132)
+
+
+state 10
+	value:  FLOAT.    (20)
+
+	.  reduce 20 (src line 136)
+
+
+state 11
+	value:  NULL.    (21)
+
+	.  reduce 21 (src line 140)
+
+
+state 12
+	boolean_value:  TRUE.    (22)
+
+	.  reduce 22 (src line 145)
+
+
+state 13
+	boolean_value:  FALSE.    (23)
+
+	.  reduce 23 (src line 150)
+
+
+state 14
+	expression:  expression AND.expression 
+
+	NOT  shift 4
+	'('  shift 3
+	STRING  shift 8
+	INTEGRAL  shift 9
+	FLOAT  shift 10
+	NULL  shift 11
+	TRUE  shift 12
+	FALSE  shift 13
+	.  error
+
+	expression  goto 27
+	condition  goto 2
+	value  goto 6
+	value_expression  goto 5
+	boolean_value  goto 7
+
+state 15
+	expression:  expression OR.expression 
+
+	NOT  shift 4
+	'('  shift 3
+	STRING  shift 8
+	INTEGRAL  shift 9
+	FLOAT  shift 10
+	NULL  shift 11
+	TRUE  shift 12
+	FALSE  shift 13
+	.  error
+
+	expression  goto 28
+	condition  goto 2
+	value  goto 6
+	value_expression  goto 5
+	boolean_value  goto 7
+
+state 16
+	expression:  '(' expression.')' 
+	expression:  expression.AND expression 
+	expression:  expression.OR expression 
+
+	OR  shift 15
+	AND  shift 14
+	')'  shift 29
+	.  error
+
+
+state 17
+	expression:  expression.AND expression 
+	expression:  expression.OR expression 
+	expression:  NOT expression.    (5)
+
+	.  reduce 5 (src line 67)
+
+
+state 18
+	condition:  value_expression compare.value_expression 
+
+	STRING  shift 8
+	INTEGRAL  shift 9
+	FLOAT  shift 10
+	NULL  shift 11
+	TRUE  shift 12
+	FALSE  shift 13
+	.  error
+
+	value  goto 6
+	value_expression  goto 30
+	boolean_value  goto 7
+
+state 19
+	condition:  value_expression LIKE.value_expression 
+
+	STRING  shift 8
+	INTEGRAL  shift 9
+	FLOAT  shift 10
+	NULL  shift 11
+	TRUE  shift 12
+	FALSE  shift 13
+	.  error
+
+	value  goto 6
+	value_expression  goto 31
+	boolean_value  goto 7
+
+state 20
+	condition:  value_expression NOT.LIKE value_expression 
+
+	LIKE  shift 32
+	.  error
+
+
+state 21
+	compare:  '='.    (12)
+
+	.  reduce 12 (src line 101)
+
+
+state 22
+	compare:  '<'.    (13)
+
+	.  reduce 13 (src line 106)
+
+
+state 23
+	compare:  '>'.    (14)
+
+	.  reduce 14 (src line 110)
+
+
+state 24
+	compare:  LE.    (15)
+
+	.  reduce 15 (src line 114)
+
+
+state 25
+	compare:  GE.    (16)
+
+	.  reduce 16 (src line 118)
+
+
+state 26
+	compare:  NE.    (17)
+
+	.  reduce 17 (src line 122)
+
+
+state 27
+	expression:  expression.AND expression 
+	expression:  expression AND expression.    (3)
+	expression:  expression.OR expression 
+
+	.  reduce 3 (src line 59)
+
+
+state 28
+	expression:  expression.AND expression 
+	expression:  expression.OR expression 
+	expression:  expression OR expression.    (4)
+
+	AND  shift 14
+	.  reduce 4 (src line 63)
+
+
+state 29
+	expression:  '(' expression ')'.    (2)
+
+	.  reduce 2 (src line 55)
+
+
+state 30
+	condition:  value_expression compare value_expression.    (7)
+
+	.  reduce 7 (src line 76)
+
+
+state 31
+	condition:  value_expression LIKE value_expression.    (8)
+
+	.  reduce 8 (src line 81)
+
+
+state 32
+	condition:  value_expression NOT LIKE.value_expression 
+
+	STRING  shift 8
+	INTEGRAL  shift 9
+	FLOAT  shift 10
+	NULL  shift 11
+	TRUE  shift 12
+	FALSE  shift 13
+	.  error
+
+	value  goto 6
+	value_expression  goto 33
+	boolean_value  goto 7
+
+state 33
+	condition:  value_expression NOT LIKE value_expression.    (9)
+
+	.  reduce 9 (src line 85)
+
+
+21 terminals, 7 nonterminals
+24 grammar rules, 34/8000 states
+0 shift/reduce, 0 reduce/reduce conflicts reported
+56 working sets used
+memory: parser 38/120000
+8 extra closures
+73 shift entries, 1 exceptions
+13 goto entries
+22 entries saved by goto default
+Optimizer space used: output 47/120000
+47 table entries, 5 zero
+maximum spread: 21, maximum offset: 32
