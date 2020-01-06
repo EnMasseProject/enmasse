@@ -43,7 +43,6 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
     private static final String DEVICE_REGISTRY_TEST_PROJECT = "device-registry-test-project";
 
-
     private String randomDeviceId;
     private IoTConfig iotConfig;
     private IoTProject iotProject;
@@ -56,6 +55,8 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     private AmqpClientFactory iotAmqpClientFactory;
 
     private AmqpClient amqpClient;
+
+    protected static int TENANT_DOESNT_EXISTS_CODE = HTTP_NOT_FOUND;
 
     protected abstract IoTConfigBuilder provideIoTConfig() throws Exception;
 
@@ -268,7 +269,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
     protected void doTestCreateForNonExistingTenantFails() throws Exception {
         var response = client.registerDeviceWithResponse("invalid-" + isolatedIoTManager.getTenantId(), randomDeviceId);
-        assertEquals(HTTP_NOT_FOUND, response.statusCode());
+        assertEquals(TENANT_DOESNT_EXISTS_CODE, response.statusCode());
     }
 
     protected void doTestTenantDeletionTriggersDevicesDeletion() throws Exception {
@@ -292,7 +293,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
             // second check, the credentials and device should be deleted
 
-            client.getDeviceRegistration(tenantId, randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+            client.getDeviceRegistration(tenantId, randomDeviceId, TENANT_DOESNT_EXISTS_CODE);
             IoTUtils.checkCredentials(authId, newPassword, true, httpAdapterEndpoint, amqpClient, iotProject);
         }
     }
