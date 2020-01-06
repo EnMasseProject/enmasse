@@ -273,12 +273,22 @@ The service operator persona is introduced to allow managing messaging plans, ad
 
 === Operations
 
-With shared infrastructure, monitoring and alerting of routers and brokers is requires as today, but the visibility into the per-namespace 'slice' of the infrastructure is also needed to debug and observe the system. The operator need the ability to:
+With shared infrastructure, monitoring and alerting of routers and brokers is requires as today, but the visibility into the per-namespace 'slice' of the infrastructure is also needed to debug and observe the system. The service admin/operator need the ability to:
 
-* Locate routers and brokers serving a namespace
+* Locate routers and brokers serving endpoints of a namespace
 * Locate broker(s) for a given address
 * Inspect the current version of a shared infrastructure instance
 * Determine requested and actual resource usage of a namespace
+* Determine placement of routers/brokers to ensure proper HA configuration
+* 
+
+=== Tenants
+
+With shared infrastructure, tenants will share resources with other tenants, and it is critical that tenants can observe statistics for their 'share'. These statistics include:
+
+* Address, connection and link statistics (covered by console API?)
+* MessagingConfig status (CRD)
+* MessagingEndpoint status (CRD)
 
 === IoT
 
