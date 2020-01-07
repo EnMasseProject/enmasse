@@ -1,0 +1,13 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-service-admin-guide.adoc
+
+[id='iot-project-external-example']
+= Using an external messaging infrastructure
+
+This IoT configuration example shows how an external messaging infrastructure can be provided.
+
+[source,yaml,options="nowrap"]
+----
+include::../common/iot-project-external-example.yaml[]
+----

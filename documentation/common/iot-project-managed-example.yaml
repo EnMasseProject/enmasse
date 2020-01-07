@@ -1,0 +1,19 @@
+kind: IoTProject
+apiVersion: iot.enmasse.io/v1alpha1
+metadata:
+  name: user-1
+spec:
+  downstreamStrategy:
+    managedStrategy: <1>
+      addressSpace:
+        name: iot-user-1
+        plan: standard-unlimited <2>
+        type: standard <4>
+      addresses:
+        telemetry:
+          plan: standard-small-anycast <3>
+          type: standard <5>
+        event:
+          plan: standard-small-queue <3>
+        command:
+          plan: standard-small-anycast <3>

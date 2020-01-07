@@ -35,3 +35,10 @@ include::../modules/proc-iot-sending-events-mqtt.adoc[leveloffset=+2]
 
 include::assembly-iot-configuring-sigfox.adoc[leveloffset=+1]
 
+== IoT projects configuration examples
+
+IoT projects define the messaging resources an IoT tenant can consume.
+
+include::../modules/ref-iot-project-managed-example.adoc[leveloffset=+2]
+
+include::../modules/ref-iot-project-external-example.adoc[leveloffset=+2]
