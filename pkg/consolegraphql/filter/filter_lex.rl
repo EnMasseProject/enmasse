@@ -9,6 +9,7 @@ package filter
 import (
         "fmt"
         "strconv"
+        "strings"
 )
 
 %%{
@@ -41,8 +42,10 @@ func (lex *lexer) Lex(out *FilterSymType) int {
     tok := 0
     %%{
         squote      = "'";
+        not_squote      = [^'];
+        dble_squote      = "''";
         newline      = "\n";
-        quoted_string = squote (any - newline - squote)* squote;
+        quoted_string = squote (not_squote | dble_squote)* squote;
         float_num =  [+\-]? digit+ '.'  digit+;
         integral_num =  [+\-]? digit+;
         main := |*
@@ -50,11 +53,18 @@ func (lex *lexer) Lex(out *FilterSymType) int {
             out.integralValue = IntVal(val)
             tok = INTEGRAL;
             fbreak;};
+
             float_num => { val, _ := strconv.ParseFloat(string(lex.data[lex.ts:lex.te]), 64);
             out.floatValue = FloatVal(val)
             tok = FLOAT;
             fbreak;};
-            quoted_string => { tok = STRING; out.stringValue = StringVal(lex.data[lex.ts+1:lex.te-1]); fbreak; };
+
+            quoted_string => {
+            val := strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "''", "'", -1)
+            tok = STRING
+            out.stringValue = StringVal(val)
+            fbreak; };
+
             'AND' => { tok = AND; fbreak;};
             'OR' => { tok = OR; fbreak;};
             'NOT' => { tok = NOT; fbreak;};
