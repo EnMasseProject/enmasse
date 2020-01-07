@@ -18,9 +18,9 @@ endif::[]
 = Installing the Eclipse Hono command-line client
 
 .Prerequisites
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-messaging-iot[The IoT services are installed].
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-messaging-iot[An IoT project is created].
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-messaging-iot[An IoT device is created].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-installing-services-{context}[The IoT services are installed].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-{context}[An IoT project is created].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#assembly-iot-creating-device-{context}[An IoT device is created].
 
 .Procedure
 

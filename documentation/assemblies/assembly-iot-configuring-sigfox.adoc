@@ -17,8 +17,8 @@ After installing the IoT services and creating an IoT project, you can configure
 the Sigfox backend integration.
 
 .Prerequisites
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-iot-installing-services-{context}[The IoT services are installed].
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-iot-creating-project-{context}[An IoT project is created].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-installing-services-{context}[The IoT services are installed].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-{context}[An IoT project is created].
 * TLS is properly deployed in your cluster. The Sigfox protocol adapter endpoint
   must be properly validated with TLS.
 * An account at https://backend.sigfox.com must be set up and your Sigfox devices registered.
