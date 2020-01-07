@@ -64,7 +64,7 @@ spec:
     image: # Optional. Allows overriding broker image
     min: 1 // Can be > 0 to pre-create brokers
     max: 5 // Will never create more brokers than this
-    replicas: 1 // Must be >= 1, defaults to 1. Larger values creates HA replicas
+    replicas: 1 // Must be >= 1, defaults to 1. Larger values creates HA replicas that are spread using anti-affinity
     addressFullPolicy: BLOCK
     storageClassName: # Storage class name to use for PVCs.
     podTemplate:
@@ -236,6 +236,8 @@ Other properties are specified for each type. I.e. queue properties are under .s
 
 Addresses allow setting the same properties as the plan, if permitted by the allowOverrides setting in the plan.
 
+A note on partitions: the new scheduler should take broker topology in the shared infra into account when placing queues so that they are not put in brokers in the same AZ (if multiple are configured)
+
 ```
 apiVersion: enmasse.io/v1beta1
 kind: Address
@@ -292,9 +294,11 @@ With shared infrastructure, tenants will share resources with other tenants, and
 
 === IoT
 
-With shared infra, IoT will not be able to create multiple managed IoTProject resources per namespace. One could work to allow multiple iot projects per namespace sharing the messaging resources, but it is probably not something important in the first instance.
+With shared infra, IoT will not be able to create multiple managed IoTProject resources per namespace. We could put some effort into allowing multiple iot projects per namespace sharing the messaging resources, but we should consider if this is a common use case or not.
 
-At present, the IoTConfig resource deploying the protocol adapters is a singleton in the infrastructure namespace. It could be desirable to support multiple instance of this resource, potentially deployed and managed in different namespaces to the messaging namespace and be managed by a separate persona than the messaging service admin. The IoTProject singleton of a namespace can then refer to the iot config for the project in the same way a messaging plan.
+Moreover, the IoTConfig resource deploying the protocol adapters is a singleton in the infrastructure namespace. It might be desirable to support multiple instances of this resource, potentially deployed and managed in different namespaces to the messaging namespace and be managed by a separate persona than the messaging service admin. The IoTProject singleton of a namespace can then refer to the iot config for the project in the same way a messaging plan.
+
+// TODO: Other IoT aspects that should change as part of shared infra?
 
 === Phase 1 (Milestone 0.32.0 ?)
 
