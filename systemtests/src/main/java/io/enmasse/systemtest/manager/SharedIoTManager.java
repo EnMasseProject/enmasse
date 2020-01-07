@@ -60,7 +60,11 @@ public class SharedIoTManager extends ResourceManager {
     public void tearDown(ExtensionContext context) throws Exception {
         closeAmqpFactory();
         closeMqttFactory();
-        if (!environment.skipCleanup()) {
+        if (environment.skipCleanup()) {
+            LOGGER.info("Skip cleanup is set, no cleanup process");
+        } else {
+            logCollector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+            logCollector.collectEvents(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
             if (sharedIoTProject != null) {
                 LOGGER.info("Shared IoTProject will be removed");
                 var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
@@ -73,8 +77,6 @@ public class SharedIoTManager extends ResourceManager {
             }
             tearDownSharedIoTConfig();
             SystemtestsKubernetesApps.deleteInfinispanServer();
-        } else {
-            LOGGER.info("Skip cleanup is set, no cleanup process");
         }
     }
 

@@ -67,6 +67,8 @@ public class IsolatedIoTManager extends ResourceManager {
             LOGGER.info("Skip cleanup is set, no cleanup process");
         } else {
             try {
+                logCollector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+                logCollector.collectEvents(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
                 tearDownProjects();
                 tearDownConfigs();
                 SystemtestsKubernetesApps.deleteInfinispanServer();
