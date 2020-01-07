@@ -76,6 +76,7 @@ func TestEval(t *testing.T) {
 		{"1 = 1.0", true},
 		{"1.0 != 2", true},
 		{"2.0 >= 1", true},
+		{"-1.9 > -2.0", true},
 
 		{"'A' = 'A'", true},
 		{"'A' = 'B'", false},
