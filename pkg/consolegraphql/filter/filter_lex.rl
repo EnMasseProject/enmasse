@@ -43,9 +43,10 @@ func (lex *lexer) Lex(out *FilterSymType) int {
         squote      = "'";
         newline      = "\n";
         quoted_string = squote (any - newline - squote)* squote;
-        float_num =  digit+ . '.' . digit+;
+        float_num =  [+\-]? digit+ '.'  digit+;
+        integral_num =  [+\-]? digit+;
         main := |*
-            digit+ => { val, _ := strconv.Atoi(string(lex.data[lex.ts:lex.te]));
+            integral_num => { val, _ := strconv.Atoi(string(lex.data[lex.ts:lex.te]));
             out.integralValue = IntVal(val)
             tok = INTEGRAL;
             fbreak;};

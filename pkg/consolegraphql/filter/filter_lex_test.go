@@ -19,6 +19,10 @@ func TestLex(t *testing.T) {
 	}{
 		{"1", []int{INTEGRAL}},
 		{"1.0", []int{FLOAT}},
+
+		{"-1", []int{INTEGRAL}},
+		{"-1.0", []int{FLOAT}},
+
 		{"'A'", []int{STRING}},
 		{"'AB'", []int{STRING}},
 		{"''", []int{STRING}},
