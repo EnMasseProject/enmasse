@@ -76,6 +76,8 @@ broker which is the case after 0.26.x.
 
       <global-max-size>${GLOBAL_MAX_SIZE}</global-max-size>
 
+      <metrics-plugin class-name="org.apache.activemq.artemis.core.server.metrics.plugins.ArtemisPrometheusMetricsPlugin" />
+
       <acceptors>
          <acceptor name="artemis">tcp://0.0.0.0:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=CORE</acceptor>
          <acceptor name="amqp">tcp://0.0.0.0:5673?protocols=AMQP;sslEnabled=true;keyStorePath=${KEYSTORE_PATH};keyStorePassword=enmasse;trustStorePath=${TRUSTSTORE_PATH};trustStorePassword=enmasse;verifyHost=false;needClientAuth=true</acceptor>

@@ -136,9 +136,6 @@ objects:
           volumeMounts:
           - mountPath: /var/run/artemis
             name: data
-          - mountPath: /etc/prometheus-config
-            name: broker-prometheus-config
-            readOnly: true
           - mountPath: /opt/apache-artemis/custom
             name: broker-custom
             readOnly: false
@@ -179,9 +176,6 @@ objects:
           - mountPath: /etc/authservice-ca
             name: authservice-ca
             readOnly: true
-          - mountPath: /etc/prometheus-config
-            name: broker-prometheus-config
-            readOnly: true
           - mountPath: /opt/apache-artemis/custom
             name: broker-custom
             readOnly: false
@@ -191,9 +185,6 @@ objects:
             claimName: broker-data.${INFRA_UUID}
         - emptyDir: {}
           name: broker-custom
-        - name: broker-prometheus-config
-          configMap:
-            name: broker-prometheus-config
         - name: broker-internal-cert
           secret:
             secretName: broker-internal-cert.${INFRA_UUID}

@@ -9,9 +9,7 @@ BROKER_CONF_DIR=${BROKER_CUSTOM}/conf
 
 export BROKER_IP=`hostname -f`
 
-mkdir -p $BROKER_CUSTOM/jmx_exporter
 mkdir -p $BROKER_CONF_DIR
-cp -r ${BROKER_PLUGIN_DIR}/jmx_exporter/*.jar $BROKER_CUSTOM/jmx_exporter/jmx-exporter.jar
 cp -r ${BROKER_PLUGIN_DIR}/lib $BROKER_CUSTOM
 cp -r ${BROKER_PLUGIN_DIR}/bin $BROKER_CUSTOM
 
@@ -62,7 +60,6 @@ function pre_configuration() {
     KEYSTORE_PASS=enmasse
     source $BROKER_CUSTOM/bin/env.sh
 
-    JAVA_OPTS="-Dcom.sun.management.jmxremote=true -Djava.rmi.server.hostname=127.0.0.1 -Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.ssl=true -Dcom.sun.management.jmxremote.registry.ssl=true -Dcom.sun.management.jmxremote.ssl.need.client.auth=true -Dcom.sun.management.jmxremote.authenticate=false -javaagent:${BROKER_DIR}/custom/jmx_exporter/jmx-exporter.jar=8080:/etc/prometheus-config/config.yaml"
     # Make sure that we use /dev/urandom
     JAVA_OPTS="${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom"
     echo "export JAVA_OPTS=\"${JAVA_OPTS} -Djavax.net.ssl.keyStore=${KEYSTORE_PATH} -Djavax.net.ssl.keyStorePassword=${KEYSTORE_PASS} -Djavax.net.ssl.trustStore=${TRUSTSTORE_PATH} -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASS}\"" >> $BROKER_CUSTOM/bin/env.sh

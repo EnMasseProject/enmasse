@@ -16,7 +16,6 @@
   <modules>
      <module>amqp-connector</module>
      <module>sasl-delegation</module>
-     <module>jmx_exporter</module>
      <module>tcnative</module>
      <module>broker-cli</module>
      <module>plugin</module>

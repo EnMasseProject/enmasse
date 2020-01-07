@@ -156,9 +156,6 @@ objects:
           - mountPath: /opt/apache-artemis/custom
             name: broker-custom
             readOnly: false
-          - mountPath: /etc/prometheus-config
-            name: broker-prometheus-config
-            readOnly: true
         - env:
           - name: INFRA_UUID
             value: ${INFRA_UUID}
@@ -240,9 +237,6 @@ objects:
           - mountPath: /etc/authservice-ca
             name: authservice-ca
             readOnly: true
-          - mountPath: /etc/prometheus-config
-            name: broker-prometheus-config
-            readOnly: true
           - mountPath: /opt/apache-artemis/custom
             name: broker-custom
             readOnly: false
@@ -255,9 +249,6 @@ objects:
         - name: broker-internal-cert
           secret:
             secretName: broker-internal-cert.${INFRA_UUID}
-        - configMap:
-            name: broker-prometheus-config
-          name: broker-prometheus-config
     volumeClaimTemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
