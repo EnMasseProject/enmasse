@@ -174,7 +174,7 @@ export default function AddressDetailPage() {
         addressspace_name={name || ""}
         addressspace_namespace={namespace || ""}
         addressspace_type={type || " "}
-        addressname={addressname || " "}
+        addressName={addressname || " "}
       />
     </>
   );

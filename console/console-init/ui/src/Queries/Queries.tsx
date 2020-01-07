@@ -423,7 +423,7 @@ export const RETURN_ADDRESS_LINKS = (
       (filterContainers && filterContainers.length > 0) ||
       (filterRole && filterRole.trim() != "")
     ) {
-      filterForLink = " AND ";
+      filterForLink += " AND ";
     }
   }
   if (filterContainers && filterContainers.length > 0) {
@@ -975,4 +975,31 @@ export const RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION = (
   }
 `;
   return ALL_TOPICS_FOR_ADDRESS_SPACE;
+};
+
+export const RETURN_ALL_NAMES_OF_ADDRESS_LINKS = (
+  addressname: string,
+  addressSpaceName: string,
+  namespace: string,
+  name:string
+) => {
+  const all_names = gql`
+  query all_link_names_for_connection {
+    addresses(
+      filter: "\`$.Spec.AddressSpace\` = '${addressSpaceName}'  AND \`$.ObjectMeta.Name\` = '${addressname}' AND \`$.ObjectMeta.Namespace\` = '${namespace}'"
+    ) {
+      Total
+      Addresses {
+        Links(filter:"\`$.ObjectMeta.Name\` = '${name}'" first:50,offset:0)  {
+          Links{
+            ObjectMeta {
+              Name
+            }
+          }
+        }
+      }
+    }
+  }
+  `;
+  return all_names;
 };

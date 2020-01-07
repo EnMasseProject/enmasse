@@ -27,6 +27,8 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
   const [addressSpacePlan, setAddressSpacePlan] = React.useState(" ");
   const [namespace, setNamespace] = React.useState(" ");
   const [authenticationService, setAuthenticationService] = React.useState(" ");
+  const [message,setMessage] = React.useState("");
+  const [isError,setIsError] = React.useState();
   const client = useApolloClient();
 
   const handleSave = async () => {
@@ -53,6 +55,10 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
         }
       });
       console.log(data);
+      if(data.errors) {
+        setIsError(true);
+        console.log("Error",data)
+      }
       if (data.data) {
         setIsCreateWizardOpen(false);
         setAddressSpaceType("");

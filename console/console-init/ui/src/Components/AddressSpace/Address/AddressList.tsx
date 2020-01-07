@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 import { TypePlan } from "../../Common/TypePlan";
 import { Messages } from "../../Common/Messages";
 import { Error } from "../../Common/Error";
+import useWindowDimensions from "src/Components/Common/WindowDimension";
 
 export interface IAddress {
   name: string;
@@ -46,6 +47,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   onSort
 }) => {
   const [tableRows, setTableRows] = React.useState<IRowData[]>([]);
+  const { width } = useWindowDimensions();
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;
     return [
@@ -116,23 +118,29 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     { title: "Name", transforms: [sortable] },
     "Type/Plan",
     {
-      title: (
-        <span style={{ display: "inline-flex" }}>
-          Messages In
-          <br />
-          {`(over last 5 min)`}
-        </span>
-      ),
+      title:
+        width > 769 ? (
+          <span style={{ display: "inline-flex" }}>
+            Messages In
+            <br />
+            {`(over last 5 min)`}
+          </span>
+        ) : (
+          "Message In"
+        ),
       transforms: [sortable]
     },
     {
-      title: (
-        <span style={{ display: "inline-flex" }}>
-          Messages Out
-          <br />
-          {`(over last 5 min)`}
-        </span>
-      ),
+      title:
+        width > 769 ? (
+          <span style={{ display: "inline-flex" }}>
+            Messages Out
+            <br />
+            {`(over last 5 min)`}
+          </span>
+        ) : (
+          "Messages Out"
+        ),
       transforms: [sortable]
     },
     { title: "Stored Messages", transforms: [sortable] },

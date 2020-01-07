@@ -17,13 +17,13 @@ interface IAddressLinksWithFilterAndPaginationProps {
   addressspace_name: string;
   addressspace_namespace: string;
   addressspace_type: string;
-  addressname: string;
+  addressName: string;
 }
 export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddressLinksWithFilterAndPaginationProps> = ({
   addressspace_name,
   addressspace_namespace,
   addressspace_type,
-  addressname
+  addressName
 }) => {
   const location = useLocation();
   const history = useHistory();
@@ -79,9 +79,7 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
       />
     );
   };
-  const nameOptions = [{ value: "" }];
 
-  const onNameChange = (newValue: string) => {};
   return (
     <PageSection>
       <PageSection variant={PageSectionVariants.light}>
@@ -104,8 +102,9 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
               totalLinks={addresLinksTotal}
               sortValue={sortDropDownValue}
               setSortValue={setSortDropdownValue}
-              namesOptions={nameOptions}
-              onNameChange={onNameChange}
+              namespace={addressspace_namespace}
+              addressName={addressName}
+              addressSpaceName={addressspace_name}
             />
           </GridItem>
           <GridItem span={5}>
@@ -117,7 +116,7 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
           perPage={perPage}
           name={addressspace_name}
           namespace={addressspace_namespace}
-          addressname={addressname}
+          addressName={addressName}
           setAddressLinksTotal={setAddressLinksTotal}
           type={addressspace_type}
           filterNames={filterNames}

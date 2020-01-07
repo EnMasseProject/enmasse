@@ -16,17 +16,21 @@ import {
   TextInput,
   Button,
   ButtonVariant,
-  Badge
+  Badge,
+  Select,
+  SelectVariant,
+  SelectOption,
+  SelectOptionObject
 } from "@patternfly/react-core";
 import {
   FilterIcon,
-  SearchIcon,
-  SortAmountUpAltIcon,
-  SortAmountDownAltIcon
+  SearchIcon
 } from "@patternfly/react-icons";
 import { ISortBy } from "@patternfly/react-table";
 import useWindowDimensions from "../Common/WindowDimension";
 import { SortForMobileView } from "../Common/SortForMobileView";
+import { useApolloClient } from "@apollo/react-hooks";
+import { RETURN_ALL_NAMES_OF_ADDRESS_LINKS } from "src/Queries/Queries";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -40,10 +44,24 @@ interface IAddressLinksFilterProps {
   totalLinks: number;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
-  namesOptions: Array<{ value: string }>;
-  onNameChange: (newValue: string) => void;
+  addressName: string;
+  addressSpaceName: string;
+  namespace: string;
 }
-
+interface ISearchAddressLinkNameResponse {
+  addresses: {
+    Total: number;
+    Addresses: Array<{
+      Links: {
+        Links: Array<{
+          ObjectMeta: {
+            Name: string;
+          };
+        }>;
+      };
+    }>;
+  };
+}
 export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProps> = ({
   filterValue,
   setFilterValue,
@@ -56,13 +74,22 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   totalLinks,
   sortValue,
   setSortValue,
-  namesOptions,
-  onNameChange
+  addressName,
+  addressSpaceName,
+  namespace
 }) => {
   const { width } = useWindowDimensions();
+  const client = useApolloClient();
   const [inputValue, setInputValue] = React.useState<string>();
-  const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
-  const [roleIsExpanded, setRoleIsExpanded] = React.useState(false);
+  const [filterIsExpanded, setFilterIsExpanded] = React.useState<boolean>(
+    false
+  );
+  const [roleIsExpanded, setRoleIsExpanded] = React.useState<boolean>(false);
+  const [isSelectNameExpanded, setIsSelectNameExpanded] = React.useState<
+    boolean
+  >(false);
+  const [selected, setSelected] = React.useState<string>();
+  const [nameOptions, setNameOptions] = React.useState<Array<string>>([]);
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
     { key: "filterContainers", value: "Container" },
@@ -86,9 +113,10 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
 
   const onAddInput = (event: any) => {
     if (filterValue && filterValue === "Name") {
-      if (inputValue && inputValue.trim() !== "")
-        if (filterNames.indexOf(inputValue.trim()) < 0) {
-          setFilterNames([...filterNames, inputValue.trim()]);
+      if (selected && selected.trim() !== "")
+        if (filterNames.indexOf(selected.trim()) < 0) {
+          setFilterNames([...filterNames, selected.trim()]);
+          setSelected(undefined);
         }
     } else if (filterValue && filterValue === "Container") {
       if (inputValue && inputValue.trim() !== "")
@@ -106,6 +134,55 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   const onRoleSelect = (event: any) => {
     setFilterRole(event.target.value);
     setRoleIsExpanded(!roleIsExpanded);
+  };
+  const onNameSelectToggle = () => {
+    setIsSelectNameExpanded(!isSelectNameExpanded);
+  };
+  const changeData = async (value: string) => {
+    setNameOptions([]);
+    const response = await client.query<ISearchAddressLinkNameResponse>({
+      query: RETURN_ALL_NAMES_OF_ADDRESS_LINKS(
+        addressName,
+        addressSpaceName,
+        namespace,
+        value.trim()
+      )
+    });
+    if (
+      response &&
+      response.data &&
+      response.data.addresses &&
+      response.data.addresses.Addresses &&
+      response.data.addresses.Addresses.length > 0 &&
+      response.data.addresses.Addresses[0].Links &&
+      response.data.addresses.Addresses[0].Links.Links &&
+      response.data.addresses.Addresses[0].Links.Links.length > 0
+    ) {
+      const obtainedList = response.data.addresses.Addresses[0].Links.Links.map(
+        (link: any) => {
+          return link.ObjectMeta.Name;
+        }
+      );
+      setNameOptions(obtainedList);
+    }
+  };
+  const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    changeData(e.target.value);
+    const options: React.ReactElement[] = nameOptions
+      ? nameOptions.map((option, index) => (
+          <SelectOption key={index} value={option} />
+        ))
+      : [];
+    return options;
+  };
+
+  const onNameSelect = (
+    event: any,
+    selection: string | SelectOptionObject,
+    isPlaceholder?: boolean
+  ) => {
+    setSelected(selection.toString());
+    setIsSelectNameExpanded(false);
   };
 
   const onDelete = (
@@ -183,18 +260,31 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
               categoryName="Name">
               {filterValue && filterValue === "Name" && (
                 <InputGroup>
-                  <TextInput
-                    name="name"
-                    id="name"
-                    type="search"
-                    aria-label="search input name"
-                    placeholder="Filter By Name ..."
-                    onChange={onInputChange}
-                    value={inputValue || ""}
-                  />
+                  <Select
+                    variant={SelectVariant.typeahead}
+                    aria-label="Select a Name"
+                    onToggle={onNameSelectToggle}
+                    onSelect={onNameSelect}
+                    onClear={() => {
+                      setSelected(undefined);
+                      setIsSelectNameExpanded(false);
+                    }}
+                    selections={selected}
+                    onFilter={onNameSelectFilterChange}
+                    isExpanded={isSelectNameExpanded}
+                    ariaLabelledBy={"typeahead-select-id"}
+                    placeholderText="Select name"
+                    isDisabled={false}
+                    isCreatable={false}
+                    onCreateOption={() => {}}>
+                    {nameOptions &&
+                      nameOptions.map((option, index) => (
+                        <SelectOption key={index} value={option} />
+                      ))}
+                  </Select>
                   <Button
                     variant={ButtonVariant.control}
-                    aria-label="search button for search input"
+                    aria-label="search button for search containers"
                     onClick={onAddInput}>
                     <SearchIcon />
                   </Button>
