@@ -11,21 +11,12 @@ import (
 	"testing"
 )
 
-func TestLex(t *testing.T) {
+func TestLexSimpleLexemes(t *testing.T) {
+
 	testCases := []struct {
-		expr  string
+		expr     string
 		expected []int
-
 	}{
-		{"1", []int{INTEGRAL}},
-		{"1.0", []int{FLOAT}},
-
-		{"-1", []int{INTEGRAL}},
-		{"-1.0", []int{FLOAT}},
-
-		{"'A'", []int{STRING}},
-		{"'AB'", []int{STRING}},
-		{"''", []int{STRING}},
 		{"TRUE", []int{TRUE}},
 		{"NULL", []int{NULL}},
 		{"=", []int{'='}},
@@ -44,7 +35,6 @@ func TestLex(t *testing.T) {
 		lexer := newLexer([]byte(tc.expr))
 		fst := &FilterSymType{}
 
-
 		toks := make([]int, 0)
 		for {
 			tok := lexer.Lex(fst)
@@ -52,14 +42,64 @@ func TestLex(t *testing.T) {
 				break
 			}
 			toks = append(toks, tok)
+
 		}
 
-		assert.NoErrorf(t, lexer.GetError(), "Unexpected expected for case : %s", tc.expr)
+		assert.NoErrorf(t, lexer.GetError(), "Unexpected error for case : %s", tc.expr)
 		assert.Equal(t, tc.expected, toks, "Unexpected tokens for case : %s", tc.expr)
 	}
+}
+
+func TestLexValueCarryingLexemes(t *testing.T) {
+
+	testCases := []struct {
+		expr           string
+		expected       int
+		validatingFunc func(*FilterSymType)
+	}{
+		{"1", INTEGRAL,
+			func(fst *FilterSymType) { assert.Equal(t, IntVal(1), fst.integralValue) },
+		},
+		{"1.0", FLOAT,
+			func(fst *FilterSymType) { assert.Equal(t, FloatVal(1.0), fst.floatValue) },
+		},
+
+		{"-1", INTEGRAL,
+			func(fst *FilterSymType) { assert.Equal(t, IntVal(-1), fst.integralValue) },
+		},
+		{"-1.0", FLOAT,
+			func(fst *FilterSymType) { assert.Equal(t, FloatVal(-1.0), fst.floatValue) },
+		},
+
+		{"'A'", STRING,
+			func(fst *FilterSymType) { assert.Equal(t, StringVal("A"), fst.stringValue) },
+		},
+		{"'AB'", STRING,
+			func(fst *FilterSymType) { assert.Equal(t, StringVal("AB"), fst.stringValue) },
+		},
+		{"''", STRING,
+			func(fst *FilterSymType) { assert.Equal(t, StringVal(""), fst.stringValue) },
+		},
+		{"'a cow said ''moo!'''", STRING,
+			func(fst *FilterSymType) { assert.Equal(t, StringVal("a cow said 'moo!'"), fst.stringValue) },
+		},
+		{"''''", STRING,
+			func(fst *FilterSymType) { assert.Equal(t, StringVal("'"), fst.stringValue) },
+		},
+	}
+
+	for _, tc := range testCases {
+		lexer := newLexer([]byte(tc.expr))
+		fst := &FilterSymType{}
+
+		tok := lexer.Lex(fst)
+		if tc.validatingFunc != nil {
+			tc.validatingFunc(fst)
+		}
 
 
-
-
+		assert.NoErrorf(t, lexer.GetError(), "Unexpected error for case : %s", tc.expr)
+		assert.Equal(t, tc.expected, tok, "Unexpected token for case : %s", tc.expr)
+	}
 
 }
