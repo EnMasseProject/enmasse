@@ -67,7 +67,7 @@ public class AddressPlanStatus extends AbstractWithAdditionalProperties {
     public void appendMessage(String message) {
         if (this.message == null) {
             this.message = message;
-        } else {
+        } else if (!this.message.contains(message)) {
             this.message = this.message + ". " + message;
         }
     }
