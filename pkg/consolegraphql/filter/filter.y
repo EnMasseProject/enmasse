@@ -4,7 +4,7 @@
  *
  */
 
- /* Based on original work from: https://github.com/chrislusf/gleam/blob/master/sql/parser/parser.y */
+ /* Based on original work from: https://github.com/xwb1989/sqlparser/blob/master/sql.y */
 
 %{
 package filter
@@ -20,6 +20,7 @@ func setParseTree(yylex interface{}, expr Expr) {
   stringValue   StringVal
   integralValue	IntVal
   floatValue    FloatVal
+  jsonPathValue JSONPathVal
   boolVal       BoolVal
 
   expr          Expr
@@ -38,7 +39,7 @@ func setParseTree(yylex interface{}, expr Expr) {
 %right <bytes> NOT
 
 
-%left <bytes> '=' '<' '>' LE GE NE LIKE
+%left <bytes> '=' '<' '>' LE GE NE LIKE IS
 
 %token <bytes> '('
 %token <bytes> ')'
@@ -46,6 +47,8 @@ func setParseTree(yylex interface{}, expr Expr) {
 %token <stringValue> STRING
 %token <integralValue> INTEGRAL
 %token <floatValue> FLOAT
+%token <jsonPathValue> JSON_PATH
+
 %token <bytes> NULL TRUE FALSE
 
 
@@ -99,6 +102,14 @@ condition:
   {
     $$ = NewComparisonExpr($1, NotLikeStr, $4)
   }
+| value_expression IS NULL
+  {
+    $$ = NewIsNullExpr($1, IsNull)
+  }
+| value_expression IS NOT NULL
+  {
+    $$ = NewIsNullExpr($1, IsNotNull)
+  }
 
 
 value_expression:
@@ -149,6 +160,10 @@ value:
 | FLOAT
   {
     $$ = FloatVal($1)
+  }
+| JSON_PATH
+  {
+    $$ = $1
   }
 | NULL
   {

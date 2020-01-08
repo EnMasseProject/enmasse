@@ -49,6 +49,15 @@ func TestParseValueExprValid(t *testing.T) {
 }
 
 func TestEval(t *testing.T) {
+
+	obj := struct {
+		FooStr string
+		FooInt int
+		FooInt32 int32
+		FooInt64 int64
+		FooUint uint
+	}{"Bar", 10, 11, 12, 13}
+
 	testCases := []struct {
 		expr     string
 		expected bool
@@ -101,6 +110,12 @@ func TestEval(t *testing.T) {
 
 		{"'a' NOT LIKE 'b'", true},
 
+		{"NULL IS NULL", true},
+		{"'a' IS NULL", false},
+		{"'' IS NULL", false},
+		{"0 IS NULL", false},
+		{"'a' IS NOT NULL", true},
+
 		{"TRUE = TRUE", true},
 		{"TRUE = FALSE", false},
 		{"TRUE != FALSE", true},
@@ -124,6 +139,22 @@ func TestEval(t *testing.T) {
 
 		{"NOT (TRUE)", false},
 		{"NOT (FALSE)", true},
+
+		{"`$.FooStr` = 'Bar'", true},
+		{"`$.FooStr` != 'Bar'", false},
+		{"`$.FooStr` = `$.FooStr`", true},
+
+		{"`$.FooInt` = 10", true},
+		{"`$.FooInt32` = 11", true},
+		{"`$.FooInt64` = 12", true},
+		{"`$.FooUint` = 13", true},
+
+		{"`$.NonExistentNode` != 'Bar'", false},
+		{"`$.FooStr.NonExistentSubNode` != 'Bar'", false},
+
+		{"`$.FooInt` IS NOT NULL", true},
+		{"`$.NonExistentNode` IS NULL", true},
+		{"`$.FooStr.NonExistentSubNode` IS NULL", true},
 	}
 
 	for _, tc := range testCases {
@@ -131,7 +162,7 @@ func TestEval(t *testing.T) {
 		assert.NoErrorf(t, err, "Unexpected error for case : %s", tc.expr)
 		assert.NotNil(t, expr, "Expected an expression")
 		if expr != nil {
-			actual := expr.Eval()
+			actual, _ := expr.Eval(obj)
 			assert.Equal(t, tc.expected, actual, "Unexpected result for case : %s", tc.expr)
 		}
 	}

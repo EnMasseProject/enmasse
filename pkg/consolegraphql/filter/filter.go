@@ -18,6 +18,7 @@ type FilterSymType struct {
 	stringValue   StringVal
 	integralValue IntVal
 	floatValue    FloatVal
+	jsonPathValue JSONPathVal
 	boolVal       BoolVal
 
 	expr Expr
@@ -31,12 +32,14 @@ const LE = 57349
 const GE = 57350
 const NE = 57351
 const LIKE = 57352
-const STRING = 57353
-const INTEGRAL = 57354
-const FLOAT = 57355
-const NULL = 57356
-const TRUE = 57357
-const FALSE = 57358
+const IS = 57353
+const STRING = 57354
+const INTEGRAL = 57355
+const FLOAT = 57356
+const JSON_PATH = 57357
+const NULL = 57358
+const TRUE = 57359
+const FALSE = 57360
 
 var FilterToknames = [...]string{
 	"$end",
@@ -52,11 +55,13 @@ var FilterToknames = [...]string{
 	"GE",
 	"NE",
 	"LIKE",
+	"IS",
 	"'('",
 	"')'",
 	"STRING",
 	"INTEGRAL",
 	"FLOAT",
+	"JSON_PATH",
 	"NULL",
 	"TRUE",
 	"FALSE",
@@ -76,59 +81,62 @@ var FilterExca = [...]int{
 	1, 7,
 	4, 7,
 	5, 7,
-	15, 7,
-	-2, 12,
+	16, 7,
+	-2, 14,
 }
 
 const FilterPrivate = 57344
 
-const FilterLast = 52
+const FilterLast = 56
 
 var FilterAct = [...]int{
 
-	6, 5, 7, 11, 12, 13, 14, 8, 9, 4,
-	34, 11, 12, 13, 14, 8, 9, 16, 15, 15,
-	32, 32, 31, 33, 21, 22, 23, 24, 25, 26,
-	27, 20, 1, 2, 10, 32, 19, 35, 17, 18,
-	16, 15, 3, 0, 0, 0, 0, 0, 0, 28,
-	29, 30,
+	6, 5, 7, 11, 12, 13, 14, 15, 8, 9,
+	4, 38, 11, 12, 13, 14, 15, 8, 9, 40,
+	36, 34, 34, 33, 35, 16, 37, 22, 24, 25,
+	26, 27, 28, 29, 21, 23, 2, 34, 1, 39,
+	10, 18, 19, 17, 16, 17, 16, 20, 3, 0,
+	0, 0, 0, 30, 31, 32,
 }
 var FilterPact = [...]int{
 
-	-5, -1000, 13, -1000, -5, -5, -1000, 18, -1000, -1000,
-	-1000, -1000, -1000, -1000, -1000, -5, -5, 36, -1000, -13,
-	-13, -3, -1000, -1000, -1000, -1000, -1000, -1000, -1000, 14,
-	-1000, -1000, -1000, -1000, -13, -1000,
+	-5, -1000, 41, -1000, -5, -5, -1000, 21, -1000, -1000,
+	-1000, -1000, -1000, -1000, -1000, -1000, -5, -5, 39, -1000,
+	-14, -14, 7, 5, -1000, -1000, -1000, -1000, -1000, -1000,
+	-1000, 20, -1000, -1000, -1000, -1000, -14, -1000, -2, -1000,
+	-1000,
 }
 var FilterPgo = [...]int{
 
-	0, 33, 42, 36, 34, 2, 0, 32,
+	0, 36, 48, 47, 40, 2, 0, 38,
 }
 var FilterR1 = [...]int{
 
 	0, 7, 1, 1, 1, 1, 1, 1, 2, 2,
-	2, 5, 5, 3, 3, 3, 3, 3, 3, 4,
-	4, 4, 4, 6, 6,
+	2, 2, 2, 5, 5, 3, 3, 3, 3, 3,
+	3, 4, 4, 4, 4, 4, 6, 6,
 }
 var FilterR2 = [...]int{
 
 	0, 1, 1, 3, 3, 3, 2, 1, 3, 3,
-	4, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1,
+	4, 3, 4, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1,
 }
 var FilterChk = [...]int{
 
-	-1000, -7, -1, -2, 14, 6, -6, -5, 20, 21,
-	-4, 16, 17, 18, 19, 5, 4, -1, -1, -3,
-	13, 6, 7, 8, 9, 10, 11, 12, -1, -1,
-	15, -5, -6, -5, 13, -5,
+	-1000, -7, -1, -2, 15, 6, -6, -5, 22, 23,
+	-4, 17, 18, 19, 20, 21, 5, 4, -1, -1,
+	-3, 13, 6, 14, 7, 8, 9, 10, 11, 12,
+	-1, -1, 16, -5, -6, -5, 13, 21, 6, -5,
+	21,
 }
 var FilterDef = [...]int{
 
-	0, -2, 1, 2, 0, 0, -2, 0, 23, 24,
-	11, 19, 20, 21, 22, 0, 0, 0, 6, 0,
-	0, 0, 13, 14, 15, 16, 17, 18, 4, 5,
-	3, 8, 12, 9, 0, 10,
+	0, -2, 1, 2, 0, 0, -2, 0, 26, 27,
+	13, 21, 22, 23, 24, 25, 0, 0, 0, 6,
+	0, 0, 0, 0, 15, 16, 17, 18, 19, 20,
+	4, 5, 3, 8, 14, 9, 0, 11, 0, 10,
+	12,
 }
 var FilterTok1 = [...]int{
 
@@ -136,14 +144,14 @@ var FilterTok1 = [...]int{
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	14, 15, 3, 3, 3, 3, 3, 3, 3, 3,
+	15, 16, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	8, 7, 9,
 }
 var FilterTok2 = [...]int{
 
-	2, 3, 4, 5, 6, 10, 11, 12, 13, 16,
-	17, 18, 19, 20, 21,
+	2, 3, 4, 5, 6, 10, 11, 12, 13, 14,
+	17, 18, 19, 20, 21, 22, 23,
 }
 var FilterTok3 = [...]int{
 	0,
@@ -488,145 +496,163 @@ Filterdefault:
 
 	case 1:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:59
+//line filter.y:62
 		{
 			setParseTree(Filterlex, FilterDollar[1].expr)
 		}
 	case 2:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:65
+//line filter.y:68
 		{
 			FilterVAL.expr = FilterDollar[1].expr
 		}
 	case 3:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line filter.y:69
+//line filter.y:72
 		{
 			FilterVAL.expr = NewBoolExpr(FilterDollar[2].expr)
 		}
 	case 4:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line filter.y:73
+//line filter.y:76
 		{
 			FilterVAL.expr = NewAndExpr(FilterDollar[1].expr, FilterDollar[3].expr)
 		}
 	case 5:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line filter.y:77
+//line filter.y:80
 		{
 			FilterVAL.expr = NewOrExpr(FilterDollar[1].expr, FilterDollar[3].expr)
 		}
 	case 6:
 		FilterDollar = FilterS[Filterpt-2 : Filterpt+1]
-//line filter.y:81
+//line filter.y:84
 		{
 			FilterVAL.expr = NewNotExpr(FilterDollar[2].expr)
 		}
 	case 7:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:85
+//line filter.y:88
 		{
 			FilterVAL.expr = FilterDollar[1].boolVal
 		}
 	case 8:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line filter.y:91
+//line filter.y:94
 		{
 			FilterVAL.expr = NewComparisonExpr(FilterDollar[1].expr, FilterDollar[2].str, FilterDollar[3].expr)
 		}
 	case 9:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line filter.y:95
+//line filter.y:98
 		{
 			FilterVAL.expr = NewComparisonExpr(FilterDollar[1].expr, LikeStr, FilterDollar[3].expr)
 		}
 	case 10:
 		FilterDollar = FilterS[Filterpt-4 : Filterpt+1]
-//line filter.y:99
+//line filter.y:102
 		{
 			FilterVAL.expr = NewComparisonExpr(FilterDollar[1].expr, NotLikeStr, FilterDollar[4].expr)
 		}
 	case 11:
-		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
 //line filter.y:106
 		{
-			FilterVAL.expr = FilterDollar[1].expr
+			FilterVAL.expr = NewIsNullExpr(FilterDollar[1].expr, IsNull)
 		}
 	case 12:
-		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+		FilterDollar = FilterS[Filterpt-4 : Filterpt+1]
 //line filter.y:110
 		{
-			FilterVAL.expr = FilterDollar[1].boolVal
+			FilterVAL.expr = NewIsNullExpr(FilterDollar[1].expr, IsNotNull)
 		}
 	case 13:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:116
+//line filter.y:117
 		{
-			FilterVAL.str = EqualStr
+			FilterVAL.expr = FilterDollar[1].expr
 		}
 	case 14:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:120
+//line filter.y:121
 		{
-			FilterVAL.str = LessThanStr
+			FilterVAL.expr = FilterDollar[1].boolVal
 		}
 	case 15:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:124
+//line filter.y:127
 		{
-			FilterVAL.str = GreaterThanStr
+			FilterVAL.str = EqualStr
 		}
 	case 16:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:128
+//line filter.y:131
 		{
-			FilterVAL.str = LessEqualStr
+			FilterVAL.str = LessThanStr
 		}
 	case 17:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:132
+//line filter.y:135
 		{
-			FilterVAL.str = GreaterEqualStr
+			FilterVAL.str = GreaterThanStr
 		}
 	case 18:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:136
+//line filter.y:139
 		{
-			FilterVAL.str = NotEqualStr
+			FilterVAL.str = LessEqualStr
 		}
 	case 19:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:142
+//line filter.y:143
 		{
-			FilterVAL.expr = StringVal(FilterDollar[1].stringValue)
+			FilterVAL.str = GreaterEqualStr
 		}
 	case 20:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:146
+//line filter.y:147
 		{
-			FilterVAL.expr = IntVal(FilterDollar[1].integralValue)
+			FilterVAL.str = NotEqualStr
 		}
 	case 21:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:150
+//line filter.y:153
 		{
-			FilterVAL.expr = FloatVal(FilterDollar[1].floatValue)
+			FilterVAL.expr = StringVal(FilterDollar[1].stringValue)
 		}
 	case 22:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:154
+//line filter.y:157
 		{
-			FilterVAL.expr = NewNullVal()
+			FilterVAL.expr = IntVal(FilterDollar[1].integralValue)
 		}
 	case 23:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:160
+//line filter.y:161
 		{
-			FilterVAL.boolVal = BoolVal(true)
+			FilterVAL.expr = FloatVal(FilterDollar[1].floatValue)
 		}
 	case 24:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line filter.y:164
+//line filter.y:165
+		{
+			FilterVAL.expr = FilterDollar[1].jsonPathValue
+		}
+	case 25:
+		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+//line filter.y:169
+		{
+			FilterVAL.expr = NewNullVal()
+		}
+	case 26:
+		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+//line filter.y:175
+		{
+			FilterVAL.boolVal = BoolVal(true)
+		}
+	case 27:
+		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+//line filter.y:179
 		{
 			FilterVAL.boolVal = BoolVal(false)
 		}
