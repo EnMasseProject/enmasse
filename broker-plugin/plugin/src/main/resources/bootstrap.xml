@@ -35,7 +35,7 @@
    </web>
 
    <web bind="http://0.0.0.0:8080" path="web">
-       <app url="" war="metrics.war"/>
+       <app url="metrics" war="metrics.war"/>
    </web>
 
 </broker>
