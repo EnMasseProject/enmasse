@@ -13,7 +13,6 @@ import {
   DropdownToggle,
   DropdownItem,
   InputGroup,
-  TextInput,
   Button,
   ButtonVariant,
   Badge,
@@ -22,15 +21,16 @@ import {
   SelectOption,
   SelectOptionObject
 } from "@patternfly/react-core";
-import {
-  FilterIcon,
-  SearchIcon
-} from "@patternfly/react-icons";
+import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { ISortBy } from "@patternfly/react-table";
 import useWindowDimensions from "../Common/WindowDimension";
 import { SortForMobileView } from "../Common/SortForMobileView";
 import { useApolloClient } from "@apollo/react-hooks";
-import { RETURN_ALL_NAMES_OF_ADDRESS_LINKS } from "src/Queries/Queries";
+import {
+  RETURN_ALL_NAMES_OF_ADDRESS_LINKS,
+  RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_CONTAINER_SEARCH
+} from "src/Queries/Queries";
+import { id } from "date-fns/esm/locale";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -62,6 +62,25 @@ interface ISearchAddressLinkNameResponse {
     }>;
   };
 }
+
+interface ISearchAddressLinkContainerResponse {
+  addresses: {
+    Total: number;
+    Addresses: Array<{
+      Links: {
+        Links: Array<{
+          Spec: {
+            Connection: {
+              Spec: {
+                ContainerId: string;
+              };
+            };
+          };
+        }>;
+      };
+    }>;
+  };
+}
 export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProps> = ({
   filterValue,
   setFilterValue,
@@ -80,7 +99,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
 }) => {
   const { width } = useWindowDimensions();
   const client = useApolloClient();
-  const [inputValue, setInputValue] = React.useState<string>();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState<boolean>(
     false
   );
@@ -88,8 +106,16 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   const [isSelectNameExpanded, setIsSelectNameExpanded] = React.useState<
     boolean
   >(false);
-  const [selected, setSelected] = React.useState<string>();
-  const [nameOptions, setNameOptions] = React.useState<Array<string>>([]);
+  const [
+    isSelectContainerExpanded,
+    setIsSelectContainerExpanded
+  ] = React.useState<boolean>(false);
+  const [nameSelected, setNameSelected] = React.useState<string>();
+  const [containerSelected, setContainerSelected] = React.useState<string>();
+  const [nameOptions, setNameOptions] = React.useState<Array<string>>();
+  const [containerOptions, setContainerOptions] = React.useState<
+    Array<string>
+  >();
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
     { key: "filterContainers", value: "Container" },
@@ -107,24 +133,20 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     { key: "backlog", value: "Backlog", index: 4 }
   ];
 
-  const onInputChange = (newValue: string) => {
-    setInputValue(newValue);
-  };
-
   const onAddInput = (event: any) => {
     if (filterValue && filterValue === "Name") {
-      if (selected && selected.trim() !== "")
-        if (filterNames.indexOf(selected.trim()) < 0) {
-          setFilterNames([...filterNames, selected.trim()]);
-          setSelected(undefined);
+      if (nameSelected && nameSelected.trim() !== "")
+        if (filterNames.indexOf(nameSelected.trim()) < 0) {
+          setFilterNames([...filterNames, nameSelected.trim()]);
+          setNameSelected(undefined);
         }
     } else if (filterValue && filterValue === "Container") {
-      if (inputValue && inputValue.trim() !== "")
-        if (filterContainers.indexOf(inputValue.trim()) < 0) {
-          setFilterContainers([...filterContainers, inputValue.trim()]);
+      if (containerSelected && containerSelected.trim() !== "")
+        if (filterContainers.indexOf(containerSelected.trim()) < 0) {
+          setFilterContainers([...filterContainers, containerSelected.trim()]);
+          setContainerSelected(undefined);
         }
     }
-    setInputValue(undefined);
   };
 
   const onFilterSelect = (event: any) => {
@@ -138,8 +160,12 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   const onNameSelectToggle = () => {
     setIsSelectNameExpanded(!isSelectNameExpanded);
   };
-  const changeData = async (value: string) => {
-    setNameOptions([]);
+  const onContainerSelectToggle = () => {
+    setIsSelectContainerExpanded(!isSelectContainerExpanded);
+  };
+  const onChangeNameData = async (value: string) => {
+    setNameOptions(undefined);
+    let obtainedList;
     const response = await client.query<ISearchAddressLinkNameResponse>({
       query: RETURN_ALL_NAMES_OF_ADDRESS_LINKS(
         addressName,
@@ -158,18 +184,61 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       response.data.addresses.Addresses[0].Links.Links &&
       response.data.addresses.Addresses[0].Links.Links.length > 0
     ) {
-      const obtainedList = response.data.addresses.Addresses[0].Links.Links.map(
+      obtainedList = response.data.addresses.Addresses[0].Links.Links.map(
         (link: any) => {
           return link.ObjectMeta.Name;
         }
       );
       setNameOptions(obtainedList);
     }
+    return obtainedList;
   };
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    changeData(e.target.value);
+    const data = onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
+          <SelectOption key={index} value={option} />
+        ))
+      : [];
+    return options;
+  };
+
+  const onChangeContainerData = async (value: string) => {
+    setContainerOptions(undefined);
+    const response = await client.query<ISearchAddressLinkContainerResponse>({
+      query: RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_CONTAINER_SEARCH(
+        addressName,
+        addressSpaceName,
+        namespace,
+        value.trim()
+      )
+    });
+    console.log(response);
+    if (
+      response &&
+      response.data &&
+      response.data.addresses &&
+      response.data.addresses.Addresses &&
+      response.data.addresses.Addresses.length > 0 &&
+      response.data.addresses.Addresses[0].Links &&
+      response.data.addresses.Addresses[0].Links.Links &&
+      response.data.addresses.Addresses[0].Links.Links.length > 0
+    ) {
+      const obtainedList = response.data.addresses.Addresses[0].Links.Links.map(
+        (link: any) => {
+          return link.Spec.Connection.Spec.ContainerId;
+        }
+      );
+      setContainerOptions(obtainedList);
+    }
+  };
+
+  const onContainerSelectFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const data = onChangeContainerData(e.target.value);
+    const options: React.ReactElement[] = containerOptions
+      ? containerOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
         ))
       : [];
@@ -181,8 +250,17 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     selection: string | SelectOptionObject,
     isPlaceholder?: boolean
   ) => {
-    setSelected(selection.toString());
+    setNameSelected(selection.toString());
     setIsSelectNameExpanded(false);
+  };
+
+  const onContainerSelect = (
+    event: any,
+    selection: string | SelectOptionObject,
+    isPlaceholder?: boolean
+  ) => {
+    setContainerSelected(selection.toString());
+    setIsSelectContainerExpanded(false);
   };
 
   const onDelete = (
@@ -266,25 +344,25 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                     onToggle={onNameSelectToggle}
                     onSelect={onNameSelect}
                     onClear={() => {
-                      setSelected(undefined);
+                      setNameSelected(undefined);
                       setIsSelectNameExpanded(false);
                     }}
-                    selections={selected}
+                    selections={nameSelected}
                     onFilter={onNameSelectFilterChange}
                     isExpanded={isSelectNameExpanded}
                     ariaLabelledBy={"typeahead-select-id"}
                     placeholderText="Select name"
                     isDisabled={false}
-                    isCreatable={false}
-                    onCreateOption={() => {}}>
+                    isCreatable={false}>
                     {nameOptions &&
                       nameOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
                       ))}
+                    {/* {} */}
                   </Select>
                   <Button
                     variant={ButtonVariant.control}
-                    aria-label="search button for search containers"
+                    aria-label="search button for search name"
                     onClick={onAddInput}>
                     <SearchIcon />
                   </Button>
@@ -299,15 +377,28 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
               categoryName="Container">
               {filterValue && filterValue === "Container" && (
                 <InputGroup>
-                  <TextInput
-                    name="container"
-                    id="container"
-                    type="search"
-                    aria-label="search input container"
-                    placeholder="Filter By Container ..."
-                    onChange={onInputChange}
-                    value={inputValue || ""}
-                  />
+                  <Select
+                    variant={SelectVariant.typeahead}
+                    aria-label="Select a Container"
+                    onToggle={onContainerSelectToggle}
+                    onSelect={onContainerSelect}
+                    onClear={() => {
+                      setContainerSelected(undefined);
+                      setIsSelectContainerExpanded(false);
+                    }}
+                    selections={containerSelected}
+                    onFilter={onContainerSelectFilterChange}
+                    isExpanded={isSelectContainerExpanded}
+                    ariaLabelledBy={"typeahead-select-id"}
+                    placeholderText="Select container"
+                    isDisabled={false}
+                    isCreatable={false}>
+                    {containerOptions &&
+                      containerOptions.map((option, index) => (
+                        <SelectOption key={index} value={option} />
+                      ))}
+                    {/* {} */}
+                  </Select>
                   <Button
                     variant={ButtonVariant.control}
                     aria-label="search button for search containers"

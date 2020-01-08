@@ -1003,3 +1003,36 @@ export const RETURN_ALL_NAMES_OF_ADDRESS_LINKS = (
   `;
   return all_names;
 };
+
+
+
+export const RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_CONTAINER_SEARCH = (
+  addressname: string,
+  addressSpaceName: string,
+  namespace: string,
+  container:string
+) => {
+  const all_names = gql`
+  query all_link_names_for_connection {
+    addresses(
+      filter: "\`$.Spec.AddressSpace\` = '${addressSpaceName}'  AND \`$.ObjectMeta.Name\` = '${addressname}' AND \`$.ObjectMeta.Namespace\` = '${namespace}'"
+    ) {
+      Total
+      Addresses {
+        Links(filter:"\`$.Spec.Connection.Spec.ContainerId\` = '${container}'" first:50,offset:0)  {
+          Links{
+            Spec{
+              Connection{
+                Spec{
+                  ContainerId
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  `;
+  return all_names;
+};
