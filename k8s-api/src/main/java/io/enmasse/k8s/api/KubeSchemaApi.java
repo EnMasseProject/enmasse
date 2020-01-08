@@ -133,10 +133,13 @@ public class KubeSchemaApi implements SchemaApi {
 
     private void validateAddressPlan(String addressSpaceType, AddressPlan addressPlan) {
 
+        List<String> supportedTypes = new ArrayList<>();
         List<String> requiredResources = new ArrayList<>();
         if ("brokered".equals(addressSpaceType)) {
+            supportedTypes.addAll(Arrays.asList("queue", "topic"));
             requiredResources.add("broker");
         } else if ("standard".equals(addressSpaceType)) {
+            supportedTypes.addAll(Arrays.asList("queue", "topic", "subscription", "anycast", "multicast"));
             requiredResources.add("router");
             if (!Arrays.asList("anycast", "multicast").contains(addressPlan.getAddressType())) {
                 if (!"queue".equals(addressPlan.getAddressType()) && addressPlan.getPartitions() > 1) {
@@ -153,6 +156,12 @@ public class KubeSchemaApi implements SchemaApi {
             Set<String> missing = new HashSet<>(requiredResources);
             missing.removeAll(resourcesUsed);
             String error = "Error validating address plan " + addressPlan.getMetadata().getName() + ": missing resources " + missing;
+            log.warn(error);
+            throw new SchemaValidationException(error);
+        }
+
+        if (!supportedTypes.contains(addressPlan.getAddressType())) {
+            String error = String.format("Error validating address plan %s: address type %s not supported by address space type %s", addressPlan.getMetadata().getName(), addressPlan.getAddressType(), addressSpaceType);
             log.warn(error);
             throw new SchemaValidationException(error);
         }
@@ -386,8 +395,10 @@ public class KubeSchemaApi implements SchemaApi {
                     addressPlanStatusMap.get(addressPlanName).setPhase(Phase.Active);
                 } catch (SchemaValidationException e) {
                     if (addressPlan == null) {
+                        addressSpacePlanStatusMap.get(addressSpacePlan.getMetadata().getName()).setPhase(Phase.Failed);
                         addressSpacePlanStatusMap.get(addressSpacePlan.getMetadata().getName()).appendMessage(e.getMessage());
                     } else {
+                        addressPlanStatusMap.get(addressPlanName).setPhase(Phase.Failed);
                         addressPlanStatusMap.get(addressPlanName).appendMessage(e.getMessage());
                     }
                 }
@@ -403,6 +414,7 @@ public class KubeSchemaApi implements SchemaApi {
                 validAddressPlans.addAll(plansForAddressSpacePlan);
                 addressSpacePlanStatusMap.get(addressSpacePlan.getMetadata().getName()).setPhase(Phase.Active);
             } catch (SchemaValidationException e) {
+                addressSpacePlanStatusMap.get(addressSpacePlan.getMetadata().getName()).setPhase(Phase.Failed);
                 addressSpacePlanStatusMap.get(addressSpacePlan.getMetadata().getName()).appendMessage(e.getMessage());
             }
         }

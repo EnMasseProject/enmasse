@@ -44,6 +44,7 @@ const (
 	AddressPlanPending     AddressPlanPhase = "Pending"
 	AddressPlanConfiguring AddressPlanPhase = "Configuring"
 	AddressPlanActive      AddressPlanPhase = "Active"
+	AddressPlanFailed      AddressPlanPhase = "Failed"
 )
 
 type AddressPlanStatus struct {
@@ -91,6 +92,7 @@ const (
 	AddressSpacePlanPending     AddressSpacePlanPhase = "Pending"
 	AddressSpacePlanConfiguring AddressSpacePlanPhase = "Configuring"
 	AddressSpacePlanActive      AddressSpacePlanPhase = "Active"
+	AddressSpacePlanFailed      AddressSpacePlanPhase = "Failed"
 )
 
 type AddressSpacePlanStatus struct {
