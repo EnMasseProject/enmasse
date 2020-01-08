@@ -18,6 +18,7 @@ func TestLexSimpleLexemes(t *testing.T) {
 		expected []int
 	}{
 		{"TRUE", []int{TRUE}},
+		{"true", []int{TRUE}},
 		{"NULL", []int{NULL}},
 		{"=", []int{'='}},
 		{">", []int{'>'}},
