@@ -10,6 +10,7 @@ import (
         "fmt"
         "strconv"
         "strings"
+        "k8s.io/client-go/util/jsonpath"
 )
 
 %%{
@@ -44,25 +45,51 @@ func (lex *lexer) Lex(out *FilterSymType) int {
         squote      = "'";
         not_squote      = [^'];
         dble_squote      = "''";
-        newline      = "\n";
-        quoted_string = squote (not_squote | dble_squote)* squote;
+        squoted_string = squote (not_squote | dble_squote)* squote;
+
+        bquote      = "`";
+        not_bquote      = [^`];
+        dble_bquote      = "```";
+        bquoted_string = bquote (not_bquote | dble_bquote)* bquote;
+
         float_num =  [+\-]? digit+ '.'  digit+;
         integral_num =  [+\-]? digit+;
         main := |*
-            integral_num => { val, _ := strconv.Atoi(string(lex.data[lex.ts:lex.te]));
+            integral_num => {
+            val, err := strconv.Atoi(string(lex.data[lex.ts:lex.te]));
+            if err != nil {
+                // Should not happen as we've already sanitized the input
+                panic(err)
+            }
             out.integralValue = IntVal(val)
             tok = INTEGRAL;
             fbreak;};
 
-            float_num => { val, _ := strconv.ParseFloat(string(lex.data[lex.ts:lex.te]), 64);
+            float_num => {
+            val, err := strconv.ParseFloat(string(lex.data[lex.ts:lex.te]), 64);
+            if err != nil {
+                // Should not happen as we've already sanitized the input
+                panic(err)
+            }
             out.floatValue = FloatVal(val)
             tok = FLOAT;
             fbreak;};
 
-            quoted_string => {
+            squoted_string => {
             val := strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "''", "'", -1)
             tok = STRING
             out.stringValue = StringVal(val)
+            fbreak; };
+
+            bquoted_string => {
+            val := "{" + strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "```", "`", -1) + "}"
+            tok = JSON_PATH
+            jsonPath := jsonpath.New("filter expr").AllowMissingKeys(true)
+            err := jsonPath.Parse(val)
+            if err != nil {
+                lex.e = err
+            }
+            out.jsonPathValue = NewJSONPathVal(jsonPath)
             fbreak; };
 
             'AND' => { tok = AND; fbreak;};
@@ -72,6 +99,7 @@ func (lex *lexer) Lex(out *FilterSymType) int {
             'TRUE' => { tok = TRUE; fbreak;};
             'FALSE' => { tok = FALSE; fbreak;};
             'NULL' => { tok = NULL; fbreak;};
+            'IS' => { tok = IS; fbreak;};
 
             '=' => { tok = '='; fbreak;};
             '>' => { tok = '>'; fbreak;};

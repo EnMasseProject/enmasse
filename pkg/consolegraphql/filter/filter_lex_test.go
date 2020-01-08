@@ -86,6 +86,14 @@ func TestLexValueCarryingLexemes(t *testing.T) {
 		{"''''", STRING,
 			func(fst *FilterSymType) { assert.Equal(t, StringVal("'"), fst.stringValue) },
 		},
+
+		{"`$.Foo`", JSON_PATH,
+			func(fst *FilterSymType) {
+				value, err := fst.jsonPathValue.Eval(struct {Foo string }{"MyFoo",})
+				assert.NoError(t, err)
+				assert.Equal(t, "MyFoo", value)
+			},
+		},
 	}
 
 	for _, tc := range testCases {
