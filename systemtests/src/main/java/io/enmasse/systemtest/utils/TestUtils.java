@@ -495,7 +495,9 @@ public class TestUtils {
 
     public static RemoteWebDriver getChromeDriver() throws Exception {
         Endpoint endpoint = SystemtestsKubernetesApps.getChromeSeleniumAppEndpoint(Kubernetes.getInstance());
-        return getRemoteDriver(endpoint.getHost(), endpoint.getPort(), new ChromeOptions());
+        ChromeOptions options = new ChromeOptions();
+        options.setAcceptInsecureCerts(true);
+        return getRemoteDriver(endpoint.getHost(), endpoint.getPort(), options);
     }
 
     private static RemoteWebDriver getRemoteDriver(String host, int port, Capabilities options) throws Exception {
