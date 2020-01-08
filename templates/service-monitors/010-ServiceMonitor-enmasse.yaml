@@ -11,6 +11,10 @@ spec:
       app: enmasse
   endpoints:
   - port: health
+  - port: health-tls
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
   - port: prometheus
     path: /prometheus
   namespaceSelector:

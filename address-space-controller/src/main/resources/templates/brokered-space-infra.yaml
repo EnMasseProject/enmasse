@@ -67,9 +67,6 @@ objects:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          prometheus.io/path: /metrics/
-          prometheus.io/port: '8161'
-          prometheus.io/scrape: 'true'
         labels:
           app: enmasse
           name: broker
@@ -205,7 +202,7 @@ objects:
     - name: amqps-normal
       port: 55671
       targetPort: amqps-normal
-    - name: health
+    - name: health-tls
       port: 8161
       protocol: TCP
       targetPort: jolokia
