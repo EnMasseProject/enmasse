@@ -31,10 +31,12 @@
      keyStorePassword="enmasse">
        <app url="activemq-branding" war="activemq-branding.war"/>
        <app url="artemis-plugin" war="artemis-plugin.war"/>
-       <app url="metrics" war="metrics.war"/>
        <app url="console" war="console.war"/>
    </web>
 
+   <web bind="http://0.0.0.0:8080" path="web">
+       <app url="" war="metrics.war"/>
+   </web>
 
 </broker>
 
