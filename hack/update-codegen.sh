@@ -14,7 +14,7 @@ SCRIPTPATH="$(cd "$(dirname "$0")" && pwd -P)"
 if which -s ragel
 then
     echo Generating Console filter lexer
-    (cd $SCRIPTPATH; ; ragel-Z -G2 -o pkg/consolegraphql/filter/filter_lex.go pkg/consolegraphql/filter/filter_lex.rl
+    (cd $SCRIPTPATH; ; ragel -Z -G0 -o pkg/consolegraphql/filter/filter_lex.go pkg/consolegraphql/filter/filter_lex.rl
 fi
 
 if which -s goyacc
