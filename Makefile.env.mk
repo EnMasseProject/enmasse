@@ -40,7 +40,7 @@ ALERTMANAGER_IMAGE ?= prom/alertmanager:v0.15.2
 GRAFANA_IMAGE ?= grafana/grafana:5.3.1
 APPLICATION_MONITORING_OPERATOR_IMAGE ?= quay.io/integreatly/application-monitoring-operator:0.0.27
 KUBE_STATE_METRICS_IMAGE ?= quay.io/coreos/kube-state-metrics:v1.4.0
-BROKER_IMAGE ?= quay.io/enmasse/artemis-base:37500490
+BROKER_IMAGE ?= quay.io/enmasse/artemis-base:a8eab12e
 
 CONTROLLER_MANAGER_IMAGE   ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/controller-manager:$(IMAGE_VERSION)
 
