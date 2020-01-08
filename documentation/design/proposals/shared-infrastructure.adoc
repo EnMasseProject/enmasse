@@ -159,6 +159,12 @@ spec:
     provided:
       secret:
         name: mycert # Get cert from secret
+  
+  # Optional approach to grant admin access to an endpoint using mTLS
+  authentication:
+    clientCaSecret:
+      name: clientsecret
+      namespace: myapp
 
   # Only one of 'internal', 'route' and 'loadbalancer' may be specified for each endpoint
   internal: # Expose as a ClusterIP service for applications on cluster
@@ -296,7 +302,7 @@ With shared infrastructure, tenants will share resources with other tenants, and
 
 With shared infra, IoT will not be able to create multiple managed IoTProject resources per namespace. We could put some effort into allowing multiple iot projects per namespace sharing the messaging resources, but we should consider if this is a common use case or not.
 
-Moreover, the IoTConfig resource deploying the protocol adapters is a singleton in the infrastructure namespace. It might be desirable to support multiple instances of this resource, potentially deployed and managed in different namespaces to the messaging namespace and be managed by a separate persona than the messaging service admin. The IoTProject singleton of a namespace can then refer to the iot config for the project in the same way a messaging plan.
+The shared infra should also support ways of using mutual TLS for authenticating components.
 
 // TODO: Other IoT aspects that should change as part of shared infra?
 
@@ -434,6 +440,10 @@ A components state encapsulates the configuration state of a broker or router in
 The state object has methods to apply configuration (i.e. applyAddress, applyMessagingEndpoint, applyMessagingConfig etc.). These methods compare the actual configuration of the underlying component to the desired configuration (transformed into autolinks etc.). If the applied configuration is different to the internal state, the underlying component is updated using AMQP management.
 
 In addition ,each state object has a goroutine which periodically polls its underlying router/broker for all status information and caches it for use by controllers to update the status of their respective resources.
+
+===== Certificate management
+
+Communication between components in the shared infrastructure should be secured using TLS. At present, self-signed certificates are issued by the address-space-controller per address space. The messaging-infra-controller needs to create a CA per messaging-infra instance, as well as handle certificate rotation for the internal certificates.
 
 ==== Task 5: Implement messaging-config controller in controller-manager (medium)
 
