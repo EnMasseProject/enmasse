@@ -7,7 +7,7 @@ metadata:
 rules:
   - apiGroups: [ "admin.enmasse.io" ]
     resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices", "consoleservices"]
-    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+    verbs: [ "patch", "get", "list", "watch" ]
   - apiGroups: [ "" ]
     resources: [ "pods" ]
     verbs: [ "get", "list", "patch", "update" ]
