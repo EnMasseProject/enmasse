@@ -38,9 +38,7 @@ interface ITypeString {
 }
 
 export const TypeBadge: React.FunctionComponent<ITypeString> = ({ type }) => {
-  console.log(type);
   const iconColor = getTypeColor(type[0]);
-  console.log("color", iconColor);
   return (
     <Badge
       style={{

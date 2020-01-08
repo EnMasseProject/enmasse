@@ -15,7 +15,7 @@ import { AddressListPage } from "./AddressListPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { useQuery } from "@apollo/react-hooks";
 import { CURRENT_ADDRESS_SPACE_PLAN } from "src/Queries/Queries";
-import { ISortBy } from "@patternfly/react-table";
+import { ISortBy, IRowData } from "@patternfly/react-table";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {

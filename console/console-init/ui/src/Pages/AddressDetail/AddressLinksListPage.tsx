@@ -13,7 +13,7 @@ export interface IAddressLinksListProps {
   perPage: number;
   name?: string;
   namespace?: string;
-  addressname?: string;
+  addressName?: string;
   type?: string;
   setAddressLinksTotal: (total: number) => void;
   filterNames: string[];
@@ -27,7 +27,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   perPage,
   name,
   namespace,
-  addressname,
+  addressName,
   type,
   setAddressLinksTotal,
   filterNames,
@@ -48,7 +48,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
       filterContainers,
       name,
       namespace,
-      addressname,
+      addressName,
       sortBy,
       filterRole
     ),
@@ -56,7 +56,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   );
   if (loading) return <Loading />;
   if (error) console.log(error);
-  console.log(data);
+  // console.log(data);
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };

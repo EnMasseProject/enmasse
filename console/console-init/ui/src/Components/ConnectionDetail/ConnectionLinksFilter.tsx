@@ -71,7 +71,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
     { key: "address", value: "Address", index: 2 },
     { key: "deliveries", value: "Deliveries", index: 3 },
     { key: "rejected", value: "Rejected", index: 4 },
-    { key: "released", value: "Released", index: 6 },
+    { key: "released", value: "Released", index: 5 },
     { key: "modified", value: "Modified", index: 6 },
     { key: "presettled", value: "Presettled", index: 7 },
     { key: "undelievered", value: "Undelievered", index: 8 }

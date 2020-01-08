@@ -10,6 +10,7 @@ import {
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
 import { ConnectionProtocolFormat } from "../../Common/ConnectionListFormatter";
+import useWindowDimensions from "src/Components/Common/WindowDimension";
 
 interface IConnectionListProps {
   rows: IConnection[];
@@ -34,6 +35,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   sortBy,
   onSort
 }) => {
+  const { width } = useWindowDimensions();
   const toTableCells = (row: IConnection) => {
     const tableRow: IRowData = {
       cells: [
@@ -64,23 +66,29 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
     { title: "Container ID", transforms: [sortable] },
     { title: "Protocol", transforms: [sortable] },
     {
-      title: (
-        <span style={{ display: "inline-flex" }}>
-          Messages In
-          <br />
-          {`(over last 5 min)`}
-        </span>
-      ),
+      title:
+        width > 769 ? (
+          <span style={{ display: "inline-flex" }}>
+            Messages In
+            <br />
+            {`(over last 5 min)`}
+          </span>
+        ) : (
+          "Messages In"
+        ),
       transforms: [sortable]
     },
     {
-      title: (
-        <span style={{ display: "inline-flex" }}>
-          Messages Out
-          <br />
-          {`(over last 5 min)`}
-        </span>
-      ),
+      title:
+        width > 769 ? (
+          <span style={{ display: "inline-flex" }}>
+            Messages Out
+            <br />
+            {`(over last 5 min)`}
+          </span>
+        ) : (
+          "Messages Out"
+        ),
       transforms: [sortable]
     },
     {
