@@ -92,14 +92,14 @@ func (lex *lexer) Lex(out *FilterSymType) int {
             out.jsonPathValue = NewJSONPathVal(jsonPath)
             fbreak; };
 
-            'AND' => { tok = AND; fbreak;};
-            'OR' => { tok = OR; fbreak;};
-            'NOT' => { tok = NOT; fbreak;};
-            'LIKE' => { tok = LIKE; fbreak;};
-            'TRUE' => { tok = TRUE; fbreak;};
-            'FALSE' => { tok = FALSE; fbreak;};
-            'NULL' => { tok = NULL; fbreak;};
-            'IS' => { tok = IS; fbreak;};
+            /AND/i => { tok = AND; fbreak;};
+            /OR/i => { tok = OR; fbreak;};
+            /NOT/i => { tok = NOT; fbreak;};
+            /LIKE/i => { tok = LIKE; fbreak;};
+            /TRUE/i => { tok = TRUE; fbreak;};
+            /FALSE/i => { tok = FALSE; fbreak;};
+            /NULL/i => { tok = NULL; fbreak;};
+            /IS/i => { tok = IS; fbreak;};
 
             '=' => { tok = '='; fbreak;};
             '>' => { tok = '>'; fbreak;};
