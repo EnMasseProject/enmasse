@@ -67,8 +67,8 @@ objects:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          prometheus.io/path: /metrics
-          prometheus.io/port: '8080'
+          prometheus.io/path: /metrics/
+          prometheus.io/port: '8161'
           prometheus.io/scrape: 'true'
         labels:
           app: enmasse
@@ -119,8 +119,6 @@ objects:
             name: amqps-normal
           - containerPort: 8161
             name: jolokia
-          - containerPort: 8080
-            name: artemismetrics
           readinessProbe:
             exec:
               command:
@@ -208,9 +206,9 @@ objects:
       port: 55671
       targetPort: amqps-normal
     - name: health
-      port: 8080
+      port: 8161
       protocol: TCP
-      targetPort: artemismetrics
+      targetPort: jolokia
     selector:
       role: broker
       infraUuid: ${INFRA_UUID}

@@ -19,13 +19,14 @@ objects:
   spec:
     ports:
     - name: health
-      port: 8080
+      port: 8161
       protocol: TCP
-      targetPort: artemismetrics
+      targetPort: jolokia
     clusterIP: None
     selector:
       name: ${NAME}
       role: broker
+      infraType: standard
       infraUuid: ${INFRA_UUID}
 - apiVersion: apps/v1
   kind: StatefulSet
@@ -68,8 +69,8 @@ objects:
           address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
-          prometheus.io/path: /metrics
-          prometheus.io/port: '8080'
+          prometheus.io/path: /metrics/
+          prometheus.io/port: '8161'
           prometheus.io/scrape: 'true'
         labels:
           addresstype: queue
@@ -134,8 +135,6 @@ objects:
             name: amqp
           - containerPort: 8161
             name: jolokia
-          - containerPort: 8080
-            name: artemismetrics
           readinessProbe:
             exec:
               command:
