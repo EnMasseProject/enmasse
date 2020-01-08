@@ -9,8 +9,12 @@
 %{
 package filter
 
-func setParseTree(yylex interface{}, expr Expr) {
+func setExpressionTree(yylex interface{}, expr Expr) {
   yylex.(*lexer).expr = expr
+}
+
+func setOrderByTree(yylex interface{}, expr OrderBy) {
+  yylex.(*lexer).orderBy = expr
 }
 
 %}
@@ -22,6 +26,9 @@ func setParseTree(yylex interface{}, expr Expr) {
   floatValue    FloatVal
   jsonPathValue JSONPathVal
   boolVal       BoolVal
+
+  orderList     OrderBy
+  order		*Order
 
   expr          Expr
   str           string
@@ -51,6 +58,17 @@ func setParseTree(yylex interface{}, expr Expr) {
 
 %token <bytes> NULL TRUE FALSE
 
+%token <bytes> START_EXPRESSION
+
+%type <orderList> order_list
+%type <order> order
+%type <order> order
+%type <str> asc_desc_opt
+
+%token <bytes> ASC DESC
+%token <bytes> ','
+
+%token <bytes> START_ORDER_LIST
 
 %start top
 
@@ -58,9 +76,14 @@ func setParseTree(yylex interface{}, expr Expr) {
 %%
 
 top:
-  expression
+  START_EXPRESSION expression
   {
-    setParseTree(Filterlex, $1)
+    setExpressionTree(Filterlex, $2)
+  }
+|
+  START_ORDER_LIST order_list
+  {
+    setOrderByTree(Filterlex, $2)
   }
 
 expression:
@@ -178,4 +201,33 @@ boolean_value:
 | FALSE
   {
     $$ = BoolVal(false)
+  }
+
+order_list:
+  order
+  {
+    $$ = OrderBy{$1}
+  }
+| order_list ',' order
+  {
+    $$ = append($1, $3)
+  }
+
+order:
+  JSON_PATH asc_desc_opt
+  {
+    $$ = &Order{Expr: $1, Direction: $2}
+  }
+
+asc_desc_opt:
+  {
+    $$ = AscScr
+  }
+| ASC
+  {
+    $$ = AscScr
+  }
+| DESC
+  {
+    $$ = DescScr
   }

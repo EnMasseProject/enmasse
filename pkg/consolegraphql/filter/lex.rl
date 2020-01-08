@@ -25,8 +25,13 @@ type lexer struct {
     data []byte
     p, pe, cs int
     ts, te, act int
-    expr Expr
+
     e error
+
+    expr Expr
+    orderBy OrderBy
+
+    startToks []int
 }
 
 func newLexer(data []byte) *lexer {
@@ -41,6 +46,14 @@ func newLexer(data []byte) *lexer {
 func (lex *lexer) Lex(out *FilterSymType) int {
     eof := lex.pe
     tok := 0
+
+    // Produce starting token(s) to allow grammars with multiple start symbols.
+    if len(lex.startToks) > 0 {
+        tok = lex.startToks[0]
+        lex.startToks = lex.startToks[1:]
+        return tok;
+    }
+
     %%{
         squote      = "'";
         not_squote      = [^'];
@@ -101,6 +114,9 @@ func (lex *lexer) Lex(out *FilterSymType) int {
             /NULL/i => { tok = NULL; fbreak;};
             /IS/i => { tok = IS; fbreak;};
 
+            /ASC/i => { tok = ASC; fbreak;};
+            /DESC/i => { tok = DESC; fbreak;};
+
             '=' => { tok = '='; fbreak;};
             '>' => { tok = '>'; fbreak;};
             '<' => { tok = '<'; fbreak;};
@@ -110,6 +126,8 @@ func (lex *lexer) Lex(out *FilterSymType) int {
 
             '(' => { tok = '('; fbreak;};
             ')' => { tok = ')'; fbreak;};
+
+            ',' => { tok = ','; fbreak;};
 
             space;
         *|;
