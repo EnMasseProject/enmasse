@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestParseBooleanExprValid(t *testing.T) {
+func TestParseFilterBooleanExprValid(t *testing.T) {
 
 	testCases := []struct {
 		expr  string
@@ -25,12 +25,12 @@ func TestParseBooleanExprValid(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := Parse(tc.expr)
+		_, err := ParseFilterExpression(tc.expr)
 		assert.NoErrorf(t, err, "Unexpected error for case : %s", tc.expr)
 	}
 }
 
-func TestParseValueExprValid(t *testing.T) {
+func TestParseFilterValueExprValid(t *testing.T) {
 
 	testCases := []struct {
 		expr  string
@@ -43,12 +43,12 @@ func TestParseValueExprValid(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := Parse(tc.expr)
+		_, err := ParseFilterExpression(tc.expr)
 		assert.NoErrorf(t, err, "Unexpected error for case : %s", tc.expr)
 	}
 }
 
-func TestEval(t *testing.T) {
+func TestFilterEval(t *testing.T) {
 
 	obj := struct {
 		FooStr string
@@ -158,7 +158,7 @@ func TestEval(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		expr, err := Parse(tc.expr)
+		expr, err := ParseFilterExpression(tc.expr)
 		assert.NoErrorf(t, err, "Unexpected error for case : %s", tc.expr)
 		assert.NotNil(t, expr, "Expected an expression")
 		if expr != nil {

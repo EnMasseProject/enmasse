@@ -4,7 +4,7 @@
  *
  */
 
-//go:generate goyacc -o filter.go -p Filter filter.y
+//go:generate goyacc -o parser.go -p Filter parser.y
 
 package filter
 
@@ -31,10 +31,18 @@ const (
 	IsNotNull            = "is not null"
 )
 
-func Parse(s string) (Expr, error) {
+func ParseFilterExpression(s string) (Expr, error) {
 	lexer := newLexer([]byte(s))
+	lexer.startToks = []int {START_EXPRESSION}
 	_ = FilterParse(lexer)
 	return lexer.expr, lexer.e
+}
+
+func ParseOrderByExpression(s string) (OrderBy, error) {
+	lexer := newLexer([]byte(s))
+	lexer.startToks = []int {START_ORDER_LIST}
+	_ = FilterParse(lexer)
+	return lexer.orderBy, lexer.e
 }
 
 type Expr interface {
@@ -694,3 +702,17 @@ func widenNumeric(s interface{}, dst reflect.Type) interface{} {
 		return s
 	}
 }
+
+
+type OrderBy []*Order
+
+type Order struct {
+	Expr      Expr
+	Direction string
+}
+
+// Order.Direction
+const (
+	AscScr  = "asc"
+	DescScr = "desc"
+)
