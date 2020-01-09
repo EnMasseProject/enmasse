@@ -89,15 +89,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                     }
                     if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
                         LOGGER.warn("Before certs " + Kubernetes.getInstance().getCluster().getClass() + " == " + MinikubeCluster.class);
-                        if (Kubernetes.getInstance().getCluster() instanceof MinikubeCluster) {
-                            LOGGER.warn("Installing certs!");
-                            List<String> create = Arrays.asList(Paths.get(Environment.getInstance().getTemplatesPath(), "install",
-                                    "components", "iot", "examples", "k8s-tls", "create").toString());
-                            assertTrue(Exec.execute(create, 300_000, true).getRetCode(), "Cannot create certs!");
-                            List<String> deploy = Arrays.asList(Paths.get(Environment.getInstance().getTemplatesPath(), "install",
-                                    "components", "iot", "examples", "k8s-tls", "deploy").toString());
-                            assertTrue(Exec.execute(deploy, 300_000, true).getRetCode(), "Cannot deploy certs!");
-                        }
                         operatorManager.installIoTOperator();
                     }
                 }

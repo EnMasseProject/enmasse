@@ -11,10 +11,12 @@ import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.OpenShift;
+import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.slf4j.Logger;
@@ -55,6 +57,15 @@ public class OperatorManager {
         installOperators();
         installExamplesBundle(kube.getInfraNamespace());
         waitUntilOperatorReady(kube.getInfraNamespace());
+        if (Kubernetes.getInstance().getCluster() instanceof MinikubeCluster) {
+            LOGGER.warn("Installing certs!");
+            List<String> create = Arrays.asList(Paths.get(Environment.getInstance().getTemplatesPath(), "install",
+                    "components", "iot", "examples", "k8s-tls", "create").toString());
+            assertTrue(Exec.execute(create, 300_000, true).getRetCode(), "Cannot create certs!");
+            List<String> deploy = Arrays.asList(Paths.get(Environment.getInstance().getTemplatesPath(), "install",
+                    "components", "iot", "examples", "k8s-tls", "deploy").toString());
+            assertTrue(Exec.execute(deploy, 300_000, true).getRetCode(), "Cannot deploy certs!");
+        }
         LOGGER.info("***********************************************************");
     }
 
