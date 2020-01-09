@@ -24,17 +24,37 @@ func (r *Resolver) AddressSpaceSpec_enmasse_io_v1beta1() AddressSpaceSpec_enmass
 }
 
 func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1, error) {
-	objects, e := r.Cache.Get("hierarchy", "AddressSpace/", nil)
+	fltrfunc, err := BuildFilter(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	orderer, err := BuildOrderer(orderBy)
+	if err != nil {
+		return nil, err
+	}
+
+	objects, e := r.Cache.Get("hierarchy", "AddressSpace/", fltrfunc)
 	if e != nil {
 		return nil, e
 	}
-	addressspaces := make([]*AddressSpaceConsoleapiEnmasseIoV1beta1, len(objects))
-	for i, as := range objects {
+
+	e = orderer(objects)
+	if e != nil {
+		return nil, e
+	}
+
+	lower, upper := CalcLowerUpper(offset, first, len(objects))
+
+	paged := objects[lower:upper]
+	addressspaces := make([]*AddressSpaceConsoleapiEnmasseIoV1beta1, len(paged))
+	for i, as := range paged {
 		addr := as.(*v1beta1.AddressSpace)
 		addressspaces[i] = &AddressSpaceConsoleapiEnmasseIoV1beta1{
 			ObjectMeta: &addr.ObjectMeta,
 			Spec:       &addr.Spec,
 			Status:     &addr.Status,
+			// Do we need this initialisation?
 			Connections: &ConnectionQueryResultConsoleapiEnmasseIoV1beta1{
 				Total:       0,
 				Connections: make([]*ConnectionConsoleapiEnmasseIoV1beta1, 0),
@@ -44,7 +64,7 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 	}
 
 	asqr := &AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1{
-		Total:         len(addressspaces),
+		Total:         len(objects),
 		AddressSpaces: addressspaces,
 	}
 	return asqr, nil
