@@ -25,15 +25,33 @@ type addressK8sResolver struct{ *Resolver }
 
 func (ar addressK8sResolver) Links(ctx context.Context, obj *AddressConsoleapiEnmasseIoV1beta1, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
-		addrtoks := strings.SplitN(obj.ObjectMeta.Name, ".", 2)
-		// N.B. address name not prefixed in the link index
-		links, e := ar.Cache.Get("addressLinkHierarchy", fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1]), nil)
+		fltrfunc, e := BuildFilter(filter)
 		if e != nil {
 			return nil, e
 		}
 
+		orderer, e := BuildOrderer(orderBy)
+		if e != nil {
+			return nil, e
+		}
+
+		addrtoks := strings.SplitN(obj.ObjectMeta.Name, ".", 2)
+		// N.B. address name not prefixed in the link index
+		links, e := ar.Cache.Get("addressLinkHierarchy", fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1]), fltrfunc)
+		if e != nil {
+			return nil, e
+		}
+
+		e = orderer(links)
+		if e != nil {
+			return nil, e
+		}
+
+		lower, upper := CalcLowerUpper(offset, first, len(links))
+		paged := links[lower:upper]
+
 		consolelinks := make([]*LinkConsoleapiEnmasseIoV1beta1, 0)
-		for _, obj := range links {
+		for _, obj := range paged {
 			link := obj.(*consolegraphql.Link)
 			consolelinks = append(consolelinks, &LinkConsoleapiEnmasseIoV1beta1{
 				ObjectMeta: &link.ObjectMeta,
@@ -111,13 +129,31 @@ func (ar addressK8sResolver) Metrics(ctx context.Context, obj *AddressConsoleapi
 type addressSpecK8sResolver struct{ *Resolver }
 
 func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1beta1, error) {
-	//lower, upper := calcLowerUpper(offset, first, len(obj.Links))
-	objects, e := r.Cache.Get("hierarchy", "Address/", nil)
+	fltrfunc, e := BuildFilter(filter)
 	if e != nil {
 		return nil, e
 	}
-	addresses := make([]*AddressConsoleapiEnmasseIoV1beta1, len(objects))
-	for i, a := range objects {
+
+	orderer, e := BuildOrderer(orderBy)
+	if e != nil {
+		return nil, e
+	}
+
+	objects, e := r.Cache.Get("hierarchy", "Address/", fltrfunc)
+	if e != nil {
+		return nil, e
+	}
+
+	e = orderer(objects)
+	if e != nil {
+		return nil, e
+	}
+
+	lower, upper := CalcLowerUpper(offset, first, len(objects))
+	paged := objects[lower:upper]
+
+	addresses := make([]*AddressConsoleapiEnmasseIoV1beta1, len(paged))
+	for i, a := range paged {
 		addr := a.(*v1beta1.Address)
 		addresses[i] = &AddressConsoleapiEnmasseIoV1beta1{
 			ObjectMeta: &addr.ObjectMeta,
@@ -132,12 +168,11 @@ func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, 
 	}
 
 	aqr := &AddressQueryResultConsoleapiEnmasseIoV1beta1{
-		Total:     len(addresses),
+		Total:     len(objects),
 		Addresses: addresses,
 	}
 
 	return aqr, nil
-
 }
 
 func (r *addressSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.AddressSpec) (*v1beta2.AddressPlan, error) {

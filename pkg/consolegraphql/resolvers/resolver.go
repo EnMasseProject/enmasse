@@ -13,6 +13,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/filter"
 )
 
 type Resolver struct {
@@ -63,4 +64,33 @@ func Min(x, y int) int {
 		return x
 	}
 	return y
+}
+
+func BuildFilter(f *string) (cache.ObjectFilter, error) {
+	if f != nil {
+		expression, err := filter.ParseFilterExpression(*f)
+		if err != nil {
+			return nil, err
+		}
+		return func(i interface{}) (match bool, cont bool, e error) {
+			rv, e := expression.Eval(i)
+			if e != nil {
+				return false, false, e
+			}
+			return rv.(bool), true, nil
+		}, nil
+	}
+	return nil, nil
+}
+
+func BuildOrderer(o *string) (func (interface{}) error, error) {
+	if o != nil {
+		orderby, err := filter.ParseOrderByExpression(*o)
+		if err != nil {
+			return nil, err
+		}
+
+		return orderby.Sort, err
+	}
+	return func(interface{}) error { return nil}, nil
 }
