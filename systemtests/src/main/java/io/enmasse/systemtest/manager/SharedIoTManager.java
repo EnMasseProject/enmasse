@@ -132,6 +132,7 @@ public class SharedIoTManager extends ResourceManager {
         map.put("iot-auth-service","iot-auth-service-tls");
         map.put("iot-device-registry","iot-device-registry-tls");
         map.put("iot-tenant-service","iot-tenant-service-tls");
+
         sharedIoTConfig = new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
@@ -146,10 +147,27 @@ public class SharedIoTManager extends ResourceManager {
                                                 .withServiceSecretNames(map)
                                                 .build()
                                 )
-                            .endSecretCertificatesStrategy()
-                            .build()
+                                .endSecretCertificatesStrategy()
+                                .build()
                 )
                 .endInterServiceCertificates()
+                .withNewServices()
+                .withDeviceRegistry(DefaultDeviceRegistry.newInfinispanBased())
+                .endServices()
+                .withNewAdapters()
+                .withNewMqtt()
+                .endMqtt()
+                .endAdapters()
+                .endSpec()
+                .build();
+
+
+       /* sharedIoTConfig = new IoTConfigBuilder()
+                .withNewMetadata()
+                .withName("default")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
                 .withNewServices()
                 .withDeviceRegistry(DefaultDeviceRegistry.newInfinispanBased())
                 .endServices()
@@ -164,7 +182,7 @@ public class SharedIoTManager extends ResourceManager {
                 .endMqtt()
                 .endAdapters()
                 .endSpec()
-                .build();
+                .build();*/
         createIoTConfig(sharedIoTConfig);
     }
 
