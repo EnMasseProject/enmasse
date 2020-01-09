@@ -12,7 +12,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	time2 "time"
+	"time"
 )
 
 type connectionK8sResolver struct{ *Resolver }
@@ -23,13 +23,31 @@ func (r *Resolver) Connection_consoleapi_enmasse_io_v1beta1() Connection_console
 
 func (cr connectionK8sResolver) Links(ctx context.Context, obj *ConnectionConsoleapiEnmasseIoV1beta1, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
-		links, e := cr.Cache.Get("hierarchy", fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, obj.Spec.AddressSpace, obj.ObjectMeta.Name), nil)
+		fltrfunc, e := BuildFilter(filter)
 		if e != nil {
 			return nil, e
 		}
 
+		orderer, e := BuildOrderer(orderBy)
+		if e != nil {
+			return nil, e
+		}
+
+		links, e := cr.Cache.Get("hierarchy", fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, obj.Spec.AddressSpace, obj.ObjectMeta.Name), fltrfunc)
+		if e != nil {
+			return nil, e
+		}
+
+		e = orderer(links)
+		if e != nil {
+			return nil, e
+		}
+
+		lower, upper := CalcLowerUpper(offset, first, len(links))
+		paged := links[lower:upper]
+
 		consolelinks := make([]*LinkConsoleapiEnmasseIoV1beta1, 0)
-		for _, obj := range links {
+		for _, obj := range paged {
 			link := obj.(*consolegraphql.Link)
 			consolelinks = append(consolelinks, &LinkConsoleapiEnmasseIoV1beta1{
 				ObjectMeta: &link.ObjectMeta,
@@ -77,17 +95,10 @@ func (cr connectionK8sResolver) Metrics(ctx context.Context, obj *ConnectionCons
 		metrics := make([]*consolegraphql.Metric, 2)
 
 		metrics[0] = &consolegraphql.Metric{
-			Value:        consolegraphql.NewSimpleMetricValue("enmasse_senders", "gauge", float64(linkCounts["sender"]), "", time2.Now()),
-			//
-			//MetricName:  "enmasse_senders",
-			//MetricType:  "gauge",
-			//MetricValue: float64(linkCounts["sender"]),
+			Value:        consolegraphql.NewSimpleMetricValue("enmasse_senders", "gauge", float64(linkCounts["sender"]), "", time.Now()),
 		}
 		metrics[1] = &consolegraphql.Metric{
-			Value:        consolegraphql.NewSimpleMetricValue("enmasse_receivers", "gauge", float64(linkCounts["receiver"]), "", time2.Now()),
-			//MetricName:  "enmasse_receivers",
-			//MetricType:  "gauge",
-			//MetricValue: float64(linkCounts["receiver"]),
+			Value:        consolegraphql.NewSimpleMetricValue("enmasse_receivers", "gauge", float64(linkCounts["receiver"]), "", time.Now()),
 		}
 
 		for _, i := range dynamic {
@@ -161,13 +172,31 @@ func (r *Resolver) Links(ctx context.Context, obj *ConnectionConsoleapiEnmasseIo
 }
 
 func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1beta1, error) {
-
-	objects, e := r.Cache.Get("hierarchy", "Connection/", nil)
+	fltrfunc, e := BuildFilter(filter)
 	if e != nil {
 		return nil, e
 	}
-	cons := make([]*ConnectionConsoleapiEnmasseIoV1beta1, len(objects))
-	for i, a := range objects {
+
+	orderer, e := BuildOrderer(orderBy)
+	if e != nil {
+		return nil, e
+	}
+
+	objects, e := r.Cache.Get("hierarchy", "Connection/", fltrfunc)
+	if e != nil {
+		return nil, e
+	}
+
+	e = orderer(objects)
+	if e != nil {
+		return nil, e
+	}
+
+	lower, upper := CalcLowerUpper(offset, first, len(objects))
+	paged := objects[lower:upper]
+
+	cons := make([]*ConnectionConsoleapiEnmasseIoV1beta1, len(paged))
+	for i, a := range paged {
 		con := a.(*consolegraphql.Connection)
 		cons[i] = &ConnectionConsoleapiEnmasseIoV1beta1{
 			ObjectMeta: &con.ObjectMeta,
@@ -181,7 +210,7 @@ func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int
 	}
 
 	cqr := &ConnectionQueryResultConsoleapiEnmasseIoV1beta1{
-		Total:       len(cons),
+		Total:       len(objects),
 		Connections: cons,
 	}
 
