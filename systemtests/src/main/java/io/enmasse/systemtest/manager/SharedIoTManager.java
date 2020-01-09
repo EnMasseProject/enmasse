@@ -5,9 +5,11 @@
 package io.enmasse.systemtest.manager;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.iot.model.v1.InterServiceCertificatesBuilder;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.model.v1.SecretCertificatesStrategyBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -124,12 +127,29 @@ public class SharedIoTManager extends ResourceManager {
 
     private void createNewIoTConfig() throws Exception {
         CertBundle certBundle = CertificateUtils.createCertBundle();
+
+        HashMap<String, String> map = new HashMap<>();
+        map.put("iot-auth-service","iot-auth-service-tls");
+        map.put("iot-device-registry","iot-device-registry-tls");
+        map.put("iot-tenant-service","iot-tenant-service-tls");
         sharedIoTConfig = new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
+                .withNewInterServiceCertificatesLike(
+                        new InterServiceCertificatesBuilder()
+                                .withNewSecretCertificatesStrategyLike(
+                                        new SecretCertificatesStrategyBuilder()
+                                                .withCaSecretName("iot-service-ca")
+                                                .withServiceSecretNames(map)
+                                                .build()
+                                )
+                            .endSecretCertificatesStrategy()
+                            .build()
+                )
+                .endInterServiceCertificates()
                 .withNewServices()
                 .withDeviceRegistry(DefaultDeviceRegistry.newInfinispanBased())
                 .endServices()
