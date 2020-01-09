@@ -12,12 +12,11 @@ import { AddressSpaceListPage } from "./AddressSpaceListPage";
 import { AddressSpaceListFilterPage } from "./AddressSpaceListFilterPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
-import { IAddressSpace } from "src/Components/AddressSpaceList/AddressSpaceList";
 
 export default function AddressSpaceListWithFilterAndPagination() {
   useDocumentTitle("Address Space List");
   useA11yRouteChange();
-  const [filterValue, setFilterValue] = React.useState<string | null>("Name");
+  const [filterValue, setFilterValue] = React.useState<string>("Name");
   const [filterNames, setFilterNames] = React.useState<string[]>([]);
   const [onCreationRefetch, setOnCreationRefetch] = React.useState<boolean>(
     false

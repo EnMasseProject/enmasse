@@ -20,7 +20,11 @@ import {
   Button,
   ButtonVariant,
   KebabToggle,
-  Badge
+  Badge,
+  SelectOption,
+  Select,
+  SelectVariant,
+  SelectOptionObject
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 
@@ -54,6 +58,11 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const [typeIsExpanded, setTypeIsExpanded] = React.useState(false);
   const [statusIsExpanded, setStatusIsExpanded] = React.useState(false);
+  const [isSelectNameExpanded, setIsSelectNameExpanded] = React.useState<
+    boolean
+  >(false);
+  const [nameSelected, setNameSelected] = React.useState<string>();
+  const [nameOptions, setNameOptions] = React.useState<Array<string>>();
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
     { key: "filterType", value: "Type" },
@@ -78,14 +87,14 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
     setInputValue(newValue);
   };
 
-  const onAddInput = (event: any) => {
+  const onClickSearchIcon = (event: any) => {
     if (filterValue && filterValue === "Name") {
-      if (inputValue && inputValue.trim() !== "")
-        if (filterNames.indexOf(inputValue.trim()) < 0) {
-          setFilterNames([...filterNames, inputValue.trim()]);
+      if (nameSelected && nameSelected.trim() !== "")
+        if (filterNames.indexOf(nameSelected.trim()) < 0) {
+          setFilterNames([...filterNames, nameSelected.trim()]);
+          setNameSelected(undefined);
         }
     }
-    setInputValue(null);
   };
 
   const onFilterSelect = (event: any) => {
@@ -100,6 +109,55 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   const onStatusSelect = (event: any) => {
     setStatusValue(event.target.value);
     setStatusIsExpanded(!statusIsExpanded);
+  };
+
+  const onNameSelectToggle = () => {
+    setIsSelectNameExpanded(!isSelectNameExpanded);
+  };
+
+  const onChangeNameData = async (value: string) => {
+    setNameOptions(undefined);
+    // const response = await client.query<IConnectionLinksNameSearchResponse>({
+    //   query: RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH(
+    //     connectionName,
+    //     addressSpaceName,
+    //     namespace,
+    //     value.trim()
+    //   )
+    // });
+    // if (
+    //   response &&
+    //   response.data &&
+    //   response.data.connections &&
+    //   response.data.connections.Connections &&
+    //   response.data.connections.Connections.length > 0 &&
+    //   response.data.connections.Connections[0].Links &&
+    //   response.data.connections.Connections[0].Links.Links &&
+    //   response.data.connections.Connections[0].Links.Links.length > 0
+    // ) {
+    //   const obtainedList = response.data.connections.Connections[0].Links.Links.map(
+    //     (link: any) => {
+    //       console.log("Name", link);
+    //       return link.ObjectMeta.Name;
+    //     }
+    //   );
+    //   setNameOptions(obtainedList);
+    // }
+  };
+
+  const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChangeNameData(e.target.value);
+    const options: React.ReactElement[] = nameOptions
+      ? nameOptions.map((option, index) => (
+          <SelectOption key={index} value={option} />
+        ))
+      : [];
+    return options;
+  };
+
+  const onNameSelect = (event: any, selection: string | SelectOptionObject) => {
+    setNameSelected(selection.toString());
+    setIsSelectNameExpanded(false);
   };
 
   const onDelete = (
@@ -162,7 +220,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
             ))}
           />
         </DataToolbarFilter>
-        {filterValue && filterValue.trim() !== "" ? (
+        {filterValue && filterValue.trim() !== "" && (
           <>
             <DataToolbarItem>
               <DataToolbarFilter
@@ -171,19 +229,32 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                 categoryName="Name">
                 {filterValue && filterValue === "Name" && (
                   <InputGroup>
-                    <TextInput
-                      name="name"
-                      id="name"
-                      type="search"
-                      aria-label="search input name"
-                      placeholder="Filter By Name ..."
-                      onChange={onInputChange}
-                      value={inputValue || ""}
-                    />
+                    <Select
+                      variant={SelectVariant.typeahead}
+                      aria-label="Select a Name"
+                      onToggle={onNameSelectToggle}
+                      onSelect={onNameSelect}
+                      onClear={() => {
+                        setNameSelected(undefined);
+                        setIsSelectNameExpanded(false);
+                      }}
+                      selections={nameSelected}
+                      onFilter={onNameSelectFilterChange}
+                      isExpanded={isSelectNameExpanded}
+                      ariaLabelledBy={"typeahead-select-id"}
+                      placeholderText="Select name"
+                      isDisabled={false}
+                      isCreatable={false}>
+                      {nameOptions &&
+                        nameOptions.map((option, index) => (
+                          <SelectOption key={index} value={option} />
+                        ))}
+                      {/* {} */}
+                    </Select>
                     <Button
                       variant={ButtonVariant.control}
                       aria-label="search button for search input"
-                      onClick={onAddInput}>
+                      onClick={onClickSearchIcon}>
                       <SearchIcon />
                     </Button>
                   </InputGroup>
@@ -203,7 +274,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                     toggle={
                       <DropdownToggle onToggle={setTypeIsExpanded}>
                         <FilterIcon />
-                        &nbsp;{typeValue}
+                        &nbsp;{typeValue || "Select Type"}
                       </DropdownToggle>
                     }
                     dropdownItems={typeMenuItems.map(option => (
@@ -232,7 +303,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                     toggle={
                       <DropdownToggle onToggle={setStatusIsExpanded}>
                         <FilterIcon />
-                        &nbsp;{statusValue}
+                        &nbsp;{statusValue || "Select Status"}
                       </DropdownToggle>
                     }
                     dropdownItems={statusMenuItems.map(option => (
@@ -249,29 +320,6 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
               </DataToolbarFilter>
             </DataToolbarItem>
           </>
-        ) : (
-          <DataToolbarItem>
-            <DataToolbarFilter categoryName="">
-              <InputGroup>
-                <TextInput
-                  name="search diabled"
-                  id="search disabled"
-                  type="search"
-                  aria-label="search input diabled"
-                  placeholder="Search By filter ..."
-                  onChange={onInputChange}
-                  isDisabled={true}
-                  value={inputValue || ""}
-                />
-                <Button
-                  variant={ButtonVariant.control}
-                  aria-label="search button for search input"
-                  isDisabled={true}>
-                  <SearchIcon />
-                </Button>
-              </InputGroup>
-            </DataToolbarFilter>
-          </DataToolbarItem>
         )}
       </DataToolbarGroup>
     </>

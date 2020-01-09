@@ -3,7 +3,7 @@ import { MemoryRouter } from "react-router";
 import { LinkList, ILink } from "../Components/ConnectionDetail/LinkList";
 import { text, number, select } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import { ConnectionLinksFilter } from "src/Components/ConnectionDetail/ConnectionLinksFilter";
+import { ConnectionLinksFilter } from "src/Pages/ConnectionDetail/ConnectionLinksFilter";
 
 export default {
   title: "Connection Detail"
@@ -54,26 +54,26 @@ export const linkList = () => (
   </MemoryRouter>
 );
 
-export const ConnectionLinksFilterStory = () => {
-  const options=["","Sender","Receiver"];
-  return(
-  <MemoryRouter>
-    <ConnectionLinksFilter
-      filterValue={text("FilterValue", "Name")}
-      setFilterValue={action("set filter value")}
-      filterNames={
-        text("filter name", "") != "" ? [text("filter name", "")] : []
-      }
-      setFilterNames={action("setFilterNames")}
-      filterAddresses={
-        text("filter address", "") != "" ? [text("filter address", "")] : []
-      }
-      setFilterAddresses={action("setFilterAddress")}
-      filterRole={select("Role ", options, "")}
-      setFilterRole={action("setFilterRole")}
-      totalLinks={number("total links", 1)}
-      setSortValue={()=>{}}
-    />
-  </MemoryRouter>
-  );
-};
+// export const ConnectionLinksFilterStory = () => {
+//   const options=["","Sender","Receiver"];
+//   return(
+//   <MemoryRouter>
+//     <ConnectionLinksFilter
+//       filterValue={text("FilterValue", "Name")}
+//       setFilterValue={action("set filter value")}
+//       filterNames={
+//         text("filter name", "") != "" ? [text("filter name", "")] : []
+//       }
+//       setFilterNames={action("setFilterNames")}
+//       filterAddresses={
+//         text("filter address", "") != "" ? [text("filter address", "")] : []
+//       }
+//       setFilterAddresses={action("setFilterAddress")}
+//       filterRole={select("Role ", options, "")}
+//       setFilterRole={action("setFilterRole")}
+//       totalLinks={number("total links", 1)}
+//       setSortValue={()=>{}}
+//     />
+//   </MemoryRouter>
+//   );
+// };

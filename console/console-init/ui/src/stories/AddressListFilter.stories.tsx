@@ -1,7 +1,7 @@
 import React from "react";
 import { MemoryRouter } from "react-router";
 import { action } from "@storybook/addon-actions";
-import { AddressListFilter } from "src/Components/AddressSpace/Address/AddressListFilter";
+import { AddressListFilter } from "src/Pages/AddressSpaceDetail/AddressList/AddressListFilter";
 import { text, number } from "@storybook/addon-knobs";
 
 export default {

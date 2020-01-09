@@ -11,7 +11,7 @@ import { GridStylesForTableHeader } from "../AddressSpaceDetail/AddressList/Addr
 import { ConnectionLinksListPage } from "./ConnectionsLinksListPage";
 import { useLocation, useHistory } from "react-router";
 import { css } from "@patternfly/react-styles";
-import { ConnectionLinksFilter } from "src/Components/ConnectionDetail/ConnectionLinksFilter";
+import { ConnectionLinksFilter } from "src/Pages/ConnectionDetail/ConnectionLinksFilter";
 import { ISortBy } from "@patternfly/react-table";
 interface IConnectionLinksWithFilterAndPaginationPageProps {
   name?: string;
@@ -100,6 +100,9 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
             totalLinks={totalLinks}
             sortValue={sortDropDownValue}
             setSortValue={setSortDropdownValue}
+            addressSpaceName={name||""}
+            namespace={namespace||""}
+            connectionName={connectionname||""}
           />
         </GridItem>
         <GridItem span={6}>{renderPagination(page, perPage)}</GridItem>

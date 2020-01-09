@@ -16,7 +16,7 @@ import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "src/Components/AddressSpace/Address/EmptyAddress";
 import { EditAddress } from "../../EditAddressPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { ISortBy, IRowData } from "@patternfly/react-table";
+import { ISortBy } from "@patternfly/react-table";
 export interface IAddressListPageProps {
   name?: string;
   namespace?: string;
@@ -58,7 +58,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   const client = useApolloClient();
   const [sortBy, setSortBy] = React.useState<ISortBy>();
 
-  if (sortValue && sortBy != sortValue) {
+  if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
   const { loading, error, data, refetch } = useQuery<IAddressResponse>(
