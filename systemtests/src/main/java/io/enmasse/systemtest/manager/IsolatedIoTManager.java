@@ -9,6 +9,7 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
@@ -16,6 +17,7 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,9 +58,7 @@ public class IsolatedIoTManager extends ResourceManager {
 
     @Override
     public void setup() {
-        if (!kubernetes.namespaceExists(IOT_PROJECT_NAMESPACE)) {
-            kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
-        }
+        kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
     }
 
     @Override
@@ -67,10 +67,10 @@ public class IsolatedIoTManager extends ResourceManager {
             LOGGER.info("Skip cleanup is set, no cleanup process");
         } else {
             try {
-                logCollector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
-                logCollector.collectEvents(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
                 tearDownProjects();
                 tearDownConfigs();
+                Path path = JunitCallbackListener.getPath(context);
+                SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
                 SystemtestsKubernetesApps.deleteInfinispanServer();
             } catch (Exception e) {
                 LOGGER.error("Error tearing down iot test: {}", e.getMessage());

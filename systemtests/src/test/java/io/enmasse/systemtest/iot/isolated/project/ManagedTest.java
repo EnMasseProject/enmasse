@@ -21,7 +21,6 @@ import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
-import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -101,7 +100,6 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
         if (context.getExecutionException().isPresent()) { //test failed
             logCollector.collectHttpAdapterQdrProxyState();
         }
-        SystemtestsKubernetesApps.deleteInfinispanServer();
     }
 
     @Test

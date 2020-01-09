@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -35,8 +36,11 @@ import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.cluster.CRCCluster;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -104,8 +108,10 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
     @AfterEach
     void deleteAddressSpace(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectLogsOfPodsInNamespace(getInstallationNamespace());
-            logCollector.collectEvents(getInstallationNamespace());
+            Path path = JunitCallbackListener.getPath(context);
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, getInstallationNamespace());
+            collector.collectLogsOfPodsInNamespace(getInstallationNamespace());
+            collector.collectEvents(getInstallationNamespace());
         }
         for (String namespace : Arrays.asList(getInstallationNamespace(), getDifferentAddressSpaceNamespace())) {
             AddressSpace addressSpace = kubernetes.getAddressSpaceClient(namespace).withName("myspace").get();

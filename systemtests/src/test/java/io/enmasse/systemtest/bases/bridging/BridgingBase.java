@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.bases.bridging;
 
+import java.nio.file.Path;
 import java.util.Base64;
 
 import io.enmasse.address.model.*;
@@ -21,6 +22,7 @@ import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
+import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -64,8 +66,8 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
     @AfterEach
     void undeployBroker(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectLogsOfPodsInNamespace(remoteBrokerNamespace);
-            logCollector.collectEvents(remoteBrokerNamespace);
+            Path path = JunitCallbackListener.getPath(context);
+            SystemtestsKubernetesApps.collectAMQBrokerLogs(path, remoteBrokerNamespace);
         }
         SystemtestsKubernetesApps.deleteAMQBroker(remoteBrokerNamespace, remoteBrokerName);
     }

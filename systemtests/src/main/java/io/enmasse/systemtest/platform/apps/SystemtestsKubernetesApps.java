@@ -106,9 +106,7 @@ public class SystemtestsKubernetesApps {
     }
 
     public static String deployMessagingClientApp() throws Exception {
-        if (!Kubernetes.getInstance().namespaceExists(MESSAGING_PROJECT)) {
-            Kubernetes.getInstance().createNamespace(MESSAGING_PROJECT);
-        }
+        Kubernetes.getInstance().createNamespace(MESSAGING_PROJECT);
         Kubernetes.getInstance().createDeploymentFromResource(MESSAGING_PROJECT, getMessagingAppDeploymentResource());
         TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), MESSAGING_PROJECT, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
         return getMessagingAppPodName();
@@ -150,9 +148,7 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deployOpenshiftCertValidator(String namespace, Kubernetes kubeClient) throws Exception {
-        if (!kubeClient.namespaceExists(namespace)) {
-            kubeClient.createNamespace(namespace);
-        }
+        kubeClient.createNamespace(namespace);
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(OPENSHIFT_CERT_VALIDATOR, 8080));
         kubeClient.createDeploymentFromResource(namespace, getOpenshiftCertValidatorDeploymentResource());
         kubeClient.createIngressFromResource(namespace, getSystemtestsIngressResource(OPENSHIFT_CERT_VALIDATOR, 8080));
@@ -169,9 +165,7 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deployFirefoxSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {
-        if (!kubeClient.namespaceExists(namespace)) {
-            kubeClient.createNamespace(namespace);
-        }
+        kubeClient.createNamespace(namespace);
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(SystemtestsKubernetesApps.SELENIUM_FIREFOX, 4444));
         kubeClient.createConfigmapFromResource(namespace, getRheaConfigMap());
         kubeClient.createDeploymentFromResource(namespace,
@@ -181,8 +175,7 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deployChromeSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {
-        if (!kubeClient.namespaceExists(namespace))
-            kubeClient.createNamespace(namespace);
+        kubeClient.createNamespace(namespace);
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(SELENIUM_CHROME, 4444));
         kubeClient.createConfigmapFromResource(namespace, getRheaConfigMap());
         kubeClient.createDeploymentFromResource(namespace,
@@ -261,9 +254,7 @@ public class SystemtestsKubernetesApps {
             return getInfinispanEndpoint(INFINISPAN_PROJECT);
         }
 
-        if (!Kubernetes.getInstance().namespaceExists(INFINISPAN_PROJECT)) {
-            Kubernetes.getInstance().createNamespace(INFINISPAN_PROJECT);
-        }
+        Kubernetes.getInstance().createNamespace(INFINISPAN_PROJECT);
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
@@ -315,11 +306,18 @@ public class SystemtestsKubernetesApps {
         }
     }
 
+    public static void collectInfinispanServerLogs(Path path) {
+        try {
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+            collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+        } catch (Exception e) {
+            log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+        }
+    }
+
     public static void deployAMQBroker(String namespace, String name, String user, String password, BrokerCertBundle certBundle) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
-        if (!kubeCli.namespaceExists(namespace)) {
-            kubeCli.createNamespace(namespace);
-        }
+        kubeCli.createNamespace(namespace);
 
         kubeCli.getClient().rbac().roles().inNamespace(namespace).createOrReplace(new RoleBuilder()
                 .withNewMetadata()
@@ -392,6 +390,16 @@ public class SystemtestsKubernetesApps {
         kubeCli.deleteDeployment(namespace, name);
         kubeCli.deleteExternalEndpoint(namespace, name);
         Thread.sleep(5000);
+    }
+
+    public static void collectAMQBrokerLogs(Path path, String namespace) {
+        try {
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, namespace);
+            collector.collectLogsOfPodsInNamespace(namespace);
+            collector.collectEvents(namespace);
+        } catch (Exception e) {
+            log.error("Failed to collect pod logs from namespace : {}", namespace);
+        }
     }
 
     public static void scaleDownDeployment(String namespace, String name) throws Exception {

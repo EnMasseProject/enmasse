@@ -496,8 +496,8 @@ public abstract class Kubernetes {
     }
 
     public void createNamespace(String namespace, Map<String, String> labels) {
-        log.info("Following namespace will be created = {}", namespace);
         if (!namespaceExists(namespace)) {
+            log.info("Following namespace will be created = {}", namespace);
             var builder = new NamespaceBuilder().withNewMetadata().withName(namespace);
             if (labels != null) {
                 builder.withLabels(labels);
