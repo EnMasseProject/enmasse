@@ -134,14 +134,14 @@ var FilterR1 = [...]int{
 	0, 10, 10, 1, 1, 1, 1, 1, 1, 2,
 	2, 2, 2, 2, 5, 5, 3, 3, 3, 3,
 	3, 3, 4, 4, 4, 4, 4, 6, 6, 7,
-	7, 8, 9, 9, 9,
+	7, 7, 8, 9, 9, 9,
 }
 var FilterR2 = [...]int{
 
 	0, 2, 2, 1, 3, 3, 3, 2, 1, 3,
 	3, 4, 3, 4, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	3, 2, 0, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+	1, 3, 2, 0, 1, 1,
 }
 var FilterChk = [...]int{
 
@@ -154,11 +154,11 @@ var FilterChk = [...]int{
 }
 var FilterDef = [...]int{
 
-	0, -2, 0, 0, 1, 3, 0, 0, -2, 0,
-	27, 28, 14, 22, 23, 24, 25, 26, 2, 29,
-	32, 0, 0, 0, 7, 0, 0, 0, 0, 16,
-	17, 18, 19, 20, 21, 0, 31, 33, 34, 5,
-	6, 4, 9, 15, 10, 0, 12, 0, 30, 11,
+	0, -2, 0, 29, 1, 3, 0, 0, -2, 0,
+	27, 28, 14, 22, 23, 24, 25, 26, 2, 30,
+	33, 0, 0, 0, 7, 0, 0, 0, 0, 16,
+	17, 18, 19, 20, 21, 0, 32, 34, 35, 5,
+	6, 4, 9, 15, 10, 0, 12, 0, 31, 11,
 	13,
 }
 var FilterTok1 = [...]int{
@@ -687,38 +687,44 @@ Filterdefault:
 			FilterVAL.boolVal = BoolVal(false)
 		}
 	case 29:
-		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line parser.y:208
+		FilterDollar = FilterS[Filterpt-0 : Filterpt+1]
+//line parser.y:207
 		{
-			FilterVAL.orderList = OrderBy{FilterDollar[1].order}
+			FilterVAL.orderList = NewEmptyOrderBy()
 		}
 	case 30:
+		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+//line parser.y:211
+		{
+			FilterVAL.orderList = NewOrderBy(FilterDollar[1].order)
+		}
+	case 31:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line parser.y:212
+//line parser.y:215
 		{
 			FilterVAL.orderList = append(FilterDollar[1].orderList, FilterDollar[3].order)
 		}
-	case 31:
-		FilterDollar = FilterS[Filterpt-2 : Filterpt+1]
-//line parser.y:218
-		{
-			FilterVAL.order = &Order{Expr: FilterDollar[1].jsonPathValue, Direction: FilterDollar[2].str}
-		}
 	case 32:
-		FilterDollar = FilterS[Filterpt-0 : Filterpt+1]
-//line parser.y:223
+		FilterDollar = FilterS[Filterpt-2 : Filterpt+1]
+//line parser.y:221
 		{
-			FilterVAL.str = AscScr
+			FilterVAL.order = NewOrder(FilterDollar[1].jsonPathValue, FilterDollar[2].str)
 		}
 	case 33:
-		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line parser.y:227
+		FilterDollar = FilterS[Filterpt-0 : Filterpt+1]
+//line parser.y:226
 		{
 			FilterVAL.str = AscScr
 		}
 	case 34:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line parser.y:231
+//line parser.y:230
+		{
+			FilterVAL.str = AscScr
+		}
+	case 35:
+		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+//line parser.y:234
 		{
 			FilterVAL.str = DescScr
 		}
