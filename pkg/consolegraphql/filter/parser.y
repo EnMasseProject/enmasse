@@ -204,9 +204,12 @@ boolean_value:
   }
 
 order_list:
-  order
   {
-    $$ = OrderBy{$1}
+    $$ = NewEmptyOrderBy()
+  }
+| order
+  {
+    $$ = NewOrderBy($1)
   }
 | order_list ',' order
   {
@@ -216,7 +219,7 @@ order_list:
 order:
   JSON_PATH asc_desc_opt
   {
-    $$ = &Order{Expr: $1, Direction: $2}
+    $$ = NewOrder($1, $2)
   }
 
 asc_desc_opt:

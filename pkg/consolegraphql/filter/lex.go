@@ -29,95 +29,6 @@ var _filterlexer_actions []byte = []byte{
 	2, 3, 5, 
 }
 
-var _filterlexer_key_offsets []byte = []byte{
-	0, 0, 1, 2, 4, 6, 10, 12, 
-	14, 16, 18, 20, 22, 24, 26, 28, 
-	30, 32, 34, 36, 40, 42, 44, 46, 
-	48, 50, 52, 54, 55, 56, 88, 89, 
-	92, 94, 95, 96, 
-}
-
-var _filterlexer_trans_keys []byte = []byte{
-	61, 39, 48, 57, 48, 57, 78, 83, 
-	110, 115, 68, 100, 67, 99, 69, 101, 
-	83, 115, 67, 99, 65, 97, 76, 108, 
-	83, 115, 69, 101, 83, 115, 73, 105, 
-	75, 107, 69, 101, 79, 85, 111, 117, 
-	84, 116, 76, 108, 76, 108, 82, 114, 
-	82, 114, 85, 117, 69, 101, 96, 96, 
-	32, 33, 39, 40, 41, 44, 60, 61, 
-	62, 65, 68, 70, 73, 76, 78, 79, 
-	84, 96, 97, 100, 102, 105, 108, 110, 
-	111, 116, 9, 13, 43, 45, 48, 57, 
-	39, 46, 48, 57, 48, 57, 61, 61, 
-	96, 
-}
-
-var _filterlexer_single_lengths []byte = []byte{
-	0, 1, 1, 0, 0, 4, 2, 2, 
-	2, 2, 2, 2, 2, 2, 2, 2, 
-	2, 2, 2, 4, 2, 2, 2, 2, 
-	2, 2, 2, 1, 1, 26, 1, 1, 
-	0, 1, 1, 1, 
-}
-
-var _filterlexer_range_lengths []byte = []byte{
-	0, 0, 0, 1, 1, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 3, 0, 1, 
-	1, 0, 0, 0, 
-}
-
-var _filterlexer_index_offsets []byte = []byte{
-	0, 0, 2, 4, 6, 8, 13, 16, 
-	19, 22, 25, 28, 31, 34, 37, 40, 
-	43, 46, 49, 52, 57, 60, 63, 66, 
-	69, 72, 75, 78, 80, 82, 112, 114, 
-	117, 119, 121, 123, 
-}
-
-var _filterlexer_indicies []byte = []byte{
-	0, 1, 4, 3, 5, 1, 7, 6, 
-	8, 9, 8, 9, 1, 10, 10, 1, 
-	11, 11, 1, 12, 12, 1, 13, 13, 
-	1, 14, 14, 1, 15, 15, 1, 16, 
-	16, 1, 17, 17, 1, 18, 18, 1, 
-	19, 19, 1, 20, 20, 1, 21, 21, 
-	1, 22, 22, 1, 23, 24, 23, 24, 
-	1, 25, 25, 1, 26, 26, 1, 27, 
-	27, 1, 28, 28, 1, 29, 29, 1, 
-	30, 30, 1, 31, 31, 1, 33, 32, 
-	32, 34, 35, 36, 3, 37, 38, 40, 
-	41, 42, 43, 44, 45, 46, 47, 48, 
-	49, 50, 51, 32, 44, 45, 46, 47, 
-	48, 49, 50, 51, 35, 39, 5, 1, 
-	3, 52, 54, 5, 53, 7, 55, 57, 
-	56, 59, 58, 61, 60, 
-}
-
-var _filterlexer_trans_targs []byte = []byte{
-	29, 0, 29, 2, 30, 31, 29, 32, 
-	6, 7, 29, 29, 9, 10, 29, 12, 
-	13, 14, 29, 29, 17, 18, 29, 20, 
-	21, 29, 22, 29, 29, 25, 26, 29, 
-	27, 35, 29, 29, 1, 29, 29, 3, 
-	29, 33, 29, 34, 5, 8, 11, 15, 
-	16, 19, 23, 24, 29, 29, 4, 29, 
-	29, 29, 29, 29, 29, 28, 
-}
-
-var _filterlexer_trans_actions []byte = []byte{
-	31, 0, 57, 0, 62, 3, 53, 0, 
-	0, 0, 5, 21, 0, 0, 23, 0, 
-	0, 0, 15, 19, 0, 0, 11, 0, 
-	0, 9, 0, 17, 7, 0, 0, 13, 
-	0, 65, 55, 39, 0, 33, 35, 0, 
-	37, 0, 25, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 45, 41, 0, 43, 
-	51, 29, 49, 27, 47, 0, 
-}
-
 var _filterlexer_to_state_actions []byte = []byte{
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
@@ -132,14 +43,6 @@ var _filterlexer_from_state_actions []byte = []byte{
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 1, 0, 0, 
 	0, 0, 0, 0, 
-}
-
-var _filterlexer_eof_trans []byte = []byte{
-	0, 0, 3, 0, 7, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 3, 35, 0, 53, 54, 
-	56, 57, 59, 61, 
 }
 
 const filterlexer_start int = 29
@@ -171,7 +74,7 @@ func newLexer(data []byte) *lexer {
         pe: len(data),
     }
     
-//line lex.go:175
+//line lex.go:78
 	{
 	 lex.cs = filterlexer_start
 	 lex.ts = 0
@@ -195,13 +98,11 @@ func (lex *lexer) Lex(out *FilterSymType) int {
     }
 
     
-//line lex.go:199
+//line lex.go:102
 	{
-	var _klen int
-	var _trans int
 	var _acts int
 	var _nacts uint
-	var _keys int
+
 	if ( lex.p) == ( lex.pe) {
 		goto _test_eof
 	}
@@ -212,82 +113,435 @@ _resume:
 	_acts = int(_filterlexer_from_state_actions[ lex.cs])
 	_nacts = uint(_filterlexer_actions[_acts]); _acts++
 	for ; _nacts > 0; _nacts-- {
-		 _acts++
+		_acts++
 		switch _filterlexer_actions[_acts - 1] {
 		case 2:
 //line NONE:1
  lex.ts = ( lex.p)
 
-//line lex.go:222
+//line lex.go:123
 		}
 	}
 
-	_keys = int(_filterlexer_key_offsets[ lex.cs])
-	_trans = int(_filterlexer_index_offsets[ lex.cs])
-
-	_klen = int(_filterlexer_single_lengths[ lex.cs])
-	if _klen > 0 {
-		_lower := int(_keys)
-		var _mid int
-		_upper := int(_keys + _klen - 1)
-		for {
-			if _upper < _lower {
-				break
-			}
-
-			_mid = _lower + ((_upper - _lower) >> 1)
-			switch {
-			case  lex.data[( lex.p)] < _filterlexer_trans_keys[_mid]:
-				_upper = _mid - 1
-			case  lex.data[( lex.p)] > _filterlexer_trans_keys[_mid]:
-				_lower = _mid + 1
-			default:
-				_trans += int(_mid - int(_keys))
-				goto _match
-			}
+	switch  lex.cs {
+	case 29:
+		switch  lex.data[( lex.p)] {
+		case 32:
+			goto tr35;
+		case 33:
+			goto tr36;
+		case 39:
+			goto tr3;
+		case 40:
+			goto tr37;
+		case 41:
+			goto tr38;
+		case 44:
+			goto tr40;
+		case 60:
+			goto tr41;
+		case 61:
+			goto tr42;
+		case 62:
+			goto tr43;
+		case 65:
+			goto tr44;
+		case 68:
+			goto tr45;
+		case 70:
+			goto tr46;
+		case 73:
+			goto tr47;
+		case 76:
+			goto tr48;
+		case 78:
+			goto tr49;
+		case 79:
+			goto tr50;
+		case 84:
+			goto tr51;
+		case 96:
+			goto tr32;
+		case 97:
+			goto tr44;
+		case 100:
+			goto tr45;
+		case 102:
+			goto tr46;
+		case 105:
+			goto tr47;
+		case 108:
+			goto tr48;
+		case 110:
+			goto tr49;
+		case 111:
+			goto tr50;
+		case 116:
+			goto tr51;
 		}
-		_keys += _klen
-		_trans += _klen
-	}
-
-	_klen = int(_filterlexer_range_lengths[ lex.cs])
-	if _klen > 0 {
-		_lower := int(_keys)
-		var _mid int
-		_upper := int(_keys + (_klen << 1) - 2)
-		for {
-			if _upper < _lower {
-				break
+		switch {
+		case  lex.data[( lex.p)] < 43:
+			if 9 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 13 {
+				goto tr35;
 			}
-
-			_mid = _lower + (((_upper - _lower) >> 1) & ^1)
-			switch {
-			case  lex.data[( lex.p)] < _filterlexer_trans_keys[_mid]:
-				_upper = _mid - 2
-			case  lex.data[( lex.p)] > _filterlexer_trans_keys[_mid + 1]:
-				_lower = _mid + 2
-			default:
-				_trans += int((_mid - int(_keys)) >> 1)
-				goto _match
+		case  lex.data[( lex.p)] > 45:
+			if 48 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 57 {
+				goto tr5;
 			}
+		default:
+			goto tr39;
 		}
-		_trans += _klen
+		goto tr1;
+	case 0:
+		goto _out
+	case 1:
+		if  lex.data[( lex.p)] == 61 {
+			goto tr0;
+		}
+		goto tr1;
+	case 2:
+		if  lex.data[( lex.p)] == 39 {
+			goto tr4;
+		}
+		goto tr3;
+	case 30:
+		if  lex.data[( lex.p)] == 39 {
+			goto tr3;
+		}
+		goto tr52;
+	case 3:
+		if 48 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 57 {
+			goto tr5;
+		}
+		goto tr1;
+	case 31:
+		if  lex.data[( lex.p)] == 46 {
+			goto tr54;
+		}
+		if 48 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 57 {
+			goto tr5;
+		}
+		goto tr53;
+	case 4:
+		if 48 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 57 {
+			goto tr7;
+		}
+		goto tr6;
+	case 32:
+		if 48 <=  lex.data[( lex.p)] &&  lex.data[( lex.p)] <= 57 {
+			goto tr7;
+		}
+		goto tr55;
+	case 33:
+		if  lex.data[( lex.p)] == 61 {
+			goto tr57;
+		}
+		goto tr56;
+	case 34:
+		if  lex.data[( lex.p)] == 61 {
+			goto tr59;
+		}
+		goto tr58;
+	case 5:
+		switch  lex.data[( lex.p)] {
+		case 78:
+			goto tr8;
+		case 83:
+			goto tr9;
+		case 110:
+			goto tr8;
+		case 115:
+			goto tr9;
+		}
+		goto tr1;
+	case 6:
+		switch  lex.data[( lex.p)] {
+		case 68:
+			goto tr10;
+		case 100:
+			goto tr10;
+		}
+		goto tr1;
+	case 7:
+		switch  lex.data[( lex.p)] {
+		case 67:
+			goto tr11;
+		case 99:
+			goto tr11;
+		}
+		goto tr1;
+	case 8:
+		switch  lex.data[( lex.p)] {
+		case 69:
+			goto tr12;
+		case 101:
+			goto tr12;
+		}
+		goto tr1;
+	case 9:
+		switch  lex.data[( lex.p)] {
+		case 83:
+			goto tr13;
+		case 115:
+			goto tr13;
+		}
+		goto tr1;
+	case 10:
+		switch  lex.data[( lex.p)] {
+		case 67:
+			goto tr14;
+		case 99:
+			goto tr14;
+		}
+		goto tr1;
+	case 11:
+		switch  lex.data[( lex.p)] {
+		case 65:
+			goto tr15;
+		case 97:
+			goto tr15;
+		}
+		goto tr1;
+	case 12:
+		switch  lex.data[( lex.p)] {
+		case 76:
+			goto tr16;
+		case 108:
+			goto tr16;
+		}
+		goto tr1;
+	case 13:
+		switch  lex.data[( lex.p)] {
+		case 83:
+			goto tr17;
+		case 115:
+			goto tr17;
+		}
+		goto tr1;
+	case 14:
+		switch  lex.data[( lex.p)] {
+		case 69:
+			goto tr18;
+		case 101:
+			goto tr18;
+		}
+		goto tr1;
+	case 15:
+		switch  lex.data[( lex.p)] {
+		case 83:
+			goto tr19;
+		case 115:
+			goto tr19;
+		}
+		goto tr1;
+	case 16:
+		switch  lex.data[( lex.p)] {
+		case 73:
+			goto tr20;
+		case 105:
+			goto tr20;
+		}
+		goto tr1;
+	case 17:
+		switch  lex.data[( lex.p)] {
+		case 75:
+			goto tr21;
+		case 107:
+			goto tr21;
+		}
+		goto tr1;
+	case 18:
+		switch  lex.data[( lex.p)] {
+		case 69:
+			goto tr22;
+		case 101:
+			goto tr22;
+		}
+		goto tr1;
+	case 19:
+		switch  lex.data[( lex.p)] {
+		case 79:
+			goto tr23;
+		case 85:
+			goto tr24;
+		case 111:
+			goto tr23;
+		case 117:
+			goto tr24;
+		}
+		goto tr1;
+	case 20:
+		switch  lex.data[( lex.p)] {
+		case 84:
+			goto tr25;
+		case 116:
+			goto tr25;
+		}
+		goto tr1;
+	case 21:
+		switch  lex.data[( lex.p)] {
+		case 76:
+			goto tr26;
+		case 108:
+			goto tr26;
+		}
+		goto tr1;
+	case 22:
+		switch  lex.data[( lex.p)] {
+		case 76:
+			goto tr27;
+		case 108:
+			goto tr27;
+		}
+		goto tr1;
+	case 23:
+		switch  lex.data[( lex.p)] {
+		case 82:
+			goto tr28;
+		case 114:
+			goto tr28;
+		}
+		goto tr1;
+	case 24:
+		switch  lex.data[( lex.p)] {
+		case 82:
+			goto tr29;
+		case 114:
+			goto tr29;
+		}
+		goto tr1;
+	case 25:
+		switch  lex.data[( lex.p)] {
+		case 85:
+			goto tr30;
+		case 117:
+			goto tr30;
+		}
+		goto tr1;
+	case 26:
+		switch  lex.data[( lex.p)] {
+		case 69:
+			goto tr31;
+		case 101:
+			goto tr31;
+		}
+		goto tr1;
+	case 27:
+		if  lex.data[( lex.p)] == 96 {
+			goto tr33;
+		}
+		goto tr32;
+	case 35:
+		if  lex.data[( lex.p)] == 96 {
+			goto tr61;
+		}
+		goto tr60;
+	case 28:
+		if  lex.data[( lex.p)] == 96 {
+			goto tr32;
+		}
+		goto tr34;
 	}
 
-_match:
-	_trans = int(_filterlexer_indicies[_trans])
-_eof_trans:
-	 lex.cs = int(_filterlexer_trans_targs[_trans])
+	tr1:  lex.cs = 0; goto _again
+	tr36:  lex.cs = 1; goto _again
+	tr3:  lex.cs = 2; goto _again
+	tr39:  lex.cs = 3; goto _again
+	tr54:  lex.cs = 4; goto _again
+	tr44:  lex.cs = 5; goto _again
+	tr8:  lex.cs = 6; goto _again
+	tr9:  lex.cs = 7; goto _again
+	tr45:  lex.cs = 8; goto _again
+	tr12:  lex.cs = 9; goto _again
+	tr13:  lex.cs = 10; goto _again
+	tr46:  lex.cs = 11; goto _again
+	tr15:  lex.cs = 12; goto _again
+	tr16:  lex.cs = 13; goto _again
+	tr17:  lex.cs = 14; goto _again
+	tr47:  lex.cs = 15; goto _again
+	tr48:  lex.cs = 16; goto _again
+	tr20:  lex.cs = 17; goto _again
+	tr21:  lex.cs = 18; goto _again
+	tr49:  lex.cs = 19; goto _again
+	tr23:  lex.cs = 20; goto _again
+	tr24:  lex.cs = 21; goto _again
+	tr26:  lex.cs = 22; goto _again
+	tr50:  lex.cs = 23; goto _again
+	tr51:  lex.cs = 24; goto _again
+	tr29:  lex.cs = 25; goto _again
+	tr30:  lex.cs = 26; goto _again
+	tr32:  lex.cs = 27; goto _again
+	tr61:  lex.cs = 28; goto _again
+	tr0:  lex.cs = 29; goto f0
+	tr2:  lex.cs = 29; goto f1
+	tr6:  lex.cs = 29; goto f4
+	tr10:  lex.cs = 29; goto f5
+	tr11:  lex.cs = 29; goto f6
+	tr14:  lex.cs = 29; goto f7
+	tr18:  lex.cs = 29; goto f8
+	tr19:  lex.cs = 29; goto f9
+	tr22:  lex.cs = 29; goto f10
+	tr25:  lex.cs = 29; goto f11
+	tr27:  lex.cs = 29; goto f12
+	tr28:  lex.cs = 29; goto f13
+	tr31:  lex.cs = 29; goto f14
+	tr34:  lex.cs = 29; goto f16
+	tr35:  lex.cs = 29; goto f19
+	tr37:  lex.cs = 29; goto f20
+	tr38:  lex.cs = 29; goto f21
+	tr40:  lex.cs = 29; goto f22
+	tr42:  lex.cs = 29; goto f23
+	tr52:  lex.cs = 29; goto f24
+	tr53:  lex.cs = 29; goto f25
+	tr55:  lex.cs = 29; goto f26
+	tr56:  lex.cs = 29; goto f27
+	tr57:  lex.cs = 29; goto f28
+	tr58:  lex.cs = 29; goto f29
+	tr59:  lex.cs = 29; goto f30
+	tr60:  lex.cs = 29; goto f31
+	tr4:  lex.cs = 30; goto f2
+	tr5:  lex.cs = 31; goto f3
+	tr7:  lex.cs = 32; goto _again
+	tr41:  lex.cs = 33; goto _again
+	tr43:  lex.cs = 34; goto _again
+	tr33:  lex.cs = 35; goto f15
 
-	if _filterlexer_trans_actions[_trans] == 0 {
-		goto _again
-	}
+	f3: _acts = 3; goto execFuncs
+	f5: _acts = 5; goto execFuncs
+	f13: _acts = 7; goto execFuncs
+	f11: _acts = 9; goto execFuncs
+	f10: _acts = 11; goto execFuncs
+	f14: _acts = 13; goto execFuncs
+	f8: _acts = 15; goto execFuncs
+	f12: _acts = 17; goto execFuncs
+	f9: _acts = 19; goto execFuncs
+	f6: _acts = 21; goto execFuncs
+	f7: _acts = 23; goto execFuncs
+	f23: _acts = 25; goto execFuncs
+	f30: _acts = 27; goto execFuncs
+	f28: _acts = 29; goto execFuncs
+	f0: _acts = 31; goto execFuncs
+	f20: _acts = 33; goto execFuncs
+	f21: _acts = 35; goto execFuncs
+	f22: _acts = 37; goto execFuncs
+	f19: _acts = 39; goto execFuncs
+	f25: _acts = 41; goto execFuncs
+	f26: _acts = 43; goto execFuncs
+	f24: _acts = 45; goto execFuncs
+	f31: _acts = 47; goto execFuncs
+	f29: _acts = 49; goto execFuncs
+	f27: _acts = 51; goto execFuncs
+	f4: _acts = 53; goto execFuncs
+	f16: _acts = 55; goto execFuncs
+	f1: _acts = 57; goto execFuncs
+	f2: _acts = 62; goto execFuncs
+	f15: _acts = 65; goto execFuncs
 
-	_acts = int(_filterlexer_trans_actions[_trans])
+execFuncs:
 	_nacts = uint(_filterlexer_actions[_acts]); _acts++
 	for ; _nacts > 0; _nacts-- {
 		_acts++
-		switch _filterlexer_actions[_acts-1] {
+		switch _filterlexer_actions[_acts - 1] {
 		case 3:
 //line NONE:1
  lex.te = ( lex.p)+1
@@ -509,16 +763,17 @@ goto _again
  }
 	}
 	
-//line lex.go:513
+//line lex.go:767
 		}
 	}
+	goto _again
 
 _again:
 	_acts = int(_filterlexer_to_state_actions[ lex.cs])
 	_nacts = uint(_filterlexer_actions[_acts]); _acts++
 	for ; _nacts > 0; _nacts-- {
 		_acts++
-		switch _filterlexer_actions[_acts-1] {
+		switch _filterlexer_actions[_acts - 1] {
 		case 0:
 //line NONE:1
  lex.ts = 0
@@ -527,23 +782,40 @@ _again:
 //line NONE:1
  lex.act = 0
 
-//line lex.go:531
+//line lex.go:786
 		}
 	}
 
 	if  lex.cs == 0 {
 		goto _out
 	}
-	( lex.p)++
-	if ( lex.p) != ( lex.pe) {
+	if ( lex.p)++; ( lex.p) != ( lex.pe) {
 		goto _resume
 	}
 	_test_eof: {}
 	if ( lex.p) == eof {
-		if _filterlexer_eof_trans[ lex.cs] > 0 {
-			_trans = int(_filterlexer_eof_trans[ lex.cs] - 1)
-			goto _eof_trans
-		}
+		switch  lex.cs {
+		case 2:
+			goto tr2
+		case 30:
+			goto tr52
+		case 31:
+			goto tr53
+		case 4:
+			goto tr6
+		case 32:
+			goto tr55
+		case 33:
+			goto tr56
+		case 34:
+			goto tr58
+		case 27:
+			goto tr2
+		case 35:
+			goto tr60
+		case 28:
+			goto tr34
+	}
 	}
 
 	_out: {}

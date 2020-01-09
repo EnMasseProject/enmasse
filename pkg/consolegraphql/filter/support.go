@@ -15,6 +15,7 @@ import (
 	"math"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -706,9 +707,226 @@ func widenNumeric(s interface{}, dst reflect.Type) interface{} {
 
 type OrderBy []*Order
 
+func NewEmptyOrderBy() OrderBy {
+	return OrderBy{}
+}
+
+func NewOrderBy(order *Order) OrderBy {
+	return append(OrderBy{}, order)
+}
+
+func (o OrderBy) Sort(slice interface{}) error {
+
+	if len(o) == 0 {
+		return nil
+	}
+
+	data := reflect.ValueOf(slice)
+
+	var err error
+	less := func(i, j int) bool {
+
+		p, q := data.Index(i).Interface(), data.Index(j).Interface()
+		var k int
+		for k = 0; k < len(o)-1; k++ {
+			rv, err := o[k].compare(p, q)
+			if err != nil {
+				return false;
+			}
+			if rv > 0 {
+				return false
+			} else if rv < 0 {
+				return true
+			}
+		}
+		rv, err := o[k].compare(p, q)
+		if err != nil {
+			return false
+		}
+		return rv < 0
+
+	}
+	sort.SliceStable(slice, less)
+
+	return err
+}
+
+func NewOrder(expr Expr, dir string) *Order {
+	return &Order{
+		Expr:      expr,
+		Direction:dir,
+	}
+}
+
 type Order struct {
 	Expr      Expr
 	Direction string
+}
+
+func (o Order) compare(p interface{}, q interface{}) (int, error) {
+	pgtq := 1
+	pltq := -1
+	if o.Direction == DescScr {
+		pgtq = -1
+		pltq = 1
+	}
+	pv, err := o.Expr.Eval(p)
+	if err != nil {
+		panic(err)
+	}
+	qv, err := o.Expr.Eval(q)
+	if err != nil {
+		panic(err)
+	}
+	switch pc := pv.(type) {
+	case string:
+		switch qc := qv.(type) {
+		case string:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case int:
+		switch qc := qv.(type) {
+		case int:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case int8:
+		switch qc := qv.(type) {
+		case int8:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case int16:
+		switch qc := qv.(type) {
+		case int16:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case int32:
+		switch qc := qv.(type) {
+		case int32:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case int64:
+		switch qc := qv.(type) {
+		case int64:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case uint:
+		switch qc := qv.(type) {
+		case uint:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case uint8:
+		switch qc := qv.(type) {
+		case uint8:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case uint16:
+		switch qc := qv.(type) {
+		case uint16:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case uint32:
+		switch qc := qv.(type) {
+		case uint32:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case uint64:
+		switch qc := qv.(type) {
+		case uint64:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+
+	case float32:
+
+		switch qc := qv.(type) {
+		case float32:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case float64:
+		switch qc := qv.(type) {
+		case float64:
+			if pc == qc {
+				return 0, nil
+			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	}
+
+	return 0, nil
 }
 
 // Order.Direction
