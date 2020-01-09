@@ -87,4 +87,9 @@ public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList
         controller.start();
         return controller;
     }
+
+    @Override
+    public void patch(T instance) {
+        client.customResources(customResourceDefinition, tClazz, ltClazz, dtClazz).inNamespace(namespace).withName(instance.getMetadata().getName()).patch(instance);
+    }
 }

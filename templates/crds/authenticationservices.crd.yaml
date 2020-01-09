@@ -13,6 +13,21 @@ spec:
     listKind: AuthenticationServiceList
     singular: authenticationservice
     plural: authenticationservices
+  additionalPrinterColumns:
+  - name: Phase
+    type: string
+    priority: 0
+    description: The phase of the authentication service
+    JSONPath: .status.phase
+  - name: Status
+    type: string
+    priority: 1
+    description: The status of the authentication service
+    JSONPath: .status.message
+  - name: Age
+    priority: 0
+    type: date
+    JSONPath: .metadata.creationTimestamp
   validation:
     openAPIV3Schema:
       properties:
@@ -186,6 +201,12 @@ spec:
         status:
           type: object
           properties:
+            phase:
+              type: string
+              description: "Phase of the authentication service."
+            message:
+              type: string
+              description: "Status and error messages for the authentication service."
             host:
               type: string
             port:

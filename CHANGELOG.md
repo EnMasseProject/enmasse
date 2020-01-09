@@ -5,7 +5,9 @@
    * The api-server is removed from the install. The enmasse-operator will automatically remove it when upgrading.
    * Some of the resource validation that was taking place in the api-server has been replaced with a resource status check and error message.
    * The address space schema resource has been changed to a cluster-wide CRD. Users will not be able to read/list it without addition permissions.
-   * Qpid Dispatch Router upgraded to 1.10.0
+
+*  #3621: Add status section for plans and authentication services #3621
+*  Qpid Dispatch Router upgraded to 1.10.0
 
 ## 0.30.2
 *  #2714: Allow setting security context of pods using persistent volumes

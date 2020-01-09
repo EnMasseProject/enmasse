@@ -89,7 +89,7 @@ public class StandardController {
 
     public void start() throws Exception {
 
-        SchemaApi schemaApi = KubeSchemaApi.create(kubeClient, kubeClient.getNamespace(), options.getVersion(), false);
+        SchemaApi schemaApi = KubeSchemaApi.create(kubeClient, kubeClient.getNamespace(), options.getVersion(), false, false);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
