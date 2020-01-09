@@ -9,6 +9,8 @@ node('master') {
         echo "Github PR comment: ${env.ghprbCommentBody}"
         if (env.ghprbCommentBody.contains('ocp4') || env.ghprbCommentBody.contains('OLM')) {
             NODE_LABEL = "enmasse-crc"
+        } else if (env.ghprbCommentBody.contains('agent_label=')) {
+            NODE_LABEL = env.ghprbCommentBody.split('agent_label=')[1].split(/\s/)[0].split(/$/)[0]
         } else {
             NODE_LABEL = params.AGENT_LABEL
         }
