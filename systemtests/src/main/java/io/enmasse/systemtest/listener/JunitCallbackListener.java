@@ -233,6 +233,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
             Files.writeString(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut());
             Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(kube.getInfraNamespace()).getStdOut());
+            Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnCluster("describe", "pv").getStdOut());
+            Files.writeString(path.resolve("pvcs.txt"), KubeCMDClient.runOnCluster("describe", "pvc", "-n", Kubernetes.getInstance().getInfraNamespace()).getStdOut());
+            Files.writeString(path.resolve("storageclass.yml"), KubeCMDClient.runOnCluster("get", "storageclass", "-o", "yaml").getStdOut());
             if (testInfo.isClassIoT()) {
                 Files.writeString(path.resolve("iotconfig.yaml"), KubeCMDClient.getIoTConfig(kube.getInfraNamespace()).getStdOut());
                 GlobalLogCollector collectors = new GlobalLogCollector(kube, path, kube.getInfraNamespace());
