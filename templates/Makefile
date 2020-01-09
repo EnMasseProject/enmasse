@@ -59,6 +59,8 @@ replace_images: prepare
 					  -e 's,\$${NAMESPACE},$(DEFAULT_PROJECT),g' \
 					  -e 's,\$${VERSION},$(VERSION),g' \
 					  -e 's,\$${OLM_VERSION},$(OLM_VERSION),g' \
+					  -e 's,\$${OLM_PACKAGE_CHANNEL},$(OLM_PACKAGE_CHANNEL),g' \
+					  -e 's,\$${APP_BUNDLE_PREFIX},$(APP_BUNDLE_PREFIX),g' \
 					  -e 's,\$${IMAGE_PULL_POLICY},$(IMAGE_PULL_POLICY),g' \
 					  -e 's,\$${STANDARD_CONTROLLER_IMAGE},$(STANDARD_CONTROLLER_IMAGE),g' \
 					  -e 's,\$${ROUTER_IMAGE},$(ROUTER_IMAGE),g' \
