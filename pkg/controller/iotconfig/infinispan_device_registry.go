@@ -125,7 +125,8 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "ENMASSE_IOT_REGISTRY_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.Infinispan.Management.AuthTokenCacheExpiration},
 		}
 
-		AppendStandardHonoJavaOptions(container)
+		debug := *service.Infinispan.Java.Debug
+		AppendStandardHonoJavaOptionsToEnv(container, debug)
 
 		// append trust stores
 

@@ -41,6 +41,7 @@ type JavaContainerDefaults struct {
 
 type JavaContainerOptions struct {
 	RequireNativeTls *bool `json:"requireNativeTls,omitempty"`
+	Debug *bool `json:"debug,omitempty"`
 }
 
 type InterServiceCertificates struct {
