@@ -1185,7 +1185,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
             }
         }
 
-        ConsoleWebPage page = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressSpace, clusterUser);
+        ConsoleWebPage page = new ConsoleWebPage(selenium, AddressSpaceUtils.getConsoleRoute(addressSpace), addressSpace, clusterUser);
         page.openWebConsolePage();
         page.openAddressesPageWebConsole();
 

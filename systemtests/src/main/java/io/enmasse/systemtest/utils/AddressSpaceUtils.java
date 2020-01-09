@@ -15,6 +15,7 @@ import io.enmasse.address.model.KubeUtil;
 import io.enmasse.address.model.Phase;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -321,4 +322,45 @@ public class AddressSpaceUtils {
                 .toString();
     }
 
+    public static Endpoint getMessagingRoute(AddressSpace addressSpace) throws Exception {
+        Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "messaging");
+        if (messagingEndpoint == null) {
+            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+            messagingEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName);
+        }
+        if (TestUtils.resolvable(messagingEndpoint)) {
+            return messagingEndpoint;
+        } else {
+            return Kubernetes.getInstance().getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getNamespace(), "amqps");
+        }
+    }
+
+    public static String getConsoleRoute(AddressSpace addressSpace) {
+        Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
+        String consoleRoute = String.format("https://%s", consoleEndpoint.toString());
+        log.info(consoleRoute);
+        return consoleRoute;
+    }
+
+    public static Endpoint getConsoleEndpoint(AddressSpace addressSpace) {
+        Endpoint consoleEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "console");
+        if (consoleEndpoint == null) {
+            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "console");
+            consoleEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName);
+        }
+        return consoleEndpoint;
+    }
+
+    public static Endpoint getMessagingWssRoute(AddressSpace addressSpace) throws Exception {
+        if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
+            Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByName(addressSpace, "messaging-wss");
+            if (TestUtils.resolvable(messagingEndpoint)) {
+                return messagingEndpoint;
+            } else {
+                return Kubernetes.getInstance().getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getNamespace(), "https");
+            }
+        } else {
+            return AddressSpaceUtils.getMessagingRoute(addressSpace);
+        }
+    }
 }

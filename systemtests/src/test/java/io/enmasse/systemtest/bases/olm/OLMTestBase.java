@@ -18,6 +18,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -168,7 +169,7 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
         TestUtils.waitUntilCondition("Address visible",
                 phase -> addressClient.withName("myspace.myqueue").get() != null,
                 new TimeoutBudget(30, TimeUnit.SECONDS));
-        waitForDestinationsReady(addressClient.withName("myspace.myqueue").get());
+        AddressUtils.waitForDestinationsReady(addressClient.withName("myspace.myqueue").get());
 
         // Test basic messages
         AddressSpace exampleSpace = kubernetes.getAddressSpaceClient(addressSpaceNamespace).withName("myspace").get();

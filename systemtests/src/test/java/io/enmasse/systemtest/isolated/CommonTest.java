@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -166,8 +167,8 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
-        List<Address> brokeredAddresses = getAllBrokeredAddresses(brokered);
-        List<Address> standardAddresses = getAllStandardAddresses(standard);
+        List<Address> brokeredAddresses = AddressUtils.getAllBrokeredAddresses(brokered);
+        List<Address> standardAddresses = AddressUtils.getAllStandardAddresses(standard);
 
         resourcesManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
         resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));
@@ -242,7 +243,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
-        List<Address> brokeredAddresses = Arrays.asList(
+        List<Address> brokeredAddresses = Collections.singletonList(
                 new AddressBuilder()
                         .withNewMetadata()
                         .withNamespace(brokered.getMetadata().getNamespace())
@@ -342,7 +343,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .build();
         resourcesManager.createAddressSpace(standard);
         resourcesManager.createOrUpdateUser(standard, new UserCredentials("jenda", "cenda"));
-        resourcesManager.setAddresses(getAllStandardAddresses(standard).toArray(new Address[0]));
+        resourcesManager.setAddresses(AddressUtils.getAllStandardAddresses(standard).toArray(new Address[0]));
 
         String qdRouterName = TestUtils.listRunningPods(kubernetes, standard).stream()
                 .filter(pod -> pod.getMetadata().getName().contains("qdrouter"))
@@ -390,8 +391,8 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
-        List<Address> brokeredAddresses = getAllBrokeredAddresses(brokered);
-        List<Address> standardAddresses = getAllStandardAddresses(standard);
+        List<Address> brokeredAddresses = AddressUtils.getAllBrokeredAddresses(brokered);
+        List<Address> standardAddresses = AddressUtils.getAllStandardAddresses(standard);
 
         resourcesManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
         resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));
@@ -448,7 +449,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AmqpClient client = getAmqpClientFactory().createAddressClient(space, addressType);
         client.getConnectOptions().setCredentials(user);
 
-        var stopSend = new CompletableFuture<Object>();
+        var stopSend = new CompletableFuture<>();
 
         var recvFut = client.recvMessagesWithStatus(addr.getSpec().getAddress(), msg -> {
             log.info("Message received");
@@ -492,7 +493,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         assertEquals(sent, received, "Missmatch between messages sent and received");
     }
 
-    private class Label {
+    private static class Label {
         String labelName;
         String labelValue;
 

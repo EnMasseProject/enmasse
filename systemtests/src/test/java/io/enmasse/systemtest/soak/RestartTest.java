@@ -14,6 +14,7 @@ import io.enmasse.systemtest.bases.soak.SoakTestBase;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.AfterEach;
@@ -81,8 +82,8 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
-        List<Address> brokeredAddresses = getAllBrokeredAddresses(brokered);
-        List<Address> standardAddresses = getAllStandardAddresses(standard);
+        List<Address> brokeredAddresses = AddressUtils.getAllBrokeredAddresses(brokered);
+        List<Address> standardAddresses = AddressUtils.getAllStandardAddresses(standard);
 
         resourcesManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
         resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));

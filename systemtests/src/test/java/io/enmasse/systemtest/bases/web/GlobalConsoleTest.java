@@ -225,7 +225,7 @@ public abstract class GlobalConsoleTest extends TestBase {
 
         ConsoleWebPage console = new ConsoleWebPage(
                 selenium,
-                getConsoleRoute(addressSpace),
+                AddressSpaceUtils.getConsoleRoute(addressSpace),
                 addressSpace,
                 clusterUser);
         console.openWebConsolePage();

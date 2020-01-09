@@ -5,9 +5,13 @@
 package io.enmasse.systemtest.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Phase;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.manager.IsolatedIoTManager;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
+import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.user.model.v1.DoneableUser;
@@ -103,5 +107,9 @@ public class UserUtils {
 
     public static UserCredentials getCredentialsFromUser(User user) {
         return new UserCredentials(user.getSpec().getUsername(), base64ToPassword(user.getSpec().getAuthentication().getPassword()));
+    }
+
+    public static boolean userExist(AddressSpace addressSpace, String username) {
+        return IsolatedResourcesManager.getInstance().getUser(addressSpace, username) != null;
     }
 }

@@ -315,7 +315,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
         QueueTest.runQueueTest(amqpClient, queue, 5);
         mqttClient.connect();
-        simpleMQTTSendReceive(topic, mqttClient, 3);
+        assertSimpleMQTTSendReceive(topic, mqttClient, 3);
         mqttClient.disconnect();
     }
 
@@ -328,7 +328,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                         .addCertValue(Buffer.buffer(endpointCert)))
                 .setVerifyHost(true));
 
-        Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
+        Endpoint consoleEndpoint = AddressSpaceUtils.getConsoleEndpoint(addressSpace);
         CompletableFuture<Optional<Throwable>> promise = new CompletableFuture<>();
         webClient.get(consoleEndpoint.getPort(), consoleEndpoint.getHost(), "").ssl(true).send(ar -> {
             log.info("get console " + ar.toString());

@@ -100,7 +100,7 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
         }
 
         //only set credentials when mutual tls isn't configured
-        if ( tlsSettings == null || (tlsSettings != null && tlsSettings.getClientCert() == null) ) {
+        if (tlsSettings == null || tlsSettings.getClientCert() == null) {
             if (credentials == null) {
                 Assertions.fail("Connector wrongly configured, missing connector credentials");
             }
