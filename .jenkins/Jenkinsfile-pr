@@ -58,6 +58,11 @@ pipeline {
                     } else {
                         env.TEST_CASE = params.TEST_CASE
                     }
+                    if (env.ghprbCommentBody.contains('debug=')) {
+                        env.DEBUG = env.ghprbCommentBody.split('debug=')[1].split(/\s/)[0].split(/$/)[0]
+                    } else {
+                        env.DEBUG = params.DEBUG
+                    }
                     if (env.ghprbCommentBody.contains('profile=')) {
                         env.TEST_PROFILE = env.ghprbCommentBody.split('profile=')[1].split(/\s/)[0].split(/$/)[0]
                     } else {
