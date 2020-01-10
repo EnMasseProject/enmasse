@@ -67,9 +67,6 @@ objects:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          prometheus.io/path: /metrics
-          prometheus.io/port: '8080'
-          prometheus.io/scrape: 'true'
         labels:
           app: enmasse
           name: broker
@@ -119,8 +116,6 @@ objects:
             name: amqps-normal
           - containerPort: 8161
             name: jolokia
-          - containerPort: 8080
-            name: artemismetrics
           readinessProbe:
             exec:
               command:
@@ -136,9 +131,6 @@ objects:
           volumeMounts:
           - mountPath: /var/run/artemis
             name: data
-          - mountPath: /etc/prometheus-config
-            name: broker-prometheus-config
-            readOnly: true
           - mountPath: /opt/apache-artemis/custom
             name: broker-custom
             readOnly: false
@@ -179,9 +171,6 @@ objects:
           - mountPath: /etc/authservice-ca
             name: authservice-ca
             readOnly: true
-          - mountPath: /etc/prometheus-config
-            name: broker-prometheus-config
-            readOnly: true
           - mountPath: /opt/apache-artemis/custom
             name: broker-custom
             readOnly: false
@@ -191,9 +180,6 @@ objects:
             claimName: broker-data.${INFRA_UUID}
         - emptyDir: {}
           name: broker-custom
-        - name: broker-prometheus-config
-          configMap:
-            name: broker-prometheus-config
         - name: broker-internal-cert
           secret:
             secretName: broker-internal-cert.${INFRA_UUID}
@@ -216,10 +202,10 @@ objects:
     - name: amqps-normal
       port: 55671
       targetPort: amqps-normal
-    - name: health
-      port: 8080
+    - name: health-tls
+      port: 8161
       protocol: TCP
-      targetPort: artemismetrics
+      targetPort: jolokia
     selector:
       role: broker
       infraUuid: ${INFRA_UUID}

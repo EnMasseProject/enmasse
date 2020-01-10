@@ -69,6 +69,8 @@ under the License.
 
       <global-max-size>${GLOBAL_MAX_SIZE}</global-max-size>
 
+      <metrics-plugin class-name="org.apache.activemq.artemis.core.server.metrics.plugins.ArtemisPrometheusMetricsPlugin" />
+
       <acceptors>
          <acceptor name="amqp">tcp://0.0.0.0:5672?protocols=AMQP,CORE,OPENWIRE,STOMP,MQTT;saslMechanisms=PLAIN</acceptor>
          <acceptor name="amqps">tcp://0.0.0.0:5671?protocols=AMQP,CORE,OPENWIRE,STOMP,MQTT;sslEnabled=true;saslMechanisms=PLAIN;keyStorePath=${EXTERNAL_KEYSTORE_PATH};keyStorePassword=enmasse</acceptor>
