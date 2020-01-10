@@ -14,6 +14,7 @@ import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.bases.olm.OLMTestBase;
 import io.enmasse.systemtest.condition.SupportedInstallType;
+import io.enmasse.systemtest.operator.OperatorManager;
 
 @Tag(OLM)
 @Tag(ACCEPTANCE)
@@ -22,7 +23,7 @@ public class OLMSpecificTest extends OLMTestBase{
 
     @Override
     protected String getInstallationNamespace() {
-        return kubernetes.getInfraNamespace();
+        return OperatorManager.getInstance().getNamespaceByOlmInstallationType(OLMInstallationType.SPECIFIC);
     }
 
     @Override
