@@ -128,8 +128,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: templates/build/enmasse-${{ steps.create_release.outputs.tag }}.tgz
-          asset_name: enmasse-${{ steps.version.VERSION }}.tgz
+          asset_path: "templates/build/enmasse-${{ steps.create_release.outputs.tag }}.tgz"
+          asset_name: "enmasse-${{ steps.version.VERSION }}.tgz"
           asset_content_type: application/gzip
 
     
