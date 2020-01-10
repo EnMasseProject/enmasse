@@ -14,8 +14,8 @@ import { SortForMobileView } from "../../Components/Common/SortForMobileView";
 import useWindowDimensions from "src/Components/Common/WindowDimension";
 
 interface IAddressSpaceListFilterPageProps {
-  filterValue?: string | null;
-  setFilterValue: (value: string | null) => void;
+  filterValue?: string;
+  setFilterValue: (value: string) => void;
   filterNames: string[];
   setFilterNames: (value: Array<string>) => void;
   filterNamespaces: string[];

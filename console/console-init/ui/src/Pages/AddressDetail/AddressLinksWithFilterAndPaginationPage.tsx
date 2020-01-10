@@ -11,7 +11,7 @@ import { GridStylesForTableHeader } from "../AddressSpaceDetail/AddressList/Addr
 import { AddressLinksListPage } from "./AddressLinksListPage";
 import { useHistory, useLocation } from "react-router";
 import { css } from "emotion";
-import { AddressLinksFilter } from "src/Components/AddressDetail/AddressLinksFilter";
+import { AddressLinksFilter } from "src/Pages/AddressDetail/AddressLinksFilter";
 import { ISortBy } from "@patternfly/react-table";
 interface IAddressLinksWithFilterAndPaginationProps {
   addressspace_name: string;

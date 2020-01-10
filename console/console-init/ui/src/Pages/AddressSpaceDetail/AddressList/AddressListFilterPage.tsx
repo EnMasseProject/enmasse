@@ -13,7 +13,7 @@ import { IAddressSpacesResponse } from "src/Types/ResponseTypes";
 import {
   AddressListFilter,
   AddressListKebab
-} from "src/Components/AddressSpace/Address/AddressListFilter";
+} from "src/Pages/AddressSpaceDetail/AddressList/AddressListFilter";
 import useWindowDimensions from "src/Components/Common/WindowDimension";
 import { SortForMobileView } from "src/Components/Common/SortForMobileView";
 import { ISortBy } from "@patternfly/react-table";

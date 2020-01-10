@@ -10,7 +10,7 @@ import {
 } from "@patternfly/react-core";
 import { ConnectionsListPage } from "./ConnectionsListPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
-import { ConnectionListFilter } from "src/Components/AddressSpace/Connection/ConnectionListFilter";
+import { ConnectionListFilter } from "src/Pages/AddressSpaceDetail/ConnectionList/ConnectionListFilter";
 import { ISortBy } from "@patternfly/react-table";
 
 const ConnectionListFunction = () => {

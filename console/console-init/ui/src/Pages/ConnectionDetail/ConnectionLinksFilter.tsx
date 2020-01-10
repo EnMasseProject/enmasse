@@ -16,109 +16,76 @@ import {
   Button,
   ButtonVariant,
   Badge,
-  Select,
-  SelectVariant,
   SelectOption,
-  SelectOptionObject
+  SelectOptionObject,
+  Select,
+  SelectVariant
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { ISortBy } from "@patternfly/react-table";
-import useWindowDimensions from "../Common/WindowDimension";
-import { SortForMobileView } from "../Common/SortForMobileView";
+import useWindowDimensions from "../../Components/Common/WindowDimension";
+import { SortForMobileView } from "../../Components/Common/SortForMobileView";
 import { useApolloClient } from "@apollo/react-hooks";
 import {
-  RETURN_ALL_NAMES_OF_ADDRESS_LINKS,
-  RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_CONTAINER_SEARCH
+  IConnectionLinksNameSearchResponse,
+  IConnectionLinksAddressSearchResponse
+} from "src/Types/ResponseTypes";
+import {
+  RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH,
+  RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH
 } from "src/Queries/Queries";
-import { id } from "date-fns/esm/locale";
 
-interface IAddressLinksFilterProps {
+interface IConnectionLinksFilterProps {
   filterValue: string;
   setFilterValue: (value: string) => void;
   filterNames: string[];
   setFilterNames: (value: Array<string>) => void;
-  filterContainers: string[];
-  setFilterContainers: (value: Array<string>) => void;
+  filterAddresses: string[];
+  setFilterAddresses: (value: Array<string>) => void;
   filterRole?: string;
   setFilterRole: (role: string | undefined) => void;
-  totalLinks: number;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
-  addressName: string;
+  totalLinks: number;
   addressSpaceName: string;
   namespace: string;
-}
-interface ISearchAddressLinkNameResponse {
-  addresses: {
-    Total: number;
-    Addresses: Array<{
-      Links: {
-        Links: Array<{
-          ObjectMeta: {
-            Name: string;
-          };
-        }>;
-      };
-    }>;
-  };
+  connectionName: string;
 }
 
-interface ISearchAddressLinkContainerResponse {
-  addresses: {
-    Total: number;
-    Addresses: Array<{
-      Links: {
-        Links: Array<{
-          Spec: {
-            Connection: {
-              Spec: {
-                ContainerId: string;
-              };
-            };
-          };
-        }>;
-      };
-    }>;
-  };
-}
-export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProps> = ({
+export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilterProps> = ({
   filterValue,
   setFilterValue,
   filterNames,
   setFilterNames,
-  filterContainers,
-  setFilterContainers,
+  filterAddresses,
+  setFilterAddresses,
   filterRole,
   setFilterRole,
-  totalLinks,
   sortValue,
   setSortValue,
-  addressName,
+  totalLinks,
   addressSpaceName,
-  namespace
+  namespace,
+  connectionName
 }) => {
   const { width } = useWindowDimensions();
   const client = useApolloClient();
-  const [filterIsExpanded, setFilterIsExpanded] = React.useState<boolean>(
-    false
-  );
-  const [roleIsExpanded, setRoleIsExpanded] = React.useState<boolean>(false);
+  const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
+  const [roleIsExpanded, setRoleIsExpanded] = React.useState(false);
   const [isSelectNameExpanded, setIsSelectNameExpanded] = React.useState<
     boolean
   >(false);
-  const [
-    isSelectContainerExpanded,
-    setIsSelectContainerExpanded
-  ] = React.useState<boolean>(false);
+  const [isSelectAddressExpanded, setIsSelectAddressExpanded] = React.useState<
+    boolean
+  >(false);
   const [nameSelected, setNameSelected] = React.useState<string>();
-  const [containerSelected, setContainerSelected] = React.useState<string>();
+  const [addressSelected, setAddressSelected] = React.useState<string>();
   const [nameOptions, setNameOptions] = React.useState<Array<string>>();
-  const [containerOptions, setContainerOptions] = React.useState<
-    Array<string>
-  >();
+  const [addressOptions, setAddressOptions] = React.useState<Array<string>>();
+
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
-    { key: "filterContainers", value: "Container" },
+    { key: "filterAddress", value: "Address" },
     { key: "filterRole", value: "Role" }
   ];
 
@@ -128,23 +95,28 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   ];
 
   const sortMenuItems = [
-    { key: "name", value: "Name", index: 2 },
-    { key: "deliveryRate", value: "DeliveryRate", index: 3 },
-    { key: "backlog", value: "Backlog", index: 4 }
+    { key: "name", value: "Name", index: 1 },
+    { key: "address", value: "Address", index: 2 },
+    { key: "deliveries", value: "Deliveries", index: 3 },
+    { key: "rejected", value: "Rejected", index: 4 },
+    { key: "released", value: "Released", index: 5 },
+    { key: "modified", value: "Modified", index: 6 },
+    { key: "presettled", value: "Presettled", index: 7 },
+    { key: "undelievered", value: "Undelievered", index: 8 }
   ];
 
-  const onAddInput = (event: any) => {
+  const onClickSearchIcon = (event: any) => {
     if (filterValue && filterValue === "Name") {
       if (nameSelected && nameSelected.trim() !== "")
         if (filterNames.indexOf(nameSelected.trim()) < 0) {
           setFilterNames([...filterNames, nameSelected.trim()]);
           setNameSelected(undefined);
         }
-    } else if (filterValue && filterValue === "Container") {
-      if (containerSelected && containerSelected.trim() !== "")
-        if (filterContainers.indexOf(containerSelected.trim()) < 0) {
-          setFilterContainers([...filterContainers, containerSelected.trim()]);
-          setContainerSelected(undefined);
+    } else if (filterValue && filterValue === "Address") {
+      if (addressSelected && addressSelected.trim() !== "")
+        if (filterAddresses.indexOf(addressSelected.trim()) < 0) {
+          setFilterAddresses([...filterAddresses, addressSelected.trim()]);
+          setAddressSelected(undefined);
         }
     }
   };
@@ -157,18 +129,24 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     setFilterRole(event.target.value);
     setRoleIsExpanded(!roleIsExpanded);
   };
+
   const onNameSelectToggle = () => {
     setIsSelectNameExpanded(!isSelectNameExpanded);
   };
-  const onContainerSelectToggle = () => {
-    setIsSelectContainerExpanded(!isSelectContainerExpanded);
+
+  const onAddressSelectToggle = () => {
+    setIsSelectAddressExpanded(!isSelectAddressExpanded);
   };
+
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    let obtainedList;
-    const response = await client.query<ISearchAddressLinkNameResponse>({
-      query: RETURN_ALL_NAMES_OF_ADDRESS_LINKS(
-        addressName,
+    if(value.trim().length<6) {
+      setNameOptions([]);
+      return;
+    }
+    const response = await client.query<IConnectionLinksNameSearchResponse>({
+      query: RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH(
+        connectionName,
         addressSpaceName,
         namespace,
         value.trim()
@@ -177,24 +155,25 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     if (
       response &&
       response.data &&
-      response.data.addresses &&
-      response.data.addresses.Addresses &&
-      response.data.addresses.Addresses.length > 0 &&
-      response.data.addresses.Addresses[0].Links &&
-      response.data.addresses.Addresses[0].Links.Links &&
-      response.data.addresses.Addresses[0].Links.Links.length > 0
+      response.data.connections &&
+      response.data.connections.Connections &&
+      response.data.connections.Connections.length > 0 &&
+      response.data.connections.Connections[0].Links &&
+      response.data.connections.Connections[0].Links.Links &&
+      response.data.connections.Connections[0].Links.Links.length > 0
     ) {
-      obtainedList = response.data.addresses.Addresses[0].Links.Links.map(
+      const obtainedList = response.data.connections.Connections[0].Links.Links.map(
         (link: any) => {
+          console.log("Name", link);
           return link.ObjectMeta.Name;
         }
       );
       setNameOptions(obtainedList);
     }
-    return obtainedList;
   };
+
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const data = onChangeNameData(e.target.value);
+    onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
@@ -203,64 +182,61 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     return options;
   };
 
-  const onChangeContainerData = async (value: string) => {
-    setContainerOptions(undefined);
-    const response = await client.query<ISearchAddressLinkContainerResponse>({
-      query: RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_CONTAINER_SEARCH(
-        addressName,
+  const onChangeAddressData = async (value: string) => {
+    setAddressOptions(undefined);
+    if(value.trim().length<6) {
+      setAddressOptions([]);
+      return;
+    }
+    const response = await client.query<IConnectionLinksAddressSearchResponse>({
+      query: RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH(
+        connectionName,
         addressSpaceName,
         namespace,
         value.trim()
       )
     });
-    console.log(response);
     if (
       response &&
       response.data &&
-      response.data.addresses &&
-      response.data.addresses.Addresses &&
-      response.data.addresses.Addresses.length > 0 &&
-      response.data.addresses.Addresses[0].Links &&
-      response.data.addresses.Addresses[0].Links.Links &&
-      response.data.addresses.Addresses[0].Links.Links.length > 0
+      response.data.connections &&
+      response.data.connections.Connections &&
+      response.data.connections.Connections.length > 0 &&
+      response.data.connections.Connections[0].Links &&
+      response.data.connections.Connections[0].Links.Links &&
+      response.data.connections.Connections[0].Links.Links.length > 0
     ) {
-      const obtainedList = response.data.addresses.Addresses[0].Links.Links.map(
+      const obtainedList = response.data.connections.Connections[0].Links.Links.map(
         (link: any) => {
-          return link.Spec.Connection.Spec.ContainerId;
+          return link.Spec.Address;
         }
       );
-      setContainerOptions(obtainedList);
+      setAddressOptions(obtainedList);
     }
   };
-
-  const onContainerSelectFilterChange = (
+  const onAddressSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const data = onChangeContainerData(e.target.value);
-    const options: React.ReactElement[] = containerOptions
-      ? containerOptions.map((option, index) => (
+    onChangeAddressData(e.target.value);
+    const options: React.ReactElement[] = addressOptions
+      ? addressOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
         ))
       : [];
     return options;
   };
 
-  const onNameSelect = (
-    event: any,
-    selection: string | SelectOptionObject,
-    isPlaceholder?: boolean
-  ) => {
+  const onNameSelect = (event: any, selection: string | SelectOptionObject) => {
     setNameSelected(selection.toString());
     setIsSelectNameExpanded(false);
   };
 
-  const onContainerSelect = (
+  const onAddressSelect = (
     event: any,
-    selection: string | SelectOptionObject,
-    isPlaceholder?: boolean
+    selection: string | SelectOptionObject
   ) => {
-    setContainerSelected(selection.toString());
-    setIsSelectContainerExpanded(false);
+    setAddressSelected(selection.toString());
+    setIsSelectAddressExpanded(false);
   };
 
   const onDelete = (
@@ -275,11 +251,11 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
           setFilterNames([...filterNames]);
         }
         break;
-      case "Container":
-        if (filterContainers && id) {
-          let index = filterContainers.indexOf(id.toString());
-          if (index >= 0) filterContainers.splice(index, 1);
-          setFilterContainers([...filterContainers]);
+      case "Address":
+        if (filterAddresses && id) {
+          let index = filterAddresses.indexOf(id.toString());
+          if (index >= 0) filterAddresses.splice(index, 1);
+          setFilterAddresses([...filterAddresses]);
         }
         break;
       case "Role":
@@ -290,7 +266,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   const checkIsFilterApplied = () => {
     if (
       (filterNames && filterNames.length > 0) ||
-      (filterContainers && filterContainers.length > 0) ||
+      (filterAddresses && filterAddresses.length > 0) ||
       (filterRole && filterRole.trim() !== "")
     ) {
       return true;
@@ -300,10 +276,9 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   const onDeleteAll = () => {
     setFilterValue("Name");
     setFilterNames([]);
-    setFilterContainers([]);
+    setFilterAddresses([]);
     setFilterRole(undefined);
   };
-
   const toggleGroupItems = (
     <>
       <DataToolbarGroup variant="filter-group">
@@ -363,7 +338,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                   <Button
                     variant={ButtonVariant.control}
                     aria-label="search button for search name"
-                    onClick={onAddInput}>
+                    onClick={onClickSearchIcon}>
                     <SearchIcon />
                   </Button>
                 </InputGroup>
@@ -372,44 +347,43 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
           </DataToolbarItem>
           <DataToolbarItem>
             <DataToolbarFilter
-              chips={filterContainers}
+              chips={filterAddresses}
               deleteChip={onDelete}
-              categoryName="Container">
-              {filterValue && filterValue === "Container" && (
+              categoryName="Address">
+              {filterValue && filterValue === "Address" && (
                 <InputGroup>
                   <Select
                     variant={SelectVariant.typeahead}
-                    aria-label="Select a Container"
-                    onToggle={onContainerSelectToggle}
-                    onSelect={onContainerSelect}
+                    aria-label="Select a Address"
+                    onToggle={onAddressSelectToggle}
+                    onSelect={onAddressSelect}
                     onClear={() => {
-                      setContainerSelected(undefined);
-                      setIsSelectContainerExpanded(false);
+                      setAddressSelected(undefined);
+                      setIsSelectAddressExpanded(false);
                     }}
-                    selections={containerSelected}
-                    onFilter={onContainerSelectFilterChange}
-                    isExpanded={isSelectContainerExpanded}
+                    selections={addressSelected}
+                    onFilter={onAddressSelectFilterChange}
+                    isExpanded={isSelectAddressExpanded}
                     ariaLabelledBy={"typeahead-select-id"}
-                    placeholderText="Select container"
+                    placeholderText="Select Address"
                     isDisabled={false}
                     isCreatable={false}>
-                    {containerOptions &&
-                      containerOptions.map((option, index) => (
+                    {addressOptions &&
+                      addressOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
                       ))}
                     {/* {} */}
                   </Select>
                   <Button
                     variant={ButtonVariant.control}
-                    aria-label="search button for search containers"
-                    onClick={onAddInput}>
+                    aria-label="search button for search address"
+                    onClick={onClickSearchIcon}>
                     <SearchIcon />
                   </Button>
                 </InputGroup>
               )}
             </DataToolbarFilter>
           </DataToolbarItem>
-
           <DataToolbarItem>
             <DataToolbarFilter
               chips={filterRole ? [filterRole] : []}
@@ -423,7 +397,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                   toggle={
                     <DropdownToggle onToggle={setRoleIsExpanded}>
                       <FilterIcon />
-                      &nbsp;{filterRole}
+                      &nbsp;{filterRole || "Select Role"}
                     </DropdownToggle>
                   }
                   dropdownItems={roleMenuItems.map(option => (
@@ -451,29 +425,27 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onDeleteAll}>
       <DataToolbarContent>
-        <>
-          <DataToolbarToggleGroup
-            toggleIcon={
-              <>
-                <FilterIcon />
-                {checkIsFilterApplied() && (
-                  <Badge key={1} isRead>
-                    {totalLinks}
-                  </Badge>
-                )}
-              </>
-            }
-            breakpoint="xl">
-            {toggleGroupItems}
-          </DataToolbarToggleGroup>
-          {width < 769 && (
-            <SortForMobileView
-              sortMenu={sortMenuItems}
-              sortValue={sortValue}
-              setSortValue={setSortValue}
-            />
-          )}
-        </>
+        <DataToolbarToggleGroup
+          toggleIcon={
+            <>
+              <FilterIcon />
+              {checkIsFilterApplied() && (
+                <Badge key={1} isRead>
+                  {totalLinks}
+                </Badge>
+              )}
+            </>
+          }
+          breakpoint="xl">
+          {toggleGroupItems}
+        </DataToolbarToggleGroup>
+        {width < 769 && (
+          <SortForMobileView
+            sortMenu={sortMenuItems}
+            sortValue={sortValue}
+            setSortValue={setSortValue}
+          />
+        )}
       </DataToolbarContent>
     </DataToolbar>
   );

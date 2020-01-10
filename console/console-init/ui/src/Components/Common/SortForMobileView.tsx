@@ -14,8 +14,6 @@ import {
   Dropdown,
   DropdownToggle,
   DropdownItem,
-  Flex,
-  FlexItem
 } from "@patternfly/react-core";
 import useWindowDimensions from "src/Components/Common/WindowDimension";
 import { ISortBy } from "@patternfly/react-table";

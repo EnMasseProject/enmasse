@@ -196,3 +196,79 @@ export interface IConnectionLinksResponse {
     }>;
   };
 }
+
+export interface IConnectionLinksNameSearchResponse {
+  connections: {
+    Total: number;
+    Connections: Array<{
+      Links: {
+        Links: Array<{
+          ObjectMeta: {
+            Name: string;
+          };
+        }>;
+      };
+    }>;
+  };
+}
+export interface IConnectionLinksAddressSearchResponse {
+  connections: {
+    Total: number;
+    Connections: Array<{
+      Links: {
+        Links: Array<{
+          Spec: {
+            Address:string;
+          };
+        }>;
+      };
+    }>;
+  };
+}
+
+
+export interface ISearchAddressLinkNameResponse {
+  addresses: {
+    Total: number;
+    Addresses: Array<{
+      Links: {
+        Links: Array<{
+          ObjectMeta: {
+            Name: string;
+          };
+        }>;
+      };
+    }>;
+  };
+}
+
+export interface ISearchAddressLinkContainerResponse {
+  addresses: {
+    Total: number;
+    Addresses: Array<{
+      Links: {
+        Links: Array<{
+          Spec: {
+            Connection: {
+              Spec: {
+                ContainerId: string;
+              };
+            };
+          };
+        }>;
+      };
+    }>;
+  };
+}
+
+
+export interface ISearchNameOrNameSpaceAddressSpaceListResponse {
+  addressSpaces: {
+    AddressSpaces: Array<{
+      ObjectMeta: {
+        Name: string;
+        Namespace: string;
+      };
+    }>;
+  };
+}
