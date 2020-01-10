@@ -67,7 +67,7 @@ func Min(x, y int) int {
 }
 
 func BuildFilter(f *string) (cache.ObjectFilter, error) {
-	if f != nil {
+	if f != nil && *f != "" {
 		expression, err := filter.ParseFilterExpression(*f)
 		if err != nil {
 			return nil, err
@@ -84,7 +84,7 @@ func BuildFilter(f *string) (cache.ObjectFilter, error) {
 }
 
 func BuildOrderer(o *string) (func (interface{}) error, error) {
-	if o != nil {
+	if o != nil && *o != "" {
 		orderby, err := filter.ParseOrderByExpression(*o)
 		if err != nil {
 			return nil, err
