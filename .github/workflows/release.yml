@@ -10,7 +10,7 @@ on:
     branches:
       - master
     tags:
-      - '0-*'
+      - '0.*'
 
 jobs:
   unit:
@@ -109,7 +109,7 @@ jobs:
           path: artifacts
 
       - name: Create Release
-        if: job.status == 'success' && contains(github.ref, 'refs/tags/v')
+        if: job.status == 'success' && contains(github.ref, 'refs/tags/0.')
         id: create_release
         uses: actions/create-release@v1.0.0
         env:
@@ -121,7 +121,7 @@ jobs:
           prerelease: false
 
       - name: Upload Release Asset
-        if: job.status == 'success' && contains(github.ref, 'refs/tags/v')
+        if: job.status == 'success' && contains(github.ref, 'refs/tags/0.')
         id: upload-release-asset
         uses: actions/upload-release-asset@v1.0.1
         env:
