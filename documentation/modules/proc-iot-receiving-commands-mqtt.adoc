@@ -4,20 +4,20 @@
 // assembly-iot-solution-developers-guide.adoc
 
 [id='proc-iot-receiving-commands-mqtt-{context}']
-= Receiving commands using MQTT protocol
+= Receiving commands using the MQTT protocol
 
 You can send commands from the cloud to a device using the MQTT protocol.
 
 .Procedure
 
-. Use MQTT client to subscribe to the MQTT topic for receiving commands:
+. Use the MQTT client to subscribe to the MQTT topic for receiving commands:
 +
 [options="nowrap",subs="attributes"]
 ----
 mosquitto_sub -v -d -h $(oc -n enmasse-infra get routes iot-mqtt-adapter --template='{{ .spec.host }}') -p 443 -u 'sensor1@myapp.iot' -P hono-secret -t command/+/+/req/# -i 4711 --cafile install/components/iot/examples/k8s-tls/build/iot-mqtt-adapter-fullchain.pem
 ----
 include::../common/snip-iot-customer-command.adoc[]
-. The client should receive the command in the MQTT message
+The client receives the command in the MQTT message:
 +
 [options="nowrap",subs="attributes"]
 ----

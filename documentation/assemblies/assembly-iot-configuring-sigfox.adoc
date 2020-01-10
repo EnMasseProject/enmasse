@@ -11,7 +11,7 @@ ifeval::["{cmdcli}" == "kubectl"]
 endif::[]
 
 [id='assembly-iot-configuring-sigfox-{context}']
-= Sigfox devices
+= Configuring Sigfox devices
 
 After installing the IoT services and creating an IoT project, you can configure
 the Sigfox backend integration.
@@ -33,4 +33,3 @@ include::../modules/ref-iot-prepare-sigfox-connection-information.adoc[leveloffs
 include::../modules/proc-iot-creating-new-sigfox-callback.adoc[leveloffset=+1]
 
 include::../modules/proc-iot-sigfox-enabling-command-and-control.adoc[leveloffset=+1]
-
