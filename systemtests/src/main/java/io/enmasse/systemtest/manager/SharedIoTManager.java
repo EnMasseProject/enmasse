@@ -6,6 +6,7 @@ package io.enmasse.systemtest.manager;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
