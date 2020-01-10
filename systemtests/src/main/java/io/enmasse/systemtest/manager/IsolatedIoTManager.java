@@ -69,8 +69,10 @@ public class IsolatedIoTManager extends ResourceManager {
             try {
                 tearDownProjects();
                 tearDownConfigs();
-                Path path = JunitCallbackListener.getPath(context);
-                SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
+                if (context.getExecutionException().isPresent()) {
+                    Path path = JunitCallbackListener.getPath(context);
+                    SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
+                }
                 SystemtestsKubernetesApps.deleteInfinispanServer();
             } catch (Exception e) {
                 LOGGER.error("Error tearing down iot test: {}", e.getMessage());

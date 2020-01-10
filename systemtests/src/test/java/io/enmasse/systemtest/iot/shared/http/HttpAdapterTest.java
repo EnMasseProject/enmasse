@@ -87,9 +87,6 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
 
     @AfterEach
     void cleanEnv(ExtensionContext context) throws Exception {
-        if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectHttpAdapterQdrProxyState();
-        }
         if (credentialsClient != null) {
             credentialsClient.deleteAllCredentials(sharedIoTResourceManager.getTenantId(), deviceId);
         }
