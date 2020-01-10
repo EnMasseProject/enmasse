@@ -31,6 +31,8 @@ import (
 For development purposes, you can run the console backend outside Kubernetes:
 
 export DISABLE_PROPAGATE_BEARER=1
+export ENMASSE_ADDRESS_SPACE_TYPE_FILE=.../console//console-server/src/main/resources/addressSpaceTypes.json
+ENMASSE_ADDRESS_TYPE_FILE=.../console//console-server/src/main/resources/addressTypes.json
 go run cmd/console-server/main.go
 
 You can then point a browser at :
@@ -53,12 +55,9 @@ available through GraphQL.
 
 Major items that are unfinished:
 
-5) Sorting/Filtering/Pagination
 6) Restrict query results to what the user may see
 8) Mutations
 9) Auth services.
-10) Implement the Improved Address type API
-11) Implement addressSpaceTypes_v2/addressTypes_v2
 12) Refactor agent -> model conversion - currently ugly code and poor division of responsibilities
 13) Refactor cachedb index specification to avoid spreading of knowledge of the indices throughout the code
 
