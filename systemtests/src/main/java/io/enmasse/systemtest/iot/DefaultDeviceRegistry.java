@@ -9,6 +9,7 @@ import io.enmasse.iot.model.v1.DeviceRegistryServiceConfig;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfigBuilder;
 import io.enmasse.iot.model.v1.ExternalInfinispanServer;
 import io.enmasse.iot.model.v1.ExternalInfinispanServerBuilder;
+import io.enmasse.iot.model.v1.JavaContainerOptions;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
@@ -40,6 +41,9 @@ public final class DefaultDeviceRegistry {
                 .withExternal(externalServer(infinispanEndpoint))
 
                 .endServer()
+                .withNewJava()
+                .withDebug(true)
+                .endJava()
                 .endInfinispan()
                 .build();
     }

@@ -23,6 +23,7 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class JavaContainerDefaults {
 
+    private boolean debug;
     private Boolean requireNativeTls;
 
     public Boolean getRequireNativeTls() {
@@ -31,5 +32,13 @@ public class JavaContainerDefaults {
 
     public void setRequireNativeTls(Boolean requireNativeTls) {
         this.requireNativeTls = requireNativeTls;
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 }
