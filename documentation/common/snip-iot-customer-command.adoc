@@ -1,10 +1,10 @@
-. Run the customer application to send commands to the device with id `4711`:
+. Run the customer application to send commands to a device with an ID of `4711`:
 +
 [options="nowrap",subs="attributes"]
 ----
 java -jar hono-cli-*-exec.jar --hono.client.host=$MESSAGING_HOST --hono.client.port=$MESSAGING_PORT --hono.client.username=consumer --hono.client.password=foobar --tenant.id=myapp.iot --hono.client.trustStorePath=tls.crt --device.id=4711 --spring.profiles.active=command
 ----
-. Follow the instructions for entering the command's name, payload and content type. For example:
+. Follow the instructions for entering the command's name, payload, and content type. For example:
 +
 [options="nowrap",subs="attributes"]
 ----

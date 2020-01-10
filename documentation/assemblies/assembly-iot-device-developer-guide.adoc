@@ -8,7 +8,7 @@
 = IoT for device developers
 
 Device developers are typically responsible for either connecting existing devices to the cloud platform or writing software for devices.
-This guide contains all information necessary for connecting devices using one of the supported protocols.
+This information describes how to connect devices using one of the supported protocols.
 
 == HTTP devices
 
