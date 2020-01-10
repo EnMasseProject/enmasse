@@ -22,6 +22,19 @@ type AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1 struct {
 	AddressSpaces []*AddressSpaceConsoleapiEnmasseIoV1beta1 `json:"AddressSpaces"`
 }
 
+type AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1 struct {
+	AddressSpaceType AddressSpaceType `json:"AddressSpaceType"`
+	DisplayName      string           `json:"DisplayName"`
+	LongDescription  string           `json:"LongDescription"`
+	ShortDescription string           `json:"ShortDescription"`
+	DisplayOrder     int              `json:"DisplayOrder"`
+}
+
+type AddressSpaceTypeConsoleapiEnmasseIoV1beta1 struct {
+	ObjectMeta *v1.ObjectMeta                             `json:"ObjectMeta"`
+	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"Spec"`
+}
+
 type AddressSpaceConsoleapiEnmasseIoV1beta1 struct {
 	ObjectMeta  *v1.ObjectMeta                                   `json:"ObjectMeta"`
 	Spec        *v1beta1.AddressSpaceSpec                        `json:"Spec"`
@@ -29,6 +42,20 @@ type AddressSpaceConsoleapiEnmasseIoV1beta1 struct {
 	Connections *ConnectionQueryResultConsoleapiEnmasseIoV1beta1 `json:"Connections"`
 	Addresses   *AddressQueryResultConsoleapiEnmasseIoV1beta1    `json:"Addresses"`
 	Metrics     []*consolegraphql.Metric                         `json:"Metrics"`
+}
+
+type AddressTypeSpecConsoleapiEnmasseIoV1beta1 struct {
+	AddressType      AddressType      `json:"AddressType"`
+	AddressSpaceType AddressSpaceType `json:"AddressSpaceType"`
+	DisplayName      string           `json:"DisplayName"`
+	LongDescription  string           `json:"LongDescription"`
+	ShortDescription string           `json:"ShortDescription"`
+	DisplayOrder     int              `json:"DisplayOrder"`
+}
+
+type AddressTypeConsoleapiEnmasseIoV1beta1 struct {
+	ObjectMeta *v1.ObjectMeta                             `json:"ObjectMeta"`
+	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"Spec"`
 }
 
 type AddressConsoleapiEnmasseIoV1beta1 struct {

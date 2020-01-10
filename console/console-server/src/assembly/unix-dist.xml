@@ -32,4 +32,13 @@
             <fileMode>0755</fileMode>
         </file>
     </files>
+    <fileSets>
+        <fileSet>
+            <outputDirectory></outputDirectory>
+            <directory>src/main/resources/</directory>
+            <includes>
+                <include>*.json</include>
+            </includes>
+        </fileSet>
+    </fileSets>
 </assembly>
