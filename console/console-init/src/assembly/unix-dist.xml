@@ -27,7 +27,7 @@
     <includeBaseDirectory>False</includeBaseDirectory>
     <fileSets>
         <fileSet>
-           <directory>${project.basedir}/ui/dist</directory>
+           <directory>${project.basedir}/ui/build</directory>
             <outputDirectory>/oauth-proxy/www</outputDirectory>
             <includes>
                 <include>**</include>
