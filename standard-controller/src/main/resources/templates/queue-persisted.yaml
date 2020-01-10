@@ -12,6 +12,7 @@ objects:
       addressSpace: ${ADDRESS_SPACE}
       cluster_id: ${CLUSTER_ID}
     labels:
+      monitoring-key: enmasse-tenants
       app: enmasse
       infraType: standard
       infraUuid: ${INFRA_UUID}

@@ -1,6 +1,6 @@
 // This assembly is included in the following assemblies:
 //
-// assembly-service-admin-guide.adoc
+// assembly-monitoring.adoc
 
 :parent-context: {context}
 [id='monitoring-{context}']
@@ -18,6 +18,8 @@ include::../modules/proc-deploy-monitoring-using-bundle.adoc[leveloffset=+1]
 include::../modules/proc-deploy-monitoring-using-ansible.adoc[leveloffset=+1]
 
 include::../modules/proc-configure-alerts.adoc[leveloffset=+1]
+
+include::../modules/proc-enable-tenant-metrics.adoc[leveloffset=+1]
 
 :context: {parent-context}
 

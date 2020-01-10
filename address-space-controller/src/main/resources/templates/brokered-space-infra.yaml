@@ -193,6 +193,7 @@ objects:
   kind: Service
   metadata:
     labels:
+      monitoring-key: enmasse-tenants
       app: enmasse
       infraType: brokered
       infraUuid: ${INFRA_UUID}
