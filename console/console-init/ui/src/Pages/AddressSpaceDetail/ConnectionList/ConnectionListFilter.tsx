@@ -25,6 +25,9 @@ import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import useWindowDimensions from "src/Components/Common/WindowDimension";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView } from "src/Components/Common/SortForMobileView";
+import { useApolloClient } from "@apollo/react-hooks";
+import { RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "src/Queries/Queries";
+import { IConnectionListNameSearchResponse } from "src/Types/ResponseTypes";
 
 interface IConnectionListFilterProps {
   filterValue?: string | null;
@@ -36,6 +39,8 @@ interface IConnectionListFilterProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   totalConnections: number;
+  addressSpaceName?: string;
+  namespace?: string;
 }
 export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilterProps> = ({
   filterValue,
@@ -46,24 +51,31 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   setContainerIds,
   totalConnections,
   sortValue,
-  setSortValue
+  setSortValue,
+  addressSpaceName,
+  namespace
 }) => {
   const { width } = useWindowDimensions();
+  const client = useApolloClient();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const onFilterSelect = (event: any) => {
     setFilterValue(event.target.value);
     setFilterIsExpanded(!filterIsExpanded);
   };
-  const [isSelectHostnameExpanded, setIsSelectHostnameExpanded] = React.useState<
-    boolean
-  >(false);
-  const [isSelectContainerExpanded, setIsSelectContainerExpanded] = React.useState<
-    boolean
-  >(false);
+  const [
+    isSelectHostnameExpanded,
+    setIsSelectHostnameExpanded
+  ] = React.useState<boolean>(false);
+  const [
+    isSelectContainerExpanded,
+    setIsSelectContainerExpanded
+  ] = React.useState<boolean>(false);
   const [hostnameSelected, setHostnameSelected] = React.useState<string>();
   const [containerSelected, setContainerSelected] = React.useState<string>();
   const [hostnameOptions, setHostnameOptions] = React.useState<Array<string>>();
-  const [containerOptions, setContainerOptions] = React.useState<Array<string>>();
+  const [containerOptions, setContainerOptions] = React.useState<
+    Array<string>
+  >();
 
   const filterMenuItems = [
     { key: "filterHostName", value: "Hostname" },
@@ -83,7 +95,11 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   const onClickSearchIcon = (event: any) => {
     if (filterValue)
       if (filterValue === "Container") {
-        if (containerSelected && containerSelected.trim() !== "" && containerIds) {
+        if (
+          containerSelected &&
+          containerSelected.trim() !== "" &&
+          containerIds
+        ) {
           if (containerIds.indexOf(containerSelected.trim()) < 0) {
             setContainerIds([...containerIds, containerSelected.trim()]);
           }
@@ -99,7 +115,6 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       }
   };
 
-
   const onHostnameSelectToggle = () => {
     setIsSelectHostnameExpanded(!isSelectHostnameExpanded);
   };
@@ -110,39 +125,42 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeHostnameData = async (value: string) => {
     setHostnameOptions(undefined);
-    if(value.trim().length<6) {
+    if (value.trim().length < 6) {
       setHostnameOptions([]);
       return;
     }
-    // const response = await client.query<IConnectionLinksNameSearchResponse>({
-    //   query: RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH(
-    //     connectionName,
-    //     addressSpaceName,
-    //     namespace,
-    //     value.trim()
-    //   )
-    // });
-    // if (
-    //   response &&
-    //   response.data &&
-    //   response.data.connections &&
-    //   response.data.connections.Connections &&
-    //   response.data.connections.Connections.length > 0 &&
-    //   response.data.connections.Connections[0].Links &&
-    //   response.data.connections.Connections[0].Links.Links &&
-    //   response.data.connections.Connections[0].Links.Links.length > 0
-    // ) {
-    //   const obtainedList = response.data.connections.Connections[0].Links.Links.map(
-    //     (link: any) => {
-    //       console.log("Name", link);
-    //       return link.ObjectMeta.Name;
-    //     }
-    //   );
-    //   setNameOptions(obtainedList);
-    // }
+    const response = await client.query<IConnectionListNameSearchResponse>({
+      query: RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH(
+        true,
+        value.trim(),
+        addressSpaceName,
+        namespace
+      )
+    });
+    if (
+      response &&
+      response.data &&
+      response.data.connections &&
+      response.data.connections.Connections &&
+      response.data.connections.Connections.length > 0
+    ) {
+      //To display dropdown if fetched records are less than 100 in count.
+      if (response.data.connections.Total > 100) {
+        setHostnameOptions([]);
+      } else {
+        const obtainedList = response.data.connections.Connections.map(
+          (connection: any) => {
+            return connection.Spec.Hostname;
+          }
+        );
+        setHostnameOptions(obtainedList);
+      }
+    }
   };
 
-  const onHostnameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onHostnameSelectFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     onChangeHostnameData(e.target.value);
     const options: React.ReactElement[] = hostnameOptions
       ? hostnameOptions.map((option, index) => (
@@ -154,35 +172,37 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeContainerData = async (value: string) => {
     setContainerOptions(undefined);
-    if(value.trim().length<6) {
+    if (value.trim().length < 6) {
       setContainerOptions([]);
       return;
     }
-    // const response = await client.query<IConnectionLinksAddressSearchResponse>({
-    //   query: RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH(
-    //     connectionName,
-    //     addressSpaceName,
-    //     namespace,
-    //     value.trim()
-    //   )
-    // });
-    // if (
-    //   response &&
-    //   response.data &&
-    //   response.data.connections &&
-    //   response.data.connections.Connections &&
-    //   response.data.connections.Connections.length > 0 &&
-    //   response.data.connections.Connections[0].Links &&
-    //   response.data.connections.Connections[0].Links.Links &&
-    //   response.data.connections.Connections[0].Links.Links.length > 0
-    // ) {
-    //   const obtainedList = response.data.connections.Connections[0].Links.Links.map(
-    //     (link: any) => {
-    //       return link.Spec.Address;
-    //     }
-    //   );
-    //   setAddressOptions(obtainedList);
-    // }
+    const response = await client.query<IConnectionListNameSearchResponse>({
+      query: RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH(
+        false,
+        value.trim(),
+        addressSpaceName,
+        namespace
+      )
+    });
+    if (
+      response &&
+      response.data &&
+      response.data.connections &&
+      response.data.connections.Connections &&
+      response.data.connections.Connections.length > 0
+    ) {
+      //To display dropdown if fetched records are less than 100 in count.
+      if (response.data.connections.Total > 100) {
+        setContainerOptions([]);
+      } else {
+        const obtainedList = response.data.connections.Connections.map(
+          (connection: any) => {
+            return connection.Spec.ContainerId;
+          }
+        );
+        setContainerOptions(obtainedList);
+      }
+    }
   };
   const onContainerSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -196,7 +216,10 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
     return options;
   };
 
-  const onHostnameSelect = (event: any, selection: string | SelectOptionObject) => {
+  const onHostnameSelect = (
+    event: any,
+    selection: string | SelectOptionObject
+  ) => {
     setHostnameSelected(selection.toString());
     setIsSelectHostnameExpanded(false);
   };
@@ -285,27 +308,27 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
             {filterValue && filterValue === "Hostname" && (
               <InputGroup>
                 <Select
-                    variant={SelectVariant.typeahead}
-                    aria-label="Select a hostname"
-                    onToggle={onHostnameSelectToggle}
-                    onSelect={onHostnameSelect}
-                    onClear={() => {
-                      setHostnameSelected(undefined);
-                      setIsSelectHostnameExpanded(false);
-                    }}
-                    selections={hostnameSelected}
-                    onFilter={onHostnameSelectFilterChange}
-                    isExpanded={isSelectHostnameExpanded}
-                    ariaLabelledBy={"typeahead-select-id"}
-                    placeholderText="Select Hostname"
-                    isDisabled={false}
-                    isCreatable={false}>
-                    {hostnameOptions &&
-                      hostnameOptions.map((option, index) => (
-                        <SelectOption key={index} value={option} />
-                      ))}
-                    {/* {} */}
-                  </Select>
+                  variant={SelectVariant.typeahead}
+                  aria-label="Select a hostname"
+                  onToggle={onHostnameSelectToggle}
+                  onSelect={onHostnameSelect}
+                  onClear={() => {
+                    setHostnameSelected(undefined);
+                    setIsSelectHostnameExpanded(false);
+                  }}
+                  selections={hostnameSelected}
+                  onFilter={onHostnameSelectFilterChange}
+                  isExpanded={isSelectHostnameExpanded}
+                  ariaLabelledBy={"typeahead-select-id"}
+                  placeholderText="Select Hostname"
+                  isDisabled={false}
+                  isCreatable={false}>
+                  {hostnameOptions &&
+                    hostnameOptions.map((option, index) => (
+                      <SelectOption key={index} value={option} />
+                    ))}
+                  {/* {} */}
+                </Select>
                 <Button
                   id="cl-filter-search-btn"
                   variant={ButtonVariant.control}
@@ -325,27 +348,27 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
             {filterValue && filterValue === "Container" && (
               <InputGroup>
                 <Select
-                    variant={SelectVariant.typeahead}
-                    aria-label="Select a Address"
-                    onToggle={onContainerSelectToggle}
-                    onSelect={onContainerSelect}
-                    onClear={() => {
-                      setContainerSelected(undefined);
-                      setIsSelectContainerExpanded(false);
-                    }}
-                    selections={containerSelected}
-                    onFilter={onContainerSelectFilterChange}
-                    isExpanded={isSelectContainerExpanded}
-                    ariaLabelledBy={"typeahead-select-id"}
-                    placeholderText="Select Container"
-                    isDisabled={false}
-                    isCreatable={false}>
-                    {containerOptions &&
-                      containerOptions.map((option, index) => (
-                        <SelectOption key={index} value={option} />
-                      ))}
-                    {/* {} */}
-                  </Select>
+                  variant={SelectVariant.typeahead}
+                  aria-label="Select a Address"
+                  onToggle={onContainerSelectToggle}
+                  onSelect={onContainerSelect}
+                  onClear={() => {
+                    setContainerSelected(undefined);
+                    setIsSelectContainerExpanded(false);
+                  }}
+                  selections={containerSelected}
+                  onFilter={onContainerSelectFilterChange}
+                  isExpanded={isSelectContainerExpanded}
+                  ariaLabelledBy={"typeahead-select-id"}
+                  placeholderText="Select Container"
+                  isDisabled={false}
+                  isCreatable={false}>
+                  {containerOptions &&
+                    containerOptions.map((option, index) => (
+                      <SelectOption key={index} value={option} />
+                    ))}
+                  {/* {} */}
+                </Select>
                 <Button
                   variant={ButtonVariant.control}
                   aria-label="search button for search input"

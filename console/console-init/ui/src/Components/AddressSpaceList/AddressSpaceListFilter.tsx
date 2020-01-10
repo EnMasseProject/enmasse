@@ -153,15 +153,14 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if(value.trim().length<6) {
+    if (value.trim().length < 6) {
       setNameOptions([]);
       return;
     }
-    const response = await client.query<ISearchNameOrNameSpaceAddressSpaceListResponse>({
-      query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(
-        true,
-        value.trim()
-      )
+    const response = await client.query<
+      ISearchNameOrNameSpaceAddressSpaceListResponse
+    >({
+      query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(true, value.trim())
     });
     if (
       response &&
@@ -170,12 +169,16 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       response.data.addressSpaces.AddressSpaces &&
       response.data.addressSpaces.AddressSpaces.length > 0
     ) {
-      const obtainedList = response.data.addressSpaces.AddressSpaces.map(
-        (link: any) => {
-          return link.ObjectMeta.Name;
-        }
-      );
-      setNameOptions(obtainedList);
+      if (response.data.addressSpaces.Total > 100) {
+        setNameOptions([]);
+      } else {
+        const obtainedList = response.data.addressSpaces.AddressSpaces.map(
+          (link: any) => {
+            return link.ObjectMeta.Name;
+          }
+        );
+        setNameOptions(obtainedList);
+      }
     }
   };
 
@@ -192,11 +195,13 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const onChangeNamespaceData = async (value: string) => {
     setNamespaceOptions(undefined);
     setNameOptions(undefined);
-    if(value.trim().length<6) {
+    if (value.trim().length < 6) {
       setNameOptions([]);
       return;
     }
-    const response = await client.query<ISearchNameOrNameSpaceAddressSpaceListResponse>({
+    const response = await client.query<
+      ISearchNameOrNameSpaceAddressSpaceListResponse
+    >({
       query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(
         false,
         value.trim()
@@ -209,12 +214,16 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       response.data.addressSpaces.AddressSpaces &&
       response.data.addressSpaces.AddressSpaces.length > 0
     ) {
-      const obtainedList = response.data.addressSpaces.AddressSpaces.map(
-        (link: any) => {
-          return link.ObjectMeta.Namespace;
-        }
-      );
-      setNamespaceOptions(obtainedList);
+      if (response.data.addressSpaces.Total > 100) {
+        setNamespaceOptions([]);
+      } else {
+        const obtainedList = response.data.addressSpaces.AddressSpaces.map(
+          (link: any) => {
+            return link.ObjectMeta.Namespace;
+          }
+        );
+        setNamespaceOptions(obtainedList);
+      }
     }
   };
 
