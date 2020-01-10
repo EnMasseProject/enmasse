@@ -1,0 +1,105 @@
+[id='troubleshooting-{context}']
+
+= Find which pods belong to an address space
+
+.Procedure
+
+. Retrieve the uuid for the address space
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} get addressspace _myspace_ -o jsonpath='{.metadata.annotations.enmasse\.io/infra-uuid}'
+----
+
+. Find all pods with matching `infraUuid` label:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} get pods -l infraUuid=_uuid_
+----
+
+= Find currently running version of {ProductName}
+
+.Procedure
+
+. Find enmasse-operator pod name:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} get pods | grep enmasse-operator
+----
+
+. Print the VERSION environment of the enmasse-operator pod:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} rsh _enmasse-operator-...._ env | grep VERSION
+----
+
+The VERSION should correspond to the Major.Minor version of the product, whereas MAVEN_VERSION corresponds to the build number.
+
+= Unable to find custom address space plan
+
+.Procedure 
+
+. Check that the address space plan is created in the namespace where {ProductName} is installed. 
+. Check that the address space plan has passed validation and is in the `Active` phase:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} get addressspaceplans -o wide -n {ProductNamespace}
+----
+
+= Unable to find custom address plan
+
+.Procedure 
+
+. Check that the address plan is created in the namespace where {ProductName} is installed. 
+. Check that the address plan has passed validation and is in the `Active` phase:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} get addressplans -o wide -n {ProductNamespace}
+----
+
+= Address space is not ready and clients are unable to connect to messaging endpoints
+
+.Procedure
+. Check if address space status message for errors:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} get addressspace _myspace_ -o wide
+----
+
+. Check address space controller logs for errors:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} logs dc/address-space-controller
+----
+
+= Addresses are not getting ready
+
+.Procedure
+. Check if address status message for errors:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} get address _myspace.myaddress_ -o wide
+----
+
+. If using `brokered` address space, check `agent` pod logs for errors:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} logs dc/agent._uuid_
+----
+
+. If using `standard` address space, check `admin` pod logs for errors:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} logs dc/admin._uuid_ -c standard-controller
+{cmdcli} logs dc/admin._uuid_ -c agent
+----

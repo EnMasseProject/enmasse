@@ -29,6 +29,9 @@ include::assemblies/assembly-tenant-guide.adoc[leveloffset=+1]
 include::assemblies/assembly-iot-guide.adoc[leveloffset=+1]
 
 [appendix]
+include::assemblies/assembly-troubleshooting-guide.adoc[leveloffset=+1]
+
+[appendix]
 include::modules/ref-resources-table-service-admin.adoc[leveloffset=+1]
 
 [appendix]

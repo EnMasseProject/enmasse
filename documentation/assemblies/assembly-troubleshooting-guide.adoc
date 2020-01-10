@@ -1,0 +1,11 @@
+// This assembly is included in the following assemblies:
+//
+// master-kubernetes.adoc
+// master-openshift.adoc
+
+[id='troubleshooting-guide-{context}']
+= Troubleshooting
+
+The troubleshooting provides solutions to common problems when running {ProductName}. Some of the steps in the guide may require service admin privileges.
+
+include::../modules/proc-troubleshooting.adoc[leveloffset=+1]
