@@ -24,10 +24,43 @@ The `Address` and `AddressPlan` types will remain, but the schema will be extend
 
 The `qdr-operator` and `activemq-artemis-operator` operators will be used for managing routers and brokers.
 
+The `cert-manager` operator will be used to manage certificates, both internal and external.
+
 The `MessagingPlan`, `AddressPlan` and `AuthenticationService` resources may additionally be referenced by their namespace. This allows having a service operator persona that does not manage or have access to the messaging infrastructure, but manages the plans and authentication service configurations offered to messaging tenants.
 
 MessagingUser and Address will no longer needed to be prefixed with address space name!
 
+=== Service operator
+
+The service operator persona is introduced to allow managing messaging plans, address plans, and authentication services separately from the rest of main infrastructure. Any reference to plans and authentication services will require using an object with name and namespace referencing the resource.
+
+=== Operations
+
+With shared infrastructure, monitoring and alerting of routers and brokers is requires as today, but the visibility into the per-namespace 'slice' of the infrastructure is also needed to debug and observe the system. The service admin/operator need the ability to:
+
+* Locate routers and brokers serving endpoints of a namespace
+* Locate broker(s) for a given address
+* Inspect the current version of a shared infrastructure instance
+* Determine requested and actual resource usage of a namespace
+* Determine placement of routers/brokers to ensure proper HA configuration
+
+This should be available in console, APIs and through a command line tool.
+
+=== Tenants
+
+With shared infrastructure, tenants will share resources with other tenants, and it is critical that tenants can observe statistics for their 'share'. These statistics include:
+
+* Address, connection and link statistics (covered by console API?)
+* MessagingConfig status (CRD)
+* MessagingEndpoint status (CRD)
+
+=== IoT
+
+With shared infra, IoT will not be able to create multiple managed IoTProject resources per namespace. We could put some effort into allowing multiple iot projects per namespace sharing the messaging resources, but we should consider if this is a common use case or not.
+
+The shared infra should also support ways of using mutual TLS for authenticating components.
+
+// TODO: Other IoT aspects that should change as part of shared infra?
 
 === Resources
 
@@ -49,11 +82,11 @@ spec:
     replicas:
       min: 2 # Min replicas will be deployed when infra is created
       max: 3 # Max replicas that maybe scaled to
-      minReady: 1 # Allows 1 router to not be ready before alerting
+      minReady: 1 # Allows 1 router to not be ready before alerting. Ends up creating PodDistruptionBudget
 
     podTemplate: # Same as in standard infra config today. Based on Kubernetes spec
       spec:
-        affinity: # Allow setting affinity rules to ensure routers do not run the same node etc.
+        affinity: # Allow explicitly setting affinity rules to enforce specific nodes
         tolerations: # Allow enforcing which nodes to run on
         resources: # Memory and CPU settings
         priorityClassName: # Pod priority settings
@@ -274,37 +307,6 @@ The following components will not be part of shared infra:
 * Agent
 * Standard-controller
 * Topic-forwarder (The implication is that partitioned/sharded topics will not be supported - at least initially)
-
-=== Service operator
-
-The service operator persona is introduced to allow managing messaging plans, address plans, and authentication services separately from the rest of main infrastructure. Any reference to plans and authentication services will require using an object with name and namespace referencing the resource.
-
-=== Operations
-
-With shared infrastructure, monitoring and alerting of routers and brokers is requires as today, but the visibility into the per-namespace 'slice' of the infrastructure is also needed to debug and observe the system. The service admin/operator need the ability to:
-
-* Locate routers and brokers serving endpoints of a namespace
-* Locate broker(s) for a given address
-* Inspect the current version of a shared infrastructure instance
-* Determine requested and actual resource usage of a namespace
-* Determine placement of routers/brokers to ensure proper HA configuration
-* 
-
-=== Tenants
-
-With shared infrastructure, tenants will share resources with other tenants, and it is critical that tenants can observe statistics for their 'share'. These statistics include:
-
-* Address, connection and link statistics (covered by console API?)
-* MessagingConfig status (CRD)
-* MessagingEndpoint status (CRD)
-
-=== IoT
-
-With shared infra, IoT will not be able to create multiple managed IoTProject resources per namespace. We could put some effort into allowing multiple iot projects per namespace sharing the messaging resources, but we should consider if this is a common use case or not.
-
-The shared infra should also support ways of using mutual TLS for authenticating components.
-
-// TODO: Other IoT aspects that should change as part of shared infra?
 
 === Phase 1 (Milestone 0.32.0 ?)
 
