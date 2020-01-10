@@ -153,13 +153,16 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
+    if(value.trim().length<6) {
+      setNameOptions([]);
+      return;
+    }
     const response = await client.query<ISearchNameOrNameSpaceAddressSpaceListResponse>({
       query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(
         true,
         value.trim()
       )
     });
-    console.log("response:",response)
     if (
       response &&
       response.data &&
@@ -188,6 +191,11 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
 
   const onChangeNamespaceData = async (value: string) => {
     setNamespaceOptions(undefined);
+    setNameOptions(undefined);
+    if(value.trim().length<6) {
+      setNameOptions([]);
+      return;
+    }
     const response = await client.query<ISearchNameOrNameSpaceAddressSpaceListResponse>({
       query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(
         false,

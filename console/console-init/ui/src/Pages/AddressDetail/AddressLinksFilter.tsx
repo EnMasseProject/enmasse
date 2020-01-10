@@ -133,6 +133,10 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   };
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
+    if(value.trim().length<6) {
+      setNameOptions([]);
+      return;
+    }
     const response = await client.query<ISearchAddressLinkNameResponse>({
       query: RETURN_ALL_NAMES_OF_ADDRESS_LINKS(
         addressName,
@@ -171,6 +175,10 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
 
   const onChangeContainerData = async (value: string) => {
     setContainerOptions(undefined);
+    if(value.trim().length<6) {
+      setContainerOptions([]);
+      return;
+    }
     const response = await client.query<ISearchAddressLinkContainerResponse>({
       query: RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_CONTAINER_SEARCH(
         addressName,

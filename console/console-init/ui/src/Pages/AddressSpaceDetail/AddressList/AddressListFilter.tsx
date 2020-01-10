@@ -16,7 +16,6 @@ import {
   DropdownToggle,
   DropdownItem,
   InputGroup,
-  TextInput,
   Button,
   ButtonVariant,
   KebabToggle,
@@ -54,7 +53,6 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   setStatusValue,
   totalAddresses
 }) => {
-  const [inputValue, setInputValue] = React.useState<string | null>(null);
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const [typeIsExpanded, setTypeIsExpanded] = React.useState(false);
   const [statusIsExpanded, setStatusIsExpanded] = React.useState(false);
@@ -82,10 +80,6 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
     { key: "statusConfiguring", value: "Configuring" },
     { key: "statusFailed", value: "Failed" }
   ];
-
-  const onInputChange = (newValue: string) => {
-    setInputValue(newValue);
-  };
 
   const onClickSearchIcon = (event: any) => {
     if (filterValue && filterValue === "Name") {
@@ -117,6 +111,10 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
+    if(value.trim().length<6) {
+      setNameOptions([]);
+      return;
+    }
     // const response = await client.query<IConnectionLinksNameSearchResponse>({
     //   query: RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH(
     //     connectionName,

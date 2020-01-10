@@ -13,7 +13,6 @@ import {
   DropdownToggle,
   DropdownItem,
   InputGroup,
-  TextInput,
   Button,
   ButtonVariant,
   Badge,
@@ -50,7 +49,6 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   setSortValue
 }) => {
   const { width } = useWindowDimensions();
-  const [inputValue, setInputValue] = React.useState<string | null>();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const onFilterSelect = (event: any) => {
     setFilterValue(event.target.value);
@@ -82,18 +80,14 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
     { key: "receiver", value: "Receivers", index: 6 }
   ];
 
-  const onInputChange = (newValue: string) => {
-    setInputValue(newValue);
-  };
   const onClickSearchIcon = (event: any) => {
     if (filterValue)
       if (filterValue === "Container") {
         if (containerSelected && containerSelected.trim() !== "" && containerIds) {
           if (containerIds.indexOf(containerSelected.trim()) < 0) {
             setContainerIds([...containerIds, containerSelected.trim()]);
-            setContainerSelected(undefined)
           }
-          setInputValue(null);
+          setContainerSelected(undefined);
         }
       } else if (filterValue === "Hostname") {
         if (hostnameSelected && hostnameSelected.trim() !== "" && hostnames) {
@@ -116,6 +110,10 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeHostnameData = async (value: string) => {
     setHostnameOptions(undefined);
+    if(value.trim().length<6) {
+      setHostnameOptions([]);
+      return;
+    }
     // const response = await client.query<IConnectionLinksNameSearchResponse>({
     //   query: RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH(
     //     connectionName,
@@ -156,6 +154,10 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeContainerData = async (value: string) => {
     setContainerOptions(undefined);
+    if(value.trim().length<6) {
+      setContainerOptions([]);
+      return;
+    }
     // const response = await client.query<IConnectionLinksAddressSearchResponse>({
     //   query: RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH(
     //     connectionName,

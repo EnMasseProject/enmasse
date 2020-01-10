@@ -140,6 +140,10 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
+    if(value.trim().length<6) {
+      setNameOptions([]);
+      return;
+    }
     const response = await client.query<IConnectionLinksNameSearchResponse>({
       query: RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH(
         connectionName,
@@ -180,6 +184,10 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
 
   const onChangeAddressData = async (value: string) => {
     setAddressOptions(undefined);
+    if(value.trim().length<6) {
+      setAddressOptions([]);
+      return;
+    }
     const response = await client.query<IConnectionLinksAddressSearchResponse>({
       query: RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH(
         connectionName,
