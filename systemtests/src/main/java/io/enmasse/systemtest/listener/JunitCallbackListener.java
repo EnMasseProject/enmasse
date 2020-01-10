@@ -54,6 +54,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
             handleCallBackError(context, () -> {
                 if (testInfo.isUpgradeTest()) {
+                    if (operatorManager.isEnmasseBundleDeployed()) {
+                        operatorManager.deleteEnmasseBundle();
+                    }
                     LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
                 } else if (testInfo.isOLMTest()) {
                     LOGGER.info("Test is OLM");
@@ -95,9 +98,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             } else if (env.installType() == EnmasseInstallType.BUNDLE) {
                 if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed()) {
                     operatorManager.removeIoTOperator();
-                }
-                if (operatorManager.isEnmasseBundleDeployed() && testInfo.isNextTestUpgrade()) {
-                    operatorManager.deleteEnmasseBundle();
                 }
                 if (operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.deleteEnmasseOlm();

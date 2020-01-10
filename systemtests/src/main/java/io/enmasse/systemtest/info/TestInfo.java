@@ -204,15 +204,6 @@ public class TestInfo {
                 .orElseThrow();
     }
 
-    //TODO remove this method and move the logic associated with this to beforeAll callback
-    public boolean isNextTestUpgrade() {
-        int currentClassIndex = getCurrentClassIndex();
-        if (currentClassIndex + 1 < testClasses.size()) {
-            return getTags(testClasses.get(currentClassIndex + 1)).stream().anyMatch(TestTag.UPGRADE::equals);
-        }
-        return false;
-    }
-
     private List<String> getTags(TestIdentifier test) {
         return test.getTags().stream().map(org.junit.platform.engine.TestTag::getName).collect(Collectors.toList());
     }
@@ -234,17 +225,6 @@ public class TestInfo {
                     .findFirst()
                     .get();
             return tests.indexOf(test);
-        }
-        return 0;
-    }
-
-    private int getCurrentClassIndex() {
-        if (currentTestClass != null && testClasses.size() > 0) {
-            TestIdentifier test = testClasses.stream()
-                    .filter(testClass -> isSameClass(testClass, currentTestClass))
-                    .findFirst()
-                    .get();
-            return testClasses.indexOf(test);
         }
         return 0;
     }
