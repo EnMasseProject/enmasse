@@ -249,7 +249,9 @@ public class OperatorManager {
     }
 
     public boolean clean() throws Exception {
-        KubeCMDClient.runOnCluster("delete", "-v", "2", "crd", "-l", "app=enmasse");
+        if (!KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse").getRetCode()) {
+            System.exit(1);
+        }
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
