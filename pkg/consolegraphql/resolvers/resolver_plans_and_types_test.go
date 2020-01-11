@@ -42,34 +42,8 @@ func newTestPlansResolver(t *testing.T) *Resolver {
 
 func TestQueryAddressSpacePlansAll(t *testing.T) {
 	r := newTestPlansResolver(t)
-	asp1 := &v1beta2.AddressSpacePlan{
-		TypeMeta: v1.TypeMeta{
-			Kind: "AddressSpacePlan",
-		},
-		ObjectMeta: v1.ObjectMeta{
-			Name: "myaddressspaceplan1",
-			UID:  types.UID(uuid.New().String()),
-		},
-		Spec: v1beta2.AddressSpacePlanSpec{
-			AddressPlans:     []string{"my-addressspace-plan"},
-			AddressSpaceType: "brokered",
-			DisplayOrder:     0,
-		},
-	}
-	asp2 := &v1beta2.AddressSpacePlan{
-		TypeMeta: v1.TypeMeta{
-			Kind: "AddressSpacePlan",
-		},
-		ObjectMeta: v1.ObjectMeta{
-			Name: "myaddressspaceplan2",
-			UID:  types.UID(uuid.New().String()),
-		},
-		Spec: v1beta2.AddressSpacePlanSpec{
-			AddressPlans:     []string{"my-addressspace-plan"},
-			AddressSpaceType: "brokered",
-			DisplayOrder:     1,
-		},
-	}
+	asp1 := createAddressSpacePlan("brokered", "myaddressspaceplan1", 0, []string{"my-addressspace-plan"})
+	asp2 := createAddressSpacePlan("brokered", "myaddressspaceplan2", 1, []string{"my-addressspace-plan"})
 	err := r.Cache.Add(asp1)
 	assert.NoError(t, err)
 
@@ -87,34 +61,9 @@ func TestQueryAddressSpacePlansAll(t *testing.T) {
 
 func TestQueryAddressSpacePlansByType(t *testing.T) {
 	r := newTestPlansResolver(t)
-	asp1 := &v1beta2.AddressSpacePlan{
-		TypeMeta: v1.TypeMeta{
-			Kind: "AddressSpacePlan",
-		},
-		ObjectMeta: v1.ObjectMeta{
-			Name: "myaddressspaceplan1",
-			UID:  types.UID(uuid.New().String()),
-		},
-		Spec: v1beta2.AddressSpacePlanSpec{
-			AddressPlans:     []string{"my-addressspace-plan"},
-			AddressSpaceType: "standard",
-			DisplayOrder:     0,
-		},
-	}
-	asp2 := &v1beta2.AddressSpacePlan{
-		TypeMeta: v1.TypeMeta{
-			Kind: "AddressSpacePlan",
-		},
-		ObjectMeta: v1.ObjectMeta{
-			Name: "myaddressspaceplan2",
-			UID:  types.UID(uuid.New().String()),
-		},
-		Spec: v1beta2.AddressSpacePlanSpec{
-			AddressPlans:     []string{"my-addressspace-plan"},
-			AddressSpaceType: "brokered",
-			DisplayOrder:     1,
-		},
-	}
+	asp1 := createAddressSpacePlan("standard", "myaddressspaceplan1", 0, []string{"my-addressspace-plan"})
+	asp2 := createAddressSpacePlan("brokered", "myaddressspaceplan2", 0, []string{"my-addressspace-plan"})
+
 	err := r.Cache.Add(asp1, asp2)
 	assert.NoError(t, err)
 
@@ -131,107 +80,98 @@ func TestQueryAddressSpacePlansByType(t *testing.T) {
 
 func TestQueryAddressPlansAll(t *testing.T) {
 	r := newTestPlansResolver(t)
-	ap1 := &v1beta2.AddressPlan{
-		TypeMeta: v1.TypeMeta{
-			Kind: "AddressPlan",
-		},
-		ObjectMeta: v1.ObjectMeta{
-			Name: "myaddressplan1",
-			UID:  types.UID(uuid.New().String()),
-		},
-		Spec: v1beta2.AddressPlanSpec{
-			AddressType:  "queue",
-			DisplayOrder: 0,
-		},
-	}
-	ap2 := &v1beta2.AddressPlan{
-		TypeMeta: v1.TypeMeta{
-			Kind: "AddressPlan",
-		},
-		ObjectMeta: v1.ObjectMeta{
-			Name: "myaddressplan2",
-			UID:  types.UID(uuid.New().String()),
-		},
-		Spec: v1beta2.AddressPlanSpec{
-			AddressType:  "queue",
-			DisplayOrder: 1,
-		},
-	}
+	ap1 := createAddressPlan("myaddressplan1", "queue", 0)
+	ap2 := createAddressPlan("myaddressplan2", "queue", 1)
 	err := r.Cache.Add(ap1, ap2)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().AddressPlans(context.TODO(), nil)
+	objs, err := r.Query().AddressPlans(context.TODO(), nil, nil)
 	assert.NoError(t, err)
 
 	expected := 2
 	actual := len(objs)
-	assert.Equal(t, expected, actual, "Unexpected number of addressspaceplans")
-	assert.Equal(t, ap1, objs[0], "Unexpected addressspaceplans")
+	assert.Equal(t, expected, actual, "Unexpected number of address plans")
+	assert.Equal(t, ap1, objs[0], "Unexpected address plan")
 }
 
 func TestQueryAddressPlansByAddressSpacePlan(t *testing.T) {
 	r := newTestPlansResolver(t)
+	asp := createAddressSpacePlan("standard", "myaddressspaceplan1", 0, []string{"myaddressplan1", "myaddressplan2"})
+
+	ap1 := createAddressPlan("myaddressplan1", "topic", 0)
+	ap2 := createAddressPlan("myaddressplan2", "queue", 1)
+	ap3 := createAddressPlan("myaddressplan3", "queue", 2)
+
+	err := r.Cache.Add(asp, ap1, ap2, ap3)
+	assert.NoError(t, err)
+
+	objs, err := r.Query().AddressPlans(context.TODO(), &asp.Name, nil)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 2, len(objs), "Unexpected number of address plans restricted by space plan")
+
+
+	topic := AddressTypeTopic
+	objs, err = r.Query().AddressPlans(context.TODO(), &asp.Name, &topic)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 1, len(objs), "Unexpected number of address plans restricted by space plan and address type")
+
+}
+
+func TestQueryAddressPlansByAddressType(t *testing.T) {
+	r := newTestPlansResolver(t)
+
+	ap1 := createAddressPlan("myaddressplan1", "topic", 0)
+	ap2 := createAddressPlan("myaddressplan2", "queue", 1)
+	ap3 := createAddressPlan("myaddressplan3", "queue", 2)
+
+	err := r.Cache.Add(ap1, ap2, ap3)
+	assert.NoError(t, err)
+
+	objs, err := r.Query().AddressPlans(context.TODO(), nil, nil)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 3, len(objs), "Unexpected number of address plans")
+
+	topic := AddressTypeTopic
+	objs, err = r.Query().AddressPlans(context.TODO(), nil, &topic)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 1, len(objs), "Unexpected number of address plans restricted by address type")
+}
+
+func createAddressSpacePlan(addressSpaceType, addressSpacePlanName string, displayOrder int, addressPlans []string) *v1beta2.AddressSpacePlan {
 	asp := &v1beta2.AddressSpacePlan{
 		TypeMeta: v1.TypeMeta{
 			Kind: "AddressSpacePlan",
 		},
 		ObjectMeta: v1.ObjectMeta{
-			Name: "myaddressspaceplan1",
+			Name: addressSpacePlanName,
 			UID:  types.UID(uuid.New().String()),
 		},
 		Spec: v1beta2.AddressSpacePlanSpec{
-			AddressPlans:     []string{"myaddressplan1", "myaddressplan2"},
-			AddressSpaceType: "standard",
-			DisplayOrder:     0,
+			AddressPlans:     addressPlans,
+			AddressSpaceType: addressSpaceType,
+			DisplayOrder:     displayOrder,
 		},
 	}
+	return asp
+}
 
-	ap1 := &v1beta2.AddressPlan{
+func createAddressPlan(addressSpaceName, addressType string, displayOrder int) *v1beta2.AddressPlan {
+	ap := &v1beta2.AddressPlan{
 		TypeMeta: v1.TypeMeta{
 			Kind: "AddressPlan",
 		},
 		ObjectMeta: v1.ObjectMeta{
-			Name: "myaddressplan1",
+			Name: addressSpaceName,
 			UID:  types.UID(uuid.New().String()),
 		},
 		Spec: v1beta2.AddressPlanSpec{
-			AddressType:  "topic",
-			DisplayOrder: 0,
+			AddressType:  addressType,
+			DisplayOrder: displayOrder,
 		},
 	}
-	ap2 := &v1beta2.AddressPlan{
-		TypeMeta: v1.TypeMeta{
-			Kind: "AddressPlan",
-		},
-		ObjectMeta: v1.ObjectMeta{
-			Name: "myaddressplan2",
-			UID:  types.UID(uuid.New().String()),
-		},
-		Spec: v1beta2.AddressPlanSpec{
-			AddressType:  "queue",
-			DisplayOrder: 1,
-		},
-	}
-	ap3 := &v1beta2.AddressPlan{
-		TypeMeta: v1.TypeMeta{
-			Kind: "AddressPlan",
-		},
-		ObjectMeta: v1.ObjectMeta{
-			Name: "myaddressplan3",
-			UID:  types.UID(uuid.New().String()),
-		},
-		Spec: v1beta2.AddressPlanSpec{
-			AddressType:  "queue",
-			DisplayOrder: 1,
-		},
-	}
-	err := r.Cache.Add(asp, ap1, ap2, ap3)
-	assert.NoError(t, err)
-
-	objs, err := r.Query().AddressPlans(context.TODO(), &asp.Name)
-	assert.NoError(t, err)
-
-	expected := 2
-	actual := len(objs)
-	assert.Equal(t, expected, actual, "Unexpected number of addressspaceplans")
+	return ap
 }

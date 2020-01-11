@@ -254,7 +254,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		AddressCommand            func(childComplexity int, input v1beta1.Address) int
-		AddressPlans              func(childComplexity int, addressSpacePlan *string) int
+		AddressPlans              func(childComplexity int, addressSpacePlan *string, addressType *AddressType) int
 		AddressSpaceCommand       func(childComplexity int, input v1beta1.AddressSpace) int
 		AddressSpacePlans         func(childComplexity int, addressSpaceType *AddressSpaceType) int
 		AddressSpaceTypes         func(childComplexity int) int
@@ -349,7 +349,7 @@ type QueryResolver interface {
 	AddressTypes(ctx context.Context) ([]AddressType, error)
 	AddressTypesV2(ctx context.Context, addressSpaceType *AddressSpaceType) ([]*AddressTypeConsoleapiEnmasseIoV1beta1, error)
 	AddressSpacePlans(ctx context.Context, addressSpaceType *AddressSpaceType) ([]*v1beta2.AddressSpacePlan, error)
-	AddressPlans(ctx context.Context, addressSpacePlan *string) ([]*v1beta2.AddressPlan, error)
+	AddressPlans(ctx context.Context, addressSpacePlan *string, addressType *AddressType) ([]*v1beta2.AddressPlan, error)
 	Whoami(ctx context.Context) (*v12.User, error)
 	Namespaces(ctx context.Context) ([]*v11.Namespace, error)
 	AddressSpaces(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1, error)
@@ -1185,7 +1185,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.AddressPlans(childComplexity, args["addressSpacePlan"].(*string)), true
+		return e.complexity.Query.AddressPlans(childComplexity, args["addressSpacePlan"].(*string), args["addressType"].(*AddressType)), true
 
 	case "Query.addressSpaceCommand":
 		if e.complexity.Query.AddressSpaceCommand == nil {
@@ -1649,8 +1649,8 @@ type Query {
   "Returns the address spaces plans defined by the system optionally filtereing for a single address space type"
   addressSpacePlans(addressSpaceType: AddressSpaceType): [AddressSpacePlan_admin_enmasse_io_v1beta2!]!
 
-  "Returns the address plans defined by the system optionally filtering for a single address space plan"
-  addressPlans(addressSpacePlan: String): [AddressPlan_admin_enmasse_io_v1beta2!]!
+  "Returns the address plans defined by the system optionally filtering those for a matching address space plan and/or address type"
+  addressPlans(addressSpacePlan: String, addressType: AddressType): [AddressPlan_admin_enmasse_io_v1beta2!]!
 
   "Returns the current logged on user"
   whoami: User_v1!
@@ -2064,6 +2064,14 @@ func (ec *executionContext) field_Query_addressPlans_args(ctx context.Context, r
 		}
 	}
 	args["addressSpacePlan"] = arg0
+	var arg1 *AddressType
+	if tmp, ok := rawArgs["addressType"]; ok {
+		arg1, err = ec.unmarshalOAddressType2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["addressType"] = arg1
 	return args, nil
 }
 
@@ -6385,7 +6393,7 @@ func (ec *executionContext) _Query_addressPlans(ctx context.Context, field graph
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AddressPlans(rctx, args["addressSpacePlan"].(*string))
+		return ec.resolvers.Query().AddressPlans(rctx, args["addressSpacePlan"].(*string), args["addressType"].(*AddressType))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11400,6 +11408,30 @@ func (ec *executionContext) marshalOAddressStatus_enmasse_io_v1beta12ᚖgithub�
 		return graphql.Null
 	}
 	return ec._AddressStatus_enmasse_io_v1beta1(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOAddressType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx context.Context, v interface{}) (AddressType, error) {
+	var res AddressType
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalOAddressType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx context.Context, sel ast.SelectionSet, v AddressType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOAddressType2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx context.Context, v interface{}) (*AddressType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOAddressType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOAddressType2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx context.Context, sel ast.SelectionSet, v *AddressType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

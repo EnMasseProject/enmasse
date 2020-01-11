@@ -18,6 +18,29 @@ import (
 // - e in the event of a error preventing evaluation of the filter.
 type ObjectFilter = func(interface{}) (match bool, cont bool, e error)
 
+func And(filters... ObjectFilter) ObjectFilter {
+	return func(o interface{}) (bool, bool, error) {
+		c := true
+		for _, filter := range filters {
+			if filter != nil {
+				fr, fc, e := filter(o)
+				if e != nil {
+					return false, false, e
+				}
+
+				if !fc {
+					c = false
+				}
+				if !fr {
+					return false, fc, nil
+				}
+			}
+		}
+
+		return true, c, nil
+	}
+}
+
 type Cache interface {
 	Init(indexSpecifier ...IndexSpecifier) error
 
