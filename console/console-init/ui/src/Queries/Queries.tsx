@@ -134,7 +134,7 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
 ) => {
   let filterString = "";
   if (name && name.trim() !== "") {
-    filterString += "`$.Spec.AddressSpace` = '" + name + "' AND";
+    filterString += "`$.ObjectMeta.Name` LIKE '" + name + ".%' AND";
   }
   if (namespace && namespace.trim() !== "") {
     filterString += "`$.ObjectMeta.Namespace` = '" + namespace + "'";
@@ -313,7 +313,7 @@ export const RETURN_ADDRESS_DETAIL = (
 ) => {
   let filter = "";
   if (addressSpace) {
-    filter += "`$.Spec.AddressSpace` = '" + addressSpace + "' AND ";
+    filter += "`$.ObjectMeta.Name` LIKE '" + addressSpace + ".%' AND ";
   }
   if (namespace) {
     filter += "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
@@ -376,7 +376,7 @@ export const RETURN_ADDRESS_LINKS = (
 ) => {
   let filter = "";
   if (addressSpace) {
-    filter += "`$.Spec.AddressSpace` = '" + addressSpace + "' AND ";
+    filter += "`$.ObjectMeta.Name` LIKE '" + addressSpace + ".%' AND ";
   }
   if (namespace) {
     filter += "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
@@ -939,7 +939,7 @@ export const RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION = (
 ) => {
   let filterString = "";
   if (name && name.trim() !== "") {
-    filterString += "`$.Spec.AddressSpace` = '" + name + "' AND";
+    filterString += "`$.ObjectMeta.Name` LIKE '" + name + ".%' AND";
   }
   if (namespace && namespace.trim() !== "") {
     filterString += "`$.ObjectMeta.Namespace` = '" + namespace + "'";
@@ -983,7 +983,7 @@ export const RETURN_ALL_NAMES_OF_ADDRESS_LINKS = (
   const all_names = gql`
   query all_link_names_for_connection {
     addresses(
-      filter: "\`$.Spec.AddressSpace\` = '${addressSpaceName}'  AND \`$.ObjectMeta.Name\` = '${addressname}' AND \`$.ObjectMeta.Namespace\` = '${namespace}'"
+      filter: "\`$.ObjectMeta.Name\` LIKE '${addressSpaceName}.%'  AND \`$.ObjectMeta.Name\` = '${addressname}' AND \`$.ObjectMeta.Namespace\` = '${namespace}'"
     ) {
       Total
       Addresses {
@@ -1010,7 +1010,7 @@ export const RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_CONTAINER_SEARCH = (
   const all_names = gql`
   query all_link_names_for_connection {
     addresses(
-      filter: "\`$.Spec.AddressSpace\` = '${addressSpaceName}'  AND \`$.ObjectMeta.Name\` = '${addressname}' AND \`$.ObjectMeta.Namespace\` = '${namespace}'"
+      filter: "\`$.ObjectMeta.Name\` LIKE '${addressSpaceName}.%'  AND \`$.ObjectMeta.Name\` = '${addressname}' AND \`$.ObjectMeta.Namespace\` = '${namespace}'"
     ) {
       Total
       Addresses {
