@@ -179,7 +179,7 @@ func (r *addressSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.AddressS
 	if obj != nil {
 		addressPlanName := obj.Plan
 		planFilter := func(obj interface{}) (bool, bool, error) {
-			asp, ok := obj.(*v1beta2.AddressSpacePlan)
+			asp, ok := obj.(*v1beta2.AddressPlan)
 			if !ok {
 				return false, false, fmt.Errorf("unexpected type: %T", obj)
 			}
@@ -192,7 +192,7 @@ func (r *addressSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.AddressS
 		}
 
 		if len(objs) == 0 {
-			// There might be a plan change in progress, or the user may have created a space referring to
+			// There might be a plan change in progress, or the user may have created an address referring to
 			// an unknown plan.
 			return &v1beta2.AddressPlan{
 				ObjectMeta: metav1.ObjectMeta{
