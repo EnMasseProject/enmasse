@@ -8,6 +8,7 @@ package resolvers
 import (
 	"context"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/google/uuid"
@@ -140,6 +141,23 @@ func TestQueryAddressPlansByAddressType(t *testing.T) {
 
 	assert.Equal(t, 1, len(objs), "Unexpected number of address plans restricted by address type")
 }
+
+func TestQueryAddressPlan(t *testing.T) {
+	r := newTestPlansResolver(t)
+
+	ap := createAddressPlan("myaddressplan1", "queue", 0)
+
+	err := r.Cache.Add(ap)
+	assert.NoError(t, err)
+
+	foo := &v1beta1.AddressSpec{
+		Plan: "myaddressplan1",
+	}
+	plan, err := r.AddressSpec_enmasse_io_v1beta1().Plan(context.TODO(), foo)
+	assert.NoError(t, err)
+	assert.Equal(t, ap, plan, "Unexpected plan")
+}
+
 
 func createAddressSpacePlan(addressSpaceType, addressSpacePlanName string, displayOrder int, addressPlans []string) *v1beta2.AddressSpacePlan {
 	asp := &v1beta2.AddressSpacePlan{
