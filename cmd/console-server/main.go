@@ -6,8 +6,9 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"github.com/99designs/gqlgen/cmd"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/handler"
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
@@ -18,6 +19,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	user "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
+	"github.com/vektah/gqlparser/gqlerror"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 	"net/http"
@@ -187,7 +189,27 @@ func main() {
 	}
 
 	playground := handler.Playground("GraphQL playground", "/graphql/query")
-	graphql := handler.GraphQL(resolvers.NewExecutableSchema(resolvers.Config{Resolvers: &resolver}))
+	graphql := handler.GraphQL(resolvers.NewExecutableSchema(resolvers.Config{Resolvers: &resolver}),
+		handler.ErrorPresenter(
+			func(ctx context.Context, e error) *gqlerror.Error {
+				rctx := graphql.GetRequestContext(ctx)
+				if rctx != nil {
+					log.Printf("Query error - op: %s query: %s vars: %+v error: %s\n", rctx.OperationName, rctx.RawQuery, rctx.Variables, e)
+				}
+				return graphql.DefaultErrorPresenter(ctx, e)
+			},
+		),
+		handler.RequestMiddleware(func(ctx context.Context, next func(ctx context.Context) []byte) []byte {
+			rctx := graphql.GetRequestContext(ctx)
+			start := time.Now()
+			bytes := next(ctx)
+			if rctx != nil {
+				log.Printf("Query execution - op: %s %s\n", rctx.OperationName, time.Since(start))
+			}
+
+			return bytes
+		}),
+	)
 
 	http.Handle("/graphql/", playground)
 	if disablePropagateBearer {
@@ -196,7 +218,7 @@ func main() {
 		http.Handle("/graphql/query", authHandler(graphql))
 	}
 
-	fmt.Printf("connect to http://localhost:%s/ for GraphQL playground\n", port)
+	log.Printf("connect to http://localhost:%s/ for GraphQL playground\n", port)
 	err = http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		panic(err.Error())

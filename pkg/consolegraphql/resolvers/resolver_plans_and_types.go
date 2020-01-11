@@ -40,8 +40,9 @@ func (r *Resolver) AddressPlanSpec_admin_enmasse_io_v1beta2() AddressPlanSpec_ad
 	return &addressPlanSpecK8sResolver{r}
 }
 
-func (r *queryResolver) AddressPlans(ctx context.Context, addressSpacePlan *string) ([]*v1beta2.AddressPlan, error) {
-	var planFilter cache.ObjectFilter
+func (r *queryResolver) AddressPlans(ctx context.Context, addressSpacePlan *string, addressType *AddressType) ([]*v1beta2.AddressPlan, error) {
+	var bySpacePlanFilter cache.ObjectFilter
+	var byTypePlanFilter cache.ObjectFilter
 	if addressSpacePlan != nil {
 		spaceFilter := func(obj interface{}) (bool, bool, error) {
 			asp, ok := obj.(*v1beta2.AddressSpacePlan)
@@ -65,7 +66,7 @@ func (r *queryResolver) AddressPlans(ctx context.Context, addressSpacePlan *stri
 
 		asp := objs[0].(*v1beta2.AddressSpacePlan)
 
-		planFilter = func(obj interface{}) (bool, bool, error) {
+		bySpacePlanFilter = func(obj interface{}) (bool, bool, error) {
 			ap, ok := obj.(*v1beta2.AddressPlan)
 			if !ok {
 				return false, false, fmt.Errorf("unexpected type: %T", obj)
@@ -79,7 +80,19 @@ func (r *queryResolver) AddressPlans(ctx context.Context, addressSpacePlan *stri
 			return false, true, nil
 		}
 	}
-	objects, e := r.Cache.Get("hierarchy", "AddressPlan/", planFilter)
+
+	if addressType != nil {
+		byTypePlanFilter = func(obj interface{}) (bool, bool, error) {
+			ap, ok := obj.(*v1beta2.AddressPlan)
+			if !ok {
+				return false, false, fmt.Errorf("unexpected type: %T", obj)
+			}
+
+			return ap.Spec.AddressType == string(*addressType), true, nil
+		}
+	}
+
+	objects, e := r.Cache.Get("hierarchy", "AddressPlan/", cache.And(bySpacePlanFilter, byTypePlanFilter))
 	if e != nil {
 		return nil, e
 	}
