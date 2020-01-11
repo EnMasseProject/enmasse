@@ -251,8 +251,8 @@ type Query {
   "Returns the address spaces plans defined by the system optionally filtereing for a single address space type"
   addressSpacePlans(addressSpaceType: AddressSpaceType): [AddressSpacePlan_admin_enmasse_io_v1beta2!]!
 
-  "Returns the address plans defined by the system optionally filtering for a single address space plan"
-  addressPlans(addressSpacePlan: String): [AddressPlan_admin_enmasse_io_v1beta2!]!
+  "Returns the address plans defined by the system optionally filtering those for a matching address space plan and/or address type"
+  addressPlans(addressSpacePlan: String, addressType: AddressType): [AddressPlan_admin_enmasse_io_v1beta2!]!
 
   "Returns the current logged on user"
   whoami: User_v1!
