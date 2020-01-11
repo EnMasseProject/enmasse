@@ -591,11 +591,11 @@ export const RETURN_ALL_CONECTION_LIST = (
 ) => {
   let filter = "";
   if (name) {
-    filter += "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + name + "'";
+    filter += "`$.Spec.AddressSpace` = '" + name + "'";
   }
   if (namespace) {
     filter +=
-      " AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = '" + namespace + "'";
+      " AND `$.ObjectMeta.Namespace` = '" + namespace + "'";
   }
   if (
     (hostnames && hostnames.length > 0) ||
@@ -704,11 +704,11 @@ export const RETURN_CONNECTION_DETAIL = (
   let filter = "";
   if (addressSpaceName) {
     filter +=
-      "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + addressSpaceName + "' AND ";
+      "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
   }
   if (addressSpaceNameSpcae) {
     filter +=
-      "`$.Spec.AddressSpace.ObjectMeta.Namespace` = '" +
+      "`$.ObjectMeta.Namespace` = '" +
       addressSpaceNameSpcae +
       "' AND ";
   }
@@ -805,11 +805,11 @@ export const RETURN_CONNECTION_LINKS = (
   let filter = "";
   if (addressSpaceName) {
     filter +=
-      "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + addressSpaceName + "' AND ";
+      "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
   }
   if (addressSpaceNameSpcae) {
     filter +=
-      "`$.Spec.AddressSpace.ObjectMeta.Namespace` = '" +
+      "`$.ObjectMeta.Namespace` = '" +
       addressSpaceNameSpcae +
       "' AND ";
   }
@@ -1041,11 +1041,11 @@ export const RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH = (
   let filter = "";
   if (addressSpaceName) {
     filter +=
-      "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + addressSpaceName + "' AND ";
+      "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
   }
   if (namespace) {
     filter +=
-      "`$.Spec.AddressSpace.ObjectMeta.Namespace` = '" + namespace + "' AND ";
+      "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
   }
   if (connectionName) {
     filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
@@ -1081,11 +1081,11 @@ export const RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH = (
   let filter = "";
   if (addressSpaceName) {
     filter +=
-      "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + addressSpaceName + "' AND ";
+      "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
   }
   if (namespace) {
     filter +=
-      "`$.Spec.AddressSpace.ObjectMeta.Namespace` = '" + namespace + "' AND ";
+      "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
   }
   if (connectionName) {
     filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
