@@ -872,13 +872,13 @@ function makeMockAddressMetrics() {
       Units: "messages"
     },
     {
-      Name: "enmasse-senders",
+      Name: "enmasse_senders",
       Type: "gauge",
       Value: Math.floor(Math.random() * 3),
       Units: "links"
     },
     {
-      Name: "enmasse-receivers",
+      Name: "enmasse_receivers",
       Type: "gauge",
       Value: Math.floor(Math.random() * 3),
       Units: "links"
@@ -1008,13 +1008,13 @@ function makeAddressSpaceMetrics(as) {
 
   return [
     {
-      Name: "enmasse-connections",
+      Name: "enmasse_connections",
       Type: "gauge",
       Value: cons.length,
       Units: "connections"
     },
     {
-      Name: "enmasse-addresses",
+      Name: "enmasse_addresses",
       Type: "gauge",
       Value: addrs.length,
       Units: "addresses"
