@@ -108,7 +108,7 @@ public class PublishTest extends TestBase implements ITestIsolatedStandard {
         IMqttClient mqttClient = mqttFactory.create();
         try {
             mqttClient.connect();
-            simpleMQTTSendReceive(topic, mqttClient, 3);
+            assertSimpleMQTTSendReceive(topic, mqttClient, 3);
             mqttClient.disconnect();
         } finally {
             mqttFactory.close();

@@ -15,7 +15,11 @@ import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.vertx.proton.ProtonClientOptions;
@@ -169,5 +173,113 @@ public class ClientUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * attach N receivers into one address with own username/password
+     */
+    public List<ExternalMessagingClient> attachReceivers(AddressSpace addressSpace, Address destination,
+                                                         int receiverCount, int timeout, UserCredentials userCredentials) throws Exception {
+
+        List<ExternalMessagingClient> receivers = new ArrayList<>();
+        for (int i = 0; i < receiverCount; i++) {
+            ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                    .withClientEngine(new RheaClientReceiver())
+                    .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                    .withAddress(destination)
+                    .withCredentials(userCredentials)
+                    .withTimeout(timeout)
+                    .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
+                    .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+            receiverClient.runAsync(false);
+            receivers.add(receiverClient);
+        }
+
+        Thread.sleep(15000); //wait for attached
+        return receivers;
+    }
+
+    /**
+     * attach senders to destinations (for N-th destination is attached N+1 senders)
+     */
+    public List<ExternalMessagingClient> attachSenders(AddressSpace addressSpace, List<Address> destinations, int timeout, UserCredentials userCredentials) throws Exception {
+        List<ExternalMessagingClient> senders = new ArrayList<>();
+
+        for (int i = 0; i < destinations.size(); i++) {
+            for (int j = 0; j < i + 1; j++) {
+                ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                        .withClientEngine(new RheaClientSender())
+                        .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                        .withAddress(destinations.get(i))
+                        .withCredentials(userCredentials)
+                        .withMessageBody("msg no.%d")
+                        .withTimeout(timeout)
+                        .withCount(30)
+                        .withAdditionalArgument(ClientArgument.DURATION, 30)
+                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
+                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                senderClient.runAsync(false);
+                senders.add(senderClient);
+            }
+        }
+
+        return senders;
+    }
+
+    /**
+     * attach receivers to destinations (for N-th destination is attached N+1 senders)
+     */
+    public List<ExternalMessagingClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations, int timeout, UserCredentials userCredentials) throws Exception {
+        List<ExternalMessagingClient> receivers = new ArrayList<>();
+
+        for (int i = 0; i < destinations.size(); i++) {
+            for (int j = 0; j < i + 1; j++) {
+                ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                        .withClientEngine(new RheaClientReceiver())
+                        .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                        .withAddress(destinations.get(i))
+                        .withCredentials(userCredentials)
+                        .withTimeout(timeout)
+                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
+                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                receiverClient.runAsync(false);
+                receivers.add(receiverClient);
+            }
+        }
+
+        return receivers;
+    }
+
+    /**
+     * create M connections with N receivers and K senders
+     */
+    public ExternalMessagingClient attachConnector(AddressSpace addressSpace, Address destination,
+                                                      int connectionCount,
+                                                      int senderCount, int receiverCount, UserCredentials credentials, int timeout) throws Exception {
+
+        ExternalMessagingClient connectorClient = new ExternalMessagingClient()
+                .withClientEngine(new RheaClientConnector())
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                .withAddress(destination)
+                .withCredentials(credentials)
+                .withCount(connectionCount)
+                .withTimeout(timeout)
+                .withAdditionalArgument(ClientArgument.SENDER_COUNT, Integer.toString(senderCount))
+                .withAdditionalArgument(ClientArgument.RECEIVER_COUNT, Integer.toString(receiverCount))
+                .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
+                .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+        connectorClient.runAsync(false);
+
+        return connectorClient;
+    }
+
+    /**
+     * stop all clients from list of Abstract clients
+     */
+    public void stopClients(List<ExternalMessagingClient> clients) {
+        if (clients != null) {
+            LOGGER.info("Stopping clients...");
+            clients.forEach(ExternalMessagingClient::stop);
+        }
     }
 }

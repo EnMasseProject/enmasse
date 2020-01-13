@@ -15,6 +15,7 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -139,7 +140,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         resourcesManager.setAddresses(t2);
 
         resourcesManager.appendAddresses(t1);
-        waitForDestinationsReady(t2);
+        AddressUtils.waitForDestinationsReady(t2);
 
         AmqpClient topicClient = getAmqpClientFactory().createTopicClient();
         runTopicTest(topicClient, t1, 2048);
@@ -172,7 +173,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .endSpec()
                 .build();
 
-        runRestApiTest(getSharedAddressSpace(), t1, t2);
+        assertAddressApi(getSharedAddressSpace(), t1, t2);
     }
 
     @Test
@@ -585,13 +586,13 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        Connection connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        Connection connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
 
-        sendReceiveLargeMessageTopic(jmsProvider, 1, addressTopic, 1);
-        sendReceiveLargeMessageTopic(jmsProvider, 0.5, addressTopic, 1);
-        sendReceiveLargeMessageTopic(jmsProvider, 0.25, addressTopic, 1);
+        assertSendReceiveLargeMessageTopic(jmsProvider, 1, addressTopic, 1);
+        assertSendReceiveLargeMessageTopic(jmsProvider, 0.5, addressTopic, 1);
+        assertSendReceiveLargeMessageTopic(jmsProvider, 0.25, addressTopic, 1);
 
         connection.stop();
         connection.close();

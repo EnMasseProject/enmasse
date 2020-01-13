@@ -39,6 +39,6 @@ class MulticastTest extends TestBase implements ITestSharedStandard {
                 .endSpec()
                 .build();
 
-        runRestApiTest(getSharedAddressSpace(), m1, m2);
+        assertAddressApi(getSharedAddressSpace(), m1, m2);
     }
 }

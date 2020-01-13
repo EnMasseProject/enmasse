@@ -376,6 +376,14 @@ public abstract class Kubernetes {
         return terminatedPodsLogs;
     }
 
+    public String getOCConsoleRoute() {
+        if (getOcpVersion() == 4) {
+            return String.format("https://console-openshift-console.%s", Environment.getInstance().kubernetesDomain()).replaceAll("(?<!(http:|https:))[//]+", "/");
+        } else {
+            return String.format("%s/console", Environment.getInstance().getApiUrl()).replaceAll("(?<!(http:|https:))[//]+", "/");
+        }
+    }
+
     public Map<String, String> getLogsByLables(String namespace, Map<String, String> labels) {
         return getLogs(namespace, client.pods().inNamespace(namespace).withLabels(labels).list().getItems());
     }
