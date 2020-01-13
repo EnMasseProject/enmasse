@@ -147,7 +147,6 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
     const response = await client.query<IConnectionLinksNameSearchResponse>({
       query: RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH(
         connectionName,
-        addressSpaceName,
         namespace,
         value.trim()
       )
@@ -167,7 +166,6 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       } else {
         const obtainedList = response.data.connections.Connections[0].Links.Links.map(
           (link: any) => {
-            console.log("Name", link);
             return link.ObjectMeta.Name;
           }
         );
@@ -195,7 +193,6 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
     const response = await client.query<IConnectionLinksAddressSearchResponse>({
       query: RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH(
         connectionName,
-        addressSpaceName,
         namespace,
         value.trim()
       )

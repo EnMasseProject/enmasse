@@ -143,7 +143,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     const response = await client.query<ISearchAddressLinkNameResponse>({
       query: RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH(
         addressName,
-        addressSpaceName,
         namespace,
         value.trim()
       )
@@ -189,12 +188,10 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     const response = await client.query<ISearchAddressLinkContainerResponse>({
       query: RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH(
         addressName,
-        addressSpaceName,
         namespace,
         value.trim()
       )
     });
-    console.log(response);
     if (
       response &&
       response.data &&

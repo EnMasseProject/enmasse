@@ -56,7 +56,6 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   );
   if (loading) return <Loading />;
   if (error) console.log(error);
-  // console.log(data);
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };

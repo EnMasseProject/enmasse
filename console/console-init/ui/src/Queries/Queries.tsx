@@ -971,18 +971,17 @@ export const RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION = (
 
 export const RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH = (
   addressname: string,
-  addressSpaceName: string,
   namespace: string,
   name: string
 ) => {
   const all_names = gql`
   query all_link_names_for_connection {
     addresses(
-      filter: "\`$.ObjectMeta.Name\` LIKE '${addressSpaceName}.%'  AND \`$.ObjectMeta.Name\` = '${addressname}' AND \`$.ObjectMeta.Namespace\` = '${namespace}'"
+      filter: "\`$.ObjectMeta.Name\` = '${addressname}' AND \`$.ObjectMeta.Namespace\` = '${namespace}'"
     ) {
       Total
       Addresses {
-        Links(filter:"\`$.ObjectMeta.Name\` = '${name}'" first:100,offset:0)  {
+        Links(filter:"\`$.ObjectMeta.Name\` LIKE '${name}%'" first:100,offset:0)  {
           Total
           Links{
             ObjectMeta {
@@ -999,18 +998,17 @@ export const RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH = (
 
 export const RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH = (
   addressname: string,
-  addressSpaceName: string,
   namespace: string,
   container: string
 ) => {
   const all_names = gql`
   query all_link_names_for_connection {
     addresses(
-      filter: "\`$.ObjectMeta.Name\` LIKE '${addressSpaceName}.%'  AND \`$.ObjectMeta.Name\` = '${addressname}' AND \`$.ObjectMeta.Namespace\` = '${namespace}'"
+      filter: "\`$.ObjectMeta.Name\` = '${addressname}' AND \`$.ObjectMeta.Namespace\` = '${namespace}'"
     ) {
       Total
       Addresses {
-        Links(filter:"\`$.Spec.Connection.Spec.ContainerId\` = '${container}'" first:100,offset:0)  {
+        Links(filter:"\`$.Spec.Connection.Spec.ContainerId\` LIKE '${container}%'" first:100,offset:0)  {
           Total
           Links{
             Spec{
@@ -1031,15 +1029,10 @@ export const RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH = (
 
 export const RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH = (
   connectionName: string,
-  addressSpaceName: string,
   namespace: string,
   name: string
 ) => {
   let filter = "";
-  if (addressSpaceName) {
-    filter +=
-      "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
-  }
   if (namespace) {
     filter +=
       "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
@@ -1054,7 +1047,7 @@ export const RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH = (
     ) {
       Total
       Connections {
-        Links(first:100 offset:0 filter:"\`$.ObjectMeta.Name\` = '${name}'") {
+        Links(first:100 offset:0 filter:"\`$.ObjectMeta.Name\` LIKE '${name}%'") {
           Total
           Links {
             ObjectMeta {
@@ -1071,15 +1064,10 @@ export const RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH = (
 
 export const RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH = (
   connectionName: string,
-  addressSpaceName: string,
   namespace: string,
   address: string
 ) => {
   let filter = "";
-  if (addressSpaceName) {
-    filter +=
-      "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
-  }
   if (namespace) {
     filter +=
       "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
@@ -1095,7 +1083,7 @@ export const RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH = (
       Total
       Connections {
         Links(first:100 offset:0
-              filter:"\`$.Spec.Address\` = '${address}'") {
+              filter:"\`$.Spec.Address\` LIKE '${address}%'") {
           Links {
             Spec {
               Address
@@ -1116,9 +1104,9 @@ export const RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE = (
   let filter = "";
   if (value) {
     if (isName) {
-      filter += "`$.ObjectMeta.Name` = '" + value + "'";
+      filter += "`$.ObjectMeta.Name` LIKE '" + value + "%'";
     } else {
-      filter += "`$.ObjectMeta.Namespace` = '" + value + "'";
+      filter += "`$.ObjectMeta.Namespace` LIKE '" + value + "%'";
     }
   }
   const all_address_spaces = gql`
@@ -1152,7 +1140,7 @@ export const RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
   }
   if (name && name.trim() != "") {
     filterString += " AND ";
-    filterString += "`$.ObjectMeta.Name` ='" + name.trim() + "' ";
+    filterString += "`$.ObjectMeta.Name` LIKE '" + name.trim() + "%' ";
   }
   const ALL_ADDRESS_FOR_ADDRESS_SPACE = gql`
   query all_addresses_for_addressspace_view {
@@ -1179,18 +1167,18 @@ export const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_F
 ) => {
   let filter = "";
   if (name) {
-    filter += "`$.Spec.AddressSpace.ObjectMeta.Name` = '" + name + "'";
+    filter += "`$.Spec.AddressSpace` = '" + name + "'";
   }
   if (namespace) {
     filter +=
-      " AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = '" + namespace + "'";
+      " AND `$.ObjectMeta.Namespace` = '" + namespace + "'";
   }
   if (searchValue.trim() != "") {
     filter += " AND ";
     if (isHostname) {
-      filter += "`$.Spec.Hostname` ='" + searchValue.trim() + "' ";
+      filter += "`$.Spec.Hostname` LIKE '" + searchValue.trim() + "%' ";
     } else {
-      filter += "`$.Spec.ContainerId` ='" + searchValue.trim() + "' ";
+      filter += "`$.Spec.ContainerId` LIKE '" + searchValue.trim() + "%' ";
     }
   }
 

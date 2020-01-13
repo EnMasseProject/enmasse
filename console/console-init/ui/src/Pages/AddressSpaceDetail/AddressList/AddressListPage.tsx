@@ -158,7 +158,6 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
 
   return (
     <>
-      {console.log("totalAddressSpaces", addressesList)}
       <AddressList
         rowsData={addressesList ? addressesList : []}
         onEdit={handleEdit}

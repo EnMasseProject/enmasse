@@ -113,7 +113,6 @@ export default function AddressDetailPage() {
     setIsEditModalOpen(!isEditModalOpen);
   };
 
-  console.log(addressDetail)
   return (
     <>
       {addressDetail && (
