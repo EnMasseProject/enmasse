@@ -7,39 +7,56 @@ package io.enmasse.osb.api.bind;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
-import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
-import io.enmasse.k8s.api.AuthenticationServiceRegistry;
-import io.enmasse.k8s.api.SchemaProvider;
-import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.SchemaProvider;
+import io.enmasse.osb.UserApi;
 import io.enmasse.osb.api.EmptyResponse;
 import io.enmasse.osb.api.OSBServiceBase;
-import io.enmasse.user.api.UserApi;
-import io.enmasse.user.model.v1.*;
-import javax.ws.rs.*;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthenticationBuilder;
+import io.enmasse.user.model.v1.UserAuthenticationType;
+import io.enmasse.user.model.v1.UserAuthorization;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+import io.enmasse.user.model.v1.UserBuilder;
+import io.enmasse.user.model.v1.UserSpecBuilder;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 @Path(OSBServiceBase.BASE_URI + "/service_instances/{instanceId}/service_bindings/{bindingId}")
 @Consumes({MediaType.APPLICATION_JSON})
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBBindingService extends OSBServiceBase {
 
-    private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final UserApi userApi;
     private final Random random = new SecureRandom();
 
-    public OSBBindingService(AddressSpaceApi addressSpaceApi, AuthApi authApi, SchemaProvider schemaProvider, AuthenticationServiceRegistry authenticationServiceRegistry, UserApi userApi) {
+    public OSBBindingService(AddressSpaceApi addressSpaceApi, AuthApi authApi, SchemaProvider schemaProvider, UserApi userApi) {
         super(addressSpaceApi, authApi, schemaProvider);
-        this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.userApi = userApi;
     }
 
@@ -136,18 +153,7 @@ public class OSBBindingService extends OSBServiceBase {
                 .withSpec(specBuilder.build())
                 .build();
 
-        AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
-        if (authenticationService != null) {
-            String realmName = authenticationService.getSpec().getRealm();
-            if (realmName == null) {
-                realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-            }
-            if (userApi.getUserWithName(authenticationService, realmName, user.getMetadata().getName()).isPresent()) {
-                userApi.replaceUser(authenticationService, realmName, user);
-            } else {
-                userApi.createUser(authenticationService, realmName, user);
-            }
-        }
+        userApi.createOrReplace(user);
         return user;
     }
 
@@ -202,22 +208,7 @@ public class OSBBindingService extends OSBServiceBase {
     }
 
     private boolean deleteUser(AddressSpace addressSpace, String username) throws Exception {
-
-        AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
-        if (authenticationService != null) {
-            String realmName = authenticationService.getSpec().getRealm();
-            if (realmName == null) {
-                realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-            }
-            Optional<User> user = userApi.getUserWithName(authenticationService, realmName, addressSpace.getMetadata().getName() + "." + username);
-            if (user.isPresent()) {
-                userApi.deleteUser(authenticationService, realmName, user.get());
-                return true;
-            } else {
-                return false;
-            }
-        }
-        return false;
+        return userApi.deleteUser(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName() + "." + username);
     }
 
 }

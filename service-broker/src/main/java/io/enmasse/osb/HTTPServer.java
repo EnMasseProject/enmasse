@@ -10,16 +10,14 @@ import io.enmasse.api.auth.ApiHeaderConfig;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
-import io.enmasse.k8s.api.AuthenticationServiceRegistry;
-import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.osb.api.bind.OSBBindingService;
 import io.enmasse.osb.api.catalog.OSBCatalogService;
 import io.enmasse.osb.api.console.HttpConsoleService;
 import io.enmasse.osb.api.lastoperation.OSBLastOperationService;
 import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.osb.api.provision.OSBProvisioningService;
-import io.enmasse.user.api.UserApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServer;
@@ -42,13 +40,12 @@ public class HTTPServer extends AbstractVerticle {
     private final UserApi userApi;
     private final int listenPort;
     private final ConsoleProxy consoleProxy;
-    private final AuthenticationServiceRegistry authenticationServiceRegistry;
 
     private HttpServer httpServer;
 
     public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider,
                       AuthApi authApi, String certDir, boolean enableRbac,
-                      UserApi userApi, int listenPort, ConsoleProxy consoleProxy, AuthenticationServiceRegistry authenticationServiceRegistry) {
+                      UserApi userApi, int listenPort, ConsoleProxy consoleProxy) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.certDir = certDir;
@@ -57,7 +54,6 @@ public class HTTPServer extends AbstractVerticle {
         this.userApi = userApi;
         this.listenPort = listenPort;
         this.consoleProxy = consoleProxy;
-        this.authenticationServiceRegistry = authenticationServiceRegistry;
     }
 
     @Override
@@ -81,7 +77,7 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpConsoleService(addressSpaceApi));
         deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi, authApi, schemaProvider));
         deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, authApi, schemaProvider, consoleProxy));
-        deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi, authApi, schemaProvider, authenticationServiceRegistry, userApi));
+        deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi, authApi, schemaProvider, userApi));
         deployment.getRegistry().addSingletonResource(new OSBLastOperationService(addressSpaceApi, authApi, schemaProvider));
 
         VertxRequestHandler requestHandler = new VertxRequestHandler(vertx, deployment);

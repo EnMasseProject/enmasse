@@ -7,17 +7,14 @@ package io.enmasse.osb;
 
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.admin.model.v1.AdminCrd;
-import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.k8s.api.*;
 import io.enmasse.osb.api.provision.ConsoleProxy;
-import io.enmasse.user.api.DelegateUserApi;
-import io.enmasse.user.api.NullUserApi;
-import io.enmasse.user.api.UserApi;
-import io.enmasse.user.keycloak.KeycloakFactory;
-import io.enmasse.user.keycloak.KeycloakUserApi;
-import io.enmasse.user.keycloak.KubeKeycloakFactory;
+import io.enmasse.user.model.v1.DoneableUser;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserCrd;
+import io.enmasse.user.model.v1.UserList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
@@ -33,10 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.time.Clock;
-import java.time.Duration;
 import java.util.Base64;
-import java.util.Map;
 
 public class ServiceBroker extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ServiceBroker.class.getName());
@@ -64,15 +58,13 @@ public class ServiceBroker extends AbstractVerticle {
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
-        AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
-
         ensureRouteExists(client.adapt(OpenShiftClient.class), options);
         ensureCredentialsExist(client, options);
 
         AddressSpaceApi addressSpaceApi = KubeAddressSpaceApi.create(client, null, options.getVersion());
         AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
 
-        UserApi userApi = createUserApi(options, schemaProvider);
+        UserApi userApi = createUserApi();
 
         ConsoleProxy consoleProxy = addressSpace -> {
             Route route = client.adapt(OpenShiftClient.class).routes().inNamespace(client.getNamespace()).withName(options.getConsoleProxyRouteName()).get();
@@ -82,7 +74,7 @@ public class ServiceBroker extends AbstractVerticle {
             return String.format("https://%s/console/%s/%s", route.getSpec().getHost(), addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
         };
 
-        vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), userApi, options.getListenPort(), consoleProxy, authenticationServiceRegistry),
+        vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), userApi, options.getListenPort(), consoleProxy),
                 result -> {
                     if (result.succeeded()) {
                         log.info("EnMasse Service Broker started");
@@ -106,13 +98,19 @@ public class ServiceBroker extends AbstractVerticle {
         }
     }
 
-    private UserApi createUserApi(ServiceBrokerOptions options, CachingSchemaProvider schemaProvider) {
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client);
-        KeycloakUserApi keycloakUserApi = new KeycloakUserApi(keycloakFactory, Clock.systemUTC(), Duration.ZERO);
-        schemaProvider.registerListener(newSchema -> keycloakUserApi.retainAuthenticationServices(newSchema.findAuthenticationServiceType(AuthenticationServiceType.standard)));
-        return new DelegateUserApi(Map.of(AuthenticationServiceType.none, new NullUserApi(),
-                AuthenticationServiceType.external, new NullUserApi(),
-                AuthenticationServiceType.standard, keycloakUserApi));
+    private UserApi createUserApi() {
+        var userClient = client.customResources(UserCrd.messagingUser(), User.class, UserList.class, DoneableUser.class);
+        return new UserApi() {
+            @Override
+            public void createOrReplace(User user) {
+                userClient.inNamespace(user.getMetadata().getNamespace()).create(user);
+            }
+
+            @Override
+            public boolean deleteUser(String namespace, String name) {
+                return userClient.inNamespace(namespace).withName(name).delete();
+            }
+        };
     }
 
     private static void ensureRouteExists(OpenShiftClient client, ServiceBrokerOptions serviceBrokerOptions) throws IOException {
