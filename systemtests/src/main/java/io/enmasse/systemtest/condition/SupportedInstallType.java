@@ -21,9 +21,6 @@ import io.enmasse.systemtest.OLMInstallationType;
  * According to the current systemtests implementation, using this annotation will force the deployment of enmasse into the cluster,
  * so if enmasse is already deployed, regardless of the installation type, enmasse will be undeployed and redeployed with the specific
  * settings indicated in this annotation
- *
- * @author famartin
- *
  */
 @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
