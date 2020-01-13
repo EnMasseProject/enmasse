@@ -19,7 +19,10 @@ import (
 
 func main() {
 
-	var global = flag.Bool("global", false, "Globally scoped resource")
+	var scope = flag.String("scope", "namespaced",
+		"resource scope")
+	var watchAll = flag.Bool("watchAll", true,
+		"if true, generate a watch that watches NamespaceAll, if false, ctor requires a namespace argument")
 	flag.Parse()
 
 	name := flag.Args()[0]
@@ -45,7 +48,8 @@ func main() {
 		ClientPackage   string
 		ClientInterface string
 		TypePackage     string
-		Global          bool
+		Scope           string
+		WatchAll        bool
 	}{
 		Timestamp:       time.Now(),
 		Name:            name,
@@ -53,7 +57,8 @@ func main() {
 		ClientInterface: clientInterface,
 		ClientPackage:   clientPackage,
 		TypePackage:     typePackage,
-		Global:          *global,
+		Scope:           strings.ToLower(*scope),
+		WatchAll:        *watchAll,
 	})
 }
 
@@ -93,19 +98,74 @@ type {{ .Name }}Watcher struct {
     watchingStarted bool
 	stopchan        chan struct{}
 	stoppedchan     chan struct{}
+    create          func(*tp.{{ .Name }}) interface{}
+    update          func(*tp.{{ .Name }}, interface{}) bool
 }
 
-func (kw *{{ .Name }}Watcher) Init(c cache.Cache, cl interface{}) error {
-	client, ok := cl.(cp.{{ .ClientInterface }})
-	if !ok {
-		return fmt.Errorf("unexpected type %T", cl)
+func New{{ .Name }}Watcher(c cache.Cache, {{if not .WatchAll}}namespace string, {{end}}options... WatcherOption) (ResourceWatcher, error) {
+
+    kw := &{{ .Name }}Watcher{
+		Namespace:       {{if .WatchAll}}v1.NamespaceAll{{else}}namespace{{end}},
+		Cache:           c,
+		watching:        make(chan struct{}),
+		stopchan:        make(chan struct{}),
+		stoppedchan:     make(chan struct{}),
+		create:          func(v *tp.{{ .Name }}) interface{} {
+                             return v
+                         },
+	    update:          func(v *tp.{{ .Name }}, e interface{}) bool {
+                             if !reflect.DeepEqual(v, e) {
+                                 *e.(*tp.{{ .Name }}) = *v
+                                 return true
+                             } else {
+                                 return false
+                             }
+                         },
+    }
+
+    for _, option := range options {
+        option(kw)
 	}
-	kw.Cache = c
-	kw.ClientInterface = client
-	kw.watching = make(chan struct{})
-	kw.stopchan = make(chan struct{})
-	kw.stoppedchan = make(chan struct{})
-	return nil
+
+	if kw.ClientInterface == nil {
+		return nil, fmt.Errorf("Client must be configured using the {{ .Name }}WatcherConfig or {{ .Name }}WatcherClient")
+	}
+	return kw, nil
+}
+
+func {{ .Name }}WatcherFactory(create func(*tp.{{ .Name }}) interface{}, update func(*tp.{{ .Name }}, interface{}) bool) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*{{ .Name }}Watcher)
+		w.create = create
+        w.update = update
+        return nil
+	}
+}
+
+func {{ .Name }}WatcherConfig(config *rest.Config) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*{{ .Name }}Watcher)
+
+		var cl interface{}
+		cl, _  = cp.NewForConfig(config)
+
+		client, ok := cl.(cp.{{ .ClientInterface }})
+		if !ok {
+			return fmt.Errorf("unexpected type %T", cl)
+		}
+
+		w.ClientInterface = client
+        return nil
+	}
+}
+
+// Used to inject the fake client set for testing purposes
+func {{ .Name }}WatcherClient(client cp.{{ .ClientInterface }}) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*{{ .Name }}Watcher)
+		w.ClientInterface = client
+        return nil
+	}
 }
 
 func (kw *{{ .Name }}Watcher) Watch() error {
@@ -116,7 +176,7 @@ func (kw *{{ .Name }}Watcher) Watch() error {
 				close(kw.watching)
 			}
 		}()
-		resource := kw.ClientInterface.{{ .NamePlural }}({{if not .Global }}kw.Namespace{{end}})
+		resource := kw.ClientInterface.{{ .NamePlural }}({{if eq .Scope "namespaced" }}kw.Namespace{{end}})
 		log.Printf("{{ .Name }} - Watching")
 		running := true
 		for running {
@@ -131,10 +191,6 @@ func (kw *{{ .Name }}Watcher) Watch() error {
 	}()
 
 	return nil
-}
-
-func (kw *{{ .Name }}Watcher) NewClientForConfig(config *rest.Config) (interface{}, error) {
-	return cp.NewForConfig(config)
 }
 
 func (kw *{{ .Name }}Watcher) AwaitWatching() {
@@ -162,22 +218,20 @@ func (kw *{{ .Name }}Watcher) doWatch(resource cp.{{ .Name }}Interface) error {
 		kw.updateKind(copy)
 
 		if val, ok := curr[copy.UID]; ok {
-			if !reflect.DeepEqual(val, copy) {
+			if kw.update(copy, val) {
 				err = kw.Cache.Add(copy)
 				updated++
-				if err != nil {
-					return err
-				}
 			} else {
 				unchanged++
 			}
 			delete(curr, copy.UID)
 		} else {
-			kw.Cache.Add(copy)
+			err = kw.Cache.Add(kw.create(copy))
+			if err != nil {
+				return err
+			}
 			added++
 		}
-
-		kw.Cache.Add(copy)
 	}
 
 	// Now remove any stale
@@ -216,11 +270,27 @@ func (kw *{{ .Name }}Watcher) doWatch(resource cp.{{ .Name }}Interface) error {
 					kw.updateKind(copy)
 					switch event.Type {
 					case watch.Added:
-						err = kw.Cache.Add(copy)
+						err = kw.Cache.Add(kw.create(copy))
 					case watch.Modified:
-						err = kw.Cache.Add(copy)
+						// TODO fix me
+						curr, err := kw.Cache.GetMap("{{ .Name }}/", cache.UidKeyAccessor)
+						if val, ok := curr[copy.UID]; ok {
+							if kw.update(copy, val) {
+								err = kw.Cache.Add(copy)
+								updated++
+								if err != nil {
+									return err
+								}
+							} else {
+								unchanged++
+							}
+							delete(curr, copy.UID)
+						} else {
+							err = kw.Cache.Add(kw.create(copy))
+							added++
+						}
 					case watch.Deleted:
-						err = kw.Cache.Delete(copy)
+						err = kw.Cache.Delete(kw.create(copy))
 					}
 				}
 			}

@@ -14,7 +14,7 @@ import (
 
 type MetricCreator = func (proto *consolegraphql.Metric) (*consolegraphql.Metric, error)
 
-func ToConnectionK8Style(connection *AgentConnection, metricCreator MetricCreator) (*consolegraphql.Connection, []*consolegraphql.Link, []*consolegraphql.Metric) {
+func ToConnectionK8Style(connection *AgentConnection) (*consolegraphql.Connection, []*consolegraphql.Link) {
 
 	links := make([]*consolegraphql.Link, 0)
 
@@ -42,52 +42,20 @@ func ToConnectionK8Style(connection *AgentConnection, metricCreator MetricCreato
 		con.Spec.Protocol = "amqps"
 	}
 
-	metrics := make([]*consolegraphql.Metric, 0)
-
-	lastUpdated := time.Now()
-	if connection.LastUpdated > 0 {
-		lastUpdated = millisToTime(connection.LastUpdated)
-	}
-
-	messagesInMetric, err := metricCreator(&consolegraphql.Metric{
-		Kind:         "Connection",
-		Namespace:    connection.AddressSpaceNamespace,
-		AddressSpace: connection.AddressSpace,
-		Name:         connection.Uuid,
-		Value: consolegraphql.NewRateCalculatingMetricValue("enmasse_messages_in", "gauge", ""),
-	})
-	if err != nil {
-		panic(err)
-	}
-	messagesInMetric.Value.SetValue(float64(connection.MessagesIn), lastUpdated)
-
-	messagesOutMetric, err := metricCreator(&consolegraphql.Metric{
-		Kind:         "Connection",
-		Namespace:    connection.AddressSpaceNamespace,
-		AddressSpace: connection.AddressSpace,
-		Name:         connection.Uuid,
-		Value: consolegraphql.NewRateCalculatingMetricValue("enmasse_messages_out", "gauge", ""),
-	})
-	messagesOutMetric.Value.SetValue(float64(connection.MessagesOut), lastUpdated)
-
-	metrics = append(metrics, messagesInMetric, messagesOutMetric)
-
 
 	for _, sender := range connection.Senders {
-		link, sender_metrics := convertAgentLink(sender, "sender", connection, metricCreator)
+		link := convertAgentLink(sender, "sender", connection)
 		links = append(links, link)
-		metrics = append(metrics, sender_metrics...)
 	}
 	for _, receiver := range connection.Receivers {
-		link, receiver_metrics := convertAgentLink(receiver, "receiver", connection, metricCreator)
+		link := convertAgentLink(receiver, "receiver", connection)
 		links = append(links, link)
-		metrics = append(metrics, receiver_metrics...)
 	}
 
-	return con, links, metrics
+	return con, links
 }
 
-func convertAgentLink(l AgentAddressLink, role string, connection *AgentConnection, metricCreator MetricCreator) (*consolegraphql.Link, []*consolegraphql.Metric) {
+func convertAgentLink(l AgentAddressLink, role string, connection *AgentConnection) *consolegraphql.Link {
 	link := &consolegraphql.Link{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Link",
@@ -104,44 +72,68 @@ func convertAgentLink(l AgentAddressLink, role string, connection *AgentConnecti
 			Role:         role,
 		},
 	}
-
-	createMetric := func(name string, value int) *consolegraphql.Metric {
-		return &consolegraphql.Metric{
-			Kind:         "Link",
-			Namespace:    connection.AddressSpaceNamespace,
-			AddressSpace: connection.AddressSpace,
-			Name:         l.Uuid,
-			ConnectionName: &connection.Uuid,
-
-			Value: consolegraphql.NewSimpleMetricValue(name, "counter", float64(value), "", millisToTime(connection.LastUpdated)),
-		}
-	}
-
-	metrics := make([]*consolegraphql.Metric, 0)
-	switch connection.AddressSpaceType {
-	case "standard":
-		metrics = append(metrics,
-			createMetric("enmasse_accepted", l.Accepted),
-			createMetric("enmasse_modified", l.Modified),
-			createMetric("enmasse_presettled", l.Presettled),
-			createMetric("enmasse_unsettled", l.Unsettled),
-			createMetric("enmasse_undelivered", l.Undelivered),
-			createMetric("enmasse_rejected", l.Rejected),
-			createMetric("enmasse_released", l.Released),
-			createMetric("enmasse_deliveries", l.Deliveries),
-		)
-	case "brokered":
-		metrics = append(metrics,
-			createMetric("enmasse_deliveries", l.Deliveries),
-		)
-	default:
-		panic(fmt.Sprintf("unexpected address space type : %s", connection.AddressSpaceType))
-
-	}
-
-	return link, metrics
+	return link
 }
 
 func millisToTime(ms int64) time.Time {
 	return  time.Unix(0, ms* int64(time.Millisecond))
+}
+
+func InsertOrUpdateMetric(existing []*consolegraphql.Metric, metricName string) ([]*consolegraphql.Metric, *consolegraphql.Metric) {
+
+	for _, m := range existing {
+		if m.Name == metricName {
+			return existing, m
+		}
+	}
+
+	m := &consolegraphql.Metric{
+	}
+	existing = append(existing, m)
+	return existing, m
+
+}
+
+func UpdateLinkMetrics(agentcon *AgentConnection, metrics []*consolegraphql.Metric, now time.Time, link *consolegraphql.Link) []*consolegraphql.Metric {
+
+	var agentlinks []AgentAddressLink
+	if link.Spec.Role == "sender" {
+		agentlinks = agentcon.Senders
+	} else {
+		agentlinks = agentcon.Receivers
+	}
+
+	for _, l := range agentlinks {
+		if l.Uuid == link.Name {
+			switch agentcon.AddressSpaceType {
+			case "standard":
+				m, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_accepted", "counter")
+				m.Update(float64(l.Accepted), now)
+				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_modified", "counter")
+				m.Update(float64(l.Modified), now)
+				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_presettled", "counter")
+				m.Update(float64(l.Presettled), now)
+				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_unsettled", "counter")
+				m.Update(float64(l.Unsettled), now)
+				m, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_undelivered", "counter")
+				m.Update(float64(l.Undelivered), now)
+				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_rejected", "counter")
+				m.Update(float64(l.Rejected), now)
+				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_released", "counter")
+				m.Update(float64(l.Released), now)
+				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_deliveries", "counter")
+				m.Update(float64(l.Deliveries), now)
+				return metrics
+			case "brokered":
+				m, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_deliveries", "counter")
+				m.Update(float64(l.Deliveries), now)
+				return metrics
+			default:
+				panic(fmt.Sprintf("unexpected address space type : %s", agentcon.AddressSpaceType))
+
+			}
+		}
+	}
+
+	return metrics
 }

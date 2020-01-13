@@ -17,7 +17,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"testing"
-	time2 "time"
+	"time"
 )
 
 func newTestAddressResolver(t *testing.T) *Resolver {
@@ -46,17 +46,8 @@ func newTestAddressResolver(t *testing.T) *Resolver {
 		})
 	assert.NoError(t, err)
 
-	metricCache := &cache.MemdbCache{}
-	err = metricCache.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: cache.MetricIndex(),
-		},
-	)
-
 	resolver := Resolver{}
 	resolver.Cache = objectCache
-	resolver.MetricCache = metricCache
 	return &resolver
 }
 
@@ -74,8 +65,8 @@ func TestQueryAddress(t *testing.T) {
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of addresses")
 
-	assert.Equal(t, addr.Spec, *objs.Addresses[0].Spec, "Unexpected address spec")
-	assert.Equal(t, addr.ObjectMeta, *objs.Addresses[0].ObjectMeta, "Unexpected address object meta")
+	assert.Equal(t, addr.Spec, objs.Addresses[0].Spec, "Unexpected address spec")
+	assert.Equal(t, addr.ObjectMeta, objs.Addresses[0].ObjectMeta, "Unexpected address object meta")
 }
 
 func TestQueryAddressFilter(t *testing.T) {
@@ -94,8 +85,8 @@ func TestQueryAddressFilter(t *testing.T) {
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of addresses")
 
-	assert.Equal(t, addr1.Spec, *objs.Addresses[0].Spec, "Unexpected address spec")
-	assert.Equal(t, addr1.ObjectMeta, *objs.Addresses[0].ObjectMeta, "Unexpected address object meta")
+	assert.Equal(t, addr1.Spec, objs.Addresses[0].Spec, "Unexpected address spec")
+	assert.Equal(t, addr1.ObjectMeta, objs.Addresses[0].ObjectMeta, "Unexpected address object meta")
 }
 
 func TestQueryAddressOrder(t *testing.T) {
@@ -114,8 +105,8 @@ func TestQueryAddressOrder(t *testing.T) {
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of addresses")
 
-	assert.Equal(t, addr2.Spec, *objs.Addresses[0].Spec, "Unexpected address spec")
-	assert.Equal(t, addr2.ObjectMeta, *objs.Addresses[0].ObjectMeta, "Unexpected address object meta")
+	assert.Equal(t, addr2.Spec, objs.Addresses[0].Spec, "Unexpected address spec")
+	assert.Equal(t, addr2.ObjectMeta, objs.Addresses[0].ObjectMeta, "Unexpected address object meta")
 }
 
 func TestQueryAddressPagination(t *testing.T) {
@@ -138,13 +129,13 @@ func TestQueryAddressPagination(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of addresses")
 	assert.Equal(t, 3, len(objs.Addresses), "Unexpected number of addresses in page")
-	assert.Equal(t, addr2.ObjectMeta, *objs.Addresses[0].ObjectMeta, "Unexpected addresses object meta")
+	assert.Equal(t, addr2.ObjectMeta, objs.Addresses[0].ObjectMeta, "Unexpected addresses object meta")
 
 	objs, err = r.Query().Addresses(context.TODO(), &one, &two, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of addresses")
 	assert.Equal(t, 1, len(objs.Addresses), "Unexpected number of address in page")
-	assert.Equal(t, addr3.ObjectMeta, *objs.Addresses[0].ObjectMeta, "Unexpected addresses object meta")
+	assert.Equal(t, addr3.ObjectMeta, objs.Addresses[0].ObjectMeta, "Unexpected addresses object meta")
 }
 
 func TestQueryAddressLinks(t *testing.T) {
@@ -166,14 +157,16 @@ func TestQueryAddressLinks(t *testing.T) {
 		createAddressLink(namespace, addressspace, addr2, "sender"))
 	assert.NoError(t, err)
 
-	con := &AddressConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
-			Name:      addressName,
-			UID:       types.UID(addr.UID),
-			Namespace: namespace,
-		},
-		Spec: &v1beta1.AddressSpec{
-			AddressSpace: addressspace,
+	con := &consolegraphql.AddressHolder{
+		Address: v1beta1.Address{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addressName,
+				UID:       types.UID(addr.UID),
+				Namespace: namespace,
+			},
+			Spec: v1beta1.AddressSpec{
+				AddressSpace: addressspace,
+			},
 		},
 	}
 
@@ -200,14 +193,16 @@ func TestQueryAddressLinkFilter(t *testing.T) {
 	err := r.Cache.Add(addr, link1, link2, )
 	assert.NoError(t, err)
 
-	con := &AddressConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
-			Name:      addressName,
-			UID:       types.UID(addr.UID),
-			Namespace: namespace,
-		},
-		Spec: &v1beta1.AddressSpec{
-			AddressSpace: addressspace,
+	con := &consolegraphql.AddressHolder{
+		Address: v1beta1.Address{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addressName,
+				UID:       types.UID(addr.UID),
+				Namespace: namespace,
+			},
+			Spec: v1beta1.AddressSpec{
+				AddressSpace: addressspace,
+			},
 		},
 	}
 
@@ -218,8 +213,8 @@ func TestQueryAddressLinkFilter(t *testing.T) {
 	expected := 1
 	actual := objs.Total
 	assert.Equalf(t, expected, actual, "Unexpected number of links for address %s", addr1)
-	assert.Equal(t, link1.Spec, *objs.Links[0].Spec, "Unexpected link spec")
-	assert.Equal(t, link1.ObjectMeta, *objs.Links[0].ObjectMeta, "Unexpected link object meta")
+	assert.Equal(t, link1.Spec, objs.Links[0].Spec, "Unexpected link spec")
+	assert.Equal(t, link1.ObjectMeta, objs.Links[0].ObjectMeta, "Unexpected link object meta")
 }
 
 func TestQueryAddressLinkOrder(t *testing.T) {
@@ -237,14 +232,16 @@ func TestQueryAddressLinkOrder(t *testing.T) {
 	err := r.Cache.Add(addr, link1, link2, )
 	assert.NoError(t, err)
 
-	con := &AddressConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
-			Name:      addressName,
-			UID:       types.UID(addr.UID),
-			Namespace: namespace,
-		},
-		Spec: &v1beta1.AddressSpec{
-			AddressSpace: addressspace,
+	con := &consolegraphql.AddressHolder{
+		Address: v1beta1.Address{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addressName,
+				UID:       types.UID(addr.UID),
+				Namespace: namespace,
+			},
+			Spec: v1beta1.AddressSpec{
+				AddressSpace: addressspace,
+			},
 		},
 	}
 
@@ -255,8 +252,8 @@ func TestQueryAddressLinkOrder(t *testing.T) {
 	expected := 2
 	actual := objs.Total
 	assert.Equalf(t, expected, actual, "Unexpected number of links for address %s", addr1)
-	assert.Equal(t, link2.Spec, *objs.Links[0].Spec, "Unexpected link spec")
-	assert.Equal(t, link2.ObjectMeta, *objs.Links[0].ObjectMeta, "Unexpected link object meta")
+	assert.Equal(t, link2.Spec, objs.Links[0].Spec, "Unexpected link spec")
+	assert.Equal(t, link2.ObjectMeta, objs.Links[0].ObjectMeta, "Unexpected link object meta")
 }
 
 func TestQueryAddressLinkPaginated(t *testing.T) {
@@ -276,14 +273,16 @@ func TestQueryAddressLinkPaginated(t *testing.T) {
 	err := r.Cache.Add(addr, link1, link2, link3, link4)
 	assert.NoError(t, err)
 
-	con := &AddressConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
-			Name:      addressName,
-			UID:       types.UID(addr.UID),
-			Namespace: namespace,
-		},
-		Spec: &v1beta1.AddressSpec{
-			AddressSpace: addressspace,
+	con := &consolegraphql.AddressHolder{
+		Address: v1beta1.Address{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      addressName,
+				UID:       types.UID(addr.UID),
+				Namespace: namespace,
+			},
+			Spec: v1beta1.AddressSpec{
+				AddressSpace: addressspace,
+			},
 		},
 	}
 
@@ -314,68 +313,45 @@ func TestQueryAddressMetrics(t *testing.T) {
 	addressName := "myaddressspace." + addr1
 
 	createMetric := func(namespace string, addr1 string, metricName string, metricValue float64) *consolegraphql.Metric {
-		return &consolegraphql.Metric{
-			Kind:         "Address",
-			Namespace:    namespace,
-			AddressSpace: addressspace,
-			Name:         addr1,
-			Value:        consolegraphql.NewSimpleMetricValue(metricName, "gauge", float64(metricValue), "", time2.Now()),
-		}
+		metric := consolegraphql.NewSimpleMetric(metricName, "gauge")
+		metric.Update(metricValue, time.Now())
+		return (*consolegraphql.Metric)(metric)
 	}
 
-	addruid := types.UID(uuid.New().String())
-	addr := &v1beta1.Address{
-		TypeMeta: metav1.TypeMeta{
-			Kind: "Address",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      addressName,
-			UID:       addruid,
-			Namespace: namespace,
-		},
-	}
-
-	err := r.MetricCache.Add(createMetric(namespace, addr1, "enmasse_messages_stored", float64(100)),
+	addr := createAddress(namespace, addressName,
+		createMetric(namespace, addr1, "enmasse_messages_stored", float64(100)),
 		createMetric(namespace, addr1, "enmasse_messages_in", float64(10)),
 		createMetric(namespace, addr1, "enmasse_messages_out", float64(20)),
 	)
-	assert.NoError(t, err)
 
-	err = r.Cache.Add(addr,
+	err := r.Cache.Add(addr,
 		createAddressLink(namespace, addressspace, addr1, "sender"),
 		createAddressLink(namespace, addressspace, addr1, "sender"),
 		createAddressLink(namespace, addressspace, addr1, "receiver"),
 		createAddressLink(namespace, addressspace, addr2, "receiver"))
 	assert.NoError(t, err)
 
-	con := &AddressConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
-			Name:      addressName,
-			UID:       types.UID(addruid),
-			Namespace: namespace,
-		},
-		Spec: &v1beta1.AddressSpec{
-			AddressSpace: addressspace,
-		},
-	}
-	objs, err := r.Address_consoleapi_enmasse_io_v1beta1().Metrics(context.TODO(), con)
+	objs, err := r.Query().Addresses(context.TODO(), nil, nil, nil, nil)
 	assert.NoError(t, err)
+	assert.Equal(t, 1, objs.Total, "Unexpected number of addresses")
+
+	metrics := objs.Addresses[0].Metrics
 
 	expected := 5
-	actual := len(objs)
+	actual := len(metrics)
 	assert.Equal(t, expected, actual, "Unexpected number of metrics")
 
-	sendersMetric := getMetric("enmasse_senders", objs)
+	sendersMetric := getMetric("enmasse_senders", metrics)
 	assert.NotNil(t, sendersMetric, "Senders metric is absent")
-	value, _, _ := sendersMetric.Value.GetValue()
+	value := sendersMetric.Value
 	assert.Equal(t, float64(2), value, "Unexpected senders metric value")
-	receiversMetric := getMetric("enmasse_receivers", objs)
+	receiversMetric := getMetric("enmasse_receivers", metrics)
 	assert.NotNil(t, receiversMetric, "Receivers metric is absent")
-	value, _, _ = receiversMetric.Value.GetValue()
+	value = receiversMetric.Value
 	assert.Equal(t, float64(1), value, "Unexpected receivers metric value")
-	storedMetric := getMetric("enmasse_messages_stored", objs)
+	storedMetric := getMetric("enmasse_messages_stored", metrics)
 	assert.NotNil(t, storedMetric, "Stored metric is absent")
-	value, _, _ = storedMetric.Value.GetValue()
+	value = storedMetric.Value
 	assert.Equal(t, float64(100), value, "Unexpected stored metric value")
 }
 

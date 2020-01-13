@@ -27,19 +27,74 @@ type AddressSpaceSchemaWatcher struct {
     watchingStarted bool
 	stopchan        chan struct{}
 	stoppedchan     chan struct{}
+    create          func(*tp.AddressSpaceSchema) interface{}
+    update          func(*tp.AddressSpaceSchema, interface{}) bool
 }
 
-func (kw *AddressSpaceSchemaWatcher) Init(c cache.Cache, cl interface{}) error {
-	client, ok := cl.(cp.EnmasseV1beta1Interface)
-	if !ok {
-		return fmt.Errorf("unexpected type %T", cl)
+func NewAddressSpaceSchemaWatcher(c cache.Cache, options... WatcherOption) (ResourceWatcher, error) {
+
+    kw := &AddressSpaceSchemaWatcher{
+		Namespace:       v1.NamespaceAll,
+		Cache:           c,
+		watching:        make(chan struct{}),
+		stopchan:        make(chan struct{}),
+		stoppedchan:     make(chan struct{}),
+		create:          func(v *tp.AddressSpaceSchema) interface{} {
+                             return v
+                         },
+	    update:          func(v *tp.AddressSpaceSchema, e interface{}) bool {
+                             if !reflect.DeepEqual(v, e) {
+                                 *e.(*tp.AddressSpaceSchema) = *v
+                                 return true
+                             } else {
+                                 return false
+                             }
+                         },
+    }
+
+    for _, option := range options {
+        option(kw)
 	}
-	kw.Cache = c
-	kw.ClientInterface = client
-	kw.watching = make(chan struct{})
-	kw.stopchan = make(chan struct{})
-	kw.stoppedchan = make(chan struct{})
-	return nil
+
+	if kw.ClientInterface == nil {
+		return nil, fmt.Errorf("Client must be configured using the AddressSpaceSchemaWatcherConfig or AddressSpaceSchemaWatcherClient")
+	}
+	return kw, nil
+}
+
+func AddressSpaceSchemaWatcherFactory(create func(*tp.AddressSpaceSchema) interface{}, update func(*tp.AddressSpaceSchema, interface{}) bool) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*AddressSpaceSchemaWatcher)
+		w.create = create
+        w.update = update
+        return nil
+	}
+}
+
+func AddressSpaceSchemaWatcherConfig(config *rest.Config) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*AddressSpaceSchemaWatcher)
+
+		var cl interface{}
+		cl, _  = cp.NewForConfig(config)
+
+		client, ok := cl.(cp.EnmasseV1beta1Interface)
+		if !ok {
+			return fmt.Errorf("unexpected type %T", cl)
+		}
+
+		w.ClientInterface = client
+        return nil
+	}
+}
+
+// Used to inject the fake client set for testing purposes
+func AddressSpaceSchemaWatcherClient(client cp.EnmasseV1beta1Interface) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*AddressSpaceSchemaWatcher)
+		w.ClientInterface = client
+        return nil
+	}
 }
 
 func (kw *AddressSpaceSchemaWatcher) Watch() error {
@@ -67,10 +122,6 @@ func (kw *AddressSpaceSchemaWatcher) Watch() error {
 	return nil
 }
 
-func (kw *AddressSpaceSchemaWatcher) NewClientForConfig(config *rest.Config) (interface{}, error) {
-	return cp.NewForConfig(config)
-}
-
 func (kw *AddressSpaceSchemaWatcher) AwaitWatching() {
 	<-kw.watching
 }
@@ -96,22 +147,20 @@ func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInter
 		kw.updateKind(copy)
 
 		if val, ok := curr[copy.UID]; ok {
-			if !reflect.DeepEqual(val, copy) {
+			if kw.update(copy, val) {
 				err = kw.Cache.Add(copy)
 				updated++
-				if err != nil {
-					return err
-				}
 			} else {
 				unchanged++
 			}
 			delete(curr, copy.UID)
 		} else {
-			kw.Cache.Add(copy)
+			err = kw.Cache.Add(kw.create(copy))
+			if err != nil {
+				return err
+			}
 			added++
 		}
-
-		kw.Cache.Add(copy)
 	}
 
 	// Now remove any stale
@@ -150,11 +199,27 @@ func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInter
 					kw.updateKind(copy)
 					switch event.Type {
 					case watch.Added:
-						err = kw.Cache.Add(copy)
+						err = kw.Cache.Add(kw.create(copy))
 					case watch.Modified:
-						err = kw.Cache.Add(copy)
+						// TODO fix me
+						curr, err := kw.Cache.GetMap("AddressSpaceSchema/", cache.UidKeyAccessor)
+						if val, ok := curr[copy.UID]; ok {
+							if kw.update(copy, val) {
+								err = kw.Cache.Add(copy)
+								updated++
+								if err != nil {
+									return err
+								}
+							} else {
+								unchanged++
+							}
+							delete(curr, copy.UID)
+						} else {
+							err = kw.Cache.Add(kw.create(copy))
+							added++
+						}
 					case watch.Deleted:
-						err = kw.Cache.Delete(copy)
+						err = kw.Cache.Delete(kw.create(copy))
 					}
 				}
 			}
