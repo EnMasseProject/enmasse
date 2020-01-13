@@ -249,16 +249,18 @@ public class OperatorManager {
     }
 
     public boolean clean() throws Exception {
-        if (!KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse").getRetCode()) {
-            System.exit(1);
-        }
+        KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "oauthclients", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterservicebrokers", "-l", "app=enmasse");
         if (!kube.getInfraNamespace().equals(kube.getOlmNamespace())) {
-            kube.deleteNamespace(kube.getInfraNamespace());
+            try {
+                kube.deleteNamespace(kube.getInfraNamespace());
+            } catch (Exception e) {
+                System.exit(1);
+            }
         }
         return true;
     }
