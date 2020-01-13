@@ -18,6 +18,8 @@ type EnmasseV1beta1Interface interface {
 	RESTClient() rest.Interface
 	AddressesGetter
 	AddressSpacesGetter
+	AddressSpaceSchemasGetter
+	AuthenticationServicesGetter
 }
 
 // EnmasseV1beta1Client is used to interact with features provided by the enmasse.io group.
@@ -31,6 +33,14 @@ func (c *EnmasseV1beta1Client) Addresses(namespace string) AddressInterface {
 
 func (c *EnmasseV1beta1Client) AddressSpaces(namespace string) AddressSpaceInterface {
 	return newAddressSpaces(c, namespace)
+}
+
+func (c *EnmasseV1beta1Client) AddressSpaceSchemas(namespace string) AddressSpaceSchemaInterface {
+	return newAddressSpaceSchemas(c, namespace)
+}
+
+func (c *EnmasseV1beta1Client) AuthenticationServices(namespace string) AuthenticationServiceInterface {
+	return newAuthenticationServices(c, namespace)
 }
 
 // NewForConfig creates a new EnmasseV1beta1Client for the given config.
