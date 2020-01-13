@@ -65,6 +65,18 @@ objects:
     name: qdrouterd-${INFRA_UUID}
   spec:
     affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: enmasse
+                  capability: router
+                  name: qdrouterd
+                  infraType: standard
+                  infraUuid: ${INFRA_UUID}
+              topologyKey: kubernetes.io/hostname
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
           - weight: 1
