@@ -27,19 +27,74 @@ type AddressPlanWatcher struct {
     watchingStarted bool
 	stopchan        chan struct{}
 	stoppedchan     chan struct{}
+    create          func(*tp.AddressPlan) interface{}
+    update          func(*tp.AddressPlan, interface{}) bool
 }
 
-func (kw *AddressPlanWatcher) Init(c cache.Cache, cl interface{}) error {
-	client, ok := cl.(cp.AdminV1beta2Interface)
-	if !ok {
-		return fmt.Errorf("unexpected type %T", cl)
+func NewAddressPlanWatcher(c cache.Cache, namespace string, options... WatcherOption) (ResourceWatcher, error) {
+
+    kw := &AddressPlanWatcher{
+		Namespace:       namespace,
+		Cache:           c,
+		watching:        make(chan struct{}),
+		stopchan:        make(chan struct{}),
+		stoppedchan:     make(chan struct{}),
+		create:          func(v *tp.AddressPlan) interface{} {
+                             return v
+                         },
+	    update:          func(v *tp.AddressPlan, e interface{}) bool {
+                             if !reflect.DeepEqual(v, e) {
+                                 *e.(*tp.AddressPlan) = *v
+                                 return true
+                             } else {
+                                 return false
+                             }
+                         },
+    }
+
+    for _, option := range options {
+        option(kw)
 	}
-	kw.Cache = c
-	kw.ClientInterface = client
-	kw.watching = make(chan struct{})
-	kw.stopchan = make(chan struct{})
-	kw.stoppedchan = make(chan struct{})
-	return nil
+
+	if kw.ClientInterface == nil {
+		return nil, fmt.Errorf("Client must be configured using the AddressPlanWatcherConfig or AddressPlanWatcherClient")
+	}
+	return kw, nil
+}
+
+func AddressPlanWatcherFactory(create func(*tp.AddressPlan) interface{}, update func(*tp.AddressPlan, interface{}) bool) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*AddressPlanWatcher)
+		w.create = create
+        w.update = update
+        return nil
+	}
+}
+
+func AddressPlanWatcherConfig(config *rest.Config) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*AddressPlanWatcher)
+
+		var cl interface{}
+		cl, _  = cp.NewForConfig(config)
+
+		client, ok := cl.(cp.AdminV1beta2Interface)
+		if !ok {
+			return fmt.Errorf("unexpected type %T", cl)
+		}
+
+		w.ClientInterface = client
+        return nil
+	}
+}
+
+// Used to inject the fake client set for testing purposes
+func AddressPlanWatcherClient(client cp.AdminV1beta2Interface) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*AddressPlanWatcher)
+		w.ClientInterface = client
+        return nil
+	}
 }
 
 func (kw *AddressPlanWatcher) Watch() error {
@@ -67,10 +122,6 @@ func (kw *AddressPlanWatcher) Watch() error {
 	return nil
 }
 
-func (kw *AddressPlanWatcher) NewClientForConfig(config *rest.Config) (interface{}, error) {
-	return cp.NewForConfig(config)
-}
-
 func (kw *AddressPlanWatcher) AwaitWatching() {
 	<-kw.watching
 }
@@ -96,22 +147,20 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 		kw.updateKind(copy)
 
 		if val, ok := curr[copy.UID]; ok {
-			if !reflect.DeepEqual(val, copy) {
+			if kw.update(copy, val) {
 				err = kw.Cache.Add(copy)
 				updated++
-				if err != nil {
-					return err
-				}
 			} else {
 				unchanged++
 			}
 			delete(curr, copy.UID)
 		} else {
-			kw.Cache.Add(copy)
+			err = kw.Cache.Add(kw.create(copy))
+			if err != nil {
+				return err
+			}
 			added++
 		}
-
-		kw.Cache.Add(copy)
 	}
 
 	// Now remove any stale
@@ -150,11 +199,27 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 					kw.updateKind(copy)
 					switch event.Type {
 					case watch.Added:
-						err = kw.Cache.Add(copy)
+						err = kw.Cache.Add(kw.create(copy))
 					case watch.Modified:
-						err = kw.Cache.Add(copy)
+						// TODO fix me
+						curr, err := kw.Cache.GetMap("AddressPlan/", cache.UidKeyAccessor)
+						if val, ok := curr[copy.UID]; ok {
+							if kw.update(copy, val) {
+								err = kw.Cache.Add(copy)
+								updated++
+								if err != nil {
+									return err
+								}
+							} else {
+								unchanged++
+							}
+							delete(curr, copy.UID)
+						} else {
+							err = kw.Cache.Add(kw.create(copy))
+							added++
+						}
 					case watch.Deleted:
-						err = kw.Cache.Delete(copy)
+						err = kw.Cache.Delete(kw.create(copy))
 					}
 				}
 			}

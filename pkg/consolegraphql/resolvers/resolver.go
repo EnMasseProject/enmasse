@@ -8,10 +8,8 @@ package resolvers
 //go:generate go run github.com/99designs/gqlgen generate --config console/console-server/src/main/resources/gqlgen.yml --verbose
 
 import (
-	"context"
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/filter"
 )
@@ -20,20 +18,8 @@ type Resolver struct {
 	AdminConfig *v1beta2.AdminV1beta2Client
 	CoreConfig  *v1beta1.EnmasseV1beta1Client
 	Cache       *cache.MemdbCache
-	MetricCache *cache.MemdbCache
 }
 
-func (r *Resolver) AddressSpace(ctx context.Context, obj *consolegraphql.ConnectionSpec) (*AddressSpaceConsoleapiEnmasseIoV1beta1, error) {
-	panic("implement me")
-}
-
-func (r *Resolver) Protocol(ctx context.Context, obj *consolegraphql.ConnectionSpec) (Protocol, error) {
-	panic("implement me")
-}
-
-func (r *Resolver) Properties(ctx context.Context, obj *consolegraphql.ConnectionSpec) ([]*KeyValue, error) {
-	panic("implement me")
-}
 
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}

@@ -33,7 +33,7 @@ func TestConvertConnectionOnly(t *testing.T) {
 		Encrypted:             true,
 	}
 
-	actualConnection, _, _ := ToConnectionK8Style(connection, metricCreator)
+	actualConnection, _ := ToConnectionK8Style(connection)
 
 	expectedConnection := &consolegraphql.Connection{
 		TypeMeta: metav1.TypeMeta{
@@ -53,40 +53,6 @@ func TestConvertConnectionOnly(t *testing.T) {
 	}
 
 	assert.Equal(t, expectedConnection, actualConnection, "expected and actual connections unequal")
-}
-
-func TestConvertConnectionMetrics(t *testing.T) {
-
-	epoch := time.Now().Unix()
-	connectionUid := uuid.New().String()
-	namespace := "namespace1"
-	addressSpace := "addressSpace1"
-
-	connection := &AgentConnection{
-		Uuid:                  connectionUid,
-		CreationTimestamp:     epoch,
-		AddressSpace:          addressSpace,
-		AddressSpaceNamespace: namespace,
-		Encrypted:             true,
-		MessagesIn:            10,
-		MessagesOut:           20,
-		LastUpdated:           epoch * 1000,
-	}
-
-	_, _, metrics := ToConnectionK8Style(connection, metricCreator)
-
-	messageInMetric := getMetric("enmasse_messages_in", metrics)
-	expectedMessageInMetric := &consolegraphql.Metric{
-		Kind:         "Connection",
-		Namespace:    namespace,
-		AddressSpace: addressSpace,
-		Name:         connectionUid,
-		Value:        consolegraphql.NewRateCalculatingMetricValue("enmasse_messages_in", "gauge", ""),
-	}
-
-	expectedMessageInMetric.Value.SetValue(float64(10), time.Unix(epoch, 0))
-
-	assert.Equal(t, expectedMessageInMetric, messageInMetric, "expected and actual connection metric unequal")
 }
 
 func TestConvertStandardConnectionWithLink(t *testing.T) {
@@ -114,7 +80,7 @@ func TestConvertStandardConnectionWithLink(t *testing.T) {
 		},
 	}
 
-	_, objs, metrics := ToConnectionK8Style(connection, metricCreator)
+	_, objs := ToConnectionK8Style(connection)
 	actualLink := objs[0]
 
 	expectedLink := &consolegraphql.Link{
@@ -136,17 +102,6 @@ func TestConvertStandardConnectionWithLink(t *testing.T) {
 
 	assert.Equal(t, expectedLink, actualLink, "expected and actual links unequal")
 
-	releasedMetric := getMetric("enmasse_released", metrics)
-	expectedReleasedMetric := &consolegraphql.Metric{
-		Kind:           "Link",
-		Namespace:      namespace,
-		AddressSpace:   addressSpace,
-		Name:           linkUid,
-		ConnectionName: &connectionUid,
-		Value:        consolegraphql.NewSimpleMetricValue("enmasse_released", "counter", float64(10), "", time.Unix(epoch, 0)),
-	}
-
-	assert.Equal(t, expectedReleasedMetric, releasedMetric, "expected and actual link metric unequal")
 }
 
 func TestConvertBrokeredConnectionWithLink(t *testing.T) {
@@ -174,7 +129,7 @@ func TestConvertBrokeredConnectionWithLink(t *testing.T) {
 		},
 	}
 
-	_, objs, metrics := ToConnectionK8Style(connection, metricCreator)
+	_, objs := ToConnectionK8Style(connection)
 	actualLink := objs[0]
 
 	expectedLink := &consolegraphql.Link{
@@ -195,26 +150,4 @@ func TestConvertBrokeredConnectionWithLink(t *testing.T) {
 	}
 
 	assert.Equal(t, expectedLink, actualLink, "expected and actual links unequal")
-
-	releasedMetric := getMetric("enmasse_deliveries", metrics)
-	expectedDeliveriesMetric := &consolegraphql.Metric{
-		Kind:           "Link",
-		Namespace:      namespace,
-		AddressSpace:   addressSpace,
-		Name:           linkUid,
-		ConnectionName: &connectionUid,
-		Value:        consolegraphql.NewSimpleMetricValue("enmasse_deliveries", "counter", float64(30), "", time.Unix(epoch, 0)),
-	}
-
-	assert.Equal(t, expectedDeliveriesMetric, releasedMetric, "expected and actual link metric unequal")
-}
-
-
-func getMetric(name string, metrics []*consolegraphql.Metric) *consolegraphql.Metric {
-	for _, m := range metrics {
-		if m.Value.GetName() == name {
-			return m
-		}
-	}
-	return nil
 }

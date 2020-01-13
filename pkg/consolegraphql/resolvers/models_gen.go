@@ -7,19 +7,18 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type AddressQueryResultConsoleapiEnmasseIoV1beta1 struct {
-	Total     int                                  `json:"Total"`
-	Addresses []*AddressConsoleapiEnmasseIoV1beta1 `json:"Addresses"`
+	Total     int                             `json:"Total"`
+	Addresses []*consolegraphql.AddressHolder `json:"Addresses"`
 }
 
 type AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1 struct {
-	Total         int                                       `json:"Total"`
-	AddressSpaces []*AddressSpaceConsoleapiEnmasseIoV1beta1 `json:"AddressSpaces"`
+	Total         int                                  `json:"Total"`
+	AddressSpaces []*consolegraphql.AddressSpaceHolder `json:"AddressSpaces"`
 }
 
 type AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1 struct {
@@ -33,15 +32,6 @@ type AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1 struct {
 type AddressSpaceTypeConsoleapiEnmasseIoV1beta1 struct {
 	ObjectMeta *v1.ObjectMeta                             `json:"ObjectMeta"`
 	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"Spec"`
-}
-
-type AddressSpaceConsoleapiEnmasseIoV1beta1 struct {
-	ObjectMeta  *v1.ObjectMeta                                   `json:"ObjectMeta"`
-	Spec        *v1beta1.AddressSpaceSpec                        `json:"Spec"`
-	Status      *v1beta1.AddressSpaceStatus                      `json:"Status"`
-	Connections *ConnectionQueryResultConsoleapiEnmasseIoV1beta1 `json:"Connections"`
-	Addresses   *AddressQueryResultConsoleapiEnmasseIoV1beta1    `json:"Addresses"`
-	Metrics     []*consolegraphql.Metric                         `json:"Metrics"`
 }
 
 type AddressTypeSpecConsoleapiEnmasseIoV1beta1 struct {
@@ -58,24 +48,9 @@ type AddressTypeConsoleapiEnmasseIoV1beta1 struct {
 	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"Spec"`
 }
 
-type AddressConsoleapiEnmasseIoV1beta1 struct {
-	ObjectMeta *v1.ObjectMeta                             `json:"ObjectMeta"`
-	Spec       *v1beta1.AddressSpec                       `json:"Spec"`
-	Status     *v1beta1.AddressStatus                     `json:"Status"`
-	Links      *LinkQueryResultConsoleapiEnmasseIoV1beta1 `json:"Links"`
-	Metrics    []*consolegraphql.Metric                   `json:"Metrics"`
-}
-
 type ConnectionQueryResultConsoleapiEnmasseIoV1beta1 struct {
-	Total       int                                     `json:"Total"`
-	Connections []*ConnectionConsoleapiEnmasseIoV1beta1 `json:"Connections"`
-}
-
-type ConnectionConsoleapiEnmasseIoV1beta1 struct {
-	ObjectMeta *v1.ObjectMeta                             `json:"ObjectMeta"`
-	Spec       *consolegraphql.ConnectionSpec             `json:"Spec"`
-	Metrics    []*consolegraphql.Metric                   `json:"Metrics"`
-	Links      *LinkQueryResultConsoleapiEnmasseIoV1beta1 `json:"Links"`
+	Total       int                          `json:"Total"`
+	Connections []*consolegraphql.Connection `json:"Connections"`
 }
 
 type KeyValue struct {
@@ -84,14 +59,8 @@ type KeyValue struct {
 }
 
 type LinkQueryResultConsoleapiEnmasseIoV1beta1 struct {
-	Total int                               `json:"Total"`
-	Links []*LinkConsoleapiEnmasseIoV1beta1 `json:"Links"`
-}
-
-type LinkConsoleapiEnmasseIoV1beta1 struct {
-	ObjectMeta *v1.ObjectMeta           `json:"ObjectMeta"`
-	Spec       *consolegraphql.LinkSpec `json:"Spec"`
-	Metrics    []*consolegraphql.Metric `json:"Metrics"`
+	Total int                    `json:"Total"`
+	Links []*consolegraphql.Link `json:"Links"`
 }
 
 type AddressSpaceType string

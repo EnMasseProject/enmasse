@@ -12,7 +12,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
 
@@ -51,8 +50,8 @@ func TestQueryAddressSpace(t *testing.T) {
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of address spaces")
 
-	assert.Equal(t, as.Spec, *objs.AddressSpaces[0].Spec, "Unexpected address space spec")
-	assert.Equal(t, as.ObjectMeta, *objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, as.Spec, objs.AddressSpaces[0].Spec, "Unexpected address space spec")
+	assert.Equal(t, as.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
 }
 
 func TestQueryAddressSpaceFilter(t *testing.T) {
@@ -70,7 +69,7 @@ func TestQueryAddressSpaceFilter(t *testing.T) {
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of address spaces")
 
-	assert.Equal(t, as1.ObjectMeta, *objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, as1.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
 }
 
 func TestQueryAddressSpaceOrder(t *testing.T) {
@@ -88,7 +87,7 @@ func TestQueryAddressSpaceOrder(t *testing.T) {
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of address spaces")
 
-	assert.Equal(t, as2.ObjectMeta, *objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, as2.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
 }
 
 func TestQueryAddressSpacePagination(t *testing.T) {
@@ -110,47 +109,40 @@ func TestQueryAddressSpacePagination(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 3, len(objs.AddressSpaces), "Unexpected number of address spaces in page")
-	assert.Equal(t, as2.ObjectMeta, *objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, as2.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
 
 	objs, err = r.Query().AddressSpaces(context.TODO(), &one, &two, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 1, len(objs.AddressSpaces), "Unexpected number of address spaces in page")
-	assert.Equal(t, as3.ObjectMeta, *objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, as3.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
 }
 
 func TestQueryAddressSpaceMetrics(t *testing.T) {
 	r := newTestAddressSpaceResolver(t)
-	as := createAddressSpace("mynamespace", "myaddressspace")
-	c1 := createConnection( "host:1234", "mynamespace", "myaddrspace")
-	c2 := createConnection( "host:1235", "mynamespace", "myaddrspace")
-	differentAddrressSpaceCon := createConnection("hostL1236", "mynamespace", "myaddrspace1")
+	as := createAddressSpace( "myaddressspace", "mynamespace")
+	c1 := createConnection( "host:1234", as.Namespace, as.Name)
+	c2 := createConnection( "host:1235", as.Namespace, as.Name)
+	differentAddressSpaceCon := createConnection("host:1236", as.Namespace, "myaddrspace1")
 
-	err := r.Cache.Add(as, c1, c2, differentAddrressSpaceCon)
+	err := r.Cache.Add(as, c1, c2, differentAddressSpaceCon)
 	assert.NoError(t, err)
 
-	obj := &AddressSpaceConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
-			Name:      "myaddrspace",
-			Namespace: "mynamespace",
-		},
-	}
-
-	metrics, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Metrics(context.TODO(), obj)
+	objs, err := r.Query().AddressSpaces(context.TODO(), nil, nil, nil,  nil)
 	assert.NoError(t, err)
+	assert.Equal(t,1, objs.Total, "Unexpected number of address spaces")
 
-	expected := 2
-	actual := len(metrics)
-	assert.Equal(t, expected, actual, "Unexpected number of metrics")
+	metrics := objs.AddressSpaces[0].Metrics
+	assert.Equal(t, 2, len(metrics), "Unexpected number of metrics")
 
-	connectionMetric := getMetric("enmasse-connections", metrics)
+	connectionMetric := getMetric("enmasse_connections", metrics)
 	assert.NotNil(t, connectionMetric, "Connections metric is absent")
 
 	expectedNumberConnections := float64(2)
-	value, _, _ := connectionMetric.Value.GetValue()
+	value := connectionMetric.Value
 	assert.Equal(t, expectedNumberConnections, value, "Unexpected connection metric")
 
-	addressesMetric := getMetric("enmasse-addresses", metrics)
+	addressesMetric := getMetric("enmasse_addresses", metrics)
 	assert.NotNil(t, addressesMetric, "Addresses metric is absent")
 }
 

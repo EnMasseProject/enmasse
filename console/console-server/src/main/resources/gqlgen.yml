@@ -47,8 +47,8 @@ models:
   AuthenticationService_enmasse_io_v1beta1:
     model: v1beta1.AuthenticationService
 
-  Address_enmasse_io_v1beta1:
-    model: v1beta1.Address
+  Address_consoleapi_enmasse_io_v1beta1:
+    model: consolegraphql.AddressHolder
   AddressSpec_enmasse_io_v1beta1:
     model: v1beta1.AddressSpec
   AddressStatus_enmasse_io_v1beta1:
@@ -56,8 +56,8 @@ models:
   AddressPlanStatus_enmasse_io_v1beta1:
     model: v1beta1.AddressPlanStatus
 
-  AddressSpace_enmasse_io_v1beta1:
-    model: v1beta1.AddressSpace
+  AddressSpace_consoleapi_enmasse_io_v1beta1:
+    model: consolegraphql.AddressSpaceHolder
   AddressSpaceSpec_enmasse_io_v1beta1:
     model: v1beta1.AddressSpaceSpec
   AddressSpaceStatus_enmasse_io_v1beta1:
@@ -73,9 +73,13 @@ models:
   AddressSpacePlanSpec_admin_enmasse_io_v1beta2:
     model: v1beta2.AddressSpacePlanSpec
 
+  Connection_consoleapi_enmasse_io_v1beta1:
+      model: consolegraphql.Connection
   ConnectionSpec_consoleapi_enmasse_io_v1beta1:
       model: consolegraphql.ConnectionSpec
 
+  Link_consoleapi_enmasse_io_v1beta1:
+      model: consolegraphql.Link
   LinkSpec_consoleapi_enmasse_io_v1beta1:
       model: consolegraphql.LinkSpec
 
@@ -97,12 +101,3 @@ models:
 
   Metric_consoleapi_enmasse_io_v1beta1:
     model: consolegraphql.Metric
-#    fields:
-#      Name:
-#        model: github.com/enmasseproject/enmasse/pkg/consolegraphql.GetMetricName
-#      Type:
-#        model: github.com/enmasseproject/enmasse/pkg/consolegraphql.GetMetricType
-#      Units:
-#        model: github.com/enmasseproject/enmasse/pkg/consolegraphql.GetMetricUnit
-#      Value:
-#        model: github.com/enmasseproject/enmasse/pkg/consolegraphql.GetMetricValue
