@@ -62,6 +62,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta1().Addresses().Informer()}, nil
 	case enmassev1beta1.SchemeGroupVersion.WithResource("addressspaces"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta1().AddressSpaces().Informer()}, nil
+	case enmassev1beta1.SchemeGroupVersion.WithResource("addressspaceschemas"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta1().AddressSpaceSchemas().Informer()}, nil
+	case enmassev1beta1.SchemeGroupVersion.WithResource("authenticationservices"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta1().AuthenticationServices().Informer()}, nil
 
 		// Group=iot.enmasse.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("iotconfigs"):

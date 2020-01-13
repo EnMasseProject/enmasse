@@ -182,6 +182,47 @@ func (e AddressType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type AuthenticationServiceType string
+
+const (
+	AuthenticationServiceTypeNone     AuthenticationServiceType = "none"
+	AuthenticationServiceTypeStandard AuthenticationServiceType = "standard"
+)
+
+var AllAuthenticationServiceType = []AuthenticationServiceType{
+	AuthenticationServiceTypeNone,
+	AuthenticationServiceTypeStandard,
+}
+
+func (e AuthenticationServiceType) IsValid() bool {
+	switch e {
+	case AuthenticationServiceTypeNone, AuthenticationServiceTypeStandard:
+		return true
+	}
+	return false
+}
+
+func (e AuthenticationServiceType) String() string {
+	return string(e)
+}
+
+func (e *AuthenticationServiceType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AuthenticationServiceType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AuthenticationServiceType", str)
+	}
+	return nil
+}
+
+func (e AuthenticationServiceType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type LinkRole string
 
 const (
