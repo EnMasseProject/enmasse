@@ -19,7 +19,8 @@ export interface IAddress {
   name: string;
   namespace: string;
   type: string;
-  plan: string;
+  planLabel: string;
+  planValue: string;
   messagesIn: number;
   messagesOut: number;
   storedMessages: number;
@@ -67,7 +68,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       const tableRow: IRowData = {
         cells: [
           { title: <Link to={`addresses/${row.name}`}>{row.name}</Link> },
-          { title: <TypePlan type={row.type} plan={row.plan} /> },
+          { title: <TypePlan type={row.type} plan={row.planLabel} /> },
           {
             title: (
               <Messages
@@ -98,7 +99,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       const tableRow: IRowData = {
         cells: [
           { title: <Link to={`addresses/${row.name}`}>{row.name}</Link> },
-          { title: <TypePlan type={row.type} plan={row.plan} /> },
+          { title: <TypePlan type={row.type} plan={row.planLabel} /> },
           {
             title: row.errorMessages ? (
               <Error message={row.errorMessages[0]} type={row.status} />

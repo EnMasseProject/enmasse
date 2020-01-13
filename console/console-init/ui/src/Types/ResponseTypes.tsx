@@ -44,6 +44,9 @@ export interface IAddressResponse {
           Spec: {
             DisplayName: string;
           };
+          ObjectMeta: {
+            Name: string;
+          };
         };
       };
       Status: {

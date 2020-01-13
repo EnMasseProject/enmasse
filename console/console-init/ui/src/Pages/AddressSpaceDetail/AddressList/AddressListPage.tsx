@@ -84,7 +84,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     name: address.ObjectMeta.Name,
     namespace: address.ObjectMeta.Namespace,
     type: address.Spec.Type,
-    plan: address.Spec.Plan.Spec.DisplayName,
+    planLabel: address.Spec.Plan.Spec.DisplayName,
+    planValue : address.Spec.Plan.ObjectMeta.Name,
     messagesIn: getFilteredValue(address.Metrics, "enmasse_messages_in"),
     messagesOut: getFilteredValue(address.Metrics, "enmasse_messages_out"),
     storedMessages: getFilteredValue(
@@ -116,7 +117,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           },
           jsonPatch:
             '[{"op":"replace","path":"/Plan","value":"' +
-            addressBeingEdited.plan +
+            addressBeingEdited.planValue +
             '"}]',
           patchType: "application/json-patch+json"
         }
@@ -128,7 +129,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
 
   const handlePlanChange = (plan: string) => {
     if (addressBeingEdited) {
-      addressBeingEdited.plan = plan;
+      addressBeingEdited.planValue = plan;
       setAddressBeingEdited({ ...addressBeingEdited });
     }
   };
@@ -194,7 +195,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           <EditAddress
             name={addressBeingEdited.name}
             type={addressBeingEdited.type}
-            plan={addressBeingEdited.plan}
+            plan={addressBeingEdited.planValue}
             addressSpacePlan={addressSpacePlan}
             onChange={handlePlanChange}
           />
