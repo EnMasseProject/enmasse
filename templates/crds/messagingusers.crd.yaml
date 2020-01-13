@@ -4,6 +4,7 @@ metadata:
   name: messagingusers.user.enmasse.io
   labels:
     app: enmasse
+    enmasse-component: tenant-api
 spec:
   group: user.enmasse.io
   version: v1beta1
