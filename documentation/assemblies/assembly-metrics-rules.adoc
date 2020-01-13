@@ -11,5 +11,5 @@ include::../modules/ref-metrics-address-space-controller.adoc[leveloffset=+1]
 
 include::../modules/ref-metrics-standard-controller-agent.adoc[leveloffset=+1]
 
-include::assemblies/assembly-rules.adoc[leveloffset=+1]
+include::assembly-rules.adoc[leveloffset=+1]
 
