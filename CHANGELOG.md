@@ -10,6 +10,7 @@
 *  #3621: Add status section for plans and authentication services
 *  Qpid Dispatch Router upgraded to 1.10.0
 *  #3657 Configure router pod anti-affinity by default
+* Upgrade to Infinispan 9.4.16
 
 * #3673: Add support for pod disruption budgets
 
