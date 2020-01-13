@@ -4,6 +4,7 @@ metadata:
   name: addressspaces.enmasse.io
   labels:
     app: enmasse
+    enmasse-component: tenant-api
 spec:
   group: enmasse.io
   version: v1beta1
