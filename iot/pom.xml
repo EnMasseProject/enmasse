@@ -14,7 +14,7 @@
 
   <properties>
     <hono.version>1.0.2</hono.version>
-    <infinispan.version>9.4.15.Final</infinispan.version>
+    <infinispan.version>9.4.16.Final</infinispan.version>
 
     <!-- align with Hono compatible versions -->
     <spring.boot.version>2.1.5.RELEASE</spring.boot.version>
