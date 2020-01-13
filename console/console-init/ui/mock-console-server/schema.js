@@ -283,7 +283,7 @@ const typeDefs = gql`
         authenticationServices: [AuthenticationService_admin_enmasse_io_v1beta1!]!
         "Returns the addressSpaceSchema"
         addressSpaceSchema: [AddressSpaceSchema_enmasse_io_v1beta1!]!
-        "Returns the addressSpaceSchema optionally filtering those for a matching address space plan and/or address type"
+        "Returns the addressSpaceSchema optionally filtering those for a matching address space type"
         addressSpaceSchema_v2(
           addressSpaceType: AddressSpaceType
         ): [AddressSpaceSchema_enmasse_io_v1beta1!]!
