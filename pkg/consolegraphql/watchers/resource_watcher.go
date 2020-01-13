@@ -5,11 +5,15 @@
 
 //go:generate go run ../../../hack/generate_resource_watchers.go AddressSpace EnmasseV1beta1Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1 github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1
 //go:generate go run ../../../hack/generate_resource_watchers.go Address EnmasseV1beta1Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1 github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1
-//go:generate go run ../../../hack/generate_resource_watchers.go AddressPlan AdminV1beta2Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2 github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2
-//go:generate go run ../../../hack/generate_resource_watchers.go AddressSpacePlan AdminV1beta2Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2 github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2
-//go:generate go run ../../../hack/generate_resource_watchers.go --global Namespace CoreV1Interface k8s.io/client-go/kubernetes/typed/core/v1 k8s.io/api/core/v1
-//go:generate go run ../../../hack/generate_resource_watchers.go AuthenticationService AdminV1beta1Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta1 github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1
-//go:generate go run ../../../hack/generate_resource_watchers.go AddressSpaceSchema EnmasseV1beta1Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1 github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1
+
+//go:generate go run ../../../hack/generate_resource_watchers.go --watchAll=false AddressPlan AdminV1beta2Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2 github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2
+//go:generate go run ../../../hack/generate_resource_watchers.go --watchAll=false AddressSpacePlan AdminV1beta2Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2 github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2
+//go:generate go run ../../../hack/generate_resource_watchers.go --watchAll=false AuthenticationService AdminV1beta1Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta1 github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1
+
+//go:generate go run ../../../hack/generate_resource_watchers.go --scope clusterwide Namespace CoreV1Interface k8s.io/client-go/kubernetes/typed/core/v1 k8s.io/api/core/v1
+// TODO check me - should be --scope clusterwide
+//go:generate go run ../../../hack/generate_resource_watchers.go  AddressSpaceSchema EnmasseV1beta1Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1 github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1
+
 package watchers
 
 import (
@@ -18,20 +22,20 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/rest"
 	"strings"
 )
 
 type ResourceWatcher interface {
-	Init(cache cache.Cache, client interface{}) error
-	NewClientForConfig(config *rest.Config) (interface{}, error)
+	//NewClientForConfig(config *rest.Config) (interface{}, error)
 	Watch() error
 	AwaitWatching()
 	Shutdown()
 }
+
+type WatcherOption func(watcher ResourceWatcher) error
+
 
 func NamespaceIndexCreator(o runtime.Object) (string, error) {
 	ns, ok := o.(*v1.Namespace)
@@ -43,7 +47,7 @@ func NamespaceIndexCreator(o runtime.Object) (string, error) {
 }
 
 func AddressSpaceIndexCreator(o runtime.Object) (string, error) {
-	as, ok := o.(*v1beta1.AddressSpace)
+	as, ok := o.(*consolegraphql.AddressSpaceHolder)
 	if !ok {
 		return "", fmt.Errorf("unexpected type")
 	}
@@ -52,7 +56,7 @@ func AddressSpaceIndexCreator(o runtime.Object) (string, error) {
 }
 
 func AddressIndexCreator(o runtime.Object) (string, error) {
-	a, ok := o.(*v1beta1.Address)
+	a, ok := o.(*consolegraphql.AddressHolder)
 	if !ok {
 		return "", fmt.Errorf("unexpected type")
 	}
@@ -103,12 +107,12 @@ func AddressSpaceSchemaIndexCreator(o runtime.Object) (string, error) {
 }
 
 func ConnectionIndexCreator(o runtime.Object) (string, error) {
-	asp, ok := o.(*consolegraphql.Connection)
+	con, ok := o.(*consolegraphql.Connection)
 	if !ok {
 		return "", fmt.Errorf("unexpected type")
 	}
 
-	return asp.Kind + "/" + asp.Namespace + "/" + asp.Spec.AddressSpace + "/" + asp.Name, nil
+	return con.Kind + "/" + con.Namespace + "/" + con.Spec.AddressSpace + "/" + con.Name, nil
 }
 
 func ConnectionLinkIndexCreator(o runtime.Object) (string, error) {

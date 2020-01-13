@@ -31,11 +31,10 @@ func newTestNamespaceWatcher(t *testing.T) *NamespaceWatcher {
 			},
 		})
 	assert.NoError(t, err, "failed to create test resolver")
-	watcher := NamespaceWatcher{}
+	watcher, err := NewNamespaceWatcher(c, NamespaceWatcherClient(fake.NewSimpleClientset().CoreV1()))
+	assert.NoError(t, err, "failed to create test resolver")
 
-	err = watcher.Init(c, fake.NewSimpleClientset().CoreV1())
-	assert.NoError(t, err, "failed to create namespace watcher")
-	return &watcher
+	return watcher.(*NamespaceWatcher)
 }
 
 func TestWatchExistingValue(t *testing.T) {

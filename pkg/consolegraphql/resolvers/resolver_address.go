@@ -14,7 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"strings"
-	time2 "time"
+	"time"
 )
 
 func (r *Resolver) Address_consoleapi_enmasse_io_v1beta1() Address_consoleapi_enmasse_io_v1beta1Resolver {
@@ -23,7 +23,7 @@ func (r *Resolver) Address_consoleapi_enmasse_io_v1beta1() Address_consoleapi_en
 
 type addressK8sResolver struct{ *Resolver }
 
-func (ar addressK8sResolver) Links(ctx context.Context, obj *AddressConsoleapiEnmasseIoV1beta1, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error) {
+func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.AddressHolder, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
 		fltrfunc, e := BuildFilter(filter)
 		if e != nil {
@@ -50,13 +50,13 @@ func (ar addressK8sResolver) Links(ctx context.Context, obj *AddressConsoleapiEn
 		lower, upper := CalcLowerUpper(offset, first, len(links))
 		paged := links[lower:upper]
 
-		consolelinks := make([]*LinkConsoleapiEnmasseIoV1beta1, 0)
+		consolelinks := make([]*consolegraphql.Link, 0)
 		for _, obj := range paged {
 			link := obj.(*consolegraphql.Link)
-			consolelinks = append(consolelinks, &LinkConsoleapiEnmasseIoV1beta1{
-				ObjectMeta: &link.ObjectMeta,
-				Spec:       &link.Spec,
-				Metrics:    make([]*consolegraphql.Metric, 0),
+			consolelinks = append(consolelinks, &consolegraphql.Link{
+				ObjectMeta: link.ObjectMeta,
+				Spec:       link.Spec,
+				Metrics:    link.Metrics,
 			})
 		}
 
@@ -72,59 +72,6 @@ func (r *Resolver) AddressSpec_enmasse_io_v1beta1() AddressSpec_enmasse_io_v1bet
 	return &addressSpecK8sResolver{r}
 }
 
-func (ar addressK8sResolver) Metrics(ctx context.Context, obj *AddressConsoleapiEnmasseIoV1beta1) ([]*consolegraphql.Metric, error) {
-
-	if obj != nil {
-
-		linkCounts := make(map[string]int, 0)
-		linkCounts["sender"] = 0
-		linkCounts["receiver"] = 0
-		roleCountingFilter := func(obj interface{}) (bool, bool, error) {
-			asp, ok := obj.(*consolegraphql.Link)
-			if !ok {
-				return false, false, fmt.Errorf("unexpected type: %T", obj)
-			}
-
-			if val, ok := linkCounts[asp.Spec.Role]; ok {
-				linkCounts[asp.Spec.Role] = val + 1
-			}
-			return false, true, nil
-		}
-
-		addrtoks := strings.SplitN(obj.ObjectMeta.Name, ".", 2)
-		// address name not addressspace name prefixed in the link index
-		_, e := ar.Cache.Get("addressLinkHierarchy", fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1]), roleCountingFilter)
-		if e != nil {
-			return nil, e
-		}
-
-		key := fmt.Sprintf("Address/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1])
-		dynamic, e := ar.MetricCache.Get("id", key, nil)
-		metrics := make([]*consolegraphql.Metric, 2)
-
-		metrics[0] = &consolegraphql.Metric{
-			Value:        consolegraphql.NewSimpleMetricValue("enmasse_senders", "gauge", float64(linkCounts["sender"]), "", time2.Now()),
-			//
-			//MetricName:  "enmasse_senders",
-			//MetricType:  "gauge",
-			//MetricValue: float64(linkCounts["sender"]),
-		}
-		metrics[1] = &consolegraphql.Metric{
-			Value:        consolegraphql.NewSimpleMetricValue("enmasse_receivers", "gauge", float64(linkCounts["receiver"]), "", time2.Now()),
-			//MetricName:  "enmasse_receivers",
-			//MetricType:  "gauge",
-			//MetricValue: float64(linkCounts["receiver"]),
-		}
-
-		for _, i := range dynamic {
-			metric := i.(*consolegraphql.Metric)
-			metrics = append(metrics, metric)
-		}
-
-		return metrics, nil
-	}
-	return nil, nil
-}
 
 type addressSpecK8sResolver struct{ *Resolver }
 
@@ -152,18 +99,46 @@ func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, 
 	lower, upper := CalcLowerUpper(offset, first, len(objects))
 	paged := objects[lower:upper]
 
-	addresses := make([]*AddressConsoleapiEnmasseIoV1beta1, len(paged))
+	addresses := make([]*consolegraphql.AddressHolder, len(paged))
 	for i, a := range paged {
-		addr := a.(*v1beta1.Address)
-		addresses[i] = &AddressConsoleapiEnmasseIoV1beta1{
-			ObjectMeta: &addr.ObjectMeta,
-			Spec:       &addr.Spec,
-			Status:     &addr.Status,
-			Links: &LinkQueryResultConsoleapiEnmasseIoV1beta1{
-				Total: 0,
-				Links: make([]*LinkConsoleapiEnmasseIoV1beta1, 0),
-			},
-			Metrics: make([]*consolegraphql.Metric, 0),
+		obj := a.(*consolegraphql.AddressHolder)
+		now := time.Now()
+
+		linkCounts := make(map[string]int, 0)
+		linkCounts["sender"] = 0
+		linkCounts["receiver"] = 0
+		roleCountingFilter := func(obj interface{}) (bool, bool, error) {
+			asp, ok := obj.(*consolegraphql.Link)
+			if !ok {
+				return false, false, fmt.Errorf("unexpected type: %T", obj)
+			}
+
+			if val, ok := linkCounts[asp.Spec.Role]; ok {
+				linkCounts[asp.Spec.Role] = val + 1
+			}
+			return false, true, nil
+		}
+
+		addrtoks := strings.SplitN(obj.ObjectMeta.Name, ".", 2)
+		// address name not addressspace name prefixed in the link index
+		_, e := r.Cache.Get("addressLinkHierarchy", fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1]), roleCountingFilter)
+		if e != nil {
+			return nil, e
+		}
+
+		metrics := make([]*consolegraphql.Metric, 0)
+		senders, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_senders", "gauge" )
+		senders.Update(float64(linkCounts["sender"]), now)
+		receivers, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_receivers", "gauge" )
+		receivers.Update(float64(linkCounts["receiver"]), now)
+
+		for _, metric := range obj.Metrics {
+			metrics = append(metrics, metric)
+		}
+
+		addresses[i] = &consolegraphql.AddressHolder{
+			Address: obj.Address,
+			Metrics: metrics,
 		}
 	}
 

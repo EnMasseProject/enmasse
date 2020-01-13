@@ -12,7 +12,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	time2 "time"
+	"time"
 )
 
 func (r *Resolver) AddressSpace_consoleapi_enmasse_io_v1beta1() AddressSpace_consoleapi_enmasse_io_v1beta1Resolver {
@@ -45,21 +45,39 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 	}
 
 	lower, upper := CalcLowerUpper(offset, first, len(objects))
-
 	paged := objects[lower:upper]
-	addressspaces := make([]*AddressSpaceConsoleapiEnmasseIoV1beta1, len(paged))
+	addressspaces := make([]*consolegraphql.AddressSpaceHolder, len(paged))
 	for i, as := range paged {
-		addr := as.(*v1beta1.AddressSpace)
-		addressspaces[i] = &AddressSpaceConsoleapiEnmasseIoV1beta1{
-			ObjectMeta: &addr.ObjectMeta,
-			Spec:       &addr.Spec,
-			Status:     &addr.Status,
-			// Do we need this initialisation?
-			Connections: &ConnectionQueryResultConsoleapiEnmasseIoV1beta1{
-				Total:       0,
-				Connections: make([]*ConnectionConsoleapiEnmasseIoV1beta1, 0),
-			},
-			Metrics: make([]*consolegraphql.Metric, 0),
+		obj := as.(*consolegraphql.AddressSpaceHolder)
+		metrics := make([]*consolegraphql.Metric, 0)
+		now := time.Now()
+
+		connections := 0
+		_, e := r.Cache.Get("hierarchy", fmt.Sprintf("Connection/%s/%s/", obj.ObjectMeta.Namespace, obj.ObjectMeta.Name), func(obj interface{}) (bool, bool, error) {
+			connections++
+			return false, true, nil
+		})
+		if e != nil {
+			return nil, e
+		}
+
+		addresses := 0
+		_, e = r.Cache.Get("hierarchy", fmt.Sprintf("Address/%s/%s/", obj.ObjectMeta.Namespace, obj.ObjectMeta.Name), func(obj interface{}) (bool, bool, error) {
+			addresses++
+			return false, true, nil
+		})
+		if e != nil {
+			return nil, e
+		}
+
+		senders, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_connections", "gauge" )
+		senders.Update(float64(connections), now)
+		receivers, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_addresses", "gauge" )
+		receivers.Update(float64(addresses), now)
+
+		addressspaces[i] = &consolegraphql.AddressSpaceHolder{
+			AddressSpace: obj.AddressSpace,
+			Metrics:      metrics,
 		}
 	}
 
@@ -92,7 +110,7 @@ func (r *addressSpaceSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.Add
 		}
 
 		if len(objs) == 0 {
-			// There might be a plan change in progress, or the user may have created a space refering to
+			// There might be a plan change in progress, or the user may have created a space referring to
 			// an unknown plan.
 			return &v1beta2.AddressSpacePlan{
 				ObjectMeta: v1.ObjectMeta{
@@ -102,11 +120,6 @@ func (r *addressSpaceSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.Add
 					AddressPlans:     make([]string, 0),
 					AddressSpaceType: obj.Type,
 					DisplayName:      addressSpacePlan,
-					LongDescription:  "",
-					ShortDescription: "",
-					InfraConfigRef:   "",
-					DisplayOrder:     0,
-					ResourceLimits:   nil,
 				},
 			}, nil
 		}
@@ -127,44 +140,17 @@ func (r *addressSpaceSpecK8sResolver) Type(ctx context.Context, obj *v1beta1.Add
 	return spaceType, nil
 }
 
+
+
 type addressSpaceK8sResolver struct{ *Resolver }
 
-func (r *addressSpaceK8sResolver) Metrics(ctx context.Context, obj *AddressSpaceConsoleapiEnmasseIoV1beta1) ([]*consolegraphql.Metric, error) {
-	if obj != nil {
-		metrics := make([]*consolegraphql.Metric, 2)
 
-		connections := 0
-		_, e := r.Cache.Get("hierarchy", fmt.Sprintf("Connection/%s/%s/", obj.ObjectMeta.Namespace, obj.ObjectMeta.Name), func(obj interface{}) (bool, bool, error) {
-			connections++
-			return false, true, nil
-		})
-		if e != nil {
-			return nil, e
-		}
+func (r *addressSpaceK8sResolver) Connections(ctx context.Context, obj *consolegraphql.AddressSpaceHolder, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1beta1, error) {
+	panic("implement me")
+}
 
-		addresses := 0
-		_, e = r.Cache.Get("hierarchy", fmt.Sprintf("Address/%s/%s/", obj.ObjectMeta.Namespace, obj.ObjectMeta.Name), func(obj interface{}) (bool, bool, error) {
-			addresses++
-			return false, true, nil
-		})
-		if e != nil {
-			return nil, e
-		}
-
-		metrics[0] = &consolegraphql.Metric{
-			Value:        consolegraphql.NewSimpleMetricValue("enmasse-connections", "gauge", float64(connections), "", time2.Now()),
-			//
-			//MetricName:  "enmasse-connections",
-			//MetricType:  "gauge",
-			//MetricValue: float64(connections),
-		}
-		metrics[1] = &consolegraphql.Metric{
-			Value:        consolegraphql.NewSimpleMetricValue("enmasse-addresses", "gauge", float64(addresses), "", time2.Now()),
-		}
-		return metrics, nil
-	} else {
-		return nil, nil
-	}
+func (r *addressSpaceK8sResolver) Addresses(ctx context.Context, obj *consolegraphql.AddressSpaceHolder, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1beta1, error) {
+	panic("implement me")
 }
 
 func (r *queryResolver) MessagingCertificateChain(ctx context.Context, input v1.ObjectMeta) (string, error) {

@@ -10,8 +10,10 @@ import (
 	"github.com/99designs/gqlgen/cmd"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/handler"
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/resolvers"
@@ -20,10 +22,10 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util"
 	user "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
 	"github.com/vektah/gqlparser/gqlerror"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	config2 "sigs.k8s.io/controller-runtime/pkg/client/config"
 	"time"
 )
@@ -111,11 +113,6 @@ func main() {
 		panic(err)
 	}
 
-	metricCache, err := createMetricCache()
-	if err != nil {
-		panic(err)
-	}
-
 	config, err := config2.GetConfig()
 	if err != nil {
 		panic(err)
@@ -131,43 +128,77 @@ func main() {
 		panic(err.Error())
 	}
 
-	resourcewatchers := make([]watchers.ResourceWatcher, 0)
-	resourcewatchers = append(resourcewatchers, &watchers.AddressSpaceWatcher{
-		Namespace: v1.NamespaceAll,
-	})
-	resourcewatchers = append(resourcewatchers, &watchers.AddressWatcher{
-		Namespace: v1.NamespaceAll,
-	})
-	resourcewatchers = append(resourcewatchers, &watchers.AddressPlanWatcher{
-		Namespace: infraNamespace,
-	})
-	resourcewatchers = append(resourcewatchers, &watchers.AddressSpacePlanWatcher{
-		Namespace: infraNamespace,
-	})
-	resourcewatchers = append(resourcewatchers, &watchers.AuthenticationServiceWatcher{
-		Namespace: infraNamespace,
-	})
-	resourcewatchers = append(resourcewatchers, &watchers.AddressSpaceSchemaWatcher{})
-	resourcewatchers = append(resourcewatchers, &watchers.NamespaceWatcher{})
-	connAndLinkWatcher := &watchers.ConnectionAndLinkWatcher{
-		Namespace:   infraNamespace,
-		MetricCache: metricCache,
-		AgentCollectorCreator: func() agent.AgentCollector {
-			return agent.AmqpAgentCollectorCreator(config.BearerToken)
+	creators := []func() (watchers.ResourceWatcher, error) {
+		func() (watchers.ResourceWatcher, error) {
+			return watchers.NewAddressSpaceWatcher(objectCache, watchers.AddressSpaceWatcherConfig(config),
+				watchers.AddressSpaceWatcherFactory(
+					func(space *v1beta1.AddressSpace) interface{} {
+						return &consolegraphql.AddressSpaceHolder{
+							AddressSpace: *space,
+						}
+					},
+					func(value *v1beta1.AddressSpace, existing interface{}) bool {
+						ash := existing.(*consolegraphql.AddressSpaceHolder)
+						if reflect.DeepEqual(ash.AddressSpace, *value) {
+							return false
+						} else {
+							value.DeepCopyInto(&ash.AddressSpace)
+							return true
+						}
+					},
+				))
+		},
+		func() (watchers.ResourceWatcher, error) {
+			return watchers.NewAddressWatcher(objectCache, watchers.AddressWatcherConfig(config),
+				watchers.AddressWatcherFactory(
+					func(space *v1beta1.Address) interface{} {
+						return &consolegraphql.AddressHolder{
+							Address: *space,
+						}
+					},
+					func(value *v1beta1.Address, existing interface{}) bool {
+						ash := existing.(*consolegraphql.AddressHolder)
+						if reflect.DeepEqual(ash.Address, *value) {
+							return false
+						} else {
+							value.DeepCopyInto(&ash.Address)
+							return true
+						}
+					},
+				))
+		},
+		func() (watchers.ResourceWatcher, error) {
+			return watchers.NewNamespaceWatcher(objectCache, watchers.NamespaceWatcherConfig(config))
+		},
+		func() (watchers.ResourceWatcher, error) {
+			return watchers.NewAddressSpacePlanWatcher(objectCache, infraNamespace, watchers.AddressSpacePlanWatcherConfig(config))
+		},
+		func() (watchers.ResourceWatcher, error) {
+			return watchers.NewAddressPlanWatcher(objectCache, infraNamespace, watchers.AddressPlanWatcherConfig(config))
+		},
+		func() (watchers.ResourceWatcher, error) {
+			return watchers.NewAuthenticationServiceWatcher(objectCache, infraNamespace, watchers.AuthenticationServiceWatcherConfig(config))
+		},
+		func() (watchers.ResourceWatcher, error) {
+			return watchers.NewAddressSpaceSchemaWatcher(objectCache, watchers.AddressSpaceSchemaWatcherConfig(config))
+		},
+		func() (watchers.ResourceWatcher, error) {
+			return watchers.NewConnectionAndLinkWatcher(objectCache, infraNamespace, func() agent.AgentCollector {
+				return agent.AmqpAgentCollectorCreator(config.BearerToken)
+			},  watchers.ConnectionAndLinkWatcherConfig(config))
 		},
 	}
-	resourcewatchers = append(resourcewatchers, connAndLinkWatcher)
 
-	for _, resourcewatcher := range resourcewatchers {
-		client, err := resourcewatcher.NewClientForConfig(config)
+	resourcewatchers := make([]watchers.ResourceWatcher,0)
+
+	for _, f := range creators {
+		watcher, err := f()
 		if err != nil {
 			panic(err.Error())
 		}
-		err = resourcewatcher.Init(objectCache, client)
-		if err != nil {
-			panic(err.Error())
-		}
-		err = resourcewatcher.Watch()
+		resourcewatchers = append(resourcewatchers, watcher)
+
+		err = watcher.Watch()
 		if err != nil {
 			panic(err.Error())
 		}
@@ -177,14 +208,13 @@ func main() {
 		AdminConfig: adminclient,
 		CoreConfig:  coreclient,
 		Cache:       objectCache,
-		MetricCache: metricCache,
 	}
 
 	if dumpCachePeriod != "" {
 		duration, err := time.ParseDuration(dumpCachePeriod)
 		if err == nil {
 			schedule(func() {
-				//_ = objectCache.Dump()
+				_ = objectCache.Dump()
 				//objectCache.Dump()
 				//_ = metricCache.Dump()
 			}, duration)
@@ -263,22 +293,6 @@ func createObjectCache() (*cache.MemdbCache, error) {
 				},
 			},
 		})
-	return c, err
-}
-
-func createMetricCache() (*cache.MemdbCache, error) {
-	c := &cache.MemdbCache{}
-	err := c.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: cache.MetricIndex(),
-		},
-		cache.IndexSpecifier{
-			Name:    "connectionLink",
-			Indexer: cache.ConnectionLinkMetricIndex(),
-			AllowMissing: true,
-		},
-	)
 	return c, err
 }
 
