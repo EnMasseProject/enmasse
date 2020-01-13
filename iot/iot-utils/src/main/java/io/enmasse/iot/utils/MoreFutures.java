@@ -32,7 +32,7 @@ public final class MoreFutures {
         try {
             future = supplier.get();
         } catch (final Exception e) {
-            log.debug("Failed to prepare future", e);
+            log.info("Failed to prepare future", e);
             handler.handle(Future.failedFuture(e));
             return;
         }
@@ -42,10 +42,10 @@ public final class MoreFutures {
             if (error == null) {
                 handler.handle(Future.succeededFuture(result));
             } else {
-                log.debug("Future failed", error);
                 if (error instanceof CompletionException) {
                     error = error.getCause();
                 }
+                log.info("Future failed", error);
                 handler.handle(Future.failedFuture(error));
             }
         });

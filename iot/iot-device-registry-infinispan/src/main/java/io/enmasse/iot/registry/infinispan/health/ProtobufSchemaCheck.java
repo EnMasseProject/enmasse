@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.infinispan.config.InfinispanProperties;
+import io.enmasse.iot.registry.health.AbstractSyncHealthCheck;
 import io.vertx.core.Vertx;
 import io.vertx.ext.healthchecks.Status;
 

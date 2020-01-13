@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
+import static io.enmasse.iot.infinispan.device.DeviceKey.deviceKey;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
@@ -23,15 +24,16 @@ import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.Result;
 import org.eclipse.hono.service.management.device.Device;
 import org.infinispan.client.hotrod.Flag;
+import org.infinispan.client.hotrod.RemoteCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.registry.infinispan.device.AbstractDeviceManagementService;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
-import io.enmasse.iot.infinispan.device.DeviceKey;
+import io.enmasse.iot.registry.device.DeviceKey;
+import io.enmasse.iot.registry.device.AbstractDeviceManagementService;
 import io.opentracing.Span;
 import io.vertx.core.json.Json;
 
@@ -40,9 +42,18 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
 
     private static final Logger log = LoggerFactory.getLogger(DeviceManagementServiceImpl.class);
 
+    // Adapter cache :
+    // <( tenantId + authId + type), (credential + deviceId + sync-flag + registration data version)>
+    private final RemoteCache<io.enmasse.iot.infinispan.device.CredentialKey, String> adapterCache;
+
+    // Management cache
+    // <(TenantId+DeviceId), (Device information + version + credentials)>
+    private final RemoteCache<io.enmasse.iot.infinispan.device.DeviceKey, DeviceInformation> managementCache;
+
     @Autowired
     public DeviceManagementServiceImpl(final DeviceManagementCacheProvider cacheProvider) {
-        super(cacheProvider);
+        this.adapterCache = cacheProvider.getOrCreateAdapterCredentialsCache();
+        this.managementCache = cacheProvider.getOrCreateDeviceManagementCache();
     }
 
     @Override
@@ -55,7 +66,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
 
         return this.managementCache
                 .withFlags(Flag.FORCE_RETURN_VALUE)
-                .putIfAbsentAsync(key, value)
+                .putIfAbsentAsync(deviceKey(key), value)
                 .thenApply(result -> {
                     if (result == null) {
                         return OperationResult.ok(HTTP_CREATED,
@@ -73,7 +84,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
     protected CompletableFuture<OperationResult<Device>> processReadDevice(final DeviceKey key, final Span span) {
 
         return this.managementCache
-                .getWithMetadataAsync(key)
+                .getWithMetadataAsync(deviceKey(key))
                 .thenApply(result -> {
 
                     if (result == null) {
@@ -95,7 +106,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
 
         return this.managementCache
 
-                .getWithMetadataAsync(key)
+                .getWithMetadataAsync(deviceKey(key))
                 .thenCompose(currentValue -> {
 
                     if (currentValue == null) {
@@ -111,7 +122,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
 
                     return this.managementCache
 
-                            .replaceWithVersionAsync(key, newValue, currentValue.getVersion())
+                            .replaceWithVersionAsync(deviceKey(key), newValue, currentValue.getVersion())
                             .thenApply(putResult -> {
                                 if (putResult == null) {
                                     return OperationResult.empty(HTTP_PRECON_FAILED);
@@ -130,7 +141,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
     protected CompletableFuture<Result<Void>> processDeleteDevice(final DeviceKey key, final Optional<String> resourceVersion, final Span span) {
 
         return this.managementCache
-                .getWithMetadataAsync(key)
+                .getWithMetadataAsync(deviceKey(key))
                 .thenCompose(result -> {
 
                     if (result == null) {
@@ -142,7 +153,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
                     }
 
                     return this.managementCache
-                            .removeWithVersionAsync(key, result.getVersion())
+                            .removeWithVersionAsync(deviceKey(key), result.getVersion())
                             .thenApply(removeResult -> {
                                 return Result.from(HTTP_NO_CONTENT);
                             });

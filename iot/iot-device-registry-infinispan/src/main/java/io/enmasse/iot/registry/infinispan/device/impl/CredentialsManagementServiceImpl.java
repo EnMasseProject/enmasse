@@ -5,7 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
-import static io.enmasse.iot.infinispan.device.CredentialKey.credentialKey;
+import static io.enmasse.iot.infinispan.device.DeviceKey.deviceKey;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.fromInternal;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.toInternal;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -32,24 +33,38 @@ import org.eclipse.hono.auth.HonoPasswordEncoder;
 import org.eclipse.hono.client.ServiceInvocationException;
 import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
+import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsManagementService;
-import io.enmasse.iot.infinispan.device.CredentialKey;
 import io.enmasse.iot.infinispan.device.DeviceCredential;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
-import io.enmasse.iot.infinispan.device.DeviceKey;
+import io.enmasse.iot.registry.device.AbstractCredentialsManagementService;
+import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 
 @Component
 public class CredentialsManagementServiceImpl extends AbstractCredentialsManagementService {
 
+    // Adapter cache :
+    // <(tenantId + authId + type), (credential + deviceId)>
+    private final RemoteCache<io.enmasse.iot.infinispan.device.CredentialKey, String> adapterCache;
+
+    // Management cache
+    // <(tenantId + deviceId), (device information + version + credentials)>
+    private final RemoteCache<io.enmasse.iot.infinispan.device.DeviceKey, DeviceInformation> managementCache;
+
     @Autowired
     public CredentialsManagementServiceImpl(final DeviceManagementCacheProvider cacheProvider, final HonoPasswordEncoder passwordEncoder) {
-        super(cacheProvider, passwordEncoder);
+        super(passwordEncoder);
+        this.managementCache = cacheProvider
+                .getDeviceManagementCache()
+                .orElseThrow(() -> new NoSuchElementException("Missing device management cache"));
+        this.adapterCache = cacheProvider
+                .getAdapterCredentialsCache()
+                .orElseThrow(() -> new NoSuchElementException("Missing adapter credentials cache"));
     }
 
     @Override
@@ -58,7 +73,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
         return this.managementCache
 
-                .getWithMetadataAsync(key)
+                .getWithMetadataAsync(deviceKey(key))
                 .thenCompose(currentValue -> {
 
                     if (currentValue == null) {
@@ -72,7 +87,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
                     final DeviceInformation newValue = currentValue.getValue().newVersion();
                     newValue.setCredentials(toInternal(credentials));
 
-                    final Collection<CredentialKey> affectedKeys;
+                    final Collection<io.enmasse.iot.infinispan.device.CredentialKey> affectedKeys;
                     try {
                         affectedKeys = calculateDifference(key.getTenantId(), currentValue.getValue().getCredentials(), newValue.getCredentials());
                     } catch (final IllegalStateException e) {
@@ -80,7 +95,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
                     }
 
                     return this.managementCache
-                            .replaceWithVersionAsync(key, newValue, currentValue.getVersion())
+                            .replaceWithVersionAsync(deviceKey(key), newValue, currentValue.getVersion())
 
                             .<OperationResult<Void>>thenCompose(lockResult -> {
 
@@ -107,9 +122,9 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
     }
 
-    static Collection<CredentialKey> calculateDifference(final String tenantId, final List<DeviceCredential> current, final List<DeviceCredential> next) {
+    static Collection<io.enmasse.iot.infinispan.device.CredentialKey> calculateDifference(final String tenantId, final List<DeviceCredential> current, final List<DeviceCredential> next) {
 
-        final Set<CredentialKey> result = new HashSet<>();
+        final Set<io.enmasse.iot.infinispan.device.CredentialKey> result = new HashSet<>();
 
         final var currentMap = toMap(tenantId, current);
         final var nextMap = toMap(tenantId, next);
@@ -142,7 +157,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
     }
 
-    private static Map<CredentialKey, DeviceCredential> toMap(final String tenantId, final List<DeviceCredential> entries) {
+    private static Map<io.enmasse.iot.infinispan.device.CredentialKey, DeviceCredential> toMap(final String tenantId, final List<DeviceCredential> entries) {
 
         // if the map is null or empty ...
 
@@ -151,11 +166,11 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
             return new HashMap<>();
         }
 
-        final Map<CredentialKey, DeviceCredential> result = new HashMap<>(entries.size());
+        final Map<io.enmasse.iot.infinispan.device.CredentialKey, DeviceCredential> result = new HashMap<>(entries.size());
 
         for (final DeviceCredential credential : entries) {
 
-            final var key = credentialKey(tenantId, credential.getAuthId(), credential.getType());
+            final var key = io.enmasse.iot.infinispan.device.CredentialKey.credentialKey(tenantId, credential.getAuthId(), credential.getType());
             if (result.put(key, credential) != null) {
                 // conflict adding
                 throw new IllegalStateException(String.format("Duplicate entries for '%s'", key));
@@ -173,10 +188,10 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
      * @param keys The keys to delete. May be empty, but must not be {@code null}.
      * @return The future which completes when all the delete operations are completed.
      */
-    protected CompletableFuture<?> clearAdapterEntries(final Collection<CredentialKey> keys) {
+    protected CompletableFuture<?> clearAdapterEntries(final Collection<io.enmasse.iot.infinispan.device.CredentialKey> keys) {
         final List<CompletableFuture<?>> futures = new ArrayList<>(keys.size());
 
-        for (final CredentialKey key : keys) {
+        for (final io.enmasse.iot.infinispan.device.CredentialKey key : keys) {
             futures.add(this.adapterCache.removeAsync(key));
         }
 
@@ -188,7 +203,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
         return this.managementCache
 
-                .getAsync(key)
+                .getAsync(deviceKey(key))
                 .thenApply(result -> {
 
                     if (result == null) {

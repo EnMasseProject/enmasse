@@ -81,4 +81,9 @@ public class DeviceConnectionKey implements Serializable {
         return toStringHelper().toString();
     }
 
+    public static DeviceConnectionKey deviceConnectionKey(io.enmasse.iot.registry.devcon.DeviceConnectionKey other) {
+        Objects.requireNonNull(other);
+        return new DeviceConnectionKey(other.getTenantId(), other.getDeviceId());
+    }
+
 }

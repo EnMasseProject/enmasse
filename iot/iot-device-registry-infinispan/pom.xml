@@ -20,7 +20,7 @@
 
     <dependency>
       <groupId>io.enmasse</groupId>
-      <artifactId>iot-service-base</artifactId>
+      <artifactId>iot-device-registry-base</artifactId>
     </dependency>
     <dependency>
       <groupId>io.enmasse</groupId>

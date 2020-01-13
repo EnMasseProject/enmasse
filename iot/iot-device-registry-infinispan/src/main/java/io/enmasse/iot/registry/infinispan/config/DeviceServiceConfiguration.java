@@ -18,8 +18,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.enmasse.iot.registry.infinispan.util.DeviceRegistryTokenAuthHandler;
-import io.enmasse.iot.registry.infinispan.util.DeviceRegistryTokenAuthProvider;
+import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler;
+import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthProvider;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.handler.AuthHandler;
 

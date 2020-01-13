@@ -10,6 +10,7 @@ import org.infinispan.client.hotrod.ServerStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.enmasse.iot.registry.health.AbstractSyncHealthCheck;
 import io.vertx.core.Vertx;
 import io.vertx.ext.healthchecks.Status;
 
