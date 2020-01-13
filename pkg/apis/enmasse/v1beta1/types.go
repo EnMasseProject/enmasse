@@ -16,6 +16,65 @@ import (
  * the generator, and produce a non-version version.
  */
 
+// ** AddressSpaceSchema
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type AddressSpaceSchema struct {
+       metav1.TypeMeta   `json:",inline"`
+       metav1.ObjectMeta `json:"metadata,omitempty"`
+
+       Spec    AddressSpaceSchemaSpec   `json:"spec"`
+}
+
+type AddressSpaceSchemaSpec struct {
+	   AuthenticationServices []string `json:"authenticationServices,omitempty"`
+       Description            string   `json:"description,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type AddressSpaceSchemaList struct {
+       metav1.TypeMeta `json:",inline"`
+       metav1.ListMeta `json:"metadata,omitempty"`
+
+       Items []AddressSpaceSchema `json:"items"`
+}
+
+// ** AuthenticationService
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type AuthenticationService struct {
+
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Type string `json:"type,omitempty"`
+	Name string `json:"name,omitempty"`
+
+	Overrides *AuthenticationServiceSettings `json:"overrides,omitempty"`
+}
+
+type AuthenticationServiceSettings struct {
+	Host  string `json:"host,omitempty"`
+	Port  int    `json:"port,omitempty"`
+	Realm string `json:"realm,omitempty"`
+
+	CaCertSecret     *corev1.SecretReference `json:"caCertSecret,omitempty"`
+	ClientCertSecret *corev1.SecretReference `json:"clientCertSecret,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type AuthenticationServiceList struct {
+       metav1.TypeMeta `json:",inline"`
+       metav1.ListMeta `json:"metadata,omitempty"`
+
+       Items []AuthenticationService `json:"items"`
+}
+
 // ** AddressSpace
 
 // +genclient
@@ -37,22 +96,6 @@ type AddressSpaceSpec struct {
 
 	Endpoints  []EndpointSpec  `json:"endpoints,omitempty"`
 	Connectors []ConnectorSpec `json:"connectors,omitempty"`
-}
-
-type AuthenticationService struct {
-	Type string `json:"type,omitempty"`
-	Name string `json:"name,omitempty"`
-
-	Overrides *AuthenticationServiceSettings `json:"overrides,omitempty"`
-}
-
-type AuthenticationServiceSettings struct {
-	Host  string `json:"host,omitempty"`
-	Port  int    `json:"port,omitempty"`
-	Realm string `json:"realm,omitempty"`
-
-	CaCertSecret     *corev1.SecretReference `json:"caCertSecret,omitempty"`
-	ClientCertSecret *corev1.SecretReference `json:"clientCertSecret,omitempty"`
 }
 
 type EndpointSpec struct {
