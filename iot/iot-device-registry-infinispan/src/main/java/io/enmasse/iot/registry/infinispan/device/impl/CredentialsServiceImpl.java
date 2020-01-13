@@ -34,22 +34,24 @@ import org.eclipse.hono.util.CacheDirective;
 import org.eclipse.hono.util.CredentialsConstants;
 import org.eclipse.hono.util.CredentialsResult;
 import org.infinispan.client.hotrod.MetadataValue;
+import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
 import org.infinispan.query.dsl.IndexedQueryMode;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.registry.device.AbstractCredentialsService;
 import io.enmasse.iot.registry.infinispan.config.DeviceServiceProperties;
-import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsService;
-import io.enmasse.iot.infinispan.device.CredentialKey;
+import io.enmasse.iot.registry.device.CredentialKey;
 import io.enmasse.iot.infinispan.device.DeviceCredential;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
-import io.enmasse.iot.infinispan.tenant.TenantInformation;
 import io.enmasse.iot.registry.infinispan.util.Credentials;
+import io.enmasse.iot.registry.tenant.TenantInformation;
 import io.opentracing.Span;
 import io.vertx.core.json.JsonObject;
 
@@ -58,14 +60,25 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     private static final Logger log = LoggerFactory.getLogger(CredentialsServiceImpl.class);
 
+    // Adapter cache :
+    // <( tenantId + authId + type), (adapter credentials)>
+    private final RemoteCache<io.enmasse.iot.infinispan.device.CredentialKey, String> adapterCache;
+
+    // Management cache
+    // <(TenantId+DeviceId), (Device information + version + credentials)>
+    private final RemoteCache<io.enmasse.iot.infinispan.device.DeviceKey, DeviceInformation> managementCache;
+
     private final DeviceServiceProperties properties;
 
     private final ThreadPoolExecutor executor;
 
     private Duration defaultTtl;
 
+    @Autowired
     public CredentialsServiceImpl(final DeviceManagementCacheProvider cacheProvider, final DeviceServiceProperties properties) {
-        super(cacheProvider);
+        this.adapterCache = cacheProvider.getOrCreateAdapterCredentialsCache();
+        this.managementCache = cacheProvider.getOrCreateDeviceManagementCache();
+
         this.properties = properties;
         this.defaultTtl = this.properties.getCredentialsTtl();
 
@@ -90,7 +103,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final TenantInformation tenant, final CredentialKey key, final Span span) {
 
         return this.adapterCache
-                .getWithMetadataAsync(key)
+                .getWithMetadataAsync(credentialKey(key))
                 .thenCompose(result -> {
 
                     // entry not found ...
@@ -100,7 +113,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
                         // ... try to re-create cache entry
 
                         log.debug("Entry not found - resync: {}", key);
-                        return resyncCacheEntry(tenant, key, span);
+                        return resyncCacheEntry(tenant, credentialKey(key), span);
                     }
 
                     // entry found and in sync ... return
@@ -139,7 +152,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         }
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final TenantInformation tenant, final CredentialKey key, final Span span) {
+    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final TenantInformation tenant, final io.enmasse.iot.infinispan.device.CredentialKey key, final Span span) {
 
         return searchCredentials(key)
                 .thenCompose(r -> {
@@ -190,7 +203,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         return completedFuture(notFound(getStoreTtl(tenant)));
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final TenantInformation tenant, final CredentialKey key, final JsonObject cacheEntry) {
+    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final TenantInformation tenant, final io.enmasse.iot.infinispan.device.CredentialKey key, final JsonObject cacheEntry) {
 
         final Duration ttl = getStoreTtl(tenant);
 
@@ -206,7 +219,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final TenantInformation tenant, final CredentialKey key) {
+    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final TenantInformation tenant, final io.enmasse.iot.infinispan.device.CredentialKey key) {
 
         final Duration ttl = getStoreTtl(tenant);
 
@@ -227,7 +240,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
      * @param key The search key.
      * @return The result of the search.
      */
-    private CompletableFuture<LinkedList<JsonObject>> searchCredentials(final CredentialKey key) {
+    private CompletableFuture<LinkedList<JsonObject>> searchCredentials(final io.enmasse.iot.infinispan.device.CredentialKey key) {
 
         final QueryFactory queryFactory = Search.getQueryFactory(this.managementCache);
 
@@ -243,7 +256,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private LinkedList<JsonObject> mapCredentials(final CredentialKey searchKey, final List<DeviceInformation> devices) {
+    private LinkedList<JsonObject> mapCredentials(final io.enmasse.iot.infinispan.device.CredentialKey searchKey, final List<DeviceInformation> devices) {
 
         log.debug("Search result : {} -> {}", searchKey, devices);
 
@@ -260,7 +273,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
             for (final DeviceCredential credential : device.getCredentials()) {
 
-                final CredentialKey key = credentialKey(tenantId, credential.getAuthId(), credential.getType());
+                final var key = credentialKey(tenantId, credential.getAuthId(), credential.getType());
 
                 if (!key.equals(searchKey)) {
                     log.debug("Result key doesn't match - expected: {}, actual: {}", searchKey, key);

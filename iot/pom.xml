@@ -35,8 +35,11 @@
     <module>iot-sigfox-adapter</module>
     <module>iot-tenant-service</module>
     <module>iot-proxy-configurator</module>
+    <module>iot-device-registry-base</module>
     <module>iot-device-registry-infinispan</module>
+    <module>iot-device-registry-jdbc</module>
     <module>iot-infinispan-base</module>
+    <module>iot-jdbc-base</module>
     <module>iot-tenant-cleaner</module>
     <module>iot-utils</module>
   </modules>
@@ -52,7 +55,17 @@
       </dependency>
       <dependency>
         <groupId>io.enmasse</groupId>
+        <artifactId>iot-device-registry-base</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.enmasse</groupId>
         <artifactId>iot-infinispan-base</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.enmasse</groupId>
+        <artifactId>iot-jdbc-base</artifactId>
         <version>${project.version}</version>
       </dependency>
 

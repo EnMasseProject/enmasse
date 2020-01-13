@@ -5,19 +5,22 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
+import static io.enmasse.iot.infinispan.device.DeviceKey.deviceKey;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.hono.util.RegistrationConstants;
 import org.eclipse.hono.util.RegistrationResult;
+import org.infinispan.client.hotrod.RemoteCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.registry.infinispan.device.AbstractRegistrationService;
-import io.enmasse.iot.infinispan.device.DeviceKey;
+import io.enmasse.iot.infinispan.device.DeviceInformation;
+import io.enmasse.iot.registry.device.DeviceKey;
+import io.enmasse.iot.registry.device.AbstractRegistrationService;
 import io.opentracing.Span;
 import io.vertx.core.json.JsonObject;
 
@@ -26,8 +29,12 @@ public class RegistrationServiceImpl extends AbstractRegistrationService {
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationServiceImpl.class);
 
+    // Management cache
+    // <(TenantId+DeviceId), (Device information + version + credentials)>
+    private final RemoteCache<io.enmasse.iot.infinispan.device.DeviceKey, DeviceInformation> managementCache;
+
     public RegistrationServiceImpl(final DeviceManagementCacheProvider provider) {
-        super(provider);
+        this.managementCache = provider.getOrCreateDeviceManagementCache();
     }
 
     @Override
@@ -35,7 +42,7 @@ public class RegistrationServiceImpl extends AbstractRegistrationService {
 
         return this.managementCache
 
-                .getWithMetadataAsync(key)
+                .getWithMetadataAsync(deviceKey(key))
                 .thenApply(result -> {
 
                     if (result == null) {

@@ -14,7 +14,7 @@ import org.infinispan.protostream.annotations.ProtoMessage;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 
-import io.enmasse.iot.infinispan.tenant.TenantHandle;
+import io.enmasse.iot.registry.tenant.TenantHandle;
 
 /**
  * A custom class to be used as key in the backend key-value storage.
@@ -90,5 +90,11 @@ public class DeviceKey implements Serializable {
         Objects.requireNonNull(deviceId);
 
         return new DeviceKey(tenantHandle.getId(), deviceId);
+    }
+
+    public static DeviceKey deviceKey(final io.enmasse.iot.registry.device.DeviceKey other) {
+        Objects.requireNonNull(other);
+
+        return new DeviceKey(other.getTenantId(), other.getDeviceId());
     }
 }
