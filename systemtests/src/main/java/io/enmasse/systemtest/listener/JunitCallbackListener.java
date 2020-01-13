@@ -92,6 +92,11 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         handleCallBackError(extensionContext, () -> {
             if (env.skipCleanup() || env.skipUninstall()) {
                 LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
+            } else if (testInfo.isOLMTest()) {
+                LOGGER.info("Test is OLM");
+                if (operatorManager.isEnmasseOlmDeployed()) {
+                    operatorManager.deleteEnmasseOlm();
+                }
             } else if (env.installType() == EnmasseInstallType.BUNDLE) {
                 if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed()) {
                     operatorManager.removeIoTOperator();

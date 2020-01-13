@@ -343,12 +343,12 @@ public class OperatorManager {
     private boolean isEnmasseOlmDeployed(String namespace) {
         ExecutionResultData res = KubeCMDClient.runOnCluster("get", "subscriptions", "-n", namespace);
         if (res.getRetCode()) {
-            return res.getStdOut().contains(productName + "-sub");
+            return res.getStdOut().contains("enmasse-sub");
         }
         return false;
     }
 
-    private String getNamespaceByOlmInstallationType(OLMInstallationType installation) {
+    public String getNamespaceByOlmInstallationType(OLMInstallationType installation) {
         return installation == OLMInstallationType.DEFAULT ? kube.getOlmNamespace() : kube.getInfraNamespace();
     }
 }
