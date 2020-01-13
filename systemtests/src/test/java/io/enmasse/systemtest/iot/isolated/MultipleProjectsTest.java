@@ -117,16 +117,10 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
 
     @AfterEach
     void cleanEnv(ExtensionContext context) throws Exception {
-
-        if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectHttpAdapterQdrProxyState();
-        }
-
         for (IoTProjectTestContext ctx : projects) {
             cleanDeviceSide(ctx);
             cleanAmqpSide(ctx);
         }
-
     }
 
     @Test

@@ -76,8 +76,10 @@ public class SharedIoTManager extends ResourceManager {
                 }
             }
             tearDownSharedIoTConfig();
-            Path path = JunitCallbackListener.getPath(context);
-            SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
+            if (context.getExecutionException().isPresent()) {
+                Path path = JunitCallbackListener.getPath(context);
+                SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
+            }
             SystemtestsKubernetesApps.deleteInfinispanServer();
         }
     }
