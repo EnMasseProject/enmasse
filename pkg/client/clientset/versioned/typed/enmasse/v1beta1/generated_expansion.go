@@ -10,3 +10,7 @@ package v1beta1
 type AddressExpansion interface{}
 
 type AddressSpaceExpansion interface{}
+
+type AddressSpaceSchemaExpansion interface{}
+
+type AuthenticationServiceExpansion interface{}

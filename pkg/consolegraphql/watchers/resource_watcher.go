@@ -8,11 +8,13 @@
 //go:generate go run ../../../hack/generate_resource_watchers.go AddressPlan AdminV1beta2Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2 github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2
 //go:generate go run ../../../hack/generate_resource_watchers.go AddressSpacePlan AdminV1beta2Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2 github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2
 //go:generate go run ../../../hack/generate_resource_watchers.go --global Namespace CoreV1Interface k8s.io/client-go/kubernetes/typed/core/v1 k8s.io/api/core/v1
-
+//go:generate go run ../../../hack/generate_resource_watchers.go AuthenticationService AdminV1beta1Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta1 github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1
+//go:generate go run ../../../hack/generate_resource_watchers.go AddressSpaceSchema EnmasseV1beta1Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1 github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1
 package watchers
 
 import (
 	"fmt"
+	adminv1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
@@ -80,6 +82,24 @@ func AddressSpacePlanIndexCreator(o runtime.Object) (string, error) {
 	}
 
 	return asp.Kind + "/" + asp.Namespace + "/" + asp.Name, nil
+}
+
+func AuthenticationServiceIndexCreator(o runtime.Object) (string, error) {
+       as, ok := o.(*adminv1.AuthenticationService)
+       if !ok {
+               return "", fmt.Errorf("unexpected type")
+       }
+
+       return as.Kind + "/" + as.Namespace + "/" + as.Name, nil
+}
+
+func AddressSpaceSchemaIndexCreator(o runtime.Object) (string, error) {
+       ass, ok := o.(*v1beta1.AddressSpaceSchema)
+       if !ok {
+               return "", fmt.Errorf("unexpected type")
+       }
+
+       return ass.Kind + "/" + ass.Namespace + "/" + ass.Name, nil
 }
 
 func ConnectionIndexCreator(o runtime.Object) (string, error) {

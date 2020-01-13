@@ -144,6 +144,10 @@ func main() {
 	resourcewatchers = append(resourcewatchers, &watchers.AddressSpacePlanWatcher{
 		Namespace: infraNamespace,
 	})
+	resourcewatchers = append(resourcewatchers, &watchers.AuthenticationServiceWatcher{
+		Namespace: infraNamespace,
+	})
+	resourcewatchers = append(resourcewatchers, &watchers.AddressSpaceSchemaWatcher{})
 	resourcewatchers = append(resourcewatchers, &watchers.NamespaceWatcher{})
 	connAndLinkWatcher := &watchers.ConnectionAndLinkWatcher{
 		Namespace:   infraNamespace,
@@ -238,13 +242,15 @@ func createObjectCache() (*cache.MemdbCache, error) {
 			Name: "hierarchy",
 			Indexer: &cache.HierarchyIndex{
 				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"Namespace":        watchers.NamespaceIndexCreator,
-					"AddressSpace":     watchers.AddressSpaceIndexCreator,
-					"Address":          watchers.AddressIndexCreator,
-					"AddressPlan":      watchers.AddressPlanIndexCreator,
-					"AddressSpacePlan": watchers.AddressSpacePlanIndexCreator,
-					"Connection":       watchers.ConnectionIndexCreator,
-					"Link":             watchers.ConnectionLinkIndexCreator,
+					"Namespace":        		watchers.NamespaceIndexCreator,
+					"AddressSpace":     		watchers.AddressSpaceIndexCreator,
+					"Address":          		watchers.AddressIndexCreator,
+					"AddressPlan":      		watchers.AddressPlanIndexCreator,
+					"AddressSpacePlan": 		watchers.AddressSpacePlanIndexCreator,
+					"AuthenticationService":	watchers.AuthenticationServiceIndexCreator,
+					"AddressSpaceSchema":    	watchers.AddressSpaceSchemaIndexCreator,
+					"Connection":       		watchers.ConnectionIndexCreator,
+					"Link":             		watchers.ConnectionLinkIndexCreator,
 				},
 			},
 		},

@@ -224,7 +224,7 @@ func (r *mutationResolver) CreateAddress(ctx context.Context, input v1beta1.Addr
 
 func (r *mutationResolver) PatchAddress(ctx context.Context, input metav1.ObjectMeta, patch string, patchType string) (*bool, error) {
 	pt := types.PatchType(patchType)
-	//fmt.Printf("JSON patch : %s patch type %s pt %s", patch, patchType, pt)
+	//fmt.Printf("JSON patch : %s patch type %s pt %s", patch0, patchType, pt)
 	_, e := r.CoreConfig.Addresses(input.Namespace).Patch(input.Name, pt, []byte(patch))
 	b := e == nil
 	return &b, e
