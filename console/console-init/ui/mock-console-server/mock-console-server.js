@@ -500,7 +500,7 @@ function createConnection(addressSpace, hostname) {
       CreationTimestamp: getRandomCreationDate(addressSpace.ObjectMeta.CreationTimestamp)
     },
     Spec: {
-      AddressSpace: addressSpace,
+      AddressSpace: addressSpace.ObjectMeta.Name,
       Hostname: hostport,
       ContainerId: uuidv1() + "",
       Protocol: encrypted ? "amqps" : "amqp",
@@ -575,7 +575,7 @@ connections = connections.concat(["kosmos",
 
 var addressspace_connection = {};
 addressSpaces.forEach(as => {
-  addressspace_connection[as.ObjectMeta.Uid] = connections.filter((c) => c.Spec.AddressSpace.ObjectMeta.Uid === as.ObjectMeta.Uid);
+  addressspace_connection[as.ObjectMeta.Uid] = connections.filter((c) => c.Spec.AddressSpace === as.ObjectMeta.Name);
 });
 
 var addresses = [];
@@ -725,7 +725,9 @@ function closeConnection(objectmeta) {
   }
   var targetCon = connections[index];
 
-  var as = connections[index].Spec.AddressSpace;
+  var addressSpaceName = connections[index].Spec.AddressSpace;
+  var as = addressSpaces.find(as => as.ObjectMeta.Name === addressSpaceName);
+
   var as_cons = addressspace_connection[as.ObjectMeta.Uid];
   var as_cons_index = as_cons.findIndex((c) => c === targetCon);
   as_cons.splice(as_cons_index, 1);
@@ -834,7 +836,10 @@ addressSpaces.forEach((as) => {
 
 var links = [];
 connections.forEach(c => {
-  var addr = addressItrs[c.Spec.AddressSpace.ObjectMeta.Uid].next().value;
+  var addressSpaceName = c.Spec.AddressSpace;
+  var addressSpace = addressSpaces.find(as => as.ObjectMeta.Name === addressSpaceName);
+  var uid = addressSpace.ObjectMeta.Uid;
+  var addr = addressItrs[uid].next().value;
 
   for (var i = 0; i< addr.ObjectMeta.Name.length; i++) {
     links.push(
@@ -947,7 +952,8 @@ function makeMockLinkMetrics(is_addr_query, link) {
     ];
   } else {
 
-    var as = link.Spec.Connection.Spec.AddressSpace;
+    var addressSpaceName = link.Spec.Connection.Spec.AddressSpace;
+    var as = addressSpaces.find(as => as.ObjectMeta.Name === addressSpaceName);
     if (as.Spec.Type === "brokered") {
       return [
         {
@@ -1232,7 +1238,7 @@ EOF
 
 
       var addr = parent;
-      var copy = clone(links.filter((l) => l.Spec.Connection.Spec.AddressSpace.ObjectMeta.Namespace === addr.ObjectMeta.Namespace && addr.ObjectMeta.Name.startsWith(l.Spec.Connection.Spec.AddressSpace.ObjectMeta.Name + ".")));
+      var copy = clone(links.filter((l) => l.Spec.Connection.ObjectMeta.Namespace === addr.ObjectMeta.Namespace && addr.ObjectMeta.Name.startsWith(l.Spec.Connection.Spec.AddressSpace + ".")));
       copy.forEach(l => {
         l.Metrics = makeMockLinkMetrics(true, l);
       });
@@ -1268,6 +1274,14 @@ EOF
       };
     },
   },
+  ConnectionSpec_consoleapi_enmasse_io_v1beta1: {
+    AddressSpace: (parent, args, context, info) => {
+      var as = addressSpaces.find(as => as.ObjectMeta.Name ===  parent.AddressSpace);
+      console.log("KWDEBUG" + as);
+      return as
+    },
+  },
+
   Link_consoleapi_enmasse_io_v1beta1: {
   },
   ObjectMeta_v1 : {
