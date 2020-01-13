@@ -21,6 +21,11 @@ const typeDefs = gql`
         anycast
     }
 
+    enum AuthenticationServiceType {
+        none
+        standard
+    }
+
     enum LinkRole {
         sender,
         receiver
@@ -67,6 +72,27 @@ const typeDefs = gql`
         LongDescription: String!
         ShortDescription: String!
         DisplayOrder: Int!
+    }
+
+    type AuthenticationService_admin_enmasse_io_v1beta1 {
+        ObjectMeta: ObjectMeta_v1!
+        Spec: AuthenticationServiceSpec_admin_enmasse_io_v1beta1!
+        Status: AuthenticationServiceStatus_admin_enmasse_io_v1beta1!
+    }
+    type AuthenticationServiceStatus_admin_enmasse_io_v1beta1 {
+        host: String!
+        port: Int!
+    }
+    type AuthenticationServiceSpec_admin_enmasse_io_v1beta1 {
+        Type: AuthenticationServiceType!
+    }
+    type AddressSpaceSchema_enmasse_io_v1beta1 {
+        ObjectMeta: ObjectMeta_v1!
+        Spec: AddressSpaceSchemaSpec_enmasse_io_v1beta1!
+    }
+    type AddressSpaceSchemaSpec_enmasse_io_v1beta1 {
+        AuthenticationServices: [String!]
+        Description: String
     }
 
     type Connection_consoleapi_enmasse_io_v1beta1 {
@@ -252,6 +278,15 @@ const typeDefs = gql`
 
         "Returns the address plans defined by the system optionally filtering those for a matching address space plan and/or address type"
         addressPlans(addressSpacePlan: String, addressType: AddressType): [AddressPlan_admin_enmasse_io_v1beta2!]!
+
+        "Returns the authenticationServices"
+        authenticationServices: [AuthenticationService_admin_enmasse_io_v1beta1!]!
+        "Returns the addressSpaceSchema"
+        addressSpaceSchema: [AddressSpaceSchema_enmasse_io_v1beta1!]!
+        "Returns the addressSpaceSchema optionally filtering those for a matching address space plan and/or address type"
+        addressSpaceSchema_v2(
+          addressSpaceType: AddressSpaceType
+        ): [AddressSpaceSchema_enmasse_io_v1beta1!]!
 
         "Returns the current logged on user"
         whoami: User_v1!

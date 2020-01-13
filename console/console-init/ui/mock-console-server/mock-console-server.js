@@ -155,6 +155,47 @@ const availableAddressTypes = [
   },
 ];
 
+const availableAuthenticationServices = [
+  createAuthenticationService("none", "none-authservice"),
+  createAuthenticationService("standard", "standard-authservice")
+];
+
+function createAuthenticationService(type, name) {
+  return {
+    Spec: {
+      Type: type
+    },
+    ObjectMeta: {
+      Name: name,
+      Uid: uuidv1(),
+      CreationTimestamp: getRandomCreationDate()
+    }
+  };
+}
+
+const availableAddressSpaceSchemas = [
+  {
+    ObjectMeta: {
+      Name: "brokered"
+    },
+    Spec: {
+      AuthenticationServices: ["none-authservice", "standard-authservice"],
+      Description:
+        "A brokered address space consists of a broker combined with a console for managing addresses."
+    }
+  },
+  {
+    ObjectMeta: {
+      Name: "standard"
+    },
+    Spec: {
+      AuthenticationServices: ["none-authservice", "standard-authservice"],
+      Description:
+        "A standard address space consists of an AMQP router network in combination with attachable 'storage units'. The implementation of a storage unit is hidden from the client and the routers with a well defined API."
+    }
+  }
+];
+
 const availableNamespaces = [
   {
     ObjectMeta: {
@@ -1106,6 +1147,16 @@ EOF
     },
 
     namespaces: () => availableNamespaces,
+
+    authenticationServices: () => availableAuthenticationServices,
+    addressSpaceSchema: () => availableAddressSpaceSchemas,
+    addressSpaceSchema_v2: (parent, args, context, info) => {
+      return availableAddressSpaceSchemas.filter(
+        o =>
+          args.addressSpaceType === undefined ||
+          o.ObjectMeta.Name === args.addressSpaceType
+      );
+    },
 
     addressTypes: () => (['queue', 'topic', 'subscription', 'multicast', 'anycast']),
     addressTypes_v2: (parent, args, context, info) => {

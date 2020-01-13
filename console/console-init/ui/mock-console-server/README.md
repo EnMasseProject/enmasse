@@ -263,6 +263,56 @@ query filtered_address_plans {
 }
 ```
 
+## all_authentication_services (from the address space schema)
+
+```
+query addressspace_schema {
+  addressSpaceSchema_v2  {
+    ObjectMeta {
+      Name
+    }
+    Spec {
+      AuthenticationServices
+    }
+  }
+}
+```
+
+## filtered_authentication_services
+
+schema authentication services can be filtered by address space type (from the address space schema)
+
+```
+query filtered_addressspace_schema($t:AddressSpaceType = standard){
+  addressSpaceSchema_v2(addressSpaceType:$t)  {
+    ObjectMeta {
+      Name
+    }
+    Spec {
+      AuthenticationServices
+    }
+  }
+}
+```
+
+## all_authentication_services
+
+all unvalidated authentication services
+
+```
+query authentication_services {
+  authenticationServices{
+    Spec
+    {
+      Type
+    }
+    ObjectMeta {
+      Name
+    }
+  }
+}
+
+```
 
 ## all_link_names_for_connection
 
