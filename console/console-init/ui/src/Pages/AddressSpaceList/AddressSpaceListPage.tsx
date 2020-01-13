@@ -71,7 +71,6 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     ),
     { pollInterval: 20000, fetchPolicy: "network-only" }
   );
-  // console.log(data);
   if (onCreationRefetch) {
     refetch();
     setOnCreationRefetch(false);
@@ -139,7 +138,6 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
   console.log(addressSpaces.AddressSpaces);
-  setTotalAddressSpaces(addressSpaces.Total);
   const addressSpacesList = addressSpaces.AddressSpaces.map(addSpace => ({
     name: addSpace.ObjectMeta.Name,
     nameSpace: addSpace.ObjectMeta.Namespace,
