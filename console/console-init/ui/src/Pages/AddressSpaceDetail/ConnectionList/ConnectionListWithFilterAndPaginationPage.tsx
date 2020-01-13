@@ -84,6 +84,8 @@ const ConnectionListFunction = () => {
             totalConnections={totalConnections}
             sortValue={sortDropDownValue}
             setSortValue={setSortDropdownValue}
+            addressSpaceName={name}
+            namespace={namespace}
           />
         </GridItem>
         <GridItem span={6}>

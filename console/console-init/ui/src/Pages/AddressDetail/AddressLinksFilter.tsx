@@ -27,11 +27,14 @@ import useWindowDimensions from "../../Components/Common/WindowDimension";
 import { SortForMobileView } from "../../Components/Common/SortForMobileView";
 import { useApolloClient } from "@apollo/react-hooks";
 import {
-  RETURN_ALL_NAMES_OF_ADDRESS_LINKS,
-  RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_CONTAINER_SEARCH
+  RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH,
+  RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH
 } from "src/Queries/Queries";
 import { id } from "date-fns/esm/locale";
-import { ISearchAddressLinkNameResponse, ISearchAddressLinkContainerResponse } from "src/Types/ResponseTypes";
+import {
+  ISearchAddressLinkNameResponse,
+  ISearchAddressLinkContainerResponse
+} from "src/Types/ResponseTypes";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -133,12 +136,12 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   };
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if(value.trim().length<6) {
+    if (value.trim().length < 6) {
       setNameOptions([]);
       return;
     }
     const response = await client.query<ISearchAddressLinkNameResponse>({
-      query: RETURN_ALL_NAMES_OF_ADDRESS_LINKS(
+      query: RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH(
         addressName,
         addressSpaceName,
         namespace,
@@ -155,12 +158,16 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       response.data.addresses.Addresses[0].Links.Links &&
       response.data.addresses.Addresses[0].Links.Links.length > 0
     ) {
-      const obtainedList = response.data.addresses.Addresses[0].Links.Links.map(
-        (link: any) => {
-          return link.ObjectMeta.Name;
-        }
-      );
-      setNameOptions(obtainedList);
+      if (response.data.addresses.Addresses[0].Links.Total > 100) {
+        setNameOptions([]);
+      } else {
+        const obtainedList = response.data.addresses.Addresses[0].Links.Links.map(
+          (link: any) => {
+            return link.ObjectMeta.Name;
+          }
+        );
+        setNameOptions(obtainedList);
+      }
     }
   };
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,12 +182,12 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
 
   const onChangeContainerData = async (value: string) => {
     setContainerOptions(undefined);
-    if(value.trim().length<6) {
+    if (value.trim().length < 6) {
       setContainerOptions([]);
       return;
     }
     const response = await client.query<ISearchAddressLinkContainerResponse>({
-      query: RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_CONTAINER_SEARCH(
+      query: RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH(
         addressName,
         addressSpaceName,
         namespace,
@@ -198,12 +205,16 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       response.data.addresses.Addresses[0].Links.Links &&
       response.data.addresses.Addresses[0].Links.Links.length > 0
     ) {
-      const obtainedList = response.data.addresses.Addresses[0].Links.Links.map(
-        (link: any) => {
-          return link.Spec.Connection.Spec.ContainerId;
-        }
-      );
-      setContainerOptions(obtainedList);
+      if (response.data.addresses.Addresses[0].Links.Total > 100) {
+        setContainerOptions([]);
+      } else {
+        const obtainedList = response.data.addresses.Addresses[0].Links.Links.map(
+          (link: any) => {
+            return link.Spec.Connection.Spec.ContainerId;
+          }
+        );
+        setContainerOptions(obtainedList);
+      }
     }
   };
 
@@ -219,10 +230,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     return options;
   };
 
-  const onNameSelect = (
-    event: any,
-    selection: string | SelectOptionObject
-  ) => {
+  const onNameSelect = (event: any, selection: string | SelectOptionObject) => {
     setNameSelected(selection.toString());
     setIsSelectNameExpanded(false);
   };
@@ -395,7 +403,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                   toggle={
                     <DropdownToggle onToggle={setRoleIsExpanded}>
                       <FilterIcon />
-                      &nbsp;{filterRole||"Select Role"}
+                      &nbsp;{filterRole || "Select Role"}
                     </DropdownToggle>
                   }
                   dropdownItems={roleMenuItems.map(option => (

@@ -157,9 +157,9 @@ export interface IAddressSpacesResponse {
       Spec: {
         Type: string;
         Plan: {
-          ObjectMeta:{
-            Name:string;
-          }
+          ObjectMeta: {
+            Name: string;
+          };
           Spec: {
             DisplayName: string;
           };
@@ -188,7 +188,7 @@ export interface IConnectionLinksResponse {
           };
           Spec: {
             Role: string;
-            Address:string;
+            Address: string;
           };
           Metrics: Array<IMetrics>;
         }>;
@@ -202,6 +202,7 @@ export interface IConnectionLinksNameSearchResponse {
     Total: number;
     Connections: Array<{
       Links: {
+        Total:number;
         Links: Array<{
           ObjectMeta: {
             Name: string;
@@ -216,9 +217,10 @@ export interface IConnectionLinksAddressSearchResponse {
     Total: number;
     Connections: Array<{
       Links: {
+        Total:number;
         Links: Array<{
           Spec: {
-            Address:string;
+            Address: string;
           };
         }>;
       };
@@ -226,12 +228,12 @@ export interface IConnectionLinksAddressSearchResponse {
   };
 }
 
-
 export interface ISearchAddressLinkNameResponse {
   addresses: {
     Total: number;
     Addresses: Array<{
       Links: {
+        Total:number;
         Links: Array<{
           ObjectMeta: {
             Name: string;
@@ -247,6 +249,7 @@ export interface ISearchAddressLinkContainerResponse {
     Total: number;
     Addresses: Array<{
       Links: {
+        Total:number;
         Links: Array<{
           Spec: {
             Connection: {
@@ -261,13 +264,36 @@ export interface ISearchAddressLinkContainerResponse {
   };
 }
 
-
 export interface ISearchNameOrNameSpaceAddressSpaceListResponse {
   addressSpaces: {
+    Total:number;
     AddressSpaces: Array<{
       ObjectMeta: {
         Name: string;
         Namespace: string;
+      };
+    }>;
+  };
+}
+
+export interface IAddressListNameSearchResponse {
+  addresses: {
+    Total: number;
+    Addresses: Array<{
+      ObjectMeta: {
+        Name: string;
+      };
+    }>;
+  };
+}
+
+export interface IConnectionListNameSearchResponse {
+  connections: {
+    Total: number;
+    Connections: Array<{
+      Spec: {
+        Hostname: string;
+        ContainerId: string;
       };
     }>;
   };

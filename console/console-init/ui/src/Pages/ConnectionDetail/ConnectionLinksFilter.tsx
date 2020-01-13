@@ -140,7 +140,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if(value.trim().length<6) {
+    if (value.trim().length < 6) {
       setNameOptions([]);
       return;
     }
@@ -162,13 +162,17 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       response.data.connections.Connections[0].Links.Links &&
       response.data.connections.Connections[0].Links.Links.length > 0
     ) {
-      const obtainedList = response.data.connections.Connections[0].Links.Links.map(
-        (link: any) => {
-          console.log("Name", link);
-          return link.ObjectMeta.Name;
-        }
-      );
-      setNameOptions(obtainedList);
+      if (response.data.connections.Connections[0].Links.Total > 100) {
+        setNameOptions([]);
+      } else {
+        const obtainedList = response.data.connections.Connections[0].Links.Links.map(
+          (link: any) => {
+            console.log("Name", link);
+            return link.ObjectMeta.Name;
+          }
+        );
+        setNameOptions(obtainedList);
+      }
     }
   };
 
@@ -184,7 +188,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
 
   const onChangeAddressData = async (value: string) => {
     setAddressOptions(undefined);
-    if(value.trim().length<6) {
+    if (value.trim().length < 6) {
       setAddressOptions([]);
       return;
     }
@@ -206,12 +210,16 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       response.data.connections.Connections[0].Links.Links &&
       response.data.connections.Connections[0].Links.Links.length > 0
     ) {
-      const obtainedList = response.data.connections.Connections[0].Links.Links.map(
-        (link: any) => {
-          return link.Spec.Address;
-        }
-      );
-      setAddressOptions(obtainedList);
+      if (response.data.connections.Connections[0].Links.Total > 100) {
+        setAddressOptions([]);
+      } else {
+        const obtainedList = response.data.connections.Connections[0].Links.Links.map(
+          (link: any) => {
+            return link.Spec.Address;
+          }
+        );
+        setAddressOptions(obtainedList);
+      }
     }
   };
   const onAddressSelectFilterChange = (

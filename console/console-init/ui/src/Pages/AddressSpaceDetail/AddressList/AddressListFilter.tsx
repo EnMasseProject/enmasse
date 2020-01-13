@@ -26,6 +26,9 @@ import {
   SelectOptionObject
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
+import { useApolloClient } from "@apollo/react-hooks";
+import { IAddressListNameSearchResponse } from "src/Types/ResponseTypes";
+import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "src/Queries/Queries";
 
 interface IAddressListFilterProps {
   filterValue: string | null;
@@ -37,6 +40,8 @@ interface IAddressListFilterProps {
   statusValue: string | null;
   setStatusValue: (value: string | null) => void;
   totalAddresses: number;
+  addressspaceName?: string;
+  namespace?: string;
 }
 
 interface IAddressListKebabProps {
@@ -51,8 +56,11 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   setTypeValue,
   statusValue,
   setStatusValue,
-  totalAddresses
+  totalAddresses,
+  addressspaceName,
+  namespace
 }) => {
+  const client = useApolloClient();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
   const [typeIsExpanded, setTypeIsExpanded] = React.useState(false);
   const [statusIsExpanded, setStatusIsExpanded] = React.useState(false);
@@ -111,36 +119,35 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if(value.trim().length<6) {
+    if (value.trim().length < 6) {
       setNameOptions([]);
       return;
     }
-    // const response = await client.query<IConnectionLinksNameSearchResponse>({
-    //   query: RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH(
-    //     connectionName,
-    //     addressSpaceName,
-    //     namespace,
-    //     value.trim()
-    //   )
-    // });
-    // if (
-    //   response &&
-    //   response.data &&
-    //   response.data.connections &&
-    //   response.data.connections.Connections &&
-    //   response.data.connections.Connections.length > 0 &&
-    //   response.data.connections.Connections[0].Links &&
-    //   response.data.connections.Connections[0].Links.Links &&
-    //   response.data.connections.Connections[0].Links.Links.length > 0
-    // ) {
-    //   const obtainedList = response.data.connections.Connections[0].Links.Links.map(
-    //     (link: any) => {
-    //       console.log("Name", link);
-    //       return link.ObjectMeta.Name;
-    //     }
-    //   );
-    //   setNameOptions(obtainedList);
-    // }
+    const response = await client.query<IAddressListNameSearchResponse>({
+      query: RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH(
+        addressspaceName,
+        namespace,
+        value.trim()
+      )
+    });
+    if (
+      response &&
+      response.data &&
+      response.data.addresses &&
+      response.data.addresses.Addresses
+    ) {
+      //To display dropdown if fetched records are less than 100 in count.
+      if (response.data.addresses.Total > 100) {
+        setNameOptions([]);
+      } else {
+        const obtainedList = response.data.addresses.Addresses.map(
+          (address: any) => {
+            return address.ObjectMeta.Name;
+          }
+        );
+        setNameOptions(obtainedList);
+      }
+    }
   };
 
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {

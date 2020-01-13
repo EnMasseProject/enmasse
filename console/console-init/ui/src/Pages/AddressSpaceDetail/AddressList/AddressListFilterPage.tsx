@@ -95,6 +95,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
         statusValue={statusValue}
         setStatusValue={setStatusValue}
         totalAddresses={totalAddresses}
+        addressspaceName={name}
+        namespace={namespace}
       />
       {width < 769 && (
         <SortForMobileView
