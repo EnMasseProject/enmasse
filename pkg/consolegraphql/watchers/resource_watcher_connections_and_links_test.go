@@ -6,7 +6,6 @@
 package watchers
 
 import (
-	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
@@ -24,7 +23,7 @@ import (
 const addressSpace = "myaddrspace"
 const namespace = "mynamespace"
 
-func newTestConnectionsAndLinksWatcher(t *testing.T) *ConnectionAndLinkWatcher {
+func newTestConnectionsAndLinksWatcher(t *testing.T) (*ConnectionAndLinkWatcher, chan agent.AgentEvent) {
 	objectCache := &cache.MemdbCache{}
 	err := objectCache.Init(
 		cache.IndexSpecifier{
@@ -50,32 +49,16 @@ func newTestConnectionsAndLinksWatcher(t *testing.T) *ConnectionAndLinkWatcher {
 		})
 	assert.NoError(t, err)
 
-	metricCache := &cache.MemdbCache{}
-	err = metricCache.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: cache.MetricIndex(),
-		},
-		cache.IndexSpecifier{
-			Name:    "connectionLink",
-			Indexer: cache.ConnectionLinkMetricIndex(),
-			AllowMissing: true,
-		},
-	)
+	eventChan := make(chan agent.AgentEvent)
 
-	watcher := ConnectionAndLinkWatcher{
-		Namespace:   v1.NamespaceAll,
-		MetricCache: metricCache,
-	}
-
-	err = watcher.Init(objectCache, fake.NewSimpleClientset().CoreV1())
+	watcher, err := NewConnectionAndLinkWatcher(objectCache, v1.NamespaceAll, MockAgentCollectorCreator(eventChan), ConnectionAndLinkWatcherClient(fake.NewSimpleClientset().CoreV1()))
 	assert.NoError(t, err)
 
-	return &watcher
+	return watcher, eventChan
 }
 
 func TestWatchConnection(t *testing.T) {
-	w := newTestConnectionsAndLinksWatcher(t)
+	w, eventChan := newTestConnectionsAndLinksWatcher(t)
 
 	agentservice := &v1.Service{
 		ObjectMeta: v1meta.ObjectMeta{
@@ -96,9 +79,6 @@ func TestWatchConnection(t *testing.T) {
 			}},
 		},
 	}
-
-	eventChan := make(chan agent.AgentEvent)
-	w.AgentCollectorCreator = MockAgentCollectorCreator(eventChan)
 
 	_, err := w.ClientInterface.Services("").(*fake2.FakeServices).Create(agentservice)
 	assert.NoError(t, err)
@@ -156,6 +136,9 @@ func TestWatchConnection(t *testing.T) {
 		},
 	}
 
+	conmetrics := actualConnection.Metrics
+	actualConnection.Metrics = nil
+
 	assert.Equal(t, expectedConnection, actualConnection, "Unexpected connection")
 
 	links, err := w.Cache.Get("hierarchy", "Link", nil)
@@ -163,27 +146,23 @@ func TestWatchConnection(t *testing.T) {
 
 	assert.Equal(t, 1, len(links), "Unexpected number of links")
 
-	conmetrics, err := w.MetricCache.Get("id", "Connection", nil)
-	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(conmetrics), "Unexpected number of connection metrics")
 
 	messagesInMetric := getMetric("enmasse_messages_in", conmetrics)
 	assert.NotNil(t, messagesInMetric, "MessagesIn metric is absent")
 
-	linkmetrics, err := w.MetricCache.Get("id", "Link", nil)
-	assert.NoError(t, err)
+	linkmetrics := links[0].(*consolegraphql.Link).Metrics
 
 	assert.Equal(t, 8, len(linkmetrics), "Unexpected number of link metrics")
 
 	releasedMetric := getMetric("enmasse_released", linkmetrics)
 	assert.NotNil(t, releasedMetric, "Released metric is absent")
-	value, _, _ := releasedMetric.Value.GetValue()
-	assert.Equal(t, float64(6), value, "Unexpected released metric value")
+	assert.Equal(t, float64(6), releasedMetric.Value, "Unexpected released metric value")
 }
 
 func TestWatchConnectionWithChangingLinks(t *testing.T) {
-	w := newTestConnectionsAndLinksWatcher(t)
+	w, eventChan := newTestConnectionsAndLinksWatcher(t)
 
 	agentservice := &v1.Service{
 		ObjectMeta: v1meta.ObjectMeta{
@@ -205,8 +184,6 @@ func TestWatchConnectionWithChangingLinks(t *testing.T) {
 		},
 	}
 
-	eventChan := make(chan agent.AgentEvent)
-	w.AgentCollectorCreator = MockAgentCollectorCreator(eventChan)
 
 	_, err := w.ClientInterface.Services("").(*fake2.FakeServices).Create(agentservice)
 	assert.NoError(t, err)
@@ -272,22 +249,41 @@ func TestWatchConnectionWithChangingLinks(t *testing.T) {
 	actual := len(objs)
 	assert.Equal(t, expected, actual, "Unexpected number of connections")
 
-	linkmetrics, err := w.MetricCache.Get("id", fmt.Sprintf("Link/%s/%s/%s", namespace, addressSpace, sendingLinkUuid2), nil)
+	links, err := w.Cache.Get("hierarchy", "Link", nil)
 	assert.NoError(t, err)
-	assert.Equal(t, 8, len(linkmetrics), "Unexpected number of link metrics for remaining sending link")
 
-	linkmetrics, err = w.MetricCache.Get("id", fmt.Sprintf("Link/%s/%s/%s", namespace, addressSpace, receivingLinkUuid), nil)
+	assert.Equal(t, 2, len(links), "Unexpected number of links")
+
+
+	remainingSendingLink, err := w.Cache.Get("hierarchy", "Link", func(o interface{}) (bool, bool, error) {
+		l := o.(*consolegraphql.Link)
+		if l.Name == sendingLinkUuid2 {
+			return true, false, nil
+		} else {
+			return false, true, nil
+		}
+	})
 	assert.NoError(t, err)
-	assert.Equal(t, 8, len(linkmetrics), "Unexpected number of link metrics for new receiving link")
 
-	linkmetrics, err = w.MetricCache.Get("id", fmt.Sprintf("Link/%s/%s/%s", namespace, addressSpace, sendingLinkUuid1), nil)
+	remainingSendingLinkMetrics := remainingSendingLink[0].(*consolegraphql.Link).Metrics
+	assert.Equal(t, 8, len(remainingSendingLinkMetrics), "Unexpected number of link metrics for remaining sending link")
+
+	newReceivingLink, err := w.Cache.Get("hierarchy", "Link", func(o interface{}) (bool, bool, error) {
+		l := o.(*consolegraphql.Link)
+		if l.Name == receivingLinkUuid {
+			return true, false, nil
+		} else {
+			return false, true, nil
+		}
+	})
+
 	assert.NoError(t, err)
-	assert.Equal(t, 0, len(linkmetrics), "Unexpected number of link metrics for removed sending link")
-
+	newReceivingLinkMetrics := newReceivingLink[0].(*consolegraphql.Link).Metrics
+	assert.Equal(t, 8, len(newReceivingLinkMetrics), "Unexpected number of link metrics for removed sending link")
 }
 
 func TestWatchDeletedConnection(t *testing.T) {
-	w := newTestConnectionsAndLinksWatcher(t)
+	w, _ := newTestConnectionsAndLinksWatcher(t)
 
 	agentservice := &v1.Service{
 		ObjectMeta: v1meta.ObjectMeta{
@@ -359,10 +355,7 @@ func TestWatchDeletedConnection(t *testing.T) {
 }
 
 func TestWatchNewAgent(t *testing.T) {
-	w := newTestConnectionsAndLinksWatcher(t)
-
-	eventChan := make(chan agent.AgentEvent)
-	w.AgentCollectorCreator = MockAgentCollectorCreator(eventChan)
+	w, eventChan := newTestConnectionsAndLinksWatcher(t)
 
 	err := w.Watch()
 	assert.NoError(t, err)
@@ -456,15 +449,10 @@ func MockAgentCollectorCreator(events chan agent.AgentEvent) AgentCollectorCreat
 	}
 }
 
-func getMetric(name string, metrics []interface{}) *consolegraphql.Metric {
+func getMetric(name string, metrics []*consolegraphql.Metric) *consolegraphql.Metric {
 	for _, m := range metrics {
-		switch m := m.(type) {
-		case *consolegraphql.Metric:
-			if m.Value.GetName() == name {
-				return m
-			}
-		default:
-			panic("unexpected type")
+		if m.Name == name {
+			return m
 		}
 	}
 	return nil

@@ -16,23 +16,17 @@ import (
 
 func TestRateCalculatingMetricValue(t *testing.T) {
 	now := time.Now()
-	metric := NewRateCalculatingMetricValue("foo", "mytype", "myunit")
-	metric.SetValue(0, now.Add(time.Minute  * - 1))
-	metric.SetValue(1500, now)
+	metric := NewRateCalculatingMetric("foo", "mytype")
+	metric.Update(0, now.Add(time.Minute  * - 1))
+	err := metric.Update(1500, now)
 
-	value, timestamp, err := metric.GetValue()
 	assert.NoError(t, err)
-	assert.InDelta(t, float64(300), value, 0.1)
+	assert.InDelta(t, float64(300), metric.Value, 0.1)
 	// https://github.com/stretchr/testify/issues/502 - tracks ability to compare time with delta
-	assert.True(t, cmp.Equal(now, timestamp, cmpopts.EquateApproxTime(time.Second)))
+	assert.True(t, cmp.Equal(now, metric.Time, cmpopts.EquateApproxTime(time.Second)))
 }
 
 func TestRateCalculatingMetricValueWithNoData(t *testing.T) {
-	now := time.Now()
-	metric := NewRateCalculatingMetricValue("foo", "mytype", "myunit")
-
-	value, timestamp, err := metric.GetValue()
-	assert.NoError(t, err)
-	assert.Equal(t, float64(0), value)
-	assert.True(t, cmp.Equal(now, timestamp, cmpopts.EquateApproxTime(time.Second)))
+	metric := NewRateCalculatingMetric("foo", "mytype")
+	assert.Equal(t, float64(0), metric.Value)
 }

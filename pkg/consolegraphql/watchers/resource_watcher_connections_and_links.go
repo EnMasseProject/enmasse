@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/rest"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	time "time"
@@ -27,10 +28,8 @@ type AgentCollectorCreator = func() agent.AgentCollector
 type ConnectionAndLinkWatcher struct {
 	Namespace             string
 	Cache                 cache.Cache
-	MetricCache           cache.Cache
 	ClientInterface       cp.CoreV1Interface
 	AgentCollectorCreator AgentCollectorCreator
-	BearerToken           string
 	collectors            map[string]agent.AgentCollector
 	watching              chan struct{}
 	watchingAgentsStarted bool
@@ -38,19 +37,54 @@ type ConnectionAndLinkWatcher struct {
 	stoppedchan           chan struct{}
 }
 
-func (clw *ConnectionAndLinkWatcher) Init(c cache.Cache, cl interface{}) error {
-	client, ok := cl.(cp.CoreV1Interface)
-	if !ok {
-		return fmt.Errorf("unexpected type %T", cl)
+
+func NewConnectionAndLinkWatcher(c cache.Cache, namespace string, f func() agent.AgentCollector, options ...WatcherOption) (*ConnectionAndLinkWatcher, error) {
+
+	clw := &ConnectionAndLinkWatcher{
+		Namespace:             namespace,
+		Cache:                 c,
+		watching:              make(chan struct{}),
+		stopchan:              make(chan struct{}),
+		stoppedchan:           make(chan struct{}),
+		AgentCollectorCreator: f,
+		collectors:            make(map[string]agent.AgentCollector),
 	}
-	clw.Cache = c
-	clw.ClientInterface = client
-	clw.collectors = make(map[string]agent.AgentCollector)
-	clw.watching = make(chan struct{})
-	clw.stopchan = make(chan struct{})
-	clw.stoppedchan = make(chan struct{})
-	return nil
+
+	for _, option := range options {
+		option(clw)
+	}
+	if clw.ClientInterface == nil {
+		return nil, fmt.Errorf("Client must be configured using the NamespaceWatcherConfig or NamespaceWatcherClient")
+	}
+
+	return clw, nil
 }
+
+func ConnectionAndLinkWatcherConfig(config *rest.Config) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*ConnectionAndLinkWatcher)
+
+		var cl interface{}
+		cl, _  = cp.NewForConfig(config)
+
+		client, ok := cl.(cp.CoreV1Interface)
+		if !ok {
+			return fmt.Errorf("unexpected type %T", cl)
+		}
+
+		w.ClientInterface = client
+		return nil
+	}
+}
+
+func ConnectionAndLinkWatcherClient(client cp.CoreV1Interface) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*ConnectionAndLinkWatcher)
+		w.ClientInterface = client
+		return nil
+	}
+}
+
 
 func (clw *ConnectionAndLinkWatcher) Watch() error {
 	go func() {
@@ -231,146 +265,170 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 			return err
 		}
 
-		err = clw.MetricCache.DeleteByPrefix("id", conKey)
-		if err != nil {
-			return err
-		}
-
-		err = clw.MetricCache.DeleteByPrefix("connectionLink", linkKey)
-		if err != nil {
-			return err
-		}
-
 	case agent.AgentConnectionEventType:
-		con, links, metrics := agent.ToConnectionK8Style(event.Object.(*agent.AgentConnection), clw.getExistingMetricOrNew)
+		now := time.Now()
+		agentcon := event.Object.(*agent.AgentConnection)
 
-		// TODO Currently removes all links/link metrics for this connection - ought to remove only that relate to link that have gone.
-		linkKey := fmt.Sprintf("Link/%s/%s/%s", con.Namespace, con.Spec.AddressSpace, con.Name)
-		err := clw.Cache.DeleteByPrefix("hierarchy", linkKey)
-		if err != nil {
-			return err
-		}
-		err = clw.MetricCache.DeleteByPrefix("connectionLink", linkKey)
+		objs, err := clw.Cache.Get("hierarchy", fmt.Sprintf("Connection/%s/%s/%s", agentcon.AddressSpaceNamespace, agentcon.AddressSpace, agentcon.Uuid), nil)
 		if err != nil {
 			return err
 		}
 
+		var con *consolegraphql.Connection
+		if len(objs) == 0 {
+			con, _ = agent.ToConnectionK8Style(agentcon)
+		} else {
+			con = objs[0].(*consolegraphql.Connection)
+		}
+
+		metrics := con.Metrics
+		in, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
+		err = in.Update(float64(agentcon.MessagesIn), now)
+		if err != nil {
+			return err
+		}
+		out, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge")
+		err = out.Update(float64(agentcon.MessagesOut), now)
+		if err != nil {
+			return err
+		}
+		con.Metrics = metrics
 
 		err = clw.Cache.Add(con)
 		if err != nil {
 			return err
 		}
 
-		{
-			lcopy := make([]interface{}, len(links))
-			for i, v := range links {
-				lcopy[i] = v
+
+		_, currentLinks := agent.ToConnectionK8Style(agentcon)
+
+		linkKey := fmt.Sprintf("Link/%s/%s/%s", con.Namespace, con.Spec.AddressSpace, con.Name)
+		existingLinks, err := clw.Cache.Get("hierarchy", linkKey, nil)
+
+		orphans := make([]interface{}, 0)
+		newLinks := make([]*consolegraphql.Link, 0)
+		updatingLinks := make([]*consolegraphql.Link, 0)
+		for _, currentLink := range currentLinks {
+			newLinks = append(newLinks, currentLink)
+		}
+		for i, _ := range existingLinks {
+			existingLink := existingLinks[i].(*consolegraphql.Link)
+			orphan := true
+			for _, currentLink := range currentLinks {
+				if reflect.DeepEqual(currentLink, existingLink) {
+					orphan = false
+					break
+				}
 			}
-			err = clw.Cache.Add(lcopy...)
-			if err != nil {
-				return err
+			if orphan {
+				orphans = append(orphans, existingLink)
+			} else {
+				remove := func (s []*consolegraphql.Link, i int) []*consolegraphql.Link {
+					s[len(s)-1], s[i] = s[i], s[len(s)-1]
+					return s[:len(s)-1]
+				}
+
+				for i, _ := range newLinks {
+					if reflect.DeepEqual(newLinks[i], existingLink) {
+						newLinks = remove(newLinks, i)
+						break
+					}
+				}
+				updatingLinks = append(updatingLinks, existingLink)
 			}
 		}
 
-		{
-			mcopy := make([]interface{}, len(metrics))
-			for i, v := range metrics {
-				mcopy[i] = v
-			}
-			err = clw.MetricCache.Add(mcopy...)
+		// Remove orphan links from cache
+		if len(orphans) > 0 {
+			err := clw.Cache.Delete(orphans...)
 			if err != nil {
 				return err
 			}
+
 		}
+
+		pending := make([]interface{}, 0)
+
+		for _, updatingLink := range updatingLinks {
+			metrics := updatingLink.Metrics
+			metrics = agent.UpdateLinkMetrics(agentcon, metrics, now, updatingLink)
+
+			updatingLink.Metrics = metrics
+			pending = append(pending, updatingLink)
+		}
+
+		for _, newLink := range newLinks {
+			metrics := newLink.Metrics
+			metrics = agent.UpdateLinkMetrics(agentcon, metrics, now, newLink)
+
+			newLink.Metrics = metrics
+			pending = append(pending, newLink)
+		}
+
+		err = clw.Cache.Add(pending...)
+		if err != nil {
+			return err
+		}
+
 	case agent.AgentConnectionEventTypeDelete:
-		// we don't really need the full object, only the skeletal form to get the indexes.
-		con, _, _ := agent.ToConnectionK8Style(event.Object.(*agent.AgentConnection), clw.getExistingMetricOrNew)
+		con := event.Object.(*agent.AgentConnection)
 
-		err := clw.Cache.Delete(con)
+		err := clw.Cache.DeleteByPrefix("hierarchy", fmt.Sprintf("Connection/%s/%s/%s", con.AddressSpaceNamespace, con.AddressSpace, con.Uuid))
 		if err != nil {
 			return err
 		}
 
 		// Remove links belonging to this connection
-		linkKey := fmt.Sprintf("Link/%s/%s/%s", con.Namespace, con.Spec.AddressSpace, con.Name)
-		conKey := fmt.Sprintf("Connection/%s/%s/%s/", con.Namespace, con.Spec.AddressSpace, con.Name)
+		linkKey := fmt.Sprintf("Link/%s/%s/%s", con.AddressSpaceNamespace, con.AddressSpace, con.Uuid)
 		err = clw.Cache.DeleteByPrefix("hierarchy", linkKey)
 		if err != nil {
 			return err
 		}
 
-		// Remove the connection metrics
-		err = clw.MetricCache.DeleteByPrefix("id", conKey)
-		if err != nil {
-			return err
-		}
-
-		// Delete all link metrics belonging to this connection.
-		err = clw.MetricCache.DeleteByPrefix("connectionLink", linkKey)
-		if err != nil {
-			return err
-		}
 
 	case agent.AgentAddressEventType:
-		addr := event.Object.(*agent.AgentAddress)
+		agentAddr := event.Object.(*agent.AgentAddress)
 		now := time.Now()
 
-		storedMetric := &consolegraphql.Metric{
-			Kind:         "Address",
-			Namespace:    addr.AddressSpaceNamespace,
-			AddressSpace: addr.AddressSpace,
-			Name:         addr.Address,
-			Value:        consolegraphql.NewSimpleMetricValue("enmasse_messages_stored", "gauge", float64(addr.Depth), "", now),
-		}
-		messagesInMetric, err := clw.getExistingMetricOrNew(&consolegraphql.Metric{
-			Kind:         "Address",
-			Namespace:    addr.AddressSpaceNamespace,
-			AddressSpace: addr.AddressSpace,
-			Name:         addr.Address,
-			Value:        consolegraphql.NewRateCalculatingMetricValue("enmasse_messages_in", "gauge", ""),
-		})
-		if err != nil {
-			return err
-		}
-		messagesInMetric.Value.SetValue(float64(addr.MessagesIn), now)
+		// TODO handle temporary subscription queues.
 
-		messagesOutMetric, err := clw.getExistingMetricOrNew(&consolegraphql.Metric{
-			Kind:         "Address",
-			Namespace:    addr.AddressSpaceNamespace,
-			AddressSpace: addr.AddressSpace,
-			Name:         addr.Address,
-			Value:        consolegraphql.NewRateCalculatingMetricValue("enmasse_messages_out", "gauge", ""),
-		})
+
+		objs, err := clw.Cache.Get("hierarchy", fmt.Sprintf("Address/%s/%s/%s", agentAddr.AddressSpaceNamespace, agentAddr.AddressSpace, agentAddr.Name), nil)
 		if err != nil {
 			return err
 		}
-		messagesOutMetric.Value.SetValue(float64(addr.MessagesOut), now)
 
-		err = clw.MetricCache.Add(storedMetric, messagesInMetric, messagesOutMetric)
-		if err != nil {
-			return err
+		if len(objs) > 0 {
+			addr := objs[0].(*consolegraphql.AddressHolder)
+			metrics := addr.Metrics
+
+			stored, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_messages_stored", "gauge")
+			err := stored.Update(float64(agentAddr.Depth), now)
+			if err != nil {
+				return err
+			}
+			in, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
+			err = in.Update(float64(agentAddr.MessagesIn), now)
+			if err != nil {
+				return err
+			}
+			out, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge")
+			err = out.Update(float64(agentAddr.MessagesOut), now)
+			if err != nil {
+				return err
+			}
+			addr.Metrics = metrics
+			err = clw.Cache.Add(addr)
+			if err != nil {
+				return err
+			}
 		}
 	case agent.AgentAddressEventTypeDelete:
-		addr := event.Object.(*agent.AgentAddress)
+		_ = event.Object.(*agent.AgentAddress)
+		// TODO handle temporary subscription queues.
 
-		err := clw.MetricCache.DeleteByPrefix("id", fmt.Sprintf("Address/%s/%s/%s/", addr.AddressSpaceNamespace, addr.AddressSpace, addr.Address))
-		if err != nil {
-			return err
-		}
 	}
 	return nil
-}
-
-func (clw *ConnectionAndLinkWatcher) getExistingMetricOrNew(proto *consolegraphql.Metric) (*consolegraphql.Metric, error) {
-	key := fmt.Sprintf("%s/%s/%s/%s/%s", proto.Kind, proto.Namespace, proto.AddressSpace, proto.Name, proto.Value.GetName())
-	objs, err := clw.MetricCache.Get("id", key, nil)
-	if err != nil {
-		return nil, err
-	} else if len(objs) > 0 {
-		return objs[0].(*consolegraphql.Metric), nil
-	} else {
-		return proto, nil
-	}
 }
 
 func getServiceDetails(service tp.Service) (*string, *string, *string, error) {
@@ -404,3 +462,5 @@ func getAnnotation(service tp.Service, annotation string) (*string, error) {
 		return nil, fmt.Errorf("agent service %v lacks an %s annotation", service, annotation)
 	}
 }
+
+

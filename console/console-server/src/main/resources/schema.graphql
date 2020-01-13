@@ -44,7 +44,7 @@ enum Protocol {
 }
 
 type Metric_consoleapi_enmasse_io_v1beta1 {
-  Name: String! @goField(forceResolver: true)
+  Name: String!
   Type: MetricType!
   Value: Float!
   Units: String!
@@ -54,7 +54,7 @@ type Connection_consoleapi_enmasse_io_v1beta1 {
   ObjectMeta: ObjectMeta_v1!
   Spec: ConnectionSpec_consoleapi_enmasse_io_v1beta1!
 
-  Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]! @goField(forceResolver: true),
+  Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
   Links(first: Int, offset: Int, filter: String, orderBy: String): LinkQueryResult_consoleapi_enmasse_io_v1beta1! @goField(forceResolver: true)
 }
 
@@ -70,7 +70,7 @@ type ConnectionSpec_consoleapi_enmasse_io_v1beta1 {
 type Link_consoleapi_enmasse_io_v1beta1 {
   ObjectMeta: ObjectMeta_v1!
   Spec: LinkSpec_consoleapi_enmasse_io_v1beta1!
-  Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]! @goField(forceResolver: true),
+  Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
 }
 
 type LinkSpec_consoleapi_enmasse_io_v1beta1 {
@@ -118,7 +118,7 @@ type AddressSpace_consoleapi_enmasse_io_v1beta1 {
   Status: AddressSpaceStatus_enmasse_io_v1beta1
   Connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1beta1!
   Addresses(first: Int, offset: Int, filter: String, orderBy: String): AddressQueryResult_consoleapi_enmasse_io_v1beta1!
-  Metrics: [Metric_consoleapi_enmasse_io_v1beta1!] @goField(forceResolver: true)
+  Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
 }
 
 type AddressSpaceSpec_enmasse_io_v1beta1 {
@@ -158,7 +158,7 @@ type Address_consoleapi_enmasse_io_v1beta1 {
   Status: AddressStatus_enmasse_io_v1beta1
 
   Links(first: Int, offset: Int, filter: String, orderBy: String ): LinkQueryResult_consoleapi_enmasse_io_v1beta1! @goField(forceResolver: true)
-  Metrics: [Metric_consoleapi_enmasse_io_v1beta1!] @goField(forceResolver: true)
+  Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
 }
 
 type AddressPlan_admin_enmasse_io_v1beta2 {

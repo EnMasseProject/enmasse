@@ -8,6 +8,7 @@ package consolegraphql
 import (
 	"container/ring"
 	"context"
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/prometheus/prometheus/pkg/labels"
 	"github.com/prometheus/prometheus/pkg/timestamp"
 	"github.com/prometheus/prometheus/prompb"
@@ -23,7 +24,8 @@ import (
 type Connection struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ObjectMeta
-	Spec ConnectionSpec
+	Spec    ConnectionSpec
+	Metrics []*Metric
 }
 
 func (c Connection) SetGroupVersionKind(kind schema.GroupVersionKind) {
@@ -78,6 +80,7 @@ type Link struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ObjectMeta
 	Spec LinkSpec
+	Metrics []*Metric
 }
 
 func (l Link) SetGroupVersionKind(kind schema.GroupVersionKind) {
@@ -118,89 +121,109 @@ type LinkSpec struct {
 	Role         string
 }
 
-type MetricValue interface {
-	GetName() string
-	GetUnit()  string
-	GetType() string
-	GetValue() (float64, time.Time, error)
-	SetValue(float64, time.Time)
-}
-
 type Metric struct {
-	// Make these map of label/value pairs to follow Prometheus conventions? ?
-	Kind         string
-	Namespace    string
-	AddressSpace string
-	Name         string
-
-	// Used to additionally index link metrics by connection
-	ConnectionName *string
-
-	Value MetricValue
-}
-
-
-type simpleMetricValue struct {
 	Name  string
 	Type  string
 	Value float64
 	Unit  string
 	Time  time.Time
+	timeseries *ring.Ring
 }
 
-func (s *simpleMetricValue) GetName() string {
-	return s.Name
+type SimpleMetric Metric
+type RateCalculatingMetric Metric
+
+func FindOrCreateSimpleMetric(existing []*Metric, n string, t string) (*SimpleMetric, []*Metric) {
+	for _, m := range existing {
+		if m.Name == n {
+			return (*SimpleMetric)(m), existing
+		}
+	}
+
+	m := NewSimpleMetric(n, t)
+	existing = append(existing, (*Metric)(m))
+	return m, existing
 }
 
-func (s *simpleMetricValue) GetType() string {
-	return s.Type
+func FindOrCreateRateCalculatingMetric(existing []*Metric, n string, t string) (*RateCalculatingMetric, []*Metric) {
+	for _, m := range existing {
+		if m.Name == n {
+			return (*RateCalculatingMetric)(m), existing
+		}
+	}
+
+	m := NewRateCalculatingMetric(n, t)
+	existing = append(existing, (*Metric)(m))
+	return m, existing
 }
 
-func (s *simpleMetricValue) GetUnit() string {
-	return s.Unit
-}
 
-func (s *simpleMetricValue) GetValue() (float64, time.Time, error) {
-	return s.Value,s.Time, nil
-}
-
-func (s *simpleMetricValue) SetValue(v float64, t time.Time) {
-	s.Value = v
-	s.Time = t
-}
-
-func NewSimpleMetricValue(n string, t string, v float64, u string, ts time.Time) MetricValue {
-	return &simpleMetricValue{
+func NewSimpleMetric(n string, t string) *SimpleMetric {
+	metric := SimpleMetric{
 		Name:  n,
 		Type:  t,
-		Value: v,
-		Unit:  u,
-		Time:  ts,
 	}
+	return &metric
 }
 
-type rateCalculatingMetricValue struct {
-	Name string
-	Type string
-	Unit string
-	Ring *ring.Ring
+func (m *SimpleMetric) Update(v float64, ts time.Time) error {
+	m.Value = v
+	m.Time = ts
+	return nil
 }
+
+func NewRateCalculatingMetric(n string, t string) *RateCalculatingMetric {
+	m := RateCalculatingMetric{
+		Name:       n,
+		Type:       t,
+		timeseries: ring.New(100),
+	}
+	return &m
+}
+
+func (m *RateCalculatingMetric) Update(v float64, ts time.Time) error {
+	m.timeseries.Value = dataPointTimePair{v, ts}
+	m.timeseries = m.timeseries.Next()
+	m.Time = ts
+	return m.updateMetricValue()
+}
+
+func (m *RateCalculatingMetric) updateMetricValue() error {
+
+	engine := promql.NewEngine(promql.EngineOpts{
+		MaxConcurrent: 1,
+		MaxSamples:    100,
+		Timeout:       10 * time.Second,
+	})
+	now := time.Now()
+	query, err := engine.NewInstantQuery(&adaptingQueryable{
+		dataPointRing: m.timeseries,
+	}, "round(rate(unused_label[5m]) * 60)", now)  // Rate per minute
+	if err != nil {
+		return err
+	}
+	result := query.Exec(context.TODO())
+
+	if result.Err != nil {
+		return result.Err
+	}
+
+	vector := result.Value.(promql.Vector)
+	if len(vector) == 0 {
+		m.Value = 0
+		m.Time = now
+	} else {
+		m.Value = vector[0].V
+		m.Time = now
+	}
+	return nil
+}
+
+
 
 type dataPointTimePair struct  {
 	dataPoint float64
 	ts        time.Time
-}
-
-func (t *rateCalculatingMetricValue) GetName() string {
-	return t.Name
-}
-
-func (t *rateCalculatingMetricValue) GetUnit() string {
-	return t.Unit
-}
-
-func (t *rateCalculatingMetricValue) GetType() string {
-	return t.Type
 }
 
 type adaptingQueryable struct {
@@ -265,43 +288,59 @@ func (aq adaptingQueryable) Querier(ctx context.Context, mint, maxt int64) (stor
 	}, nil
 }
 
-func (t *rateCalculatingMetricValue) GetValue() (float64, time.Time, error) {
-	engine := promql.NewEngine(promql.EngineOpts{
-		MaxConcurrent: 1,
-		MaxSamples:    100,
-		Timeout:       10 * time.Second,
-	})
-	now := time.Now()
-	query, err := engine.NewInstantQuery(&adaptingQueryable{
-		dataPointRing: t.Ring,
-	}, "rate(unused_label[5m]) * 60", now)  // Rate per minute
-	if err != nil {
-		panic(err)
-	}
-	result := query.Exec(context.TODO())
 
-	if result.Err != nil {
-		return float64(0), now, err
-	}
 
-	vector := result.Value.(promql.Vector)
-	if len(vector) == 0 {
-		return float64(0), now, nil
-	} else {
-		return vector[0].V, timestamp.Time(vector[0].T), nil
+
+type AddressSpaceHolder struct {
+	v1beta1.AddressSpace
+	Metrics     []*Metric
+}
+
+func (ash AddressSpaceHolder) SetGroupVersionKind(kind schema.GroupVersionKind) {
+	panic("unused")
+}
+
+func (ash AddressSpaceHolder) GroupVersionKind() schema.GroupVersionKind {
+	return ash.AddressSpace.GroupVersionKind()
+}
+
+func (ash AddressSpaceHolder) GetObjectKind() schema.ObjectKind {
+	return ash.AddressSpace.GetObjectKind()
+}
+
+func (ash AddressSpaceHolder) DeepCopyObject() runtime.Object {
+	return AddressSpaceHolder{
+		AddressSpace: *ash.AddressSpace.DeepCopy(),
 	}
 }
 
-func (t *rateCalculatingMetricValue) SetValue(v float64, ts time.Time) {
-	t.Ring.Value = dataPointTimePair{v, ts}
-	t.Ring = t.Ring.Next()
+func (ash AddressSpaceHolder) GetObjectMeta() metav1.Object {
+	return ash.AddressSpace.GetObjectMeta()
 }
 
-func NewRateCalculatingMetricValue(n string, t string, u string) MetricValue {
-	return &rateCalculatingMetricValue{
-		Name: n,
-		Type: t,
-		Ring: ring.New(100),
-		Unit: u,
+type AddressHolder struct {
+	v1beta1.Address
+	Metrics     []*Metric
+}
+
+func (ah AddressHolder) SetGroupVersionKind(kind schema.GroupVersionKind) {
+	panic("unused")
+}
+
+func (ah AddressHolder) GroupVersionKind() schema.GroupVersionKind {
+	return ah.Address.GroupVersionKind()
+}
+
+func (ah AddressHolder) GetObjectKind() schema.ObjectKind {
+	return ah.Address.GetObjectKind()
+}
+
+func (ah AddressHolder) DeepCopyObject() runtime.Object {
+	return AddressHolder{
+		Address: *ah.Address.DeepCopy(),
 	}
+}
+
+func (ah AddressHolder) GetObjectMeta() metav1.Object {
+	return ah.Address.GetObjectMeta()
 }

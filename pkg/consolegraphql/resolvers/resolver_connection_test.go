@@ -16,7 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"testing"
-	time2 "time"
+	"time"
 )
 
 func newTestConnectionResolver(t *testing.T) *Resolver {
@@ -45,17 +45,8 @@ func newTestConnectionResolver(t *testing.T) *Resolver {
 		})
 	assert.NoError(t, err)
 
-	metricCache := &cache.MemdbCache{}
-	err = metricCache.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: cache.MetricIndex(),
-		},
-	)
-
 	resolver := Resolver{}
 	resolver.Cache = objectCache
-	resolver.MetricCache = metricCache
 	return &resolver
 }
 
@@ -75,8 +66,8 @@ func TestQueryConnection(t *testing.T) {
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of connections")
 
-	assert.Equal(t, con.Spec, *objs.Connections[0].Spec, "Unexpected connection spec")
-	assert.Equal(t, con.ObjectMeta, *objs.Connections[0].ObjectMeta, "Unexpected connection object meta")
+	assert.Equal(t, con.Spec, objs.Connections[0].Spec, "Unexpected connection spec")
+	assert.Equal(t, con.ObjectMeta, objs.Connections[0].ObjectMeta, "Unexpected connection object meta")
 }
 
 func TestQueryConnectionFilter(t *testing.T) {
@@ -97,8 +88,8 @@ func TestQueryConnectionFilter(t *testing.T) {
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of connections")
 
-	assert.Equal(t, con1.Spec, *objs.Connections[0].Spec, "Unexpected connection spec")
-	assert.Equal(t, con1.ObjectMeta, *objs.Connections[0].ObjectMeta, "Unexpected connection object meta")
+	assert.Equal(t, con1.Spec, objs.Connections[0].Spec, "Unexpected connection spec")
+	assert.Equal(t, con1.ObjectMeta, objs.Connections[0].ObjectMeta, "Unexpected connection object meta")
 }
 
 func TestQueryConnectionOrder(t *testing.T) {
@@ -119,8 +110,8 @@ func TestQueryConnectionOrder(t *testing.T) {
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of connections")
 
-	assert.Equal(t, con2.Spec, *objs.Connections[0].Spec, "Unexpected connection spec")
-	assert.Equal(t, con2.ObjectMeta, *objs.Connections[0].ObjectMeta, "Unexpected connection object meta")
+	assert.Equal(t, con2.Spec, objs.Connections[0].Spec, "Unexpected connection spec")
+	assert.Equal(t, con2.ObjectMeta, objs.Connections[0].ObjectMeta, "Unexpected connection object meta")
 }
 
 func TestQueryConnectionPagination(t *testing.T) {
@@ -145,13 +136,13 @@ func TestQueryConnectionPagination(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 3, len(objs.Connections), "Unexpected number of addresses in page")
-	assert.Equal(t, con2.ObjectMeta, *objs.Connections[0].ObjectMeta, "Unexpected addresses object meta")
+	assert.Equal(t, con2.ObjectMeta, objs.Connections[0].ObjectMeta, "Unexpected addresses object meta")
 
 	objs, err = r.Query().Connections(context.TODO(), &one, &two, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 1, len(objs.Connections), "Unexpected number of address spaces in page")
-	assert.Equal(t, con3.ObjectMeta, *objs.Connections[0].ObjectMeta, "Unexpected addresses object meta")
+	assert.Equal(t, con3.ObjectMeta, objs.Connections[0].ObjectMeta, "Unexpected addresses object meta")
 }
 
 func TestQueryConnectionLinks(t *testing.T) {
@@ -164,13 +155,13 @@ func TestQueryConnectionLinks(t *testing.T) {
 	err := r.Cache.Add(createConnectionLink(namespace, addressspace, con1, "sender"), createConnectionLink(namespace, addressspace, con2, "sender"))
 	assert.NoError(t, err)
 
-	con := &ConnectionConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
+	con := &consolegraphql.Connection{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      con1,
 			UID:       types.UID(con1),
 			Namespace: namespace,
 		},
-		Spec: &consolegraphql.ConnectionSpec{
+		Spec: consolegraphql.ConnectionSpec{
 			AddressSpace: addressspace,
 		},
 	}
@@ -193,13 +184,13 @@ func TestQueryConnectionLinkFilter(t *testing.T) {
 	err := r.Cache.Add(link1, link2)
 	assert.NoError(t, err)
 
-	con := &ConnectionConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
+	con := &consolegraphql.Connection{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      conuuid,
 			UID:       types.UID(conuuid),
 			Namespace: namespace,
 		},
-		Spec: &consolegraphql.ConnectionSpec{
+		Spec: consolegraphql.ConnectionSpec{
 			AddressSpace: addressspace,
 		},
 	}
@@ -211,8 +202,8 @@ func TestQueryConnectionLinkFilter(t *testing.T) {
 	expected := 1
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of links")
-	assert.Equal(t, link1.Spec, *objs.Links[0].Spec, "Unexpected link spec")
-	assert.Equal(t, link1.ObjectMeta, *objs.Links[0].ObjectMeta, "Unexpected link object meta")
+	assert.Equal(t, link1.Spec, objs.Links[0].Spec, "Unexpected link spec")
+	assert.Equal(t, link1.ObjectMeta, objs.Links[0].ObjectMeta, "Unexpected link object meta")
 }
 
 func TestQueryConnectionLinkOrder(t *testing.T) {
@@ -226,13 +217,13 @@ func TestQueryConnectionLinkOrder(t *testing.T) {
 	err := r.Cache.Add(link1, link2)
 	assert.NoError(t, err)
 
-	con := &ConnectionConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
+	con := &consolegraphql.Connection{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      conuuid,
 			UID:       types.UID(conuuid),
 			Namespace: namespace,
 		},
-		Spec: &consolegraphql.ConnectionSpec{
+		Spec: consolegraphql.ConnectionSpec{
 			AddressSpace: addressspace,
 		},
 	}
@@ -244,8 +235,8 @@ func TestQueryConnectionLinkOrder(t *testing.T) {
 	expected := 2
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of links")
-	assert.Equal(t, link2.Spec, *objs.Links[0].Spec, "Unexpected link spec")
-	assert.Equal(t, link2.ObjectMeta, *objs.Links[0].ObjectMeta, "Unexpected link object meta")
+	assert.Equal(t, link2.Spec, objs.Links[0].Spec, "Unexpected link spec")
+	assert.Equal(t, link2.ObjectMeta, objs.Links[0].ObjectMeta, "Unexpected link object meta")
 }
 
 func TestQueryConnectionLinkPaged(t *testing.T) {
@@ -261,13 +252,13 @@ func TestQueryConnectionLinkPaged(t *testing.T) {
 	err := r.Cache.Add(link1, link2, link3, link4)
 	assert.NoError(t, err)
 
-	con := &ConnectionConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
+	con := &consolegraphql.Connection{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      conuuid,
 			UID:       types.UID(conuuid),
 			Namespace: namespace,
 		},
-		Spec: &consolegraphql.ConnectionSpec{
+		Spec: consolegraphql.ConnectionSpec{
 			AddressSpace: addressspace,
 		},
 	}
@@ -292,67 +283,98 @@ func TestQueryConnectionLinkPaged(t *testing.T) {
 
 func TestQueryConnectionMetrics(t *testing.T) {
 	r := newTestConnectionResolver(t)
-	con1 := uuid.New().String()
-	con2 := uuid.New().String()
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
-	createMetric := func(namespace string, con string, metricName string, metricValue float64) *consolegraphql.Metric {
-		return &consolegraphql.Metric{
-			Kind:         "Connection",
-			Namespace:    namespace,
-			AddressSpace: addressspace,
-			Name:         con,
-			Value:        consolegraphql.NewSimpleMetricValue(metricName, "gauge", float64(metricValue), "", time2.Now()),
-		}
+	createMetric := func(namespace string, addr1 string, metricName string, metricValue float64) *consolegraphql.Metric {
+		metric := consolegraphql.NewSimpleMetric(metricName, "gauge")
+		metric.Update(metricValue, time.Now())
+		return (*consolegraphql.Metric)(metric)
 	}
 
-	err := r.Cache.Add(
-		createConnectionLink(namespace, addressspace, con1, "sender"),
-		createConnectionLink(namespace, addressspace, con1, "sender"),
-		createConnectionLink(namespace, addressspace, con1, "receiver"),
-		createConnectionLink(namespace, addressspace, con2, "receiver"))
+	con := createConnection("host:1234", namespace, addressspace,
+		createMetric(namespace, "", "enmasse_messages_in", float64(10)),
+		createMetric(namespace, "", "enmasse_messages_out", float64(20)))
+
+	err := r.Cache.Add(con,
+		createConnectionLink(namespace, addressspace, con.Name, "sender"),
+		createConnectionLink(namespace, addressspace, con.Name, "sender"),
+		createConnectionLink(namespace, addressspace, con.Name, "receiver"))
 	assert.NoError(t, err)
 
-	err = r.MetricCache.Add(createMetric(namespace, con1, "enmasse_messages_in", float64(10)), createMetric(namespace, con1, "enmasse_messages_out", float64(20)))
+	objs, err := r.Query().Connections(context.TODO(), nil, nil, nil, nil)
 	assert.NoError(t, err)
 
-	con := &ConnectionConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
-			Name:      con1,
-			UID:       types.UID(con1),
-			Namespace: namespace,
-		},
-		Spec: &consolegraphql.ConnectionSpec{
-			AddressSpace: addressspace,
-		},
-	}
-	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Metrics(context.TODO(), con)
-	assert.NoError(t, err)
+	assert.Equal(t, 1, objs.Total, "Unexpected number of connections")
 
+	metrics := objs.Connections[0].Metrics
 	expected := 4
-	actual := len(objs)
+	actual := len(metrics)
 	assert.Equal(t, expected, actual, "Unexpected number of metrics")
 
-	sendersMetric := getMetric("enmasse_senders", objs)
+	sendersMetric := getMetric("enmasse_senders", metrics)
 	assert.NotNil(t, sendersMetric, "Senders metric is absent")
-	value, _, _ := sendersMetric.Value.GetValue()
+	value := sendersMetric.Value
 	assert.Equal(t, float64(2), value, "Unexpected senders metric value")
-	receiversMetric := getMetric("enmasse_receivers", objs)
+
+	receiversMetric := getMetric("enmasse_receivers", metrics)
 	assert.NotNil(t, receiversMetric, "Receivers metric is absent")
-	value, _, _ = receiversMetric.Value.GetValue()
+	value = receiversMetric.Value
 	assert.Equal(t, float64(1), value, "Unexpected receivers metric value")
-	messagesInMetric := getMetric("enmasse_messages_in", objs)
+	messagesInMetric := getMetric("enmasse_messages_in", metrics)
 	assert.NotNil(t, messagesInMetric, "Messages In metric is absent")
-	value, _, _ = messagesInMetric.Value.GetValue()
+	value = messagesInMetric.Value
 	assert.Equal(t, float64(10), value, "Unexpected messages in metric value")
-	messagesOutMetric := getMetric("enmasse_messages_out", objs)
+	messagesOutMetric := getMetric("enmasse_messages_out", metrics)
 	assert.NotNil(t, messagesOutMetric, "Messages In metric is absent")
-	value, _, _ = messagesOutMetric.Value.GetValue()
+	value = messagesOutMetric.Value
 	assert.Equal(t, float64(20), value, "Unexpected messages out metric value")
 }
 
-func createConnectionLink(namespace string, addressspace string, con string, role string) *consolegraphql.Link {
+func TestQueryConnectionLinkMetric(t *testing.T) {
+	r := newTestConnectionResolver(t)
+	conuuid := uuid.New().String()
+	namespace := "mynamespace"
+	addressspace := "myaddressspace"
+
+	createMetric := func(namespace string, addr1 string, metricName string, metricValue float64) *consolegraphql.Metric {
+		metric := consolegraphql.NewSimpleMetric(metricName, "gauge")
+		metric.Update(metricValue, time.Now())
+		return (*consolegraphql.Metric)(metric)
+	}
+
+
+	link := createConnectionLink(namespace, addressspace, conuuid, "sender",
+		createMetric(namespace, "", "enmasse_messages_backlog", float64(100)))
+	err := r.Cache.Add(link)
+	assert.NoError(t, err)
+
+	con := &consolegraphql.Connection{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      conuuid,
+			UID:       types.UID(conuuid),
+			Namespace: namespace,
+		},
+		Spec: consolegraphql.ConnectionSpec{
+			AddressSpace: addressspace,
+		},
+	}
+
+	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, nil, nil, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, objs.Total, "Unexpected number of links")
+
+	metrics := objs.Links[0].Metrics
+	assert.Equal(t, 1, len(metrics), "Unexpected number of metrics")
+
+	backlogMetric := getMetric("enmasse_messages_backlog", metrics)
+	assert.NotNil(t, backlogMetric, "Backlog metric is absent")
+	value := backlogMetric.Value
+	assert.Equal(t, float64(100), value, "Unexpected backlog metric value")
+
+}
+
+func createConnectionLink(namespace string, addressspace string, con string, role string, metrics ...*consolegraphql.Metric) *consolegraphql.Link {
 	linkuid := uuid.New().String()
 	return &consolegraphql.Link{
 		TypeMeta: metav1.TypeMeta{
@@ -368,5 +390,6 @@ func createConnectionLink(namespace string, addressspace string, con string, rol
 			AddressSpace: addressspace,
 			Role:         role,
 		},
+		Metrics: metrics,
 	}
 }

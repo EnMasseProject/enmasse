@@ -17,7 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"testing"
-	time2 "time"
 )
 
 func newTestLinkResolver(t *testing.T) *Resolver {
@@ -46,18 +45,8 @@ func newTestLinkResolver(t *testing.T) *Resolver {
 		})
 	assert.NoError(t, err)
 
-	metricCache := &cache.MemdbCache{}
-	err = metricCache.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: cache.MetricIndex(),
-		},
-	)
-	assert.NoError(t, err)
-
 	resolver := Resolver{}
 	resolver.Cache = objectCache
-	resolver.MetricCache = metricCache
 	return &resolver
 }
 
@@ -95,56 +84,9 @@ func TestLinkConnection(t *testing.T) {
 	assert.Equal(t, uid, con.ObjectMeta.Name, "unexpected connection uid")
 }
 
-func TestLinkMetrics(t *testing.T) {
-	r := newTestLinkResolver(t)
-	addressspace := "myaddressspace"
-
-	createMetric := func(namespace string, link string, metricName string, metricValue float64) *consolegraphql.Metric {
-		return &consolegraphql.Metric{
-			Kind:        "Link",
-			Namespace:   namespace,
-			AddressSpace: addressspace,
-			Name:        link,
-			Value:        consolegraphql.NewSimpleMetricValue(metricName, "gauge", float64(metricValue), "", time2.Now()),
-		}
-	}
-
-	linkuid := uuid.New().String()
-	conuid := uuid.New().String()
-	namespace := "mynamespace"
-	addr1 := "myaddr"
-
-	err := r.MetricCache.Add(createMetric(namespace, linkuid, "enmasse_messages_backlog", float64(100)))
-	assert.NoError(t, err)
-
-	link := &LinkConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
-			Name:      linkuid,
-			UID:       types.UID(linkuid),
-			Namespace: namespace,
-		},
-		Spec: &consolegraphql.LinkSpec{
-			Connection:   conuid,
-			AddressSpace: addressspace,
-			Address:      addr1,
-			Role:         "sender",
-		},
-	}
-	metrics, err := r.Link_consoleapi_enmasse_io_v1beta1().Metrics(context.TODO(), link)
-	assert.NoError(t, err)
-
-	assert.Equal(t, 1, len(metrics), "Unexpected number of metrics")
-
-	backlogMetric := getMetric("enmasse_messages_backlog", metrics)
-	assert.NotNil(t, backlogMetric, "Backlog metric is absent")
-	value, _, _ := backlogMetric.Value.GetValue()
-	assert.Equal(t, float64(100), value, "Unexpected backlog metric value")
-
-}
-
 func buildResolverContext(namespace string) context.Context {
-	link := &LinkConsoleapiEnmasseIoV1beta1{
-		ObjectMeta: &metav1.ObjectMeta{
+	link := &consolegraphql.Link{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
 		},
 	}
