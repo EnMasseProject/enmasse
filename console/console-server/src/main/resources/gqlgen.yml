@@ -33,6 +33,20 @@ models:
   User_v1:
     model: github.com/openshift/api/user/v1.User
 
+  AuthenticationService_admin_enmasse_io_v1beta1:
+    model: github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1.AuthenticationService
+  AuthenticationServiceSpec_admin_enmasse_io_v1beta1:
+    model: github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1.AuthenticationServiceSpec
+  AuthenticationServiceStatus_admin_enmasse_io_v1beta1:
+    model: github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1.AuthenticationServiceStatus
+
+  AddressSpaceSchema_enmasse_io_v1beta1:
+    model: v1beta1.AddressSpaceSchema
+  AddressSpaceSchemaSpec_enmasse_io_v1beta1:
+    model: v1beta1.AddressSpaceSchemaSpec
+  AuthenticationService_enmasse_io_v1beta1:
+    model: v1beta1.AuthenticationService
+
   Address_enmasse_io_v1beta1:
     model: v1beta1.Address
   AddressSpec_enmasse_io_v1beta1:

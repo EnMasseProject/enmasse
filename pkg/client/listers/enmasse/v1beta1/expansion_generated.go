@@ -22,3 +22,19 @@ type AddressSpaceListerExpansion interface{}
 // AddressSpaceNamespaceListerExpansion allows custom methods to be added to
 // AddressSpaceNamespaceLister.
 type AddressSpaceNamespaceListerExpansion interface{}
+
+// AddressSpaceSchemaListerExpansion allows custom methods to be added to
+// AddressSpaceSchemaLister.
+type AddressSpaceSchemaListerExpansion interface{}
+
+// AddressSpaceSchemaNamespaceListerExpansion allows custom methods to be added to
+// AddressSpaceSchemaNamespaceLister.
+type AddressSpaceSchemaNamespaceListerExpansion interface{}
+
+// AuthenticationServiceListerExpansion allows custom methods to be added to
+// AuthenticationServiceLister.
+type AuthenticationServiceListerExpansion interface{}
+
+// AuthenticationServiceNamespaceListerExpansion allows custom methods to be added to
+// AuthenticationServiceNamespaceLister.
+type AuthenticationServiceNamespaceListerExpansion interface{}
