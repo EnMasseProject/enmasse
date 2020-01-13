@@ -22,11 +22,13 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
 import java.util.Base64;
@@ -39,6 +41,7 @@ public class KubeKeycloakFactory implements KeycloakFactory {
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final NamespacedKubernetesClient kubeClient;
+    private static final File serviceCaFile = new File("/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt");
 
     public KubeKeycloakFactory(NamespacedKubernetesClient kubeClient) {
         this.kubeClient = kubeClient;
@@ -70,7 +73,13 @@ public class KubeKeycloakFactory implements KeycloakFactory {
         }
         Secret certificate = kubeClient.secrets().inNamespace(certificateSecretNamespace).withName(standard.getCertificateSecret().getName()).get();
 
-        KeyStore trustStore = createKeyStore(b64dec.decode(certificate.getData().get("tls.crt")));
+        byte []serviceCa = null;
+        try {
+            serviceCa = Files.readAllBytes(serviceCaFile.toPath());
+        } catch (IOException e) {
+            log.warn("Unable to load service CA, ignoring", e);
+        }
+        KeyStore trustStore = createKeyStore(b64dec.decode(certificate.getData().get("tls.crt")), serviceCa);
         ResteasyJackson2Provider provider = new ResteasyJackson2Provider() {
             @Override
             public void writeTo(Object value, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException {
@@ -97,14 +106,19 @@ public class KubeKeycloakFactory implements KeycloakFactory {
                 .build();
     }
 
-    private static KeyStore createKeyStore(byte [] ca) {
+    private static KeyStore createKeyStore(byte [] ca, byte [] serviceCa) {
         try {
             KeyStore keyStore = KeyStore.getInstance("JKS");
             keyStore.load(null);
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            keyStore.setCertificateEntry("keycloak",
-                    cf.generateCertificate(new ByteArrayInputStream(ca)));
-
+            if (ca != null) {
+                keyStore.setCertificateEntry("keycloak",
+                        cf.generateCertificate(new ByteArrayInputStream(ca)));
+            }
+            if (serviceCa != null) {
+                keyStore.setCertificateEntry("service-ca",
+                        cf.generateCertificate(new ByteArrayInputStream(serviceCa)));
+            }
             return keyStore;
         } catch (Exception ignored) {
             log.warn("Error creating keystore. Ignoring", ignored);
