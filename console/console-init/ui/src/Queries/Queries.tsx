@@ -219,6 +219,9 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
             Spec {
               DisplayName
             }
+            ObjectMeta {
+              Name
+            }
           }
         }
         Status {
