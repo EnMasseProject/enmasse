@@ -18,6 +18,7 @@ import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageType;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import static io.enmasse.systemtest.platform.KubeCMDClient.patchCR;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
@@ -206,7 +207,13 @@ public class IoTUtils {
         log.info("Deleting IoTProject: {}", project.getMetadata().getName());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
         kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).cascading(true).delete();
-        IoTUtils.waitForIoTProjectDeleted(kubernetes, project);
+        try {
+            IoTUtils.waitForIoTProjectDeleted(kubernetes, project);
+        } catch (Exception e) {
+            log.warn("IoT project '{}' failed to delete. Removing finalizers!", project.getMetadata().getName());
+            assertTrue(patchCR(project.getKind().toLowerCase(), project.getMetadata().getName(), "'{\"metadata\":{\"finalizers\": []}}").getRetCode());
+            IoTUtils.waitForIoTProjectDeleted(kubernetes, project);
+        }
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
