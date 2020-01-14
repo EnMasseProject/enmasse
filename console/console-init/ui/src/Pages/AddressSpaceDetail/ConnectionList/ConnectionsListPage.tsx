@@ -62,7 +62,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
   const { connections } = data || {
     connections: { Total: 0, Connections: [] }
   };
-
+  
   setTotalConnections(connections.Total);
   const connectionList: IConnection[] = connections.Connections.map(
     connection => ({
@@ -74,13 +74,14 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
       messagesOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
       senders: getFilteredValue(connection.Metrics, "enmasse_senders"),
       receivers: getFilteredValue(connection.Metrics, "enmasse_receivers"),
-      status: "running"
+      status: "running",
+      name: connection.ObjectMeta.Name
     })
   );
 
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
-    setSortValue({index:index,direction:direction});
+    setSortValue({ index: index, direction: direction });
   };
   return (
     <>

@@ -25,7 +25,8 @@ const rows: IConnection[] = [
     messagesOut: 123,
     senders: 123,
     receivers: 123,
-    status: "running"
+    status: "running",
+    name: "juno2"
   },
   {
     hostname: "foo",
@@ -36,7 +37,8 @@ const rows: IConnection[] = [
     messagesOut: 123,
     senders: 123,
     receivers: 123,
-    status: "running"
+    status: "running",
+    name: "juno3"
   },
   {
     hostname: "foo",
@@ -47,7 +49,8 @@ const rows: IConnection[] = [
     messagesOut: 123,
     senders: 123,
     receivers: 123,
-    status: "running"
+    status: "running",
+    name: "juno4"
   }
 ];
 

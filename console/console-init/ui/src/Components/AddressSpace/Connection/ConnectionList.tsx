@@ -33,6 +33,7 @@ export interface IConnection {
   senders: number;
   receivers: number;
   status: "creating" | "deleting" | "running";
+  name: string;
 }
 
 export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
@@ -45,7 +46,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
     const tableRow: IRowData = {
       cells: [
         {
-          title: <Link to={`connections/${row.hostname}`}>{row.hostname}</Link>
+          title: <Link to={`connections/${row.name}`}>{row.hostname}</Link>
         },
         row.containerId,
         {
@@ -113,8 +114,9 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       rows={tableRows}
       aria-label="connection list"
       sortBy={sortBy}
-      onSort={onSort}>
-      <TableHeader id="connectionlist-table-header"/>
+      onSort={onSort}
+    >
+      <TableHeader id="connectionlist-table-header" />
       <TableBody />
     </Table>
   );
