@@ -12,5 +12,5 @@ include::../modules/proc-uninstalling.adoc[leveloffset=+1]
 
 ifeval::["{cmdcli}" == "oc"]
 include::../modules/proc-uninstalling-using-ansible.adoc[leveloffset=+1]
+include::../modules/proc-uninstalling-using-olm.adoc[leveloffset=+1]
 endif::[]
-

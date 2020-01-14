@@ -1,0 +1,56 @@
+// Module included in the following assemblies:
+//
+// assembly-uninstalling.adoc
+
+[id='uninstalling-olm-{context}']
+= Uninstalling {ProductName} using OLM
+
+This method uninstalls {ProductName} that was installed using the Operator Marketplace.
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a user with `cluster-admin` privileges:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} login -u system:admin
+----
+endif::[]
+
+. Remove all IoTProject and AddressSpace instances:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete iotprojects -A --all
+{cmdcli} delete addressspaces -A --all
+----
+
+. Remove the Subscription (replace the name with the name of the subscription used in the install):
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete subscription _{OperatorName}_ -n _{ProductNamespace}_
+----
+
+. Remove the CSV for the operator:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete csv -l app=enmasse -n _{ProductNamespace}_
+----
+
+. Remove additional resources:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete crd -l app=enmasse
+{cmdcli} delete oauthclients -l app=enmasse
+----
+
+. Delete the namespace where {ProductName} was installed:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete namespace _{ProductNamespace}_
+----
