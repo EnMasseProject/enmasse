@@ -255,19 +255,10 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryConfigMap(config *
 
 	if configMap.Data == nil {
 		configMap.Data = make(map[string]string)
-	}
 
-	if configMap.Data["logback-spring.xml"] == "" {
+		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
 
-		debug := *config.Spec.ServicesConfig.DeviceRegistry.Infinispan.Java.Debug
-		if debug {
-			configMap.Data["logback-spring.xml"] = DebugLogbackConfig
-		} else {
-			configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
-		}
-	}
-
-	configMap.Data["application.yml"] = `
+		configMap.Data["application.yml"] = `
 hono:
 
   auth:
@@ -312,6 +303,7 @@ enmasse:
       svc:
         maxBcryptIterations: 10
 `
+	}
 	return nil
 }
 
