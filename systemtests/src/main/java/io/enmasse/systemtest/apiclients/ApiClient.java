@@ -43,7 +43,7 @@ public abstract class ApiClient implements AutoCloseable {
     private void initializeApiClient(Supplier<Endpoint> endpointSupplier, String apiVersion, String token) {
         this.vertx = VertxFactory.create();
         this.connect();
-        this.authzString = Kubernetes.getInstance().getApiToken();
+        this.authzString = token == null || token.isEmpty() ? Kubernetes.getInstance().getApiToken() : token;
         this.endpoint = endpointSupplier.get();
         this.endpointSupplier = endpointSupplier;
         this.apiVersion = apiVersion;
