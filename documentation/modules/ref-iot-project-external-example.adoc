@@ -5,7 +5,7 @@
 [id='iot-project-external-example']
 = Using an external messaging infrastructure
 
-This IoT configuration example shows how an external messaging infrastructure can be provided.
+This IoT configuration example shows how an external messaging infrastructure can be configured.
 
 [source,yaml,options="nowrap"]
 ----

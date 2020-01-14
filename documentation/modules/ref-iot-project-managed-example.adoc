@@ -5,15 +5,15 @@
 [id='iot-project-managed-example']
 = Using a managed messaging infrastructure
 
-This IoT project configuration example rely on {productName} to manage the messaging infrastructure used by iot traffic.
-Here we use {productName} standard address space and address plans.
+This IoT project configuration example relies on {ProductName} to manage the messaging infrastructure used by IoT traffic.
+The {ProductName} `standard` address space and address plans are used.
 
 [source,yaml,options="nowrap"]
 ----
 include::../common/iot-project-managed-example.yaml[]
 ----
-<1> The `managedStrategy` value refers to an messaging infrastructure managed by {productName}.
-<2> The address space plan, defining resource usage of the address space. Each iot tenant get his own address space.
-<3> Each address must be declared with an valid address plan.
-<4> The type of the address space. Default is `standard`. See link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address space documentation] for more details.
-<5> The type of the address. See link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address space documentation] for more details.
+<1> The `managedStrategy` value refers to a messaging infrastructure managed by {ProductName}.
+<2> Specifies the address space plan, defining the resource usage of the address space. Each IoT tenant must have its own address space.
+<3> Each address must be associated with a valid address plan.
+<4> Specifies the type of the address space. The default value is `standard`. For more information see the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address space documentation].
+<5> Specifies the type of the address. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address space documentation].
