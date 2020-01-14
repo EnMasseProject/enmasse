@@ -80,8 +80,8 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     void initClient() {
         this.deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         this.httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        this.registryClient = new DeviceRegistryClient(kubernetes, this.deviceRegistryEndpoint);
-        this.credentialsClient = new CredentialsRegistryClient(kubernetes, this.deviceRegistryEndpoint);
+        this.registryClient = new DeviceRegistryClient(this.deviceRegistryEndpoint);
+        this.credentialsClient = new CredentialsRegistryClient(this.deviceRegistryEndpoint);
     }
 
     @BeforeEach
@@ -91,7 +91,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         this.deviceId = UUID.randomUUID().toString();
         this.authId = UUID.randomUUID().toString();
         this.password = UUID.randomUUID().toString();
-        this.httpClient = new HttpAdapterClient(kubernetes, this.httpAdapterEndpoint, this.authId, sharedIoTResourceManager.getTenantId(), this.password);
+        this.httpClient = new HttpAdapterClient(this.httpAdapterEndpoint, this.authId, sharedIoTResourceManager.getTenantId(), this.password);
         
         // set up new random device
         this.registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), this.deviceId);

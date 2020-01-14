@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.apiclients;
 
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -18,8 +17,8 @@ import java.util.concurrent.TimeUnit;
 
 public class PrometheusApiClient extends ApiClient {
 
-    public PrometheusApiClient(Kubernetes kubernetes, Endpoint endpoint) {
-        super(kubernetes, () -> endpoint, "");
+    public PrometheusApiClient(Endpoint endpoint) {
+        super(() -> endpoint, "");
     }
 
     @Override
@@ -38,7 +37,7 @@ public class PrometheusApiClient extends ApiClient {
     public JsonObject getRules() throws Exception {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         client.get(endpoint.getPort(), endpoint.getHost(), "/api/v1/rules")
-                .bearerTokenAuthentication(kubernetes.getApiToken())
+                .bearerTokenAuthentication(authzString)
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)
                 .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error getting prometheus rules"));
@@ -50,7 +49,7 @@ public class PrometheusApiClient extends ApiClient {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         String uri = String.format("/api/v1/query?query=%s", query);
         client.get(endpoint.getPort(), endpoint.getHost(), uri)
-                .bearerTokenAuthentication(kubernetes.getApiToken())
+                .bearerTokenAuthentication(authzString)
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)
                 .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error doing prometheus query " + uri));
@@ -64,7 +63,7 @@ public class PrometheusApiClient extends ApiClient {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         String uri = String.format("/api/v1/query_range?query=%s&start=%s&end=%s&step=14", query, startTs, endTs);
         client.get(endpoint.getPort(), endpoint.getHost(), uri)
-                .bearerTokenAuthentication(kubernetes.getApiToken())
+                .bearerTokenAuthentication(authzString)
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)
                 .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error doing prometheus range query " + uri));

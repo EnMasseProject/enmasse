@@ -52,8 +52,8 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
     @BeforeEach
     void initEnv() throws Exception {
         deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
-        registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
-        credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
+        registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
+        credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
         registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
         credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, deviceAuthId, devicePassword);
 
@@ -81,7 +81,7 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
                 .setPassword(businessApplicationPassword);
 
         Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        adapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, deviceAuthId, sharedIoTResourceManager.getTenantId(), devicePassword);
+        adapterClient = new HttpAdapterClient(httpAdapterEndpoint, deviceAuthId, sharedIoTResourceManager.getTenantId(), devicePassword);
 
     }
 

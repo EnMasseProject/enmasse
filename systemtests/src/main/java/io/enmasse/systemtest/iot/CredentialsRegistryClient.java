@@ -33,8 +33,8 @@ public class CredentialsRegistryClient extends HonoApiClient {
     private static final String CREDENTIALS_PATH = "v1/credentials";
     private static final Random rnd = new SecureRandom();
 
-    public CredentialsRegistryClient(Kubernetes kubernetes, Endpoint endpoint) {
-        super(kubernetes, () -> endpoint);
+    public CredentialsRegistryClient(Endpoint endpoint) {
+        super(() -> endpoint);
     }
 
     @Override

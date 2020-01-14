@@ -10,7 +10,6 @@ import io.enmasse.systemtest.apiclients.ApiClient;
 import io.enmasse.systemtest.apiclients.Predicates;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
@@ -38,8 +37,8 @@ public class HttpAdapterClient extends ApiClient {
 
     protected static Logger log = CustomLogger.getLogger();
 
-    public HttpAdapterClient(Kubernetes kubernetes, Endpoint endpoint, String deviceAuthId, String tenantId, String password) {
-        super(kubernetes, () -> endpoint, "");
+    public HttpAdapterClient(Endpoint endpoint, String deviceAuthId, String tenantId, String password) {
+        super(() -> endpoint, "");
         this.authzString = getBasicAuth(deviceAuthId + "@" + tenantId, password);
     }
 
