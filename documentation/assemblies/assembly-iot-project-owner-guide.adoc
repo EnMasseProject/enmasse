@@ -1,0 +1,16 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+
+:context: {context}-iot
+
+[id='iot-project-owner-{context}]
+= IoT for projects owners
+
+== IoT project configuration examples
+
+IoT projects define the messaging resources an IoT tenant can consume.
+
+include::../modules/ref-iot-project-managed-example.adoc[leveloffset=+2]
+
+include::../modules/ref-iot-project-external-example.adoc[leveloffset=+2]
