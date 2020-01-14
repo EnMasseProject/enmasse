@@ -330,7 +330,7 @@ public class IoTUtils {
 
     public static void checkCredentials(String authId, String password, boolean authFail, Endpoint httpAdapterEndpoint, AmqpClient iotAmqpClient, IoTProject ioTProject) throws Exception {
         String tenantID = getTenantId(ioTProject);
-        try (var httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId, tenantID, password)) {
+        try (var httpAdapterClient = new HttpAdapterClient(httpAdapterEndpoint, authId, tenantID, password)) {
 
             try {
                 new MessageSendTester()

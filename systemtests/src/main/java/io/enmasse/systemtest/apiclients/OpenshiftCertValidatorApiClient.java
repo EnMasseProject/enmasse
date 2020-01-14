@@ -20,8 +20,8 @@ import java.util.concurrent.TimeoutException;
 public class OpenshiftCertValidatorApiClient extends ApiClient {
 
 
-    public OpenshiftCertValidatorApiClient(Kubernetes kubernetes, Endpoint endpoint) {
-        super(kubernetes, () -> endpoint, "");
+    public OpenshiftCertValidatorApiClient(Endpoint endpoint) {
+        super(() -> endpoint, "");
     }
 
     @Override

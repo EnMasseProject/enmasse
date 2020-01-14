@@ -19,8 +19,8 @@ public class DeviceRegistryClient extends HonoApiClient {
 
     private static final String DEVICES_PATH = "v1/devices";
 
-    public DeviceRegistryClient(Kubernetes kubernetes, Endpoint endpoint) {
-        super(kubernetes, () -> endpoint);
+    public DeviceRegistryClient(Endpoint endpoint) {
+        super(() -> endpoint);
     }
 
     @Override

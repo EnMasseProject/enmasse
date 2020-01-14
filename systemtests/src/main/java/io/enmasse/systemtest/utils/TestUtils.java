@@ -404,41 +404,6 @@ public class TestUtils {
     }
 
     /**
-     * Repeat request n-times in a row
-     *
-     * @param retry count of remaining retries
-     * @param fn    request function
-     * @return
-     */
-    public static <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Runnable> reconnect) throws Exception {
-        try {
-            return fn.call();
-        } catch (Exception ex) {
-            if (ex.getCause() instanceof VertxException && ex.getCause().getMessage().contains("Connection was closed")) {
-                if (reconnect.isPresent()) {
-                    log.warn("connection was closed, trying to reconnect...");
-                    reconnect.get().run();
-                }
-            }
-            if (ex.getCause() instanceof UnknownHostException && retry > 0) {
-                try {
-                    log.info("{} remaining iterations", retry);
-                    return doRequestNTimes(retry - 1, fn, reconnect);
-                } catch (Exception ex2) {
-                    throw ex2;
-                }
-            } else {
-                if (ex.getCause() != null) {
-                    ex.getCause().printStackTrace();
-                } else {
-                    ex.printStackTrace();
-                }
-                throw ex;
-            }
-        }
-    }
-
-    /**
      * Repeat command n-times
      *
      * @param retry count of remaining retries
