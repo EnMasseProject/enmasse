@@ -136,9 +136,6 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
 
     @AfterEach
     void cleanEnv(ExtensionContext context) throws Exception {
-        if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectMqttAdapterQdrProxyState();
-        }
         credentialsClient.deleteAllCredentials(sharedIoTResourceManager.getTenantId(), deviceId);
         registryClient.deleteDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId);
         registryClient.getDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);

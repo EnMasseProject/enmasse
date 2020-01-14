@@ -31,7 +31,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     @Test
     @DisplayName("testTopicSubscribe")
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
-        doTopicSubscribeTest(artemisManagement, new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
+        doTopicSubscribeTest(artemisManagement, new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
     }
 
     @Test
@@ -53,6 +53,6 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     @DisplayName("testMessageSelectorTopic")
     void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
         doMessageSelectorTopicTest(artemisManagement, new PythonClientSender(logPath), new PythonClientSender(logPath),
-                new PythonClientReceiver(logPath), new PythonClientReceiver(logPath), false);
+                new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
     }
 }

@@ -188,7 +188,7 @@ public class EndpointController implements Controller {
                 .editOrNewMetadata()
                 .withName(routeName)
                 .withNamespace(namespace)
-                .addToAnnotations(exposeSpec.getAnnotations() != null ? exposeSpec.getAnnotations() : Collections.emptyMap())
+                .addToAnnotations(exposeSpec.getAnnotations() != null ? exposeSpec.getAnnotations() : Collections.singletonMap("haproxy.router.openshift.io/balance", "leastconn"))
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getMetadata().getName())
                 .addToAnnotations(AnnotationKeys.SERVICE_NAME, serviceName)
                 .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getSpec().getType())

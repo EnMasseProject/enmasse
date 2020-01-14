@@ -1,6 +1,7 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
 MVNPROJ=$(shell realpath --relative-to="$(realpath $(TOPDIR))" "$(shell pwd)")
 include $(TOPDIR)/Makefile.common
+
 ifeq ($(SKIP_TESTS),true)
 MAVEN_ARGS="-DskipTests"
 endif

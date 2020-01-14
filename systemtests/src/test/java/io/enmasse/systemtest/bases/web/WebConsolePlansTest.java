@@ -24,6 +24,7 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.shared.standard.TopicTest;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -96,7 +97,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ITestIsola
         isolatedResourcesManager.createOrUpdateUser(consoleAddrSpace, user);
 
         //create addresses
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);
+        consoleWebPage = new ConsoleWebPage(selenium, AddressSpaceUtils.getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         Address q1 = new AddressBuilder()
                 .withNewMetadata()

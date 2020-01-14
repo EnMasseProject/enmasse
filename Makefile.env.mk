@@ -1,14 +1,16 @@
 # Docker env
-DOCKER_REGISTRY ?= quay.io
-DOCKER_ORG      ?= enmasse
-DOCKER          ?= docker
-PROJECT_PREFIX  ?= enmasse
-PROJECT_NAME    ?= $(shell basename $(CURDIR))
-COMMIT          ?= $(shell git rev-parse HEAD)
-VERSION         ?= $(shell grep "release.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
-OLM_VERSION     ?= $(shell grep "olm.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
-MAVEN_VERSION   ?= $(shell grep "maven.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
-TAG             ?= latest
+DOCKER_REGISTRY     ?= quay.io
+DOCKER_ORG          ?= enmasse
+DOCKER              ?= docker
+PROJECT_PREFIX      ?= enmasse
+PROJECT_NAME        ?= $(shell basename $(CURDIR))
+COMMIT              ?= $(shell git rev-parse HEAD)
+VERSION             ?= $(shell grep "release.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+OLM_VERSION         ?= $(shell grep "olm.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+MAVEN_VERSION       ?= $(shell grep "maven.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+APP_BUNDLE_PREFIX   ?= $(shell grep "application.bundle.prefix" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+OLM_PACKAGE_CHANNEL ?= $(shell grep "olm.package.channel" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+TAG                 ?= latest
 
 # Go settings
 GOPATH          := $(abspath $(TOPDIR))/go
@@ -19,9 +21,8 @@ export GOPATH
 DOCKER_REGISTRY_PREFIX ?= $(DOCKER_REGISTRY)/
 IMAGE_VERSION          ?= $(TAG)
 ADDRESS_SPACE_CONTROLLER_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/address-space-controller:$(IMAGE_VERSION)
-API_SERVER_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/api-server:$(IMAGE_VERSION)
 STANDARD_CONTROLLER_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/standard-controller:$(IMAGE_VERSION)
-ROUTER_IMAGE ?= quay.io/interconnectedcloud/qdrouterd:1.9.0
+ROUTER_IMAGE ?= quay.io/interconnectedcloud/qdrouterd:1.10.0
 BROKER_PLUGIN_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/broker-plugin:$(IMAGE_VERSION)
 TOPIC_FORWARDER_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/topic-forwarder:$(IMAGE_VERSION)
 AGENT_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/agent:$(IMAGE_VERSION)
@@ -41,7 +42,7 @@ ALERTMANAGER_IMAGE ?= prom/alertmanager:v0.15.2
 GRAFANA_IMAGE ?= grafana/grafana:5.3.1
 APPLICATION_MONITORING_OPERATOR_IMAGE ?= quay.io/integreatly/application-monitoring-operator:0.0.27
 KUBE_STATE_METRICS_IMAGE ?= quay.io/coreos/kube-state-metrics:v1.4.0
-BROKER_IMAGE ?= quay.io/enmasse/artemis-base:2.10.1
+BROKER_IMAGE ?= quay.io/enmasse/artemis-base:2.10.1-1
 
 CONTROLLER_MANAGER_IMAGE   ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/controller-manager:$(IMAGE_VERSION)
 
@@ -52,9 +53,9 @@ IOT_HTTP_ADAPTER_IMAGE               ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/i
 IOT_MQTT_ADAPTER_IMAGE               ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/iot-mqtt-adapter:$(IMAGE_VERSION)
 IOT_LORAWAN_ADAPTER_IMAGE            ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/iot-lorawan-adapter:$(IMAGE_VERSION)
 IOT_SIGFOX_ADAPTER_IMAGE             ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/iot-sigfox-adapter:$(IMAGE_VERSION)
+IOT_TENANT_CLEANER_IMAGE             ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/iot-tenant-cleaner:$(IMAGE_VERSION)
 IOT_TENANT_SERVICE_IMAGE             ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/iot-tenant-service:$(IMAGE_VERSION)
 IOT_PROXY_CONFIGURATOR_IMAGE         ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/iot-proxy-configurator:$(IMAGE_VERSION)
-
 
 DEFAULT_PROJECT ?= enmasse-infra
 ifeq ($(TAG),latest)
@@ -64,7 +65,6 @@ IMAGE_PULL_POLICY ?= IfNotPresent
 endif
 
 IMAGE_ENV=ADDRESS_SPACE_CONTROLLER_IMAGE=$(ADDRESS_SPACE_CONTROLLER_IMAGE) \
-			API_SERVER_IMAGE=$(API_SERVER_IMAGE) \
 			STANDARD_CONTROLLER_IMAGE=$(STANDARD_CONTROLLER_IMAGE) \
 			ROUTER_IMAGE=$(ROUTER_IMAGE) \
 			BROKER_IMAGE=$(BROKER_IMAGE) \
@@ -98,6 +98,7 @@ IMAGE_ENV=ADDRESS_SPACE_CONTROLLER_IMAGE=$(ADDRESS_SPACE_CONTROLLER_IMAGE) \
 			IOT_LORAWAN_ADAPTER_IMAGE=$(IOT_LORAWAN_ADAPTER_IMAGE) \
 			IOT_SIGFOX_ADAPTER_IMAGE=$(IOT_SIGFOX_ADAPTER_IMAGE) \
 			IOT_TENANT_SERVICE_IMAGE=$(IOT_TENANT_SERVICE_IMAGE) \
+			IOT_TENANT_CLEANER_IMAGE=$(IOT_TENANT_CLEANER_IMAGE) \
 			IMAGE_PULL_POLICY=$(IMAGE_PULL_POLICY) \
 			ENMASSE_VERSION=$(VERSION) \
 			MAVEN_VERSION=$(MAVEN_VERSION) \
@@ -106,7 +107,6 @@ IMAGE_ENV=ADDRESS_SPACE_CONTROLLER_IMAGE=$(ADDRESS_SPACE_CONTROLLER_IMAGE) \
 
 IMAGE_LIST=\
 		   $(ADDRESS_SPACE_CONTROLLER_IMAGE) \
-		   $(API_SERVER_IMAGE) \
 		   $(STANDARD_CONTROLLER_IMAGE) \
 		   $(ROUTER_IMAGE) \
 		   $(BROKER_IMAGE) \
@@ -139,4 +139,6 @@ IMAGE_LIST=\
 		   $(IOT_MQTT_ADAPTER_IMAGE) \
 		   $(IOT_LORAWAN_ADAPTER_IMAGE) \
 		   $(IOT_SIGFOX_ADAPTER_IMAGE) \
-		   $(IOT_TENANT_SERVICE_IMAGE)
+		   $(IOT_TENANT_SERVICE_IMAGE) \
+		   $(IOT_TENANT_CLEANER_IMAGE)
+

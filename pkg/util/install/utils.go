@@ -7,6 +7,7 @@ package install
 
 import (
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util/images"
 
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -42,6 +44,15 @@ func ApplyDefaultLabels(meta *v1.ObjectMeta, component string, name string) {
 func ApplyServiceDefaults(service *corev1.Service, component string, name string) {
 
 	ApplyDefaultLabels(&service.ObjectMeta, component, name)
+	if service.CreationTimestamp.IsZero() {
+		service.Spec.Selector = CreateDefaultLabels(nil, component, name)
+	}
+
+}
+
+func ApplyMetricsServiceDefaults(service *corev1.Service, component string, name string) {
+
+	ApplyDefaultLabels(&service.ObjectMeta, component, name+"-metrics")
 	if service.CreationTimestamp.IsZero() {
 		service.Spec.Selector = CreateDefaultLabels(nil, component, name)
 	}
@@ -101,15 +112,16 @@ func DropContainer(deployment *appsv1.Deployment, name string) {
 	}
 }
 
-func ApplyContainerWithError(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container) error) error {
+func ApplyContainerWithError(containers []corev1.Container, name string, mutator func(*corev1.Container) error) ([]corev1.Container, error) {
 
-	if deployment.Spec.Template.Spec.Containers == nil {
-		deployment.Spec.Template.Spec.Containers = make([]corev1.Container, 0)
+	if containers == nil {
+		containers = make([]corev1.Container, 0)
 	}
 
-	for i, c := range deployment.Spec.Template.Spec.Containers {
+	for i, c := range containers {
 		if c.Name == name {
-			return mutator(&deployment.Spec.Template.Spec.Containers[i])
+			err := mutator(&containers[i])
+			return containers, err
 		}
 	}
 
@@ -119,31 +131,37 @@ func ApplyContainerWithError(deployment *appsv1.Deployment, name string, mutator
 
 	err := mutator(c)
 	if err == nil {
-		deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, *c)
+		containers = append(containers, *c)
+	}
+
+	return containers, err
+}
+
+func ApplyDeploymentContainerWithError(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container) error) error {
+	containers, err := ApplyContainerWithError(deployment.Spec.Template.Spec.Containers, name, mutator)
+
+	if err == nil {
+		deployment.Spec.Template.Spec.Containers = containers
 	}
 
 	return err
 }
 
 func ApplyInitContainerWithError(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container) error) error {
+	containers, err := ApplyContainerWithError(deployment.Spec.Template.Spec.InitContainers, name, mutator)
 
-	if deployment.Spec.Template.Spec.InitContainers == nil {
-		deployment.Spec.Template.Spec.InitContainers = make([]corev1.Container, 0)
-	}
-
-	for i, c := range deployment.Spec.Template.Spec.InitContainers {
-		if c.Name == name {
-			return mutator(&deployment.Spec.Template.Spec.InitContainers[i])
-		}
-	}
-
-	c := &corev1.Container{
-		Name: name,
-	}
-
-	err := mutator(c)
 	if err == nil {
-		deployment.Spec.Template.Spec.InitContainers = append(deployment.Spec.Template.Spec.InitContainers, *c)
+		deployment.Spec.Template.Spec.InitContainers = containers
+	}
+
+	return err
+}
+
+func ApplyJobContainerWithError(job *batchv1.Job, name string, mutator func(*corev1.Container) error) error {
+	containers, err := ApplyContainerWithError(job.Spec.Template.Spec.Containers, name, mutator)
+
+	if err == nil {
+		job.Spec.Template.Spec.Containers = containers
 	}
 
 	return err

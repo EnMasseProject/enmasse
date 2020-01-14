@@ -1,0 +1,39 @@
+kind: IoTConfig
+apiVersion: iot.enmasse.io/v1alpha1
+metadata:
+  name: default
+spec:
+  services:
+    deviceRegistry:
+      infinispan:
+        server:
+          external:
+            host: infinispan
+            port: 11222
+            username: app
+            password: test12
+            saslServerName: hotrod
+            saslRealm: ApplicationRealm
+  adapters:
+    mqtt:
+      enabled: true <1>
+      replicas: 1
+      options:
+        tenantIdleTimeout: 30m <2>
+        maxPayloadSize: 2048
+    http:
+      enabled: true
+      replicas: 1 <4>
+      options:
+        tenantIdleTimeout: 30m
+        maxPayloadSize: 2048 <3>
+      containers:
+        adapter:
+          resources: <4>
+            limits:
+              memory: 128Mi
+              cpu: 500m
+    lorawan:
+      enabled: false
+    sigfox:
+      enabled: false

@@ -6,10 +6,12 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceSpec;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.AppliedConfig;
 import io.enmasse.controller.InfraConfigs;
 import io.enmasse.k8s.util.Templates;
 import io.fabric8.kubernetes.api.model.*;
@@ -185,9 +187,9 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public String getAppliedPlan(AddressSpace addressSpace) {
-        if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN) != null) {
-            return addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN);
+    public AppliedConfig getAppliedConfig(AddressSpace addressSpace) throws IOException {
+        if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION) != null) {
+            return AppliedConfig.parseCurrentAppliedConfig(addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION));
         }
         Service messaging = client.services().inNamespace(namespace).withName(KubeUtil.getAddressSpaceServiceName("messaging", addressSpace)).get();
         if (messaging == null) {
@@ -196,7 +198,7 @@ public class KubernetesHelper implements Kubernetes {
         if (messaging.getMetadata().getAnnotations() == null) {
             return null;
         }
-        return messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_PLAN);
+        return AppliedConfig.parseCurrentAppliedConfig(messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_CONFIGURATION));
     }
 
     @Override

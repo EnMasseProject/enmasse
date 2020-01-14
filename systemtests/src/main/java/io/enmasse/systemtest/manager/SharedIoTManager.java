@@ -13,6 +13,7 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
+import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.util.UUID;
 
 import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
@@ -53,15 +55,16 @@ public class SharedIoTManager extends ResourceManager {
     public AddressSpace getSharedAddressSpace() {
         if (sharedIoTProject == null) return null;
         String addSpaceName = sharedIoTProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-        AddressSpace addressSpace = kubernetes.getAddressSpaceClient(sharedIoTProject.getMetadata().getNamespace()).withName(addSpaceName).get();
-        return addressSpace;
+        return kubernetes.getAddressSpaceClient(sharedIoTProject.getMetadata().getNamespace()).withName(addSpaceName).get();
     }
 
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
         closeAmqpFactory();
         closeMqttFactory();
-        if (!environment.skipCleanup()) {
+        if (environment.skipCleanup()) {
+            LOGGER.info("Skip cleanup is set, no cleanup process");
+        } else {
             if (sharedIoTProject != null) {
                 LOGGER.info("Shared IoTProject will be removed");
                 var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
@@ -73,9 +76,11 @@ public class SharedIoTManager extends ResourceManager {
                 }
             }
             tearDownSharedIoTConfig();
+            if (context.getExecutionException().isPresent()) {
+                Path path = JunitCallbackListener.getPath(context);
+                SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
+            }
             SystemtestsKubernetesApps.deleteInfinispanServer();
-        } else {
-            LOGGER.info("Skip cleanup is set, no cleanup process");
         }
     }
 
@@ -92,17 +97,14 @@ public class SharedIoTManager extends ResourceManager {
         }
     }
 
-    void initFactories(AddressSpace addressSpace, UserCredentials credentials) {
+    void initFactories(UserCredentials credentials) {
         amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(), credentials);
         mqttClientFactory = new MqttClientFactory(getSharedAddressSpace(), credentials);
     }
 
     @Override
     public void setup() throws Exception {
-        if (!kubernetes.namespaceExists(IOT_PROJECT_NAMESPACE)) {
-            LOGGER.info("Namespace {} doesn't exists and will be created.", IOT_PROJECT_NAMESPACE);
-            kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
-        }
+        kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
 
         UserCredentials credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
@@ -114,7 +116,7 @@ public class SharedIoTManager extends ResourceManager {
             sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project", defaultAddSpaceIdentifier, IOT_PROJECT_NAMESPACE, addressSpacePlan);
             createIoTProject(sharedIoTProject);
         }
-        initFactories(getSharedAddressSpace(), credentials);
+        initFactories(credentials);
         createOrUpdateUser(getSharedAddressSpace(), credentials);
         this.amqpClient = amqpClientFactory.createQueueClient();
     }

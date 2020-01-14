@@ -23,7 +23,6 @@ import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
 import io.enmasse.systemtest.utils.CertificateUtils;
@@ -101,9 +100,8 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         for (int i = 1; i <= numberOfProjects; i++) {
             String projectName = String.format("project-%s", i);
 
-            if (!kubernetes.namespaceExists(projectName)) {
-                kubernetes.createNamespace(projectName);
-            }
+            kubernetes.createNamespace(projectName);
+
             IoTProject project = IoTUtils.getBasicIoTProjectObject(projectName, projectName,
                     projectName, getDefaultAddressSpacePlan());
             isolatedIoTManager.createIoTProject(project);
@@ -119,17 +117,10 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
 
     @AfterEach
     void cleanEnv(ExtensionContext context) throws Exception {
-
-        if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectHttpAdapterQdrProxyState();
-        }
-
         for (IoTProjectTestContext ctx : projects) {
             cleanDeviceSide(ctx);
             cleanAmqpSide(ctx);
         }
-
-        SystemtestsKubernetesApps.deleteInfinispanServer();
     }
 
     @Test

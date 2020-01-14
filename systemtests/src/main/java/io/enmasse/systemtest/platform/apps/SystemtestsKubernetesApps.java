@@ -61,6 +61,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,7 +70,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class SystemtestsKubernetesApps {
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
 
     public static final String MESSAGING_CLIENTS = "systemtests-clients";
     public static final String SELENIUM_FIREFOX = "selenium-firefox";
@@ -81,7 +82,16 @@ public class SystemtestsKubernetesApps {
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_PROJECT = Environment.getInstance().getInfinispanProject();
     public static final String INFINISPAN_SERVER = "infinispan";
-    private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+    private static final Path INFINISPAN_EXAMPLE_BASE;
+    private static final String[] INFINISPAN_DIRECTORIES;
+
+    static {
+        INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+        INFINISPAN_DIRECTORIES = new String[] {
+                        "common",
+                        "manual"
+        };
+    }
 
     public static String getMessagingAppPodName() throws Exception {
         return getMessagingAppPodName(MESSAGING_PROJECT);
@@ -96,9 +106,7 @@ public class SystemtestsKubernetesApps {
     }
 
     public static String deployMessagingClientApp() throws Exception {
-        if (!Kubernetes.getInstance().namespaceExists(MESSAGING_PROJECT)) {
-            Kubernetes.getInstance().createNamespace(MESSAGING_PROJECT);
-        }
+        Kubernetes.getInstance().createNamespace(MESSAGING_PROJECT);
         Kubernetes.getInstance().createDeploymentFromResource(MESSAGING_PROJECT, getMessagingAppDeploymentResource());
         TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), MESSAGING_PROJECT, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
         return getMessagingAppPodName();
@@ -140,9 +148,7 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deployOpenshiftCertValidator(String namespace, Kubernetes kubeClient) throws Exception {
-        if (!kubeClient.namespaceExists(namespace)) {
-            kubeClient.createNamespace(namespace);
-        }
+        kubeClient.createNamespace(namespace);
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(OPENSHIFT_CERT_VALIDATOR, 8080));
         kubeClient.createDeploymentFromResource(namespace, getOpenshiftCertValidatorDeploymentResource());
         kubeClient.createIngressFromResource(namespace, getSystemtestsIngressResource(OPENSHIFT_CERT_VALIDATOR, 8080));
@@ -159,9 +165,7 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deployFirefoxSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {
-        if (!kubeClient.namespaceExists(namespace)) {
-            kubeClient.createNamespace(namespace);
-        }
+        kubeClient.createNamespace(namespace);
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(SystemtestsKubernetesApps.SELENIUM_FIREFOX, 4444));
         kubeClient.createConfigmapFromResource(namespace, getRheaConfigMap());
         kubeClient.createDeploymentFromResource(namespace,
@@ -171,8 +175,7 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deployChromeSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {
-        if (!kubeClient.namespaceExists(namespace))
-            kubeClient.createNamespace(namespace);
+        kubeClient.createNamespace(namespace);
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(SELENIUM_CHROME, 4444));
         kubeClient.createConfigmapFromResource(namespace, getRheaConfigMap());
         kubeClient.createDeploymentFromResource(namespace,
@@ -238,15 +241,20 @@ public class SystemtestsKubernetesApps {
         return in -> ReplaceValueStream.replaceValues(in, values);
     }
 
+    public static Path[] resolveAll(final Path base, final String ... localPaths) {
+        return Arrays.asList(localPaths)
+                .stream()
+                .map(l -> base.resolve(l))
+                .toArray(Path[]::new);
+    }
+
     public static Endpoint deployInfinispanServer() throws Exception {
 
         if (Environment.getInstance().isSkipDeployInfinispan()) {
             return getInfinispanEndpoint(INFINISPAN_PROJECT);
         }
 
-        if (!Kubernetes.getInstance().namespaceExists(INFINISPAN_PROJECT)) {
-            Kubernetes.getInstance().createNamespace(INFINISPAN_PROJECT);
-        }
+        Kubernetes.getInstance().createNamespace(INFINISPAN_PROJECT);
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
@@ -254,8 +262,7 @@ public class SystemtestsKubernetesApps {
         // apply "common" and "manual" folders
 
         applyDirectories(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
-                INFINISPAN_EXAMPLE_BASE.resolve("common"),
-                INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+                resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_DIRECTORIES));
 
         // wait for the deployment
 
@@ -271,7 +278,7 @@ public class SystemtestsKubernetesApps {
     }
 
     private static Endpoint getInfinispanEndpoint(final String namespace) {
-        return Kubernetes.getInstance().getEndpoint(INFINISPAN_SERVER, namespace, "hotrod");
+        return Kubernetes.getInstance().getEndpoint(INFINISPAN_SERVER, namespace, "infinispan");
     }
 
     public static void deleteInfinispanServer() throws Exception {
@@ -292,17 +299,25 @@ public class SystemtestsKubernetesApps {
 
             log.info("Infinispan server will be removed");
 
-            KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, INFINISPAN_EXAMPLE_BASE.resolve("common"));
-            KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+            for(final Path path : resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_DIRECTORIES)) {
+                KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, path);
+            }
 
+        }
+    }
+
+    public static void collectInfinispanServerLogs(Path path) {
+        try {
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+            collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+        } catch (Exception e) {
+            log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.INFINISPAN_PROJECT);
         }
     }
 
     public static void deployAMQBroker(String namespace, String name, String user, String password, BrokerCertBundle certBundle) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
-        if (!kubeCli.namespaceExists(namespace)) {
-            kubeCli.createNamespace(namespace);
-        }
+        kubeCli.createNamespace(namespace);
 
         kubeCli.getClient().rbac().roles().inNamespace(namespace).createOrReplace(new RoleBuilder()
                 .withNewMetadata()
@@ -375,6 +390,16 @@ public class SystemtestsKubernetesApps {
         kubeCli.deleteDeployment(namespace, name);
         kubeCli.deleteExternalEndpoint(namespace, name);
         Thread.sleep(5000);
+    }
+
+    public static void collectAMQBrokerLogs(Path path, String namespace) {
+        try {
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, namespace);
+            collector.collectLogsOfPodsInNamespace(namespace);
+            collector.collectEvents(namespace);
+        } catch (Exception e) {
+            log.error("Failed to collect pod logs from namespace : {}", namespace);
+        }
     }
 
     public static void scaleDownDeployment(String namespace, String name) throws Exception {

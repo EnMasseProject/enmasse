@@ -128,7 +128,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        runRestApiTest(addressSpace, a1, a2);
+        assertAddressApi(addressSpace, a1, a2);
     }
 
     @Test

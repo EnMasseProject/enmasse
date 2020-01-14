@@ -74,7 +74,7 @@ public class AddressSpaceController {
 
     public void start() throws Exception {
         boolean isOpenShift = OpenShift.isOpenShift(controllerClient);
-        KubeSchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace(), options.getVersion(), isOpenShift);
+        KubeSchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace(), options.getVersion(), isOpenShift, true);
 
         log.info("AddressSpaceController starting with options: {}", options);
         if (options.isInstallDefaultResources()) {
@@ -142,7 +142,7 @@ public class AddressSpaceController {
         AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
         AuthenticationServiceResolver authenticationServiceResolver = new AuthenticationServiceResolver(authenticationServiceRegistry);
 
-        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, authenticationServiceResolver, System.getenv(), schemaProvider);
+        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, System.getenv(), schemaProvider);
 
         Clock clock = Clock.systemUTC();
         KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient);
@@ -156,14 +156,15 @@ public class AddressSpaceController {
         controllerChain = new ControllerChain(addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new DefaultsController(authenticationServiceRegistry));
         controllerChain.addController(new AddressFinalizerController(addressSpaceApi));
+        controllerChain.addController(new MessagingUserFinalizerController(controllerClient));
         controllerChain.addController(new ComponentFinalizerController(kubernetes));
         controllerChain.addController(new RealmFinalizerController(keycloakUserApi, authenticationServiceRegistry));
-        controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi));
+        controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi, authenticationServiceResolver));
         controllerChain.addController(new RouterConfigController(controllerClient, controllerClient.getNamespace(), authenticationServiceResolver));
         controllerChain.addController(new RealmController(keycloakUserApi, authenticationServiceRegistry));
         controllerChain.addController(new NetworkPolicyController(controllerClient));
-        controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, authenticationServiceRegistry, userApi));
-        controllerChain.addController(new RouterStatusController(controllerClient, controllerClient.getNamespace(), options));
+        controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, authenticationServiceRegistry, userApi,
+                new RouterStatusController(controllerClient, controllerClient.getNamespace(), options)));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault(), isOpenShift));
         controllerChain.addController(new ExportsController(controllerClient));
         controllerChain.addController(authController);

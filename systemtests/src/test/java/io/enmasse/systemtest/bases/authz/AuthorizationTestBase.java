@@ -6,6 +6,7 @@ package io.enmasse.systemtest.bases.authz;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
@@ -15,7 +16,6 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 
 import javax.security.sasl.AuthenticationException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -255,7 +256,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                 .collect(Collectors.toList());
 
         UserCredentials credentials = UserUtils.getCredentialsFromUser(user);
-        if (addresses.stream().filter(address -> destination.getSpec().getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
+        if (addresses.stream().filter(address -> destination.getSpec().getAddress().contains(address.replace("*", ""))).count() > 0) {
             assertTrue(canSend(destination, credentials),
                     String.format("Authz failed, user %s cannot send message to destination %s", credentials,
                             destination.getSpec().getAddress()));
@@ -273,7 +274,7 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
                 .collect(Collectors.toList());
 
         UserCredentials credentials = UserUtils.getCredentialsFromUser(user);
-        if (addresses.stream().filter(address -> destination.getSpec().getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
+        if (addresses.stream().filter(address -> destination.getSpec().getAddress().contains(address.replace("*", ""))).count() > 0) {
             assertTrue(canReceive(destination, credentials),
                     String.format("Authz failed, user %s cannot receive message from destination %s", credentials,
                             destination.getSpec().getAddress()));
@@ -357,7 +358,10 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
 
     private boolean canAuth(AmqpClient sender, AmqpClient receiver, Address destination, boolean checkSender) throws Exception {
         try {
+            log.info("Staring receiver for " + destination.getSpec().getAddress());
             Future<List<Message>> received = receiver.recvMessages(destination.getSpec().getAddress(), 1);
+
+            log.info("Staring sender for " + destination.getSpec().getAddress());
             Future<Integer> sent = sender.sendMessages(destination.getSpec().getAddress(), Collections.singletonList("msg1"));
 
             if (checkSender) {
@@ -407,5 +411,111 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
 
         Objects.requireNonNull(client).getConnectOptions().setCredentials(credentials);
         return client;
+    }
+
+    protected List<Address> getAddressesWildcard(AddressSpace addressspace) {
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressspace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressspace, "queue/1234"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue/1234")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+
+        Address queue2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressspace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressspace, "queue/ABCD"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue/ABCD")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+
+        Address topic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressspace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressspace, "topic/2345"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("topic/2345")
+                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build();
+
+        Address topic2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressspace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressspace, "topic/ABCD"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("topic/ABCD")
+                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build();
+
+        return Arrays.asList(queue, queue2, topic, topic2);
+    }
+
+    protected List<User> createUsersWildcard(AddressSpace addressSpace, Operation operation) throws
+            Exception {
+        List<User> users = new ArrayList<>();
+        users.add(UserUtils.createUserResource(new UserCredentials("user1", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("*")
+                        .withOperations(operation)
+                        .build()))
+                .endSpec()
+                .done());
+
+        users.add(UserUtils.createUserResource(new UserCredentials("user2", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("queue/*")
+                        .withOperations(operation)
+                        .build()))
+                .endSpec()
+                .done());
+
+        users.add(UserUtils.createUserResource(new UserCredentials("user3", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("topic/*")
+                        .withOperations(operation)
+                        .build()))
+                .endSpec()
+                .done());
+
+        users.add(UserUtils.createUserResource(new UserCredentials("user4", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("queueA*")
+                        .withOperations(operation)
+                        .build()))
+                .endSpec()
+                .done());
+
+        users.add(UserUtils.createUserResource(new UserCredentials("user5", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("topicA*")
+                        .withOperations(operation)
+                        .build()))
+                .endSpec()
+                .done());
+
+        for (User user : users) {
+            resourcesManager.createOrUpdateUser(addressSpace, user);
+        }
+        return users;
     }
 }

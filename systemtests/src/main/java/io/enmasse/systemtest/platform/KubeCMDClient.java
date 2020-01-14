@@ -233,7 +233,7 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData getUser(String namespace) {
-        List<String> getCmd = getRessourcesCmd("get", "messaginguser", namespace, Optional.of("wide"));
+        List<String> getCmd = getRessourcesCmd("get", "messaginguser", namespace, Optional.empty());
         return Exec.execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
@@ -366,5 +366,12 @@ public class KubeCMDClient {
         command.add(CMD);
         command.addAll(Arrays.asList(args));
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData runOnClusterWithoutLogger(String... args) {
+        List<String> command = new LinkedList<>();
+        command.add(CMD);
+        command.addAll(Arrays.asList(args));
+        return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 }

@@ -1,0 +1,17 @@
+// Module included in the following assemblies:
+//
+// assembly-service-admin.adoc
+// assembly-iot-getting-started.adoc
+
+:api: telemetry
+
+[id='proc-iot-starting-commands-sender-{context}']
+= Starting the command sender
+
+You can send commands from a cloud to the device.  To do this, you must start the command sender by running the customer application.
+
+.Procedure
+
+include::../common/snip-iot-customer-command.adoc[leveloffset=+2]
+
+

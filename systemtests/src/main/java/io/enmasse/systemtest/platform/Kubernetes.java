@@ -152,6 +152,11 @@ public abstract class Kubernetes {
             try {
                 instance.olmAvailable = instance.getCRD("clusterserviceversions.operators.coreos.com") != null
                         && instance.getCRD("subscriptions.operators.coreos.com") != null;
+                if (instance.olmAvailable) {
+                    log.info("OLM is available in this cluster");
+                } else {
+                    log.info("OLM is not available in this cluster");
+                }
             } catch (Exception e) {
                 log.error("Error checking olm availability", e);
                 instance.olmAvailable = false;
@@ -161,8 +166,10 @@ public abstract class Kubernetes {
     }
 
     public double getKubernetesVersion() {
-        VersionInfo versionInfo = new DefaultKubernetesClient().getVersion();
-        return Double.parseDouble(versionInfo.getMajor() + "." + versionInfo.getMinor().replace("+", ""));
+        try ( var client = new DefaultKubernetesClient() ) {
+            final VersionInfo versionInfo = client.getVersion();
+            return Double.parseDouble(versionInfo.getMajor() + "." + versionInfo.getMinor().replace("+", ""));
+        }
     }
 
     public int getOcpVersion() {
@@ -369,6 +376,14 @@ public abstract class Kubernetes {
         return terminatedPodsLogs;
     }
 
+    public String getOCConsoleRoute() {
+        if (getOcpVersion() == 4) {
+            return String.format("https://console-openshift-console.%s", Environment.getInstance().kubernetesDomain()).replaceAll("(?<!(http:|https:))[//]+", "/");
+        } else {
+            return String.format("%s/console", Environment.getInstance().getApiUrl()).replaceAll("(?<!(http:|https:))[//]+", "/");
+        }
+    }
+
     public Map<String, String> getLogsByLables(String namespace, Map<String, String> labels) {
         return getLogs(namespace, client.pods().inNamespace(namespace).withLabels(labels).list().getItems());
     }
@@ -489,8 +504,8 @@ public abstract class Kubernetes {
     }
 
     public void createNamespace(String namespace, Map<String, String> labels) {
-        log.info("Following namespace will be created = {}", namespace);
         if (!namespaceExists(namespace)) {
+            log.info("Following namespace will be created = {}", namespace);
             var builder = new NamespaceBuilder().withNewMetadata().withName(namespace);
             if (labels != null) {
                 builder.withLabels(labels);

@@ -78,4 +78,9 @@ class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
     void testCreateDuplicateDeviceFails() throws Exception {
         super.doCreateDuplicateDeviceFails();
     }
+
+    @Test
+    void testTenantDeletionTriggersDevicesDeletion() throws Exception {
+        super.doTestTenantDeletionTriggersDevicesDeletion();
+    }
 }

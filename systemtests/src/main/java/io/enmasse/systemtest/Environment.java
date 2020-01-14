@@ -15,8 +15,6 @@ import java.time.Duration;
 import java.util.Optional;
 
 public class Environment {
-    public static final String KEYCLOAK_ADMIN_PASSWORD_ENV = "KEYCLOAK_ADMIN_PASSWORD";
-    public static final String KEYCLOAK_ADMIN_USER_ENV = "KEYCLOAK_ADMIN_USER";
     public static final String TEST_LOG_DIR_ENV = "TEST_LOGDIR";
     public static final String K8S_NAMESPACE_ENV = "KUBERNETES_NAMESPACE";
     public static final String K8S_API_URL_ENV = "KUBERNETES_API_URL";
@@ -45,8 +43,6 @@ public class Environment {
     private static Environment instance;
     private final String namespace = System.getenv().getOrDefault(K8S_NAMESPACE_ENV, "enmasse-infra");
     private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
-    private final String keycloakAdminUser = System.getenv().getOrDefault(KEYCLOAK_ADMIN_USER_ENV, "admin");
-    private final String keycloakAdminPassword = System.getenv(KEYCLOAK_ADMIN_PASSWORD_ENV);
     private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
     private final String kubernetesDomain = System.getenv().getOrDefault(K8S_DOMAIN_ENV, "nip.io");
     private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV,
@@ -137,14 +133,6 @@ public class Environment {
 
     public Path testLogDir() {
         return Paths.get(testLogDir);
-    }
-
-    public UserCredentials keycloakCredentials() {
-        if (keycloakAdminUser == null || keycloakAdminPassword == null) {
-            return null;
-        } else {
-            return new UserCredentials(keycloakAdminUser, keycloakAdminPassword);
-        }
     }
 
     public boolean skipCleanup() {

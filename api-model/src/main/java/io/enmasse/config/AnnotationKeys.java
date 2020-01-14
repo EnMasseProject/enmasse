@@ -29,7 +29,8 @@ public interface AnnotationKeys {
     String MQTT_TEMPLATE_NAME = "enmasse.io/mqtt-template-name";
     String APPLIED_INFRA_CONFIG = "enmasse.io/applied-infra-config";
     String OPENSHIFT_SERVING_CERT_SECRET_NAME = "service.alpha.openshift.io/serving-cert-secret-name";
-    String APPLIED_PLAN = "enmasse.io/applied-plan";
     String GENERATION = "enmasse.io/generation";
     String VERSION = "enmasse.io/version";
+    String APPLIED_CONFIGURATION = "enmasse.io/applied-configuration";
+    String APPLIED_PLAN = "enmasse.io/applied-plan";
 }

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressStatus;
@@ -15,12 +16,17 @@ import io.enmasse.address.model.AddressStatusForwarder;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
+import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -28,6 +34,7 @@ import io.fabric8.kubernetes.client.dsl.FilterWatchListMultiDeletable;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,6 +44,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class AddressUtils {
@@ -76,7 +84,7 @@ public class AddressUtils {
         return address != null ? address.toLowerCase().replaceAll("[^a-z0-9.\\-]", "") : address;
     }
 
-    public static void delete(Address... destinations) throws Exception {
+    public static void delete(Address... destinations) {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS);
         Arrays.stream(destinations).forEach(address -> Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).cascading(true).delete());
         TimeMeasuringSystem.stopOperation(operationID);
@@ -170,12 +178,9 @@ public class AddressUtils {
     public static boolean areForwardersReady(Address address) {
         return Optional.ofNullable(address)
                 .map(Address::getStatus)
-                .map(AddressStatus::getForwarders)
-                .map(Stream::of)
-                .orElseGet(Stream::empty)
+                .map(AddressStatus::getForwarders).stream()
                 .flatMap(Collection::stream)
-                .map(AddressStatusForwarder::isReady)
-                .allMatch(ready -> ready == true);
+                .allMatch(AddressStatusForwarder::isReady);
     }
 
     private static FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> getAddressClient(Address... destinations) {
@@ -194,6 +199,11 @@ public class AddressUtils {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_READY);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::isAddressReady, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    public static void waitForDestinationsReady(Address... destinations) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        AddressUtils.waitForDestinationsReady(budget, destinations);
     }
 
     public static void waitForDestinationPlanApplied(TimeoutBudget budget, Address... destinations) throws Exception {
@@ -260,10 +270,7 @@ public class AddressUtils {
                 List<Address> addressesInSameAddrSpace = addressList.getItems().stream()
                         .filter(address1 -> Address.extractAddressSpace(address1)
                                 .equals(Address.extractAddressSpace(address))).collect(Collectors.toList());
-                if (!addressesInSameAddrSpace.contains(address)) {
-                    return true;
-                }
-                return false;
+                return !addressesInSameAddrSpace.contains(address);
             } catch (KubernetesClientException e) {
                 log.warn("Client can't read address resources");
                 return false;
@@ -271,11 +278,114 @@ public class AddressUtils {
         }, timeoutBudget);
     }
 
-    public static String getTopicPrefix(boolean topicSwitch) {
-        return topicSwitch ? "topic://" : "";
+    public static String getTopicPrefix(AbstractClient clientEngine) {
+        return (clientEngine instanceof ProtonJMSClientReceiver || clientEngine instanceof ProtonJMSClientSender) &&
+                !(clientEngine instanceof PahoMQTTClientReceiver || clientEngine instanceof PahoMQTTClientSender) ? "topic://" : "";
     }
 
     interface AddressListMatcher {
         Map<String, Address> matchAddresses(List<Address> addressList);
+    }
+
+    public static List<Address> getAllStandardAddresses(AddressSpace addressspace) {
+        return Arrays.asList(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-queue"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-topic"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-queue-sharded"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue-sharded")
+                        .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-topic-sharded"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic-sharded")
+                        .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-anycast"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("anycast")
+                        .withAddress("test-anycast")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-multicast"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("multicast")
+                        .withAddress("test-multicast")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
+                        .endSpec()
+                        .build());
+    }
+
+    public static List<Address> getAllBrokeredAddresses(AddressSpace addressspace) {
+        return Arrays.asList(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-queue"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue")
+                        .withPlan(DestinationPlan.BROKERED_QUEUE)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-topic"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic")
+                        .withPlan(DestinationPlan.BROKERED_TOPIC)
+                        .endSpec()
+                        .build());
     }
 }

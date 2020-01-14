@@ -120,6 +120,10 @@ func GetImage(name string) (string, error) {
 	return value, nil
 }
 
+func GetDefaultPullPolicy() corev1.PullPolicy {
+	return defaultPullPolicy
+}
+
 func PullPolicyFromImageName(imageName string) corev1.PullPolicy {
 
 	if defaultPullPolicy != "" {

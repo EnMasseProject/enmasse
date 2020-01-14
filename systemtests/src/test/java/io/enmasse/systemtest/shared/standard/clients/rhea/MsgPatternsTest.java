@@ -35,7 +35,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
     @Test
     @DisplayName("testTopicSubscribe")
     void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
-        doTopicSubscribeTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath), false);
+        doTopicSubscribeTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
     }
 
     @Test
@@ -48,6 +48,6 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
     @DisplayName("testMessageSelectorTopic")
     void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
         doMessageSelectorTopicTest(artemisManagement, new RheaClientSender(logPath), new RheaClientSender(logPath),
-                new RheaClientReceiver(logPath), new RheaClientReceiver(logPath), false);
+                new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
     }
 }

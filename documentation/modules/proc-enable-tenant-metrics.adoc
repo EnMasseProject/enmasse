@@ -1,0 +1,40 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring-kube.adoc
+// assembly-monitoring-oc.adoc
+
+[id='enable-tenant-metrics-{context}']
+= Enabling Tenant Metrics
+
+Metrics from brokers and routers can be exposed to tenants without exposing system-admin metrics. To expose tenant metrics create a service monitor in any non-`{ProductNamespace}` namespace, ideally the namespace of the concerned address space(s).
+
+.Prerequisites
+
+* The `servicemonitor` Custom Resource Definition provided by the Prometheus Operator must be installed.
+* The tenant must have their own monitoring stack installed.
+
+.Procedure
+
+* Creata a `servicemonitor` resource with a the selector configured to match labels of `monitoring-key: enmasse-tenants` and the `{ProductNamespace}` as the namespace selector. An example service monitor is shown below:
+
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: enmasse-tenants
+  labels:
+    app: enmasse
+spec:
+  selector:
+    matchLabels:
+      monitoring-key: enmasse-tenants
+  endpoints:
+  - port: health
+  namespaceSelector:
+    matchNames:
+      - enmasse-infra
+----
+
+* Ensure the tenant's monitoring stack has read permissions for service monitors in the service monitor's namespace but not in the `{ProductNamespace}` as this would expose service-admin metrics too.

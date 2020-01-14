@@ -10,6 +10,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceSpecStandardStorage;
 import io.enmasse.admin.model.v1.AuthenticationServiceSpecStandardType;
+import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.IndicativeSentences;
 import io.enmasse.systemtest.UserCredentials;
@@ -17,6 +18,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
@@ -49,18 +51,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.UPGRADE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(UPGRADE)
 @ExternalClients
-@DisplayNameGeneration(IndicativeSentences.class)
 class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
     private static final int MESSAGE_COUNT = 50;
     private static Logger log = CustomLogger.getLogger();
     private static String productName;
+    private EnmasseInstallType type;
 
     @BeforeAll
     void prepareUpgradeEnv() throws Exception {
@@ -69,21 +72,27 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @AfterEach
-    void removeEnmasse() {
-        uninstallEnmasse(Paths.get(Environment.getInstance().getUpgradeTemplates()));
+    void removeEnmasse() throws Exception {
+        if (this.type.equals(EnmasseInstallType.BUNDLE)) {
+            assertTrue(OperatorManager.getInstance().clean());
+        } else {
+            OperatorManager.getInstance().deleteEnmasseAnsible();
+        }
     }
 
     @ParameterizedTest(name = "testUpgradeBundle-{0}")
     @MethodSource("provideVersions")
     void testUpgradeBundle(String version, String templates) throws Exception {
-        doTestUpgrade(templates, version, false);
+        this.type = EnmasseInstallType.BUNDLE;
+        doTestUpgrade(templates, version);
     }
 
     @ParameterizedTest(name = "testUpgradeAnsible-{0}")
     @MethodSource("provideVersions")
     @OpenShift
     void testUpgradeAnsible(String version, String templates) throws Exception {
-        doTestUpgrade(templates, version, true);
+        this.type = EnmasseInstallType.ANSIBLE;
+        doTestUpgrade(templates, version);
     }
 
 
@@ -91,8 +100,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     // Help methods
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void doTestUpgrade(String templates, String version, boolean isAnsible) throws Exception {
-        if (isAnsible) {
+    private void doTestUpgrade(String templates, String version) throws Exception {
+        if (this.type.equals(EnmasseInstallType.ANSIBLE)) {
             installEnmasseAnsible(Paths.get(templates), false);
         } else {
             installEnmasseBundle(Paths.get(templates), version);
@@ -119,7 +128,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         createAddressCMD(kubernetes.getInfraNamespace(), "brokered-queue", "brokered-queue", "brokered", "queue", "brokered-queue", getApiVersion(version));
         createAddressCMD(kubernetes.getInfraNamespace(), "brokered-topic", "brokered-topic", "brokered", "topic", "brokered-topic", getApiVersion(version));
         Thread.sleep(30_000);
-        waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("brokered")).toArray(new Address[0]));
+        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("brokered")).toArray(new Address[0]));
 
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-xlarge", "standard-queue-xlarge", "standard", "queue", "standard-xlarge-queue", getApiVersion(version));
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-small", "standard-queue-small", "standard", "queue", "standard-small-queue", getApiVersion(version));
@@ -127,13 +136,13 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-anycast", "standard-anycast", "standard", "anycast", "standard-small-anycast", getApiVersion(version));
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", getApiVersion(version));
         Thread.sleep(30_000);
-        waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("standard")).toArray(new Address[0]));
+        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("standard")).toArray(new Address[0]));
 
         assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue", "pepa", MESSAGE_COUNT, true));
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small", "pepa", MESSAGE_COUNT, true));
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", "pepa", MESSAGE_COUNT, true));
 
-        if (isAnsible) {
+        if (this.type.equals(EnmasseInstallType.ANSIBLE)) {
             installEnmasseAnsible(Paths.get(Environment.getInstance().getUpgradeTemplates()), true);
         } else {
             upgradeEnmasseBundle(Paths.get(Environment.getInstance().getUpgradeTemplates()));
@@ -151,8 +160,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             }
         });
 
-        waitForDestinationsReady(AddressUtils.getAddresses(brokered).toArray(new Address[0]));
-        waitForDestinationsReady(AddressUtils.getAddresses(standard).toArray(new Address[0]));
+        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(brokered).toArray(new Address[0]));
+        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(standard).toArray(new Address[0]));
 
         List<User> items = kubernetes.getUserClient().list().getItems();
         log.info("After upgrade {} user(s)", items.size());
@@ -201,15 +210,6 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         Path scriptPath = Paths.get(System.getProperty("user.dir"), "scripts", "create_address.sh");
         List<String> cmd = Arrays.asList("/bin/bash", "-c", scriptPath.toString() + " " + namespace + " " + addressSpace + " " + name + " " + address + " " + type + " " + plan + " " + apiVersion);
         assertTrue(Exec.execute(cmd, 20_000, true).getRetCode(), "Address not created");
-    }
-
-    private void uninstallEnmasse(Path templateDir) {
-        log.info("Application will be removed");
-        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", "systemtests.inventory");
-        Path ansiblePlaybook = Paths.get(templateDir.toString(), "ansible", "playbooks", "openshift", "uninstall.yml");
-        List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
-                "--extra-vars", String.format("namespace=%s", kubernetes.getInfraNamespace()));
-        assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Uninstall failed");
     }
 
     private void installEnmasseBundle(Path templateDir, String version) throws Exception {

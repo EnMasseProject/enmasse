@@ -30,61 +30,86 @@ public class JunitExecutionListener implements TestExecutionListener {
 
     @Override
     public void testPlanExecutionFinished(TestPlan testPlan) {
-        Environment env = Environment.getInstance();
+
+        final Environment env = Environment.getInstance();
+
         if (!env.skipCleanup()) {
-            Kubernetes kube = Kubernetes.getInstance();
-            GlobalLogCollector logCollector = new GlobalLogCollector(kube, env.testLogDir());
-            try {
-                kube.getAddressSpaceClient().inAnyNamespace().list().getItems().forEach((addrSpace) -> {
-                    LOGGER.info("address space '{}' will be removed", addrSpace);
-                    try {
-                        AddressSpaceUtils.deleteAddressSpaceAndWait(addrSpace, logCollector);
-                        IsolatedResourcesManager.getInstance().tearDown(TestInfo.getInstance().getActualTest());
-                    } catch (Exception e) {
-                        LOGGER.warn("Cleanup failed or no clean is needed");
-                    }
-                });
-            } catch (Exception e) {
-                LOGGER.warn("Cleanup failed or no clean is needed");
-            }
-            if (IoTUtils.isIoTInstalled(kube)) {
-                try {
-                    kube.getNonNamespacedIoTProjectClient().list().getItems().forEach(project -> {
-                        LOGGER.info("iot project '{}' will be removed", project.getMetadata().getName());
-                        try {
-                            IoTUtils.deleteIoTProjectAndWait(kube, project);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    });
-                    var iotConfigClient = kube.getIoTConfigClient();
-                    iotConfigClient.list().getItems().forEach(config -> {
-                        LOGGER.info("iot config '{}' will be removed", config.getMetadata().getName());
-                        try {
-                            IoTUtils.deleteIoTConfigAndWait(kube, config);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    });
-                    LOGGER.info("Infinispan server will be removed");
-                    SystemtestsKubernetesApps.deleteInfinispanServer();
-                    kube.deleteNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
-                } catch (Exception e) {
-                    LOGGER.warn("Cleanup failed or no clean is needed");
-                }
-            }
+            // clean up resources
+            performCleanup();
         } else {
             LOGGER.warn("Remove address spaces when test run finished - SKIPPED!");
         }
+
         TimeMeasuringSystem.printAndSaveResults();
-        if (!(Environment.getInstance().skipCleanup() || Environment.getInstance().skipUninstall())) {
+
+        if (!(env.skipCleanup() || env.skipUninstall())) {
+            // clean up infrastructure after resources
+            performInfraCleanup();
+        }
+
+    }
+
+    private void performCleanup() {
+        final Environment env = Environment.getInstance();
+        final Kubernetes kube = Kubernetes.getInstance();
+        final GlobalLogCollector logCollector = new GlobalLogCollector(kube, env.testLogDir());
+
+        if (IoTUtils.isIoTInstalled(kube)) {
             try {
-                OperatorManager.getInstance().removeIoTOperator();
-                OperatorManager.getInstance().deleteEnmasseOlm();
-                OperatorManager.getInstance().deleteEnmasseBundle();
+                kube.getNonNamespacedIoTProjectClient().list().getItems().forEach(project -> {
+                    LOGGER.info("iot project '{}' will be removed", project.getMetadata().getName());
+                    try {
+                        IoTUtils.deleteIoTProjectAndWait(kube, project);
+                    } catch (Exception e) {
+                        LOGGER.warn("Failed to delete IoT projects: {}", project, e);
+                    }
+                });
+                kube.getIoTConfigClient().list().getItems().forEach(config -> {
+                    LOGGER.info("iot config '{}' will be removed", config.getMetadata().getName());
+                    try {
+                        IoTUtils.deleteIoTConfigAndWait(kube, config);
+                    } catch (Exception e) {
+                        LOGGER.warn("Failed to delete IoT config: {}", config, e);
+                    }
+                });
+                LOGGER.info("Infinispan server will be removed");
+                SystemtestsKubernetesApps.deleteInfinispanServer();
+                if (!SystemtestsKubernetesApps.INFINISPAN_PROJECT.equals(kube.getInfraNamespace())) {
+                    kube.deleteNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+                }
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.warn("Cleanup failed or no clean is needed");
             }
         }
+
+        /*
+         * Clean up address spaces after IoT projects, as the iot operator immediately re-created missing
+         * address spaces.
+         */
+        try {
+            kube.getAddressSpaceClient().inAnyNamespace().list().getItems().forEach((addrSpace) -> {
+                LOGGER.info("address space '{}' will be removed", addrSpace);
+                try {
+                    AddressSpaceUtils.deleteAddressSpaceAndWait(addrSpace, logCollector);
+                    IsolatedResourcesManager.getInstance().tearDown(TestInfo.getInstance().getActualTest());
+                } catch (Exception e) {
+                    LOGGER.warn("Cleanup failed or no clean is needed");
+                }
+            });
+        } catch (Exception e) {
+            LOGGER.warn("Cleanup failed or no clean is needed");
+        }
+
     }
+
+    private void performInfraCleanup() {
+        try {
+            OperatorManager.getInstance().removeIoTOperator();
+            OperatorManager.getInstance().deleteEnmasseOlm();
+            OperatorManager.getInstance().deleteEnmasseBundle();
+        } catch (Exception e) {
+            LOGGER.error("Failed", e);
+        }
+    }
+
 }

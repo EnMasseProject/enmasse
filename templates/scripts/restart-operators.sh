@@ -20,21 +20,6 @@ function wait_deployment_ready() {
     echo "Minimum ready pods ${minReady} restored"
 }
 
-echo "Restarting API servers"
-for dep in $(kubectl get deployment -l component=api-server -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
-do
-    wait_deployment_ready ${dep} ${MINAVAILABLE}
-    echo "All api-server pods are ready. Initiating rolling restart."
-    for pod in $(kubectl get pods -l component=api-server -o jsonpath='{.items[*].metadata.name}')
-    do
-        echo "Deleting api-server ${pod}"
-        kubectl delete pod ${pod} -n ${ENMASSE_NAMESPACE}
-        sleep 30
-        wait_deployment_ready ${dep} ${MINAVAILABLE}
-    done
-done
-echo "API servers restarted"
-
 echo "Restarting Address Space Controller"
 kubectl delete pod -l name=address-space-controller
 for dep in $(kubectl get deployment -l name=address-space-controller -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})

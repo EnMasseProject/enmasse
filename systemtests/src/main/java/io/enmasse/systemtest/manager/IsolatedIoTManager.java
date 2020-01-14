@@ -9,6 +9,7 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
@@ -16,6 +17,7 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,10 +57,8 @@ public class IsolatedIoTManager extends ResourceManager {
     }
 
     @Override
-    public void setup() throws Exception {
-        if (!kubernetes.namespaceExists(IOT_PROJECT_NAMESPACE)) {
-            kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
-        }
+    public void setup() {
+        kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
     }
 
     @Override
@@ -69,6 +69,10 @@ public class IsolatedIoTManager extends ResourceManager {
             try {
                 tearDownProjects();
                 tearDownConfigs();
+                if (context.getExecutionException().isPresent()) {
+                    Path path = JunitCallbackListener.getPath(context);
+                    SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
+                }
                 SystemtestsKubernetesApps.deleteInfinispanServer();
             } catch (Exception e) {
                 LOGGER.error("Error tearing down iot test: {}", e.getMessage());

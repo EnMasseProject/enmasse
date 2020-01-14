@@ -1,0 +1,30 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+
+:context: {context}-iot
+
+[id='iot-device-developers-{context}]
+= IoT for device developers
+
+Device developers are typically responsible for either connecting existing devices to the cloud platform or writing software for devices.
+This information describes how to connect devices using one of the supported protocols.
+
+== HTTP devices
+
+include::../modules/proc-iot-sending-telemetry-http.adoc[leveloffset=+2]
+
+include::../modules/proc-iot-sending-events-http.adoc[leveloffset=+2]
+
+include::../modules/proc-iot-receiving-commands-http.adoc[leveloffset=+2]
+
+== MQTT devices
+
+include::../modules/proc-iot-sending-telemetry-mqtt.adoc[leveloffset=+2]
+
+include::../modules/proc-iot-sending-events-mqtt.adoc[leveloffset=+2]
+
+include::../modules/proc-iot-receiving-commands-mqtt.adoc[leveloffset=+2]
+
+//Sigfox
+include::assembly-iot-configuring-sigfox.adoc[leveloffset=+1]

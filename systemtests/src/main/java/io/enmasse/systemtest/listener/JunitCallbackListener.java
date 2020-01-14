@@ -29,7 +29,6 @@ import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,6 +54,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
             handleCallBackError(context, () -> {
                 if (testInfo.isUpgradeTest()) {
+                    if (operatorManager.isEnmasseBundleDeployed()) {
+                        operatorManager.deleteEnmasseBundle();
+                    }
                     LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
                 } else if (testInfo.isOLMTest()) {
                     LOGGER.info("Test is OLM");
@@ -93,12 +95,14 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         handleCallBackError(extensionContext, () -> {
             if (env.skipCleanup() || env.skipUninstall()) {
                 LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
+            } else if (testInfo.isOLMTest()) {
+                LOGGER.info("Test is OLM");
+                if (operatorManager.isEnmasseOlmDeployed()) {
+                    operatorManager.deleteEnmasseOlm();
+                }
             } else if (env.installType() == EnmasseInstallType.BUNDLE) {
                 if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed()) {
                     operatorManager.removeIoTOperator();
-                }
-                if (operatorManager.isEnmasseBundleDeployed() && testInfo.isNextTestUpgrade()) {
-                    operatorManager.deleteEnmasseBundle();
                 }
                 if (operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.deleteEnmasseOlm();
@@ -198,11 +202,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             throw throwable;
         }
 
-        Method testMethod = extensionContext.getTestMethod().orElse(null);
-        Class<?> testClass = extensionContext.getRequiredTestClass();
         try {
             Kubernetes kube = Kubernetes.getInstance();
-            Path path = getPath(testMethod, testClass);
+            Path path = getPath(extensionContext);
             Files.createDirectories(path);
             List<Pod> pods = kube.listPods();
             for (Pod p : pods) {
@@ -234,6 +236,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
             Files.writeString(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut());
             Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(kube.getInfraNamespace()).getStdOut());
+            Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pv").getStdOut());
+            Files.writeString(path.resolve("pvcs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", Kubernetes.getInstance().getInfraNamespace()).getStdOut());
+            Files.writeString(path.resolve("storageclass.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "storageclass", "-o", "yaml").getStdOut());
             if (testInfo.isClassIoT()) {
                 Files.writeString(path.resolve("iotconfig.yaml"), KubeCMDClient.getIoTConfig(kube.getInfraNamespace()).getStdOut());
                 GlobalLogCollector collectors = new GlobalLogCollector(kube, path, kube.getInfraNamespace());
@@ -246,13 +251,16 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         throw throwable;
     }
 
-    public static Path getPath(Method testMethod, Class<?> testClass) {
-        Path path = env.testLogDir().resolve(
-                Paths.get(
-                        "failed_test_logs",
-                        testClass.getName()));
+    public static Path getPath(ExtensionContext extensionContext) {
+        String testMethod = extensionContext.getDisplayName();
+        Class<?> testClass = extensionContext.getRequiredTestClass();
+        return getPath(testMethod, testClass);
+    }
+
+    public static Path getPath(String testMethod, Class<?> testClass) {
+        Path path = env.testLogDir().resolve(Paths.get("failed_test_logs", testClass.getName()));
         if (testMethod != null) {
-            path = path.resolve(testMethod.getName());
+            path = path.resolve(testMethod);
         }
         return path;
     }
@@ -263,5 +271,3 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
 }
-
-

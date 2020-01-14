@@ -428,6 +428,7 @@ objects:
     annotations:
       addressSpace: ${ADDRESS_SPACE}
     labels:
+      monitoring-key: enmasse-tenants
       app: enmasse
       infraType: standard
       infraUuid: ${INFRA_UUID}

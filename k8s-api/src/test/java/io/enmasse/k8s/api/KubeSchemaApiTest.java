@@ -5,6 +5,7 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpaceType;
+import io.enmasse.address.model.Phase;
 import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
@@ -17,6 +18,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,7 +47,7 @@ public class KubeSchemaApiTest {
 
     @Test
     public void testSchemaAssemble() {
-        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, consoleServiceApi, "1.0", Clock.systemUTC(), false);
+        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, consoleServiceApi, "1.0", Clock.systemUTC(), false, true);
 
         List<AddressSpacePlan> addressSpacePlans = Arrays.asList(
                 new AddressSpacePlanBuilder()
@@ -64,6 +66,24 @@ public class KubeSchemaApiTest {
                         .endMetadata()
                         .withAddressSpaceType("brokered")
                         .withAddressPlans(Arrays.asList( "plan3"))
+                        .withResources(Arrays.asList(new ResourceAllowance("broker", 1)))
+                        .build(),
+                new AddressSpacePlanBuilder()
+                        .withNewMetadata()
+                        .withName("spaceplan3")
+                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra4")
+                        .endMetadata()
+                        .withAddressSpaceType("brokered")
+                        .withAddressPlans(Arrays.asList( "unknown"))
+                        .withResources(Arrays.asList(new ResourceAllowance("broker", 1)))
+                        .build(),
+                new AddressSpacePlanBuilder()
+                        .withNewMetadata()
+                        .withName("spaceplan4")
+                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra1")
+                        .endMetadata()
+                        .withAddressSpaceType("brokered")
+                        .withAddressPlans(Arrays.asList( "plan4"))
                         .withResources(Arrays.asList(new ResourceAllowance("broker", 1)))
                         .build());
 
@@ -87,7 +107,7 @@ public class KubeSchemaApiTest {
                                 .withName("plan4")
                                 .build())
                         .withAddressType("anycast")
-                        .withRequiredResources(new ResourceRequest("router", 0.01))
+                        .withRequiredResources(new ResourceRequest("router", 0.01), new ResourceRequest("broker", 0.01))
                         .build(),
                 new AddressPlanBuilder()
                         .withNewMetadata()
@@ -142,6 +162,8 @@ public class KubeSchemaApiTest {
             assertTrue(type.findAddressType("queue").get().findAddressPlan("plan1").isPresent());
             assertTrue(type.findAddressType("topic").get().findAddressPlan("plan2").isPresent());
             assertTrue(type.findAddressType("anycast").get().findAddressPlan("plan4").isPresent());
+            assertEquals(Phase.Failed, ((AddressPlan)type.findAddressType("anycast").get().findAddressPlan("plan4").get()).getStatus().getPhase());
+            assertEquals(Phase.Active, ((AddressPlan)type.findAddressType("queue").get().findAddressPlan("plan1").get()).getStatus().getPhase());
         }
         {
             AddressSpaceType type = schema.findAddressSpaceType("brokered").get();
@@ -153,6 +175,16 @@ public class KubeSchemaApiTest {
             assertTrue(type.findInfraConfig("infra1").isPresent());
 
             assertTrue(type.findAddressType("queue").get().findAddressPlan("plan3").isPresent());
+        }
+        {
+            assertEquals(Phase.Failed, addressSpacePlans.get(2).getStatus().getPhase());
+            System.out.println(addressSpacePlans.get(2).getStatus().getMessage());
+            assertTrue(addressSpacePlans.get(2).getStatus().getMessage().contains("missing infra config definition infra4"));
+            assertTrue(addressSpacePlans.get(2).getStatus().getMessage().contains("unable to find address plan definition"));
+        }
+        {
+            assertEquals(Phase.Failed, addressPlans.get(2).getStatus().getPhase());
+            assertTrue(addressPlans.get(2).getStatus().getMessage().contains("address type anycast not supported by address space type brokered"));
         }
 
         System.out.println(schema.printSchema());
@@ -175,7 +207,7 @@ public class KubeSchemaApiTest {
         when(standardInfraConfigApi.watchResources(any(), any())).thenReturn(mockWatch);
         when(authenticationServiceApi.watchResources(any(), any())).thenReturn(mockWatch);
 
-        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, consoleServiceApi, "1.0", Clock.systemUTC(), true);
+        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, consoleServiceApi, "1.0", Clock.systemUTC(), true, false);
 
         schemaApi.watchSchema(items -> { }, Duration.ofSeconds(5));
         verify(addressSpacePlanApi).watchResources(any(), eq(Duration.ofSeconds(5)));

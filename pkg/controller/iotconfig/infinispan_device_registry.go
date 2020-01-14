@@ -37,6 +37,9 @@ func (r *ReconcileIoTConfig) processInfinispanDeviceRegistry(ctx context.Context
 		return r.processService(ctx, nameDeviceRegistry, config, false, r.reconcileInfinispanDeviceRegistryService)
 	})
 	rc.ProcessSimple(func() error {
+		return r.processService(ctx, nameDeviceRegistry+"-metrics", config, false, r.reconcileMetricsService(nameDeviceRegistry))
+	})
+	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, r.reconcileInfinispanDeviceRegistryConfigMap)
 	})
 	if !util.IsOpenshift() {
@@ -72,7 +75,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	service := config.Spec.ServicesConfig.DeviceRegistry
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, nil)
 
-	err := install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-device-registry-infinispan", config); err != nil {
 			return err
@@ -89,12 +92,12 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 		}
 
 		container.Ports = []corev1.ContainerPort{
-			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "amqps", ContainerPort: 5671, Protocol: corev1.ProtocolTCP},
 			{Name: "http", ContainerPort: 8080, Protocol: corev1.ProtocolTCP},
 			{Name: "https", ContainerPort: 8443, Protocol: corev1.ProtocolTCP},
 		}
 
+		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
 		// eval native TLS flag
@@ -119,6 +122,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 			{Name: "ENMASSE_IOT_REGISTRY_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
+			{Name: "ENMASSE_IOT_REGISTRY_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.Infinispan.Management.AuthTokenCacheExpiration},
 		}
 
 		AppendStandardHonoJavaOptions(container)

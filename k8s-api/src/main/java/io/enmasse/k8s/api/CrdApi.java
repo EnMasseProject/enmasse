@@ -8,4 +8,5 @@ import java.time.Duration;
 
 public interface CrdApi<T> {
     Watch watchResources(Watcher<T> watcher, Duration resyncInterval);
+    void patch(T instance);
 }

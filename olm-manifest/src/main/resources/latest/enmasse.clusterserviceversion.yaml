@@ -412,7 +412,7 @@ spec:
   keywords: ${olm.csv.keywords}
   icon:
     - base64data: ${olm.csv.logo.base64}
-      mediatype: image/svg+xml
+      mediatype: ${olm.csv.logo.mediatype}
   maintainers:
   - name: ${olm.csv.maintainer.name}
     email: ${olm.csv.maintainer.email}
@@ -468,7 +468,7 @@ spec:
         rules:
         - apiGroups: [ "admin.enmasse.io" ]
           resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices", "consoleservices"]
-          verbs: [ "get", "list", "watch" ]
+          verbs: [ "patch", "get", "list", "watch" ]
         - apiGroups: [ "" ]
           resources: [ "pods" ]
           verbs: [ "get", "list" ]
@@ -521,11 +521,22 @@ spec:
         - apiGroups: [ "admin.enmasse.io" ]
           resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs", "authenticationservices", "consoleservices"]
           verbs: [ "get", "list", "watch" ]
+      - serviceAccountName: iot-operator
+        rules:
+        - apiGroups: [ "batch" ]
+          resources: [ "jobs" ]
+          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+        - apiGroups: [ "iot.enmasse.io" ]
+          resources: [ "iotconfigs" ]
+          verbs: [ "get", "list", "watch" ]
       clusterPermissions:
       - serviceAccountName: address-space-controller
         rules:
         - apiGroups: [ "enmasse.io" ]
           resources: [ "addressspaces", "addresses", "addressspaceschemas", "addressspaces/finalizers", "addresses/finalizers" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "user.enmasse.io" ]
+          resources: [ "messagingusers" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
       - serviceAccountName: address-space-admin
         rules:
@@ -545,27 +556,15 @@ spec:
         - apiGroups: [ "oauth.openshift.io" ]
           resources: [ "oauthclients" ]
           verbs: [ "create", "get", "update", "list", "watch" ]
+        - apiGroups: [ "user.enmasse.io" ]
+          resources: [ "messagingusers", "messagingusers/finalizers", "messagingusers/status" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "enmasse.io" ]
           resources: [ "addressspaces", "addresses" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "apiregistration.k8s.io" ]
           resources: [ "apiservices" ]
           resourceNames: [ "v1alpha1.enmasse.io", "v1beta1.enmasse.io" ]
-          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
-      - serviceAccountName: api-server
-        rules:
-        - apiGroups: [ "authentication.k8s.io" ]
-          resources: [ "tokenreviews" ]
-          verbs: [ "create" ]
-        - apiGroups: [ "authorization.k8s.io" ]
-          resources: [ "subjectaccessreviews" ]
-          verbs: [ "create" ]
-        - apiGroups: [ "" ]
-          resources: [ "configmaps" ]
-          resourceNames: [ "extension-apiserver-authentication" ]
-          verbs: [ "get" ]
-        - apiGroups: [ "enmasse.io" ]
-          resources: [ "addressspaces", "addresses" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
       - serviceAccountName: iot-operator
         rules:
@@ -586,6 +585,16 @@ spec:
         - apiGroups: [ "authorization.k8s.io" ]
           resources: [ "subjectaccessreviews" ]
           verbs: [ "create" ]
+        - apiGroups: [ "iot.enmasse.io" ]
+          resources: [ "iotprojects" ]
+          verbs: [ "get", "list", "watch" ]
+      - serviceAccountName: iot-protocol-adapter
+        rules:
+        - apiGroups: [ "iot.enmasse.io" ]
+          resources: [ "iotprojects" ]
+          verbs: [ "get", "list", "watch" ]
+      - serviceAccountName: iot-tenant-service
+        rules:
         - apiGroups: [ "iot.enmasse.io" ]
           resources: [ "iotprojects" ]
           verbs: [ "get", "list", "watch" ]
@@ -640,6 +649,8 @@ spec:
                 - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
                   value: "true"
                 - name: CONTROLLER_ENABLE_ADDRESS_SPACE_CONTROLLER
+                  value: "true"
+                - name: CONTROLLER_ENABLE_MESSAGING_USER
                   value: "true"
                 - name: ADDRESS_SPACE_CONTROLLER_IMAGE
                   value: ${env.ADDRESS_SPACE_CONTROLLER_IMAGE}
@@ -699,98 +710,30 @@ spec:
                   value: "${env.CONSOLE_HTTPD_IMAGE}"
                 - name: "FS_GROUP_FALLBACK_MAP"
                   value: "{\"standard-authservice\": 1000}"
-      - name: user-api-server
-        spec:
-          replicas: 1
-          selector:
-            matchLabels:
-              app: enmasse
-              component: user-api-server
-          template:
-            metadata:
-              labels:
-                app: enmasse
-                component: user-api-server
-            spec:
-              affinity:
-                nodeAffinity:
-                  preferredDuringSchedulingIgnoredDuringExecution:
-                    - weight: 1
-                      preference:
-                        matchExpressions:
-                          - key: node-role.enmasse.io/operator-infra
-                            operator: In
-                            values:
-                              - "true"
-              containers:
-              - env:
-                - name: JAVA_OPTS
-                  value: -verbose:gc -Xlog:gc*
-                - name: CERT_DIR
-                  value: /api-server-cert
-                - name: ENABLE_RBAC
-                  value: "true"
-                - name: APISERVER_CLIENT_CA_CONFIG_NAME
-                  value: extension-apiserver-authentication
-                - name: APISERVER_CLIENT_CA_CONFIG_NAMESPACE
-                  value: kube-system
-                image: ${env.API_SERVER_IMAGE}
-                imagePullPolicy: ${env.IMAGE_PULL_POLICY}
-                livenessProbe:
-                  httpGet:
-                    path: /healthz
-                    port: http
-                    scheme: HTTP
-                  initialDelaySeconds: 60
-                name: api-server
-                ports:
-                - containerPort: 8080
-                  name: http
-                - containerPort: 8443
-                  name: https
-                readinessProbe:
-                  httpGet:
-                    path: /healthz
-                    port: http
-                    scheme: HTTP
-                resources:
-                  limits:
-                    memory: 512Mi
-                  requests:
-                    memory: 512Mi
-                volumeMounts:
-                - mountPath: /api-server-cert
-                  name: apiservice-cert
-                  readOnly: true
-              serviceAccountName: api-server
-  apiservicedefinitions:
-    owned:
-    - group: user.enmasse.io
-      version: v1beta1
-      kind: MessagingUser
-      name: messagingusers
-      displayName: Messaging User
-      description: A messaging user that can connect to an Address Space
-      deploymentName: user-api-server
-      containerPort: 8443
-      specDescriptors:
-        - description: The user name.
-          displayName: Username
-          path: username
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: The authentication type
-          displayName: Authentication type
-          path: authentication.type
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: The password
-          displayName: Password
-          path: authentication.password
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
   customresourcedefinitions:
     owned:
+      - group: user.enmasse.io
+        version: v1beta1
+        kind: MessagingUser
+        name: messagingusers.user.enmasse.io
+        displayName: Messaging User
+        description: A messaging user that can connect to an Address Space
+        specDescriptors:
+          - description: The user name.
+            displayName: Username
+            path: username
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: The authentication type
+            displayName: Authentication type
+            path: authentication.type
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: The password
+            displayName: Password
+            path: authentication.password
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
       - group: enmasse.io
         version: v1beta1
         kind: AddressSpaceSchema

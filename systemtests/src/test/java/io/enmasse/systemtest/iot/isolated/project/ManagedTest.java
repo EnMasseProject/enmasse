@@ -21,13 +21,10 @@ import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
-import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.CertificateUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import io.enmasse.address.model.Address;
@@ -94,14 +91,6 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
         this.addressClient = kubernetes.getAddressClient(IOT_PROJECT_NAMESPACE);
         this.addressSpaceClient = kubernetes.getAddressSpaceClient(IOT_PROJECT_NAMESPACE);
         this.userClient = kubernetes.getUserClient(IOT_PROJECT_NAMESPACE);
-    }
-
-    @AfterEach
-    void cleanEnv(ExtensionContext context) throws Exception {
-        if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectHttpAdapterQdrProxyState();
-        }
-        SystemtestsKubernetesApps.deleteInfinispanServer();
     }
 
     @Test

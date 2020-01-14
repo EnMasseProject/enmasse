@@ -1,10 +1,18 @@
 // This assembly is included in the following assemblies:
 //
-// assembly-iot-guide.adoc
+// assembly-.adoc
 
 :context: {context}-iot
 
 [id='iot-service-admin-{context}]
-= IoT for service administrators 
+= IoT for service administrators
 
-include::../modules/proc-iot-configuring-sigfox.adoc[leveloffset=+1]
+Service administrators typically install and configure the Internet of Things (IoT) services for {ProductName}.
+
+include::../modules/proc-iot-installing-services.adoc[leveloffset=+1]
+
+== IoT services configuration examples
+
+include::../modules/ref-iot-config-example.adoc[leveloffset=+2]
+
+include::../modules/ref-iot-config-example-adapters.adoc[leveloffset=+2]

@@ -7,6 +7,8 @@ package io.enmasse.k8s.api;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AddressPlanStatus;
+import io.enmasse.admin.model.v1.AddressPlanStatusBuilder;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.DoneableAuthenticationService;
 import io.enmasse.admin.model.v1.*;
@@ -37,6 +39,7 @@ public class KubeSchemaApi implements SchemaApi {
             .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
             .withZone(ZoneId.of("UTC"));
     private final boolean isOpenShift;
+    private final boolean updateStatus;
 
     private volatile List<io.enmasse.admin.model.v1.AddressSpacePlan> currentAddressSpacePlans = Collections.emptyList();
     private volatile List<io.enmasse.admin.model.v1.AddressPlan> currentAddressPlans = Collections.emptyList();
@@ -51,7 +54,7 @@ public class KubeSchemaApi implements SchemaApi {
                          CrdApi<StandardInfraConfig> standardInfraConfigApi,
                          CrdApi<AuthenticationService> authenticationServiceApi,
                          CrdApi<ConsoleService> consoleServiceApi, String defaultVersion, Clock clock,
-                         boolean isOpenShift) {
+                         boolean isOpenShift, boolean updateStatus) {
         this.addressSpacePlanApi = addressSpacePlanApi;
         this.addressPlanApi = addressPlanApi;
         this.brokeredInfraConfigApi = brokeredInfraConfigApi;
@@ -61,9 +64,10 @@ public class KubeSchemaApi implements SchemaApi {
         this.defaultVersion = defaultVersion;
         this.clock = clock;
         this.isOpenShift = isOpenShift;
+        this.updateStatus = updateStatus;
     }
 
-    public static KubeSchemaApi create(NamespacedKubernetesClient openShiftClient, String namespace, String defaultVersion, boolean isOpenShift) {
+    public static KubeSchemaApi create(NamespacedKubernetesClient openShiftClient, String namespace, String defaultVersion, boolean isOpenShift, boolean updateStatus) {
         CrdApi<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlanApi = new KubeCrdApi<>(openShiftClient, namespace, AdminCrd.addressSpacePlans(),
                 io.enmasse.admin.model.v1.AddressSpacePlan.class,
                 AddressSpacePlanList.class,
@@ -96,7 +100,7 @@ public class KubeSchemaApi implements SchemaApi {
 
         Clock clock = Clock.systemUTC();
 
-        return new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, consoleServiceApi, defaultVersion, clock, isOpenShift);
+        return new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, consoleServiceApi, defaultVersion, clock, isOpenShift, updateStatus);
     }
 
     private void validateAddressSpacePlan(AddressSpacePlan addressSpacePlan, List<AddressPlan> addressPlans, List<String> infraTemplateNames) {
@@ -129,10 +133,13 @@ public class KubeSchemaApi implements SchemaApi {
 
     private void validateAddressPlan(String addressSpaceType, AddressPlan addressPlan) {
 
+        List<String> supportedTypes = new ArrayList<>();
         List<String> requiredResources = new ArrayList<>();
         if ("brokered".equals(addressSpaceType)) {
+            supportedTypes.addAll(Arrays.asList("queue", "topic"));
             requiredResources.add("broker");
         } else if ("standard".equals(addressSpaceType)) {
+            supportedTypes.addAll(Arrays.asList("queue", "topic", "subscription", "anycast", "multicast"));
             requiredResources.add("router");
             if (!Arrays.asList("anycast", "multicast").contains(addressPlan.getAddressType())) {
                 if (!"queue".equals(addressPlan.getAddressType()) && addressPlan.getPartitions() > 1) {
@@ -149,6 +156,12 @@ public class KubeSchemaApi implements SchemaApi {
             Set<String> missing = new HashSet<>(requiredResources);
             missing.removeAll(resourcesUsed);
             String error = "Error validating address plan " + addressPlan.getMetadata().getName() + ": missing resources " + missing;
+            log.warn(error);
+            throw new SchemaValidationException(error);
+        }
+
+        if (!supportedTypes.contains(addressPlan.getAddressType())) {
+            String error = String.format("Error validating address plan %s: address type %s not supported by address space type %s", addressPlan.getMetadata().getName(), addressPlan.getAddressType(), addressSpaceType);
             log.warn(error);
             throw new SchemaValidationException(error);
         }
@@ -335,10 +348,18 @@ public class KubeSchemaApi implements SchemaApi {
     }
 
     Schema assembleSchema(List<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlans, List<io.enmasse.admin.model.v1.AddressPlan> addressPlans, List<StandardInfraConfig> standardInfraConfigs, List<BrokeredInfraConfig> brokeredInfraConfigs, List<AuthenticationService> authenticationServices, List<ConsoleService> consoleServices) {
+
         Set<AddressPlan> validAddressPlans = new HashSet<>();
-        Map<String, AddressPlan> addressPlanByName = new HashMap<>();
-        for (AddressPlan addressPlan : addressPlans) {
+        Map<String, io.enmasse.admin.model.v1.AddressPlan> addressPlanByName = new HashMap<>();
+        Map<String, AddressPlanStatus> addressPlanStatusMap = new HashMap<>();
+        Map<String, AddressSpacePlanStatus> addressSpacePlanStatusMap = new HashMap<>();
+
+        for (io.enmasse.admin.model.v1.AddressPlan addressPlan : addressPlans) {
             addressPlanByName.put(addressPlan.getMetadata().getName(), addressPlan);
+            addressPlanStatusMap.put(addressPlan.getMetadata().getName(), new AddressPlanStatusBuilder()
+                    .withPhase(Phase.Pending)
+                    .build());
+
         }
 
         for (StandardInfraConfig standardInfraConfig : standardInfraConfigs) {
@@ -355,17 +376,31 @@ public class KubeSchemaApi implements SchemaApi {
 
         List<AddressSpacePlan> validAddressSpacePlans = new ArrayList<>();
         for (io.enmasse.admin.model.v1.AddressSpacePlan addressSpacePlan : addressSpacePlans) {
+            addressSpacePlanStatusMap.put(addressSpacePlan.getMetadata().getName(), new AddressSpacePlanStatusBuilder()
+                    .withPhase(Phase.Pending)
+                    .build());
+
             List<AddressPlan> plansForAddressSpacePlan = new ArrayList<>();
             for (String addressPlanName : addressSpacePlan.getAddressPlans()) {
+                io.enmasse.admin.model.v1.AddressPlan addressPlan = null;
                 try {
-                    AddressPlan addressPlan = addressPlanByName.get(addressPlanName);
+                    addressPlan = addressPlanByName.get(addressPlanName);
                     if (addressPlan == null) {
-                        throw new SchemaValidationException("Unable to find address plan " + addressPlanName);
+                        String message = String.format("Error validating address plan %s: unable to find address plan definition", addressPlanName);
+                        log.warn(message);
+                        throw new SchemaValidationException(message);
                     }
                     validateAddressPlan(addressSpacePlan.getAddressSpaceType(), addressPlan);
                     plansForAddressSpacePlan.add(addressPlan);
+                    addressPlanStatusMap.get(addressPlanName).setPhase(Phase.Active);
                 } catch (SchemaValidationException e) {
-                    log.error("Error validating address plan {}, skipping", addressPlanName, e);
+                    if (addressPlan == null) {
+                        addressSpacePlanStatusMap.get(addressSpacePlan.getMetadata().getName()).setPhase(Phase.Failed);
+                        addressSpacePlanStatusMap.get(addressSpacePlan.getMetadata().getName()).appendMessage(e.getMessage());
+                    } else {
+                        addressPlanStatusMap.get(addressPlanName).setPhase(Phase.Failed);
+                        addressPlanStatusMap.get(addressPlanName).appendMessage(e.getMessage());
+                    }
                 }
             }
 
@@ -377,8 +412,28 @@ public class KubeSchemaApi implements SchemaApi {
                 }
                 validAddressSpacePlans.add(addressSpacePlan);
                 validAddressPlans.addAll(plansForAddressSpacePlan);
+                addressSpacePlanStatusMap.get(addressSpacePlan.getMetadata().getName()).setPhase(Phase.Active);
             } catch (SchemaValidationException e) {
-                log.error("Error validating address space plan {}, skipping", addressSpacePlan.getMetadata().getName(), e);
+                addressSpacePlanStatusMap.get(addressSpacePlan.getMetadata().getName()).setPhase(Phase.Failed);
+                addressSpacePlanStatusMap.get(addressSpacePlan.getMetadata().getName()).appendMessage(e.getMessage());
+            }
+        }
+
+        // Update status of plans to provide error messages and status
+        if (updateStatus) {
+            for (io.enmasse.admin.model.v1.AddressSpacePlan addressSpacePlan : addressSpacePlans) {
+                AddressSpacePlanStatus newStatus = addressSpacePlanStatusMap.get(addressSpacePlan.getMetadata().getName());
+                if (!newStatus.equals(addressSpacePlan.getStatus())) {
+                    addressSpacePlan.setStatus(newStatus);
+                    addressSpacePlanApi.patch(addressSpacePlan);
+                }
+            }
+            for (io.enmasse.admin.model.v1.AddressPlan addressPlan : addressPlans) {
+                AddressPlanStatus newStatus = addressPlanStatusMap.get(addressPlan.getMetadata().getName());
+                if (!newStatus.equals(addressPlan.getStatus())) {
+                    addressPlan.setStatus(newStatus);
+                    addressPlanApi.patch(addressPlan);
+                }
             }
         }
 

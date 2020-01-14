@@ -27,8 +27,6 @@ MODULES=\
 	example-authservices \
 	example-olm \
 	iot/examples \
-	api-server \
-	api-service \
 	monitoring-operator \
 	monitoring-deployment \
 	grafana-dashboards \
@@ -61,6 +59,8 @@ replace_images: prepare
 					  -e 's,\$${NAMESPACE},$(DEFAULT_PROJECT),g' \
 					  -e 's,\$${VERSION},$(VERSION),g' \
 					  -e 's,\$${OLM_VERSION},$(OLM_VERSION),g' \
+					  -e 's,\$${OLM_PACKAGE_CHANNEL},$(OLM_PACKAGE_CHANNEL),g' \
+					  -e 's,\$${APP_BUNDLE_PREFIX},$(APP_BUNDLE_PREFIX),g' \
 					  -e 's,\$${IMAGE_PULL_POLICY},$(IMAGE_PULL_POLICY),g' \
 					  -e 's,\$${STANDARD_CONTROLLER_IMAGE},$(STANDARD_CONTROLLER_IMAGE),g' \
 					  -e 's,\$${ROUTER_IMAGE},$(ROUTER_IMAGE),g' \
@@ -115,7 +115,7 @@ scripts_install:
 ENMASSE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse
 $(ENMASSE_BUNDLE): replace_images
 	mkdir -p $(ENMASSE_BUNDLE)
-	for i in crds address-space-controller api-server api-service enmasse-operator; do \
+	for i in crds address-space-controller enmasse-operator; do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 

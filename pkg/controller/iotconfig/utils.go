@@ -8,6 +8,8 @@ package iotconfig
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/util/intstr"
+
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -144,4 +146,42 @@ func updateEndpointStatus(protocol string, forcePort bool, service *routev1.Rout
 		status.URI += ":443"
 	}
 
+}
+
+// Append the standard Hono ports
+func appendHonoStandardPorts(ports []corev1.ContainerPort) []corev1.ContainerPort {
+	if ports == nil {
+		ports = make([]corev1.ContainerPort, 0)
+	}
+	ports = append(ports, corev1.ContainerPort{
+		ContainerPort: 8088,
+		Name:          "health",
+	})
+	return ports
+}
+
+func (r *ReconcileIoTConfig) reconcileMetricsService(serviceName string) func(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
+	return func(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
+		return processReconcileMetricsService(config, serviceName, service)
+	}
+}
+
+// Configure a metrics service for hono standard components.
+// Hono exposes metrics on /prometheus on the health endpoint. We create a "<component>-metrics" service and map
+// the "prometheus" port form the service to the "health" port of the container. So we can define a "prometheus"
+// port on the ServiceMonitor on EnMasse with a custom path of "/prometheus".
+func processReconcileMetricsService(config *iotv1alpha1.IoTConfig, serviceName string, service *corev1.Service) error {
+
+	install.ApplyMetricsServiceDefaults(service, "iot", serviceName)
+
+	service.Spec.Ports = []corev1.ServicePort{
+		{
+			Name:       "prometheus",
+			Port:       8088,
+			TargetPort: intstr.FromString("health"),
+			Protocol:   corev1.ProtocolTCP,
+		},
+	}
+
+	return nil
 }

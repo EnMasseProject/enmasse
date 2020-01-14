@@ -14,6 +14,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.OLMInstallationType;
 
+/**
+ * The use of this annotation enables/disables the target test class depending if OLM is supported in the cluster where tests are run.
+ *
+ * Important note:
+ * According to the current systemtests implementation, using this annotation will force the deployment of enmasse into the cluster,
+ * so if enmasse is already deployed, regardless of the installation type, enmasse will be undeployed and redeployed with the specific
+ * settings indicated in this annotation
+ */
 @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @ExtendWith(SupportedInstallTypeCondition.class)

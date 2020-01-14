@@ -20,6 +20,7 @@ import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecAdminBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -1001,6 +1002,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.createAddressSpace(addressSpace);
 
+        String appliedConfig = addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
+
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         resourcesManager.createOrUpdateUser(addressSpace, user);
 
@@ -1045,14 +1048,14 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.replaceAddressSpace(replaced, false);
+        resourcesManager.replaceAddressSpace(replaced, false, null);
 
         String expected = String.format("Unable to apply plan [%s] to address space %s:%s: quota exceeded for resource broker",
                 afterQueuePlan.getMetadata().getName(), environment.namespace(), replaced.getMetadata().getName());
         replaced = AddressSpaceUtils.waitForAddressSpaceStatusMessage(replaced, expected, new TimeoutBudget(2, TimeUnit.MINUTES));
 
-        assertEquals(beforeAddressSpacePlan.getMetadata().getName(),
-                replaced.getMetadata().getAnnotations().get("enmasse.io/applied-plan"));
+        assertEquals(appliedConfig,
+                replaced.getMetadata().getAnnotations().get("enmasse.io/applied-configuration"));
     }
 
     @Test
@@ -1182,7 +1185,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
             }
         }
 
-        ConsoleWebPage page = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressSpace, clusterUser);
+        ConsoleWebPage page = new ConsoleWebPage(selenium, AddressSpaceUtils.getConsoleRoute(addressSpace), addressSpace, clusterUser);
         page.openWebConsolePage();
         page.openAddressesPageWebConsole();
 

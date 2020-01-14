@@ -169,8 +169,9 @@ public abstract class GlobalConsoleTest extends TestBase {
         waitUntilAddressSpaceActive(addressSpace);
         assertEquals(AddressSpacePlans.STANDARD_MEDIUM,
                 resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
+        String currentConfig = resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan();
         globalConsolePage.switchAddressSpacePlan(addressSpace, AddressSpacePlans.STANDARD_UNLIMITED);
-        AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
+        AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(addressSpace, currentConfig);
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
         assertEquals(AddressSpacePlans.STANDARD_UNLIMITED,
                 resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
@@ -224,7 +225,7 @@ public abstract class GlobalConsoleTest extends TestBase {
 
         ConsoleWebPage console = new ConsoleWebPage(
                 selenium,
-                getConsoleRoute(addressSpace),
+                AddressSpaceUtils.getConsoleRoute(addressSpace),
                 addressSpace,
                 clusterUser);
         console.openWebConsolePage();

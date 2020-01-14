@@ -30,7 +30,7 @@ import java.util.concurrent.Future;
 public abstract class AbstractClient {
     private static Logger log = CustomLogger.getLogger();
     private final Object lock = new Object();
-    private final int DEFAULT_ASYNC_TIMEOUT = 180_000;
+    private final int DEFAULT_ASYNC_TIMEOUT = 300_000;
     private final int DEFAULT_SYNC_TIMEOUT = 60_000;
     protected ArrayList<ClientArgument> allowedArgs = new ArrayList<>();
     private Exec executor;
@@ -137,9 +137,7 @@ public abstract class AbstractClient {
                     arguments.add(value);
                 }
             } else {
-                log.warn(String.format("Argument '%s' is not allowed for '%s'",
-                        arg.command(),
-                        this.getClass().getSimpleName()));
+                log.debug("Argument {} is not allowed for '{}'", arg.command(), this.getClass().getSimpleName());
             }
         }
     }
@@ -321,7 +319,7 @@ public abstract class AbstractClient {
                     try {
                         messages.add(new JsonObject(line));
                     } catch (Exception ignored) {
-                        log.warn("{} - Failed to parse client output '{}' as JSON", clientType, line);
+                        log.debug("{} - Failed to parse client output '{}' as JSON", clientType, line);
                     }
                 }
             }

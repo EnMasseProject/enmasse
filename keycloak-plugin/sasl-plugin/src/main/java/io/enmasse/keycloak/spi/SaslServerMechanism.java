@@ -35,7 +35,7 @@ public interface SaslServerMechanism {
                          final Config.Scope config,
                          AmqpServer amqpServer);
     interface Instance {
-        byte[] processResponse(byte[] response) throws IllegalArgumentException;
+        byte[] processResponse(byte[] response) throws IllegalArgumentException, InterruptedException;
         boolean isComplete();
         boolean isAuthenticated();
         UserData getAuthenticatedUser();

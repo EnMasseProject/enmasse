@@ -6,10 +6,32 @@ package io.enmasse.common.model;
 
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionBuilder;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 public final class CustomResources {
 
     private CustomResources() {}
+
+    /**
+     * Convert a {@link CustomResourceDefinition} to a {@link CustomResourceDefinitionContext}.
+     * @param definition The definition to convert.
+     * @return The converted definition, or {@code null} if the input was {@code null}.
+     */
+    public static CustomResourceDefinitionContext toContext(final CustomResourceDefinition definition) {
+
+        if ( definition == null ) {
+            return null;
+        }
+
+        return new CustomResourceDefinitionContext.Builder ()
+                .withGroup(definition.getSpec().getGroup())
+                .withScope(definition.getSpec().getScope())
+                .withVersion(definition.getSpec().getVersion())
+                .withPlural(definition.getSpec().getNames().getPlural())
+                .withName(definition.getSpec().getNames().getSingular())
+                .build();
+
+    }
 
     public static CustomResourceDefinition createCustomResource(final String group, final String version, final String kind) {
         return createCustomResource(group, version, kind, "Namespaced");

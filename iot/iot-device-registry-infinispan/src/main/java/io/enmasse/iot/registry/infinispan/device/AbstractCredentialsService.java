@@ -5,8 +5,8 @@
 
 package io.enmasse.iot.registry.infinispan.device;
 
-import static io.enmasse.iot.registry.infinispan.device.data.CredentialKey.credentialKey;
-import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
+import static io.enmasse.iot.infinispan.device.CredentialKey.credentialKey;
+import static io.enmasse.iot.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import java.util.concurrent.CompletableFuture;
@@ -16,11 +16,11 @@ import org.eclipse.hono.util.CredentialsResult;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
-import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.registry.infinispan.device.data.CredentialKey;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
+import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.infinispan.device.CredentialKey;
+import io.enmasse.iot.infinispan.device.DeviceInformation;
+import io.enmasse.iot.infinispan.device.DeviceKey;
+import io.enmasse.iot.infinispan.tenant.TenantInformation;
 import io.enmasse.iot.registry.infinispan.tenant.TenantInformationService;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
@@ -41,9 +41,9 @@ public abstract class AbstractCredentialsService implements CredentialsService {
     protected TenantInformationService tenantInformationService;
 
     @Autowired
-    public AbstractCredentialsService(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider) {
-        this.adapterCache = adapterProvider.getAdapterCredentialsCache();
-        this.managementCache = managementProvider.getDeviceManagementCache();
+    public AbstractCredentialsService(final DeviceManagementCacheProvider cacheProvider) {
+        this.adapterCache = cacheProvider.getOrCreateAdapterCredentialsCache();
+        this.managementCache = cacheProvider.getOrCreateDeviceManagementCache();
     }
 
     public void setTenantInformationService(TenantInformationService tenantInformationService) {
@@ -63,11 +63,11 @@ public abstract class AbstractCredentialsService implements CredentialsService {
     protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final String tenantId, final String type, final String authId, final Span span) {
 
         return this.tenantInformationService
-                .tenantExists(tenantId, HTTP_NOT_FOUND, span )
-                .thenCompose(tenantHandle -> processGet(credentialKey(tenantHandle, authId, type), span));
+                .tenantExists(tenantId, HTTP_NOT_FOUND, span)
+                .thenCompose(tenantHandle -> processGet(tenantHandle, credentialKey(tenantHandle, authId, type), span));
 
     }
 
-    protected abstract CompletableFuture<CredentialsResult<JsonObject>> processGet(CredentialKey key, Span span);
+    protected abstract CompletableFuture<CredentialsResult<JsonObject>> processGet(TenantInformation tenant, CredentialKey key, Span span);
 
 }

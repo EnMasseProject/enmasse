@@ -12,6 +12,7 @@ import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -139,7 +140,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 .endSpec()
                 .build();
 
-        runRestApiTest(getSharedAddressSpace(), q1, q2);
+        assertAddressApi(getSharedAddressSpace(), q1, q2);
     }
 
     @Test
@@ -158,7 +159,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
@@ -238,7 +239,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -291,16 +292,16 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
 
-        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1, DeliveryMode.PERSISTENT);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1, DeliveryMode.PERSISTENT);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1, DeliveryMode.PERSISTENT);
         connection.stop();
         connection.close();
     }

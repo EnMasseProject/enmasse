@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -17,6 +18,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -35,8 +37,11 @@ import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.cluster.CRCCluster;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -104,8 +109,10 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
     @AfterEach
     void deleteAddressSpace(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
-            logCollector.collectLogsOfPodsInNamespace(getInstallationNamespace());
-            logCollector.collectEvents(getInstallationNamespace());
+            Path path = JunitCallbackListener.getPath(context);
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, getInstallationNamespace());
+            collector.collectLogsOfPodsInNamespace(getInstallationNamespace());
+            collector.collectEvents(getInstallationNamespace());
         }
         for (String namespace : Arrays.asList(getInstallationNamespace(), getDifferentAddressSpaceNamespace())) {
             AddressSpace addressSpace = kubernetes.getAddressSpaceClient(namespace).withName("myspace").get();
@@ -162,7 +169,7 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
         TestUtils.waitUntilCondition("Address visible",
                 phase -> addressClient.withName("myspace.myqueue").get() != null,
                 new TimeoutBudget(30, TimeUnit.SECONDS));
-        waitForDestinationsReady(addressClient.withName("myspace.myqueue").get());
+        AddressUtils.waitForDestinationsReady(addressClient.withName("myspace.myqueue").get());
 
         // Test basic messages
         AddressSpace exampleSpace = kubernetes.getAddressSpaceClient(addressSpaceNamespace).withName("myspace").get();

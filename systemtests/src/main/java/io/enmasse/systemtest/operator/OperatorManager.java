@@ -8,30 +8,29 @@ import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.ConsoleServiceSpec;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
-import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.Minikube;
 import io.enmasse.systemtest.platform.OpenShift;
 import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OperatorManager {
-
-//    private static final OLMInstallationType SYSTEMTESTS_OLM_INSTALLATION_TYPE = OLMInstallationType.DEFAULT;
 
     private static Logger LOGGER = CustomLogger.getLogger();
     private Kubernetes kube = Kubernetes.getInstance();
@@ -103,7 +102,7 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void deleteEnmasseOlm() throws Exception {
+    public void deleteEnmasseOlm() {
         LOGGER.info("***********************************************************");
         LOGGER.info("                  Enmasse OLM delete");
         LOGGER.info("***********************************************************");
@@ -111,21 +110,10 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void installOperators() throws Exception {
+    public void installOperators() {
         LOGGER.info("Installing enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
+        generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
-        if (kube instanceof Minikube) {
-            CertBundle apiServertCert = CertificateUtils.createCertBundle("api-server." + kube.getInfraNamespace() + ".svc.cluster.local");
-            Secret secret = new SecretBuilder()
-                    .editOrNewMetadata()
-                    .withName("api-server-cert")
-                    .endMetadata()
-                    .addToData("tls.key", apiServertCert.getKeyB64())
-                    .addToData("tls.crt", apiServertCert.getCertB64())
-
-                    .build();
-            kube.createSecret(kube.getInfraNamespace(), secret);
-        }
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
     }
 
@@ -180,7 +168,7 @@ public class OperatorManager {
         KubeCMDClient.applyFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
     }
 
-    public void installIoTOperator() throws Exception {
+    public void installIoTOperator() {
         LOGGER.info("***********************************************************");
         LOGGER.info("                Enmasse IoT operator install");
         LOGGER.info("***********************************************************");
@@ -200,9 +188,10 @@ public class OperatorManager {
         KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
     }
 
-    public void removeOlm() throws Exception {
+    public void removeOlm() {
         Consumer<String> remover = (namespace) -> {
             KubeCMDClient.runOnCluster("delete", "subscriptions", "-l", "app=enmasse", "-n", namespace);
+            KubeCMDClient.runOnCluster("delete", "operatorgroups", "-l", "app=enmasse", "-n", namespace);
             KubeCMDClient.runOnCluster("delete", "catalogsources", "-l", "app=enmasse", "-n", namespace);
             KubeCMDClient.runOnCluster("delete", "csv", "-l", "app=enmasse", "-n", namespace);
             KubeCMDClient.runOnCluster("delete", "deployments", "-l", "app=enmasse", "-n", namespace);
@@ -247,16 +236,35 @@ public class OperatorManager {
         KubeCMDClient.deleteFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
     }
 
-    public void clean() throws Exception {
-        KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse");
+    public void deleteEnmasseAnsible() {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("            Enmasse operator delete by ansible");
+        LOGGER.info("***********************************************************");
+        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", "systemtests.inventory");
+        Path ansiblePlaybook = Paths.get(Environment.getInstance().getUpgradeTemplates(), "ansible", "playbooks", "openshift", "uninstall.yml");
+        List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
+                "--extra-vars", String.format("namespace=%s", kube.getInfraNamespace()));
+        assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Uninstall failed");
+        LOGGER.info("***********************************************************");
+    }
+
+    public boolean clean() throws Exception {
+        KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse,enmasse-component=iot");
+        KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse,enmasse-component=tenant-api");
+        KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "oauthclients", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterservicebrokers", "-l", "app=enmasse");
         if (!kube.getInfraNamespace().equals(kube.getOlmNamespace())) {
-            kube.deleteNamespace(kube.getInfraNamespace());
+            try {
+                kube.deleteNamespace(kube.getInfraNamespace());
+            } catch (Exception e) {
+                System.exit(1);
+            }
         }
+        return true;
     }
 
     public void waitUntilOperatorReadyOlm() throws Exception {
@@ -274,6 +282,13 @@ public class OperatorManager {
         if (kube instanceof OpenShift) {
             // Kubernetes does not make a console service available by default.
             awaitConsoleReadiness(namespace);
+        }
+    }
+
+    private void generateTemplates() {
+        if (Files.notExists(Paths.get(Environment.getInstance().getTemplatesPath()))) {
+            LOGGER.info("Generating templates.");
+            Exec.execute(Arrays.asList("make", "-C", "..", "templates"));
         }
     }
 
@@ -317,10 +332,7 @@ public class OperatorManager {
         if (isEnmasseOlmDeployed(kube.getOlmNamespace())) {
             return true;
         }
-        if (kube.namespaceExists(kube.getInfraNamespace()) && isEnmasseOlmDeployed(kube.getInfraNamespace())) {
-            return true;
-        }
-        return false;
+        return kube.namespaceExists(kube.getInfraNamespace()) && isEnmasseOlmDeployed(kube.getInfraNamespace());
     }
 
     public boolean areExamplesApplied() {
@@ -332,14 +344,13 @@ public class OperatorManager {
 
     private boolean isEnmasseOlmDeployed(String namespace) {
         ExecutionResultData res = KubeCMDClient.runOnCluster("get", "subscriptions", "-n", namespace);
-        if(res.getRetCode()) {
-            return res.getStdOut().contains(productName+"-sub");
+        if (res.getRetCode()) {
+            return res.getStdOut().contains("enmasse-sub");
         }
         return false;
     }
 
-    private String getNamespaceByOlmInstallationType(OLMInstallationType installation) {
-        String namespace = installation == OLMInstallationType.DEFAULT ? kube.getOlmNamespace() : kube.getInfraNamespace();
-        return namespace;
+    public String getNamespaceByOlmInstallationType(OLMInstallationType installation) {
+        return installation == OLMInstallationType.DEFAULT ? kube.getOlmNamespace() : kube.getInfraNamespace();
     }
 }

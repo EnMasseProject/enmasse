@@ -17,6 +17,7 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.Count;
 import io.enmasse.systemtest.utils.JmsProvider;
@@ -174,7 +175,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         kubernetes.getAddressClient().create(q2);
 
         resourcesManager.appendAddresses(q1);
-        waitForDestinationsReady(q2);
+        AddressUtils.waitForDestinationsReady(q2);
 
         AmqpClient client = getAmqpClientFactory().createQueueClient();
         runQueueTest(client, q1);
@@ -207,7 +208,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .endSpec()
                 .build();
 
-        runRestApiTest(getSharedAddressSpace(), q1, q2);
+        assertAddressApi(getSharedAddressSpace(), q1, q2);
     }
 
     @Test
@@ -444,7 +445,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 try {
                     int messageCount = 43;
                     resourcesManager.appendAddresses(false, destinations);
-                    doMessaging(Arrays.asList(destinations), users, destNamePrefix, customerIndex, messageCount);
+                    assertConcurentMessaging(Arrays.asList(destinations), users, destNamePrefix, customerIndex, messageCount);
                 } catch (Exception e) {
                     e.printStackTrace();
                     fail(e.getMessage());
@@ -455,7 +456,9 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         //once one of the doMessaging method is finished  then remove appropriate users
         for (Map.Entry<CompletableFuture<Void>, List<UserCredentials>> customer : company.entrySet()) {
             customer.getKey().get();
-            customer.getValue().stream().forEach(user -> resourcesManager.removeUser(getSharedAddressSpace(), user.getUsername()));
+            for (UserCredentials user : customer.getValue()) {
+                resourcesManager.removeUser(getSharedAddressSpace(), user.getUsername());
+            }
         }
     }
 
@@ -475,16 +478,16 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
 
-        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1);
-        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1, DeliveryMode.PERSISTENT);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1, DeliveryMode.PERSISTENT);
+        assertSendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1, DeliveryMode.PERSISTENT);
         connection.stop();
         connection.close();
     }

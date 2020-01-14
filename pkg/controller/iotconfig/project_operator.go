@@ -8,6 +8,8 @@ package iotconfig
 import (
 	"context"
 
+	"github.com/enmasseproject/enmasse/pkg/util/images"
+
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	appsv1 "k8s.io/api/apps/v1"
@@ -27,7 +29,7 @@ func (r *ReconcileIoTConfig) reconcileProjectOperator(config *iotv1alpha1.IoTCon
 
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-operator"
 
-	err := install.ApplyContainerWithError(deployment, "operator", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "operator", func(container *corev1.Container) error {
 		if err := install.SetContainerImage(container, "controller-manager", config); err != nil {
 			return err
 		}
@@ -44,16 +46,29 @@ func (r *ReconcileIoTConfig) reconcileProjectOperator(config *iotv1alpha1.IoTCon
 
 		applyContainerConfig(container, config.Spec.ServicesConfig.Operator.Container)
 
+		iotTenantCleanerImage, err := images.GetImage("iot-tenant-cleaner")
+		if err != nil {
+			return err
+		}
+
 		// setup env vars
 
 		container.Env = []corev1.EnvVar{
 			{Name: "POD_NAME", ValueFrom: &corev1.EnvVarSource{
 				FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.name"},
 			}},
+			{Name: "K8S_NAMESPACE", ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"},
+			}},
+			{Name: "IOT_CONFIG_NAME", Value: config.Name},
+
 			{Name: "OPERATOR_NAME", Value: "iot-operator"},
 
 			{Name: "CONTROLLER_DISABLE_ALL", Value: "true"},
 			{Name: "CONTROLLER_ENABLE_IOT_PROJECT", Value: "true"},
+
+			{Name: "IMAGE_PULL_POLICY", Value: string(images.GetDefaultPullPolicy())},
+			{Name: "IOT_TENANT_CLEANER_IMAGE", Value: iotTenantCleanerImage},
 		}
 
 		// return

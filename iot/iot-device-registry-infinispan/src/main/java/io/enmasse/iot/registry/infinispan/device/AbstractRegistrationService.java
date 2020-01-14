@@ -5,8 +5,8 @@
 
 package io.enmasse.iot.registry.infinispan.device;
 
-import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
-import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
+import static io.enmasse.iot.infinispan.device.DeviceKey.deviceKey;
+import static io.enmasse.iot.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import java.util.concurrent.CompletableFuture;
@@ -15,9 +15,9 @@ import org.eclipse.hono.util.RegistrationResult;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
+import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.infinispan.device.DeviceInformation;
+import io.enmasse.iot.infinispan.device.DeviceKey;
 import io.enmasse.iot.registry.infinispan.tenant.TenantInformationService;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
@@ -34,7 +34,7 @@ public abstract class AbstractRegistrationService extends org.eclipse.hono.servi
 
     @Autowired
     public AbstractRegistrationService(final DeviceManagementCacheProvider provider) {
-        this.managementCache = provider.getDeviceManagementCache();
+        this.managementCache = provider.getOrCreateDeviceManagementCache();
     }
 
     public void setTenantInformationService(final TenantInformationService tenantInformationService) {

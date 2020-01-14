@@ -1,0 +1,35 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+// assembly-IoT.adoc
+
+ifeval::["{cmdcli}" == "oc"]
+:cmd-get-adapter: echo "https://$(oc -n {ProductNamespace} get routes iot-sigfox-adapter --template='{{ .spec.host }}')"
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+:cmd-get-adapter: echo "https://$(kubectl -n {ProductNamespace} get service iot-sigfox-adapter-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443"
+endif::[]
+
+[id='assembly-iot-configuring-sigfox-{context}']
+= Configuring Sigfox devices
+
+After installing the IoT services and creating an IoT project, you can configure
+the Sigfox backend integration.
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-installing-services-{context}[The IoT services are installed].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-{context}[An IoT project is created].
+* TLS is properly deployed in your cluster. The Sigfox protocol adapter endpoint
+  must be properly validated with TLS.
+* An account at https://backend.sigfox.com must be set up and your Sigfox devices registered.
+* Familiarity with the Sigfox backend. After you are logged in to the Sigfox backend, for more information see the link:https://backend.sigfox.com/cms/[Sigfox documentation].
+
+include::../modules/proc-iot-register-sigfox-backend-gateway-device.adoc[leveloffset=+1]
+
+include::../modules/proc-iot-register-sigfox-device.adoc[leveloffset=+1]
+
+include::../modules/ref-iot-prepare-sigfox-connection-information.adoc[leveloffset=+1]
+
+include::../modules/proc-iot-creating-new-sigfox-callback.adoc[leveloffset=+1]
+
+include::../modules/proc-iot-sigfox-enabling-command-and-control.adoc[leveloffset=+1]

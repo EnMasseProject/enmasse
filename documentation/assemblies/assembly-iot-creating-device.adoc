@@ -1,0 +1,26 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+// assembly-IoT.adoc
+
+[id='assembly-iot-creating-device-{context}']
+= Creating an IoT device
+
+After installing the IoT services and creating an IoT project, you can create an IoT device for the device you want to monitor.
+
+:headers: -H 'Content-Type: application/json' -H "Authorization: Bearer ${TOKEN}"
+ifeval::["{cmdcli}" == "oc"]
+:registry: $(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+:registry: $(kubectl -n enmasse-infra get service iot-device-registry-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443
+endif::[]
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-installing-services-{context}[The IoT services are installed].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-{context}[An IoT project is created].
+
+include::../modules/proc-iot-register-new-device.adoc[leveloffset=+1]
+
+include::../modules/proc-iot-set-username-password-device.adoc[leveloffset=+1]
+

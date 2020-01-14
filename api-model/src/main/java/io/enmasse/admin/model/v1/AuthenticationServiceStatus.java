@@ -6,6 +6,7 @@ package io.enmasse.admin.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.enmasse.address.model.Phase;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.SecretReference;
 import io.sundr.builder.annotations.Buildable;
@@ -26,6 +27,8 @@ import java.util.Objects;
 @JsonPropertyOrder({"host", "port"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthenticationServiceStatus extends AbstractWithAdditionalProperties {
+    private Phase phase;
+    private String message;
     private String host;
     private int port;
     private SecretReference caCertSecret;
@@ -37,23 +40,27 @@ public class AuthenticationServiceStatus extends AbstractWithAdditionalPropertie
         if (o == null || getClass() != o.getClass()) return false;
         AuthenticationServiceStatus that = (AuthenticationServiceStatus) o;
         return port == that.port &&
+                phase == that.phase &&
+                Objects.equals(message, that.message) &&
                 Objects.equals(host, that.host) &&
-                Objects.equals(clientCertSecret, that.clientCertSecret) &&
-                Objects.equals(caCertSecret, that.caCertSecret);
+                Objects.equals(caCertSecret, that.caCertSecret) &&
+                Objects.equals(clientCertSecret, that.clientCertSecret);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(host, port, clientCertSecret, caCertSecret);
+        return Objects.hash(phase, message, host, port, caCertSecret, clientCertSecret);
     }
 
     @Override
     public String toString() {
         return "AuthenticationServiceStatus{" +
-                "host='" + host + '\'' +
+                "phase=" + phase +
+                ", message='" + message + '\'' +
+                ", host='" + host + '\'' +
                 ", port=" + port +
-                ", clientCertSecret=" + clientCertSecret +
                 ", caCertSecret=" + caCertSecret +
+                ", clientCertSecret=" + clientCertSecret +
                 '}';
     }
 
@@ -87,5 +94,21 @@ public class AuthenticationServiceStatus extends AbstractWithAdditionalPropertie
 
     public void setClientCertSecret(SecretReference clientCertSecret) {
         this.clientCertSecret = clientCertSecret;
+    }
+
+    public Phase getPhase() {
+        return phase;
+    }
+
+    public void setPhase(Phase phase) {
+        this.phase = phase;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

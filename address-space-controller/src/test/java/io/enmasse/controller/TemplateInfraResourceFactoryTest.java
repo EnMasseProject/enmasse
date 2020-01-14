@@ -42,6 +42,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
 
     private TemplateInfraResourceFactory resourceFactory;
     private NamespacedKubernetesClient client;
+    private AuthenticationServiceResolver authenticationServiceResolver;
 
     @AfterEach
     void tearDown() {
@@ -71,12 +72,13 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                 .build();
         when(authenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.of(authenticationService));
 
+        authenticationServiceResolver = new AuthenticationServiceResolver(authenticationServiceRegistry);
+
         resourceFactory = new TemplateInfraResourceFactory(
                 new KubernetesHelper("test",
                         client,
                         new File("src/test/resources/templates"),
                         true),
-                new AuthenticationServiceResolver(authenticationServiceRegistry),
                 Collections.emptyMap(), schemaProvider);
     }
 
@@ -130,7 +132,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                         .build())
                 .endSpec()
                 .build();
-        List<HasMetadata> items = resourceFactory.createInfraResources(addressSpace, infraConfig);
+        List<HasMetadata> items = resourceFactory.createInfraResources(addressSpace, infraConfig, authenticationServiceResolver.resolve(addressSpace));
         assertEquals(3, items.size());
         ConfigMap map = findItem(ConfigMap.class, "ConfigMap", "mymap", items);
         assertEquals("FAIL", map.getData().get("key"));

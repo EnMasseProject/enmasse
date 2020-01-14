@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -7,6 +7,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
@@ -29,7 +30,7 @@ import (
 )
 
 type Configurator struct {
-	ephermalCertBase string
+	ephemeralCertBase string
 
 	kubeclientset    kubernetes.Interface
 	enmasseclientset clientset.Interface
@@ -46,7 +47,7 @@ func NewConfigurator(
 	kubeclientset kubernetes.Interface,
 	iotclientset clientset.Interface,
 	projectInformer iotinformers.IoTProjectInformer,
-	ephermalCertBase string,
+	ephemeralCertBase string,
 ) *Configurator {
 
 	controller := &Configurator{
@@ -56,9 +57,9 @@ func NewConfigurator(
 		projectLister:  projectInformer.Lister(),
 		projectsSynced: projectInformer.Informer().HasSynced,
 
-		workqueue:        workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "IoTProjects"),
-		manage:           qdr.NewManage(),
-		ephermalCertBase: ephermalCertBase,
+		workqueue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "IoTProjects"),
+		manage:            qdr.NewManage(),
+		ephemeralCertBase: ephemeralCertBase,
 	}
 
 	log.Info("Setting up event handlers")
@@ -67,28 +68,78 @@ func NewConfigurator(
 	projectInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			log.V(2).Info("Add", "object", obj)
-			controller.enqueueProject(obj)
+			controller.enqueueProject(obj, nil)
 		},
 		UpdateFunc: func(old, new interface{}) {
 			log.V(2).Info("Update", "old", old, "new", new)
-			controller.enqueueProject(new)
+			controller.enqueueProject(new, old)
 		},
 		DeleteFunc: func(obj interface{}) {
 			log.V(2).Info("Deleted", "object", obj)
-			controller.enqueueProject(obj)
+			controller.enqueueProject(obj, nil)
 		},
 	})
 
 	return controller
 }
 
-func (c *Configurator) enqueueProject(obj interface{}) {
-	if key, err := cache.MetaNamespaceKeyFunc(obj); err != nil {
+func (c *Configurator) enqueueProject(obj, old interface{}) {
+
+	key, err := cache.MetaNamespaceKeyFunc(obj)
+
+	if err != nil {
 		runtime.HandleError(err)
 		return
-	} else {
-		c.workqueue.AddRateLimited(key)
 	}
+
+	result := shouldQueue(obj, old)
+
+	log.Info(fmt.Sprintf("Should queue %v -> %v", key, result))
+
+	if !result {
+		return
+	}
+
+	c.workqueue.AddRateLimited(key)
+}
+
+func shouldQueue(obj, old interface{}) bool {
+
+	if old == nil {
+		// we only have the current state, no diff ... so enqueue it
+		return true
+	}
+
+	prj, ok := obj.(*v1alpha1.IoTProject)
+	if !ok {
+		runtime.HandleError(fmt.Errorf("can only handle objects of type *IoTProject, was: %T", obj))
+		return false
+	}
+
+	oldprj, ok := old.(*v1alpha1.IoTProject)
+	if !ok {
+		runtime.HandleError(fmt.Errorf("'old' must be of type *IoTProject, was: %T", old))
+		return false
+	}
+
+	if prj.Status.DownstreamEndpoint == nil || oldprj.Status.DownstreamEndpoint == nil {
+		// no endpoint ... no need to queue
+		return false
+	}
+
+	if prj.Status.Phase != oldprj.Status.Phase {
+		// always re-queue on phase change
+		return true
+	}
+
+	if reflect.DeepEqual(prj.Status.DownstreamEndpoint, oldprj.Status.DownstreamEndpoint) {
+		// downstream information did not change ... no change for us
+		return false
+	}
+
+	// requeue
+	return true
+
 }
 
 // Run main controller
@@ -197,6 +248,8 @@ func (c *Configurator) syncHandler(key string) error {
 		return nil
 	}
 
+	log := log.WithValues("namespace", namespace, "name", name)
+
 	// read requested state
 	project, err := c.projectLister.IoTProjects(namespace).Get(name)
 	if err != nil {
@@ -219,6 +272,8 @@ func (c *Configurator) syncHandler(key string) error {
 
 		}
 
+		log.Error(err, "Failed to read IoTProject")
+
 		return err
 	}
 
@@ -236,7 +291,10 @@ func (c *Configurator) syncHandler(key string) error {
 
 	}
 
-	if project.Status.Phase != v1alpha1.ProjectPhaseReady || project.Status.DownstreamEndpoint == nil {
+	log.Info("Change on IoTProject: " + project.Namespace + "." + project.Name)
+
+	if project.Status.Phase != v1alpha1.ProjectPhaseActive || project.Status.DownstreamEndpoint == nil {
+		log.Info("Project is not ready yet", "Phase", project.Status.Phase, "DownstreamEndpoint", project.Status.DownstreamEndpoint)
 		// project is not ready yet
 		return nil
 	}
@@ -247,6 +305,7 @@ func (c *Configurator) syncHandler(key string) error {
 	// something went wrong syncing the project
 	// we will re-queue this by returning the error state
 	if err != nil {
+		log.Error(err, "Failed to sync IoTProject with QDR")
 		return err
 	}
 

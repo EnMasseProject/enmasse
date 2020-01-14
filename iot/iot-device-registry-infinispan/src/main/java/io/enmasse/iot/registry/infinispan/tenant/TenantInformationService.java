@@ -5,6 +5,8 @@
 
 package io.enmasse.iot.registry.infinispan.tenant;
 
+import io.enmasse.iot.infinispan.tenant.TenantInformation;
+
 import java.util.concurrent.CompletableFuture;
 
 import io.opentracing.Span;
@@ -14,6 +16,6 @@ import io.opentracing.Span;
  */
 public interface TenantInformationService {
 
-    public CompletableFuture<TenantHandle> tenantExists(String tenantName, int notFoundStatusCode, Span span);
+    public CompletableFuture<TenantInformation> tenantExists(String tenantName, int notFoundStatusCode, Span span);
 
 }

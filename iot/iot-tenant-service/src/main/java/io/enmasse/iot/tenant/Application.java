@@ -12,14 +12,17 @@ import org.eclipse.hono.service.AbstractBaseApplication;
 import org.eclipse.hono.service.HealthCheckProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.ComponentScan;
 
 import io.enmasse.model.CustomResourceDefinitions;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Verticle;
 
-@SpringBootApplication
+@ComponentScan("io.enmasse.iot.tenant")
+@ComponentScan("org.eclipse.hono.service.metric")
+@EnableAutoConfiguration
 public class Application extends AbstractBaseApplication {
 
     /**

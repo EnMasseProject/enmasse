@@ -288,6 +288,13 @@
             </properties>
         </profile>
         <profile>
+            <id>olm</id>
+            <properties>
+                <groups>olm</groups>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
+        <profile>
             <id>iot-release</id>
             <properties>
                 <groups>(shared-iot | isolated-iot) &amp; !noneAuth &amp; !smoke &amp; !soak &amp; !olm &amp; !upgrade</groups>

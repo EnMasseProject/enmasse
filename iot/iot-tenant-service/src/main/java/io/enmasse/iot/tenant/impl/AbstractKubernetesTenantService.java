@@ -5,7 +5,7 @@
 
 package io.enmasse.iot.tenant.impl;
 
-import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
+import static io.enmasse.iot.utils.MoreFutures.completeHandler;
 
 import java.util.concurrent.CompletableFuture;
 

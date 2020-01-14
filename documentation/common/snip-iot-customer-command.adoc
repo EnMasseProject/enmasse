@@ -1,0 +1,20 @@
+. Run the customer application to send commands to a device with an ID of `4711`:
++
+[options="nowrap",subs="attributes"]
+----
+java -jar hono-cli-*-exec.jar --hono.client.host=$MESSAGING_HOST --hono.client.port=$MESSAGING_PORT --hono.client.username=consumer --hono.client.password=foobar --tenant.id=myapp.iot --hono.client.trustStorePath=tls.crt --device.id=4711 --spring.profiles.active=command
+----
+
+. Follow the instructions for entering the command's name, payload, and content type. For example:
++
+[options="nowrap",subs="attributes"]
+----
+>>>>>>>>> Enter name of command for device [4711] in tenant [myapp.iot] (prefix with 'ow:' to send one-way command):
+ow:setVolume
+>>>>>>>>> Enter command payload:
+{"level": 50}
+>>>>>>>>> Enter content type:
+application/json
+
+INFO  org.eclipse.hono.cli.app.Commander - Command sent to device
+----

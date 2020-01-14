@@ -43,7 +43,7 @@ type IoTProjectStatus struct {
 type ProjectPhaseType string
 
 const (
-	ProjectPhaseReady       ProjectPhaseType = "Ready"
+	ProjectPhaseActive      ProjectPhaseType = "Active"
 	ProjectPhaseConfiguring ProjectPhaseType = "Configuring"
 	ProjectPhaseTerminating ProjectPhaseType = "Terminating"
 	ProjectPhaseFailed      ProjectPhaseType = "Failed"

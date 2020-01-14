@@ -12,16 +12,17 @@ objects:
       addressSpace: ${ADDRESS_SPACE}
       cluster_id: ${CLUSTER_ID}
     labels:
+      monitoring-key: enmasse-tenants
       app: enmasse
       infraType: standard
       infraUuid: ${INFRA_UUID}
     name: ${NAME}
   spec:
     ports:
-    - name: health
-      port: 8080
+    - name: health-tls
+      port: 8161
       protocol: TCP
-      targetPort: artemismetrics
+      targetPort: jolokia
     clusterIP: None
     selector:
       name: ${NAME}
@@ -69,9 +70,6 @@ objects:
           address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
-          prometheus.io/path: /metrics
-          prometheus.io/port: '8080'
-          prometheus.io/scrape: 'true'
         labels:
           addresstype: topic
           app: enmasse
@@ -129,15 +127,13 @@ objects:
               - sh
               - -c
               - $ARTEMIS_HOME/custom/bin/probe.sh
-            initialDelaySeconds: 120
+            initialDelaySeconds: 300
           name: broker
           ports:
           - containerPort: 5673
             name: amqp
           - containerPort: 8161
             name: jolokia
-          - containerPort: 8080
-            name: artemismetrics
           readinessProbe:
             exec:
               command:
@@ -156,9 +152,6 @@ objects:
           - mountPath: /opt/apache-artemis/custom
             name: broker-custom
             readOnly: false
-          - mountPath: /etc/prometheus-config
-            name: broker-prometheus-config
-            readOnly: true
         - env:
           - name: INFRA_UUID
             value: ${INFRA_UUID}
@@ -240,9 +233,6 @@ objects:
           - mountPath: /etc/authservice-ca
             name: authservice-ca
             readOnly: true
-          - mountPath: /etc/prometheus-config
-            name: broker-prometheus-config
-            readOnly: true
           - mountPath: /opt/apache-artemis/custom
             name: broker-custom
             readOnly: false
@@ -255,9 +245,6 @@ objects:
         - name: broker-internal-cert
           secret:
             secretName: broker-internal-cert.${INFRA_UUID}
-        - configMap:
-            name: broker-prometheus-config
-          name: broker-prometheus-config
     volumeClaimTemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim

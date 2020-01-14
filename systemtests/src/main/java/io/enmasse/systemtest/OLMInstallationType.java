@@ -7,6 +7,6 @@ package io.enmasse.systemtest;
 public enum OLMInstallationType {
 
     DEFAULT,
-    SPECIFIC;
+    SPECIFIC
 
 }

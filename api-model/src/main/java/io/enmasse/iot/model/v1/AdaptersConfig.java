@@ -24,11 +24,19 @@ import io.sundr.builder.annotations.Inline;
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AdaptersConfig {
+    private AdapterOptions defaults;
     private AdapterConfig http;
     private AdapterConfig mqtt;
     private AdapterConfig sigfox;
     @JsonProperty("lorawan")
     private AdapterConfig loraWan;
+
+    public AdapterOptions getDefaults() {
+        return defaults;
+    }
+    public void setDefaults(AdapterOptions defaults) {
+        this.defaults = defaults;
+    }
 
     public AdapterConfig getHttp() {
         return http;

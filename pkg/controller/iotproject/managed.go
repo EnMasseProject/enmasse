@@ -43,7 +43,6 @@ var Addresses = []string{
 const resourceTypeAddressSpace = "Address Space"
 const resourceTypeAdapterUser = "Adapter User"
 
-const annotationPasswordSyncTime = annotationBase + "/passwordSyncTime"
 const annotationProject = annotationBase + "/project.name"
 const annotationProjectUID = annotationBase + "/project.uid"
 
@@ -91,7 +90,7 @@ func updateManagedReadyStatus(m *managedStatus, project *iotv1alpha1.IoTProject)
 	updateFromMap(m.remainingReady, &readyCondition.CommonCondition, "Non-ready resources")
 
 	if createdCondition.Status == corev1.ConditionTrue && readyCondition.Status == corev1.ConditionTrue {
-		project.Status.Phase = iotv1alpha1.ProjectPhaseReady
+		project.Status.Phase = iotv1alpha1.ProjectPhaseActive
 	} else {
 		project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
 	}
@@ -105,7 +104,7 @@ func updateManagedStatus(managedStatus *managedStatus, project *iotv1alpha1.IoTP
 	// extract endpoint information
 
 	currentCredentials := project.Status.DownstreamEndpoint.Credentials.DeepCopy()
-	if managedStatus.addressSpace != nil && project.Status.Phase == iotv1alpha1.ProjectPhaseReady {
+	if managedStatus.addressSpace != nil && project.Status.Phase == iotv1alpha1.ProjectPhaseActive {
 
 		forceTls := true
 		endpoint, err := extractEndpointInformation("messaging", iotv1alpha1.Service, "amqps", currentCredentials, managedStatus.addressSpace, &forceTls)
@@ -154,7 +153,7 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 		return rc.Result()
 	}
 
-	project.Status.Phase = "Configuring"
+	project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
 
 	// reconcile address space
 
@@ -233,7 +232,7 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 
 			// cleanup old address space first
 
-			project.Status.Phase = "Reconfiguring"
+			project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
 			project.Status.PhaseReason = "Address Space changed"
 
 			result, err := cleanupManagedResources(ctx, r.client, project)
@@ -360,7 +359,7 @@ func (r *ReconcileIoTProject) reconcileAdapterUser(ctx context.Context, project 
 
 	if err == nil {
 		managedStatus.remainingCreated[resourceTypeAdapterUser] = true
-		managedStatus.remainingReady[resourceTypeAdapterUser] = true
+		managedStatus.remainingReady[resourceTypeAdapterUser] = (adapterUser.Status.Phase == userv1beta1.UserActive)
 	}
 
 	return reconcile.Result{}, err
@@ -514,8 +513,6 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 		return err
 	}
 
-	managed := project.Status.Managed
-
 	existing.Spec.Username = credentials.Username
 	existing.Spec.Authentication = userv1beta1.AuthenticationSpec{
 		Type: "password",
@@ -528,25 +525,8 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 	existing.Annotations[annotationProject] = project.Name
 	existing.Annotations[annotationProjectUID] = string(project.UID)
 
-	// get last password sync
-
-	var syncTime time.Time
-	syncTimeString := existing.Annotations[annotationPasswordSyncTime]
-	if syncTimeString != "" {
-		syncTime, _ = time.Parse(time.RFC3339, syncTimeString)
-	}
-
-	// if we missed an update
-
-	if managed.PasswordTime.After(syncTime) {
-
-		log.Info("Updating password for", "user", existing.Name)
-
-		// set the password
-		existing.Spec.Authentication.Password = []byte(credentials.Password)
-		existing.Annotations[annotationPasswordSyncTime] = managed.PasswordTime.UTC().Format(time.RFC3339)
-
-	}
+	// set the password
+	existing.Spec.Authentication.Password = []byte(credentials.Password)
 
 	// create access rules
 
@@ -567,8 +547,8 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				commandResponseName,
 				commandResponseName + "/*",
 			},
-			Operations: []string{
-				"send",
+			Operations: []userv1beta1.AuthorizationOperation{
+				userv1beta1.Send,
 			},
 		},
 
@@ -577,8 +557,8 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				commandName,
 				commandName + "/*",
 			},
-			Operations: []string{
-				"recv",
+			Operations: []userv1beta1.AuthorizationOperation{
+				userv1beta1.Recv,
 			},
 		},
 
@@ -587,9 +567,9 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				commandLegacyName,
 				commandLegacyName + "/*",
 			},
-			Operations: []string{
-				"send",
-				"recv",
+			Operations: []userv1beta1.AuthorizationOperation{
+				userv1beta1.Send,
+				userv1beta1.Recv,
 			},
 		},
 	}

@@ -10,6 +10,7 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.DoneableAddressSpace;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
@@ -28,6 +29,7 @@ import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+import io.enmasse.user.model.v1.UserBuilder;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
 
@@ -93,19 +95,19 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         createCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
         isolatedResourcesManager.addToAddressSpaces(standard);
         resourcesManager.waitForAddressSpaceReady(standard);
-        resourcesManager.waitForAddressSpacePlanApplied(standard);
+        String currentConfig = resourcesManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
 
         standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_UNLIMITED).endSpec().done();
         updateCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
-        resourcesManager.waitForAddressSpaceReady(standard);
-        resourcesManager.waitForAddressSpacePlanApplied(standard);
+        AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(standard, currentConfig);
         assertThat(resourcesManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_UNLIMITED));
+        currentConfig = resourcesManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
 
         // Patch back to small plan
         assertTrue(patchCR(standard.getKind().toLowerCase(), standard.getMetadata().getName(), "{\"spec\":{\"plan\":\"" + AddressSpacePlans.STANDARD_SMALL + "\"}}").getRetCode());
         standard = resourcesManager.getAddressSpace(standard.getMetadata().getName());
         resourcesManager.waitForAddressSpaceReady(standard);
-        resourcesManager.waitForAddressSpacePlanApplied(standard);
+        AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(standard, currentConfig);
         assertThat(resourcesManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_SMALL));
     }
 
@@ -263,6 +265,10 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(brokered.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
             assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(standard.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
 
+            TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+            UserUtils.waitForUserActive(new UserBuilder(testUser).editOrNewMetadata().withName(String.format("%s.%s", brokered.getMetadata().getName(), cred.getUsername())).withNamespace(namespace).endMetadata().build(), budget);
+            UserUtils.waitForUserActive(new UserBuilder(testUser).editOrNewMetadata().withName(String.format("%s.%s", standard.getMetadata().getName(), cred.getUsername())).withNamespace(namespace).endMetadata().build(), budget);
+
             data = new CliOutputData(KubeCMDClient.getUser(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.USER);
             assertEquals(((CliOutputData.UserRow) data.getData(String.format("%s.%s", brokered.getMetadata().getName(),
@@ -361,7 +367,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             TestUtils.waitUntilCondition(() -> {
                 ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(namespace, Optional.empty());
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
-            }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+            }, "No resources found", new TimeoutBudget(30, TimeUnit.SECONDS));
         } finally {
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());

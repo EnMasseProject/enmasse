@@ -29,6 +29,7 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
     public static final String KIND = "AddressSpacePlan";
 
     private AddressSpacePlanSpec spec;
+    private AddressSpacePlanStatus status;
 
     private String shortDescription;
     private String addressSpaceType;
@@ -53,12 +54,13 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
         if (o == null || getClass() != o.getClass()) return false;
         AddressSpacePlan that = (AddressSpacePlan) o;
         return Objects.equals(getMetadata(), that.getMetadata()) &&
-                Objects.equals(spec, that.getSpec());
+                Objects.equals(spec, that.getSpec()) &&
+                Objects.equals(status, that.getStatus());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMetadata(), spec);
+        return Objects.hash(getMetadata(), spec, status);
     }
 
     @Override
@@ -66,6 +68,7 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
         return "AddressSpacePlan{" +
                 "metadata='" + getMetadata()+ '\'' +
                 ", spec='" + spec + '\'' +
+                ", status='" + status + '\'' +
                 '}';
     }
 
@@ -168,4 +171,11 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
         this.addressSpaceType = addressSpaceType;
     }
 
+    public AddressSpacePlanStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AddressSpacePlanStatus status) {
+        this.status = status;
+    }
 }

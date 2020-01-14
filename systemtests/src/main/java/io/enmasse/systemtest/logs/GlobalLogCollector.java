@@ -23,7 +23,6 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,7 +158,7 @@ public class GlobalLogCollector {
         collectMqttAdapterQdrProxyState();
     }
 
-    public void collectHttpAdapterQdrProxyState() {
+    private void collectHttpAdapterQdrProxyState() {
         log.info("Collecting qdr-proxy router state in namespace {}", namespace);
         collectRouterState("httpAdapterQdrProxyState", System.currentTimeMillis(),
                 kubernetes.listPods(Map.of("component", "iot", "name", "iot-http-adapter")).stream(),
@@ -167,7 +166,7 @@ public class GlobalLogCollector {
                 this::qdrProxyCmd);
     }
 
-    public void collectMqttAdapterQdrProxyState() {
+    private void collectMqttAdapterQdrProxyState() {
         log.info("Collecting qdr-proxy router state in namespace {}", namespace);
         collectRouterState("mqttAdapterQdrProxyState", System.currentTimeMillis(),
                 kubernetes.listPods(Map.of("component", "iot", "name", "iot-mqtt-adapter")).stream(),
@@ -230,11 +229,6 @@ public class GlobalLogCollector {
         } catch (IOException e) {
             log.warn("Error collecting router state", e);
         }
-    }
-
-    public void collectApiServerJmapLog() {
-        log.info("Collecting jmap from api server");
-        kubernetes.listPods(Collections.singletonMap("component", "api-server")).forEach(this::collectJmap);
     }
 
     private void collectJmap(Pod pod) {

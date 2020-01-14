@@ -13,6 +13,7 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
 import org.junit.jupiter.api.AfterEach;
@@ -126,7 +127,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .endSpec()
                 .build();
 
-        runRestApiTest(getSharedAddressSpace(), t1, t2);
+        assertAddressApi(getSharedAddressSpace(), t1, t2);
     }
 
     @Test
@@ -145,7 +146,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -195,7 +196,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -268,7 +269,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
@@ -322,9 +323,9 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        Context context1 = jmsProvider.createContextForShared(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context1 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection1 = jmsProvider.createConnection(context1);
-        Context context2 = jmsProvider.createContextForShared(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context2 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection2 = jmsProvider.createConnection(context2);
         connection1.start();
         connection2.start();
@@ -382,9 +383,9 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        Context context1 = jmsProvider.createContextForShared(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context1 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection1 = jmsProvider.createConnection(context1);
-        Context context2 = jmsProvider.createContextForShared(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context2 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection2 = jmsProvider.createConnection(context2);
         connection1.start();
         connection2.start();
@@ -440,13 +441,13 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
 
-        sendReceiveLargeMessageTopic(jmsProvider, 1, addressTopic, 1);
-        sendReceiveLargeMessageTopic(jmsProvider, 0.5, addressTopic, 1);
-        sendReceiveLargeMessageTopic(jmsProvider, 0.25, addressTopic, 1);
+        assertSendReceiveLargeMessageTopic(jmsProvider, 1, addressTopic, 1);
+        assertSendReceiveLargeMessageTopic(jmsProvider, 0.5, addressTopic, 1);
+        assertSendReceiveLargeMessageTopic(jmsProvider, 0.25, addressTopic, 1);
         connection.stop();
         connection.close();
     }

@@ -1,0 +1,16 @@
+// Module included in the following assemblies:
+//
+// assembly-service-admin.adoc
+// assembly-iot-getting-started.adoc
+
+:api: telemetry
+
+[id='proc-iot-sending-telemetry-mqtt-{context}']
+= Sending telemetry using MQTT
+
+You can send telemetry from a device to the cloud using the MQTT protocol.
+
+.Procedure
+
+include::../common/snip-iot-mqtt-api.adoc[leveloffset=+1]
+

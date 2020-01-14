@@ -9,12 +9,14 @@
 
 The IoT guide provides resources on how to set up and manage {ProductName} IoT features.
 
-include::../modules/con-iot-concepts.adoc[leveloffset=+1]
-
 include::../assemblies/assembly-iot-getting-started.adoc[leveloffset=+1]
 
 include::../assemblies/assembly-iot-service-admin-guide.adoc[leveloffset=+1]
 
-include::../assemblies/assembly-iot-tenant-guide.adoc[leveloffset=+1]
+include::../assemblies/assembly-iot-device-manager-guide.adoc[leveloffset=+1]
+
+include::../assemblies/assembly-iot-solution-developers-guide.adoc[leveloffset=+1]
+
+include::../assemblies/assembly-iot-device-developer-guide.adoc[leveloffset=+1]
 
 :context: {parent-context}
