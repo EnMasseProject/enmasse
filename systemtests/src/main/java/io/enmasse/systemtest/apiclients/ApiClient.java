@@ -30,7 +30,6 @@ import static java.net.HttpURLConnection.HTTP_OK;
 public abstract class ApiClient implements AutoCloseable {
     private static final Logger log = CustomLogger.getLogger();
     protected WebClient client;
-    protected Kubernetes kubernetes;
     protected Vertx vertx;
     protected Endpoint endpoint;
     protected Supplier<Endpoint> endpointSupplier;
@@ -43,9 +42,8 @@ public abstract class ApiClient implements AutoCloseable {
 
     private void initializeApiClient(Supplier<Endpoint> endpointSupplier, String apiVersion, String token) {
         this.vertx = VertxFactory.create();
-        this.kubernetes = Kubernetes.getInstance();
         this.connect();
-        this.authzString = String.format("Bearer %s", Strings.isNullOrEmpty(token) ? kubernetes.getApiToken() : token);
+        this.authzString = Kubernetes.getInstance().getApiToken();
         this.endpoint = endpointSupplier.get();
         this.endpointSupplier = endpointSupplier;
         this.apiVersion = apiVersion;

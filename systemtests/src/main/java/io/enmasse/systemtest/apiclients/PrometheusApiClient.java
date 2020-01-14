@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.apiclients;
 
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;

@@ -77,10 +77,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         log.info("Waiting for monitoring resources to be installed");
         TestUtils.waitUntilCondition("Monitoring resources installed", phase -> {
             String permissions = KubeCMDClient.checkPermission("create", "prometheus", environment.getMonitoringNamespace(), "application-monitoring-operator").getStdOut();
-            if (permissions.trim().equals("yes")) {
-                return true;
-            }
-            return false;
+            return permissions.trim().equals("yes");
         }, new TimeoutBudget(3, TimeUnit.MINUTES));
 
     }
@@ -170,14 +167,10 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         validateAddressSpaceQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, addressSpaceName, "0");
 
         //tests address spaces ready goes from 0 to 1
-        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, startTs, addressSpaceName, range -> {
-            return Ordering.natural().isOrdered(range);
-        });
+        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, startTs, addressSpaceName, range -> Ordering.natural().isOrdered(range));
 
         //tests address spaces not ready goes from 1 to 0
-        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, startTs, addressSpaceName, range -> {
-            return Ordering.natural().reverse().isOrdered(range);
-        });
+        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, startTs, addressSpaceName, range -> Ordering.natural().reverse().isOrdered(range));
     }
 
     private void validateAddressSpaceQueryWaiting(String query, String addressSpace, String expectedValue) throws Exception {
