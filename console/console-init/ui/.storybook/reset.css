@@ -1,0 +1,6 @@
+@import url('~@patternfly/react-core/dist/styles/base.css');
+
+html, body, #root, #root > div {
+  height: 100%;
+  overflow: hidden;
+}
