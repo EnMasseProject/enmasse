@@ -1,0 +1,4 @@
+article.noBoShadow {
+  --pf-c-card--BoxShadow: none
+}
+
