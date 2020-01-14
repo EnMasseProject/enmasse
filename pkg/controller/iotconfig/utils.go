@@ -62,21 +62,13 @@ func AppendEnvVarValue(container *corev1.Container, name string, value string) {
 	})
 }
 
-func AppendStandardHonoJavaOptionsToEnv(container *corev1.Container, debug bool) {
+func AppendStandardHonoJavaOptions(container *corev1.Container) {
 
 	opts := "-Djava.net.preferIPv4Stack=true -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory"
 
-	if debug {
-		opts += " -Ddebug"
-
-	}
 	AppendEnvVarValue(
-			container,
-			"JAVA_APP_OPTS", opts)
-}
-
-func AppendStandardHonoJavaOptions(container *corev1.Container) {
-	AppendStandardHonoJavaOptionsToEnv(container, false)
+		container,
+		"JAVA_APP_OPTS", opts)
 }
 
 func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig iotv1alpha1.ServiceConfig, configCtx *cchange.ConfigChangeRecorder) {

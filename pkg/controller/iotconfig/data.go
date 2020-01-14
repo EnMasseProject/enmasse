@@ -19,3 +19,18 @@ const DefaultLogbackConfig = `<?xml version="1.0" encoding="UTF-8"?>
 	<logger name="org.eclipse.hono" level="INFO"/>
 </configuration>
 `
+
+const DebugLogbackConfig = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<configuration>
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z',GMT} %-5p [%c{0}] %m%n</pattern>
+		</encoder>
+	</appender>
+	<root level="DEBUG">
+		<appender-ref ref="STDOUT" />
+	</root>
+	<logger name="org.eclipse.hono" level="INFO"/>
+</configuration>
+`

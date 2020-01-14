@@ -125,8 +125,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "ENMASSE_IOT_REGISTRY_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.Infinispan.Management.AuthTokenCacheExpiration},
 		}
 
-		debug := *service.Infinispan.Java.Debug
-		AppendStandardHonoJavaOptionsToEnv(container, debug)
+		AppendStandardHonoJavaOptions(container)
 
 		// append trust stores
 
@@ -259,7 +258,13 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryConfigMap(config *
 	}
 
 	if configMap.Data["logback-spring.xml"] == "" {
-		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
+
+		debug := *config.Spec.ServicesConfig.DeviceRegistry.Infinispan.Java.Debug
+		if debug {
+			configMap.Data["logback-spring.xml"] = DebugLogbackConfig
+		} else {
+			configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
+		}
 	}
 
 	configMap.Data["application.yml"] = `
