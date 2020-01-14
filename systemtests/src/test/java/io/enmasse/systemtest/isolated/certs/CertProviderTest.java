@@ -193,7 +193,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         boolean testSucceeded = false;
         try {
             SystemtestsKubernetesApps.deployOpenshiftCertValidator(appNamespace, kubernetes);
-            try (var client = new OpenshiftCertValidatorApiClient(kubernetes, SystemtestsKubernetesApps.getOpenshiftCertValidatorEndpoint(appNamespace, kubernetes))) {
+            try (var client = new OpenshiftCertValidatorApiClient(SystemtestsKubernetesApps.getOpenshiftCertValidatorEndpoint(appNamespace, kubernetes))) {
 
                 JsonObject request = new JsonObject();
                 request.put("username", user.getUsername());

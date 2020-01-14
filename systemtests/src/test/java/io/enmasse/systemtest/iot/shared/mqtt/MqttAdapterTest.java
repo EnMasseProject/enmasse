@@ -75,10 +75,10 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
             mqttAdapterEndpoint = kubernetes.getExternalEndpoint("iot-mqtt-adapter");
         }
         if (registryClient == null) {
-            registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
+            registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
         }
         if (credentialsClient == null) {
-            credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
+            credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
         }
         registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
         credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, deviceAuthId, devicePassword);

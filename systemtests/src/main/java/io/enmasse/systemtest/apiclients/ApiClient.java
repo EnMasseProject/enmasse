@@ -8,16 +8,17 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.VertxFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxException;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.slf4j.Logger;
 
 import java.net.HttpURLConnection;
+import java.net.UnknownHostException;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -36,13 +37,13 @@ public abstract class ApiClient implements AutoCloseable {
     protected String authzString;
     protected String apiVersion;
 
-    protected ApiClient(Kubernetes kubernetes, Supplier<Endpoint> endpointSupplier, String apiVersion) {
-        initializeAddressClient(kubernetes, endpointSupplier, apiVersion, "");
+    protected ApiClient(Supplier<Endpoint> endpointSupplier, String apiVersion) {
+        initializeApiClient(endpointSupplier, apiVersion, "");
     }
 
-    private void initializeAddressClient(Kubernetes kubernetes, Supplier<Endpoint> endpointSupplier, String apiVersion, String token) {
+    private void initializeApiClient(Supplier<Endpoint> endpointSupplier, String apiVersion, String token) {
         this.vertx = VertxFactory.create();
-        this.kubernetes = kubernetes;
+        this.kubernetes = Kubernetes.getInstance();
         this.connect();
         this.authzString = String.format("Bearer %s", Strings.isNullOrEmpty(token) ? kubernetes.getApiToken() : token);
         this.endpoint = endpointSupplier.get();
@@ -126,9 +127,44 @@ public abstract class ApiClient implements AutoCloseable {
     }
 
     protected <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Supplier<Endpoint>> endpointFn, Optional<Runnable> reconnect) throws Exception {
-        return TestUtils.doRequestNTimes(retry, () -> {
+        return doRequestNTimes(retry, () -> {
             endpointFn.ifPresent(supplier -> endpoint = supplier.get());
             return fn.call();
         }, reconnect);
+    }
+
+    /**
+     * Repeat request n-times in a row
+     *
+     * @param retry count of remaining retries
+     * @param fn    request function
+     * @return
+     */
+    private <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Runnable> reconnect) throws Exception {
+        try {
+            return fn.call();
+        } catch (Exception ex) {
+            if (ex.getCause() instanceof VertxException && ex.getCause().getMessage().contains("Connection was closed")) {
+                if (reconnect.isPresent()) {
+                    log.warn("connection was closed, trying to reconnect...");
+                    reconnect.get().run();
+                }
+            }
+            if (ex.getCause() instanceof UnknownHostException && retry > 0) {
+                try {
+                    log.info("{} remaining iterations", retry);
+                    return doRequestNTimes(retry - 1, fn, reconnect);
+                } catch (Exception ex2) {
+                    throw ex2;
+                }
+            } else {
+                if (ex.getCause() != null) {
+                    ex.getCause().printStackTrace();
+                } else {
+                    ex.printStackTrace();
+                }
+                throw ex;
+            }
+        }
     }
 }

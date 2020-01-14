@@ -67,7 +67,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
 
         Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
-        this.prometheusApiClient = new PrometheusApiClient(kubernetes, prometheusEndpoint);
+        this.prometheusApiClient = new PrometheusApiClient(prometheusEndpoint);
 
         waitUntilPrometheusReady();
 

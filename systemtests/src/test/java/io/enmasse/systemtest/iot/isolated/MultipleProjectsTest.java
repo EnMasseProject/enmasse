@@ -94,8 +94,8 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         isolatedIoTManager.createIoTConfig(iotConfig);
 
         Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
-        registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
-        credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
+        registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
+        credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
 
         for (int i = 1; i <= numberOfProjects; i++) {
             String projectName = String.format("project-%s", i);
@@ -209,7 +209,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         registryClient.registerDevice(tenant, ctx.getDeviceId());
         credentialsClient.addCredentials(tenant, ctx.getDeviceId(), ctx.getDeviceAuthId(), ctx.getDevicePassword());
         Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        ctx.setHttpAdapterClient(new HttpAdapterClient(kubernetes, httpAdapterEndpoint, ctx.getDeviceAuthId(), tenant, ctx.getDevicePassword()));
+        ctx.setHttpAdapterClient(new HttpAdapterClient(httpAdapterEndpoint, ctx.getDeviceAuthId(), tenant, ctx.getDevicePassword()));
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
         mqttOptions.setAutomaticReconnect(true);
         mqttOptions.setConnectionTimeout(60);

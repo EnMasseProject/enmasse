@@ -92,7 +92,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
         httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
 
-        client = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
+        client = new DeviceRegistryClient(deviceRegistryEndpoint);
 
         this.randomDeviceId = UUID.randomUUID().toString();
 
@@ -131,7 +131,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     }
 
     protected void doTestDeviceCredentials() throws Exception {
-        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+        try (var credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint)) {
 
             client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
 
@@ -150,7 +150,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     }
 
     protected void doTestDeviceCredentialsPlainPassword() throws Exception {
-        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+        try (var credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint)) {
 
             client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
 
@@ -169,7 +169,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     }
 
     protected void doTestDeviceCredentialsDoesNotContainsPasswordDetails() throws Exception {
-        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+        try (var credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint)) {
 
             client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
 
@@ -197,7 +197,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
 
     protected void doTestCacheExpiryForCredentials() throws Exception {
-        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+        try (var credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint)) {
 
             final Duration cacheExpiration = Duration.ofMinutes(3);
 
@@ -237,7 +237,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
 
     protected void doTestSetExpiryForCredentials() throws Exception {
-        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+        try (var credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint)) {
             client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
 
             final String authId = UUID.randomUUID().toString();
@@ -273,7 +273,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
     protected void doTestTenantDeletionTriggersDevicesDeletion() throws Exception {
         var tenantId = isolatedIoTManager.getTenantId();
-        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+        try (var credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint)) {
             client.registerDevice(tenantId, randomDeviceId);
 
             final String authId = UUID.randomUUID().toString();
