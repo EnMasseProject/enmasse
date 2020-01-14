@@ -1,0 +1,9 @@
+{
+  "extends": [
+    "plugin:patternfly-react/recommended"
+  ],
+  "rules": {
+    "no-console": 0,
+    "no-debugger": 1
+  }
+}
