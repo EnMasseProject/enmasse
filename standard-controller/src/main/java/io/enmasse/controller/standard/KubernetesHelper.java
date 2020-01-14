@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
@@ -164,43 +163,8 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void delete(KubernetesList resources) {
-        // Work around fabric8 issue when deleting a deployment.  Internally there is a race between Fabric8's
-        // scaling of the deployment to zero and the deletion of the replicaset.  If the replicaset is deleted first
-        // the pods are orphaned.
-
-        final Set<Deployment> deployments = resources.getItems().stream().filter(r -> r instanceof Deployment).map(r -> (Deployment) r).collect(Collectors.toSet());
-        deployments.forEach(d -> scaleDeployment(d, 0));
-
-        long timeout = System.currentTimeMillis() + 60000;
-        while(!deployments.isEmpty() && timeout > System.currentTimeMillis()) {
-            final Iterator<Deployment> iterator = deployments.iterator();
-            while (iterator.hasNext()) {
-                final Deployment next = iterator.next();
-                final String deploymentName = next.getMetadata().getName();
-                final Deployment current = client.apps().deployments().withName(deploymentName).get();
-                if (current.getStatus() != null && (current.getStatus().getReplicas() == null || current.getStatus().getReplicas() == 0)) {
-                    iterator.remove();
-                }
-            }
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-
-        if (!deployments.isEmpty()) {
-            final List<Object> names = deployments.stream().map(d -> d.getMetadata().getName()).collect(Collectors.toList());
-            throw new RuntimeException(String.format("Could not scale [%s] deployment(s) to zero replicas within timeout", names));
-        }
-
         for (HasMetadata resource : resources.getItems()) {
-            if (resource instanceof StatefulSet) {
-                client.apps().statefulSets().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
-            } else {
-                client.resource(resource).cascading(true).delete();
-            }
+            client.resource(resource).cascading(true).delete();
         }
     }
 
@@ -219,10 +183,6 @@ public class KubernetesHelper implements Kubernetes {
     public KubernetesList processTemplate(String templateName, Map<String,String> parameters) {
         File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
         return Templates.process(templateFile, parameters);
-    }
-
-    private void scaleDeployment(Deployment deployment, int numReplicas) {
-        client.apps().deployments().withName(deployment.getMetadata().getName()).scale(numReplicas);
     }
 
     @Override
