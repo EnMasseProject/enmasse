@@ -22,11 +22,12 @@ import io.sundr.builder.annotations.Inline;
         refs = {@BuildableReference(AbstractWithAdditionalProperties.class)},
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"minReplicas", "resources", "linkCapacity", "handshakeTimeout", "idleTimeout", "workerThreads", "policy", "podTemplate"})
+@JsonPropertyOrder({"minAvailable", "minReplicas", "resources", "linkCapacity", "handshakeTimeout", "idleTimeout", "workerThreads", "policy", "podTemplate"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalProperties {
     private StandardInfraConfigSpecRouterResources resources;
     private Integer minReplicas;
+    private Integer minAvailable;
     private Integer linkCapacity;
     private Integer handshakeTimeout;
     private Integer idleTimeout;
@@ -48,6 +49,10 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
 
     public Integer getLinkCapacity() {
         return linkCapacity;
+    }
+
+    public Integer getMinAvailable() {
+        return minAvailable;
     }
 
     public void setMinReplicas(Integer minReplicas) {
@@ -105,6 +110,7 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
         StandardInfraConfigSpecRouter that = (StandardInfraConfigSpecRouter) o;
         return Objects.equals(resources, that.resources) &&
                 Objects.equals(minReplicas, that.minReplicas) &&
+                Objects.equals(minAvailable, that.minAvailable) &&
                 Objects.equals(handshakeTimeout, that.handshakeTimeout) &&
                 Objects.equals(idleTimeout, that.idleTimeout) &&
                 Objects.equals(linkCapacity, that.linkCapacity) &&
@@ -115,7 +121,7 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, linkCapacity, minReplicas, handshakeTimeout, idleTimeout, workerThreads, policy, podTemplate);
+        return Objects.hash(resources, linkCapacity, minAvailable, minReplicas, handshakeTimeout, idleTimeout, workerThreads, policy, podTemplate);
     }
 
     @Override
@@ -123,6 +129,7 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
         return "StandardInfraConfigSpecRouter{" +
                 "resources=" + resources +
                 ", minReplicas=" + minReplicas +
+                ", minAvailable=" + minAvailable +
                 ", linkCapacity=" + linkCapacity +
                 ", handshakeTimeout=" + handshakeTimeout +
                 ", idleTimeout=" + idleTimeout +
@@ -130,5 +137,9 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
                 ", policy=" + policy +
                 ", podTemplate=" + podTemplate +
                 '}';
+    }
+
+    public void setMinAvailable(Integer minAvailable) {
+        this.minAvailable = minAvailable;
     }
 }

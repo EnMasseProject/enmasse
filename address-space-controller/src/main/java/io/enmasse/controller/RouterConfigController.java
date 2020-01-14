@@ -15,6 +15,9 @@ import io.enmasse.controller.router.config.Address;
 import io.enmasse.controller.router.config.*;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudget;
+import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudgetBuilder;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,12 +47,51 @@ public class RouterConfigController implements Controller {
             RouterSet routerSet = RouterSet.create(namespace, addressSpace, client);
             reconcileRouterSetSecrets(addressSpace, routerSet);
             reconcileRouterConfig(addressSpace, routerSet, (StandardInfraConfig) infraConfig);
+            reconcileRouterPodDistruptionBudget(addressSpace, routerSet, (StandardInfraConfig) infraConfig);
             if (routerSet.isModified()) {
                 addressSpace.getStatus().setPhase(Phase.Configuring);
             }
             routerSet.apply(client);
         }
         return addressSpace;
+    }
+
+    private void reconcileRouterPodDistruptionBudget(AddressSpace addressSpace, RouterSet routerSet, StandardInfraConfig infraConfig) {
+        if (infraConfig.getSpec() != null && infraConfig.getSpec().getRouter() != null && infraConfig.getSpec().getRouter().getMinAvailable() != null) {
+            int minAvailable = infraConfig.getSpec().getRouter().getMinAvailable();
+            String name = String.format("enmasse.%s.%s", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
+            try {
+                boolean changed = false;
+                PodDisruptionBudget podDisruptionBudget = client.policy().podDisruptionBudget().withName(name).get();
+                if (podDisruptionBudget == null) {
+                    podDisruptionBudget = new PodDisruptionBudgetBuilder()
+                            .editOrNewMetadata()
+                            .withName(name)
+                            .addToLabels("app", "enmasse")
+                            .endMetadata()
+                            .editOrNewSpec()
+                            .endSpec()
+                            .build();
+                    changed = true;
+                }
+
+                if (podDisruptionBudget.getSpec().getMinAvailable().getIntVal() != minAvailable) {
+                    podDisruptionBudget.getSpec().setMinAvailable(new IntOrString(minAvailable));
+                    changed = true;
+                }
+
+                if (!podDisruptionBudget.getSpec().getSelector().equals(routerSet.getStatefulSet().getSpec().getSelector())) {
+                    podDisruptionBudget.getSpec().setSelector(routerSet.getStatefulSet().getSpec().getSelector());
+                    changed = true;
+                }
+
+                if (changed) {
+                    client.policy().podDisruptionBudget().createOrReplace(podDisruptionBudget);
+                }
+            } catch (KubernetesClientException e) {
+                log.warn("Error creating pod distruption budget", e);
+            }
+        }
     }
 
     private static String routerConfigName(String infraUuid) {
