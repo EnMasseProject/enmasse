@@ -1,0 +1,69 @@
+// Module included in the following assemblies:
+//
+// assembly-service-admin.adoc
+
+[id='proc-iot-troubleshoot-stuck-iotproject-{context}']
+= Fix `IoTProject` stuck in termination
+
+When an `IoTProject` instance is deleted, the resource will not be deleted immediately,
+but is only marked for deletion. Necessary cleanup operations will be performed in the background
+and the resource will automatically be delete once the cleanup has been performed successfully.
+
+In some situations it might be that, due do to infrastructure issues, the clean-up operation
+cannot be performed at this point in time. The `IoTProject` will still be kept, and the
+operator will re-try periodically to clean up the resources. The cleanup will succeed once
+the infrastructure is back in operational state.
+
+In the case that the infrastructure is not expected to function ever again, it might be desirable
+to force the destruction of the `IoTProject`.
+
+WARNING: Manually removing the resource cleanup finalizer will skip the cleanup process,
+ and prevent the system from properly cleaning up.
+
+.Procedure
+
+. Evaluate if the project is stuck in the termination state using the `{cmdcli}` tool:
++
+[options="nowrap",subs="attributes, +quotes"]
+----
+{cmdcli} get iotproject iot -n myapp
+NAME   IOT TENANT  DOWNSTREAM HOST                       DOWNSTREAM PORT   TLS    PHASE
+iot    myapp.iot   messaging-be482a6.enmasse-infra.svc   5671              true   Terminating
+----
+The output should show the project in the state "Terminating".
+In addition, verify that the cleanup finalizer is still present:
++
+[options="nowrap",subs="attributes, +quotes"]
+----
+{cmdcli} get iotproject iot -n myapp -ojsonpath='{range .metadata.finalizers[*]}{..}{"\n"}{end}'
+iot.enmasse.io/deviceRegistryCleanup
+----
+If the list contains an entry of `iot.enmasse.io/deviceRegistryCleanup`, then resource cleanup process
+is still pending.
+
+. Manually remove the finalizer `iot.enmasse.io/deviceRegistryCleanup` from the list of finalizers:
++
+[options="nowrap",subs="attributes, +quotes"]
+----
+{cmdcli} edit iotproject iot -n myapp
+----
+This will open up a text editor with the content of the resource:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: iot.enmasse.io/v1alpha1
+kind: IoTProject
+metadata:
+  creationTimestamp: "2019-12-09T15:00:00Z"
+  deletionTimestamp: "2019-12-09T16:00:00Z"
+  finalizers:
+  - iot.enmasse.io/deviceRegistryCleanup <1>
+  name: iot
+  namespace: myapp
+----
+<1> The line with the finalizer to delete
++
+Delete the line of the finalizer. Save and exit the editor. This will automatically trigger an update
+on the server, and the system will continue deleting the `IoTProject` resource.
+
+. After the finalizer has been removed, the resource should be deleted and disappear from the system.
