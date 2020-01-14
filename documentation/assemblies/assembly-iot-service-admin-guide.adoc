@@ -20,3 +20,7 @@ include::../modules/ref-iot-config-example.adoc[leveloffset=+2]
 include::../modules/ref-iot-config-example-adapters.adoc[leveloffset=+2]
 
 include::../modules/ref-iot-metrics.adoc[leveloffset=+1]
+
+== Troubleshooting guide
+
+include::../modules/proc-iot-troubleshoot-stuck-iotproject.adoc[leveloffset=+2]
