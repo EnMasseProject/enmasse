@@ -88,7 +88,6 @@
         <mycila-license-maven-plugin.version>2.11</mycila-license-maven-plugin.version>
         <codehaus-license-maven-plugin.version>2.0.0</codehaus-license-maven-plugin.version>
         <frontend-maven-plugin.version>1.6</frontend-maven-plugin.version>
-        <jmx_prometheus_javaagent.version>0.3.1</jmx_prometheus_javaagent.version>
         <properties-maven-plugin.version>1.0.0</properties-maven-plugin.version>
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
         <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
@@ -99,7 +98,6 @@
         <maven-site-plugin.version>3.5.1</maven-site-plugin.version>
         <maven-project-info-reports-plugin.version>2.9</maven-project-info-reports-plugin.version>
         <maven-enforcer-plugin.version>3.0.0-M2</maven-enforcer-plugin.version>
-        <netty-tcnative-boringssl-static.version>2.0.22.Final</netty-tcnative-boringssl-static.version>
         <security-versions-plugin.version>1.0.6</security-versions-plugin.version>
         <dependency-check-maven-plugin.version>4.0.2</dependency-check-maven-plugin.version>
         <maven-xml-plugin.version>1.0.2</maven-xml-plugin.version>
@@ -195,16 +193,6 @@
                 <groupId>io.enmasse</groupId>
                 <artifactId>keycloak-user-api</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-tcnative-boringssl-static</artifactId>
-                <version>${netty-tcnative-boringssl-static.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.prometheus.jmx</groupId>
-                <artifactId>jmx_prometheus_javaagent</artifactId>
-                <version>${jmx_prometheus_javaagent.version}</version>
             </dependency>
 
             <!-- EnMasse test modules -->
