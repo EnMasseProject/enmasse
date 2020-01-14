@@ -8,6 +8,7 @@
 
 *  #3621: Add status section for plans and authentication services #3621
 *  Qpid Dispatch Router upgraded to 1.10.0
+*  #3657 Configure router pod anti-affinity by default
 
 ## 0.30.2
 *  #2714: Allow setting security context of pods using persistent volumes
