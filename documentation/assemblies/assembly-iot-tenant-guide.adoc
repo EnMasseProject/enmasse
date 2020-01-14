@@ -7,49 +7,27 @@
 [id='iot-tenant-{context}]
 = IoT for messaging tenants
 
+Messaging tenants are typically responsible for managing devices and writing device and back-end applications for IoT solutions.
 
-== Customer applications
+include::assembly-iot-configuring-sigfox.adoc[leveloffset=+1]
 
-include::../modules/proc-iot-configure-hono-cli.adoc[leveloffset=+1]
+include::assembly-iot-creating-device.adoc[leveloffset=+1]
 
-:api: telemetry
+== Consumer applications
 
-=== Telemetry
+include::../modules/proc-iot-installing-cli.adoc[leveloffset=+1]
 
-include::../modules/snip-iot-customer-api.adoc[leveloffset=+1]
+include::../modules/proc-iot-starting-telemetry-consumer.adoc[leveloffset=+1]
 
-:api: events
-
-=== Events
-
-include::../modules/snip-iot-customer-api.adoc[leveloffset=+1]
+include::../modules/proc-iot-starting-events-consumer.adoc[leveloffset=+1]
 
 == Device applications
 
-=== HTTP
+include::../modules/proc-iot-sending-telemetry-http.adoc[leveloffset=+2]
 
-.Telemetry
+include::../modules/proc-iot-sending-events-http.adoc[leveloffset=+2]
 
-:api: telemetry
+include::../modules/proc-iot-sending-telemetry-mqtt.adoc[leveloffset=+2]
 
-include::../modules/snip-iot-http-api.adoc[leveloffset=+2]
+include::../modules/proc-iot-sending-events-mqtt.adoc[leveloffset=+2]
 
-:api: events
-
-.Events
-
-include::../modules/snip-iot-http-api.adoc[leveloffset=+2]
-
-=== MQTT
-
-:api: telemetry
-
-.Telemetry
-
-include::../modules/snip-iot-mqtt-api.adoc[leveloffset=+2]
-
-:api: events
-
-.Events
-
-include::../modules/snip-iot-mqtt-api.adoc[leveloffset=+2]

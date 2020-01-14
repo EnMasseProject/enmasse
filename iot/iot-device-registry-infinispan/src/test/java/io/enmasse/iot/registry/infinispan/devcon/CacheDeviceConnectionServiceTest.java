@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import io.enmasse.iot.registry.infinispan.EmbeddedHotRodServer;
+import io.enmasse.iot.infinispan.EmbeddedHotRodServer;
 import io.opentracing.noop.NoopSpan;
 import io.vertx.core.Future;
 import io.vertx.junit5.VertxExtension;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.UUID;
 
 /**
- * Tests verifying behavior of {@link CacheRegistrationService}.
+ * Tests verifying behavior of {@link CacheDeviceConnectionService}.
  *
  */
 @ExtendWith(VertxExtension.class)

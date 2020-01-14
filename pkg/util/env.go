@@ -6,6 +6,7 @@
 package util
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -37,6 +38,15 @@ func GetBooleanEnvOrDefault(key string, defaultValue bool) bool {
 		return defaultValue
 	} else {
 		return "true" == strings.ToLower(value)
+	}
+}
+
+func GetEnvOrError(name string) (string, error) {
+	result := os.Getenv(name)
+	if result != "" {
+		return result, nil
+	} else {
+		return "", fmt.Errorf("'%s' is not set", name)
 	}
 }
 

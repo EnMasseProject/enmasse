@@ -7,6 +7,7 @@ package io.enmasse.admin.model.v1;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.SecretReference;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
@@ -23,12 +24,13 @@ import java.util.Objects;
         },
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"credentialsSecret", "certificateSecret", "storage"})
+@JsonPropertyOrder({"credentialsSecret", "certificateSecret", "storage", "securityContext"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalProperties {
     private SecretReference credentialsSecret;
     private SecretReference certificateSecret;
     private AuthenticationServiceSpecStandardStorage storage;
+    private PodSecurityContext securityContext;
 
     public SecretReference getCredentialsSecret() {
         return credentialsSecret;
@@ -45,12 +47,13 @@ public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalPro
         AuthenticationServiceSpecStandard that = (AuthenticationServiceSpecStandard) o;
         return Objects.equals(credentialsSecret, that.credentialsSecret) &&
                 Objects.equals(certificateSecret, that.certificateSecret) &&
-                Objects.equals(storage, that.storage);
+                Objects.equals(storage, that.storage) &&
+                Objects.equals(securityContext, that.securityContext);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(credentialsSecret, certificateSecret, storage);
+        return Objects.hash(credentialsSecret, certificateSecret, storage, securityContext);
     }
 
     @Override
@@ -59,6 +62,7 @@ public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalPro
                 "credentialsSecret=" + credentialsSecret +
                 ", certificateSecret=" + certificateSecret +
                 ", storage=" + storage +
+                ", securityContext=" + securityContext +
                 '}';
     }
 
@@ -76,5 +80,13 @@ public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalPro
 
     public void setStorage(AuthenticationServiceSpecStandardStorage storage) {
         this.storage = storage;
+    }
+
+    public PodSecurityContext getSecurityContext() {
+        return securityContext;
+    }
+
+    public void setSecurityContext(PodSecurityContext securityContext) {
+        this.securityContext = securityContext;
     }
 }

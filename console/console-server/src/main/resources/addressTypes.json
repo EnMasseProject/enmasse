@@ -1,0 +1,93 @@
+[
+  {
+    "ObjectMeta": {
+      "Name": "brokered.queue"
+    },
+    "Spec": {
+      "AddressType": "queue",
+      "AddressSpaceType": "brokered",
+      "DisplayName": "queue",
+      "ShortDescription": "A store-and-forward queue",
+      "LongDescription": "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue in the brokered address space supports selectors, message groups, transactions, and other JMS features. Message order can be lost with released messages.",
+      "DisplayOrder": 0
+    }
+  },
+  {
+    "ObjectMeta": {
+      "Name": "brokered.topic"
+    },
+    "Spec": {
+      "AddressType": "topic",
+      "AddressSpaceType": "brokered",
+      "DisplayName": "topic",
+      "ShortDescription": "A publish-and-subscribe address with store-and-forward semantics",
+      "LongDescription": "The topic address type supports the publish-subscribe messaging pattern in which there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
+      "DisplayOrder": 1
+    }
+  },
+  {
+    "ObjectMeta": {
+      "Name": "standard.anycast"
+    },
+    "Spec": {
+      "AddressType": "anycast",
+      "AddressSpaceType": "standard",
+      "DisplayName": "anycast",
+      "ShortDescription": "A scalable 'direct' address for sending messages to one consumer",
+      "LongDescription": "The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but are instead forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.",
+      "DisplayOrder": 0
+    }
+  },
+  {
+    "ObjectMeta": {
+      "Name": "standard.multicast"
+    },
+    "Spec": {
+      "AddressType": "multicast",
+      "AddressSpaceType": "standard",
+      "DisplayName": "multicast",
+      "ShortDescription": "A scalable 'direct' address for sending messages to multiple consumers",
+      "LongDescription": "The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. Because message acknowledgments from consumers are not propagated to producers, only pre-settled messages can be sent to multicast addresses.",
+      "DisplayOrder": 1
+    }
+  },
+  {
+    "ObjectMeta": {
+      "Name": "standard.queue"
+    },
+    "Spec": {
+      "AddressType": "queue",
+      "AddressSpaceType": "standard",
+      "DisplayName": "queue",
+      "ShortDescription": "A store-and-forward queue",
+      "LongDescription": "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases when you want to decouple the producer and consumer. A queue can be sharded across multiple storage units. Message ordering might be lost for queues in the standard address space.",
+      "DisplayOrder": 2
+    }
+  },
+  {
+    "ObjectMeta": {
+      "Name": "standard.subscription"
+    },
+    "Spec": {
+      "AddressType": "subscription",
+      "AddressSpaceType": "standard",
+      "DisplayName": "subscription",
+      "ShortDescription": "A subscription on a specified topic",
+      "LongDescription": "The subscription address type allows a subscription to be created for a topic that holds messages published to the topic even if the subscriber is not attached. The subscription is accessed by the consumer using <topic-address>::<subscription-address>. For example, for a subscription `mysub` on a topic `mytopic` the consumer consumes from the address \"mytopic::mysub\",",
+      "DisplayOrder": 3
+    }
+  },
+  {
+    "ObjectMeta": {
+      "Name": "standard.topic"
+    },
+    "Spec": {
+      "AddressType": "topic",
+      "AddressSpaceType": "standard",
+      "DisplayName": "topic",
+      "ShortDescription": "A publish-subscribe topic",
+      "LongDescription": "The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
+      "DisplayOrder": 4
+    }
+  }
+]

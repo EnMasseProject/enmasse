@@ -34,3 +34,13 @@ oc get pods -w
 +
 The pods restart and become active within several minutes.
 
+. Delete api-server resources not needed after upgrade:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} delete sa api-server -n {ProductBundleNamespace}
+{cmdcli} delete clusterrolebinding enmasse.io:api-server-{ProductBundleNamespace}
+{cmdcli} delete clusterrole enmasse.io:api-server
+{cmdcli} delete rolebinding api-server -n {ProductBundleNamespace}
+{cmdcli} delete role enmasse.io:api-server -n {ProductBundleNamespace}
+----

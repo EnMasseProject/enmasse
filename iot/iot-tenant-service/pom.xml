@@ -8,7 +8,7 @@
   <parent>
     <groupId>io.enmasse</groupId>
     <artifactId>iot-application-base</artifactId>
-    <version>0.30-SNAPSHOT</version>
+    <version>0.31-SNAPSHOT</version>
     <relativePath>../iot-application-base</relativePath>
   </parent>
 
@@ -35,6 +35,11 @@
     <dependency>
       <groupId>io.enmasse</groupId>
       <artifactId>api-model</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-utils</artifactId>
     </dependency>
 
     <dependency>

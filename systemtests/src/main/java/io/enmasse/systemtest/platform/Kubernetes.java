@@ -42,8 +42,9 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
 import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
@@ -57,8 +58,6 @@ import io.enmasse.user.model.v1.UserList;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.Event;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
@@ -78,27 +77,20 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.VersionInfo;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.ExecListener;
-import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import okhttp3.Response;
 import org.slf4j.Logger;
 
-import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -110,6 +102,7 @@ public abstract class Kubernetes {
     protected final KubernetesClient client;
     protected final String infraNamespace;
     protected static KubeCluster cluster;
+    private boolean olmAvailable;
 
     static {
         try {
@@ -120,10 +113,15 @@ public abstract class Kubernetes {
         }
     }
 
-    protected Kubernetes(String infraNamespace, Supplier<KubernetesClient> clientSupplier) {
-        this.environment = Environment.getInstance();
+    protected Kubernetes(Environment environment, Supplier<KubernetesClient> clientSupplier) {
+        this.environment = environment;
         this.client = clientSupplier.get();
-        this.infraNamespace = infraNamespace;
+        if (environment.installType() == EnmasseInstallType.OLM
+                && environment.olmInstallType() == OLMInstallationType.DEFAULT) {
+            this.infraNamespace = getOlmNamespace();
+        } else {
+            this.infraNamespace = environment.namespace();
+        }
     }
 
     private static int getPort(Service service, String portName) {
@@ -145,18 +143,33 @@ public abstract class Kubernetes {
             } catch (NoClusterException ex) {
                 log.error(ex.getMessage());
             }
+            Environment env = Environment.getInstance();
             if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
-                instance = new Minikube(Environment.getInstance().namespace());
+                instance = new Minikube(env);
             } else {
-                instance = new OpenShift(Environment.getInstance(), Environment.getInstance().namespace());
+                instance = new OpenShift(env);
+            }
+            try {
+                instance.olmAvailable = instance.getCRD("clusterserviceversions.operators.coreos.com") != null
+                        && instance.getCRD("subscriptions.operators.coreos.com") != null;
+                if (instance.olmAvailable) {
+                    log.info("OLM is available in this cluster");
+                } else {
+                    log.info("OLM is not available in this cluster");
+                }
+            } catch (Exception e) {
+                log.error("Error checking olm availability", e);
+                instance.olmAvailable = false;
             }
         }
         return instance;
     }
 
     public double getKubernetesVersion() {
-        VersionInfo versionInfo = new DefaultKubernetesClient().getVersion();
-        return Double.parseDouble(versionInfo.getMajor() + "." + versionInfo.getMinor().replace("+", ""));
+        try ( var client = new DefaultKubernetesClient() ) {
+            final VersionInfo versionInfo = client.getVersion();
+            return Double.parseDouble(versionInfo.getMajor() + "." + versionInfo.getMinor().replace("+", ""));
+        }
     }
 
     public int getOcpVersion() {
@@ -173,6 +186,10 @@ public abstract class Kubernetes {
 
     public KubeCluster getCluster() {
         return cluster;
+    }
+
+    public boolean isOLMAvailable() {
+        return olmAvailable;
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -316,10 +333,6 @@ public abstract class Kubernetes {
         return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
     }
 
-    public Endpoint getOSBEndpoint() {
-        return getEndpoint("service-broker", infraNamespace, "https");
-    }
-
     public abstract Endpoint getMasterEndpoint();
 
     public abstract Endpoint getRestEndpoint();
@@ -335,17 +348,6 @@ public abstract class Kubernetes {
     public abstract Endpoint getExternalEndpoint(String name);
 
     public abstract Endpoint getExternalEndpoint(String name, String namespace);
-
-    public UserCredentials getKeycloakCredentials() {
-        Secret creds = client.secrets().inNamespace(infraNamespace).withName("keycloak-credentials").get();
-        if (creds != null) {
-            String username = new String(Base64.getDecoder().decode(creds.getData().get("admin.username")));
-            String password = new String(Base64.getDecoder().decode(creds.getData().get("admin.password")));
-            return new UserCredentials(username, password);
-        } else {
-            return null;
-        }
-    }
 
     public Map<String, String> getLogsOfTerminatedPods(String namespace) {
         Map<String, String> terminatedPodsLogs = new HashMap<>();
@@ -408,24 +410,16 @@ public abstract class Kubernetes {
         client.apps().deployments().inNamespace(namespace).withName(name).scale(numReplicas, true);
     }
 
-    public void setStatefulSetReplicas(String name, int numReplicas) {
-        client.apps().statefulSets().inNamespace(infraNamespace).withName(name).scale(numReplicas, true);
-    }
-
-    public List<Pod> listPods(String namespace, String uuid) {
-        return new ArrayList<>(client.pods().inNamespace(namespace).withLabel("enmasse.io/uuid", uuid).list().getItems());
-    }
-
     public List<Pod> listPods(String namespace) {
         return new ArrayList<>(client.pods().inNamespace(namespace).list().getItems());
     }
 
     public List<Pod> listPods() {
-        return new ArrayList<>(client.pods().inNamespace(infraNamespace).list().getItems());
+        return listPods(infraNamespace);
     }
 
     public List<Pod> listPods(Map<String, String> labelSelector) {
-        return client.pods().inNamespace(infraNamespace).withLabels(labelSelector).list().getItems();
+        return listPods(infraNamespace, labelSelector);
     }
 
     public List<Pod> listPods(String namespace, Map<String, String> labelSelector) {
@@ -443,22 +437,8 @@ public abstract class Kubernetes {
         }).collect(Collectors.toList());
     }
 
-    public int getExpectedPods(String plan) {
-        if (plan.endsWith("with-mqtt")) {
-            return 6;
-        } else if (plan.endsWith("medium") || plan.endsWith("unlimited")) {
-            return 3;
-        } else {
-            return 2;
-        }
-    }
-
     public Watch watchPods(String uuid, Watcher<Pod> podWatcher) {
         return client.pods().withLabel("enmasse.io/infra", uuid).watch(podWatcher);
-    }
-
-    public List<Event> listEvents(String namespace) {
-        return client.events().inNamespace(namespace).list().getItems();
     }
 
     public LogWatch watchPodLog(String name, String container, OutputStream outputStream) {
@@ -473,20 +453,6 @@ public abstract class Kubernetes {
         return client.namespaces().list().getItems().stream()
                 .map(ns -> ns.getMetadata().getName())
                 .collect(Collectors.toSet());
-    }
-
-    public String getKeycloakCA() throws UnsupportedEncodingException {
-        Secret secret = client.secrets().inNamespace(infraNamespace).withName("standard-authservice-cert").get();
-        if (secret == null) {
-            throw new IllegalStateException("Unable to find CA cert for keycloak");
-        }
-        return new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), StandardCharsets.UTF_8);
-    }
-
-    public List<ConfigMap> listConfigMaps(String type) {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("type", type);
-        return listConfigMaps(labels);
     }
 
     public List<ConfigMap> listConfigMaps(Map<String, String> labels) {
@@ -525,30 +491,18 @@ public abstract class Kubernetes {
         return client.configMaps().inNamespace(namespace).list();
     }
 
-    public ConfigMap getConfigMap(String namespace, String configMapName) {
-        return getAllConfigMaps(namespace).getItems().stream()
-                .filter(configMap -> configMap.getMetadata().getName().equals(configMapName))
-                .findFirst().get();
-    }
-
-    public void replaceConfigMap(String namespace, ConfigMap newConfigMap) {
-        client.configMaps().inNamespace(namespace).createOrReplace(newConfigMap);
-    }
-
     public void createNamespace(String namespace) {
-        log.info("Following namespace will be created = {}", namespace);
-        if (!namespaceExists(namespace)) {
-            Namespace ns = new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build();
-            client.namespaces().create(ns);
-        } else {
-            log.info("Namespace {} already exists", namespace);
-        }
+        createNamespace(namespace, null);
     }
 
     public void createNamespace(String namespace, Map<String, String> labels) {
         log.info("Following namespace will be created = {}", namespace);
         if (!namespaceExists(namespace)) {
-            Namespace ns = new NamespaceBuilder().withNewMetadata().withName(namespace).withLabels(labels).endMetadata().build();
+            var builder = new NamespaceBuilder().withNewMetadata().withName(namespace);
+            if (labels != null) {
+                builder.withLabels(labels);
+            }
+            Namespace ns = builder.endMetadata().build();
             client.namespaces().create(ns);
         } else {
             log.info("Namespace {} already exists", namespace);
@@ -578,21 +532,6 @@ public abstract class Kubernetes {
     }
 
     /***
-     * Creates pod from resources
-     * @param namespace
-     * @param configName
-     * @throws Exception
-     */
-    public void createPodFromTemplate(String namespace, String configName) throws Exception {
-        List<HasMetadata> resources = client.load(getClass().getResourceAsStream(configName)).inNamespace(namespace).get();
-        HasMetadata resource = resources.get(0);
-        Pod podRes = client.pods().inNamespace(namespace).create((Pod) resource);
-        Pod result = client.pods().inNamespace(namespace)
-                .withName(podRes.getMetadata().getName()).waitUntilReady(5, TimeUnit.SECONDS);
-        log.info("Pod created {}", result.getMetadata().getName());
-    }
-
-    /***
      * Delete pod by name
      * @param namespace
      * @param podName
@@ -601,16 +540,6 @@ public abstract class Kubernetes {
     public void deletePod(String namespace, String podName) {
         client.pods().inNamespace(namespace).withName(podName).cascading(true).delete();
         log.info("Pod {} removed", podName);
-    }
-
-    /***
-     * Returns pod ip
-     * @param namespace namespace
-     * @param podName name of pod
-     * @return string ip
-     */
-    public String getPodIp(String namespace, String podName) {
-        return client.pods().inNamespace(namespace).withName(podName).get().getStatus().getPodIP();
     }
 
     /***
@@ -813,46 +742,6 @@ public abstract class Kubernetes {
         return listPods().get(0).getMetadata().getLabels().get("app");
     }
 
-
-    /**
-     * Run command on kubernetes pod
-     *
-     * @param pod       pod instance
-     * @param container name of container
-     * @param command   command to run
-     * @return stdout
-     */
-    public String runOnPod(Pod pod, String container, String... command) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        log.info("Running command on pod {}: {}", pod.getMetadata().getName(), command);
-        CompletableFuture<String> data = new CompletableFuture<>();
-        try (ExecWatch execWatch = client.pods().inNamespace(pod.getMetadata().getNamespace())
-                .withName(pod.getMetadata().getName()).inContainer(container)
-                .readingInput(null)
-                .writingOutput(baos)
-                .usingListener(new ExecListener() {
-                    @Override
-                    public void onOpen(Response response) {
-                        log.info("Reading data...");
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable, Response response) {
-                        data.completeExceptionally(throwable);
-                    }
-
-                    @Override
-                    public void onClose(int i, String s) {
-                        data.complete(baos.toString());
-                    }
-                }).exec(command)) {
-            return data.get(10, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            log.warn("Exception running command {} on pod: {} with exception {}", command, pod.getMetadata().getName(), e);
-            return "";
-        }
-    }
-
     public ServiceAccount getServiceAccount(String namespace, String name) {
         return client.serviceAccounts().inNamespace(namespace).withName(name).get();
     }
@@ -928,7 +817,8 @@ public abstract class Kubernetes {
      *
      * @param namespace namespace
      * @param pvcName   of pvc
-     * @return boolean
+     * @return boolean    private static final String OLM_NAMESPACE = "operators";
+
      */
     public boolean pvcExists(String namespace, String pvcName) {
         return client.persistentVolumeClaims().inNamespace(namespace).list().getItems().stream()

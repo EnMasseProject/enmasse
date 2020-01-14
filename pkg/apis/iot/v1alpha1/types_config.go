@@ -66,6 +66,8 @@ type ServicesConfig struct {
 }
 
 type AdaptersConfig struct {
+	DefaultOptions *AdapterOptions `json:"defaults,omitempty"`
+
 	HttpAdapterConfig    HttpAdapterConfig    `json:"http,omitempty"`
 	MqttAdapterConfig    MqttAdapterConfig    `json:"mqtt,omitempty"`
 	SigfoxAdapterConfig  SigfoxAdapterConfig  `json:"sigfox,omitempty"`
@@ -88,6 +90,8 @@ type AdapterEndpointConfig struct {
 
 type AdapterConfig struct {
 	Enabled *bool `json:"enabled,omitempty"`
+
+	Options *AdapterOptions `json:"options,omitempty"`
 }
 
 type KeyCertificateStrategy struct {
@@ -135,7 +139,12 @@ type ExternalInfinispanServer struct {
 	SaslServerName string `json:"saslServerName,omitempty"`
 	SaslRealm      string `json:"saslRealm,omitempty"`
 
-	CacheNames *ExternalCacheNames `json:"cacheNames,omitempty"`
+	CacheNames        *ExternalCacheNames `json:"cacheNames,omitempty"`
+	DeletionChunkSize uint32              `json:"deletionChunkSize"`
+}
+
+type InfinispanRegistryManagement struct {
+	AuthTokenCacheExpiration string `json:"authTokenCacheExpiration,omitempty"`
 }
 
 type ExternalCacheNames struct {
@@ -163,11 +172,19 @@ type AuthenticationServiceConfig struct {
 type FileBasedDeviceRegistry struct {
 	NumberOfDevicesPerTenant *uint32 `json:"numberOfDevicesPerTenant,omitempty"`
 	CommonServiceConfig      `json:",inline"`
+	SecurityContext          *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 }
 
 type InfinispanDeviceRegistry struct {
-	Server              InfinispanServer `json:"server"`
+	Server              InfinispanServer             `json:"server"`
+	Management          InfinispanRegistryManagement `json:"management"`
 	CommonServiceConfig `json:",inline"`
+}
+
+// The adapter options should focus on functional configuration applicable to all adapters
+type AdapterOptions struct {
+	TenantIdleTimeout string `json:"tenantIdleTimeout,omitempty"`
+	MaxPayloadSize    uint32 `json:"maxPayloadSize,omitempty"`
 }
 
 // Common options for a standard 3-pod protocol adapter
@@ -198,9 +215,8 @@ type MqttAdapterConfig struct {
 }
 
 type IoTConfigStatus struct {
-	Initialized bool   `json:"initialized"`
-	Phase       string `json:"phase"`
-	PhaseReason string `json:"phaseReason,omitempty"`
+	Phase       ConfigPhaseType `json:"phase"`
+	PhaseReason string          `json:"phaseReason,omitempty"`
 
 	AuthenticationServicePSK *string                  `json:"authenticationServicePSK"`
 	Adapters                 map[string]AdapterStatus `json:"adapters,omitempty"`
@@ -208,6 +224,15 @@ type IoTConfigStatus struct {
 
 	Conditions []ConfigCondition `json:"conditions"`
 }
+
+type ConfigPhaseType string
+
+const (
+	ConfigPhaseActive      ConfigPhaseType = "Active"
+	ConfigPhaseConfiguring ConfigPhaseType = "Configuring"
+	ConfigPhaseTerminating ConfigPhaseType = "Terminating"
+	ConfigPhaseFailed      ConfigPhaseType = "Failed"
+)
 
 type ConfigConditionType string
 
@@ -238,12 +263,6 @@ type ServiceStatus struct {
 type EndpointStatus struct {
 	URI string `json:"uri,omitempty"`
 }
-
-const (
-	ConfigStateWrongName = "WrongName"
-	ConfigStateReady     = "Ready"
-	ConfigStateFailed    = "Failed"
-)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 

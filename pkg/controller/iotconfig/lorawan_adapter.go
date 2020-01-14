@@ -47,6 +47,9 @@ func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *
 		return r.processService(ctx, nameLoraWanAdapter, config, !enabled, r.reconcileLoraWanAdapterService)
 	})
 	rc.ProcessSimple(func() error {
+		return r.processService(ctx, nameLoraWanAdapter+"-metrics", config, false, r.reconcileMetricsService(nameLoraWanAdapter))
+	})
+	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameLoraWanAdapter+"-config", config, !enabled, r.reconcileLoraWanAdapterConfigMap)
 	})
 	if !util.IsOpenshift() {
@@ -78,9 +81,10 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
+	applyDefaultAdapterDeploymentSpec(deployment)
 
 	install.DropContainer(deployment, "lorawan-adapter")
-	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-lorawan-adapter", config); err != nil {
 			return err
@@ -97,10 +101,10 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 		}
 
 		container.Ports = []corev1.ContainerPort{
-			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "https", ContainerPort: 8443, Protocol: corev1.ProtocolTCP},
 		}
 
+		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
 		// environment

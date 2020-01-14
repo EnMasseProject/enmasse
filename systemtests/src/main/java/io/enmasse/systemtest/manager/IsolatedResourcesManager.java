@@ -34,7 +34,6 @@ public class IsolatedResourcesManager extends ResourceManager {
 
     private static IsolatedResourcesManager managerInstance = null;
     private static Logger LOGGER;
-    protected List<AddressSpace> currentAddressSpaces;
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
     boolean reuseAddressSpace = false;
@@ -200,6 +199,18 @@ public class IsolatedResourcesManager extends ResourceManager {
         return Kubernetes.getInstance().getStandardInfraConfigClient().withName(name).get();
     }
 
+    @Override
+    public void createInfraConfig(StandardInfraConfig standardInfraConfig) {
+        standardInfraConfigs.add(standardInfraConfig);
+        super.createInfraConfig(standardInfraConfig);
+    }
+
+    @Override
+    public void createInfraConfig(BrokeredInfraConfig brokeredInfraConfig) {
+        brokeredInfraConfigs.add(brokeredInfraConfig);
+        super.createInfraConfig(brokeredInfraConfig);
+    }
+
     public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
         if (infraConfigDefinition instanceof StandardInfraConfig) {
             standardInfraConfigs.add((StandardInfraConfig) infraConfigDefinition);
@@ -223,11 +234,6 @@ public class IsolatedResourcesManager extends ResourceManager {
     //------------------------------------------------------------------------------------------------
     // Authentication services
     //------------------------------------------------------------------------------------------------
-
-    @Override
-    public AuthenticationService getAuthService(String name) throws Exception {
-        return Kubernetes.getInstance().getAuthenticationServiceClient().withName(name).get();
-    }
 
     @Override
     public void replaceAuthService(AuthenticationService authService) throws Exception {
@@ -301,11 +307,7 @@ public class IsolatedResourcesManager extends ResourceManager {
     }
 
     public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
-        replaceAddressSpace(addressSpace, true);
-    }
-
-    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied) throws Exception {
-        super.replaceAddressSpace(addressSpace, waitForPlanApplied, currentAddressSpaces);
+        replaceAddressSpace(addressSpace, true, null);
     }
 
     public void deleteAddressspacesFromList() throws Exception {

@@ -4,13 +4,18 @@
  */
 package io.enmasse.systemtest.info;
 
+import io.enmasse.systemtest.EnmasseInstallType;
+import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.condition.AssumeKubernetesCondition;
 import io.enmasse.systemtest.condition.AssumeOpenshiftCondition;
+import io.enmasse.systemtest.condition.SupportedInstallType;
+import io.enmasse.systemtest.condition.SupportedInstallTypeCondition;
 import io.enmasse.systemtest.logs.CustomLogger;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
+import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.support.AnnotationSupport;
 import org.junit.platform.commons.util.ReflectionUtils;
@@ -26,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 /*
 Class for store and query information about test plan and tests
  */
@@ -47,35 +53,71 @@ public class TestInfo {
     public void setTestPlan(TestPlan testPlan) {
         LOGGER.info("Setting testplan {}", testPlan.getRoots());
         tests = new ArrayList<>();
-        testClasses = Arrays.asList(testPlan.getChildren(testPlan.getRoots()
-                .toArray(new TestIdentifier[0])[0]).toArray(new TestIdentifier[0]));
-        testClasses.forEach(testIdentifier -> {
+        List<TestIdentifier> testPlanClasses = Arrays.asList(testPlan.getChildren(testPlan.getRoots()
+                .toArray(new TestIdentifier[0])[0])
+                .toArray(new TestIdentifier[0]));
+        testPlanClasses.forEach(testIdentifier -> {
             testPlan.getChildren(testIdentifier)
-            .forEach(test -> {
-                if (test.getSource().isPresent() && test.getSource().get() instanceof MethodSource) {
-                    MethodSource testSource = (MethodSource) test.getSource().get();
-                    try {
-                        Optional<Method> testMethod = ReflectionUtils.findMethod(Class.forName(testSource.getClassName()), testSource.getMethodName(), testSource.getMethodParameterTypes());
-                        MethodBasedExtensionContext extensionContext = new MethodBasedExtensionContext(testMethod);
-                        if (testMethod.isPresent()) {
-                            Optional<Disabled> disabled = AnnotationSupport.findAnnotation(testMethod.get(), Disabled.class);
-                            ConditionEvaluationResult kubernetesDisabled = new AssumeKubernetesCondition().evaluateExecutionCondition(extensionContext);
-                            ConditionEvaluationResult openshiftDisabled = new AssumeOpenshiftCondition().evaluateExecutionCondition(extensionContext);
-                            if (disabled.isPresent() || kubernetesDisabled.isDisabled() || openshiftDisabled.isDisabled()) {
-                                LOGGER.debug("Test {}.{} is disabled", testSource.getClassName(), testSource.getMethodName());
-                            } else {
-                                tests.add(test);
+                    .forEach(test -> {
+                        if (test.getSource().isPresent() && test.getSource().get() instanceof MethodSource) {
+                            MethodSource testSource = (MethodSource) test.getSource().get();
+                            try {
+                                Optional<Method> testMethod = ReflectionUtils.findMethod(Class.forName(testSource.getClassName()), testSource.getMethodName(), testSource.getMethodParameterTypes());
+                                if (testMethod.isPresent()) {
+                                    MethodBasedExtensionContext extensionContext = new MethodBasedExtensionContext(Class.forName(testSource.getClassName()), testMethod);
+                                    ExecutionCondition[] conditions = new ExecutionCondition[]{this::disabledCondition, new SupportedInstallTypeCondition(), new AssumeKubernetesCondition(), new AssumeOpenshiftCondition()};
+                                    if (evaluateTestDisabled(extensionContext, conditions)) {
+                                        LOGGER.debug("Test {}.{} is disabled", testSource.getClassName(), testSource.getMethodName());
+                                    } else {
+                                        tests.add(test);
+                                    }
+                                }
+                            } catch (ClassNotFoundException e) {
+                                throw new IllegalArgumentException(e);
                             }
+                        } else {
+                            LOGGER.warn("Test {} doesn't have MethodSource", test.getUniqueId());
                         }
-                    } catch ( ClassNotFoundException e ) {
-                        throw new IllegalArgumentException(e);
-                    }
-                } else {
-                    LOGGER.warn("Test {} doesn't have MethodSource", test.getUniqueId());
-                }
-            });
+                    });
         });
         LOGGER.debug("Final tests are {}", tests);
+        List<String> finalClasses = tests.stream()
+            .map(test -> (MethodSource) test.getSource().get())
+            .map(MethodSource::getClassName)
+            .map(t -> {
+                 try {
+                     return Class.forName(t);
+                 } catch ( ClassNotFoundException e ) {
+                     throw new IllegalArgumentException(e);
+                 }
+             })
+            .map(Class::getSimpleName)
+            .distinct()
+            .collect(Collectors.toList());
+
+        testClasses = testPlanClasses.stream()
+            .filter(testClass -> {
+               return finalClasses.stream()
+               .anyMatch(testClassName -> {
+                   return testClassName.equals(testClass.getDisplayName());
+               });
+            })
+            .collect(Collectors.toList());
+    }
+
+    private ConditionEvaluationResult disabledCondition(ExtensionContext ctx) {
+        return AnnotationSupport.findAnnotation(ctx.getElement().get(), Disabled.class)
+                .map(a -> ConditionEvaluationResult.disabled("Disabled annotation"))
+                .orElseGet(() -> ConditionEvaluationResult.enabled("No disabled annotation"));
+    }
+
+    private boolean evaluateTestDisabled(ExtensionContext context, ExecutionCondition... conditions) {
+        for (ExecutionCondition condition : conditions) {
+            if (condition.evaluateExecutionCondition(context).isDisabled()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void printTestClasses() {
@@ -134,13 +176,13 @@ public class TestInfo {
     }
 
     public boolean isClassIoT() {
-        return currentTestClass.getTags().stream().anyMatch(tag -> TestTag.IOT_TAGS.contains(tag));
+        return currentTestClass.getTags().stream().anyMatch(TestTag.IOT_TAGS::contains);
     }
 
     public boolean isEndOfIotTests() {
         int currentTestIndex = getCurrentTestIndex();
         if (currentTestIndex + 1 < tests.size()) {
-            return getTags(tests.get(currentTestIndex + 1)).stream().noneMatch(tag -> TestTag.IOT_TAGS.contains(tag));
+            return getTags(tests.get(currentTestIndex + 1)).stream().noneMatch(TestTag.IOT_TAGS::contains);
         }
         return true;
     }
@@ -150,21 +192,23 @@ public class TestInfo {
     }
 
     public boolean isOLMTest() {
-        return currentTestClass.getTags().stream().anyMatch(TestTag.OLM::equals);
+        return AnnotationSupport.findAnnotation(currentTestClass.getElement(), SupportedInstallType.class)
+                .map(a -> a.value() == EnmasseInstallType.OLM)
+                .orElse(false);
     }
 
+    public OLMInstallationType getOLMInstallationType() {
+        return AnnotationSupport.findAnnotation(currentTestClass.getElement(), SupportedInstallType.class)
+                .filter(a -> a.value() == EnmasseInstallType.OLM)
+                .map(SupportedInstallType::olmInstallType)
+                .orElseThrow();
+    }
+
+    //TODO remove this method and move the logic associated with this to beforeAll callback
     public boolean isNextTestUpgrade() {
         int currentClassIndex = getCurrentClassIndex();
         if (currentClassIndex + 1 < testClasses.size()) {
             return getTags(testClasses.get(currentClassIndex + 1)).stream().anyMatch(TestTag.UPGRADE::equals);
-        }
-        return false;
-    }
-
-    public boolean isNextTestOLM() {
-        int currentClassIndex = getCurrentClassIndex();
-        if (currentClassIndex + 1 < testClasses.size()) {
-            return getTags(testClasses.get(currentClassIndex + 1)).stream().anyMatch(TestTag.OLM::equals);
         }
         return false;
     }
@@ -210,7 +254,8 @@ public class TestInfo {
     }
 
     private boolean isSameTestMethod(TestIdentifier test1, ExtensionContext test2) {
-        return test1 != null && test2 != null && test1.getDisplayName().equals(test2.getDisplayName());
+        return test1 != null && test2 != null && test1.getDisplayName().replace("()", "").replaceAll("\\s+", "")
+                .equals(test2.getDisplayName().replace("()", "").replaceAll("\\s+", ""));
     }
 
 }

@@ -1,0 +1,50 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-configuring-sigfox.adoc
+
+[id='ref-iot-prepare-sigfox-connection-information-{context}']
+= Preparing the Sigfox connection information
+
+Prepare the following connection information, which is used in the
+link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-iot-creating-new-sigfox-callback-{context}[Creating a new callback in the Sigfox backend] procedure.
+
+IoT tenant name::
+The name of the IoT tenant consists of the {KubePlatform} namespace and the name
+of the IoT project resource, for example, `namespace.iotproject`.
+
+HTTP authorization header::
+For the Sigfox backend to authenticate, you must convert the username and password combination of the gateway device into an HTTP "Basic Authorization" header. Be sure to specify the full user name using the following syntax: `_authentication id_ @_IoT tenant name_`.
++
+Example: `sigfox-user@namespace.iotproject`
++
+The basic authentication header value can be generated on the command line using
+the following command:
++
+[options="nowrap",subs="attributes"]
+----
+echo "Basic $(echo -n "sigfox-user@namespace.iotproject:password" | base64)"
+----
+
+URL pattern::
+The URL pattern consists of the URL to the Sigfox protocol adapter and
+Sigfox-specific query parameters:
++
+[options="nowrap",subs="verbatim,attributes"]
+----
+https://<ADAPTER URL>/data/telemetry/<TENANT>?device={device}&data={data}
+----
++
+Run the following command to obtain the URL of the protocol adapter:
++
+[options="nowrap",subs="attributes"]
+----
+{cmd-get-adapter}
+----
++
+The path segment `/data/telemetry` indicates to the protocol adapter
+to handle messages as _telemetry_ data. You can use `/data/event`
+ to instead process messages as _events_.
++
+NOTE: `{device}` and `{data}` are literal values and must not be replaced.
+
+

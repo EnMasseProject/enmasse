@@ -9,6 +9,8 @@ import (
 	"context"
 	"fmt"
 
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -16,9 +18,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+var log = logf.Log.WithName("finalizer")
+
 type DeconstructorContext struct {
 	Context context.Context
 	Client  client.Client
+	Reader  client.Reader
 	Object  runtime.Object
 }
 
@@ -75,7 +80,7 @@ func removeFinalizer(name string, list []string) []string {
 // If the deletion timestamp is non-nil, it will iterate over the finalizers, and call the destructor for the first
 // finalizer it still finds in the list (in any order). If the deconstructor returns as "finished", then will remove
 // the finalizer from the list, update the object, and request to be re-queued.
-func ProcessFinalizers(ctx context.Context, client client.Client, obj runtime.Object, finalizers []Finalizer) (reconcile.Result, error) {
+func ProcessFinalizers(ctx context.Context, client client.Client, reader client.Reader, obj runtime.Object, finalizers []Finalizer) (reconcile.Result, error) {
 
 	object, ok := obj.(v1.Object)
 	if !ok {
@@ -102,6 +107,7 @@ func ProcessFinalizers(ctx context.Context, client client.Client, obj runtime.Ob
 		if changed {
 			// the list of finalizers has changed, update and return
 			object.SetFinalizers(current)
+			log.Info("Re-queue: added finalizer")
 			return reconcile.Result{Requeue: true}, client.Update(ctx, obj)
 		}
 
@@ -125,6 +131,7 @@ func ProcessFinalizers(ctx context.Context, client client.Client, obj runtime.Ob
 					result, err = f.Deconstruct(DeconstructorContext{
 						Context: ctx,
 						Client:  client,
+						Reader:  reader,
 						Object:  obj,
 					})
 				}
@@ -143,6 +150,7 @@ func ProcessFinalizers(ctx context.Context, client client.Client, obj runtime.Ob
 					c := current
 					object.SetFinalizers(removeFinalizer(f.Name, c))
 					// persist, and re-schedule for the next finalizer
+					log.Info("Re-queue: removed finalizer")
 					return reconcile.Result{Requeue: true}, client.Update(ctx, obj)
 
 				} else {

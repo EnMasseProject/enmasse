@@ -88,10 +88,8 @@ public class IoTConfigTest {
         assertThat(value.getSpec().getInterServiceCertificates().getSecretCertificatesStrategy().getServiceSecretNames().get("secret2"), is("value2"));
 
         assertThat(value.getStatus(), notNullValue());
-        assertThat(value.getStatus().isInitialized(), is(true));
         assertThat(value.getStatus().getPhase(), is("Ready"));
         assertThat(value.getStatus().getAuthenticationServicePSK(), is("psk"));
-
 
     }
 

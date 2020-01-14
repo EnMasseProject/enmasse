@@ -39,6 +39,9 @@ func (r *ReconcileIoTConfig) processFileDeviceRegistry(ctx context.Context, conf
 		return r.processService(ctx, nameDeviceRegistry, config, false, r.reconcileFileDeviceRegistryService)
 	})
 	rc.ProcessSimple(func() error {
+		return r.processService(ctx, nameDeviceRegistry+"-metrics", config, false, r.reconcileMetricsService(nameDeviceRegistry))
+	})
+	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, r.reconcileFileDeviceRegistryConfigMap)
 	})
 	rc.ProcessSimple(func() error {
@@ -69,21 +72,18 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 	deployment.Annotations[RegistryTypeAnnotation] = "file"
+	deployment.Spec.Template.Spec.ServiceAccountName = "iot-device-registry"
 	deployment.Spec.Template.Annotations[RegistryTypeAnnotation] = "file"
 
 	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig, nil)
 
-	err := install.ApplyFsGroupOverride(deployment)
-
-	if err != nil {
-		return err
-	}
+	install.OverrideSecurityContextFsGroup("file-device-registry", config.Spec.ServicesConfig.DeviceRegistry.File.SecurityContext, deployment)
 
 	// the file based device registry must use the re-create strategy
 	// this is necessary to detach the volume first
 	deployment.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 
-	err = install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-device-registry-file", config); err != nil {
 			return err
@@ -100,12 +100,12 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 		}
 
 		container.Ports = []corev1.ContainerPort{
-			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "amqps", ContainerPort: 5671, Protocol: corev1.ProtocolTCP},
 			{Name: "http", ContainerPort: 8080, Protocol: corev1.ProtocolTCP},
 			{Name: "https", ContainerPort: 8443, Protocol: corev1.ProtocolTCP},
 		}
 
+		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
 		// environment

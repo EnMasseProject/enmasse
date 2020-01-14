@@ -5,7 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
-import static io.enmasse.iot.registry.infinispan.device.data.CredentialKey.credentialKey;
+import static io.enmasse.iot.infinispan.device.CredentialKey.credentialKey;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.time.Duration.between;
@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -28,24 +29,26 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PreDestroy;
 
+import org.eclipse.hono.service.management.tenant.Tenant;
 import org.eclipse.hono.util.CacheDirective;
 import org.eclipse.hono.util.CredentialsConstants;
 import org.eclipse.hono.util.CredentialsResult;
 import org.infinispan.client.hotrod.MetadataValue;
 import org.infinispan.client.hotrod.Search;
+import org.infinispan.query.dsl.IndexedQueryMode;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
-import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.config.DeviceServiceProperties;
 import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsService;
-import io.enmasse.iot.registry.infinispan.device.data.CredentialKey;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
+import io.enmasse.iot.infinispan.device.CredentialKey;
+import io.enmasse.iot.infinispan.device.DeviceCredential;
+import io.enmasse.iot.infinispan.device.DeviceInformation;
+import io.enmasse.iot.infinispan.tenant.TenantInformation;
 import io.enmasse.iot.registry.infinispan.util.Credentials;
 import io.opentracing.Span;
 import io.vertx.core.json.JsonObject;
@@ -61,9 +64,8 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     private Duration defaultTtl;
 
-    public CredentialsServiceImpl(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider,
-            final DeviceServiceProperties properties) {
-        super(managementProvider, adapterProvider);
+    public CredentialsServiceImpl(final DeviceManagementCacheProvider cacheProvider, final DeviceServiceProperties properties) {
+        super(cacheProvider);
         this.properties = properties;
         this.defaultTtl = this.properties.getCredentialsTtl();
 
@@ -85,7 +87,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     }
 
     @Override
-    protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final CredentialKey key, final Span span) {
+    protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final TenantInformation tenant, final CredentialKey key, final Span span) {
 
         return this.adapterCache
                 .getWithMetadataAsync(key)
@@ -98,7 +100,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
                         // ... try to re-create cache entry
 
                         log.debug("Entry not found - resync: {}", key);
-                        return resyncCacheEntry(key, span);
+                        return resyncCacheEntry(tenant, key, span);
                     }
 
                     // entry found and in sync ... return
@@ -107,7 +109,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
                     // get remaining ttl
 
-                    final Duration ttl = calculateRemainingTtl(result);
+                    final Duration ttl = calculateRemainingTtl(tenant, result);
 
                     log.debug("Remaining TTL: {}", ttl);
 
@@ -123,7 +125,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private Duration calculateRemainingTtl(MetadataValue<?> result) {
+    private Duration calculateRemainingTtl(final TenantInformation tenant, final MetadataValue<?> result) {
 
         if (result.getLifespan() > 0 && result.getCreated() > 0) {
 
@@ -133,11 +135,11 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
             return between(now(), eol);
 
         } else {
-            return this.defaultTtl;
+            return getStoreTtl(tenant);
         }
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final CredentialKey key, final Span span) {
+    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final TenantInformation tenant, final CredentialKey key, final Span span) {
 
         return searchCredentials(key)
                 .thenCompose(r -> {
@@ -148,25 +150,49 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
                     switch (r.size()) {
                         case 0:
-                            return storeNotFound(key);
+                            return storeNotFound(tenant, key);
                         case 1:
-                            return storeCacheEntry(key, r.getFirst());
+                            return storeCacheEntry(tenant, key, r.getFirst());
                         default:
                             log.warn("Found entry with multiple device mappings: {} -> {}", key, r);
-                            return storeInvalidEntry();
+                            return storeInvalidEntry(tenant);
                     }
 
                 });
 
     }
 
-    private <T> CompletionStage<CredentialsResult<T>> storeInvalidEntry() {
-        return completedFuture(notFound(this.defaultTtl));
+    /**
+     * Get the TTL for storing an entry in the adapter cache.
+     *
+     * @return The TTL. Must never return {@code null}.
+     */
+    private Duration getStoreTtl(final TenantInformation tenant) {
+
+        return tenant.getTenant()
+                .map(Tenant::getDefaults)
+                .map(d -> d.get("ttl"))
+                .flatMap(v -> {
+                    if (v instanceof Number) {
+                        return Optional.of(((Number) v).longValue());
+                    } else if (v instanceof String) {
+                        return Optional.of(Long.parseLong((String) v));
+                    } else {
+                        return Optional.empty();
+                    }
+                })
+                .map(Duration::ofMillis)
+                .orElse(this.defaultTtl);
+
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final CredentialKey key, final JsonObject cacheEntry) {
+    private <T> CompletionStage<CredentialsResult<T>> storeInvalidEntry(final TenantInformation tenant) {
+        return completedFuture(notFound(getStoreTtl(tenant)));
+    }
 
-        final Duration ttl = this.defaultTtl;
+    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final TenantInformation tenant, final CredentialKey key, final JsonObject cacheEntry) {
+
+        final Duration ttl = getStoreTtl(tenant);
 
         return this.adapterCache
 
@@ -180,9 +206,9 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final CredentialKey key) {
+    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final TenantInformation tenant, final CredentialKey key) {
 
-        final Duration ttl = this.defaultTtl;
+        final Duration ttl = getStoreTtl(tenant);
 
         return this.adapterCache
 
@@ -203,16 +229,13 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
      */
     private CompletableFuture<LinkedList<JsonObject>> searchCredentials(final CredentialKey key) {
 
-        final QueryFactory qf = Search.getQueryFactory(this.managementCache);
+        final QueryFactory queryFactory = Search.getQueryFactory(this.managementCache);
 
-        final Query query = qf
-                .from(DeviceInformation.class)
-
-                .having("tenantId").eq(key.getTenantId())
-                .and().having("credentials.authId").eq(key.getAuthId())
-                .and().having("credentials.type").eq(key.getType())
-
-                .build();
+        final Query query = queryFactory
+                .create(String.format("from %s d where d.tenantId=:tenantId and d.credentials.authId=:authId and d.credentials.type=:type", DeviceInformation.class.getName()), IndexedQueryMode.BROADCAST)
+                .setParameter("tenantId", key.getTenantId())
+                .setParameter("authId", key.getAuthId())
+                .setParameter("type", key.getType());
 
         return CompletableFuture
                 .supplyAsync(query::<DeviceInformation>list, this.executor)

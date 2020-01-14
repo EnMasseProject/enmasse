@@ -10,12 +10,15 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceSpecStandardStorage;
 import io.enmasse.admin.model.v1.AuthenticationServiceSpecStandardType;
+import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.IndicativeSentences;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
@@ -31,8 +34,11 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.user.model.v1.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 
 import java.nio.file.Files;
@@ -42,8 +48,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.UPGRADE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -55,29 +63,36 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     private static final int MESSAGE_COUNT = 50;
     private static Logger log = CustomLogger.getLogger();
     private static String productName;
-    private static String startVersion;
+    private EnmasseInstallType type;
 
     @BeforeAll
     void prepareUpgradeEnv() throws Exception {
         isolatedResourcesManager.setReuseAddressSpace();
         productName = Environment.getInstance().getProductName();
-        startVersion = getVersionFromTemplateDir(Paths.get(Environment.getInstance().getStartTemplates()));
     }
 
     @AfterEach
-    void removeEnmasse() {
-        uninstallEnmasse(Paths.get(Environment.getInstance().getUpgradeTemplates()));
+    void removeEnmasse() throws Exception {
+        if (this.type.equals(EnmasseInstallType.BUNDLE)) {
+            assertTrue(OperatorManager.getInstance().clean());
+        } else {
+            OperatorManager.getInstance().deleteEnmasseAnsible();
+        }
     }
 
-    @Test
-    void testUpgradeBundle() throws Exception {
-        doTestUpgrade(false);
+    @ParameterizedTest(name = "testUpgradeBundle-{0}")
+    @MethodSource("provideVersions")
+    void testUpgradeBundle(String version, String templates) throws Exception {
+        this.type = EnmasseInstallType.BUNDLE;
+        doTestUpgrade(templates, version);
     }
 
-    @Test
+    @ParameterizedTest(name = "testUpgradeAnsible-{0}")
+    @MethodSource("provideVersions")
     @OpenShift
-    void testUpgradeAnsible() throws Exception {
-        doTestUpgrade(true);
+    void testUpgradeAnsible(String version, String templates) throws Exception {
+        this.type = EnmasseInstallType.ANSIBLE;
+        doTestUpgrade(templates, version);
     }
 
 
@@ -85,41 +100,41 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     // Help methods
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void doTestUpgrade(boolean isAnsible) throws Exception {
-        if (isAnsible) {
-            installEnmasseAnsible(Paths.get(Environment.getInstance().getStartTemplates()), false);
+    private void doTestUpgrade(String templates, String version) throws Exception {
+        if (this.type.equals(EnmasseInstallType.ANSIBLE)) {
+            installEnmasseAnsible(Paths.get(templates), false);
         } else {
-            installEnmasseBundle(Paths.get(Environment.getInstance().getStartTemplates()), startVersion);
+            installEnmasseBundle(Paths.get(templates), version);
         }
 
-        String authServiceName = !getApiVersion().equals("v1alpha1") ? "standard-authservice" : null;
+        String authServiceName = !getApiVersion(version).equals("v1alpha1") ? "standard-authservice" : null;
 
         if (authServiceName != null) {
             ensurePersistentAuthService(authServiceName);
         }
 
-        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "brokered", "brokered", "brokered-single-broker", authServiceName, getApiVersion());
+        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "brokered", "brokered", "brokered-single-broker", authServiceName, getApiVersion(version));
         Thread.sleep(30_000);
         resourcesManager.waitForAddressSpaceReady(resourcesManager.getAddressSpace("brokered"));
 
-        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited-with-mqtt", authServiceName, getApiVersion());
+        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited-with-mqtt", authServiceName, getApiVersion(version));
         Thread.sleep(30_000);
         resourcesManager.waitForAddressSpaceReady(resourcesManager.getAddressSpace("standard"));
 
-        createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", getApiVersion());
-        createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "test", "standard", getApiVersion());
+        createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", getApiVersion(version));
+        createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "test", "standard", getApiVersion(version));
         Thread.sleep(30_000);
 
-        createAddressCMD(kubernetes.getInfraNamespace(), "brokered-queue", "brokered-queue", "brokered", "queue", "brokered-queue", getApiVersion());
-        createAddressCMD(kubernetes.getInfraNamespace(), "brokered-topic", "brokered-topic", "brokered", "topic", "brokered-topic", getApiVersion());
+        createAddressCMD(kubernetes.getInfraNamespace(), "brokered-queue", "brokered-queue", "brokered", "queue", "brokered-queue", getApiVersion(version));
+        createAddressCMD(kubernetes.getInfraNamespace(), "brokered-topic", "brokered-topic", "brokered", "topic", "brokered-topic", getApiVersion(version));
         Thread.sleep(30_000);
         waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("brokered")).toArray(new Address[0]));
 
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-xlarge", "standard-queue-xlarge", "standard", "queue", "standard-xlarge-queue", getApiVersion());
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-small", "standard-queue-small", "standard", "queue", "standard-small-queue", getApiVersion());
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-topic", "standard-topic", "standard", "topic", "standard-small-topic", getApiVersion());
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-anycast", "standard-anycast", "standard", "anycast", "standard-small-anycast", getApiVersion());
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", getApiVersion());
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-xlarge", "standard-queue-xlarge", "standard", "queue", "standard-xlarge-queue", getApiVersion(version));
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-small", "standard-queue-small", "standard", "queue", "standard-small-queue", getApiVersion(version));
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-topic", "standard-topic", "standard", "topic", "standard-small-topic", getApiVersion(version));
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-anycast", "standard-anycast", "standard", "anycast", "standard-small-anycast", getApiVersion(version));
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", getApiVersion(version));
         Thread.sleep(30_000);
         waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("standard")).toArray(new Address[0]));
 
@@ -127,7 +142,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small", "pepa", MESSAGE_COUNT, true));
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", "pepa", MESSAGE_COUNT, true));
 
-        if (isAnsible) {
+        if (this.type.equals(EnmasseInstallType.ANSIBLE)) {
             installEnmasseAnsible(Paths.get(Environment.getInstance().getUpgradeTemplates()), true);
         } else {
             upgradeEnmasseBundle(Paths.get(Environment.getInstance().getUpgradeTemplates()));
@@ -152,7 +167,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         log.info("After upgrade {} user(s)", items.size());
         items.forEach(u -> log.info("User {}", u.getSpec().getUsername()));
 
-        if (!startVersion.equals("1.0")) {
+        if (!version.equals("1.0")) {
 
             assertTrue(receiveMessages("brokered", new RheaClientReceiver(), new UserCredentials("test-brokered", "test"), "brokered-queue", MESSAGE_COUNT, true));
             assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-small", MESSAGE_COUNT, true));
@@ -172,7 +187,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         }
     }
 
-    private String getVersionFromTemplateDir(Path templateDir) {
+    private static String getVersionFromTemplateDir(Path templateDir) {
         return templateDir.toString().substring(templateDir.toString().lastIndexOf("-") + 1);
     }
 
@@ -197,15 +212,6 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         assertTrue(Exec.execute(cmd, 20_000, true).getRetCode(), "Address not created");
     }
 
-    private void uninstallEnmasse(Path templateDir) {
-        log.info("Application will be removed");
-        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", "systemtests.inventory");
-        Path ansiblePlaybook = Paths.get(templateDir.toString(), "ansible", "playbooks", "openshift", "uninstall.yml");
-        List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
-                "--extra-vars", String.format("namespace=%s", kubernetes.getInfraNamespace()));
-        assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Uninstall failed");
-    }
-
     private void installEnmasseBundle(Path templateDir, String version) throws Exception {
         log.info("Application will be deployed using bundle version {}", version);
         KubeCMDClient.createNamespace(kubernetes.getInfraNamespace());
@@ -227,8 +233,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         checkImagesUpdated(getVersionFromTemplateDir(templateDir));
     }
 
-    private String getApiVersion() {
-        return startVersion.equals("1.0") || startVersion.contains("0.26") ? "v1alpha1" : "v1beta1";
+    private String getApiVersion(String version) {
+        return version.equals("1.0") || version.contains("0.26") ? "v1alpha1" : "v1beta1";
     }
 
     private void installEnmasseAnsible(Path templatePaths, boolean upgrade) throws Exception {
@@ -343,5 +349,9 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
                 TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
             }
         }
+    }
+
+    private static Stream<Arguments> provideVersions() {
+        return Arrays.stream(environment.getStartTemplates().split(",")).map(templates -> Arguments.of(getVersionFromTemplateDir(Paths.get(templates)), templates));
     }
 }

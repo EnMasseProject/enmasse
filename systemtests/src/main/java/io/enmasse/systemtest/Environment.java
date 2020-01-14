@@ -36,8 +36,11 @@ public class Environment {
     public static final String TAG_ENV = "TAG";
     public static final String PRODUCT_NAME_ENV = "PRODUCT_NAME";
     public static final String APP_NAME_ENV = "APP_NAME";
+    public static final String INSTALL_TYPE = "INSTALL_TYPE";
+    public static final String OLM_INSTALL_TYPE = "OLM_INSTALL_TYPE";
     private static final String SKIP_SAVE_STATE = "SKIP_SAVE_STATE";
     private static final String SKIP_DEPLOY_INFINISPAN = "SKIP_DEPLOY_INFINISPAN";
+    private static final String INFINISPAN_PROJECT = "INFINISPAN_PROJECT";
     private static Logger log = CustomLogger.getLogger();
     private static Environment instance;
     private final String namespace = System.getenv().getOrDefault(K8S_NAMESPACE_ENV, "enmasse-infra");
@@ -49,17 +52,20 @@ public class Environment {
     private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String upgradeTemplates = System.getenv().getOrDefault(UPGRADE_TEPLATES_ENV,
-            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-0.26.5").toString());
+            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String monitoringNamespace = System.getenv().getOrDefault(MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
     private final String tag = System.getenv().getOrDefault(TAG_ENV, "latest");
     private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
     private final String productName = System.getenv().getOrDefault(PRODUCT_NAME_ENV, "enmasse");
     private final boolean skipSaveState = Boolean.parseBoolean(System.getenv(SKIP_SAVE_STATE));
     private final boolean skipDeployInfinispan = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_INFINISPAN));
+    private String infinispanProject = System.getenv().getOrDefault(INFINISPAN_PROJECT, "systemtests-infinispan");
     private final Duration kubernetesApiConnectTimeout = Optional.ofNullable(System.getenv().get(K8S_API_CONNECT_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
     private final Duration kubernetesApiReadTimeout = Optional.ofNullable(System.getenv().get(K8S_API_READ_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
     private final Duration kubernetesApiWriteTimeout = Optional.ofNullable(System.getenv().get(K8S_API_WRITE_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
-
+    private final EnmasseInstallType installType = Optional.ofNullable(System.getenv().get(INSTALL_TYPE)).map(EnmasseInstallType::valueOf).orElse(EnmasseInstallType.BUNDLE);
+    private final OLMInstallationType olmInstallType = Optional.ofNullable(System.getenv().get(OLM_INSTALL_TYPE)).map(s->s.isEmpty() ? OLMInstallationType.SPECIFIC.name() : s)
+            .map(OLMInstallationType::valueOf).orElse(OLMInstallationType.SPECIFIC);
     protected String templatesPath = System.getenv().getOrDefault(TEMPLATES_PATH,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     protected UserCredentials managementCredentials = new UserCredentials(null, null);
@@ -86,6 +92,10 @@ public class Environment {
             url = config.getMasterUrl();
         }
         String debugFormat = "{}:{}";
+        log.info(debugFormat, INSTALL_TYPE, installType.name());
+        if (installType == EnmasseInstallType.OLM) {
+            log.info(debugFormat, OLM_INSTALL_TYPE, olmInstallType.name());
+        }
         log.info(debugFormat, TEST_LOG_DIR_ENV, testLogDir);
         log.info(debugFormat, K8S_NAMESPACE_ENV, namespace);
         log.info(debugFormat, K8S_API_URL_ENV, url);
@@ -103,6 +113,14 @@ public class Environment {
             instance = new Environment();
         }
         return instance;
+    }
+
+    public EnmasseInstallType installType() {
+        return installType;
+    }
+
+    public OLMInstallationType olmInstallType() {
+        return olmInstallType;
     }
 
     public String getApiUrl() {
@@ -211,5 +229,9 @@ public class Environment {
 
     public Duration getKubernetesApiWriteTimeout() {
         return kubernetesApiWriteTimeout;
+    }
+
+    public String getInfinispanProject() {
+        return infinispanProject;
     }
 }

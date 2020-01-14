@@ -1,3 +1,18 @@
+## 0.31.0
+*  #2714: Allow setting security context of pods using persistent volumes
+*  #3407: AddressSpace, Address and MessagingUser resources are now backed by Custom Resource Definitions (CRD) rather than api-server:
+   * On upgrade, existing address spaces, addresses and users in the standard authservices will be converted to CRDs.
+   * The api-server is removed from the install. The enmasse-operator will automatically remove it when upgrading.
+   * Some of the resource validation that was taking place in the api-server has been replaced with a resource status check and error message.
+   * The address space schema resource has been changed to a cluster-wide CRD. Users will not be able to read/list it without addition permissions.
+   * Qpid Dispatch Router upgraded to 1.10.0
+
+## 0.30.2
+*  #2714: Allow setting security context of pods using persistent volumes
+*  #3547: Network policies not deleted when address space is deleted
+*  #3542: Add resync period for agent watches
+*  #3463: Fix permission typo on 0.30 
+
 ## 0.30.0
 * Fix go tool vet on newer versions of go
 * #3247: Fix path to probe endpoint used when running on Kubernetes

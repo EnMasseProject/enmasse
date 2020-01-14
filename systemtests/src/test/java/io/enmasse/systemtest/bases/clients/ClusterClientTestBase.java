@@ -12,9 +12,9 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestBaseShared;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
-import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -22,7 +22,6 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import org.junit.jupiter.api.BeforeEach;
 
 import java.util.concurrent.Future;
 
@@ -32,15 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExternalClients
 public abstract class ClusterClientTestBase extends TestBase implements ITestBaseShared {
-    private ClientArgumentMap arguments = new ClientArgumentMap();
-
-    @BeforeEach
-    public void setUpClientBase() throws Exception {
-        arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
-        arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());
-        arguments.put(ClientArgument.LOG_MESSAGES, "json");
-        arguments.put(ClientArgument.CONN_SSL, "true");
-    }
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket, boolean ssl, boolean mqtt) throws Exception {
         int port = ssl ? 5671 : 5672;
@@ -64,38 +54,43 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
         Address dest = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "message-basic"))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "message-basic-" + ClientType.getAddressName(sender) + (websocket ? "-ws" : "")))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
-                .withAddress("round-robin" + ClientType.getAddressName(sender))
+                .withAddress("message-basic-" + ClientType.getAddressName(sender) + (websocket ? "-ws" : ""))
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
         resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace(), websocket, true, false).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
-        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.MSG_CONTENT, "message");
-        if (websocket) {
-            arguments.put(ClientArgument.CONN_WEB_SOCKET, "true");
-            if (getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
-                arguments.put(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
-            }
-        }
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(sender)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket, true, false))
+                .withAddress(dest)
+                .withCredentials(defaultCredentials)
+                .withCount(expectedMsgCount)
+                .withMessageBody("msg no. %d")
+                .withTimeout(30)
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "");
 
-        sender.setArguments(arguments);
-        arguments.put(ClientArgument.TIMEOUT, "10");  // In seconds, maximum time the consumer waits for a single message
-        arguments.remove(ClientArgument.MSG_CONTENT);
-        receiver.setArguments(arguments);
+        ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                .withClientEngine(receiver)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket, true, false))
+                .withAddress(dest)
+                .withCredentials(defaultCredentials)
+                .withCount(expectedMsgCount)
+                .withTimeout(30)
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "");
 
-        assertTrue(sender.run());
-        assertTrue(receiver.run());
+        assertTrue(senderClient.run());
+        assertTrue(receiverClient.run());
 
-        assertEquals(expectedMsgCount, sender.getMessages().size(),
+        assertEquals(expectedMsgCount, senderClient.getMessages().size(),
                 String.format("Expected %d sent messages", expectedMsgCount));
-        assertEquals(expectedMsgCount, receiver.getMessages().size(),
+        assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
                 String.format("Expected %d received messages", expectedMsgCount));
     }
 
@@ -107,7 +102,7 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
         Address dest = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "basic-mqtt"))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "basic-mqtt" + ClientType.getAddressName(sender)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -118,29 +113,33 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
 
         resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace(), false, false, true).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
-        arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.MSG_CONTENT, "message");
-        arguments.put(ClientArgument.TIMEOUT, "20");
-        arguments.remove(ClientArgument.CONN_SSL);
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(sender)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), false, false, false))
+                .withAddress(dest)
+                .withCredentials(defaultCredentials)
+                .withCount(expectedMsgCount)
+                .withMessageBody("msg no. %d")
+                .withTimeout(30);
 
+        ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                .withClientEngine(receiver)
+                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), false, false, false))
+                .withAddress(dest)
+                .withCredentials(defaultCredentials)
+                .withCount(expectedMsgCount)
+                .withTimeout(40);
 
-        sender.setArguments(arguments);
-        arguments.remove(ClientArgument.MSG_CONTENT);
-        arguments.put(ClientArgument.TIMEOUT, "40");
-        receiver.setArguments(arguments);
-
-        Future<Boolean> recResult = receiver.runAsync();
+        Future<Boolean> recResult = receiverClient.runAsync();
         Thread.sleep(20_000);
 
         assertAll(
-                () -> assertTrue(sender.run(), "Producer failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, sender.getMessages().size(),
+                () -> assertTrue(senderClient.run(), "Producer failed, expected return code 0"),
+                () -> assertEquals(expectedMsgCount, senderClient.getMessages().size(),
                         String.format("Expected %d sent messages", expectedMsgCount)));
         assertAll(
                 () -> assertTrue(recResult.get(), "Subscriber failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, receiver.getMessages().size(),
+                () -> assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
                         String.format("Expected %d received messages", expectedMsgCount)));
     }
 }

@@ -8,6 +8,7 @@ package main
 import (
 	"flag"
 	"os"
+	"strconv"
 
 	"github.com/enmasseproject/enmasse/pkg/logs"
 
@@ -26,7 +27,7 @@ import (
 )
 
 var (
-	ephermalCertBase string
+	ephemeralCertBase string
 )
 
 var log = logf.Log.WithName("cmd")
@@ -46,14 +47,14 @@ func main() {
 
 	log.Info("Starting up...")
 
-	if ephermalCertBase != "" {
-		fi, err := os.Stat(ephermalCertBase)
+	if ephemeralCertBase != "" {
+		fi, err := os.Stat(ephemeralCertBase)
 		if err != nil {
-			log.Error(err, "Ephermal certificate base is configured, but unable to access: %v", err.Error())
+			log.Error(err, "Ephemeral certificate base is configured, but unable to access: %v", err.Error())
 			os.Exit(1)
 		}
 		if !fi.IsDir() {
-			log.Info("Ephermal certificate base is configured, but is not a directory")
+			log.Info("Ephemeral certificate base is configured, but is not a directory")
 			os.Exit(1)
 		}
 	}
@@ -81,12 +82,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	enmasseInformerFactory := informers.NewSharedInformerFactory(enmasseClient, time.Second*30)
+	enmasseInformerFactory := informers.NewSharedInformerFactory(enmasseClient, refreshPeriod())
 
 	configurator := NewConfigurator(
 		kubeClient, enmasseClient,
 		enmasseInformerFactory.Iot().V1alpha1().IoTProjects(),
-		ephermalCertBase,
+		ephemeralCertBase,
 	)
 
 	enmasseInformerFactory.Start(stopCh)
@@ -96,12 +97,29 @@ func main() {
 	}
 }
 
+const DefaultInformerRefreshPeriod = time.Second * 60
+
+func refreshPeriod() time.Duration {
+
+	if value, present := os.LookupEnv("INFORMER_REFRESH_PERIOD_SECONDS"); present {
+		if i, err := strconv.ParseInt(value, 10, 32); err != nil {
+			return DefaultInformerRefreshPeriod
+		} else {
+			return time.Duration(i) * time.Second
+		}
+	}
+
+	// return default
+
+	return DefaultInformerRefreshPeriod
+}
+
 func init() {
 
-	ephermalCertBase = "/var/qdr-certs"
+	ephemeralCertBase = "/var/qdr-certs"
 
-	if value, present := os.LookupEnv("EPHERMAL_CERT_BASE"); present {
-		ephermalCertBase = value
+	if value, present := os.LookupEnv("EPHEMERAL_CERT_BASE"); present {
+		ephemeralCertBase = value
 	}
 
 }

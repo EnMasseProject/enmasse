@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdaptersConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.systemtest.Endpoint;
@@ -23,10 +24,13 @@ import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.client.utils.Serialization;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
+
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,8 +44,13 @@ import java.util.function.Function;
 
 import static io.enmasse.systemtest.apiclients.Predicates.any;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class IoTUtils {
@@ -67,7 +76,7 @@ public class IoTUtils {
         var iotConfigClient = kubernetes.getIoTConfigClient();
         while (budget.timeLeft() >= 0 && !isReady) {
             config = iotConfigClient.withName(config.getMetadata().getName()).get();
-            isReady = config.getStatus() != null && config.getStatus().isInitialized();
+            isReady = config.getStatus() != null && "Active".equals(config.getStatus().getPhase());
             if (!isReady) {
                 log.info("Waiting until IoTConfig: '{}' will be in ready state", config.getMetadata().getName());
                 Thread.sleep(10000);
@@ -132,16 +141,20 @@ public class IoTUtils {
         var iotProjectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         while (budget.timeLeft() >= 0 && !isReady) {
             project = iotProjectClient.withName(project.getMetadata().getName()).get();
-            isReady = project.getStatus() != null && project.getStatus().isReady();
+            isReady = project.getStatus() != null && "Active".equals(project.getStatus().getPhase());
             if (!isReady) {
-                log.info("Waiting until IoTProject: '{}' will be in ready state", project.getMetadata().getName());
+                log.info("Waiting until IoTProject: '{}' will be in ready state -> {}", project.getMetadata().getName(), project.getStatus() != null ? project.getStatus().getPhase() : null);
                 Thread.sleep(10000);
             }
         }
+
+        final String jsonStatus = project.getStatus() != null ? Serialization.asJson(project.getStatus()) : "Project doesn't have status";
         if (!isReady) {
-            String jsonStatus = project.getStatus() != null ? project.getStatus().toString() : "Project doesn't have status";
             throw new IllegalStateException("IoTProject " + project.getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
+
+        // refresh
+        log.info("IoTProject is ready - phase: {} -> {}", project.getStatus().getPhase(), jsonStatus);
 
         if (project.getSpec().getDownstreamStrategy() != null
                 && project.getSpec().getDownstreamStrategy().getManagedStrategy() != null
@@ -151,8 +164,19 @@ public class IoTUtils {
             var addressSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
             var addressSpace = Kubernetes.getInstance().getAddressSpaceClient(project.getMetadata().getNamespace()).withName(addressSpaceName).get();
             Objects.requireNonNull(addressSpace, () -> String.format("Unable to find addressSpace: %s", addressSpaceName));
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace, budget);
+            assertNotNull(addressSpace);
+            assertNotNull(addressSpace.getStatus());
+            assertTrue(addressSpace.getStatus().isReady());
         }
+
+        // the project is ready, so we need to check a few things
+
+        assertNotNull(project.getStatus());
+        assertNotNull(project.getStatus().getDownstreamEndpoint());
+        assertThat(project.getStatus().getDownstreamEndpoint().getHost(), not(emptyOrNullString()));
+        assertThat(project.getStatus().getDownstreamEndpoint().getUsername(), not(emptyOrNullString()));
+        assertThat(project.getStatus().getDownstreamEndpoint().getPassword(), not(emptyOrNullString()));
+        assertThat(project.getStatus().getDownstreamEndpoint().getPort(), not(is(0)));
     }
 
     private static void waitForIoTProjectDeleted(Kubernetes kubernetes, IoTProject project) throws Exception {
@@ -163,10 +187,19 @@ public class IoTUtils {
                 AddressSpaceUtils.waitForAddressSpaceDeleted(addressSpace);
             }
         }
+        var client = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
+        TestUtils.waitUntilConditionOrFail(() -> {
+            var updated = client.withName(project.getMetadata().getName()).get();
+            if (updated != null) {
+                log.info("IoTProject {}/{} still exists -> {}", project.getMetadata().getNamespace(), project.getMetadata().getName(), updated.getStatus().getPhase());
+            }
+            return updated == null;
+        }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "IoT project failed to delete in time");
+        log.info("IoTProject {}/{} deleted", project.getMetadata().getNamespace(), project.getMetadata().getName());
     }
 
     public static boolean isIoTInstalled(Kubernetes kubernetes) {
-        return kubernetes.getCRD("iotprojects.iot.enmasse.io") != null;
+        return kubernetes.getCRD(IoTCrd.project().getMetadata().getName()) != null;
     }
 
     public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {

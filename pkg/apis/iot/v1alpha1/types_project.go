@@ -29,9 +29,8 @@ type IoTProjectSpec struct {
 }
 
 type IoTProjectStatus struct {
-	IsReady     bool   `json:"isReady"`
-	Phase       string `json:"phase"`
-	PhaseReason string `json:"phaseReason,omitempty"`
+	Phase       ProjectPhaseType `json:"phase"`
+	PhaseReason string           `json:"phaseReason,omitempty"`
 
 	TenantName         string                 `json:"tenantName"`
 	DownstreamEndpoint *ConnectionInformation `json:"downstreamEndpoint,omitempty"`
@@ -40,6 +39,15 @@ type IoTProjectStatus struct {
 
 	Conditions []ProjectCondition `json:"conditions"`
 }
+
+type ProjectPhaseType string
+
+const (
+	ProjectPhaseActive      ProjectPhaseType = "Active"
+	ProjectPhaseConfiguring ProjectPhaseType = "Configuring"
+	ProjectPhaseTerminating ProjectPhaseType = "Terminating"
+	ProjectPhaseFailed      ProjectPhaseType = "Failed"
+)
 
 type ProjectConditionType string
 

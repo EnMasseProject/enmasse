@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.enmasse.iot.registry.infinispan.InfinispanRegistry;
+import io.enmasse.iot.utils.ConfigBase;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 
@@ -36,7 +36,7 @@ public class VertxConfiguration {
      *
      * @return The properties.
      */
-    @ConfigurationProperties(InfinispanRegistry.CONFIG_BASE + ".vertx")
+    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".vertx")
     @Bean
     public VertxProperties vertxProperties() {
         return new VertxProperties();

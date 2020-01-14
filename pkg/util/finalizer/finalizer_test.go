@@ -59,9 +59,9 @@ func TestAdd(t *testing.T) {
 
 	objs := []runtime.Object{project}
 
-	client := fake.NewFakeClient(objs...)
+	client := fake.NewFakeClientWithScheme(scheme.Scheme, objs...)
 
-	result, err := ProcessFinalizers(context.TODO(), client, project, []Finalizer{
+	result, err := ProcessFinalizers(context.TODO(), client, client, project, []Finalizer{
 		{Name: "foo"},
 	})
 
@@ -95,11 +95,11 @@ func TestRemove1(t *testing.T) {
 
 	objs := []runtime.Object{project}
 
-	client := fake.NewFakeClient(objs...)
+	client := fake.NewFakeClientWithScheme(scheme.Scheme, objs...)
 
 	i := 0
 
-	result, err := ProcessFinalizers(context.TODO(), client, project, []Finalizer{
+	result, err := ProcessFinalizers(context.TODO(), client, client, project, []Finalizer{
 		{
 			Name: "foo", Deconstruct: func(ctx DeconstructorContext) (result reconcile.Result, e error) {
 				i++
@@ -124,7 +124,7 @@ func TestRemove1(t *testing.T) {
 		t.Fatal("Must have one element")
 	}
 
-	result, err = ProcessFinalizers(context.TODO(), client, project, []Finalizer{
+	result, err = ProcessFinalizers(context.TODO(), client, client, project, []Finalizer{
 		{
 			Name: "foo", Deconstruct: func(ctx DeconstructorContext) (result reconcile.Result, e error) {
 				i++
@@ -149,7 +149,7 @@ func TestRemove1(t *testing.T) {
 		t.Fatal("Must have no element")
 	}
 
-	result, err = ProcessFinalizers(context.TODO(), client, project, []Finalizer{
+	result, err = ProcessFinalizers(context.TODO(), client, client, project, []Finalizer{
 		{
 			Name: "foo", Deconstruct: func(ctx DeconstructorContext) (result reconcile.Result, e error) {
 				i++
@@ -188,7 +188,7 @@ type FinalizerTestStep struct {
 func RunFinalizerSteps(t *testing.T, project *v1alpha1.IoTProject, finalizers []string, steps []FinalizerTestStep) {
 	objs := []runtime.Object{project}
 
-	client := fake.NewFakeClient(objs...)
+	client := fake.NewFakeClientWithScheme(scheme.Scheme, objs...)
 
 	i := 0
 
@@ -210,7 +210,7 @@ func RunFinalizerSteps(t *testing.T, project *v1alpha1.IoTProject, finalizers []
 				})
 			}
 
-			result, err := ProcessFinalizers(context.TODO(), client, project, mockFinalizers)
+			result, err := ProcessFinalizers(context.TODO(), client, client, project, mockFinalizers)
 
 			if (err != nil) != (s.Error != nil) {
 				t.Errorf("Error state mismatch - expected: %v, found: %v", s.Error, err)

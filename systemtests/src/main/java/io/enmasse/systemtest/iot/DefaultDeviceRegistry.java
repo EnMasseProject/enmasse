@@ -7,32 +7,37 @@ package io.enmasse.systemtest.iot;
 
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfig;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfigBuilder;
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.iot.model.v1.ExternalInfinispanServer;
+import io.enmasse.iot.model.v1.ExternalInfinispanServerBuilder;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
 public final class DefaultDeviceRegistry {
 
-    private static final Kubernetes kubernetes = Kubernetes.getInstance();
+    private DefaultDeviceRegistry() {}
 
-    private DefaultDeviceRegistry() {
+    public static ExternalInfinispanServer externalServer(final Endpoint infinispanEndpoint) {
+        var builder = new ExternalInfinispanServerBuilder()
+                .withHost(infinispanEndpoint.getHost())
+                .withPort(infinispanEndpoint.getPort());
+
+        // credentials aligned with 'templates/iot/examples/infinispan/manual'
+        builder = builder
+                .withUsername("app")
+                .withPassword("test12")
+                .withSaslRealm("ApplicationRealm")
+                .withSaslServerName("hotrod");
+
+        return builder.build();
     }
 
     public static DeviceRegistryServiceConfig newInfinispanBased() throws Exception {
-        var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getInfraNamespace());
+        var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
         return new DeviceRegistryServiceConfigBuilder()
                 .withNewInfinispan()
                 .withNewServer()
 
-                .withNewExternal()
-                .withHost(infinispanEndpoint.getHost())
-                .withPort(infinispanEndpoint.getPort())
-                // credentials aligned with 'templates/iot/examples/infinispan/manual'
-                .withUsername("app")
-                .withPassword("test12")
-                .withSaslRealm("ApplicationRealm")
-                .withSaslServerName("hotrod")
-                .endExternal()
+                .withExternal(externalServer(infinispanEndpoint))
 
                 .endServer()
                 .endInfinispan()
@@ -45,24 +50,6 @@ public final class DefaultDeviceRegistry {
                 .withNumberOfDevicesPerTenant(100_000)
                 .endFile()
                 .build();
-    }
-
-    /**
-     * Create default device registry setup.
-     *
-     * @return A new instance of a device registry configuration.
-     * @throws Exception in case anything goes wrong.
-     */
-    public static DeviceRegistryServiceConfig deviceRegistry(String deviceReg) throws Exception {
-        switch (deviceReg) {
-            case "file":
-                return newFileBased();
-            case "infinispan":
-                return newInfinispanBased();
-            default:
-                throw new IllegalArgumentException(String.format("Device registry type '%s' unknown", deviceReg));
-        }
-
     }
 
 }

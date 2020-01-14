@@ -1,0 +1,16 @@
+// Module included in the following assemblies:
+//
+// assembly-service-admin.adoc
+// assembly-iot-getting-started.adoc
+
+:api: telemetry
+
+[id='proc-iot-sending-telemetry-http-{context}']
+= Sending telemetry using HTTP
+
+You can send telemetry from a device to the cloud using the HTTP protocol.
+
+.Procedure
+
+include::../common/snip-iot-http-api.adoc[leveloffset=+1]
+

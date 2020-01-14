@@ -48,6 +48,9 @@ func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *i
 		return r.processService(ctx, nameSigfoxAdapter, config, !enabled, r.reconcileSigfoxAdapterService)
 	})
 	rc.ProcessSimple(func() error {
+		return r.processService(ctx, nameSigfoxAdapter+"-metrics", config, false, r.reconcileMetricsService(nameSigfoxAdapter))
+	})
+	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameSigfoxAdapter+"-config", config, !enabled, r.reconcileSigfoxAdapterConfigMap)
 	})
 	if !util.IsOpenshift() {
@@ -79,9 +82,10 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
+	applyDefaultAdapterDeploymentSpec(deployment)
 
 	install.DropContainer(deployment, "sigfox-adapter")
-	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-sigfox-adapter", config); err != nil {
 			return err
@@ -98,10 +102,10 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 		}
 
 		container.Ports = []corev1.ContainerPort{
-			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "https", ContainerPort: 8443, Protocol: corev1.ProtocolTCP},
 		}
 
+		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
 		// environment

@@ -12,7 +12,7 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestBaseShared;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.model.address.AddressStatus;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -59,7 +59,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public abstract class WebConsoleTest extends TestBase implements ITestBaseShared {
     private static Logger log = CustomLogger.getLogger();
     SeleniumProvider selenium = SeleniumProvider.getInstance();
-    private List<AbstractClient> clientsList;
+    private List<ExternalMessagingClient> clientsList;
 
 
     private ConsoleWebPage consoleWebPage;
@@ -371,7 +371,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
         consoleWebPage.openAddressesPageWebConsole();
 
-        List<AbstractClient> receivers = attachReceivers(getSharedAddressSpace(), addresses, -1, defaultCredentials);
+        List<ExternalMessagingClient> receivers = attachReceivers(getSharedAddressSpace(), addresses, -1, defaultCredentials);
         try {
             Thread.sleep(15000);
 
@@ -386,7 +386,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
             stopClients(receivers);
         }
 
-        List<AbstractClient> senders = attachSenders(getSharedAddressSpace(), addresses, 360, defaultCredentials);
+        List<ExternalMessagingClient> senders = attachSenders(getSharedAddressSpace(), addresses, 360, defaultCredentials);
         try {
 
             Thread.sleep(15000);
@@ -432,8 +432,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
                 clientsList.forEach(c -> {
                     c.stop();
                     log.info("=======================================");
-                    log.info("stderr {}", c.getStdErr());
-                    log.info("stdout {}", c.getStdOut());
+                    log.info("stderr {}", c.getStdError());
+                    log.info("stdout {}", c.getStdOutput());
                 });
                 clientsList.clear();
             }
@@ -520,8 +520,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
         UserCredentials pavel = new UserCredentials("pavel", "enmasse");
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), pavel);
-        List<AbstractClient> receiversPavel = null;
-        List<AbstractClient> receiversTest = null;
+        List<ExternalMessagingClient> receiversPavel = null;
+        List<ExternalMessagingClient> receiversTest = null;
         try {
             int receiversBatch1 = 5;
             int receiversBatch2 = 10;
@@ -731,7 +731,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openAddressesPageWebConsole();
 
-        AbstractClient client = new RheaClientConnector();
+        ExternalMessagingClient client = new ExternalMessagingClient()
+                .withClientEngine(new RheaClientConnector());
         try {
             client = attachConnector(getSharedAddressSpace(), dest, 1, senderCount, receiverCount, defaultCredentials, 360);
             selenium.waitUntilPropertyPresent(60, senderCount, () -> consoleWebPage.getAddressItem(dest).getSendersCount());
@@ -968,8 +969,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
     //============================================================================================
 
 
-    private List<AbstractClient> attachClients(List<Address> destinations) throws Exception {
-        List<AbstractClient> clients = new ArrayList<>();
+    private List<ExternalMessagingClient> attachClients(List<Address> destinations) throws Exception {
+        List<ExternalMessagingClient> clients = new ArrayList<>();
         for (Address destination : destinations) {
             clients.add(attachConnector(getSharedAddressSpace(), destination, 1, 6, 1, defaultCredentials, 360));
             clients.add(attachConnector(getSharedAddressSpace(), destination, 1, 4, 4, defaultCredentials, 360));

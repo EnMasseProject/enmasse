@@ -53,15 +53,18 @@ public class SharedIoTManager extends ResourceManager {
     public AddressSpace getSharedAddressSpace() {
         if (sharedIoTProject == null) return null;
         String addSpaceName = sharedIoTProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-        AddressSpace addressSpace = kubernetes.getAddressSpaceClient(sharedIoTProject.getMetadata().getNamespace()).withName(addSpaceName).get();
-        return addressSpace;
+        return kubernetes.getAddressSpaceClient(sharedIoTProject.getMetadata().getNamespace()).withName(addSpaceName).get();
     }
 
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
         closeAmqpFactory();
         closeMqttFactory();
-        if (!environment.skipCleanup()) {
+        if (environment.skipCleanup()) {
+            LOGGER.info("Skip cleanup is set, no cleanup process");
+        } else {
+            logCollector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+            logCollector.collectEvents(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
             if (sharedIoTProject != null) {
                 LOGGER.info("Shared IoTProject will be removed");
                 var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
@@ -73,9 +76,7 @@ public class SharedIoTManager extends ResourceManager {
                 }
             }
             tearDownSharedIoTConfig();
-            SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
-        } else {
-            LOGGER.info("Skip cleanup is set, no cleanup process");
+            SystemtestsKubernetesApps.deleteInfinispanServer();
         }
     }
 
@@ -92,7 +93,7 @@ public class SharedIoTManager extends ResourceManager {
         }
     }
 
-    void initFactories(AddressSpace addressSpace, UserCredentials credentials) {
+    void initFactories(UserCredentials credentials) {
         amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(), credentials);
         mqttClientFactory = new MqttClientFactory(getSharedAddressSpace(), credentials);
     }
@@ -114,7 +115,7 @@ public class SharedIoTManager extends ResourceManager {
             sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project", defaultAddSpaceIdentifier, IOT_PROJECT_NAMESPACE, addressSpacePlan);
             createIoTProject(sharedIoTProject);
         }
-        initFactories(getSharedAddressSpace(), credentials);
+        initFactories(credentials);
         createOrUpdateUser(getSharedAddressSpace(), credentials);
         this.amqpClient = amqpClientFactory.createQueueClient();
     }

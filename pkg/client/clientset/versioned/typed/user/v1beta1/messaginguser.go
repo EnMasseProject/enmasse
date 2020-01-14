@@ -28,6 +28,7 @@ type MessagingUsersGetter interface {
 type MessagingUserInterface interface {
 	Create(*v1beta1.MessagingUser) (*v1beta1.MessagingUser, error)
 	Update(*v1beta1.MessagingUser) (*v1beta1.MessagingUser, error)
+	UpdateStatus(*v1beta1.MessagingUser) (*v1beta1.MessagingUser, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
 	Get(name string, options v1.GetOptions) (*v1beta1.MessagingUser, error)
@@ -115,6 +116,22 @@ func (c *messagingUsers) Update(messagingUser *v1beta1.MessagingUser) (result *v
 		Namespace(c.ns).
 		Resource("messagingusers").
 		Name(messagingUser.Name).
+		Body(messagingUser).
+		Do().
+		Into(result)
+	return
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+
+func (c *messagingUsers) UpdateStatus(messagingUser *v1beta1.MessagingUser) (result *v1beta1.MessagingUser, err error) {
+	result = &v1beta1.MessagingUser{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("messagingusers").
+		Name(messagingUser.Name).
+		SubResource("status").
 		Body(messagingUser).
 		Do().
 		Into(result)

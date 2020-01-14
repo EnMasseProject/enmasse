@@ -79,7 +79,7 @@ func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client,
 		}
 	}
 	if authservice.Spec.Standard.CertificateSecret == nil {
-		secretName := "standard-authservice-cert"
+		secretName := *authservice.Spec.Standard.ServiceName + "-cert"
 		authservice.Spec.Standard.CertificateSecret = &corev1.SecretReference{
 			Name: secretName,
 		}
@@ -101,11 +101,7 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 
 	install.ApplyDeploymentDefaults(deployment, "standard-authservice", *authservice.Spec.Standard.DeploymentName)
 
-	err := install.ApplyFsGroupOverride(deployment)
-
-	if err != nil {
-		return err
-	}
+	install.OverrideSecurityContextFsGroup("standard-authservice", authservice.Spec.Standard.SecurityContext, deployment)
 
 	if err := install.ApplyInitContainerWithError(deployment, "keycloak-plugin", func(container *corev1.Container) error {
 		if err := install.ApplyContainerImage(container, "keycloak-plugin", authservice.Spec.Standard.InitImage); err != nil {
@@ -116,12 +112,13 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyVolumeMountSimple(container, "keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration", false)
 		install.ApplyVolumeMountSimple(container, "standard-authservice-cert", "/opt/enmasse/cert", false)
 		install.ApplyEnvSimple(container, "KEYCLOAK_CONFIG_FILE", "standalone-"+string(authservice.Spec.Standard.Datasource.Type)+".xml")
+
 		return nil
 	}); err != nil {
 		return err
 	}
 
-	if err := install.ApplyContainerWithError(deployment, "keycloak", func(container *corev1.Container) error {
+	if err := install.ApplyDeploymentContainerWithError(deployment, "keycloak", func(container *corev1.Container) error {
 		if err := install.ApplyContainerImage(container, "keycloak", authservice.Spec.Standard.Image); err != nil {
 			return err
 		}
@@ -180,6 +177,7 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyVolumeMountSimple(container, "keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration", false)
 		install.ApplyVolumeMountSimple(container, "keycloak-persistence", "/opt/jboss/keycloak/standalone/data", false)
 		install.ApplyVolumeMountSimple(container, "standard-authservice-cert", "/opt/enmasse/cert", true)
+
 		return nil
 	}); err != nil {
 		return err
@@ -218,7 +216,7 @@ func applyStandardAuthServiceService(authservice *adminv1beta1.AuthenticationSer
 	if service.Annotations == nil {
 		service.Annotations = make(map[string]string)
 	}
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = "standard-authservice-cert"
+	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = authservice.Spec.Standard.CertificateSecret.Name
 	service.Spec.Ports = []corev1.ServicePort{
 		{
 			Port:       8443,

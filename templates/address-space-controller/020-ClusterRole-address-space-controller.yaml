@@ -8,3 +8,6 @@ rules:
   - apiGroups: [ "enmasse.io" ]
     resources: [ "addressspaces", "addresses", "addressspaceschemas", "addressspaces/finalizers", "addresses/finalizers" ]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "user.enmasse.io" ]
+    resources: [ "messagingusers" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]

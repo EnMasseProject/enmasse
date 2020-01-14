@@ -1,0 +1,55 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-getting-started.adoc
+// assembly-iot-tenant-guide.adoc
+
+ifeval::["{cmdcli}" == "oc"]
+:http-adapter: $(oc -n enmasse-infra get routes iot-http-adapter --template='{{ .spec.host }}')
+:mqtt-adapter: $(oc -n enmasse-infra get routes iot-mqtt-adapter --template='{{ .spec.host }}')
+:mqtt-port: 443
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+:http-adapter: $(kubectl -n enmasse-infra get service iot-http-adapter-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):30443
+:mqtt-adapter: $(kubectl -n enmasse-infra get service iot-mqtt-adapter-external -o jsonpath={.status.loadBalancer.ingress[0].hostname})
+:mqtt-port: 30883
+endif::[]
+
+[id='proc-iot-installing-cli-{context}']
+= Installing the Eclipse Hono command-line client
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-messaging-iot[The IoT services are installed].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-messaging-iot[An IoT project is created].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-messaging-iot[An IoT device is created].
+
+.Procedure
+
+. Download the link:https://www.eclipse.org/hono/downloads/[Eclipse Hono command-line client].
+
+. Obtain the messaging endpoint certificate:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} -n myapp get addressspace iot -o jsonpath={.status.caCert} | base64 --decode > tls.crt
+----
+
+. Export the messaging endpoint host and port:
++
+[options="nowrap",subs="attributes"]
+----
+export MESSAGING_HOST=$({cmdcli} -n myapp get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].externalHost})
+export MESSAGING_PORT=443
+----
+ifeval::["{cmdcli}" == "kubectl"]
++
+[NOTE]
+====
+If you are running Kubernetes in a development environment without a proper load balancer, you need to export the IP address of your local cluster and the port number of the appropriate service, for example:
+[options="nowrap",subs="attributes"]
+----
+export MESSAGING_HOST=localhost
+export MESSAGING_PORT=5671
+----
+====
+endif::[]
+

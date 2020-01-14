@@ -8,7 +8,7 @@
   <parent>
     <groupId>io.enmasse</groupId>
     <artifactId>iot-application-base</artifactId>
-    <version>0.30-SNAPSHOT</version>
+    <version>0.31-SNAPSHOT</version>
     <relativePath>../iot-application-base</relativePath>
   </parent>
 
@@ -16,32 +16,19 @@
   <!-- used in the banner -->
   <name>EnMasse IoT Device Registry (Infinispan)</name>
 
-  <properties>
-    <junit4.version>4.12</junit4.version>
-  </properties>
-
   <dependencies>
 
     <dependency>
       <groupId>io.enmasse</groupId>
       <artifactId>iot-service-base</artifactId>
     </dependency>
-
     <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-core</artifactId>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-utils</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-client-hotrod</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-remote-query-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-query-dsl</artifactId>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-infinispan-base</artifactId>
     </dependency>
 
     <dependency>
@@ -51,6 +38,15 @@
     <dependency>
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>kubernetes-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>api-common</artifactId>
     </dependency>
 
     <!-- Test dependencies -->
@@ -90,10 +86,10 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit4.version}</version>
+      <groupId>org.infinispan</groupId>
+      <artifactId>infinispan-remote-query-server</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -111,19 +107,7 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-remote-query-server</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.enmasse</groupId>
-      <artifactId>api-common</artifactId>
-    </dependency>
+
   </dependencies>
 
   <build>
@@ -133,7 +117,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <mainClass>io.enmasse.iot.registry.infinispan.InfinispanRegistry</mainClass>
+          <mainClass>io.enmasse.iot.registry.infinispan.Application</mainClass>
         </configuration>
       </plugin>
 

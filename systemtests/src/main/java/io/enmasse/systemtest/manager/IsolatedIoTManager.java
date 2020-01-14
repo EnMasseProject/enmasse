@@ -55,7 +55,7 @@ public class IsolatedIoTManager extends ResourceManager {
     }
 
     @Override
-    public void setup() throws Exception {
+    public void setup() {
         if (!kubernetes.namespaceExists(IOT_PROJECT_NAMESPACE)) {
             kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
         }
@@ -67,9 +67,11 @@ public class IsolatedIoTManager extends ResourceManager {
             LOGGER.info("Skip cleanup is set, no cleanup process");
         } else {
             try {
+                logCollector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+                logCollector.collectEvents(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
                 tearDownProjects();
                 tearDownConfigs();
-                SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+                SystemtestsKubernetesApps.deleteInfinispanServer();
             } catch (Exception e) {
                 LOGGER.error("Error tearing down iot test: {}", e.getMessage());
                 throw e;

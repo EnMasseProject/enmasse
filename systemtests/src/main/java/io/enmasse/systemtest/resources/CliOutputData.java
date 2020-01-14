@@ -163,17 +163,24 @@ public class CliOutputData {
 
     public static class UserRow extends CliDataRow {
         private String username;
+        private String phase;
 
         UserRow(String data) {
             String[] parsedData = splitData(data);
+            System.out.println("Data: " + Arrays.toString(parsedData));
             this.name = parsedData[0];
             this.username = parsedData[1];
             this.type = parsedData[2];
-            this.age = parsedData[3];
+            this.phase = parsedData[3];
+            this.age = parsedData[4];
         }
 
         public String getUsername() {
             return username;
+        }
+
+        public String getPhase() {
+            return phase;
         }
     }
 }

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
@@ -52,4 +53,11 @@ public class IoTProject extends AbstractHasMetadata<IoTProject> {
         this.status = status;
     }
 
+    /*
+     * Required due to: fabric8io/kubernetes-client#1902
+     */
+    @Override
+    public ObjectMeta getMetadata() {
+        return super.getMetadata();
+    }
 }

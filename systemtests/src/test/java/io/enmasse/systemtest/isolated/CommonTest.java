@@ -8,17 +8,16 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.CoreCrd;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
-import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -132,7 +131,6 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
     @Test
     void testRestartComponents() throws Exception {
         List<Label> labels = new LinkedList<>();
-        labels.add(new Label("component", "api-server"));
         labels.add(new Label("name", "standard-authservice"));
         labels.add(new Label("name", "address-space-controller"));
         labels.add(new Label("name", "enmasse-operator"));
@@ -184,33 +182,27 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         List<Pod> pods = kubernetes.listPods();
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
-        try {
-            for (Label label : labels) {
-                log.info("Restarting {}", label.labelValue);
-                KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
-                Thread.sleep(30_000);
-                TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-                assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
-            }
-
-            log.info("Restarting whole enmasse");
-            KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
-            Thread.sleep(180_000);
+        for (Label label : labels) {
+            log.info("Restarting {}", label.labelValue);
+            KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
+            Thread.sleep(30_000);
             TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-            AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
-                    standardAddresses.toArray(new Address[0]));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+        }
 
-            //TODO: Uncomment when #2127 will be fixedy
+        log.info("Restarting whole enmasse");
+        KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
+        Thread.sleep(180_000);
+        TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
+                standardAddresses.toArray(new Address[0]));
+        assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+
+        //TODO: Uncomment when #2127 will be fixedy
 
 //            Pod qdrouter = pods.stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList()).get(0);
 //            kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
 //            assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
-        } finally {
-            // Ensure that EnMasse's API services are finished re-registering (after api-server restart) before ending
-            // the test otherwise test clean-up will fail.
-            assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s", CoreCrd.VERSION, CoreCrd.GROUP)).getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
-        }
     }
 
     //https://github.com/EnMasseProject/enmasse/issues/3098
@@ -364,7 +356,6 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
     @Tag(NON_PR)
     void testMessagingDuringRestartComponents() throws Exception {
         List<Label> labels = new LinkedList<>();
-        labels.add(new Label("component", "api-server"));
         labels.add(new Label("name", "address-space-controller"));
         labels.add(new Label("name", "enmasse-operator"));
 
@@ -416,31 +407,23 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
-        try {
-            for (Address addr : brokeredAddresses) {
-                log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), brokered.getMetadata().getName());
-                for (Label label : labels) {
-                    getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
-                    doMessagingDuringRestart(label, runningPodsBefore, user, brokered, addr);
-                    getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
-                }
+        for (Address addr : brokeredAddresses) {
+            log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), brokered.getMetadata().getName());
+            for (Label label : labels) {
+                getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
+                doMessagingDuringRestart(label, runningPodsBefore, user, brokered, addr);
+                getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
             }
-
-            for (Address addr : standardAddresses) {
-                log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), standard.getMetadata().getName());
-                for (Label label : labels) {
-                    getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
-                    doMessagingDuringRestart(label, runningPodsBefore, user, standard, addr);
-                    getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
-                }
-            }
-
-        } finally {
-            // Ensure that EnMasse's API services are finished re-registering (after api-server restart) before ending
-            // the test otherwise test clean-up will fail.
-            assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s", CoreCrd.VERSION, CoreCrd.GROUP)).getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
         }
 
+        for (Address addr : standardAddresses) {
+            log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), standard.getMetadata().getName());
+            for (Label label : labels) {
+                getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
+                doMessagingDuringRestart(label, runningPodsBefore, user, standard, addr);
+                getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
+            }
+        }
     }
 
     /////////////////////////////////////////////////////////////////////

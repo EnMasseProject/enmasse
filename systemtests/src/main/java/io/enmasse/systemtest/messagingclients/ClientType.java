@@ -40,19 +40,15 @@ public enum ClientType {
             case CLI_PROTON_PYTHON_RECEIVER:
                 return "cli-proton-python-receiver";
             case CLI_JAVA_PROTON_JMS_SENDER:
-                return "./client_executable/cli-qpid-jms.jar";
             case CLI_JAVA_PROTON_JMS_RECEIVER:
                 return "./client_executable/cli-qpid-jms.jar";
             case CLI_JAVA_ARTEMIS_JMS_SENDER:
-                return "./client_executable/cli-artemis-jms.jar";
             case CLI_JAVA_ARTEMIS_JMS_RECEIVER:
                 return "./client_executable/cli-artemis-jms.jar";
             case CLI_JAVA_OPENWIRE_JMS_SENDER:
-                return "./client_executable/cli-activemq.jar";
             case CLI_JAVA_OPENWIRE_JMS_RECEIVER:
                 return "./client_executable/cli-activemq.jar";
             case CLI_JAVA_PAHO_MQTT_SENDER:
-                return "./client_executable/cli-paho-java.jar";
             case CLI_JAVA_PAHO_MQTT_RECEIVER:
                 return "./client_executable/cli-paho-java.jar";
             case CLI_STOMP_SENDER:
@@ -68,22 +64,25 @@ public enum ClientType {
             case CLI_RHEA_SENDER:
             case CLI_RHEA_RECEIVER:
             case CLI_RHEA_CONNECTOR:
-                return "cli_rhea";
+                return "cli-rhea";
             case CLI_PROTON_PYTHON_SENDER:
             case CLI_PROTON_PYTHON_RECEIVER:
-                return "cli_python";
+                return "cli-python";
             case CLI_JAVA_PROTON_JMS_SENDER:
             case CLI_JAVA_PROTON_JMS_RECEIVER:
-                return "cli_jms";
+                return "cli-jms";
             case CLI_JAVA_ARTEMIS_JMS_SENDER:
             case CLI_JAVA_ARTEMIS_JMS_RECEIVER:
-                return "cli_artemis";
+                return "cli-artemis";
             case CLI_JAVA_OPENWIRE_JMS_SENDER:
             case CLI_JAVA_OPENWIRE_JMS_RECEIVER:
-                return "cli_openwire";
+                return "cli-openwire";
             case CLI_STOMP_SENDER:
             case CLI_STOMP_RECEIVER:
-                return "cli_stomp";
+                return "cli-stomp";
+            case CLI_JAVA_PAHO_MQTT_SENDER:
+            case CLI_JAVA_PAHO_MQTT_RECEIVER:
+                return "cli-paho";
             default:
                 return "";
         }

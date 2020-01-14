@@ -5,11 +5,12 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceSettings;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 
 import java.util.List;
 
 public interface InfraResourceFactory {
-    List<HasMetadata> createInfraResources(AddressSpace addressSpace, InfraConfig infraConfig);
+    List<HasMetadata> createInfraResources(AddressSpace addressSpace, InfraConfig infraConfig, AuthenticationServiceSettings authenticationServiceSettings);
 }

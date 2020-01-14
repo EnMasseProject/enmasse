@@ -13,8 +13,10 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.mqtt.MqttDeliveryCompleteCallback;
 import io.enmasse.systemtest.mqtt.MqttMessageArrivedCallback;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.github.artsok.RepeatedIfExceptionsTest;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletableFuture;
@@ -37,7 +39,8 @@ public class SessionTest extends TestBase implements ITestSharedWithMqtt {
      * [MQTT-3.1.2-4] If CleanSession is set to 1, the Client and Server MUST discard any previous Session and start a
      * new one.
      */
-    @Test
+    @DisplayName("previousPersistentSessionDiscarded")
+    @RepeatedIfExceptionsTest(repeats = 2, name = "")
     public void previousPersistentSessionDiscarded() throws Exception {
         Address dest = new AddressBuilder()
                 .withNewMetadata()

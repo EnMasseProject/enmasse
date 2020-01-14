@@ -91,7 +91,7 @@ spec:
         volumeMounts:
         - mountPath: /opt/jboss/infinispan-server/standalone/configuration/custom
           name: infinispan-configuration
-        - mountPath: /opt/jboss/infinispan-server/standalone/data
+        - mountPath: /opt/infinispan/server/data/
           name: infinispan-data
       terminationGracePeriodSeconds: 120
       volumes:
@@ -107,4 +107,4 @@ spec:
       - ReadWriteOnce
       resources:
         requests:
-          storage: 32Gi
+          storage: 8Gi

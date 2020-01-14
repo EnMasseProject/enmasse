@@ -187,9 +187,11 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
                         sasl.done(Sasl.SaslOutcome.PN_SASL_AUTH);
                     }
                 }
-            }
-            catch (IllegalArgumentException e)
-            {
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                done = true;
+                sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);
+            } catch (IllegalArgumentException e) {
                 e.printStackTrace();
                 done = true;
                 sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);

@@ -15,12 +15,16 @@ import io.enmasse.address.model.AddressStatusForwarder;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
+import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -76,7 +80,7 @@ public class AddressUtils {
         return address != null ? address.toLowerCase().replaceAll("[^a-z0-9.\\-]", "") : address;
     }
 
-    public static void delete(Address... destinations) throws Exception {
+    public static void delete(Address... destinations) {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS);
         Arrays.stream(destinations).forEach(address -> Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).cascading(true).delete());
         TimeMeasuringSystem.stopOperation(operationID);
@@ -170,12 +174,9 @@ public class AddressUtils {
     public static boolean areForwardersReady(Address address) {
         return Optional.ofNullable(address)
                 .map(Address::getStatus)
-                .map(AddressStatus::getForwarders)
-                .map(Stream::of)
-                .orElseGet(Stream::empty)
+                .map(AddressStatus::getForwarders).stream()
                 .flatMap(Collection::stream)
-                .map(AddressStatusForwarder::isReady)
-                .allMatch(ready -> ready == true);
+                .allMatch(AddressStatusForwarder::isReady);
     }
 
     private static FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> getAddressClient(Address... destinations) {
@@ -260,10 +261,7 @@ public class AddressUtils {
                 List<Address> addressesInSameAddrSpace = addressList.getItems().stream()
                         .filter(address1 -> Address.extractAddressSpace(address1)
                                 .equals(Address.extractAddressSpace(address))).collect(Collectors.toList());
-                if (!addressesInSameAddrSpace.contains(address)) {
-                    return true;
-                }
-                return false;
+                return !addressesInSameAddrSpace.contains(address);
             } catch (KubernetesClientException e) {
                 log.warn("Client can't read address resources");
                 return false;
@@ -271,8 +269,9 @@ public class AddressUtils {
         }, timeoutBudget);
     }
 
-    public static String getTopicPrefix(boolean topicSwitch) {
-        return topicSwitch ? "topic://" : "";
+    public static String getTopicPrefix(AbstractClient clientEngine) {
+        return (clientEngine instanceof ProtonJMSClientReceiver || clientEngine instanceof ProtonJMSClientSender) &&
+                !(clientEngine instanceof PahoMQTTClientReceiver || clientEngine instanceof PahoMQTTClientSender) ? "topic://" : "";
     }
 
     interface AddressListMatcher {

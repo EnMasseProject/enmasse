@@ -41,6 +41,8 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
@@ -57,11 +59,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -461,17 +463,13 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
         getClientUtils().assertCanConnect(addressspace, cred, Collections.singletonList(dest), resourcesManager);
 
-        isolatedResourcesManager.replaceAddressSpace(addressspace);
-
-        getClientUtils().assertCanConnect(addressspace, cred, Collections.singletonList(dest), resourcesManager);
-
         AddressSpace replace = new DoneableAddressSpace(addressspace)
                 .editSpec()
                 .withPlan("no-exists")
                 .endSpec()
                 .done();
 
-        isolatedResourcesManager.replaceAddressSpace(replace, false, isolatedResourcesManager.getCurrentAddressSpaces());
+        resourcesManager.replaceAddressSpace(replace, false, null);
         TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
         AddressSpace space;
         while (!budget.timeoutExpired()) {
@@ -534,6 +532,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             AddressSpace space1 = supplier.get();
             JsonObject space1Json = AddressSpaceUtils.addressSpaceToJson(space1);
             assertTrue(KubeCMDClient.createCR(namespace, space1Json.toString()).getRetCode());
+            resourcesManager.waitForAddressSpaceReady(space1);
             resourcesManager.deleteAddressSpace(space1);
 
             kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).cascading(true).delete();
@@ -552,5 +551,36 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             kubernetes.deleteNamespace(namespace);
         }
 
+    }
+
+    @ParameterizedTest(name = "testChangeAddressSpaceType-{0}")
+    @ValueSource(strings = {"brokered", "standard"})
+    void testChangeAddressSpaceType(String addressSpaceType) throws Exception {
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-auth-switch-" + addressSpaceType)
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(addressSpaceType.equals(AddressSpaceType.STANDARD.toString()) ? AddressSpaceType.STANDARD.toString() :
+                        AddressSpaceType.BROKERED.toString())
+                .withPlan(addressSpaceType.equals(AddressSpaceType.STANDARD.toString()) ? AddressSpacePlans.STANDARD_UNLIMITED : AddressSpacePlans.BROKERED)
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(addressSpace);
+        String targetType = !addressSpaceType.equals(AddressSpaceType.STANDARD.toString()) ? AddressSpaceType.STANDARD.toString() :
+                AddressSpaceType.BROKERED.toString();
+
+        addressSpace.getSpec().setType(targetType);
+
+        assertThrows(IllegalStateException.class, () -> {
+            resourcesManager.replaceAddressSpace(addressSpace, false, new TimeoutBudget(1, TimeUnit.MINUTES));
+        });
+
+        AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
+
+        assertThat(addressSpace.getStatus().getMessages().get(0), is(String.format("Cannot change type of address space "  +
+                "test-addr-space-auth-switch-%s from %s to %s", addressSpaceType, addressSpaceType, targetType)));
     }
 }

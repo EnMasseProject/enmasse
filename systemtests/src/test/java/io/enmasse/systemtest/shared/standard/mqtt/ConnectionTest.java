@@ -13,8 +13,10 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.mqtt.MqttConnectionLostCallback;
 import io.enmasse.systemtest.mqtt.MqttDeliveryCompleteCallback;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.github.artsok.RepeatedIfExceptionsTest;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletableFuture;
@@ -32,7 +34,8 @@ public class ConnectionTest extends TestBase implements ITestSharedWithMqtt {
      * MQTT-3.1.4-2 If the ClientId represents a Client already connected to the Server then the Server MUST
      * disconnect the existing Client [].
      */
-    @Test
+    @DisplayName("newSessionDisconnectsExisting")
+    @RepeatedIfExceptionsTest(repeats = 2, name = "")
     public void newSessionDisconnectsExisting() throws Exception {
         Address dest = new AddressBuilder()
                 .withNewMetadata()

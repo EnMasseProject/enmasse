@@ -10,6 +10,7 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -45,7 +46,6 @@ import io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder;
 import io.fabric8.kubernetes.api.model.rbac.RoleBuilder;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.Applicable;
 import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
 import io.fabric8.kubernetes.client.utils.ReplaceValueStream;
 import org.slf4j.Logger;
@@ -61,6 +61,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,7 +70,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class SystemtestsKubernetesApps {
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
 
     public static final String MESSAGING_CLIENTS = "systemtests-clients";
     public static final String SELENIUM_FIREFOX = "selenium-firefox";
@@ -79,8 +80,18 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
     public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
+    public static final String INFINISPAN_PROJECT = Environment.getInstance().getInfinispanProject();
     public static final String INFINISPAN_SERVER = "infinispan";
-    private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+    private static final Path INFINISPAN_EXAMPLE_BASE;
+    private static final String[] INFINISPAN_DIRECTORIES;
+
+    static {
+        INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+        INFINISPAN_DIRECTORIES = new String[] {
+                        "common",
+                        "manual"
+        };
+    }
 
     public static String getMessagingAppPodName() throws Exception {
         return getMessagingAppPodName(MESSAGING_PROJECT);
@@ -237,10 +248,21 @@ public class SystemtestsKubernetesApps {
         return in -> ReplaceValueStream.replaceValues(in, values);
     }
 
-    public static Endpoint deployInfinispanServer(final String namespace) throws Exception {
+    public static Path[] resolveAll(final Path base, final String ... localPaths) {
+        return Arrays.asList(localPaths)
+                .stream()
+                .map(l -> base.resolve(l))
+                .toArray(Path[]::new);
+    }
+
+    public static Endpoint deployInfinispanServer() throws Exception {
 
         if (Environment.getInstance().isSkipDeployInfinispan()) {
-            return getInfinispanEndpoint(namespace);
+            return getInfinispanEndpoint(INFINISPAN_PROJECT);
+        }
+
+        if (!Kubernetes.getInstance().namespaceExists(INFINISPAN_PROJECT)) {
+            Kubernetes.getInstance().createNamespace(INFINISPAN_PROJECT);
         }
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
@@ -248,28 +270,27 @@ public class SystemtestsKubernetesApps {
 
         // apply "common" and "manual" folders
 
-        applyDirectories(namespaceReplacer(namespace),
-                INFINISPAN_EXAMPLE_BASE.resolve("common"),
-                INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+        applyDirectories(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
+                resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_DIRECTORIES));
 
         // wait for the deployment
 
         client
                 .apps().statefulSets()
-                .inNamespace(namespace)
+                .inNamespace(INFINISPAN_PROJECT)
                 .withName(INFINISPAN_SERVER)
                 .waitUntilReady(5, TimeUnit.MINUTES);
 
         // return hotrod enpoint
 
-        return getInfinispanEndpoint(namespace);
+        return getInfinispanEndpoint(INFINISPAN_PROJECT);
     }
 
     private static Endpoint getInfinispanEndpoint(final String namespace) {
-        return Kubernetes.getInstance().getEndpoint(INFINISPAN_SERVER, namespace, "hotrod");
+        return Kubernetes.getInstance().getEndpoint(INFINISPAN_SERVER, namespace, "infinispan");
     }
 
-    public static void deleteInfinispanServer(final String namespace) throws Exception {
+    public static void deleteInfinispanServer() throws Exception {
 
         if (Environment.getInstance().isSkipDeployInfinispan()) {
             return;
@@ -281,15 +302,15 @@ public class SystemtestsKubernetesApps {
 
         if (client.apps()
                 .statefulSets()
-                .inNamespace(namespace)
+                .inNamespace(INFINISPAN_PROJECT)
                 .withName(INFINISPAN_SERVER)
                 .get() != null) {
 
             log.info("Infinispan server will be removed");
 
-            deleteDirectories(namespaceReplacer(namespace),
-                    INFINISPAN_EXAMPLE_BASE.resolve("common"),
-                    INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+            for(final Path path : resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_DIRECTORIES)) {
+                KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, path);
+            }
 
         }
     }
@@ -385,8 +406,10 @@ public class SystemtestsKubernetesApps {
         TestUtils.waitForExpectedReadyPods(kubeCli, namespace, 1, new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
-    public static void applyDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
-        loadDirectories(streamManipulator, Applicable::createOrReplace, paths);
+    public static void applyDirectories(String namespace, final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
+        loadDirectories(streamManipulator, item -> {
+            item.inNamespace(namespace).createOrReplace();
+        }, paths);
     }
 
     public static void deleteDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {

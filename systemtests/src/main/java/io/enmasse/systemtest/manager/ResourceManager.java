@@ -12,6 +12,7 @@ import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -51,6 +53,7 @@ public abstract class ResourceManager {
     protected String defaultAddSpaceIdentifier;
     protected String addressSpaceType;
     protected String addressSpacePlan;
+    protected List<AddressSpace> currentAddressSpaces;
 
     public void setDefaultAddSpaceIdentifier(String defaultAddSpaceIdentifier) {
         this.defaultAddSpaceIdentifier = defaultAddSpaceIdentifier;
@@ -66,7 +69,7 @@ public abstract class ResourceManager {
 
     public abstract void setup() throws Exception;
 
-    abstract void tearDown(ExtensionContext context) throws Exception;
+    public abstract void tearDown(ExtensionContext context) throws Exception;
 
     public abstract AmqpClientFactory getAmqpClientFactory();
 
@@ -180,7 +183,7 @@ public abstract class ResourceManager {
     // Authentication services
     //------------------------------------------------------------------------------------------------
 
-    public AuthenticationService getAuthService(String name) throws Exception {
+    public AuthenticationService getAuthService(String name) {
         return Kubernetes.getInstance().getAuthenticationServiceClient().withName(name).get();
     }
 
@@ -208,7 +211,7 @@ public abstract class ResourceManager {
     public void waitForAuthPods(AuthenticationService authenticationService) throws Exception {
         String desiredPodName = authenticationService.getMetadata().getName();
         TestUtils.waitUntilCondition("Auth service is deployed: " + desiredPodName, phase -> {
-                    List<Pod> pods = TestUtils.listReadyPods(Kubernetes.getInstance());
+                    List<Pod> pods = TestUtils.listReadyPods(Kubernetes.getInstance(), authenticationService.getMetadata().getNamespace());
                     long matching = pods.stream().filter(pod ->
                             pod.getMetadata().getName().contains(desiredPodName)).count();
                     if (matching != 1) {
@@ -225,7 +228,7 @@ public abstract class ResourceManager {
     public void removeAuthService(AuthenticationService authService) throws Exception {
         Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService.getMetadata().getName()).cascading(true).delete();
         TestUtils.waitUntilCondition("Auth service is deleted: " + authService.getMetadata().getName(), (phase) ->
-                        TestUtils.listReadyPods(Kubernetes.getInstance()).stream().noneMatch(pod ->
+                        TestUtils.listReadyPods(Kubernetes.getInstance(), authService.getMetadata().getNamespace()).stream().noneMatch(pod ->
                                 pod.getMetadata().getName().contains(authService.getMetadata().getName())),
                 new TimeoutBudget(1, TimeUnit.MINUTES));
     }
@@ -242,14 +245,13 @@ public abstract class ResourceManager {
             if (waitUntilReady) {
                 AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
             }
-            AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         } else {
             if (waitUntilReady) {
                 AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
             }
             LOGGER.info("Address space '" + addressSpace + "' already exists.");
-            AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         }
+        AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         syncAddressSpaceAndCollectLogs(addressSpace, operationID);
     }
 
@@ -306,30 +308,33 @@ public abstract class ResourceManager {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied, List<AddressSpace> addressSpaceList) throws Exception {
+    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForConfigApplied, TimeoutBudget waitBudget) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS_SPACE);
         var client = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
         if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             LOGGER.info("Address space '{}' exists and will be updated.", addressSpace);
-            final String currentResourceVersion = client.withName(addressSpace.getMetadata().getName()).get().getMetadata().getResourceVersion();
+            final AddressSpace current = client.withName(addressSpace.getMetadata().getName()).get();
+            final String currentResourceVersion = current.getMetadata().getResourceVersion();
+            final String currentConfig = current.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
             client.createOrReplace(addressSpace);
             Thread.sleep(10_000);
             TestUtils.waitForChangedResourceVersion(ofDuration(ofMinutes(5)), addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), currentResourceVersion);
-            if (waitForPlanApplied) {
-                AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
+            if (waitForConfigApplied) {
+                AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(addressSpace, currentConfig);
             }
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            if (waitBudget == null) {
+                AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            } else {
+                AddressSpaceUtils.waitForAddressSpaceReady(addressSpace, waitBudget);
+            }
+
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-            addressSpaceList.add(addressSpace);
+            currentAddressSpaces.add(addressSpace);
         } else {
             LOGGER.info("Address space '{}' does not exists.", addressSpace.getMetadata().getName());
         }
         LOGGER.info("Address space updated: {}", addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    public void waitForAddressSpacePlanApplied(AddressSpace addressSpace) throws Exception {
-        AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
     }
 
     public AddressSpace getAddressSpace(String namespace, String addressSpaceName) {
@@ -345,7 +350,7 @@ public abstract class ResourceManager {
     //====================================== Address methods =========================================
     //================================================================================================
 
-    public void deleteAddresses(Address... destinations) throws Exception {
+    public void deleteAddresses(Address... destinations) {
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddresses");
         AddressUtils.delete(destinations);
@@ -378,10 +383,13 @@ public abstract class ResourceManager {
         logCollector.collectConfigMaps();
     }
 
-    public void setAddresses(Address... addresses) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
+    public void setAddresses(TimeoutBudget budget, Address... addresses) throws Exception {
         logCollector.collectRouterState("setAddresses");
         AddressUtils.setAddresses(budget, true, addresses);
+    }
+
+    public void setAddresses(Address... addresses) throws Exception {
+        setAddresses(new TimeoutBudget(15, TimeUnit.MINUTES), addresses);
     }
 
     public void replaceAddress(Address destination) throws Exception {
@@ -392,7 +400,9 @@ public abstract class ResourceManager {
     //======================================= User methods ===========================================
     //================================================================================================
 
-    public User createOrUpdateUser(AddressSpace addressSpace, UserCredentials credentials) {
+    public User createOrUpdateUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
+        Objects.requireNonNull(addressSpace);
+        Objects.requireNonNull(credentials);
         User user = new UserBuilder()
                 .withNewMetadata()
                 .withName(addressSpace.getMetadata().getName() + "." + credentials.getUsername())
@@ -416,16 +426,25 @@ public abstract class ResourceManager {
         return createOrUpdateUser(addressSpace, user);
     }
 
-    public User createOrUpdateUser(AddressSpace addressSpace, User user) {
-        LOGGER.info("User {} in address space {} will be created", user, addressSpace.getMetadata().getName());
+    public User createOrUpdateUser(AddressSpace addressSpace, User user) throws Exception {
         if (user.getMetadata().getName() == null || !user.getMetadata().getName().contains(addressSpace.getMetadata().getName())) {
             user.getMetadata().setName(addressSpace.getMetadata().getName() + "." + user.getSpec().getUsername());
         }
-        return kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).createOrReplace(user);
+        if (user.getMetadata().getNamespace() == null) {
+            user.getMetadata().setNamespace(addressSpace.getMetadata().getNamespace());
+        }
+        LOGGER.info("User {} in address space {} will be created/replaced", user, addressSpace.getMetadata().getName());
+        User existing = kubernetes.getUserClient(user.getMetadata().getNamespace()).withName(user.getMetadata().getName()).get();
+        if (existing != null) {
+            existing.setSpec(user.getSpec());
+            user = existing;
+        }
+        kubernetes.getUserClient(user.getMetadata().getNamespace()).createOrReplace(user);
+        return UserUtils.waitForUserActive(user, new TimeoutBudget(1, TimeUnit.MINUTES));
     }
 
 
-    public User createUserServiceAccount(AddressSpace addressSpace, UserCredentials cred) {
+    public User createUserServiceAccount(AddressSpace addressSpace, UserCredentials cred) throws Exception {
         LOGGER.info("ServiceAccount user {} in address space {} will be created", cred.getUsername(), addressSpace.getMetadata().getName());
         String serviceaccountName = kubernetes.createServiceAccount(cred.getUsername(), addressSpace.getMetadata().getNamespace());
         User user = new UserBuilder()
@@ -448,14 +467,20 @@ public abstract class ResourceManager {
         return createOrUpdateUser(addressSpace, user);
     }
 
-    public void removeUser(AddressSpace addressSpace, User user) {
+    public void removeUser(AddressSpace addressSpace, User user) throws InterruptedException {
+        Objects.requireNonNull(addressSpace);
+        Objects.requireNonNull(user);
         LOGGER.info("User {} in address space {} will be removed", user.getMetadata().getName(), addressSpace.getMetadata().getName());
         kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).withName(user.getMetadata().getName()).cascading(true).delete();
+        UserUtils.waitForUserDeleted(user.getMetadata().getNamespace(), user.getMetadata().getName(), new TimeoutBudget(1, TimeUnit.MINUTES));
     }
 
-    public void removeUser(AddressSpace addressSpace, String userName) {
+    public void removeUser(AddressSpace addressSpace, String userName) throws InterruptedException {
+        Objects.requireNonNull(addressSpace);
         LOGGER.info("User {} in address space {} will be removed", userName, addressSpace.getMetadata().getName());
-        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).withName(String.format("%s.%s", addressSpace.getMetadata().getName(), userName)).cascading(true).delete();
+        String name = String.format("%s.%s", addressSpace.getMetadata().getName(), userName);
+        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).withName(name).cascading(true).delete();
+        UserUtils.waitForUserDeleted(addressSpace.getMetadata().getNamespace(), name, new TimeoutBudget(1, TimeUnit.MINUTES));
     }
 
     public User getUser(AddressSpace addressSpace, String username) {

@@ -1,0 +1,16 @@
+// Module included in the following assemblies:
+//
+// assembly-service-admin.adoc
+// assembly-iot-getting-started.adoc
+
+:api: events
+
+[id='proc-iot-sending-events-http-{context}']
+= Sending events using HTTP
+
+You can send an event message from the customer application to the device using the HTTP protocol.
+
+.Procedure
+
+include::../common/snip-iot-http-api.adoc[leveloffset=+1]
+

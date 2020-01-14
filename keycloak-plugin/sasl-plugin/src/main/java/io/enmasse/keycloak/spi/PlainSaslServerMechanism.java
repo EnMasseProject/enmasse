@@ -39,6 +39,7 @@ import static io.enmasse.keycloak.spi.K8sServiceAccountCredentialProvider.ENMASS
 public class PlainSaslServerMechanism implements SaslServerMechanism {
 
     private static final Logger LOG = Logger.getLogger(PlainSaslServerMechanism.class);
+    private static final int MAX_RETRIES = 10;
 
     @Override
     public String getName() {
@@ -69,8 +70,7 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
             private RuntimeException error;
 
             @Override
-            public byte[] processResponse(byte[] response) throws IllegalArgumentException
-            {
+            public byte[] processResponse(byte[] response) throws IllegalArgumentException, InterruptedException {
                 if(error != null) {
                     throw error;
                 }
@@ -92,57 +92,74 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
                 String password = new String(response, authcidNullPosition + 1, passwordLen, StandardCharsets.UTF_8);
 
                 LOG.debug("SASL hostname: " + hostname);
-                KeycloakSession keycloakSession = keycloakSessionFactory.create();
-                KeycloakTransactionManager transactionManager = keycloakSession.getTransactionManager();
-                transactionManager.begin();
-                try {
-                    final RealmModel realm = keycloakSession.realms().getRealmByName(hostname);
-                    if (realm == null) {
-                        LOG.info("Realm " + hostname + " not found");
-                        authenticated = false;
-                        complete = true;
-                        return null;
-                    }
-                    if("@@serviceaccount@@".equals(username)) {
-                        String tokenUser = K8sServiceAccountCredentialProvider.authenticateToken(password, amqpServer.getOpenShiftClient(), amqpServer.getHttpClient());
-                        if(tokenUser != null) {
-                            final UserModel user = keycloakSession.userStorageManager().getUserByUsername(tokenUser, realm);
-                            if (user != null) {
-                                if ("serviceaccount".equals(user.getFirstAttribute("authenticationType"))) {
-                                    authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
-                                    authenticated = true;
-                                    complete = true;
-                                    return null;
-                                } else {
-                                    LOG.debug("User " + tokenUser + " in realm " + hostname + " is not a serviceaccount user");
-                                }
-                            } else {
-                                LOG.debug("No such user " + tokenUser + " in realm " + hostname);
-                            }
-                        }
-                    } else {
-                        final UserModel user = keycloakSession.userStorageManager().getUserByUsername(username, realm);
-                        if (user != null) {
-                            UserCredentialModel credentialModel = "serviceaccount".equals(user.getFirstAttribute("authenticationType")) ? createServiceAccountUserCredential(password) : UserCredentialModel.password(password);
-                            if (keycloakSession.userCredentialManager().isValid(realm, user, credentialModel)) {
-                                authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
-                                authenticated = true;
+                int retry = 0;
+                while (true) {
+                    KeycloakSession keycloakSession = keycloakSessionFactory.create();
+                    KeycloakTransactionManager transactionManager = keycloakSession.getTransactionManager();
+                    transactionManager.begin();
+                    try {
+                        try {
+                            final RealmModel realm = keycloakSession.realms().getRealmByName(hostname);
+                            if (realm == null) {
+                                LOG.info("Realm " + hostname + " not found");
+                                authenticated = false;
                                 complete = true;
                                 return null;
                             }
-                            LOG.debug("Invalid password for " + username + " in realm " + hostname);
-                        } else {
-                            LOG.debug("user not found: " + username);
+                            if ("@@serviceaccount@@".equals(username)) {
+                                String tokenUser = K8sServiceAccountCredentialProvider.authenticateToken(password, amqpServer.getOpenShiftClient(), amqpServer.getHttpClient());
+                                if (tokenUser != null) {
+                                    final UserModel user = keycloakSession.userStorageManager().getUserByUsername(tokenUser, realm);
+                                    if (user != null) {
+                                        if ("serviceaccount".equals(user.getFirstAttribute("authenticationType"))) {
+                                            authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
+                                            authenticated = true;
+                                            complete = true;
+                                            return null;
+                                        } else {
+                                            LOG.debug("User " + tokenUser + " in realm " + hostname + " is not a serviceaccount user");
+                                        }
+                                    } else {
+                                        LOG.debug("No such user " + tokenUser + " in realm " + hostname);
+                                    }
+                                }
+                            } else {
+                                final UserModel user = keycloakSession.userStorageManager().getUserByUsername(username, realm);
+                                if (user != null) {
+                                    UserCredentialModel credentialModel = "serviceaccount".equals(user.getFirstAttribute("authenticationType")) ? createServiceAccountUserCredential(password) : UserCredentialModel.password(password);
+                                    if (keycloakSession.userCredentialManager().isValid(realm, user, credentialModel)) {
+                                        authenticatedUser = new UserDataImpl(user.getId(), user.getUsername(), user.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet()));
+                                        authenticated = true;
+                                        complete = true;
+                                        return null;
+                                    }
+                                    LOG.debug("Invalid password for " + username + " in realm " + hostname);
+                                } else {
+                                    LOG.debug("user not found: " + username);
+                                }
+
+                            }
+                            authenticated = false;
+                            complete = true;
+                            return null;
+
+                        } finally {
+                            transactionManager.commit();
+                            keycloakSession.close();
                         }
-
+                    } catch (Exception e) {
+                        if (retry < MAX_RETRIES) {
+                            LOG.warn("Exception when authenticating " + username, e);
+                            Thread.sleep(1000);
+                            retry++;
+                            LOG.info("Retry attempt " + retry + " for authenticating " + username);
+                        } else {
+                            LOG.warn("Exception when authenticating " + username + ". Aborting.", e);
+                            authenticated = false;
+                            complete = true;
+                            return null;
+                        }
                     }
-                    authenticated = false;
-                    complete = true;
-                    return null;
-
-                } finally {
-                    transactionManager.commit();
-                    keycloakSession.close();
                 }
             }
 

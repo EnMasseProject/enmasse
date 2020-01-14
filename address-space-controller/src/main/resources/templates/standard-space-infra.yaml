@@ -278,8 +278,8 @@ objects:
             value: ${TOPIC_FORWARDER_IMAGE}
           - name: IMAGE_PULL_POLICY
             value: ${IMAGE_PULL_POLICY}
-          - name: FS_GROUP_OVERRIDE
-            value: ${FS_GROUP_OVERRIDE}
+          - name: FS_GROUP_FALLBACK_MAP
+            value: ${FS_GROUP_FALLBACK_MAP}
           image: ${STANDARD_CONTROLLER_IMAGE}
           imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:
@@ -316,10 +316,14 @@ objects:
             value: 56671
           - name: INFRA_UUID
             value: ${INFRA_UUID}
+          - name: ADDRESS_SPACE_TYPE
+            value: standard
           - name: ADDRESS_SPACE_PLAN
             value: ${ADDRESS_SPACE_PLAN}
           - name: CERT_DIR
             value: /etc/enmasse-certs
+          - name: RESYNC_INTERVAL
+            value: ${CONTROLLER_RESYNC_INTERVAL}
           - name: AUTHENTICATION_SERVICE_HOST
             value: ${AUTHENTICATION_SERVICE_HOST}
           - name: AUTHENTICATION_SERVICE_PORT
@@ -336,32 +340,8 @@ objects:
             value: ${ADDRESS_SPACE_NAMESPACE}
           - name: MESSAGING_CERT
             value: /opt/agent/messaging-cert/tls.crt
-          - name: CONSOLE_OAUTH_DISCOVERY_URL
-            value: ${CONSOLE_OAUTH_DISCOVERY_URL}
-          - name: CONSOLE_OAUTH_SCOPE
-            value: ${CONSOLE_OAUTH_SCOPE}
-          - name: CONSOLE_LINK
-            value: ${CONSOLE_LINK}
-          - name: CONSOLE_OAUTH_CLIENT_ID
-            valueFrom:
-              secretKeyRef:
-                name: ${CONSOLE_OAUTH_SECRET_SECRET_NAME}
-                key: client-id
-                optional: true
-          - name: CONSOLE_OAUTH_CLIENT_SECRET
-            valueFrom:
-              secretKeyRef:
-                name: ${CONSOLE_OAUTH_SECRET_SECRET_NAME}
-                key: client-secret
-                optional: true
-          - name: SSO_COOKIE_SECRET
-            valueFrom:
-              secretKeyRef:
-                name: ${CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME}
-                key: cookie-secret
-                optional: true
           image: ${AGENT_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:
             httpGet:
               path: /healthz
@@ -373,8 +353,8 @@ objects:
           ports:
           - containerPort: 8888
             name: http
-          - containerPort: 8080
-            name: https
+          - containerPort: 56710
+            name: amqps
           - containerPort: 56720
             name: amqp-ws
           readinessProbe:
@@ -503,17 +483,18 @@ objects:
   metadata:
     annotations:
       addressSpace: ${ADDRESS_SPACE}
-      enmasse.io/service-port.https: 8081
+      addressSpaceNamespace: ${ADDRESS_SPACE_NAMESPACE}
     labels:
       app: enmasse
       infraType: standard
       infraUuid: ${INFRA_UUID}
+      component: agent
     name: console-${INFRA_UUID}
   spec:
     ports:
-    - name: https
-      port: 8081
-      targetPort: 8080
+    - name: amqps
+      port: 5671
+      targetPort: 56710
     selector:
       name: admin
       infraUuid: ${INFRA_UUID}
@@ -598,14 +579,4 @@ parameters:
   description: Topic Forwarder Image
   value: ${env.TOPIC_FORWARDER_IMAGE}
 - description:
-  name: CONSOLE_OAUTH_DISCOVERY_URL
-- description:
-  name: CONSOLE_OAUTH_SCOPE
-- description:
-  name: CONSOLE_OAUTH_SECRET_SECRET_NAME
-- description:
-  name: CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME
-- description:
-  name: CONSOLE_LINK
-- description:
-  name: FS_GROUP_OVERRIDE
+  name: FS_GROUP_FALLBACK_MAP

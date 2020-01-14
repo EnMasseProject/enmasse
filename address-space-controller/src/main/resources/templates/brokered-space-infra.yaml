@@ -108,7 +108,7 @@ objects:
               - sh
               - -c
               - $ARTEMIS_HOME/custom/bin/probe.sh
-            initialDelaySeconds: 120
+            initialDelaySeconds: 300
           name: broker
           ports:
           - containerPort: 5672
@@ -315,6 +315,8 @@ objects:
             value: /opt/agent/messaging-cert/tls.crt
           - name: HEALTH_PORT
             value: '8088'
+          - name: RESYNC_INTERVAL
+            value: ${CONTROLLER_RESYNC_INTERVAL}
           - name: AUTHENTICATION_SERVICE_HOST
             value: ${AUTHENTICATION_SERVICE_HOST}
           - name: AUTHENTICATION_SERVICE_PORT
@@ -323,30 +325,6 @@ objects:
             value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
           - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
             value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-          - name: CONSOLE_OAUTH_DISCOVERY_URL
-            value: ${CONSOLE_OAUTH_DISCOVERY_URL}
-          - name: CONSOLE_OAUTH_SCOPE
-            value: ${CONSOLE_OAUTH_SCOPE}
-          - name: CONSOLE_LINK
-            value: ${CONSOLE_LINK}
-          - name: CONSOLE_OAUTH_CLIENT_ID
-            valueFrom:
-              secretKeyRef:
-                name: ${CONSOLE_OAUTH_SECRET_SECRET_NAME}
-                key: client-id
-                optional: true
-          - name: CONSOLE_OAUTH_CLIENT_SECRET
-            valueFrom:
-              secretKeyRef:
-                name: ${CONSOLE_OAUTH_SECRET_SECRET_NAME}
-                key: client-secret
-                optional: true
-          - name: SSO_COOKIE_SECRET
-            valueFrom:
-              secretKeyRef:
-                name: ${CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME}
-                key: cookie-secret
-                optional: true
           image: ${AGENT_IMAGE}
           imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:
@@ -402,18 +380,20 @@ objects:
   metadata:
     annotations:
       addressSpace: ${ADDRESS_SPACE}
+      addressSpaceNamespace: ${ADDRESS_SPACE_NAMESPACE}
       namespace: ${ADDRESS_SPACE_NAMESPACE}
       enmasse.io/service-port.https: 8081
     labels:
       app: enmasse
       infraType: brokered
       infraUuid: ${INFRA_UUID}
+      component: agent
     name: console-${INFRA_UUID}
   spec:
     ports:
-    - name: https
-      port: 8081
-      targetPort: 8080
+    - name: amqps
+      port: 5671
+      targetPort: 56710
     - name: health
       port: 8088
       targetPort: 8088
@@ -493,13 +473,6 @@ parameters:
 - name: TOPIC_FORWARDER_IMAGE
   description: Topic Forwarder Image
   value: ${env.TOPIC_FORWARDER_IMAGE}
-- description:
-  name: CONSOLE_OAUTH_DISCOVERY_URL
-- description:
-  name: CONSOLE_OAUTH_SCOPE
-- description:
-  name: CONSOLE_OAUTH_SECRET_SECRET_NAME
-- description:
-  name: CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME
-- description:
-  name: CONSOLE_LINK
+- description: Interval (in seconds) to use between controller resync
+  name: CONTROLLER_RESYNC_INTERVAL
+  value: '600'

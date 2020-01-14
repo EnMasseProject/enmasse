@@ -14,14 +14,30 @@ import (
 
 	"github.com/enmasseproject/enmasse/version"
 	"github.com/go-logr/logr"
+	"go.uber.org/zap"
 
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
+	zapf "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+)
+
+var (
+	logLevel = zap.NewAtomicLevel()
 )
 
 func InitLog() {
 	development := os.Getenv("DEVELOPMENT") == "true"
-	logf.SetLogger(logf.ZapLogger(development))
+	levelString, ok := os.LookupEnv("LOG_LEVEL")
+	if !ok {
+		levelString = "info"
+	}
+	logLevel.UnmarshalText([]byte(levelString))
+	logf.SetLogger(zapf.New(func(options *zapf.Options) {
+		options.Development = development
+		if !development {
+			options.Level = &logLevel
+		}
+	}))
 }
 
 func PrintVersions(log logr.Logger) {

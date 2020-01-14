@@ -58,6 +58,7 @@ type AuthenticationServiceSpecStandard struct {
 	Resources          *corev1.ResourceRequirements                 `json:"resources,omitempty"`
 	Storage            *AuthenticationServiceSpecStandardStorage    `json:"storage,omitempty"`
 	Datasource         *AuthenticationServiceSpecStandardDatasource `json:"datasource,omitempty"`
+	SecurityContext    *corev1.PodSecurityContext                   `json:"securityContext,omitempty"`
 }
 
 type StorageType string

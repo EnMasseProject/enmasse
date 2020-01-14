@@ -1,0 +1,20 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-configuring-sigfox.adoc
+
+[id='proc-iot-sigfox-enabling-command-and-control-{context}']
+= Enabling command and control in Sigfox
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-iot-creating-new-sigfox-callback-{context}[Created a callback in the Sigfox backend].
+
+.Procedure
+
+. Log in to https://backend.sigfox.com.
+. In the `Device Type` open the type for editing and switch to the `Callbacks`
+  section.
+. Edit the callback configuration for which you want to enable command and control.
++
+Type:: Switch to `DATA` –  `BIDIR`
+Url Pattern:: Add the `ack` parameter. For example, `\https://iot-sigfox-adapter.my.cluster/data/telemetry/<TENANT>?device={device}&data={data}**&ack={ack}**`
+

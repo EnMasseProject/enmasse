@@ -23,32 +23,25 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.*;
 
-import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
-import static io.enmasse.address.model.KubeUtil.lookupResource;
+import static io.enmasse.address.model.KubeUtil.*;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
-    private static final String FS_GROUP_OVERRIDE = "FS_GROUP_OVERRIDE";
     private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class);
     private final String WELL_KNOWN_CONSOLE_SERVICE_NAME = "console";
 
     private final Kubernetes kubernetes;
-    private final AuthenticationServiceResolver authenticationServiceResolver;
     private final Map<String, String> env;
     private final SchemaProvider schemaProvider;
-    private final Long fsGroupOverride;
 
-    public TemplateInfraResourceFactory(Kubernetes kubernetes, AuthenticationServiceResolver authenticationServiceResolver, Map<String, String> env, SchemaProvider schemaProvider) {
+    public TemplateInfraResourceFactory(Kubernetes kubernetes, Map<String, String> env, SchemaProvider schemaProvider) {
         this.kubernetes = kubernetes;
-        this.authenticationServiceResolver = authenticationServiceResolver;
         this.env = env;
         this.schemaProvider = schemaProvider;
-        this.fsGroupOverride = getFsGroupOverride();
     }
 
     private void prepareParameters(AddressSpace addressSpace,
+                                   AuthenticationServiceSettings authServiceSettings,
                                    Map<String, String> parameters) {
-
-        AuthenticationServiceSettings authServiceSettings = authenticationServiceResolver.resolve(addressSpace);
 
         Optional<ConsoleService> console = schemaProvider.getSchema().findConsoleService(WELL_KNOWN_CONSOLE_SERVICE_NAME);
         if (console.isEmpty()) {
@@ -141,11 +134,11 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     }
 
 
-    private List<HasMetadata> createStandardInfra(AddressSpace addressSpace, StandardInfraConfig standardInfraConfig) {
+    private List<HasMetadata> createStandardInfra(AddressSpace addressSpace, StandardInfraConfig standardInfraConfig, AuthenticationServiceSettings authenticationServiceSettings) {
 
         Map<String, String> parameters = new HashMap<>();
 
-        prepareParameters(addressSpace, parameters);
+        prepareParameters(addressSpace, authenticationServiceSettings, parameters);
 
         if (standardInfraConfig.getSpec().getBroker() != null) {
             if (standardInfraConfig.getSpec().getBroker().getResources() != null) {
@@ -184,10 +177,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         setIfEnvPresent(parameters, TemplateParameter.BROKER_PLUGIN_IMAGE);
         setIfEnvPresent(parameters, TemplateParameter.TOPIC_FORWARDER_IMAGE);
         setIfEnvPresent(parameters, TemplateParameter.IMAGE_PULL_POLICY);
-
-        if (fsGroupOverride != null) {
-            parameters.put(TemplateParameter.FS_GROUP_OVERRIDE, fsGroupOverride.toString());
-        }
+        setIfEnvPresent(parameters, TemplateParameter.FS_GROUP_FALLBACK_MAP);
 
         Map<String, String> infraAnnotations = standardInfraConfig.getMetadata().getAnnotations();
         String templateName = getAnnotation(infraAnnotations, AnnotationKeys.TEMPLATE_NAME, "standard-space-infra");
@@ -236,10 +226,10 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                 .orElse(defaultValue);
     }
 
-    private List<HasMetadata> createBrokeredInfra(AddressSpace addressSpace, BrokeredInfraConfig brokeredInfraConfig) {
+    private List<HasMetadata> createBrokeredInfra(AddressSpace addressSpace, BrokeredInfraConfig brokeredInfraConfig, AuthenticationServiceSettings authenticationServiceSettings) {
         Map<String, String> parameters = new HashMap<>();
 
-        prepareParameters(addressSpace, parameters);
+        prepareParameters(addressSpace, authenticationServiceSettings, parameters);
 
         if (brokeredInfraConfig.getSpec().getBroker() != null) {
             if (brokeredInfraConfig.getSpec().getBroker().getResources() != null) {
@@ -290,23 +280,9 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             PodTemplateSpec actualPodTemplate = brokerDeployment.getSpec().getTemplate();
             applyPodTemplate(actualPodTemplate, podTemplate);
         }
-
-        if (this.fsGroupOverride != null) {
-            KubeUtil.applyFsGroupOverride(Collections.singletonList(brokerDeployment), this.fsGroupOverride);
-        }
+        overrideFsGroup(brokerDeployment.getSpec().getTemplate(), "broker", kubernetes.getNamespace());
 
         return items;
-    }
-
-    private Long getFsGroupOverride() {
-        Long fsGroupOverride = null;
-        if (env.containsKey(FS_GROUP_OVERRIDE)) {
-            try {
-                fsGroupOverride = Long.parseLong(env.get(FS_GROUP_OVERRIDE));
-            } catch (NumberFormatException ignore) {
-            }
-        }
-        return fsGroupOverride;
     }
 
     private List<HasMetadata> applyStorageClassName(String storageClassName, List<HasMetadata> items) {
@@ -328,11 +304,11 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
 
     @Override
-    public List<HasMetadata> createInfraResources(AddressSpace addressSpace, InfraConfig infraConfig) {
+    public List<HasMetadata> createInfraResources(AddressSpace addressSpace, InfraConfig infraConfig, AuthenticationServiceSettings authenticationServiceSettings) {
         if ("standard".equals(addressSpace.getSpec().getType())) {
-            return createStandardInfra(addressSpace, (StandardInfraConfig) infraConfig);
+            return createStandardInfra(addressSpace, (StandardInfraConfig) infraConfig, authenticationServiceSettings);
         } else if ("brokered".equals(addressSpace.getSpec().getType())) {
-            return createBrokeredInfra(addressSpace, (BrokeredInfraConfig) infraConfig);
+            return createBrokeredInfra(addressSpace, (BrokeredInfraConfig) infraConfig, authenticationServiceSettings);
         } else {
             throw new IllegalArgumentException("Unknown address space type " + addressSpace.getSpec().getType());
         }

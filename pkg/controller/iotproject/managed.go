@@ -43,7 +43,6 @@ var Addresses = []string{
 const resourceTypeAddressSpace = "Address Space"
 const resourceTypeAdapterUser = "Adapter User"
 
-const annotationPasswordSyncTime = annotationBase + "/passwordSyncTime"
 const annotationProject = annotationBase + "/project.name"
 const annotationProjectUID = annotationBase + "/project.uid"
 
@@ -82,7 +81,7 @@ func updateFromMap(resources map[string]bool, condition *iotv1alpha1.CommonCondi
 
 }
 
-func updateManagedStatus(m *managedStatus, project *iotv1alpha1.IoTProject) {
+func updateManagedReadyStatus(m *managedStatus, project *iotv1alpha1.IoTProject) {
 
 	createdCondition := project.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeResourcesCreated)
 	updateFromMap(m.remainingCreated, &createdCondition.CommonCondition, "Missing resources")
@@ -90,8 +89,34 @@ func updateManagedStatus(m *managedStatus, project *iotv1alpha1.IoTProject) {
 	readyCondition := project.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeResourcesReady)
 	updateFromMap(m.remainingReady, &readyCondition.CommonCondition, "Non-ready resources")
 
-	project.Status.IsReady = readyCondition.Status == corev1.ConditionTrue
+	if createdCondition.Status == corev1.ConditionTrue && readyCondition.Status == corev1.ConditionTrue {
+		project.Status.Phase = iotv1alpha1.ProjectPhaseActive
+	} else {
+		project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
+	}
 
+}
+
+func updateManagedStatus(managedStatus *managedStatus, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
+
+	updateManagedReadyStatus(managedStatus, project)
+
+	// extract endpoint information
+
+	currentCredentials := project.Status.DownstreamEndpoint.Credentials.DeepCopy()
+	if managedStatus.addressSpace != nil && project.Status.Phase == iotv1alpha1.ProjectPhaseActive {
+
+		forceTls := true
+		endpoint, err := extractEndpointInformation("messaging", iotv1alpha1.Service, "amqps", currentCredentials, managedStatus.addressSpace, &forceTls)
+
+		if endpoint != nil {
+			project.Status.DownstreamEndpoint = endpoint.ConnectionInformation.DeepCopy()
+		}
+
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
 }
 
 func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
@@ -113,10 +138,6 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 	managedStatus.remainingCreated[resourceTypeAddressSpace] = false
 	managedStatus.remainingReady[resourceTypeAdapterUser] = false
 
-	// defer condition status update
-
-	defer updateManagedStatus(managedStatus, project)
-
 	// start reconciling
 
 	rc := recon.ReconcileContext{}
@@ -132,7 +153,7 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 		return rc.Result()
 	}
 
-	project.Status.Phase = "Configuring"
+	project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
 
 	// reconcile address space
 
@@ -154,22 +175,11 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 		return r.reconcileAdapterUser(ctx, project, strategy, managedStatus)
 	})
 
-	// extract endpoint information
+	// update status - no more changes to "managedStatus" beyond this point
 
-	currentCredentials := project.Status.DownstreamEndpoint.Credentials.DeepCopy()
-	if managedStatus.addressSpace != nil && project.Status.IsReady {
-
-		forceTls := true
-		rc.Process(func() (result reconcile.Result, e error) {
-			endpoint, err := extractEndpointInformation("messaging", iotv1alpha1.Service, "amqps", currentCredentials, managedStatus.addressSpace, &forceTls)
-
-			if endpoint != nil {
-				project.Status.DownstreamEndpoint = endpoint.ConnectionInformation.DeepCopy()
-			}
-
-			return reconcile.Result{}, err
-		})
-	}
+	rc.Process(func() (result reconcile.Result, e error) {
+		return updateManagedStatus(managedStatus, project)
+	})
 
 	// check and queue password reset
 
@@ -205,8 +215,6 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 		project.Status.Managed = &iotv1alpha1.ManagedStatus{}
 	}
 
-	//
-
 	changed := false
 
 	// eval address space
@@ -224,7 +232,7 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 
 			// cleanup old address space first
 
-			project.Status.Phase = "Reconfiguring"
+			project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
 			project.Status.PhaseReason = "Address Space changed"
 
 			result, err := cleanupManagedResources(ctx, r.client, project)
@@ -236,6 +244,7 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 			// clear out address space, will re-set in the next iteration
 
 			project.Status.Managed.AddressSpace = ""
+			log.Info("Re-queue: Address space changed")
 			changed = true
 
 		}
@@ -277,6 +286,7 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 
 		// re-queue right now to ensure the password is stored
 
+		log.Info("Re-queue: adapter password changed")
 		changed = true
 
 	}
@@ -300,8 +310,7 @@ func (r *ReconcileIoTProject) reconcileAddressSpace(ctx context.Context, project
 
 	var retryDelay time.Duration = 0
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, addressSpace, func() error {
-		log.V(2).Info("Reconcile address space", "AddressSpace", addressSpace)
+	rc, err := controllerutil.CreateOrUpdate(ctx, r.client, addressSpace, func() error {
 
 		managedStatus.remainingReady[resourceTypeAddressSpace] = addressSpace.Status.IsReady
 
@@ -309,10 +318,15 @@ func (r *ReconcileIoTProject) reconcileAddressSpace(ctx context.Context, project
 		if !addressSpace.Status.IsReady {
 			// delay for 30 seconds
 			retryDelay = 30 * time.Second
+			log.Info("Re-queue: Address space not ready")
 		}
 
 		return r.reconcileManagedAddressSpace(project, strategy, addressSpace)
 	})
+
+	if rc != controllerutil.OperationResultNone {
+		log.V(2).Info("Created/updated address space", "op", rc, "AddressSpace", addressSpace)
+	}
 
 	if err == nil {
 		managedStatus.remainingCreated[resourceTypeAddressSpace] = true
@@ -345,7 +359,7 @@ func (r *ReconcileIoTProject) reconcileAdapterUser(ctx context.Context, project 
 
 	if err == nil {
 		managedStatus.remainingCreated[resourceTypeAdapterUser] = true
-		managedStatus.remainingReady[resourceTypeAdapterUser] = true
+		managedStatus.remainingReady[resourceTypeAdapterUser] = (adapterUser.Status.Phase == userv1beta1.UserActive)
 	}
 
 	return reconcile.Result{}, err
@@ -369,8 +383,6 @@ func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project
 	addressName := util.AddressName(project, addressBaseName)
 	addressMetaName := util.EncodeAddressSpaceAsMetaName(strategy.AddressSpace.Name, addressName)
 
-	log.Info("Creating/updating address", "basename", addressBaseName, "name", addressName, "metaname", addressMetaName)
-
 	stateKey := "Address|" + addressName
 	managedStatus.remainingCreated[stateKey] = false
 
@@ -381,11 +393,15 @@ func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project
 		},
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, address, func() error {
+	rc, err := controllerutil.CreateOrUpdate(ctx, r.client, address, func() error {
 		managedStatus.remainingReady[stateKey] = address.Status.IsReady
 
 		return r.reconcileAddress(project, strategy, addressName, plan, typeName, address)
 	})
+
+	if rc != controllerutil.OperationResultNone {
+		log.Info("Created/updated address", "op", rc, "basename", addressBaseName, "name", addressName, "metaname", addressMetaName)
+	}
 
 	if err == nil {
 		managedStatus.remainingCreated[stateKey] = true
@@ -497,8 +513,6 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 		return err
 	}
 
-	managed := project.Status.Managed
-
 	existing.Spec.Username = credentials.Username
 	existing.Spec.Authentication = userv1beta1.AuthenticationSpec{
 		Type: "password",
@@ -511,25 +525,8 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 	existing.Annotations[annotationProject] = project.Name
 	existing.Annotations[annotationProjectUID] = string(project.UID)
 
-	// get last password sync
-
-	var syncTime time.Time
-	syncTimeString := existing.Annotations[annotationPasswordSyncTime]
-	if syncTimeString != "" {
-		syncTime, _ = time.Parse(time.RFC3339, syncTimeString)
-	}
-
-	// if we missed an update
-
-	if managed.PasswordTime.After(syncTime) {
-
-		log.Info("Updating password for", "user", existing.Name)
-
-		// set the password
-		existing.Spec.Authentication.Password = []byte(credentials.Password)
-		existing.Annotations[annotationPasswordSyncTime] = managed.PasswordTime.UTC().Format(time.RFC3339)
-
-	}
+	// set the password
+	existing.Spec.Authentication.Password = []byte(credentials.Password)
 
 	// create access rules
 
@@ -550,8 +547,8 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				commandResponseName,
 				commandResponseName + "/*",
 			},
-			Operations: []string{
-				"send",
+			Operations: []userv1beta1.AuthorizationOperation{
+				userv1beta1.Send,
 			},
 		},
 
@@ -560,8 +557,8 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				commandName,
 				commandName + "/*",
 			},
-			Operations: []string{
-				"recv",
+			Operations: []userv1beta1.AuthorizationOperation{
+				userv1beta1.Recv,
 			},
 		},
 
@@ -570,9 +567,9 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				commandLegacyName,
 				commandLegacyName + "/*",
 			},
-			Operations: []string{
-				"send",
-				"recv",
+			Operations: []userv1beta1.AuthorizationOperation{
+				userv1beta1.Send,
+				userv1beta1.Recv,
 			},
 		},
 	}

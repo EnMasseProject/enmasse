@@ -5,11 +5,8 @@ enable_rbac: true
 enable_iot: false
 keycloak_admin_user: admin
 service_catalog: false
-register_api_server: false
 standard_authservice_resources: standard_authservice_keycloak
-secure_api_server: false
 enable_address_space_management: false
-api_server: true
 install_example_plans: true
 install_example_roles: true
 authentication_services:

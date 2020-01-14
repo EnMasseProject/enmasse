@@ -233,6 +233,11 @@ func (in *AuthenticationServiceSpecStandard) DeepCopyInto(out *AuthenticationSer
 		*out = new(AuthenticationServiceSpecStandardDatasource)
 		**out = **in
 	}
+	if in.SecurityContext != nil {
+		in, out := &in.SecurityContext, &out.SecurityContext
+		*out = new(v1.PodSecurityContext)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

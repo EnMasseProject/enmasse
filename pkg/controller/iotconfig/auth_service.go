@@ -40,6 +40,9 @@ func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iot
 		})
 	})
 	rc.ProcessSimple(func() error {
+		return r.processService(ctx, nameAuthService+"-metrics", config, false, r.reconcileMetricsService(nameAuthService))
+	})
+	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameAuthService, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 			return r.reconcileAuthServiceDeployment(config, deployment, configCtx)
 		})
@@ -58,7 +61,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 	service := config.Spec.ServicesConfig.Authentication
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, configCtx)
 
-	err := install.ApplyContainerWithError(deployment, "auth-service", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "auth-service", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-auth-service", config); err != nil {
 			return err
@@ -75,10 +78,10 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 		}
 
 		container.Ports = []corev1.ContainerPort{
-			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "amqps", ContainerPort: 5671, Protocol: corev1.ProtocolTCP},
 		}
 
+		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
 		// environment

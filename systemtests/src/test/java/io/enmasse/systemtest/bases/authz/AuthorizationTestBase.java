@@ -357,7 +357,10 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
 
     private boolean canAuth(AmqpClient sender, AmqpClient receiver, Address destination, boolean checkSender) throws Exception {
         try {
+            log.info("Staring receiver for " + destination.getSpec().getAddress());
             Future<List<Message>> received = receiver.recvMessages(destination.getSpec().getAddress(), 1);
+
+            log.info("Staring sender for " + destination.getSpec().getAddress());
             Future<Integer> sent = sender.sendMessages(destination.getSpec().getAddress(), Collections.singletonList("msg1"));
 
             if (checkSender) {

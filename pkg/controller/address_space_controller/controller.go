@@ -31,7 +31,6 @@ import (
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	controllertypes "k8s.io/apimachinery/pkg/types"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 	kubernetes "k8s.io/client-go/kubernetes"
@@ -139,12 +138,6 @@ func (r *ReconcileAddressSpaceController) ensureDeployment(ctx context.Context, 
 		},
 	}
 
-	deployment.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "apps",
-		Kind:    "Deployment",
-		Version: "v1",
-	})
-
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func() error {
 		return ApplyDeployment(deployment)
 	})
@@ -154,7 +147,7 @@ func (r *ReconcileAddressSpaceController) ensureDeployment(ctx context.Context, 
 
 func ApplyDeployment(deployment *appsv1.Deployment) error {
 	install.ApplyDeploymentDefaults(deployment, "address-space-controller", deployment.Name)
-	err := install.ApplyContainerWithError(deployment, "address-space-controller", func(container *corev1.Container) error {
+	err := install.ApplyDeploymentContainerWithError(deployment, "address-space-controller", func(container *corev1.Container) error {
 		install.ApplyContainerImage(container, "address-space-controller", nil)
 		install.ApplyHttpProbe(container.LivenessProbe, 30, "/healthz", 8080)
 		install.ApplyHttpProbe(container.ReadinessProbe, 30, "/healthz", 8080)
@@ -165,6 +158,10 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 		install.ApplyEnvSimple(container, "ENABLE_EVENT_LOGGER", "true")
 		install.ApplyEnvSimple(container, "TEMPLATE_DIR", "/opt/templates")
 		install.ApplyEnvSimple(container, "RESOURCES_DIR", "/opt")
+		if value, ok := os.LookupEnv("FS_GROUP_FALLBACK_MAP"); ok {
+			install.ApplyOrRemoveEnvSimple(container, "FS_GROUP_FALLBACK_MAP", value)
+		}
+
 		t := true
 		install.ApplyEnvConfigMap(container, "WILDCARD_ENDPOINT_CERT_SECRET", "wildcardEndpointCertSecret", "address-space-controller-config", &t)
 		install.ApplyEnvConfigMap(container, "RESYNC_INTERVAL", "resyncInterval", "address-space-controller-config", &t)
@@ -209,13 +206,6 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 	deployment.Spec.Template.Spec.ServiceAccountName = "address-space-controller"
 	deployment.Spec.Replicas = &one
 	install.ApplyNodeAffinity(&deployment.Spec.Template, "node-role.enmasse.io/operator-infra")
-	install.ApplyFsGroupOverride(deployment)
-
-	deployment.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "apps",
-		Kind:    "Deployment",
-		Version: "v1",
-	})
 
 	return nil
 }

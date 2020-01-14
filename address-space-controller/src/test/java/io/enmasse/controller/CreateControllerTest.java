@@ -16,6 +16,9 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.UUID;
 
+import io.enmasse.address.model.AddressSpaceSpecBuilder;
+import io.enmasse.address.model.AuthenticationService;
+import io.enmasse.address.model.AuthenticationServiceBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -59,6 +62,7 @@ public class CreateControllerTest {
                 .withNewSpec()
                 .withType("type1")
                 .withPlan("myplan")
+                .withAuthenticationService(new AuthenticationServiceBuilder().withName("standard").build())
                 .endSpec()
 
                 .build();
@@ -66,14 +70,14 @@ public class CreateControllerTest {
 
         EventLogger eventLogger = mock(EventLogger.class);
         InfraResourceFactory mockResourceFactory = mock(InfraResourceFactory.class);
-        when(mockResourceFactory.createInfraResources(eq(addressSpace), any())).thenReturn(Arrays.asList(new ConfigMapBuilder()
+        when(mockResourceFactory.createInfraResources(eq(addressSpace), any(), any())).thenReturn(Arrays.asList(new ConfigMapBuilder()
                 .editOrNewMetadata()
                 .withName("mymap")
                 .endMetadata()
                 .build()));
 
         SchemaProvider testSchema = new TestSchemaProvider();
-        CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, eventLogger, null, "1.0", new TestAddressSpaceApi());
+        CreateController createController = new CreateController(kubernetes, testSchema, mockResourceFactory, eventLogger, null, "1.0", new TestAddressSpaceApi(), mock(AuthenticationServiceResolver.class));
 
         createController.reconcileAnyState(addressSpace);
 
@@ -94,7 +98,6 @@ public class CreateControllerTest {
                 .withName("myspace")
                 .withNamespace("mynamespace")
                 .withUid(UUID.randomUUID().toString())
-                .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "plan1")
                 .addToAnnotations(AnnotationKeys.APPLIED_INFRA_CONFIG,
                         mapper.writeValueAsString(testSchema.getSchema().findAddressSpaceType("type1").get().getInfraConfigs().get(0)))
                 .endMetadata()
@@ -102,11 +105,15 @@ public class CreateControllerTest {
                 .withNewSpec()
                 .withType("type1")
                 .withPlan("myplan")
+                .withAuthenticationService(new AuthenticationServiceBuilder().withName("standard").build())
                 .endSpec()
 
                 .build();
 
 
+        AppliedConfig.setCurrentAppliedConfig(addressSpace, AppliedConfig.create(new AddressSpaceSpecBuilder(addressSpace.getSpec())
+                .withPlan("plan1")
+                .build(), null));
         TestAddressSpaceApi addressSpaceApi = new TestAddressSpaceApi();
         addressSpaceApi.createAddressSpace(addressSpace);
 
@@ -148,7 +155,7 @@ public class CreateControllerTest {
         EventLogger eventLogger = mock(EventLogger.class);
         when(kubernetes.existsAddressSpace(eq(addressSpace))).thenReturn(true);
 
-        CreateController createController = new CreateController(kubernetes, testSchema, null, eventLogger, null, "1.0", addressSpaceApi);
+        CreateController createController = new CreateController(kubernetes, testSchema, null, eventLogger, null, "1.0", addressSpaceApi, mock(AuthenticationServiceResolver.class));
 
         addressSpace = createController.reconcileAnyState(addressSpace);
 

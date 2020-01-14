@@ -4,12 +4,12 @@ include $(TOPDIR)/Makefile.env.mk
 GO_DIRS = \
 	controller-manager \
 	iot/iot-proxy-configurator \
+	console/console-server
 
 DOCKER_DIRS = \
 	agent \
 	topic-forwarder \
 	broker-plugin \
-	api-server \
 	address-space-controller \
 	none-authservice \
 	standard-controller \
@@ -18,7 +18,6 @@ DOCKER_DIRS = \
 	mqtt-lwt \
 	service-broker \
 	console/console-init \
-	console/console-httpd \
 	olm-manifest \
 	iot/iot-tenant-service \
 	iot/iot-auth-service \
@@ -28,6 +27,7 @@ DOCKER_DIRS = \
 	iot/iot-mqtt-adapter \
 	iot/iot-lorawan-adapter \
 	iot/iot-sigfox-adapter \
+	iot/iot-tenant-cleaner \
 
 FULL_BUILD       = true
 
@@ -48,7 +48,7 @@ templates: imageenv
 deploy: build_go
 	$(IMAGE_ENV) mvn -Prelease deploy $(MAVEN_ARGS)
 
-build_java: build_go
+build_java: build_go templates
 	$(IMAGE_ENV) mvn package -q -B $(MAVEN_ARGS)
 
 build_go: $(GO_DIRS) test_go
@@ -98,7 +98,7 @@ clean_go:
 	@rm -Rf $(GOPATH)
 
 clean_java:
-	mvn -B -q clean
+	mvn -B -q clean $(MAVEN_ARGS)
 
 template_clean:
 	$(MAKE) -C templates clean

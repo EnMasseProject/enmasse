@@ -10,6 +10,8 @@ To build EnMasse, you need
    * [GNU Make](https://www.gnu.org/software/make/)
    * [Asciidoctor](https://asciidoctor.org/) >= 1.5.7
    * [Go](https://golang.org/) >= 1.12.0
+   * [Go Yacc](golang.org/x/tools/cmd/goyacc)
+   * [Ragel](http://www.colm.net/open-source/ragel/)
 
 *Note*: On OSX, make sure you have [Coreutils](https://www.gnu.org/software/coreutils/) installed, e.g. `brew install coreutils`
 
@@ -68,14 +70,8 @@ by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 
 #### Deploying to a Kubernetes instance assuming already logged in with cluster-admin permissions
 
-*Note*: This assumes you have [OpenSSL](https://www.openssl.org) installed.
-
     kubectl create namespace enmasse-infra
     kubectl config set-context $(kubectl config current-context) --namespace=enmasse-infra
-    
-    mkdir -p api-server-cert
-    openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.enmasse-infra.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
-    kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
     
     kubectl apply -f templates/build/enmasse-latest/install/bundles/enmasse
     kubectl apply -f templates/build/enmasse-latest/install/components/example-plans
@@ -104,6 +100,17 @@ By default the test suite tears down the EnMasse deployment and namespace after 
 #### Run single system test
 
     make SYSTEMTEST_ARGS="shared.standard.QueueTest#testCreateDeleteQueue" systemtests
+
+#### Systemtests management of enmasse's installation
+
+Systemtests can manage the installation of enmasse before the actual test suite is run, this eases the testing of the various installation types.
+Currently we can have enmasse installed by systemtests in two ways, using the bundles or using OLM. This can be instructed using the environment variable `INSTALL_TYPE` which
+can take the values `BUNDLE` or `OLM`. By default the install type is `BUNDLE`
+Then when using OLM installation enmasse can be installed into OLM default namespace, ie: `openshift-operators`, or into `enmasse-infra` namespace, this can be instructed too with
+the environment variable `OLM_INSTALL_TYPE` that can take the values `DEFAULT` to installation into `openshift-operators` namespace or `SPECIFIC` to installation into `enmasse-infra`namespace. The olm installation type by default has the value `SPECIFIC`.
+
+This functionalities can be used in our PR's too, in example to run the smoke profile in an ocp4 cluster (actually CRC) and installing via OLM you have to type the comment:
+`@enmasse-ci run tests profile=smoke ocp4 OLM`
 
 ### Adding / Updating Go dependencies
 
@@ -158,7 +165,6 @@ The following deployment names are available depending on their types and EnMass
 
    * `address-space-controller`
    * `admin`
-   * `api-server`
    * `keycloak-controller`
    * `standard-controller`
    * `service-broker`

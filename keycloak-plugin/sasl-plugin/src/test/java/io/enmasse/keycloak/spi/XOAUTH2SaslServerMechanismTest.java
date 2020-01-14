@@ -70,7 +70,7 @@ public class XOAUTH2SaslServerMechanismTest implements XOAUTH2SaslServerMechanis
 
     // unknown realm
     @Test
-    public void testUnknownRealm() {
+    public void testUnknownRealm() throws InterruptedException {
         final SaslServerMechanism.Instance instance =
                 (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSessionFactory, "unknownRealm", config, null);
         byte[] response = instance.processResponse(createInitialResponse("user", "token"));
@@ -83,7 +83,7 @@ public class XOAUTH2SaslServerMechanismTest implements XOAUTH2SaslServerMechanis
 
     // Invalid token
     @Test
-    public void testWrongPassword() {
+    public void testWrongPassword() throws InterruptedException {
         final SaslServerMechanism.Instance instance =
                 (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSessionFactory, "realm", config, null);
         this.verifyToken = false;
@@ -95,7 +95,7 @@ public class XOAUTH2SaslServerMechanismTest implements XOAUTH2SaslServerMechanis
 
     // Validated token
     @Test
-    public void testValidatedToken() {
+    public void testValidatedToken() throws InterruptedException {
         final SaslServerMechanism.Instance instance =
                 (new XOAUTH2SaslServerMechanism(this)).newInstance(keycloakSessionFactory, "realm", config, null);
         this.verifyToken = true;

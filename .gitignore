@@ -36,6 +36,5 @@ scripts/swagger2markup.jar
 
 # Testing output
 artifacts/
-api-server-cert/
 
 imageenv.txt

@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.enmasse</groupId>
         <artifactId>enmasse</artifactId>
-        <version>0.30-SNAPSHOT</version>
+        <version>0.31-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>systemtests</artifactId>
@@ -104,6 +104,16 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.artsok</groupId>
+            <artifactId>rerunner-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
             <exclusions>
@@ -150,6 +160,25 @@
                     <includes>
                         <include>io.enmasse.systemtest.**</include>
                     </includes>
+                    <statelessTestsetReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5Xml30StatelessReporter">
+                        <disable>false</disable>
+                        <version>3.0</version>
+                        <usePhrasedFileName>false</usePhrasedFileName>
+                        <usePhrasedTestSuiteClassName>true</usePhrasedTestSuiteClassName>
+                        <usePhrasedTestCaseClassName>true</usePhrasedTestCaseClassName>
+                        <usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
+                    </statelessTestsetReporter>
+                    <consoleOutputReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5ConsoleOutputReporter">
+                        <disable>false</disable>
+                        <encoding>UTF-8</encoding>
+                        <usePhrasedFileName>true</usePhrasedFileName>
+                    </consoleOutputReporter>
+                    <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoReporter">
+                        <disable>false</disable>
+                        <usePhrasedFileName>false</usePhrasedFileName>
+                        <usePhrasedClassNameInRunning>false</usePhrasedClassNameInRunning>
+                        <usePhrasedClassNameInTestCaseSummary>true</usePhrasedClassNameInTestCaseSummary>
+                    </statelessTestsetInfoReporter>
                 </configuration>
             </plugin>
             <plugin>
@@ -259,6 +288,13 @@
             </properties>
         </profile>
         <profile>
+            <id>olm</id>
+            <properties>
+                <groups>olm</groups>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
+        <profile>
             <id>iot-release</id>
             <properties>
                 <groups>(shared-iot | isolated-iot) &amp; !noneAuth &amp; !smoke &amp; !soak &amp; !olm &amp; !upgrade</groups>
@@ -266,18 +302,16 @@
             </properties>
         </profile>
         <profile>
-            <id>olm</id>
+            <id>acceptance</id>
             <properties>
-                <groups>olm &amp; !shared-standard &amp; !shared-brokered &amp; !shared-mqtt &amp; !noneAuth &amp;
-                    !smoke &amp; !soak &amp; !shared-iot &amp; !smoke-iot &amp; !isolated &amp; !upgrade
-                </groups>
+                <groups>acceptance &amp; !soak &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>acceptance</id>
+            <id>acceptance-no-iot</id>
             <properties>
-                <groups>acceptance &amp; !soak &amp; !olm &amp; !upgrade</groups>
+                <groups>acceptance &amp; !soak &amp; !upgrade &amp; !shared-iot &amp; !isolated-iot</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>

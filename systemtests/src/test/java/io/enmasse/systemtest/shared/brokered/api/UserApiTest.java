@@ -95,7 +95,8 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
         LOGGER.info("RESPONSE stdout: {}", createUserResponse.getStdOut());
         LOGGER.info("RESPONSE stderr: {}", createUserResponse.getStdErr());
         assertThat(createUserResponse.getRetCode(), is(false));
-        assertTrue(createUserResponse.getStdErr().contains("not one of the values accepted for Enum class: [send, view, recv, manage]"));
+        assertTrue(createUserResponse.getStdErr().contains("Unsupported value: \"unknown\": supported values: \"send\", \"recv\", \"view\", \"manage\"") ||
+                createUserResponse.getStdErr().contains("operations in body should be one of [send recv view manage]"));
         assertThat(KubeCMDClient.getUser(kubernetes.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(false));
 
         User testUser2 = UserUtils.createUserResource(cred)
@@ -112,7 +113,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
         //create user
         ExecutionResultData createUserResponse2 = KubeCMDClient.createCR(kubernetes.getInfraNamespace(), userDefinitionPayload2.toString());
         assertThat(createUserResponse2.getRetCode(), is(false));
-        assertTrue(createUserResponse2.getStdErr().contains(String.format("The name of the object (.%s) is not valid", cred.getUsername())));
+        assertTrue(createUserResponse2.getStdErr().contains("DNS-1123 subdomain must consist of lower case alphanumeric characters"));
         assertThat(KubeCMDClient.getUser(kubernetes.getInfraNamespace(), getSharedAddressSpace().getMetadata().getName(), cred.getUsername()).getRetCode(), is(false));
     }
 

@@ -33,6 +33,8 @@ spec:
         image: ${CONTROLLER_MANAGER_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         env:
+        - name: LOG_LEVEL
+          value: debug
         - name: POD_NAME
           valueFrom:
             fieldRef:
@@ -55,6 +57,8 @@ spec:
           value: "true"
         - name: CONTROLLER_ENABLE_ADDRESS_SPACE_CONTROLLER
           value: "true"
+        - name: CONTROLLER_ENABLE_MESSAGING_USER
+          value: "true"
         - name: ADDRESS_SPACE_CONTROLLER_IMAGE
           value: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
         - name: CONTROLLER_MANAGER_IMAGE
@@ -75,6 +79,8 @@ spec:
           value: ${IOT_LORAWAN_ADAPTER_IMAGE}
         - name: IOT_SIGFOX_ADAPTER_IMAGE
           value: ${IOT_SIGFOX_ADAPTER_IMAGE}
+        - name: IOT_TENANT_CLEANER_IMAGE
+          value: ${IOT_TENANT_CLEANER_IMAGE}
         - name: IOT_TENANT_SERVICE_IMAGE
           value: ${IOT_TENANT_SERVICE_IMAGE}
         - name: IOT_PROXY_CONFIGURATOR_IMAGE
@@ -105,6 +111,8 @@ spec:
           value: "true"
         - name: CONSOLE_INIT_IMAGE
           value: "${CONSOLE_INIT_IMAGE}"
+        - name: CONSOLE_SERVER_IMAGE
+          value: "${CONSOLE_SERVER_IMAGE}"
         - name: CONSOLE_PROXY_OPENSHIFT_IMAGE
           value: "${CONSOLE_PROXY_OPENSHIFT_IMAGE}"
         - name: CONSOLE_PROXY_KUBERNETES_IMAGE

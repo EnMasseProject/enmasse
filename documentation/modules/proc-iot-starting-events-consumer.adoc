@@ -1,0 +1,16 @@
+// Module included in the following assemblies:
+//
+// assembly-service-admin.adoc
+// assembly-iot-getting-started.adoc
+
+:api: events
+
+[id='proc-iot-starting-events-consumer-{context}']
+= Starting the events consumer
+
+You can send events, such as alerts and other important data, from a device to a consumer application. To do this, you must first start the events consumer by running the customer application.
+
+.Procedure
+
+include::../common/snip-iot-customer-api.adoc[leveloffset=+1]
+
