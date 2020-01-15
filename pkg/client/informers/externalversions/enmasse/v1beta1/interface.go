@@ -46,7 +46,7 @@ func (v *version) AddressSpaces() AddressSpaceInformer {
 
 // AddressSpaceSchemas returns a AddressSpaceSchemaInformer.
 func (v *version) AddressSpaceSchemas() AddressSpaceSchemaInformer {
-	return &addressSpaceSchemaInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+	return &addressSpaceSchemaInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
 // AuthenticationServices returns a AuthenticationServiceInformer.

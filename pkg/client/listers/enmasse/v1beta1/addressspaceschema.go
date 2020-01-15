@@ -18,8 +18,8 @@ import (
 type AddressSpaceSchemaLister interface {
 	// List lists all AddressSpaceSchemas in the indexer.
 	List(selector labels.Selector) (ret []*v1beta1.AddressSpaceSchema, err error)
-	// AddressSpaceSchemas returns an object that can list and get AddressSpaceSchemas.
-	AddressSpaceSchemas(namespace string) AddressSpaceSchemaNamespaceLister
+	// Get retrieves the AddressSpaceSchema from the index for a given name.
+	Get(name string) (*v1beta1.AddressSpaceSchema, error)
 	AddressSpaceSchemaListerExpansion
 }
 
@@ -41,38 +41,9 @@ func (s *addressSpaceSchemaLister) List(selector labels.Selector) (ret []*v1beta
 	return ret, err
 }
 
-// AddressSpaceSchemas returns an object that can list and get AddressSpaceSchemas.
-func (s *addressSpaceSchemaLister) AddressSpaceSchemas(namespace string) AddressSpaceSchemaNamespaceLister {
-	return addressSpaceSchemaNamespaceLister{indexer: s.indexer, namespace: namespace}
-}
-
-// AddressSpaceSchemaNamespaceLister helps list and get AddressSpaceSchemas.
-type AddressSpaceSchemaNamespaceLister interface {
-	// List lists all AddressSpaceSchemas in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1beta1.AddressSpaceSchema, err error)
-	// Get retrieves the AddressSpaceSchema from the indexer for a given namespace and name.
-	Get(name string) (*v1beta1.AddressSpaceSchema, error)
-	AddressSpaceSchemaNamespaceListerExpansion
-}
-
-// addressSpaceSchemaNamespaceLister implements the AddressSpaceSchemaNamespaceLister
-// interface.
-type addressSpaceSchemaNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all AddressSpaceSchemas in the indexer for a given namespace.
-func (s addressSpaceSchemaNamespaceLister) List(selector labels.Selector) (ret []*v1beta1.AddressSpaceSchema, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.AddressSpaceSchema))
-	})
-	return ret, err
-}
-
-// Get retrieves the AddressSpaceSchema from the indexer for a given namespace and name.
-func (s addressSpaceSchemaNamespaceLister) Get(name string) (*v1beta1.AddressSpaceSchema, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
+// Get retrieves the AddressSpaceSchema from the index for a given name.
+func (s *addressSpaceSchemaLister) Get(name string) (*v1beta1.AddressSpaceSchema, error) {
+	obj, exists, err := s.indexer.GetByKey(name)
 	if err != nil {
 		return nil, err
 	}
