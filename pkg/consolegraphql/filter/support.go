@@ -778,6 +778,18 @@ func (o Order) compare(p interface{}, q interface{}) (int, error) {
 	if err != nil {
 		panic(err)
 	}
+
+	// Nulls first semantics
+	if _, ok := pv.(nullVal); ok {
+		if _, ok := qv.(nullVal); ok {
+			return 0, nil
+		} else {
+			return pltq, nil
+		}
+	} else if _, ok := qv.(nullVal); ok {
+		return pgtq, nil
+	}
+
 	switch pc := pv.(type) {
 	case string:
 		switch qc := qv.(type) {
