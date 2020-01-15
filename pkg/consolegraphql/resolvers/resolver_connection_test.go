@@ -286,20 +286,19 @@ func TestQueryConnectionMetrics(t *testing.T) {
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
-	createMetric := func(namespace string, addr1 string, metricName string, metricValue float64) *consolegraphql.Metric {
+	createMetric := func(namespace string, metricName string, metricValue float64) *consolegraphql.Metric {
 		metric := consolegraphql.NewSimpleMetric(metricName, "gauge")
 		metric.Update(metricValue, time.Now())
 		return (*consolegraphql.Metric)(metric)
 	}
 
 	con := createConnection("host:1234", namespace, addressspace,
-		createMetric(namespace, "", "enmasse_messages_in", float64(10)),
-		createMetric(namespace, "", "enmasse_messages_out", float64(20)))
+		createMetric(namespace, "enmasse_messages_in", float64(10)),
+		createMetric(namespace, "enmasse_messages_out", float64(20)),
+		createMetric(namespace, "enmasse_senders", float64(2)),
+		createMetric(namespace, "enmasse_receivers", float64(1)))
 
-	err := r.Cache.Add(con,
-		createConnectionLink(namespace, addressspace, con.Name, "sender"),
-		createConnectionLink(namespace, addressspace, con.Name, "sender"),
-		createConnectionLink(namespace, addressspace, con.Name, "receiver"))
+	err := r.Cache.Add(con)
 	assert.NoError(t, err)
 
 	objs, err := r.Query().Connections(context.TODO(), nil, nil, nil, nil)
@@ -316,7 +315,6 @@ func TestQueryConnectionMetrics(t *testing.T) {
 	assert.NotNil(t, sendersMetric, "Senders metric is absent")
 	value := sendersMetric.Value
 	assert.Equal(t, float64(2), value, "Unexpected senders metric value")
-
 	receiversMetric := getMetric("enmasse_receivers", metrics)
 	assert.NotNil(t, receiversMetric, "Receivers metric is absent")
 	value = receiversMetric.Value

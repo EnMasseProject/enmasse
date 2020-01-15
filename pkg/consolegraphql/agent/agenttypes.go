@@ -34,6 +34,8 @@ type AgentAddress struct {
 	Depth                 int
 	MessagesIn            int `json:"messages_in"`
 	MessagesOut           int `json:"messages_out"`
+	Senders               int
+	Receivers             int
 }
 
 type AgentConnection struct {

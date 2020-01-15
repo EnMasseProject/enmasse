@@ -340,6 +340,8 @@ func TestFromAgentAddress(t *testing.T) {
 		Depth:                 350,
 		MessagesIn:            350,
 		MessagesOut:           700,
+		Senders:               1,
+		Receivers:             0,
 		AddressSpace:          "standard",
 		AddressSpaceNamespace: "enmasse-infra",
 	}

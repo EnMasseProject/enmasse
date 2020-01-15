@@ -12,7 +12,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func (r *Resolver) AddressSpace_consoleapi_enmasse_io_v1beta1() AddressSpace_consoleapi_enmasse_io_v1beta1Resolver {
@@ -47,45 +46,14 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 	lower, upper := CalcLowerUpper(offset, first, len(objects))
 	paged := objects[lower:upper]
 	addressspaces := make([]*consolegraphql.AddressSpaceHolder, len(paged))
-	for i, as := range paged {
-		obj := as.(*consolegraphql.AddressSpaceHolder)
-		metrics := make([]*consolegraphql.Metric, 0)
-		now := time.Now()
-
-		connections := 0
-		_, e := r.Cache.Get("hierarchy", fmt.Sprintf("Connection/%s/%s/", obj.ObjectMeta.Namespace, obj.ObjectMeta.Name), func(obj interface{}) (bool, bool, error) {
-			connections++
-			return false, true, nil
-		})
-		if e != nil {
-			return nil, e
-		}
-
-		addresses := 0
-		_, e = r.Cache.Get("hierarchy", fmt.Sprintf("Address/%s/%s/", obj.ObjectMeta.Namespace, obj.ObjectMeta.Name), func(obj interface{}) (bool, bool, error) {
-			addresses++
-			return false, true, nil
-		})
-		if e != nil {
-			return nil, e
-		}
-
-		senders, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_connections", "gauge" )
-		senders.Update(float64(connections), now)
-		receivers, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_addresses", "gauge" )
-		receivers.Update(float64(addresses), now)
-
-		addressspaces[i] = &consolegraphql.AddressSpaceHolder{
-			AddressSpace: obj.AddressSpace,
-			Metrics:      metrics,
-		}
+	for i, _ := range paged {
+		addressspaces[i] = paged[0].(*consolegraphql.AddressSpaceHolder)
 	}
 
-	asqr := &AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1{
+	return &AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1{
 		Total:         len(objects),
 		AddressSpaces: addressspaces,
-	}
-	return asqr, nil
+	}, nil
 }
 
 type addressSpaceSpecK8sResolver struct{ *Resolver }
