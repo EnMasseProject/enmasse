@@ -1,5 +1,5 @@
 
-//line lex.rl:1
+//line pkg/consolegraphql/filter/lex.rl:1
 /*
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
@@ -16,7 +16,7 @@ import (
 )
 
 
-//line lex.go:20
+//line pkg/consolegraphql/filter/lex.go:20
 var _filterlexer_actions []byte = []byte{
 	0, 1, 2, 1, 3, 1, 6, 1, 7, 
 	1, 8, 1, 9, 1, 10, 1, 11, 
@@ -52,7 +52,7 @@ const filterlexer_error int = 0
 const filterlexer_en_main int = 29
 
 
-//line lex.rl:22
+//line pkg/consolegraphql/filter/lex.rl:22
 
 
 type lexer struct {
@@ -74,7 +74,7 @@ func newLexer(data []byte) *lexer {
         pe: len(data),
     }
     
-//line lex.go:78
+//line pkg/consolegraphql/filter/lex.go:78
 	{
 	 lex.cs = filterlexer_start
 	 lex.ts = 0
@@ -82,7 +82,7 @@ func newLexer(data []byte) *lexer {
 	 lex.act = 0
 	}
 
-//line lex.rl:43
+//line pkg/consolegraphql/filter/lex.rl:43
     return lex
 }
 
@@ -98,7 +98,7 @@ func (lex *lexer) Lex(out *FilterSymType) int {
     }
 
     
-//line lex.go:102
+//line pkg/consolegraphql/filter/lex.go:102
 	{
 	var _acts int
 	var _nacts uint
@@ -119,7 +119,7 @@ _resume:
 //line NONE:1
  lex.ts = ( lex.p)
 
-//line lex.go:123
+//line pkg/consolegraphql/filter/lex.go:123
 		}
 	}
 
@@ -547,102 +547,102 @@ execFuncs:
  lex.te = ( lex.p)+1
 
 		case 4:
-//line lex.rl:91
+//line pkg/consolegraphql/filter/lex.rl:91
  lex.act = 3;
 		case 5:
-//line lex.rl:97
+//line pkg/consolegraphql/filter/lex.rl:97
  lex.act = 4;
 		case 6:
-//line lex.rl:108
+//line pkg/consolegraphql/filter/lex.rl:108
  lex.te = ( lex.p)+1
 { tok = AND; ( lex.p)++; goto _out
 }
 		case 7:
-//line lex.rl:109
+//line pkg/consolegraphql/filter/lex.rl:109
  lex.te = ( lex.p)+1
 { tok = OR; ( lex.p)++; goto _out
 }
 		case 8:
-//line lex.rl:110
+//line pkg/consolegraphql/filter/lex.rl:110
  lex.te = ( lex.p)+1
 { tok = NOT; ( lex.p)++; goto _out
 }
 		case 9:
-//line lex.rl:111
+//line pkg/consolegraphql/filter/lex.rl:111
  lex.te = ( lex.p)+1
 { tok = LIKE; ( lex.p)++; goto _out
 }
 		case 10:
-//line lex.rl:112
+//line pkg/consolegraphql/filter/lex.rl:112
  lex.te = ( lex.p)+1
 { tok = TRUE; ( lex.p)++; goto _out
 }
 		case 11:
-//line lex.rl:113
+//line pkg/consolegraphql/filter/lex.rl:113
  lex.te = ( lex.p)+1
 { tok = FALSE; ( lex.p)++; goto _out
 }
 		case 12:
-//line lex.rl:114
+//line pkg/consolegraphql/filter/lex.rl:114
  lex.te = ( lex.p)+1
 { tok = NULL; ( lex.p)++; goto _out
 }
 		case 13:
-//line lex.rl:115
+//line pkg/consolegraphql/filter/lex.rl:115
  lex.te = ( lex.p)+1
 { tok = IS; ( lex.p)++; goto _out
 }
 		case 14:
-//line lex.rl:117
+//line pkg/consolegraphql/filter/lex.rl:117
  lex.te = ( lex.p)+1
 { tok = ASC; ( lex.p)++; goto _out
 }
 		case 15:
-//line lex.rl:118
+//line pkg/consolegraphql/filter/lex.rl:118
  lex.te = ( lex.p)+1
 { tok = DESC; ( lex.p)++; goto _out
 }
 		case 16:
-//line lex.rl:120
+//line pkg/consolegraphql/filter/lex.rl:120
  lex.te = ( lex.p)+1
 { tok = '='; ( lex.p)++; goto _out
 }
 		case 17:
-//line lex.rl:123
+//line pkg/consolegraphql/filter/lex.rl:123
  lex.te = ( lex.p)+1
 { tok = GE; ( lex.p)++; goto _out
 }
 		case 18:
-//line lex.rl:124
+//line pkg/consolegraphql/filter/lex.rl:124
  lex.te = ( lex.p)+1
 { tok = LE; ( lex.p)++; goto _out
 }
 		case 19:
-//line lex.rl:125
+//line pkg/consolegraphql/filter/lex.rl:125
  lex.te = ( lex.p)+1
 { tok = NE; ( lex.p)++; goto _out
 }
 		case 20:
-//line lex.rl:127
+//line pkg/consolegraphql/filter/lex.rl:127
  lex.te = ( lex.p)+1
 { tok = '('; ( lex.p)++; goto _out
 }
 		case 21:
-//line lex.rl:128
+//line pkg/consolegraphql/filter/lex.rl:128
  lex.te = ( lex.p)+1
 { tok = ')'; ( lex.p)++; goto _out
 }
 		case 22:
-//line lex.rl:130
+//line pkg/consolegraphql/filter/lex.rl:130
  lex.te = ( lex.p)+1
 { tok = ','; ( lex.p)++; goto _out
 }
 		case 23:
-//line lex.rl:132
+//line pkg/consolegraphql/filter/lex.rl:132
  lex.te = ( lex.p)+1
 
 		case 24:
-//line lex.rl:71
+//line pkg/consolegraphql/filter/lex.rl:71
  lex.te = ( lex.p)
 ( lex.p)--
 {
@@ -656,7 +656,7 @@ execFuncs:
             ( lex.p)++; goto _out
 }
 		case 25:
-//line lex.rl:81
+//line pkg/consolegraphql/filter/lex.rl:81
  lex.te = ( lex.p)
 ( lex.p)--
 {
@@ -670,7 +670,7 @@ execFuncs:
             ( lex.p)++; goto _out
 }
 		case 26:
-//line lex.rl:91
+//line pkg/consolegraphql/filter/lex.rl:91
  lex.te = ( lex.p)
 ( lex.p)--
 {
@@ -680,7 +680,7 @@ execFuncs:
             ( lex.p)++; goto _out
  }
 		case 27:
-//line lex.rl:97
+//line pkg/consolegraphql/filter/lex.rl:97
  lex.te = ( lex.p)
 ( lex.p)--
 {
@@ -695,19 +695,19 @@ execFuncs:
             ( lex.p)++; goto _out
  }
 		case 28:
-//line lex.rl:121
+//line pkg/consolegraphql/filter/lex.rl:121
  lex.te = ( lex.p)
 ( lex.p)--
 { tok = '>'; ( lex.p)++; goto _out
 }
 		case 29:
-//line lex.rl:122
+//line pkg/consolegraphql/filter/lex.rl:122
  lex.te = ( lex.p)
 ( lex.p)--
 { tok = '<'; ( lex.p)++; goto _out
 }
 		case 30:
-//line lex.rl:71
+//line pkg/consolegraphql/filter/lex.rl:71
 ( lex.p) = ( lex.te) - 1
 {
             val, err := strconv.Atoi(string(lex.data[lex.ts:lex.te]));
@@ -720,7 +720,7 @@ execFuncs:
             ( lex.p)++; goto _out
 }
 		case 31:
-//line lex.rl:97
+//line pkg/consolegraphql/filter/lex.rl:97
 ( lex.p) = ( lex.te) - 1
 {
             val := "{" + strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "```", "`", -1) + "}"
@@ -763,7 +763,7 @@ goto _again
  }
 	}
 	
-//line lex.go:767
+//line pkg/consolegraphql/filter/lex.go:767
 		}
 	}
 	goto _again
@@ -782,7 +782,7 @@ _again:
 //line NONE:1
  lex.act = 0
 
-//line lex.go:786
+//line pkg/consolegraphql/filter/lex.go:786
 		}
 	}
 
@@ -821,7 +821,7 @@ _again:
 	_out: {}
 	}
 
-//line lex.rl:136
+//line pkg/consolegraphql/filter/lex.rl:136
 
 
     return tok;
