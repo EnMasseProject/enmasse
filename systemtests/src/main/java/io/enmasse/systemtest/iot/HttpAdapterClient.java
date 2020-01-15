@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import static com.google.common.net.HttpHeaders.AUTHORIZATION;
 import static io.enmasse.systemtest.iot.MessageType.EVENT;
 import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
@@ -84,7 +85,7 @@ public class HttpAdapterClient extends ApiClient {
             path += pathSuffix;
         }
         var request = client.post(endpoint.getPort(), endpoint.getHost(), path)
-                .putHeader(HttpHeaders.AUTHORIZATION, authzString)
+                .putHeader(AUTHORIZATION, authzString)
                 .putHeader(HttpHeaders.CONTENT_TYPE, contentType(payload))
                 // we send with QoS 1 by default, to get some feedback
                 .putHeader("QoS-Level", "1")
