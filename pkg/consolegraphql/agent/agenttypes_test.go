@@ -106,119 +106,119 @@ const connection = `
 `
 
 const address = `{
-"address": "myqueue1",
-"addressSpace":"standard",
-"addressSpaceNamespace":"enmasse-infra",
-"forwarders": [],
-"plan": "standard-small-queue",
-"type": "queue",
-"status": {
-"brokerStatuses": [
-{
-"clusterId": "broker-4f5fcdf-f0pv",
-"containerId": "broker-4f5fcdf-f0pv-0",
-"state": "Active"
-}
-],
-"forwarders": [],
-"isReady": true,
-"messages": [],
-"phase": "Active",
-"planStatus": {
-"name": "standard-small-queue",
-"partitions": 1,
-"resources": {
-"broker": 0.01,
-"router": 0.001
-}
-}
-},
-"name": "standard.myqueue1",
-"allocated_to": [
-{
-"clusterId": "broker-4f5fcdf-f0pv",
-"containerId": "broker-4f5fcdf-f0pv-0",
-"state": "Active"
-}
-],
-"depth": 350,
-"dlq_depth": 0,
-"shards": [
-{
-"name": "broker-4f5fcdf-f0pv-0",
-"type": "queue",
-"id": 34,
-"address": "myqueue1",
-"filter": 0,
-"rate": 0,
-"durable": true,
-"paused": false,
-"temporary": false,
-"purgeOnNoConsumers": false,
-"maxConsumers": -1,
-"autoCreated": false,
-"user": 0,
-"routingType": "ANYCAST",
-"deliverDeliver": false,
-"exclusive": false,
-"lastValue": false,
-"scheduledCount": 0,
-"messages": 350,
-"consumers": 1,
-"enqueued": 350,
-"delivering": 0,
-"acknowledged": 0,
-"killed": 0
-}
-],
-"senders": 1,
-"receivers": 0,
-"propagated": 100,
-"messages_in": 350,
-"messages_out": 700,
-"outcomes": {
-"ingress": {
-"accepted": 50,
-"released": 0,
-"rejected": 0,
-"modified": 0,
-"unsettled": 0,
-"presettled": 0,
-"undelivered": 0,
-"links": [
-{
-"identity": "13675",
-"name": "ca95b223-b4e1-d043-b938-6c4ffb99e62a",
-"operStatus": "up",
-"adminStatus": "enabled",
-"deliveryCount": 50,
-"capacity": 250,
-"backlog": 0,
-"routerName": "qdrouterd-4f5fcdf-0",
-"clientName": "d4d8175a-e02f-3a49-a570-3154cfcbda23",
-"acceptedCount": 50,
-"releasedCount": 0,
-"rejectedCount": 0,
-"modifiedCount": 0,
-"unsettledCount": 0,
-"presettledCount": 0,
-"undeliveredCount": 0,
-"lastUpdated": 1576245349726
-}
-]
-},
-"egress": {
-"accepted": 0,
-"released": 0,
-"rejected": 0,
-"modified": 0,
-"unsettled": 0,
-"presettled": 0,
-"undelivered": 0,
-"links": []
-}
-},
-"waypoint": true
+  "address": "myqueue1",
+  "addressSpace": "standard",
+  "addressSpaceNamespace": "enmasse-infra",
+  "forwarders": [],
+  "plan": "standard-small-queue",
+  "type": "queue",
+  "status": {
+    "brokerStatuses": [
+      {
+        "clusterId": "broker-4f5fcdf-f0pv",
+        "containerId": "broker-4f5fcdf-f0pv-0",
+        "state": "Active"
+      }
+    ],
+    "forwarders": [],
+    "isReady": true,
+    "messages": [],
+    "phase": "Active",
+    "planStatus": {
+      "name": "standard-small-queue",
+      "partitions": 1,
+      "resources": {
+        "broker": 0.01,
+        "router": 0.001
+      }
+    }
+  },
+  "name": "standard.myqueue1",
+  "allocated_to": [
+    {
+      "clusterId": "broker-4f5fcdf-f0pv",
+      "containerId": "broker-4f5fcdf-f0pv-0",
+      "state": "Active"
+    }
+  ],
+  "depth": 350,
+  "dlq_depth": 0,
+  "shards": [
+    {
+      "name": "broker-4f5fcdf-f0pv-0",
+      "type": "queue",
+      "id": 34,
+      "address": "myqueue1",
+      "filter": 0,
+      "rate": 0,
+      "durable": true,
+      "paused": false,
+      "temporary": false,
+      "purgeOnNoConsumers": false,
+      "maxConsumers": -1,
+      "autoCreated": false,
+      "user": 0,
+      "routingType": "ANYCAST",
+      "deliverDeliver": false,
+      "exclusive": false,
+      "lastValue": false,
+      "scheduledCount": 0,
+      "messages": 350,
+      "consumers": 1,
+      "enqueued": 350,
+      "delivering": 0,
+      "acknowledged": 0,
+      "killed": 0
+    }
+  ],
+  "senders": 1,
+  "receivers": 0,
+  "propagated": 100,
+  "messages_in": 350,
+  "messages_out": 700,
+  "outcomes": {
+    "ingress": {
+      "accepted": 50,
+      "released": 0,
+      "rejected": 0,
+      "modified": 0,
+      "unsettled": 0,
+      "presettled": 0,
+      "undelivered": 0,
+      "links": [
+        {
+          "identity": "13675",
+          "name": "ca95b223-b4e1-d043-b938-6c4ffb99e62a",
+          "operStatus": "up",
+          "adminStatus": "enabled",
+          "deliveryCount": 50,
+          "capacity": 250,
+          "backlog": 0,
+          "routerName": "qdrouterd-4f5fcdf-0",
+          "clientName": "d4d8175a-e02f-3a49-a570-3154cfcbda23",
+          "acceptedCount": 50,
+          "releasedCount": 0,
+          "rejectedCount": 0,
+          "modifiedCount": 0,
+          "unsettledCount": 0,
+          "presettledCount": 0,
+          "undeliveredCount": 0,
+          "lastUpdated": 1576245349726
+        }
+      ]
+    },
+    "egress": {
+      "accepted": 0,
+      "released": 0,
+      "rejected": 0,
+      "modified": 0,
+      "unsettled": 0,
+      "presettled": 0,
+      "undelivered": 0,
+      "links": []
+    }
+  },
+  "waypoint": true
 }
 `
 
