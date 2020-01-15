@@ -58,6 +58,8 @@ public class InfinispanTenantCleaner implements AutoCloseable {
 
         final LinkedList<Closer> cleanup = new LinkedList<>();
 
+        config.getInfinispan().setUploadSchema(false);
+
         try (
                 var mgmtProvider = new DeviceManagementCacheProvider(config.getInfinispan());
                 var deviceconProvider = new DeviceConnectionCacheProvider(config.getInfinispan());) {

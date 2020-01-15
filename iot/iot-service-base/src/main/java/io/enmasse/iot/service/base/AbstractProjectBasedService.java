@@ -109,8 +109,8 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
 
     protected void stopWatcher() {
         if (this.factory != null) {
-            this.factory = null;
             this.factory.stopAllRegisteredInformers();
+            this.factory = null;
         }
     }
 

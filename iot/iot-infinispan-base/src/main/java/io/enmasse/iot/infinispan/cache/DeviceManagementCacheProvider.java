@@ -163,6 +163,7 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
             throw new IllegalStateException("Schema has illegal content");
         }
         if (!schema.equals(this.schema)) {
+            log.info("Schema doesn't match expected content: {} vs {}", this.schema, schema);
             throw new IllegalStateException("Schema doesn't match expected content");
         }
     }
