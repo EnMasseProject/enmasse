@@ -3,9 +3,9 @@
 // assembly-uninstalling.adoc
 
 [id='uninstalling-olm-{context}']
-= Uninstalling {ProductName} using OLM
+= Uninstalling {ProductName} using the Operator Lifecycle Manager (OLM)
 
-This method uninstalls {ProductName} that was installed using the Operator Marketplace.
+This method uninstalls {ProductName} that was installed using the OLM.
 
 .Procedure
 
@@ -44,11 +44,13 @@ endif::[]
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
+{cmdcli} delete all -l app=enmasse -n _{ProductNamespace}_
+{cmdcli} delete cm -l app=enmasse -n _{ProductNamespace}_
+{cmdcli} delete secret -l app=enmasse _{ProductNamespace}_
 {cmdcli} delete crd -l app=enmasse
-{cmdcli} delete oauthclients -l app=enmasse
 ----
 
-. Delete the namespace where {ProductName} was installed:
+. (Optional. Skip this step if {ProductName} is installed in the {OperatorNamespace} namespace) Delete the namespace where {ProductName} was installed:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----

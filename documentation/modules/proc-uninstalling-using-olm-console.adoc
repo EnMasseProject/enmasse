@@ -1,0 +1,39 @@
+// Module included in the following assemblies:
+//
+// assembly-uninstalling.adoc
+
+[id='uninstalling-olm-console-{context}']
+= Uninstalling {ProductName} using the {KubePlatform} console
+
+This method uninstalls {ProductName} that was installed using the Operator Lifecycle Manager (OLM).
+
+.Procedure
+
+
+. From the Project list, select the project where you installed {ProductName}:
+
+. Click *Catalog → Operator Management*. The Operator Management page opens.
+
+. Click the *Operator Subscriptions* tab.
+
+. Find the {ProductName} Operator you want to uninstall. In the far right column, click the vertical ellipsis icon and select *Remove Subscription*.
+
+. When prompted by the Remove Subscription window, select the *Also completely remove the {ProductName} Operator from the selected namespace* check box to remove all components related to the installation.
+
+* Click Remove. The {ProductName} Operator will stop running and no longer receive updates. 
+
+. Remove additional resources (replace `{ProductNamespace}` with the project where you installed {ProductName}):
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete all -l app=enmasse -n _{ProductNamespace}_
+{cmdcli} delete cm -l app=enmasse -n _{ProductNamespace}_
+{cmdcli} delete secret -l app=enmasse _{ProductNamespace}_
+----
+
+. (Optional. Skip this step if {ProductName} is installed in the openshift-operators namespace) Delete the namespace where {ProductName} was installed:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} delete namespace _{ProductNamespace}_
+----
