@@ -11,7 +11,6 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 type connectionK8sResolver struct{ *Resolver }
@@ -141,55 +140,14 @@ func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int
 	paged := objects[lower:upper]
 
 	cons := make([]*consolegraphql.Connection, len(paged))
-	for i, a := range paged {
-		con := a.(*consolegraphql.Connection)
-		now := time.Now()
-
-		linkCounts := make(map[string]int, 0)
-		linkCounts["sender"] = 0
-		linkCounts["receiver"] = 0
-		roleCountingFilter := func(obj interface{}) (bool, bool, error) {
-			asp, ok := obj.(*consolegraphql.Link)
-			if !ok {
-				return false, false, fmt.Errorf("unexpected type: %T", obj)
-			}
-
-			if val, ok := linkCounts[asp.Spec.Role]; ok {
-				linkCounts[asp.Spec.Role] = val + 1
-			}
-			return false, true, nil
-		}
-
-		_, e := r.Cache.Get("hierarchy", fmt.Sprintf("Link/%s/%s/%s/", con.ObjectMeta.Namespace, con.Spec.AddressSpace, con.ObjectMeta.Name), roleCountingFilter)
-		if e != nil {
-			return nil, e
-		}
-
-		metrics := make([]*consolegraphql.Metric, 0)
-
-		senders, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_senders", "gauge" )
-		senders.Update(float64(linkCounts["sender"]), now)
-		receivers, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_receivers", "gauge" )
-		receivers.Update(float64(linkCounts["receiver"]), now)
-
-		for _, metric := range con.Metrics {
-			metrics = append(metrics, metric)
-		}
-
-		cons[i] = &consolegraphql.Connection{
-			ObjectMeta: con.ObjectMeta,
-			Spec:       con.Spec,
-			Metrics:    metrics,
-		}
-
+	for i, _ := range paged {
+		cons[i] = paged[i].(*consolegraphql.Connection)
 	}
 
-	cqr := &ConnectionQueryResultConsoleapiEnmasseIoV1beta1{
+	return &ConnectionQueryResultConsoleapiEnmasseIoV1beta1{
 		Total:       len(objects),
 		Connections: cons,
-	}
-
-	return cqr, nil
+	}, nil
 }
 
 func (r *mutationResolver) CloseConnection(ctx context.Context, input v1.ObjectMeta) (*bool, error) {

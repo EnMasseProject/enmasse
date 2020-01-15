@@ -118,31 +118,3 @@ func TestQueryAddressSpacePagination(t *testing.T) {
 	assert.Equal(t, as3.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
 }
 
-func TestQueryAddressSpaceMetrics(t *testing.T) {
-	r := newTestAddressSpaceResolver(t)
-	as := createAddressSpace( "myaddressspace", "mynamespace")
-	c1 := createConnection( "host:1234", as.Namespace, as.Name)
-	c2 := createConnection( "host:1235", as.Namespace, as.Name)
-	differentAddressSpaceCon := createConnection("host:1236", as.Namespace, "myaddrspace1")
-
-	err := r.Cache.Add(as, c1, c2, differentAddressSpaceCon)
-	assert.NoError(t, err)
-
-	objs, err := r.Query().AddressSpaces(context.TODO(), nil, nil, nil,  nil)
-	assert.NoError(t, err)
-	assert.Equal(t,1, objs.Total, "Unexpected number of address spaces")
-
-	metrics := objs.AddressSpaces[0].Metrics
-	assert.Equal(t, 2, len(metrics), "Unexpected number of metrics")
-
-	connectionMetric := getMetric("enmasse_connections", metrics)
-	assert.NotNil(t, connectionMetric, "Connections metric is absent")
-
-	expectedNumberConnections := float64(2)
-	value := connectionMetric.Value
-	assert.Equal(t, expectedNumberConnections, value, "Unexpected connection metric")
-
-	addressesMetric := getMetric("enmasse_addresses", metrics)
-	assert.NotNil(t, addressesMetric, "Addresses metric is absent")
-}
-
