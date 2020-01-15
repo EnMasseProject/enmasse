@@ -6,17 +6,11 @@ package io.enmasse.systemtest.shared.brokered.clients.stomp;
 
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
-import io.enmasse.systemtest.broker.ArtemisManagement;
-import io.enmasse.systemtest.messagingclients.ClientArgument;
-import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.stomp.StompClientReceiver;
 import io.enmasse.systemtest.messagingclients.stomp.StompClientSender;
-import io.enmasse.systemtest.resolvers.ArtemisManagementParameterResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith(ArtemisManagementParameterResolver.class)
 class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
 
     @Test
@@ -26,8 +20,8 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
 
     @Test
     @DisplayName("testTopicSubscribe")
-    void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
-        doTopicSubscribeTest(artemisManagement, new StompClientSender(logPath), new StompClientReceiver(logPath), new StompClientReceiver(logPath));
+    void testTopicSubscribe() throws Exception {
+        doTopicSubscribeTest(new StompClientSender(logPath), new StompClientReceiver(logPath), new StompClientReceiver(logPath));
     }
 
     @Test
