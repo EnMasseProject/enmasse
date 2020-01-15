@@ -20,7 +20,6 @@ import (
 // FakeAddressSpaceSchemas implements AddressSpaceSchemaInterface
 type FakeAddressSpaceSchemas struct {
 	Fake *FakeEnmasseV1beta1
-	ns   string
 }
 
 var addressspaceschemasResource = schema.GroupVersionResource{Group: "enmasse.io", Version: "v1beta1", Resource: "addressspaceschemas"}
@@ -30,8 +29,7 @@ var addressspaceschemasKind = schema.GroupVersionKind{Group: "enmasse.io", Versi
 // Get takes name of the addressSpaceSchema, and returns the corresponding addressSpaceSchema object, and an error if there is any.
 func (c *FakeAddressSpaceSchemas) Get(name string, options v1.GetOptions) (result *v1beta1.AddressSpaceSchema, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(addressspaceschemasResource, c.ns, name), &v1beta1.AddressSpaceSchema{})
-
+		Invokes(testing.NewRootGetAction(addressspaceschemasResource, name), &v1beta1.AddressSpaceSchema{})
 	if obj == nil {
 		return nil, err
 	}
@@ -41,8 +39,7 @@ func (c *FakeAddressSpaceSchemas) Get(name string, options v1.GetOptions) (resul
 // List takes label and field selectors, and returns the list of AddressSpaceSchemas that match those selectors.
 func (c *FakeAddressSpaceSchemas) List(opts v1.ListOptions) (result *v1beta1.AddressSpaceSchemaList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(addressspaceschemasResource, addressspaceschemasKind, c.ns, opts), &v1beta1.AddressSpaceSchemaList{})
-
+		Invokes(testing.NewRootListAction(addressspaceschemasResource, addressspaceschemasKind, opts), &v1beta1.AddressSpaceSchemaList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -63,15 +60,13 @@ func (c *FakeAddressSpaceSchemas) List(opts v1.ListOptions) (result *v1beta1.Add
 // Watch returns a watch.Interface that watches the requested addressSpaceSchemas.
 func (c *FakeAddressSpaceSchemas) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(addressspaceschemasResource, c.ns, opts))
-
+		InvokesWatch(testing.NewRootWatchAction(addressspaceschemasResource, opts))
 }
 
 // Create takes the representation of a addressSpaceSchema and creates it.  Returns the server's representation of the addressSpaceSchema, and an error, if there is any.
 func (c *FakeAddressSpaceSchemas) Create(addressSpaceSchema *v1beta1.AddressSpaceSchema) (result *v1beta1.AddressSpaceSchema, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(addressspaceschemasResource, c.ns, addressSpaceSchema), &v1beta1.AddressSpaceSchema{})
-
+		Invokes(testing.NewRootCreateAction(addressspaceschemasResource, addressSpaceSchema), &v1beta1.AddressSpaceSchema{})
 	if obj == nil {
 		return nil, err
 	}
@@ -81,8 +76,7 @@ func (c *FakeAddressSpaceSchemas) Create(addressSpaceSchema *v1beta1.AddressSpac
 // Update takes the representation of a addressSpaceSchema and updates it. Returns the server's representation of the addressSpaceSchema, and an error, if there is any.
 func (c *FakeAddressSpaceSchemas) Update(addressSpaceSchema *v1beta1.AddressSpaceSchema) (result *v1beta1.AddressSpaceSchema, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(addressspaceschemasResource, c.ns, addressSpaceSchema), &v1beta1.AddressSpaceSchema{})
-
+		Invokes(testing.NewRootUpdateAction(addressspaceschemasResource, addressSpaceSchema), &v1beta1.AddressSpaceSchema{})
 	if obj == nil {
 		return nil, err
 	}
@@ -92,14 +86,13 @@ func (c *FakeAddressSpaceSchemas) Update(addressSpaceSchema *v1beta1.AddressSpac
 // Delete takes name of the addressSpaceSchema and deletes it. Returns an error if one occurs.
 func (c *FakeAddressSpaceSchemas) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(addressspaceschemasResource, c.ns, name), &v1beta1.AddressSpaceSchema{})
-
+		Invokes(testing.NewRootDeleteAction(addressspaceschemasResource, name), &v1beta1.AddressSpaceSchema{})
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeAddressSpaceSchemas) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(addressspaceschemasResource, c.ns, listOptions)
+	action := testing.NewRootDeleteCollectionAction(addressspaceschemasResource, listOptions)
 
 	_, err := c.Fake.Invokes(action, &v1beta1.AddressSpaceSchemaList{})
 	return err
@@ -108,8 +101,7 @@ func (c *FakeAddressSpaceSchemas) DeleteCollection(options *v1.DeleteOptions, li
 // Patch applies the patch and returns the patched addressSpaceSchema.
 func (c *FakeAddressSpaceSchemas) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.AddressSpaceSchema, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(addressspaceschemasResource, c.ns, name, pt, data, subresources...), &v1beta1.AddressSpaceSchema{})
-
+		Invokes(testing.NewRootPatchSubresourceAction(addressspaceschemasResource, name, pt, data, subresources...), &v1beta1.AddressSpaceSchema{})
 	if obj == nil {
 		return nil, err
 	}

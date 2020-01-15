@@ -105,7 +105,7 @@ func (kw *AddressSpaceSchemaWatcher) Watch() error {
 				close(kw.watching)
 			}
 		}()
-		resource := kw.ClientInterface.AddressSpaceSchemas(kw.Namespace)
+		resource := kw.ClientInterface.AddressSpaceSchemas()
 		log.Printf("AddressSpaceSchema - Watching")
 		running := true
 		for running {

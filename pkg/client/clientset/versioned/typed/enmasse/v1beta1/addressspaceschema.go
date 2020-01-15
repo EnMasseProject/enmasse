@@ -21,7 +21,7 @@ import (
 // AddressSpaceSchemasGetter has a method to return a AddressSpaceSchemaInterface.
 // A group's client should implement this interface.
 type AddressSpaceSchemasGetter interface {
-	AddressSpaceSchemas(namespace string) AddressSpaceSchemaInterface
+	AddressSpaceSchemas() AddressSpaceSchemaInterface
 }
 
 // AddressSpaceSchemaInterface has methods to work with AddressSpaceSchema resources.
@@ -40,14 +40,12 @@ type AddressSpaceSchemaInterface interface {
 // addressSpaceSchemas implements AddressSpaceSchemaInterface
 type addressSpaceSchemas struct {
 	client rest.Interface
-	ns     string
 }
 
 // newAddressSpaceSchemas returns a AddressSpaceSchemas
-func newAddressSpaceSchemas(c *EnmasseV1beta1Client, namespace string) *addressSpaceSchemas {
+func newAddressSpaceSchemas(c *EnmasseV1beta1Client) *addressSpaceSchemas {
 	return &addressSpaceSchemas{
 		client: c.RESTClient(),
-		ns:     namespace,
 	}
 }
 
@@ -55,7 +53,6 @@ func newAddressSpaceSchemas(c *EnmasseV1beta1Client, namespace string) *addressS
 func (c *addressSpaceSchemas) Get(name string, options v1.GetOptions) (result *v1beta1.AddressSpaceSchema, err error) {
 	result = &v1beta1.AddressSpaceSchema{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("addressspaceschemas").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
@@ -72,7 +69,6 @@ func (c *addressSpaceSchemas) List(opts v1.ListOptions) (result *v1beta1.Address
 	}
 	result = &v1beta1.AddressSpaceSchemaList{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("addressspaceschemas").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -89,7 +85,6 @@ func (c *addressSpaceSchemas) Watch(opts v1.ListOptions) (watch.Interface, error
 	}
 	opts.Watch = true
 	return c.client.Get().
-		Namespace(c.ns).
 		Resource("addressspaceschemas").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -100,7 +95,6 @@ func (c *addressSpaceSchemas) Watch(opts v1.ListOptions) (watch.Interface, error
 func (c *addressSpaceSchemas) Create(addressSpaceSchema *v1beta1.AddressSpaceSchema) (result *v1beta1.AddressSpaceSchema, err error) {
 	result = &v1beta1.AddressSpaceSchema{}
 	err = c.client.Post().
-		Namespace(c.ns).
 		Resource("addressspaceschemas").
 		Body(addressSpaceSchema).
 		Do().
@@ -112,7 +106,6 @@ func (c *addressSpaceSchemas) Create(addressSpaceSchema *v1beta1.AddressSpaceSch
 func (c *addressSpaceSchemas) Update(addressSpaceSchema *v1beta1.AddressSpaceSchema) (result *v1beta1.AddressSpaceSchema, err error) {
 	result = &v1beta1.AddressSpaceSchema{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("addressspaceschemas").
 		Name(addressSpaceSchema.Name).
 		Body(addressSpaceSchema).
@@ -124,7 +117,6 @@ func (c *addressSpaceSchemas) Update(addressSpaceSchema *v1beta1.AddressSpaceSch
 // Delete takes name of the addressSpaceSchema and deletes it. Returns an error if one occurs.
 func (c *addressSpaceSchemas) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("addressspaceschemas").
 		Name(name).
 		Body(options).
@@ -139,7 +131,6 @@ func (c *addressSpaceSchemas) DeleteCollection(options *v1.DeleteOptions, listOp
 		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("addressspaceschemas").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -152,7 +143,6 @@ func (c *addressSpaceSchemas) DeleteCollection(options *v1.DeleteOptions, listOp
 func (c *addressSpaceSchemas) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.AddressSpaceSchema, err error) {
 	result = &v1beta1.AddressSpaceSchema{}
 	err = c.client.Patch(pt).
-		Namespace(c.ns).
 		Resource("addressspaceschemas").
 		SubResource(subresources...).
 		Name(name).
