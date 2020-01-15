@@ -6,6 +6,7 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
@@ -147,7 +148,7 @@ public class StatusController implements Controller {
 
     private void checkAuthServiceReady(AddressSpace addressSpace) {
         AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
-        if (authenticationService != null) {
+        if (authenticationService != null && AuthenticationServiceType.standard.equals(authenticationService.getSpec().getType())) {
             String realm = authenticationService.getSpec().getRealm();
             if (realm == null) {
                 realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
