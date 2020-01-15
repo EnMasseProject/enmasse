@@ -772,11 +772,11 @@ func (o Order) compare(p interface{}, q interface{}) (int, error) {
 	}
 	pv, err := o.Expr.Eval(p)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 	qv, err := o.Expr.Eval(q)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 
 	// Nulls first semantics

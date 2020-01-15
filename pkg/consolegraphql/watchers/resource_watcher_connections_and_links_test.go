@@ -147,7 +147,7 @@ func TestWatchConnection(t *testing.T) {
 	assert.Equal(t, 1, len(links), "Unexpected number of links")
 
 
-	assert.Equal(t, 2, len(conmetrics), "Unexpected number of connection metrics")
+	assert.Equal(t, 4, len(conmetrics), "Unexpected number of connection metrics")
 
 	messagesInMetric := getMetric("enmasse_messages_in", conmetrics)
 	assert.NotNil(t, messagesInMetric, "MessagesIn metric is absent")
