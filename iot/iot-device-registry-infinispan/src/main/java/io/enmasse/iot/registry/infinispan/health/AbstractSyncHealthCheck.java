@@ -9,6 +9,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import org.eclipse.hono.service.HealthCheckProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -16,6 +18,8 @@ import io.vertx.ext.healthchecks.HealthCheckHandler;
 import io.vertx.ext.healthchecks.Status;
 
 public abstract class AbstractSyncHealthCheck implements HealthCheckProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractSyncHealthCheck.class);
 
     private final Vertx vertx;
     private final String name;
@@ -49,6 +53,8 @@ public abstract class AbstractSyncHealthCheck implements HealthCheckProvider {
             }
             info.put("exception", sw.toString());
         }
+
+        log.debug("Check KO: {}", info);
 
         return Status.KO(info);
 
