@@ -84,7 +84,7 @@ public class HttpAdapterClient extends ApiClient {
             path += pathSuffix;
         }
         var request = client.post(endpoint.getPort(), endpoint.getHost(), path)
-                .putHeader(HttpHeaders.AUTHORIZATION, authzString)
+                .bearerTokenAuthentication(authzString)
                 .putHeader(HttpHeaders.CONTENT_TYPE, contentType(payload))
                 // we send with QoS 1 by default, to get some feedback
                 .putHeader("QoS-Level", "1")
