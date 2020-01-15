@@ -79,21 +79,6 @@ func millisToTime(ms int64) time.Time {
 	return  time.Unix(0, ms* int64(time.Millisecond))
 }
 
-func InsertOrUpdateMetric(existing []*consolegraphql.Metric, metricName string) ([]*consolegraphql.Metric, *consolegraphql.Metric) {
-
-	for _, m := range existing {
-		if m.Name == metricName {
-			return existing, m
-		}
-	}
-
-	m := &consolegraphql.Metric{
-	}
-	existing = append(existing, m)
-	return existing, m
-
-}
-
 func UpdateLinkMetrics(agentcon *AgentConnection, metrics []*consolegraphql.Metric, now time.Time, link *consolegraphql.Link) []*consolegraphql.Metric {
 
 	var agentlinks []AgentAddressLink

@@ -281,6 +281,7 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 			con = objs[0].(*consolegraphql.Connection)
 		}
 
+		// Update the connection metrics
 		metrics := con.Metrics
 		in, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
 		err = in.Update(float64(agentcon.MessagesIn), now)
@@ -292,6 +293,17 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 		if err != nil {
 			return err
 		}
+		senders, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_senders", "gauge" )
+		senders.Update(float64(len(agentcon.Senders)), now)
+		if err != nil {
+			return err
+		}
+		receivers, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_receivers", "gauge" )
+		receivers.Update(float64(len(agentcon.Receivers)), now)
+		if err != nil {
+			return err
+		}
+
 		con.Metrics = metrics
 
 		err = clw.Cache.Add(con)
@@ -417,6 +429,17 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 			if err != nil {
 				return err
 			}
+			senders, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_senders", "gauge" )
+			senders.Update(float64(agentAddr.Senders), now)
+			if err != nil {
+				return err
+			}
+			receivers, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_receivers", "gauge" )
+			receivers.Update(float64(agentAddr.Receivers), now)
+			if err != nil {
+				return err
+			}
+
 			addr.Metrics = metrics
 			err = clw.Cache.Add(addr)
 			if err != nil {
