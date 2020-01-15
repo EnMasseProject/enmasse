@@ -1,0 +1,18 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-service-admin-guide.adoc
+
+[id='con-iot-monitoring-{context}']
+= IoT monitoring
+
+When you deployed {ProductName} monitoring, then this will also allow you to monitor the IoT related components of {ProductName}. No additional configuration is required.
+
+ifdef::SingleBookLink[]
+For more information about {ProductName} monitoring, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#monitoring-messaging[Monitoring {ProductName}].
+endif::SingleBookLink[]
+
+ifndef::SingleBookLink[]
+For more information about {ProductName} monitoring, see link:{BookUrlBase}{BaseProductVersion}/html-single/installing_and_managing_amq_online_on_openshift/#monitoring-messaging[Monitoring {ProductName}].
+endif::SingleBookLink[]
+
+For detailed information about the available metrics specific to IoT, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-iot-metrics-{context}[IoT specific metrics].

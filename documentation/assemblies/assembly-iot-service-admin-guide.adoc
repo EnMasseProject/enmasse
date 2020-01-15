@@ -9,6 +9,8 @@
 
 Service administrators typically install and configure the Internet of Things (IoT) services for {ProductName}.
 
+include::../modules/con-iot-monitoring.adoc[leveloffset=+1]
+
 include::../modules/proc-iot-installing-services.adoc[leveloffset=+1]
 
 == IoT services configuration examples
@@ -16,3 +18,5 @@ include::../modules/proc-iot-installing-services.adoc[leveloffset=+1]
 include::../modules/ref-iot-config-example.adoc[leveloffset=+2]
 
 include::../modules/ref-iot-config-example-adapters.adoc[leveloffset=+2]
+
+include::../modules/ref-iot-metrics.adoc[leveloffset=+1]
