@@ -21,7 +21,6 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
@@ -172,11 +171,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> recResult = receiverClient1.runAsync();
         Future<Boolean> rec2Result = receiverClient2.runAsync();
 
-        if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
-        } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), dest, 2);
-        }
+        Thread.sleep(7000);
 
         assertTrue(senderClient.run(), "Sender failed, expected return code 0");
         assertTrue(recResult.get(), "Receiver failed, expected return code 0");
@@ -240,11 +235,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> recResult = receiverClient1.runAsync();
         Future<Boolean> recResult2 = receiverClient2.runAsync();
 
-        if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
-        } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), dest, 2);
-        }
+        Thread.sleep(7000);
 
         assertAll(
                 () -> assertTrue(senderClient.run(), "Producer failed, expected return code 0"),
@@ -496,11 +487,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> result1 = receiverClient1.runAsync();
         Future<Boolean> result2 = receiverClient2.runAsync();
 
-        if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), topic.getSpec().getAddress(), 2);
-        } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), topic, 2);
-        }
+        Thread.sleep(7000);
 
         assertTrue(senderClient1.run(), "Sender failed, expected return code 0");
         assertTrue(senderClient2.run(), "Sender2 failed, expected return code 0");
