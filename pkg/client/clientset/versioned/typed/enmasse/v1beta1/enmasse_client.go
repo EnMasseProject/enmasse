@@ -35,8 +35,8 @@ func (c *EnmasseV1beta1Client) AddressSpaces(namespace string) AddressSpaceInter
 	return newAddressSpaces(c, namespace)
 }
 
-func (c *EnmasseV1beta1Client) AddressSpaceSchemas(namespace string) AddressSpaceSchemaInterface {
-	return newAddressSpaceSchemas(c, namespace)
+func (c *EnmasseV1beta1Client) AddressSpaceSchemas() AddressSpaceSchemaInterface {
+	return newAddressSpaceSchemas(c)
 }
 
 func (c *EnmasseV1beta1Client) AuthenticationServices(namespace string) AuthenticationServiceInterface {

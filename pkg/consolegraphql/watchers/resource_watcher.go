@@ -11,8 +11,7 @@
 //go:generate go run ../../../hack/generate_resource_watchers.go --watchAll=false AuthenticationService AdminV1beta1Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta1 github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1
 
 //go:generate go run ../../../hack/generate_resource_watchers.go --scope clusterwide Namespace CoreV1Interface k8s.io/client-go/kubernetes/typed/core/v1 k8s.io/api/core/v1
-// TODO check me - should be --scope clusterwide
-//go:generate go run ../../../hack/generate_resource_watchers.go  AddressSpaceSchema EnmasseV1beta1Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1 github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1
+//go:generate go run ../../../hack/generate_resource_watchers.go --scope clusterwide AddressSpaceSchema EnmasseV1beta1Interface github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1 github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1
 
 package watchers
 
