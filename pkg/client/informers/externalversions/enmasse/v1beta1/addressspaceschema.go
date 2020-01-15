@@ -30,33 +30,32 @@ type AddressSpaceSchemaInformer interface {
 type addressSpaceSchemaInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
-	namespace        string
 }
 
 // NewAddressSpaceSchemaInformer constructs a new informer for AddressSpaceSchema type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewAddressSpaceSchemaInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredAddressSpaceSchemaInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewAddressSpaceSchemaInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredAddressSpaceSchemaInformer(client, resyncPeriod, indexers, nil)
 }
 
 // NewFilteredAddressSpaceSchemaInformer constructs a new informer for AddressSpaceSchema type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredAddressSpaceSchemaInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredAddressSpaceSchemaInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.EnmasseV1beta1().AddressSpaceSchemas(namespace).List(options)
+				return client.EnmasseV1beta1().AddressSpaceSchemas().List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.EnmasseV1beta1().AddressSpaceSchemas(namespace).Watch(options)
+				return client.EnmasseV1beta1().AddressSpaceSchemas().Watch(options)
 			},
 		},
 		&enmassev1beta1.AddressSpaceSchema{},
@@ -66,7 +65,7 @@ func NewFilteredAddressSpaceSchemaInformer(client versioned.Interface, namespace
 }
 
 func (f *addressSpaceSchemaInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredAddressSpaceSchemaInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+	return NewFilteredAddressSpaceSchemaInformer(client, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
 func (f *addressSpaceSchemaInformer) Informer() cache.SharedIndexInformer {
