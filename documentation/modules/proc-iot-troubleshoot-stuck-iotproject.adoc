@@ -5,9 +5,9 @@
 [id='proc-iot-troubleshoot-stuck-iotproject-{context}']
 = Fix `IoTProject` stuck in termination
 
-When an `IoTProject` instance is deleted, the resource will not be deleted immediately,
-but is only marked for deletion. Necessary cleanup operations will be performed in the background
-and the resource will automatically be delete once the cleanup has been performed successfully.
+When an `IoTProject` instance is deleted, the resource will not be deleted immediately.
+It is only marked for deletion and necessary cleanup operations will be performed in the background.
+The resource will automatically be deleted once the cleanup has been performed successfully.
 
 In some situations it might be that, due do to infrastructure issues, the clean-up operation
 cannot be performed at this point in time. The `IoTProject` will still be kept, and the
@@ -15,7 +15,7 @@ operator will re-try periodically to clean up the resources. The cleanup will su
 the infrastructure is back in operational state.
 
 In the case that the infrastructure is not expected to function ever again, it might be desirable
-to force the destruction of the `IoTProject`.
+to force the destruction of the `IoTProject` resources.
 
 WARNING: Manually removing the resource cleanup finalizer will skip the cleanup process,
  and prevent the system from properly cleaning up.
