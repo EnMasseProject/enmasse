@@ -1,6 +1,10 @@
 - name: "Uninstall EnMasse"
   hosts: enmasse
   tasks:
+    - name: Delete iot CRDs
+      shell: oc delete crd -l app=enmasse,enmasse-component=iot
+    - name: Delete tenant-api CRDs
+      shell: oc delete crd -l app=enmasse,enmasse-component=tenant-api
     - name: Delete CRDs
       shell: oc delete crd -l app=enmasse
     - name: Delete rolebindings for the kube-system namespace
