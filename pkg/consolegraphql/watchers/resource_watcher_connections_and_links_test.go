@@ -154,7 +154,7 @@ func TestWatchConnection(t *testing.T) {
 
 	linkmetrics := links[0].(*consolegraphql.Link).Metrics
 
-	assert.Equal(t, 8, len(linkmetrics), "Unexpected number of link metrics")
+	assert.Equal(t, 10, len(linkmetrics), "Unexpected number of link metrics")
 
 	releasedMetric := getMetric("enmasse_released", linkmetrics)
 	assert.NotNil(t, releasedMetric, "Released metric is absent")
@@ -266,7 +266,7 @@ func TestWatchConnectionWithChangingLinks(t *testing.T) {
 	assert.NoError(t, err)
 
 	remainingSendingLinkMetrics := remainingSendingLink[0].(*consolegraphql.Link).Metrics
-	assert.Equal(t, 8, len(remainingSendingLinkMetrics), "Unexpected number of link metrics for remaining sending link")
+	assert.Equal(t, 10, len(remainingSendingLinkMetrics), "Unexpected number of link metrics for remaining sending link")
 
 	newReceivingLink, err := w.Cache.Get("hierarchy", "Link", func(o interface{}) (bool, bool, error) {
 		l := o.(*consolegraphql.Link)
@@ -279,7 +279,7 @@ func TestWatchConnectionWithChangingLinks(t *testing.T) {
 
 	assert.NoError(t, err)
 	newReceivingLinkMetrics := newReceivingLink[0].(*consolegraphql.Link).Metrics
-	assert.Equal(t, 8, len(newReceivingLinkMetrics), "Unexpected number of link metrics for removed sending link")
+	assert.Equal(t, 10, len(newReceivingLinkMetrics), "Unexpected number of link metrics for new receiving link")
 }
 
 func TestWatchDeletedConnection(t *testing.T) {
