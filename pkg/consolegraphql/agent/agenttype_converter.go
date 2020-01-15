@@ -82,41 +82,56 @@ func millisToTime(ms int64) time.Time {
 func UpdateLinkMetrics(agentcon *AgentConnection, metrics []*consolegraphql.Metric, now time.Time, link *consolegraphql.Link) []*consolegraphql.Metric {
 
 	var agentlinks []AgentAddressLink
+	var rateMetricName string
 	if link.Spec.Role == "sender" {
 		agentlinks = agentcon.Senders
+		rateMetricName = "enmasse_messages_in"
 	} else {
 		agentlinks = agentcon.Receivers
+		rateMetricName = "enmasse_messages_out"
 	}
 
 	for _, l := range agentlinks {
 		if l.Uuid == link.Name {
+			var sm *consolegraphql.SimpleMetric
+			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_deliveries", "counter")
+			sm.Update(float64(l.Deliveries), now)
+
+			var rm *consolegraphql.RateCalculatingMetric
+			rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, rateMetricName, "gauge")
+			rm.Update(float64(l.Deliveries), now)
+
 			switch agentcon.AddressSpaceType {
 			case "standard":
-				m, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_accepted", "counter")
-				m.Update(float64(l.Accepted), now)
-				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_modified", "counter")
-				m.Update(float64(l.Modified), now)
-				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_presettled", "counter")
-				m.Update(float64(l.Presettled), now)
-				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_unsettled", "counter")
-				m.Update(float64(l.Unsettled), now)
-				m, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_undelivered", "counter")
-				m.Update(float64(l.Undelivered), now)
-				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_rejected", "counter")
-				m.Update(float64(l.Rejected), now)
-				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_released", "counter")
-				m.Update(float64(l.Released), now)
-				m, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_deliveries", "counter")
-				m.Update(float64(l.Deliveries), now)
-				return metrics
+				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_accepted", "counter")
+				sm.Update(float64(l.Accepted), now)
+				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_modified", "counter")
+				sm.Update(float64(l.Modified), now)
+				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_presettled", "counter")
+				sm.Update(float64(l.Presettled), now)
+				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_unsettled", "counter")
+				sm.Update(float64(l.Unsettled), now)
+				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_undelivered", "counter")
+				sm.Update(float64(l.Undelivered), now)
+				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_rejected", "counter")
+				sm.Update(float64(l.Rejected), now)
+				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_released", "counter")
+				sm.Update(float64(l.Released), now)
+
+				// backlog - agent calculates this field to be the sum of undelivered/unsettled metrics
+				backlog := 0
+				for _, ld := range l.Links {
+					backlog += ld.Backlog
+				}
+				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_backlog", "counter")
+				sm.Update(float64(backlog), now)
+
 			case "brokered":
-				m, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_deliveries", "counter")
-				m.Update(float64(l.Deliveries), now)
-				return metrics
+				// No address space specific types
 			default:
 				panic(fmt.Sprintf("unexpected address space type : %s", agentcon.AddressSpaceType))
-
 			}
+			return metrics
 		}
 	}
 

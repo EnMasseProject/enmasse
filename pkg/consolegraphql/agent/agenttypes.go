@@ -101,7 +101,7 @@ type AgentAddressLink struct {
 	Unsettled   int
 	Undelivered int
 	Presettled  int
-	Links       []AgentLink /* values for each individual router */
+	Links       []AgentLink /* the individual links, >1 for the fanout cases */
 	/* Populated for Standard and Brokered */
 	Deliveries int
 }
