@@ -77,7 +77,7 @@ public class HTTPServerTest {
             public String getConsoleUrl(AddressSpace addressSpace) {
                 return "http://localhost/console/" + addressSpaceName;
             }
-        }, authenticationServiceRegistry);
+        });
         vertx.deployVerticle(httpServer, context.succeeding(id -> context.completeNow()));
     }
 

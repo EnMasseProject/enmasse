@@ -6,6 +6,7 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
@@ -13,7 +14,7 @@ import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
-import io.enmasse.user.api.UserApi;
+import io.enmasse.user.api.RealmApi;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,16 +32,16 @@ public class StatusController implements Controller {
     private final InfraResourceFactory infraResourceFactory;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final AuthenticationServiceResolver authenticationServiceResolver;
-    private final UserApi userApi;
+    private final RealmApi realmApi;
     private final RouterStatusController routerStatusController;
 
-    public StatusController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, AuthenticationServiceRegistry authenticationServiceRegistry, UserApi userApi, RouterStatusController routerStatusController) {
+    public StatusController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, AuthenticationServiceRegistry authenticationServiceRegistry, RealmApi realmApi, RouterStatusController routerStatusController) {
         this.kubernetes = kubernetes;
         this.schemaProvider = schemaProvider;
         this.infraResourceFactory = infraResourceFactory;
         this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.authenticationServiceResolver = new AuthenticationServiceResolver(authenticationServiceRegistry);
-        this.userApi = userApi;
+        this.realmApi = realmApi;
         this.routerStatusController = routerStatusController;
     }
 
@@ -147,13 +148,13 @@ public class StatusController implements Controller {
 
     private void checkAuthServiceReady(AddressSpace addressSpace) {
         AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
-        if (authenticationService != null) {
+        if (authenticationService != null && AuthenticationServiceType.standard.equals(authenticationService.getSpec().getType())) {
             String realm = authenticationService.getSpec().getRealm();
             if (realm == null) {
                 realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
             }
             try {
-                boolean isReady = userApi.realmExists(authenticationService, realm);
+                boolean isReady = realmApi.getRealmNames(authenticationService).contains(realm);
                 if (!isReady) {
                     addressSpace.getStatus().setReady(false);
                     addressSpace.getStatus().appendMessage("Authentication service is not configured with realm " + addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
