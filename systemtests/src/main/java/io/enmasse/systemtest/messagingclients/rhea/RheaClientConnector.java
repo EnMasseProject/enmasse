@@ -50,7 +50,6 @@ public class RheaClientConnector extends AbstractClient {
 
         allowedArgs.add(ClientArgument.LOG_LIB);
         allowedArgs.add(ClientArgument.LOG_STATS);
-        allowedArgs.add(ClientArgument.LOG_MESSAGES);
 
         allowedArgs.add(ClientArgument.BROKER);
         allowedArgs.add(ClientArgument.ADDRESS);

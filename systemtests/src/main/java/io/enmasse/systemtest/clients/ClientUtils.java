@@ -21,15 +21,21 @@ import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.sasl.MechanismMismatchException;
 import io.vertx.proton.sasl.SaslSystemException;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import javax.security.sasl.AuthenticationException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -188,9 +194,7 @@ public class ClientUtils {
                     .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
                     .withAddress(destination)
                     .withCredentials(userCredentials)
-                    .withTimeout(timeout)
-                    .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                    .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                    .withTimeout(timeout);
             receiverClient.runAsync(false);
             receivers.add(receiverClient);
         }
@@ -199,12 +203,16 @@ public class ClientUtils {
         return receivers;
     }
 
+    public List<ExternalMessagingClient> attachSenders(AddressSpace addressSpace, List<Address> destinations, UserCredentials userCredentials) throws Exception {
+        return attachSenders(addressSpace, destinations, 360, userCredentials);
+    }
+
     /**
      * attach senders to destinations (for N-th destination is attached N+1 senders)
      */
     public List<ExternalMessagingClient> attachSenders(AddressSpace addressSpace, List<Address> destinations, int timeout, UserCredentials userCredentials) throws Exception {
         List<ExternalMessagingClient> senders = new ArrayList<>();
-
+        LOGGER.info("Connecting senders...");
         for (int i = 0; i < destinations.size(); i++) {
             for (int j = 0; j < i + 1; j++) {
                 ExternalMessagingClient senderClient = new ExternalMessagingClient()
@@ -214,10 +222,8 @@ public class ClientUtils {
                         .withCredentials(userCredentials)
                         .withMessageBody("msg no.%d")
                         .withTimeout(timeout)
-                        .withCount(30)
-                        .withAdditionalArgument(ClientArgument.DURATION, 30)
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                        .withCount(timeout)
+                        .withAdditionalArgument(ClientArgument.DURATION, timeout * 1000);
                 senderClient.runAsync(false);
                 senders.add(senderClient);
             }
@@ -226,12 +232,42 @@ public class ClientUtils {
         return senders;
     }
 
+    public ExternalMessagingClient attachReceiver(AddressSpace addressSpace, Address destination, UserCredentials userCredentials, int count) throws Exception {
+        ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                .withClientEngine(new RheaClientReceiver())
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                .withAddress(destination)
+                .withCredentials(userCredentials)
+                .withTimeout(500)
+                .withCount(count);
+        receiverClient.runAsync(false);
+        return receiverClient;
+    }
+
+    public ExternalMessagingClient attachSender(AddressSpace addressSpace, Address destination, UserCredentials userCredentials, int count, int durationMillis) throws Exception {
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(new RheaClientSender())
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                .withAddress(destination)
+                .withCredentials(userCredentials)
+                .withMessageBody("msg no.%d")
+                .withTimeout(500)
+                .withCount(count)
+                .withAdditionalArgument(ClientArgument.DURATION, durationMillis);
+        senderClient.runAsync(false);
+        return senderClient;
+    }
+
+    public List<ExternalMessagingClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations, UserCredentials userCredentials) throws Exception {
+        return attachReceivers(addressSpace, destinations, 360, userCredentials);
+    }
+
     /**
      * attach receivers to destinations (for N-th destination is attached N+1 senders)
      */
     public List<ExternalMessagingClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations, int timeout, UserCredentials userCredentials) throws Exception {
         List<ExternalMessagingClient> receivers = new ArrayList<>();
-
+        LOGGER.info("Connecting receivers...");
         for (int i = 0; i < destinations.size(); i++) {
             for (int j = 0; j < i + 1; j++) {
                 ExternalMessagingClient receiverClient = new ExternalMessagingClient()
@@ -239,9 +275,7 @@ public class ClientUtils {
                         .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
                         .withAddress(destinations.get(i))
                         .withCredentials(userCredentials)
-                        .withTimeout(timeout)
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                        .withTimeout(timeout);
                 receiverClient.runAsync(false);
                 receivers.add(receiverClient);
             }
@@ -265,9 +299,7 @@ public class ClientUtils {
                 .withCount(connectionCount)
                 .withTimeout(timeout)
                 .withAdditionalArgument(ClientArgument.SENDER_COUNT, Integer.toString(senderCount))
-                .withAdditionalArgument(ClientArgument.RECEIVER_COUNT, Integer.toString(receiverCount))
-                .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                .withAdditionalArgument(ClientArgument.RECEIVER_COUNT, Integer.toString(receiverCount));
         connectorClient.runAsync(false);
 
         return connectorClient;
@@ -275,11 +307,33 @@ public class ClientUtils {
 
     /**
      * stop all clients from list of Abstract clients
+     * @throws Exception
      */
-    public void stopClients(List<ExternalMessagingClient> clients) {
+    public void stopClients(List<ExternalMessagingClient> clients, ExtensionContext context) throws Exception {
         if (clients != null) {
             LOGGER.info("Stopping clients...");
-            clients.forEach(ExternalMessagingClient::stop);
+            Path logsDir = Files.createDirectories(TestUtils.getFailedTestLogsPath(context).resolve(SystemtestsKubernetesApps.MESSAGING_PROJECT));
+            if (context.getExecutionException().isPresent()) {
+                LOGGER.info("Saving clients output into {}", logsDir.toString());
+            }
+            for (var c : clients) {
+                c.stop();
+                if (context.getExecutionException().isPresent()) {
+                    try {
+                        Files.write(logsDir.resolve(c.getId()+"-output.log"), c.getStdOutput().getBytes());
+                        Files.write(logsDir.resolve(c.getId()+"-error.log"), c.getStdError().getBytes());
+                    } catch (Exception ex) {
+                        LOGGER.warn("Cannot save output of client "+c.getId(), ex);
+                    }
+                }
+            };
         }
+    }
+
+    @FunctionalInterface
+    public static interface ClientAttacher {
+
+        List<ExternalMessagingClient> attach(AddressSpace addressSpace, List<Address> destinations, UserCredentials userCredentials) throws Exception;
+
     }
 }

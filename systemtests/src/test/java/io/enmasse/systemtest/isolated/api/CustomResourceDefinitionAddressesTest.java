@@ -12,16 +12,15 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
@@ -87,10 +86,10 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 .endSpec()
                 .build();
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, AddressSpaceUtils.getConsoleRoute(brokered), brokered, clusterUser);
-        consoleWeb.openWebConsolePage();
-        consoleWeb.openAddressesPageWebConsole();
-        consoleWeb.createAddressWebConsole(dest1, false);
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consoleWeb.openConsolePage();
+        consoleWeb.openAddressList(brokered);
+        consoleWeb.createAddress(dest1);
 
         resourcesManager.appendAddresses(false, dest2);
         AddressUtils.waitForDestinationsReady(dest1, dest2);
@@ -173,10 +172,10 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
                         dest2.getMetadata().getName(), output));
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, AddressSpaceUtils.getConsoleRoute(brokered), brokered, clusterUser);
-        consoleWeb.openWebConsolePage();
-        consoleWeb.openAddressesPageWebConsole();
-        consoleWeb.deleteAddressWebConsole(dest1);
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consoleWeb.openConsolePage();
+        consoleWeb.openAddressList(brokered);
+        consoleWeb.deleteAddress(dest1);
         resourcesManager.deleteAddresses(dest2);
 
         TestUtils.waitUntilCondition(() -> {

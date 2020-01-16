@@ -60,6 +60,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
 import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
@@ -174,8 +175,8 @@ public abstract class Kubernetes {
         }
     }
 
-    public int getOcpVersion() {
-        return getKubernetesVersion() >= 1.13 ? 4 : 3;
+    public OpenShiftVersion getOcpVersion() {
+        return OpenShiftVersion.fromK8sVersion(getKubernetesVersion());
     }
 
     public String getInfraNamespace() {
@@ -379,7 +380,7 @@ public abstract class Kubernetes {
     }
 
     public String getOCConsoleRoute() {
-        if (getOcpVersion() == 4) {
+        if (OpenShiftVersion.OCP4 == getOcpVersion()) {
             return String.format("https://console-openshift-console.%s", Environment.getInstance().kubernetesDomain()).replaceAll("(?<!(http:|https:))[//]+", "/");
         } else {
             return String.format("%s/console", Environment.getInstance().getApiUrl()).replaceAll("(?<!(http:|https:))[//]+", "/");
