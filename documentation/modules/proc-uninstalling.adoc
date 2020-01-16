@@ -1,7 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-uninstalling-openshift.adoc
-// assembly-uninstalling-kubernetes.adoc
+// assembly-uninstalling.adoc
 
 [id='uninstalling-{context}']
 = Uninstalling {ProductName} using the YAML bundle
