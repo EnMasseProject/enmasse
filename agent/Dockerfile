@@ -8,7 +8,7 @@ ARG maven_version
 ARG commit
 ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
-ADD target/agent-${MAVEN_VERSION}-dist.tar.gz /opt/app-root/src/
+ADD target/agent-${maven_version}-dist.tar.gz /opt/app-root/src/
 
 EXPOSE 56720 8080
 

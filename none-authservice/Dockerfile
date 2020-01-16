@@ -5,6 +5,6 @@ ARG maven_version
 ARG commit
 ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
-ADD target/none-authservice-${MAVEN_VERSION}.jar /none-authservice.jar
+ADD target/none-authservice-${maven_version}.jar /none-authservice.jar
 
 CMD ["/opt/run-java/launch_java.sh", "/none-authservice.jar"]
