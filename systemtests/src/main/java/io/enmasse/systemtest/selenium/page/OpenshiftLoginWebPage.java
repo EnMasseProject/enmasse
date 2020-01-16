@@ -4,16 +4,15 @@
  */
 package io.enmasse.systemtest.selenium.page;
 
-import java.time.Duration;
-
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.selenium.SeleniumProvider;
+import java.time.Duration;
 
 public class OpenshiftLoginWebPage implements IWebPage {
 
@@ -46,7 +45,11 @@ public class OpenshiftLoginWebPage implements IWebPage {
     }
 
     public String getAlertMessage() {
-        return getAlertContainer().findElement(By.className("kc-feedback-text")).getText();
+        if (Kubernetes.getInstance().getOcpVersion() == 4) {
+            return selenium.getDriver().findElement(By.className("alert-danger")).getText();
+        } else {
+            return getAlertContainer().findElement(By.className("kc-feedback-text")).getText();
+        }
     }
 
     private boolean checkAlert() {

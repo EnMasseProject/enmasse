@@ -134,6 +134,7 @@ public class SystemtestsKubernetesApps {
             Files.createDirectories(path);
             GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, SystemtestsKubernetesApps.MESSAGING_PROJECT);
             collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.MESSAGING_PROJECT);
+            collector.collectRouterState("deleteMessagingClientApp");
         } catch (Exception e) {
             log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.MESSAGING_PROJECT);
         }
@@ -171,7 +172,7 @@ public class SystemtestsKubernetesApps {
         kubeClient.createDeploymentFromResource(namespace,
                 getSeleniumNodeDeploymentResource(SELENIUM_FIREFOX, "selenium/standalone-firefox"));
         kubeClient.createIngressFromResource(namespace, getSystemtestsIngressResource(SELENIUM_FIREFOX, 4444));
-        Thread.sleep(5000);
+        TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), namespace, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
     }
 
     public static void deployChromeSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {
@@ -181,7 +182,7 @@ public class SystemtestsKubernetesApps {
         kubeClient.createDeploymentFromResource(namespace,
                 getSeleniumNodeDeploymentResource(SystemtestsKubernetesApps.SELENIUM_CHROME, "selenium/standalone-chrome"));
         kubeClient.createIngressFromResource(namespace, getSystemtestsIngressResource(SELENIUM_CHROME, 4444));
-        Thread.sleep(5000);
+        TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), namespace, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
     }
 
     public static void deleteFirefoxSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {

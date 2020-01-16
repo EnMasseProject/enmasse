@@ -188,15 +188,17 @@ public class ClientUtils {
                     .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
                     .withAddress(destination)
                     .withCredentials(userCredentials)
-                    .withTimeout(timeout)
-                    .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                    .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                    .withTimeout(timeout);
             receiverClient.runAsync(false);
             receivers.add(receiverClient);
         }
 
         Thread.sleep(15000); //wait for attached
         return receivers;
+    }
+
+    public List<ExternalMessagingClient> attachSenders(AddressSpace addressSpace, List<Address> destinations, UserCredentials userCredentials) throws Exception {
+        return attachSenders(addressSpace, destinations, 360, userCredentials);
     }
 
     /**
@@ -214,16 +216,44 @@ public class ClientUtils {
                         .withCredentials(userCredentials)
                         .withMessageBody("msg no.%d")
                         .withTimeout(timeout)
-                        .withCount(30)
-                        .withAdditionalArgument(ClientArgument.DURATION, 30)
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                        .withCount(timeout)
+                        .withAdditionalArgument(ClientArgument.DURATION, timeout * 1000);
                 senderClient.runAsync(false);
                 senders.add(senderClient);
             }
         }
 
         return senders;
+    }
+
+    public ExternalMessagingClient attachReceiver(AddressSpace addressSpace, Address destination, UserCredentials userCredentials, int count) throws Exception {
+        ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                .withClientEngine(new RheaClientReceiver())
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                .withAddress(destination)
+                .withCredentials(userCredentials)
+                .withTimeout(500)
+                .withCount(count);
+        receiverClient.runAsync(false);
+        return receiverClient;
+    }
+
+    public ExternalMessagingClient attachSender(AddressSpace addressSpace, Address destination, UserCredentials userCredentials, int count, int durationMillis) throws Exception {
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(new RheaClientSender())
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                .withAddress(destination)
+                .withCredentials(userCredentials)
+                .withMessageBody("msg no.%d")
+                .withTimeout(500)
+                .withCount(count)
+                .withAdditionalArgument(ClientArgument.DURATION, durationMillis);
+        senderClient.runAsync(false);
+        return senderClient;
+    }
+
+    public List<ExternalMessagingClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations, UserCredentials userCredentials) throws Exception {
+        return attachReceivers(addressSpace, destinations, 360, userCredentials);
     }
 
     /**
@@ -239,9 +269,7 @@ public class ClientUtils {
                         .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
                         .withAddress(destinations.get(i))
                         .withCredentials(userCredentials)
-                        .withTimeout(timeout)
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                        .withTimeout(timeout);
                 receiverClient.runAsync(false);
                 receivers.add(receiverClient);
             }
@@ -265,9 +293,7 @@ public class ClientUtils {
                 .withCount(connectionCount)
                 .withTimeout(timeout)
                 .withAdditionalArgument(ClientArgument.SENDER_COUNT, Integer.toString(senderCount))
-                .withAdditionalArgument(ClientArgument.RECEIVER_COUNT, Integer.toString(receiverCount))
-                .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                .withAdditionalArgument(ClientArgument.RECEIVER_COUNT, Integer.toString(receiverCount));
         connectorClient.runAsync(false);
 
         return connectorClient;
@@ -276,10 +302,24 @@ public class ClientUtils {
     /**
      * stop all clients from list of Abstract clients
      */
-    public void stopClients(List<ExternalMessagingClient> clients) {
+    public void stopClients(List<ExternalMessagingClient> clients, boolean testFailed) {
         if (clients != null) {
             LOGGER.info("Stopping clients...");
-            clients.forEach(ExternalMessagingClient::stop);
+            clients.forEach(c -> {
+                c.stop();
+                if (testFailed) {
+                    LOGGER.info("=======================================");
+                    LOGGER.info("stderr {}", c.getStdError());
+                    LOGGER.info("stdout {}", c.getStdOutput());
+                }
+            });
         }
+    }
+
+    @FunctionalInterface
+    public static interface ClientAttacher {
+
+        List<ExternalMessagingClient> attach(AddressSpace addressSpace, List<Address> destinations, UserCredentials userCredentials) throws Exception;
+
     }
 }

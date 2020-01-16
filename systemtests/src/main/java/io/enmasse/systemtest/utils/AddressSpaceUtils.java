@@ -338,13 +338,6 @@ public class AddressSpaceUtils {
         }
     }
 
-    public static String getConsoleRoute(AddressSpace addressSpace) {
-        Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
-        String consoleRoute = String.format("https://%s", consoleEndpoint.toString());
-        log.info(consoleRoute);
-        return consoleRoute;
-    }
-
     public static Endpoint getConsoleEndpoint(AddressSpace addressSpace) {
         Endpoint consoleEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "console");
         if (consoleEndpoint == null) {

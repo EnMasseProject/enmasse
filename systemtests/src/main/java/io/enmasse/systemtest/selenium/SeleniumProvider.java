@@ -47,7 +47,6 @@ public class SeleniumProvider {
     private NgWebDriver angularDriver;
     private WebDriverWait driverWait;
     private Map<Date, File> browserScreenshots = new HashMap<>();
-    private String webconsoleFolder = "selenium_tests";
 
     private SeleniumProvider() {
     }
@@ -286,6 +285,7 @@ public class SeleniumProvider {
     }
 
     private Path getWebConsolePath(Path target, String className, String methodName) {
+        String webconsoleFolder = "selenium_tests";
         return target.resolve(
                 Paths.get(
                         webconsoleFolder,
@@ -354,7 +354,7 @@ public class SeleniumProvider {
 
     public boolean getCheckboxValue(WebElement element) {
         if (isCheckbox(element)) {
-            return Boolean.valueOf(element.getAttribute("checked"));
+            return Boolean.parseBoolean(element.getAttribute("checked"));
         }
         throw new IllegalStateException("Requested element is not of type 'checkbox'");
     }

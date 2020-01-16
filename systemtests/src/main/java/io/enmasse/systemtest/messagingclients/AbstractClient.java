@@ -201,12 +201,12 @@ public abstract class AbstractClient {
                 log.info("{} {} Return code - {}", this.getClass().getName(), clientType, ret);
                 if (logToOutput) {
                     log.info("{} {} stdout : {}", this.getClass().getName(), clientType, executor.getStdOut());
-                    if (ret == 0) {
-                        parseToJson(executor.getStdOut());
-                    } else {
-                        if (!executor.getStdErr().isEmpty()) {
-                            log.error("{} {} stderr : {}", this.getClass().getName(), clientType, executor.getStdErr());
-                        }
+                }
+                if (ret == 0) {
+                    parseToJson(executor.getStdOut());
+                } else {
+                    if (!executor.getStdErr().isEmpty() && logToOutput) {
+                        log.error("{} {} stderr : {}", this.getClass().getName(), clientType, executor.getStdErr());
                     }
                 }
             }

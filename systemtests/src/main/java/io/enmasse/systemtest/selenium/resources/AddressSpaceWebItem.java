@@ -7,8 +7,7 @@ package io.enmasse.systemtest.selenium.resources;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-public class AddressSpaceWebItem extends WebItem {
-
+public class AddressSpaceWebItem extends WebItem implements Comparable<AddressSpaceWebItem> {
     private WebElement checkBox;
     private String name;
     private String namespace;
@@ -20,14 +19,14 @@ public class AddressSpaceWebItem extends WebItem {
 
     public AddressSpaceWebItem(WebElement item) {
         this.webItem = item;
-        this.checkBox = item.findElement(By.className("pf-c-table__check")).findElement(By.tagName("input"));
-        this.name = parseName(item.findElement(By.xpath("//td[@data-label='Name/Namespace']")));
-        this.namespace = parseNamespace(item.findElement(By.xpath("//td[@data-label='Name/Namespace']")));
-        this.consoleRoute = parseRoute(item.findElement(By.xpath("//td[@data-label='Name/Namespace']")));
-        this.type = item.findElement(By.xpath("//td[@data-label='Type']")).getText();
-        this.status = item.findElement(By.xpath("//td[@data-label='Status']")).getText();
-        this.created = item.findElement(By.xpath("//td[@data-label='Time created']")).getText();
-        this.actionDropDown = item.findElement(By.className("pf-c-dropdown"));
+        this.checkBox = webItem.findElement(By.xpath("./td[@data-key='0']")).findElement(By.tagName("input"));
+        this.name = parseName(webItem.findElement(By.xpath("./td[@data-key='1']")));
+        this.namespace = parseNamespace(webItem.findElement(By.xpath("./td[@data-key='1']")));
+        this.consoleRoute = parseRoute(webItem.findElement(By.xpath("./td[@data-key='1']")));
+        this.type = webItem.findElement(By.xpath("./td[@data-label='Type']")).getText().split(" ")[1];
+        this.status = webItem.findElement(By.xpath("./td[@data-label='Status']")).getText();
+        this.created = webItem.findElement(By.xpath("./td[@data-label='Time created']")).getText();
+        this.actionDropDown = webItem.findElement(By.className("pf-c-dropdown"));
     }
 
     public WebElement getCheckBox() {
@@ -62,6 +61,14 @@ public class AddressSpaceWebItem extends WebItem {
         return actionDropDown;
     }
 
+    public WebElement getEditMenuItem() {
+        return webItem.findElement(By.xpath("//div[contains(text(), 'Edit')]"));
+    }
+
+    public WebElement getDeleteMenuItem() {
+        return webItem.findElement(By.xpath("//div[contains(text(), 'Delete')]"));
+    }
+
     private String parseName(WebElement elem) {
         try {
             return elem.findElement(By.tagName("a")).getText();
@@ -79,10 +86,7 @@ public class AddressSpaceWebItem extends WebItem {
     }
 
     private String parseNamespace(WebElement elem) {
-        if (elem.findElements(By.tagName("p")).size() > 1) {
-            return elem.findElements(By.tagName("p")).get(1).getText();
-        }
-        return elem.findElement(By.tagName("p")).getText();
+        return elem.getText().split(System.getProperty("line.separator"))[1];
     }
 
     @Override
@@ -93,5 +97,10 @@ public class AddressSpaceWebItem extends WebItem {
                 this.type,
                 this.status,
                 this.created);
+    }
+
+    @Override
+    public int compareTo(AddressSpaceWebItem o) {
+        return name.compareTo(o.name);
     }
 }
