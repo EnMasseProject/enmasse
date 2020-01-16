@@ -182,7 +182,7 @@ public class IoTUtils {
         var projectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         var asClient = kubernetes.getAddressSpaceClient(project.getMetadata().getNamespace());
 
-        // get inital address spaces
+        // get initial address spaces
 
         var initialAddressSpaces = projectClient
                 .list().getItems().stream()
