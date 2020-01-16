@@ -210,9 +210,10 @@ public class IoTUtils {
         try {
             IoTUtils.waitForIoTProjectDeleted(kubernetes, project);
         } catch (Exception e) {
-            log.warn("IoT project '{}' failed to delete. Removing finalizers!", project.getMetadata().getName());
-            assertTrue(patchCR(project.getKind().toLowerCase(), project.getMetadata().getName(), "'{\"metadata\":{\"finalizers\": []}}").getRetCode());
+            log.warn("IoT project '{}' failed to delete. Removing finalizers!", project.getMetadata().getName(), e);
+            assertTrue(patchCR(project.getKind().toLowerCase(), project.getMetadata().getName(), "'{\"metadata\":{\"finalizers\": []}}'").getRetCode());
             IoTUtils.waitForIoTProjectDeleted(kubernetes, project);
+            throw e;
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }

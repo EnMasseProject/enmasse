@@ -6,7 +6,6 @@ package io.enmasse.systemtest.manager;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -21,10 +20,13 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
@@ -66,22 +68,52 @@ public class SharedIoTManager extends ResourceManager {
         if (environment.skipCleanup()) {
             LOGGER.info("Skip cleanup is set, no cleanup process");
         } else {
-            if (sharedIoTProject != null) {
-                LOGGER.info("Shared IoTProject will be removed");
-                var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
-                if (iotProjectApiClient.withName(sharedIoTProject.getMetadata().getName()).get() != null) {
+            List<Throwable> exceptions = new ArrayList<>();
+            try {
+                tearDownSharedIoTProject();
+            } catch(Exception | AssertionFailedError e) {
+                LOGGER.error("Error tearing down shared iotproject", e);
+                exceptions.add(e);
+            }
+            try {
+                tearDownSharedIoTConfig();
+            } catch(Exception | AssertionFailedError e) {
+                LOGGER.error("Error tearing down shared iotconfig", e);
+                exceptions.add(e);
+            }
+            try {
+                tearDownInfinispan(context);
+            } catch(Exception | AssertionFailedError e) {
+                LOGGER.error("Error tearing down infinispan", e);
+                exceptions.add(e);
+            }
+            if (!exceptions.isEmpty()) {
+                throw new IllegalStateException("Errors have been produced during tear down");
+            }
+        }
+    }
+
+    private void tearDownInfinispan(ExtensionContext context) throws Exception {
+        if (context.getExecutionException().isPresent()) {
+            Path path = TestUtils.getFailedTestLogsPath(context);
+            SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
+        }
+        SystemtestsKubernetesApps.deleteInfinispanServer();
+    }
+
+    private void tearDownSharedIoTProject() throws Exception {
+        if (sharedIoTProject != null) {
+            LOGGER.info("Shared IoTProject will be removed");
+            var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
+            if (iotProjectApiClient.withName(sharedIoTProject.getMetadata().getName()).get() != null) {
+                try {
                     IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedIoTProject);
+                } finally {
                     sharedIoTProject = null;
-                } else {
-                    LOGGER.info("IoTProject '{}' doesn't exists!", sharedIoTProject.getMetadata().getName());
                 }
+            } else {
+                LOGGER.info("IoTProject '{}' doesn't exists!", sharedIoTProject.getMetadata().getName());
             }
-            tearDownSharedIoTConfig();
-            if (context.getExecutionException().isPresent()) {
-                Path path = TestUtils.getFailedTestLogsPath(context);
-                SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
-            }
-            SystemtestsKubernetesApps.deleteInfinispanServer();
         }
     }
 
@@ -90,8 +122,11 @@ public class SharedIoTManager extends ResourceManager {
             LOGGER.info("Shared IoTConfig will be removed");
             var iotConfigApiClient = kubernetes.getIoTConfigClient();
             if (iotConfigApiClient.withName(sharedIoTConfig.getMetadata().getName()).get() != null) {
-                IoTUtils.deleteIoTConfigAndWait(kubernetes, sharedIoTConfig);
-                sharedIoTConfig = null;
+                try {
+                    IoTUtils.deleteIoTConfigAndWait(kubernetes, sharedIoTConfig);
+                } finally {
+                    sharedIoTConfig = null;
+                }
             } else {
                 LOGGER.info("IoTConfig '{}' doesn't exists!", sharedIoTConfig.getMetadata().getName());
             }

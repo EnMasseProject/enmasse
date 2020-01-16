@@ -16,6 +16,7 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
@@ -26,7 +27,7 @@ import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE
 
 public class IsolatedIoTManager extends ResourceManager {
 
-    private Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
     protected List<IoTProject> ioTProjects;
@@ -67,19 +68,37 @@ public class IsolatedIoTManager extends ResourceManager {
         if (environment.skipCleanup()) {
             LOGGER.info("Skip cleanup is set, no cleanup process");
         } else {
+            List<Throwable> exceptions = new ArrayList<>();
             try {
                 tearDownProjects();
+            } catch(Exception | AssertionFailedError e) {
+                LOGGER.error("Error tearing down iotprojects", e);
+                exceptions.add(e);
+            }
+            try {
                 tearDownConfigs();
-                if (context.getExecutionException().isPresent()) {
-                    Path path = TestUtils.getFailedTestLogsPath(context);
-                    SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
-                }
-                SystemtestsKubernetesApps.deleteInfinispanServer();
-            } catch (Exception e) {
-                LOGGER.error("Error tearing down iot test: {}", e.getMessage());
-                throw e;
+            } catch(Exception | AssertionFailedError e) {
+                LOGGER.error("Error tearing down iotconfigs", e);
+                exceptions.add(e);
+            }
+            try {
+                tearDownInfinispan(context);
+            } catch(Exception | AssertionFailedError e) {
+                LOGGER.error("Error tearing down infinispan", e);
+                exceptions.add(e);
+            }
+            if (!exceptions.isEmpty()) {
+                throw new IllegalStateException("Errors have been produced during tear down");
             }
         }
+    }
+
+    private void tearDownInfinispan(ExtensionContext context) throws Exception {
+        if (context.getExecutionException().isPresent()) {
+            Path path = TestUtils.getFailedTestLogsPath(context);
+            SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
+        }
+        SystemtestsKubernetesApps.deleteInfinispanServer();
     }
 
     private void tearDownProjects() throws Exception {
