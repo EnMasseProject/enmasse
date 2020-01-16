@@ -8,6 +8,8 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
+import io.enmasse.systemtest.utils.TestUtils;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
@@ -42,7 +44,7 @@ public interface ITestSeparator {
         TimeMeasuringSystem.setTestName(testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName());
         TimeMeasuringSystem.startOperation(SystemtestsOperation.TEST_EXECUTION);
         log.info(String.join("", Collections.nCopies(100, separatorChar)));
-        log.info(String.format("%s.%s-STARTED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName()));
+        log.info(String.format("%s.%s-STARTED", testInfo.getTestClass().get().getName(), TestUtils.getTestName(testInfo)));
     }
 
     @AfterEach
@@ -57,7 +59,7 @@ public interface ITestSeparator {
             }
         }
         TimeMeasuringSystem.stopOperation(SystemtestsOperation.TEST_EXECUTION);
-        log.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName()));
+        log.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), TestUtils.getTestName(testInfo)));
         log.info(String.join("", Collections.nCopies(100, separatorChar)));
     }
 }

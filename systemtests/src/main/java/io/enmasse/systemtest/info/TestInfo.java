@@ -180,9 +180,9 @@ public class TestInfo {
     }
 
     public boolean isEndOfIotTests() {
-        int currentTestIndex = getCurrentTestIndex();
-        if (currentTestIndex + 1 < tests.size()) {
-            return getTags(tests.get(currentTestIndex + 1)).stream().noneMatch(TestTag.IOT_TAGS::contains);
+        int currentClassIndex = getCurrentClassIndex();
+        if (currentClassIndex + 1 < testClasses.size()) {
+            return getTags(testClasses.get(currentClassIndex + 1)).stream().noneMatch(TestTag.IOT_TAGS::contains);
         }
         return true;
     }
@@ -225,6 +225,17 @@ public class TestInfo {
                     .findFirst()
                     .get();
             return tests.indexOf(test);
+        }
+        return 0;
+    }
+
+    private int getCurrentClassIndex() {
+        if (currentTestClass != null && testClasses.size() > 0) {
+            TestIdentifier test = testClasses.stream()
+                    .filter(testClass -> isSameClass(testClass, currentTestClass))
+                    .findFirst()
+                    .get();
+            return testClasses.indexOf(test);
         }
         return 0;
     }

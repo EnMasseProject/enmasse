@@ -11,7 +11,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -25,8 +24,11 @@ import io.enmasse.systemtest.time.WaitPhase;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.vertx.core.VertxException;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.function.ThrowingSupplier;
+import org.junit.platform.commons.support.AnnotationSupport;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
@@ -34,6 +36,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
+import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
@@ -772,4 +775,28 @@ public class TestUtils {
     public static interface ThrowingCallable {
         void call() throws Exception;
     }
+
+    public static String getTestName(TestInfo testInfo) {
+        return getTestName(testInfo.getDisplayName(), testInfo.getTestMethod());
+    }
+
+    public static String getTestName(ExtensionContext extensionContext) {
+        return getTestName(extensionContext.getDisplayName(), extensionContext.getTestMethod());
+    }
+
+    public static String getTestName(String displayName, Optional<Method> testMethod) {
+        String testName;
+        if (testMethod.isPresent()) {
+            Optional<DisplayName> annotation = AnnotationSupport.findAnnotation(testMethod.get(), DisplayName.class);
+            if (annotation.isPresent()) {
+                testName = displayName;
+            } else {
+                testName = testMethod.get().getName();
+            }
+        } else {
+            testName = displayName;
+        }
+        return testName;
+    }
+
 }

@@ -17,8 +17,10 @@ import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
+
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -52,7 +54,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     public void beforeAll(ExtensionContext context) throws Exception {
         testInfo.setCurrentTestClass(context);
         try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
-            handleCallBackError(context, () -> {
+            handleCallBackError("Callback before all", context, () -> {
                 if (testInfo.isUpgradeTest()) {
                     if (operatorManager.isEnmasseBundleDeployed()) {
                         operatorManager.deleteEnmasseBundle();
@@ -92,7 +94,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
         beforeAllException = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
-        handleCallBackError(extensionContext, () -> {
+        handleCallBackError("Callback after all", extensionContext, () -> {
             if (env.skipCleanup() || env.skipUninstall()) {
                 LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
             } else if (testInfo.isOLMTest()) {
@@ -122,7 +124,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void afterEach(ExtensionContext extensionContext) throws Exception {
-        handleCallBackError(extensionContext, () -> {
+        handleCallBackError("Callback after each", extensionContext, () -> {
             LOGGER.info("Teardown section: ");
             if (testInfo.isTestShared()) {
                 tearDownSharedResources();
@@ -159,35 +161,35 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-        saveKubernetesState(context, throwable);
+        saveKubernetesState("Test execution", context, throwable);
     }
 
     @Override
     public void handleBeforeAllMethodExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-        saveKubernetesState(context, throwable);
+        saveKubernetesState("Test before all", context, throwable);
     }
 
     @Override
     public void handleBeforeEachMethodExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-        saveKubernetesState(context, throwable);
+        saveKubernetesState("Test before each", context, throwable);
     }
 
     @Override
     public void handleAfterEachMethodExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-        saveKubernetesState(context, throwable);
+        saveKubernetesState("Test after each", context, throwable);
     }
 
     @Override
     public void handleAfterAllMethodExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-        saveKubernetesState(context, throwable);
+        saveKubernetesState("Test after all", context, throwable);
     }
 
-    private void handleCallBackError(ExtensionContext context, ThrowableRunner runnable) throws Exception {
+    private void handleCallBackError(String description, ExtensionContext context, ThrowableRunner runnable) throws Exception {
         try {
             runnable.run();
         } catch (Exception ex) {
             try {
-                saveKubernetesState(context, ex);
+                saveKubernetesState(description, context, ex);
             } catch (Throwable ignored) {
             }
             LOGGER.error("Exception captured in Junit callback", ex);
@@ -195,8 +197,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         }
     }
 
-    private void saveKubernetesState(ExtensionContext extensionContext, Throwable throwable) throws Throwable {
-        LOGGER.warn("Test failed: Saving pod logs and info...");
+    private void saveKubernetesState(String description, ExtensionContext extensionContext, Throwable throwable) throws Throwable {
+        LOGGER.warn("Test failed at {}: Saving pod logs and info...", description);
         logPodsInInfraNamespace();
         if (env.isSkipSaveState()) {
             throw throwable;
@@ -252,7 +254,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     public static Path getPath(ExtensionContext extensionContext) {
-        String testMethod = extensionContext.getDisplayName();
+        String testMethod = TestUtils.getTestName(extensionContext);
         Class<?> testClass = extensionContext.getRequiredTestClass();
         return getPath(testMethod, testClass);
     }
