@@ -266,7 +266,7 @@ public class AddressProvisioner {
                 UsageInfo info = resourceUsage.computeIfAbsent("all", k -> new UsageInfo());
 
                 // Remove existing usage
-                if (appliedPlan != null && appliedPlan.getResources().get(resourceName) != null) {
+                if (appliedPlan != null && appliedPlan.getResources() != null && appliedPlan.getResources().get(resourceName) != null) {
                     info.subUsed(appliedPlan.getResources().get(resourceName));
                 }
 
@@ -286,8 +286,8 @@ public class AddressProvisioner {
                     }
                 } else if ("queue".equals(address.getSpec().getType()) || resourceRequest.getValue() < 1) {
                     // Remove existing usage
-                    if (appliedPlan != null && appliedPlan.getResources().get(resourceName) != null && address.getStatus() != null) {
-                        for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                    if (appliedPlan != null && appliedPlan.getResources() != null && appliedPlan.getResources().get(resourceName) != null && address.getStatus() != null) {
+                       for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
                             UsageInfo info = resourceUsage.get(brokerStatus.getClusterId());
                             if (info != null) {
                                 info.subUsed(appliedPlan.getResources().get(resourceName));

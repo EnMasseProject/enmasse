@@ -287,7 +287,7 @@ public class AddressController implements Watcher<Address> {
 
             Address existing = validAddresses.get(address.getSpec().getAddress());
             if (existing != null) {
-                if (!address.getStatus().getPhase().equals(Pending) && existing.getStatus().getPhase().equals(Pending)) {
+                if (!Pending.equals(address.getStatus().getPhase()) && Pending.equals(existing.getStatus().getPhase())) {
                     // If existing address is pending, and we are not pending, we take priority
                     String errorMessage = String.format("Address '%s' already exists with resource name '%s'", address.getSpec().getAddress(), address.getMetadata().getName());
                     existing.getStatus().setPhase(Pending);
