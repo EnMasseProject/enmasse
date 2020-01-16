@@ -214,8 +214,8 @@ public class ClientUtils {
                         .withCredentials(userCredentials)
                         .withMessageBody("msg no.%d")
                         .withTimeout(timeout)
-                        .withCount(30)
-                        .withAdditionalArgument(ClientArgument.DURATION, 30)
+                        .withCount(90)
+                        .withAdditionalArgument(ClientArgument.DURATION, 180 * 1000)
                         .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
                         .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
                 senderClient.runAsync(false);
@@ -281,5 +281,12 @@ public class ClientUtils {
             LOGGER.info("Stopping clients...");
             clients.forEach(ExternalMessagingClient::stop);
         }
+    }
+
+    @FunctionalInterface
+    public static interface ClientAttacher {
+
+        List<ExternalMessagingClient> attach(AddressSpace addressSpace, List<Address> destinations, UserCredentials userCredentials) throws Exception;
+
     }
 }

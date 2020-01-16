@@ -6,19 +6,18 @@ package io.enmasse.systemtest.isolated.console;
 
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.bases.web.GlobalConsoleTest;
+import io.enmasse.systemtest.bases.web.ConsoleTest;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.selenium.SeleniumFirefox;
-import org.junit.jupiter.api.Disabled;
+import io.enmasse.systemtest.selenium.SeleniumChrome;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.NON_PR;
 
-@SeleniumFirefox
-@Disabled("Ignore whilst 0.31 console rework is underway")
-class FirefoxGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolatedStandard {
+@Tag(NON_PR)
+@SeleniumChrome
+class ChromeConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
 
     @Test
     void testLoginLogout() throws Exception {
@@ -26,9 +25,8 @@ class FirefoxGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolate
     }
 
     @Test
-    @Tag(ACCEPTANCE)
     void testCreateDeleteAddressSpace() throws Exception {
-        doTestCreateAddressSpace(new AddressSpaceBuilder()
+        doTestCreateDeleteAddressSpace(new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-brokered")
                 .withNamespace(kubernetes.getInfraNamespace())
@@ -41,7 +39,7 @@ class FirefoxGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolate
                 .endAuthenticationService()
                 .endSpec()
                 .build());
-        doTestCreateAddressSpace(new AddressSpaceBuilder()
+        doTestCreateDeleteAddressSpace(new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-standard")
                 .withNamespace(kubernetes.getInfraNamespace())
@@ -49,23 +47,6 @@ class FirefoxGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolate
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
                 .withPlan(AddressSpacePlans.STANDARD_SMALL)
-                .withNewAuthenticationService()
-                .withName("standard-authservice")
-                .endAuthenticationService()
-                .endSpec()
-                .build());
-    }
-
-    @Test
-    void testConnectToAddressSpaceConsole() throws Exception {
-        doTestConnectToAddressSpaceConsole(new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withName("test-addr-space-console")
-                .withNamespace(kubernetes.getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withType(AddressSpaceType.BROKERED.toString())
-                .withPlan(AddressSpacePlans.BROKERED)
                 .withNewAuthenticationService()
                 .withName("standard-authservice")
                 .endAuthenticationService()
@@ -89,13 +70,8 @@ class FirefoxGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolate
     }
 
     @Test
-    void testSwitchAddressSpacePlan() throws Exception {
-        doTestSwitchAddressSpacePlan();
-    }
-
-    @Test
-    void testOpenConsoleCustomRoute() throws Exception {
-        doTestOpenConsoleCustomRoute();
+    void testFilterAddressSpace() throws Exception {
+        doTestFilterAddrSpace();
     }
 }
 

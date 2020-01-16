@@ -31,7 +31,6 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
-import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.shared.standard.TopicTest;
@@ -1183,22 +1182,6 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 assertEquals(Phase.Pending, address.getStatus().getPhase(), assertMessage);
                 assertTrue(address.getStatus().getMessages().contains("Quota exceeded"), "No status message is present");
             }
-        }
-
-        ConsoleWebPage page = new ConsoleWebPage(selenium, AddressSpaceUtils.getConsoleRoute(addressSpace), addressSpace, clusterUser);
-        page.openWebConsolePage();
-        page.openAddressesPageWebConsole();
-
-        for (Address dest : allowedDest) {
-            AddressWebItem item = selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
-            assertNotNull(item, String.format("Address '%s' is not visible in console", dest));
-            assertThat("Item is not in state Ready", item.getStatus(), is(AddressStatus.READY));
-        }
-
-        for (Address dest : notAllowedDest) {
-            AddressWebItem item = selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
-            assertNotNull(item, String.format("Address '%s' is not visible in console", dest));
-            assertThat("Item is not in state Pending", item.getStatus(), is(AddressStatus.PENDING));
         }
 
         resourcesManager.deleteAddresses(addressSpace);

@@ -15,7 +15,6 @@ import io.enmasse.address.model.KubeUtil;
 import io.enmasse.address.model.Phase;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -333,13 +332,6 @@ public class AddressSpaceUtils {
         } else {
             return Kubernetes.getInstance().getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getNamespace(), "amqps");
         }
-    }
-
-    public static String getConsoleRoute(AddressSpace addressSpace) {
-        Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
-        String consoleRoute = String.format("https://%s", consoleEndpoint.toString());
-        log.info(consoleRoute);
-        return consoleRoute;
     }
 
     public static Endpoint getConsoleEndpoint(AddressSpace addressSpace) {

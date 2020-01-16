@@ -4,29 +4,25 @@
  */
 package io.enmasse.systemtest.selenium.resources;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 public class WebItem {
-
-    protected List<WebElement> additionalInfo;
     protected WebElement webItem;
 
-    protected int getCountOfAdditionalInfoItem(String item) {
-        for (WebElement addInfo : additionalInfo) {
-            if (addInfo.getText().toUpperCase().contains(item.toUpperCase())) {
-                if (addInfo.findElement(By.tagName("strong")).getText().equals(""))
-                    return 0;
-                return Integer.parseInt(addInfo.findElement(By.tagName("strong")).getText());
-            }
-        }
-        return 0;
+    protected int defaultInt(String value) {
+        return Optional.ofNullable(value)
+                .filter(Predicate.not(String::isEmpty))
+                .map(Integer::parseInt)
+                .orElse(0);
     }
 
-    protected void readAdditionalInfo() {
-        additionalInfo = webItem.findElement(By.className("list-view-pf-additional-info")).findElements(By.tagName("div"));
+    protected double defaultDouble(String value) {
+        return Optional.ofNullable(value)
+                .filter(Predicate.not(String::isEmpty))
+                .map(Double::parseDouble)
+                .orElse(0.0);
     }
-
 }

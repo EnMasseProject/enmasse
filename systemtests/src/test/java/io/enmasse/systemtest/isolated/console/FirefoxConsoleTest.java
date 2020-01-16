@@ -6,20 +6,17 @@ package io.enmasse.systemtest.isolated.console;
 
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.bases.web.GlobalConsoleTest;
+import io.enmasse.systemtest.bases.web.ConsoleTest;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.selenium.SeleniumChrome;
-import org.junit.jupiter.api.Disabled;
+import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import static io.enmasse.systemtest.TestTag.NON_PR;
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
-@Tag(NON_PR)
-@SeleniumChrome
-@Disabled("Ignore whilst 0.31 console refactoring is underway")
-class ChromeGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolatedStandard {
+@SeleniumFirefox
+class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
 
     @Test
     void testLoginLogout() throws Exception {
@@ -27,8 +24,9 @@ class ChromeGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolated
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateDeleteAddressSpace() throws Exception {
-        doTestCreateAddressSpace(new AddressSpaceBuilder()
+        doTestCreateDeleteAddressSpace(new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-brokered")
                 .withNamespace(kubernetes.getInfraNamespace())
@@ -41,7 +39,7 @@ class ChromeGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolated
                 .endAuthenticationService()
                 .endSpec()
                 .build());
-        doTestCreateAddressSpace(new AddressSpaceBuilder()
+        doTestCreateDeleteAddressSpace(new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-standard")
                 .withNamespace(kubernetes.getInfraNamespace())
@@ -49,23 +47,6 @@ class ChromeGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolated
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
                 .withPlan(AddressSpacePlans.STANDARD_SMALL)
-                .withNewAuthenticationService()
-                .withName("standard-authservice")
-                .endAuthenticationService()
-                .endSpec()
-                .build());
-    }
-
-    @Test
-    void testConnectToAddressSpaceConsole() throws Exception {
-        doTestConnectToAddressSpaceConsole(new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withName("test-addr-space-console")
-                .withNamespace(kubernetes.getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withType(AddressSpaceType.BROKERED.toString())
-                .withPlan(AddressSpacePlans.BROKERED)
                 .withNewAuthenticationService()
                 .withName("standard-authservice")
                 .endAuthenticationService()
@@ -91,6 +72,11 @@ class ChromeGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolated
     @Test
     void testSwitchAddressSpacePlan() throws Exception {
         doTestSwitchAddressSpacePlan();
+    }
+
+    @Test
+    void testFilterAddressSpace() throws Exception {
+        doTestFilterAddrSpace();
     }
 }
 

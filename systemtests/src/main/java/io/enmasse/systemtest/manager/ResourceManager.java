@@ -83,6 +83,14 @@ public abstract class ResourceManager {
         return null;
     }
 
+    public void addToAddressSpaces(AddressSpace addressSpace) throws Exception {
+        throw new Exception("Not implemented in resource manager");
+    }
+
+    public void deleteAddressSpaceCreatedBySC(AddressSpace addressSpace) throws Exception {
+        throw new Exception("Not implemented in resource manager");
+    }
+
     //------------------------------------------------------------------------------------------------
     // Client factories
     //------------------------------------------------------------------------------------------------

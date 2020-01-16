@@ -7,95 +7,93 @@ package io.enmasse.systemtest.selenium.resources;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-public class ConnectionWebItem extends WebItem implements Comparable<Object> {
+import java.util.Optional;
+import java.util.function.Predicate;
 
-    private String name;
-    private String headerText;
-    private int sendersCount;
-    private int receiversCount;
-    private int messagesIn;
-    private int messagesOut;
-    private boolean encrypted;
+public class ConnectionWebItem extends WebItem implements Comparable<ConnectionWebItem> {
+    private String host;
+    private String containerId;
+    private String protocol;
+    private String timeCreated;
+    private double messagesIn;
+    private double messagesOut;
+    private int senders;
+    private int receivers;
 
     public ConnectionWebItem(WebElement item) {
         this.webItem = item;
-        this.name = item.findElement(By.className("list-group-item-heading")).getText();
-        this.headerText = item.findElement(By.className("list-group-item-text")).getText();
-        this.readAdditionalInfo();
-        this.sendersCount = getCountOfAdditionalInfoItem("Senders");
-        this.receiversCount = getCountOfAdditionalInfoItem("Receivers");
-        this.messagesIn = getCountOfAdditionalInfoItem("Messages In");
-        this.messagesOut = getCountOfAdditionalInfoItem("Messages Out");
-
+        this.host = parseName(webItem.findElement(By.xpath("./td[@data-label='host']")));
+        this.containerId = webItem.findElement(By.xpath("./td[@data-label='Container ID']")).getText();
+        this.protocol = webItem.findElement(By.xpath("./td[@data-label='Protocol']")).getText().split(" ")[0];
+        this.timeCreated = webItem.findElement(By.xpath("./td[@data-label='Time created']")).getText();
+        this.messagesIn = defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-4']")).getText());
+        this.messagesOut = defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-5']")).getText());
         try {
-            item.findElement(By.className("fa-lock-fa"));
-            this.encrypted = true;
-        } catch (Exception ex) {
-            this.encrypted = false;
+            this.senders = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Senders']")).getText());
+        } catch (Exception e) {
+            this.senders = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Senders']")).getText());
+        }
+        try {
+            this.receivers = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Receivers']")).getText());
+        } catch (Exception e) {
+            this.receivers = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Receivers']")).getText());
         }
     }
 
-    public WebElement getConnectionElement() {
-        return webItem;
+    public String getHost() {
+        return host;
     }
 
-    public String getName() {
-        return name;
+    public String getContainerId() {
+        return containerId;
     }
 
-    public int getSendersCount() {
-        return sendersCount;
+    public String getProtocol() {
+        return protocol;
     }
 
-    public int getReceiversCount() {
-        return receiversCount;
+    public String getTimeCreated() {
+        return timeCreated;
     }
 
-    public int getMessagesIn() {
+    public double getMessagesIn() {
         return messagesIn;
     }
 
-    public int getMessagesOut() {
+    public double getMessagesOut() {
         return messagesOut;
     }
 
-    public boolean isEncrypted() {
-        return encrypted;
+    public int getSenders() {
+        return senders;
     }
 
-
-    public String getSomething() {
-        throw new IllegalStateException("method is not implemented");
-//        String[] types = type.split(" +");
-//        StringBuilder something = new StringBuilder();
-//        for (int i = 0; i < types.length - 1; i++) {
-//            something.append(types[i]);
-//        }
-//        return something.toString(); //TODO! in web-console filled as "not available"
+    public int getReceivers() {
+        return receivers;
     }
 
-    public String getUser() {
-        String[] types = headerText.split(" +");
-        return types[types.length - 1];
-    }
-
-    public String getType() {
-        return headerText;
-    }
-
-    public String getContainerID() {
-        String[] types = headerText.split(" +");
-        return types[0];
-    }
-
-    @Override
-    public int compareTo(Object o) {
-        return 0;
+    private String parseName(WebElement elem) {
+        try {
+            return elem.findElement(By.tagName("a")).getText();
+        } catch (Exception ex) {
+            return elem.findElements(By.tagName("p")).get(0).getText();
+        }
     }
 
     @Override
     public String toString() {
-        return String.format("name: %s, senders: %d, receivers: %d, Messages In: %d, Messages Out: %d",
-                this.name, this.sendersCount, this.receiversCount, this.messagesIn, this.messagesOut);
+        return String.format("host: %s, containerId: %s, messagesIn: %f, messagesOut: %f, senders: %d, receivers: %d",
+                this.host,
+                this.containerId,
+                this.messagesIn,
+                this.messagesOut,
+                this.senders,
+                this.receivers);
     }
+
+    @Override
+    public int compareTo(ConnectionWebItem o) {
+        return host.compareTo(o.host);
+    }
+
 }

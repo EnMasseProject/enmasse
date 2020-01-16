@@ -194,9 +194,9 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         BindingSecretData restricted = ocPage.viewSecretOfBinding(brokered, restrictedAccesId);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(brokered);
-        consolePage.login(ocTestUser);
-        consolePage.createAddressWebConsole(queue, false);
-        consolePage.createAddressWebConsole(topic, true);
+        consolePage.openConsolePage();
+        consolePage.createAddress(queue);
+        consolePage.createAddress(topic);
 
         getClientUtils().assertCanConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic), resourcesManager);
         getClientUtils().assertCannotConnect(brokered, restricted.getCredentials(), Arrays.asList(queue, topic), resourcesManager);
@@ -251,8 +251,8 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         BindingSecretData credentials = ocPage.viewSecretOfBinding(addressSpace, bindingID);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(addressSpace);
-        consolePage.login(ocTestUser);
-        consolePage.createAddressWebConsole(queue, true);
+        consolePage.openConsolePage();
+        consolePage.createAddress(queue);
 
         AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace);
         client.getConnectOptions()
@@ -287,7 +287,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
 
         //open console login web page and use OpenShift credentials for login
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(brokeredSpace);
-        consolePage.login(ocTestUser);
+        consolePage.openConsolePage();
     }
 
     @Test
@@ -328,8 +328,8 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         BindingSecretData credentials = ocPage.viewSecretOfBinding(addressSpace, bindingID);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(addressSpace);
-        consolePage.login(ocTestUser);
-        consolePage.createAddressWebConsole(queue, true);
+        consolePage.openConsolePage();
+        consolePage.createAddress(queue);
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(new ProtonJMSClientSender())
@@ -369,8 +369,8 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         addressSpace = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(addressSpace);
-        consolePage.login(ocTestUser);
-        consolePage.createAddressWebConsole(new AddressBuilder()
+        consolePage.openConsolePage();
+        consolePage.createAddress(new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(addressSpace.getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
@@ -380,7 +380,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .withAddress("test-queue")
                 .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
                 .endSpec()
-                .build(), true);
+                .build());
 
         isolatedResourcesManager.deleteAddressSpaceCreatedBySC(addressSpace);
 
