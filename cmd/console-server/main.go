@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/99designs/gqlgen/cmd"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/handler"
@@ -22,11 +23,13 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util"
 	user "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
 	"github.com/vektah/gqlparser/gqlerror"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/clientcmd/api"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"reflect"
-	config2 "sigs.k8s.io/controller-runtime/pkg/client/config"
 	"time"
 )
 
@@ -67,21 +70,77 @@ Major items that are unfinished:
 
 
 */
+
+type Tracer struct {
+	http.RoundTripper
+	name string
+}
+
+// RoundTrip calls the nested RoundTripper while printing each request and
+// response/error to os.Stderr on either side of the nested call.  WARNING: this
+// may output sensitive information including bearer tokens.
+func (t *Tracer) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Dump the request to os.Stderr.
+	b, err := httputil.DumpRequestOut(req, true)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("%s Tracing rep %+v", t.name, req)
+	os.Stderr.Write(b)
+	os.Stderr.Write([]byte{'\n'})
+
+	// Call the nested RoundTripper.
+	resp, err := t.RoundTripper.RoundTrip(req)
+
+	// If an error was returned, dump it to os.Stderr.
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return resp, err
+	}
+
+	// Dump the response to os.Stderr.
+	b, err = httputil.DumpResponse(resp, req.URL.Query().Get("watch") != "true")
+	if err != nil {
+		return nil, err
+	}
+	os.Stderr.Write(b)
+	os.Stderr.Write([]byte{'\n'})
+
+	return resp, err
+}
+
 func authHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		accessToken := req.Header.Get("X-Forwarded-Access-Token")
+		log.Printf("KWDEBUG Bearer token : " + accessToken)
+
 		if accessToken == "" {
 			rw.WriteHeader(401)
 			return
 		}
 
-		config, err := config2.GetConfig()
+		kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+			clientcmd.NewDefaultClientConfigLoadingRules(),
+			&clientcmd.ConfigOverrides{
+				AuthInfo: api.AuthInfo{
+					Token: accessToken,
+				},
+			},
+		)
+		log.Printf("KWDEBUG Using kubeconfig: %+v", kubeconfig)
+
+		config, err :=  kubeconfig.ClientConfig()
+
 		if err != nil {
 			log.Printf("Failed to build config : %v", err)
 			rw.WriteHeader(500)
 			return
 		}
-		config.BearerToken = accessToken
+
+		log.Printf("Wrapping transport")
+		config.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
+			return &Tracer{rt, "auth"}
+		}
 
 		userclientset, err := user.NewForConfig(config)
 		if err != nil {
@@ -113,7 +172,17 @@ func main() {
 		panic(err)
 	}
 
-	config, err := config2.GetConfig()
+
+	kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		&clientcmd.ConfigOverrides{},
+	)
+
+	config, err :=  kubeconfig.ClientConfig()
+	//config.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
+	//	return &Tracer{rt, "core"}
+	//}
+
 	if err != nil {
 		panic(err)
 	}
