@@ -3,6 +3,9 @@ include ../Makefile.go.mk
 
 build_deps: build/operatorImageMap.yaml
 
+run:
+	ENMASSE_IMAGE_MAP_FILE=./build/operatorImageMap.yaml ./build/controller-manager
+
 build/operatorImageMap.yaml:
 	mkdir -p build
 	echo "" > "$@"
