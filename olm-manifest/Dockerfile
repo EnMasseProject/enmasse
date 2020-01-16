@@ -10,7 +10,7 @@ ARG commit
 ARG maven_version
 ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit}
 
-ADD target/olm-manifest-${MAVEN_VERSION}-dist.tar.gz /
+ADD target/olm-manifest-${maven_version}-dist.tar.gz /
 
 RUN /usr/bin/initializer -m /manifests -o bundles.db
 ENTRYPOINT ["/usr/bin/registry-server"]

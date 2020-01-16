@@ -10,6 +10,6 @@ ARG commit
 ARG maven_version
 ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit} ENMASSE_IMAGE_MAP_FILE=/etc/operatorImageMap.yaml
 
-ADD target/controller-manager-${MAVEN_VERSION}-dist.tar.gz /
+ADD target/controller-manager-${maven_version}-dist.tar.gz /
 
 ENTRYPOINT /controller-manager

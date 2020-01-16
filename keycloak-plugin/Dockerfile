@@ -9,7 +9,7 @@ ARG commit
 ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 ENV KEYCLOAK_PLUGIN_DIR /keycloak-plugin
 
-ADD ./build/keycloak-plugin-${MAVEN_VERSION}.tar.gz ${KEYCLOAK_PLUGIN_DIR}/
+ADD ./build/keycloak-plugin-${maven_version}.tar.gz ${KEYCLOAK_PLUGIN_DIR}/
 
 USER 1000
 

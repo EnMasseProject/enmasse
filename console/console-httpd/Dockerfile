@@ -7,7 +7,7 @@ ARG maven_version
 ARG commit
 ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
-ADD target/console-httpd-${MAVEN_VERSION}-dist.tar.gz /
+ADD target/console-httpd-${maven_version}-dist.tar.gz /
 
 EXPOSE 8080
 EXPOSE 9443

@@ -6,6 +6,6 @@ ARG maven_version
 ARG commit
 ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
-ADD target/console-init-${MAVEN_VERSION}-dist.tar.gz /
+ADD target/console-init-${maven_version}-dist.tar.gz /
 
 CMD ["/oauth-proxy/bin/init.sh", "/apps/"]

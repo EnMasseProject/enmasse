@@ -7,7 +7,7 @@ ARG commit
 ARG maven_version
 ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
-ADD target/address-space-controller-${MAVEN_VERSION}-dist.tar.gz /
+ADD target/address-space-controller-${maven_version}-dist.tar.gz /
 
 ENV LOG_LEVEL info
 
