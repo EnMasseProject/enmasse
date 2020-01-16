@@ -12,7 +12,9 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func (r *Resolver) AddressSpace_consoleapi_enmasse_io_v1beta1() AddressSpace_consoleapi_enmasse_io_v1beta1Resolver {
@@ -199,15 +201,30 @@ func (r *queryResolver) MessagingCertificateChain(ctx context.Context, input v1.
 }
 
 func (r *mutationResolver) CreateAddressSpace(ctx context.Context, input v1beta1.AddressSpace) (*v1.ObjectMeta, error) {
-	panic("implement me")
+	requestState := server.GetRequestStateFromContext(ctx)
+
+	nw, e := requestState.EnmasseV1beta1Client.AddressSpaces(input.Namespace).Create(&input)
+	if e != nil {
+		return nil, e
+	}
+	return &nw.ObjectMeta, e
 }
 
 func (r *mutationResolver) PatchAddressSpace(ctx context.Context, input v1.ObjectMeta, patch string, patchType string) (*bool, error) {
-	panic("implement me")
+	pt := types.PatchType(patchType)
+	requestState := server.GetRequestStateFromContext(ctx)
+
+	_, e := requestState.EnmasseV1beta1Client.AddressSpaces(input.Namespace).Patch(input.Name, pt, []byte(patch))
+	b := e == nil
+	return &b, e
 }
 
 func (r *mutationResolver) DeleteAddressSpace(ctx context.Context, input v1.ObjectMeta) (*bool, error) {
-	panic("implement me")
+	requestState := server.GetRequestStateFromContext(ctx)
+
+	e := requestState.EnmasseV1beta1Client.AddressSpaces(input.Namespace).Delete(input.Name, &v1.DeleteOptions{})
+	b := e == nil
+	return &b, e
 }
 
 func (r *queryResolver) AddressSpaceCommand(ctx context.Context, input v1beta1.AddressSpace) (string, error) {
