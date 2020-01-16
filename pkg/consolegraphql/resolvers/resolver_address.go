@@ -12,6 +12,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"strings"
@@ -152,7 +153,9 @@ func (r *addressSpecK8sResolver) Type(ctx context.Context, obj *v1beta1.AddressS
 }
 
 func (r *mutationResolver) CreateAddress(ctx context.Context, input v1beta1.Address) (*metav1.ObjectMeta, error) {
-	nw, e := r.CoreConfig.Addresses(input.Namespace).Create(&input)
+	requestState := server.GetRequestStateFromContext(ctx)
+
+	nw, e := requestState.EnmasseV1beta1Client.Addresses(input.Namespace).Create(&input)
 	if e != nil {
 		return nil, e
 	}
@@ -161,14 +164,17 @@ func (r *mutationResolver) CreateAddress(ctx context.Context, input v1beta1.Addr
 
 func (r *mutationResolver) PatchAddress(ctx context.Context, input metav1.ObjectMeta, patch string, patchType string) (*bool, error) {
 	pt := types.PatchType(patchType)
-	//fmt.Printf("JSON patch : %s patch type %s pt %s", patch0, patchType, pt)
-	_, e := r.CoreConfig.Addresses(input.Namespace).Patch(input.Name, pt, []byte(patch))
+	requestState := server.GetRequestStateFromContext(ctx)
+
+	_, e := requestState.EnmasseV1beta1Client.Addresses(input.Namespace).Patch(input.Name, pt, []byte(patch))
 	b := e == nil
 	return &b, e
 }
 
 func (r *mutationResolver) DeleteAddress(ctx context.Context, input metav1.ObjectMeta) (*bool, error) {
-	e := r.CoreConfig.Addresses(input.Namespace).Delete(input.Name, &metav1.DeleteOptions{})
+	requestState := server.GetRequestStateFromContext(ctx)
+
+	e := requestState.EnmasseV1beta1Client.Addresses(input.Namespace).Delete(input.Name, &metav1.DeleteOptions{})
 	b := e == nil
 	return &b, e
 }

@@ -81,8 +81,17 @@ func authHandler(next http.Handler) http.Handler {
 			return
 		}
 
+		coreClient, err := enmassev1beta1.NewForConfig(config)
+		if err != nil {
+			log.Printf("Failed to build client set : %v", err)
+			rw.WriteHeader(500)
+			return
+		}
+
+
 		requestState := &server.RequestState{
 			UserInterface: userclientset.Users(),
+			EnmasseV1beta1Client: coreClient,
 		}
 
 		ctx := server.ContextWithRequestState(requestState, req.Context())
@@ -113,9 +122,16 @@ func developmentHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		requestState := &server.RequestState{
-			UserInterface: userclientset.Users(),
+		coreClient, err := enmassev1beta1.NewForConfig(config)
+		if err != nil {
+			log.Printf("Failed to build client set : %v", err)
+			rw.WriteHeader(500)
+			return
 		}
+
+		requestState := &server.RequestState{
+			UserInterface:        userclientset.Users(),
+			EnmasseV1beta1Client: coreClient}
 
 		ctx := server.ContextWithRequestState(requestState, req.Context())
 		next.ServeHTTP(rw, req.WithContext(ctx))
