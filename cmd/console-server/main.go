@@ -86,8 +86,7 @@ func (t *Tracer) RoundTrip(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 	log.Printf("%s Tracing rep %+v", t.name, req)
-	os.Stderr.Write(b)
-	os.Stderr.Write([]byte{'\n'})
+	log.Printf("REQ: %s\n", string(b))
 
 	// Call the nested RoundTripper.
 	resp, err := t.RoundTripper.RoundTrip(req)
