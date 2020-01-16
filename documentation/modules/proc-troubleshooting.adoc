@@ -76,7 +76,7 @@ The VERSION should correspond to the Major.Minor version of the product, whereas
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} logs dc/address-space-controller
+{cmdcli} logs deployment/address-space-controller
 ----
 
 = Addresses are not getting ready
@@ -93,13 +93,13 @@ The VERSION should correspond to the Major.Minor version of the product, whereas
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} logs dc/agent._uuid_
+{cmdcli} logs deployment/agent._uuid_
 ----
 
 . If using `standard` address space, check `admin` pod logs for errors:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} logs dc/admin._uuid_ -c standard-controller
-{cmdcli} logs dc/admin._uuid_ -c agent
+{cmdcli} logs deployment/admin._uuid_ -c standard-controller
+{cmdcli} logs deployment/admin._uuid_ -c agent
 ----
