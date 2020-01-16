@@ -254,6 +254,8 @@ public class SystemtestsKubernetesApps {
             return getInfinispanEndpoint(INFINISPAN_PROJECT);
         }
 
+        deleteInfinispanServer();
+
         Kubernetes.getInstance().createNamespace(INFINISPAN_PROJECT);
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
