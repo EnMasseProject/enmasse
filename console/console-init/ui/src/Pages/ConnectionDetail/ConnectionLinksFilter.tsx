@@ -294,6 +294,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       <DataToolbarGroup variant="filter-group">
         <DataToolbarFilter categoryName="Filter">
           <Dropdown
+            id="cl-filter-dropdown"
             position="left"
             onSelect={onFilterSelect}
             isOpen={filterIsExpanded}
@@ -306,10 +307,12 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
             }
             dropdownItems={filterMenuItems.map(option => (
               <DropdownItem
+                id={`cl-filter-dropdown-item${option.key}`}
                 key={option.key}
                 value={option.value}
                 itemID={option.key}
-                component={"button"}>
+                component={"button"}
+              >
                 {option.value}
               </DropdownItem>
             ))}
@@ -320,10 +323,12 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
             <DataToolbarFilter
               chips={filterNames}
               deleteChip={onDelete}
-              categoryName="Name">
+              categoryName="Name"
+            >
               {filterValue && filterValue === "Name" && (
                 <InputGroup>
                   <Select
+                    id="cl-filter-select-name"
                     variant={SelectVariant.typeahead}
                     aria-label="Select a Name"
                     onToggle={onNameSelectToggle}
@@ -338,7 +343,8 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     ariaLabelledBy={"typeahead-select-id"}
                     placeholderText="Select name"
                     isDisabled={false}
-                    isCreatable={false}>
+                    isCreatable={false}
+                  >
                     {nameOptions &&
                       nameOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
@@ -346,9 +352,11 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     {/* {} */}
                   </Select>
                   <Button
+                    id="cl-filter-search-name"
                     variant={ButtonVariant.control}
                     aria-label="search button for search name"
-                    onClick={onClickSearchIcon}>
+                    onClick={onClickSearchIcon}
+                  >
                     <SearchIcon />
                   </Button>
                 </InputGroup>
@@ -359,10 +367,12 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
             <DataToolbarFilter
               chips={filterAddresses}
               deleteChip={onDelete}
-              categoryName="Address">
+              categoryName="Address"
+            >
               {filterValue && filterValue === "Address" && (
                 <InputGroup>
                   <Select
+                    id="cl-filter-select-address"
                     variant={SelectVariant.typeahead}
                     aria-label="Select a Address"
                     onToggle={onAddressSelectToggle}
@@ -377,7 +387,8 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     ariaLabelledBy={"typeahead-select-id"}
                     placeholderText="Select Address"
                     isDisabled={false}
-                    isCreatable={false}>
+                    isCreatable={false}
+                  >
                     {addressOptions &&
                       addressOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
@@ -385,9 +396,11 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     {/* {} */}
                   </Select>
                   <Button
+                    id="cl-filter-search-address"
                     variant={ButtonVariant.control}
                     aria-label="search button for search address"
-                    onClick={onClickSearchIcon}>
+                    onClick={onClickSearchIcon}
+                  >
                     <SearchIcon />
                   </Button>
                 </InputGroup>
@@ -398,9 +411,11 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
             <DataToolbarFilter
               chips={filterRole ? [filterRole] : []}
               deleteChip={onDelete}
-              categoryName="Role">
+              categoryName="Role"
+            >
               {filterValue === "Role" && (
                 <Dropdown
+                  id="cl-filter-dropdown-role"
                   position="left"
                   onSelect={onRoleSelect}
                   isOpen={roleIsExpanded}
@@ -412,10 +427,12 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                   }
                   dropdownItems={roleMenuItems.map(option => (
                     <DropdownItem
+                      id={`cl-filter-dropdown-role${option.key}`}
                       key={option.key}
                       value={option.value}
                       itemID={option.key}
-                      component={"button"}>
+                      component={"button"}
+                    >
                       {option.value}
                     </DropdownItem>
                   ))}
@@ -433,7 +450,8 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onDeleteAll}>
+      clearAllFilters={onDeleteAll}
+    >
       <DataToolbarContent>
         <DataToolbarToggleGroup
           toggleIcon={
@@ -446,7 +464,8 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
               )}
             </>
           }
-          breakpoint="xl">
+          breakpoint="xl"
+        >
           {toggleGroupItems}
         </DataToolbarToggleGroup>
         {width < 769 && (

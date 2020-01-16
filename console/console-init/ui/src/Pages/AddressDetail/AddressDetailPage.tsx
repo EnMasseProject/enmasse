@@ -18,7 +18,12 @@ import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { IAddressDetailResponse } from "src/Types/ResponseTypes";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { DELETE_ADDRESS, RETURN_ADDRESS_DETAIL, EDIT_ADDRESS, CURRENT_ADDRESS_SPACE_PLAN  } from "src/Queries/Queries";
+import {
+  DELETE_ADDRESS,
+  RETURN_ADDRESS_DETAIL,
+  EDIT_ADDRESS,
+  CURRENT_ADDRESS_SPACE_PLAN
+} from "src/Queries/Queries";
 import { IObjectMeta_v1_Input } from "../AddressSpaceDetail/AddressSpaceDetailPage";
 import { AddressLinksWithFilterAndPagination } from "./AddressLinksWithFilterAndPaginationPage";
 import { EditAddress } from "../EditAddressPage";
@@ -30,14 +35,21 @@ export default function AddressDetailPage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link to={"/"}>Home</Link>
+          <Link id="ad-page-link-home" to={"/"}>
+            Home
+          </Link>
         </BreadcrumbItem>
         <BreadcrumbItem>
-          <Link to={`/address-spaces/${namespace}/${name}/${type}/addresses`}>
+          <Link
+            id="ad-page-link-addresses"
+            to={`/address-spaces/${namespace}/${name}/${type}/addresses`}
+          >
             {name}
           </Link>
         </BreadcrumbItem>
-        <BreadcrumbItem isActive={true}>Address</BreadcrumbItem>
+        <BreadcrumbItem id="ad-page-link-address" isActive={true}>
+          Address
+        </BreadcrumbItem>
       </Breadcrumb>
     ),
     [name, namespace, type]
@@ -48,8 +60,10 @@ export default function AddressDetailPage() {
   const client = useApolloClient();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  const [addressPlan, setAddressPlan] = React.useState<string|null>(null);
-  const [addressSpacePlan, setAddressSpacePlan] = React.useState<string|null>(null);
+  const [addressPlan, setAddressPlan] = React.useState<string | null>(null);
+  const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(
+    null
+  );
   const { loading, error, data, refetch } = useQuery<IAddressDetailResponse>(
     RETURN_ADDRESS_DETAIL(name, namespace, addressname),
     { pollInterval: 20000 }
@@ -57,10 +71,12 @@ export default function AddressDetailPage() {
 
   const addressSpaces = useQuery<IAddressSpacePlanResponse>(
     CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
-  ).data || {addressSpaces: { AddressSpaces: [] }};
+  ).data || { addressSpaces: { AddressSpaces: [] } };
 
-  if(!addressSpacePlan && addressSpaces.addressSpaces.AddressSpaces[0]){
-    setAddressSpacePlan(addressSpaces.addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta.Name);
+  if (!addressSpacePlan && addressSpaces.addressSpaces.AddressSpaces[0]) {
+    setAddressSpacePlan(
+      addressSpaces.addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta.Name
+    );
   }
 
   if (loading) return <Loading />;
@@ -109,7 +125,8 @@ export default function AddressDetailPage() {
             Name: addressDetail.ObjectMeta.Name,
             Namespace: addressDetail.ObjectMeta.Namespace.toString()
           },
-          jsonPatch: '[{"op":"replace","path":"/Plan","value":"' + addressPlan + '"}]',
+          jsonPatch:
+            '[{"op":"replace","path":"/Plan","value":"' + addressPlan + '"}]',
           patchType: "application/json-patch+json"
         }
       });
@@ -145,22 +162,25 @@ export default function AddressDetailPage() {
             key="confirm"
             id="addr-detail-edit-confirm"
             variant="primary"
-            onClick={handleSaving}>
+            onClick={handleSaving}
+          >
             Confirm
           </Button>,
           <Button
             key="cancel"
             id="addr-detail-edit-cancel"
             variant="link"
-            onClick={() => setIsEditModalOpen(!isEditModalOpen)}>
+            onClick={() => setIsEditModalOpen(!isEditModalOpen)}
+          >
             Cancel
           </Button>
         ]}
-        isFooterLeftAligned>
+        isFooterLeftAligned
+      >
         <EditAddress
           name={addressDetail.ObjectMeta.Name}
           type={addressDetail.Spec.Plan.Spec.AddressType}
-          plan={addressPlan||""}
+          plan={addressPlan || ""}
           addressSpacePlan={addressSpacePlan}
           onChange={setAddressPlan}
         />

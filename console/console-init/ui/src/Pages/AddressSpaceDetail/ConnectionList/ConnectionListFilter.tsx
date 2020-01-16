@@ -296,10 +296,12 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
             }
             dropdownItems={filterMenuItems.map(option => (
               <DropdownItem
+                id={`cl-filter-dropdown-item${option.key}`}
                 key={option.key}
                 value={option.value}
                 itemID={option.key}
-                component={"button"}>
+                component={"button"}
+              >
                 {option.value}
               </DropdownItem>
             ))}
@@ -309,10 +311,12 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
           <DataToolbarFilter
             chips={hostnames}
             deleteChip={onDelete}
-            categoryName="Hostname">
+            categoryName="Hostname"
+          >
             {filterValue && filterValue === "Hostname" && (
               <InputGroup>
                 <Select
+                  id="cl-filter-select-hostname"
                   variant={SelectVariant.typeahead}
                   aria-label="Select a hostname"
                   onToggle={onHostnameSelectToggle}
@@ -327,7 +331,8 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   ariaLabelledBy={"typeahead-select-id"}
                   placeholderText="Select Hostname"
                   isDisabled={false}
-                  isCreatable={false}>
+                  isCreatable={false}
+                >
                   {hostnameOptions &&
                     hostnameOptions.map((option, index) => (
                       <SelectOption key={index} value={option} />
@@ -338,7 +343,8 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   id="cl-filter-search-btn"
                   variant={ButtonVariant.control}
                   aria-label="search button for search input"
-                  onClick={onClickSearchIcon}>
+                  onClick={onClickSearchIcon}
+                >
                   <SearchIcon />
                 </Button>
               </InputGroup>
@@ -349,10 +355,12 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
           <DataToolbarFilter
             chips={containerIds}
             deleteChip={onDelete}
-            categoryName="Container">
+            categoryName="Container"
+          >
             {filterValue && filterValue === "Container" && (
               <InputGroup>
                 <Select
+                  id="cl-filter-select-address"
                   variant={SelectVariant.typeahead}
                   aria-label="Select a Address"
                   onToggle={onContainerSelectToggle}
@@ -367,7 +375,8 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   ariaLabelledBy={"typeahead-select-id"}
                   placeholderText="Select Container"
                   isDisabled={false}
-                  isCreatable={false}>
+                  isCreatable={false}
+                >
                   {containerOptions &&
                     containerOptions.map((option, index) => (
                       <SelectOption key={index} value={option} />
@@ -375,9 +384,11 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   {/* {} */}
                 </Select>
                 <Button
+                  id="cl-filter-search"
                   variant={ButtonVariant.control}
                   aria-label="search button for search input"
-                  onClick={onClickSearchIcon}>
+                  onClick={onClickSearchIcon}
+                >
                   <SearchIcon />
                 </Button>
               </InputGroup>
@@ -400,7 +411,8 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
             )}
           </>
         }
-        breakpoint="xl">
+        breakpoint="xl"
+      >
         {toggleGroupItems}
       </DataToolbarToggleGroup>
       {width < 769 && (
@@ -418,7 +430,8 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
         id="data-toolbar-with-filter"
         className="pf-m-toggle-group-container"
         collapseListedFiltersBreakpoint="md"
-        clearAllFilters={clearAllFilters}>
+        clearAllFilters={clearAllFilters}
+      >
         <DataToolbarContent>{toolbarItems}</DataToolbarContent>
       </DataToolbar>
     </>
