@@ -6,19 +6,15 @@ package io.enmasse.systemtest.shared.brokered.clients.rhea;
 
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
-import io.enmasse.systemtest.broker.ArtemisManagement;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
-import io.enmasse.systemtest.resolvers.ArtemisManagementParameterResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
 @Tag(ACCEPTANCE)
-@ExtendWith(ArtemisManagementParameterResolver.class)
 class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
 
     @Test
@@ -33,14 +29,14 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
 
     @Test
     @DisplayName("testRoundRobinReceiver")
-    void testRoundRobinReceiver(ArtemisManagement artemisManagement) throws Exception {
-        doRoundRobinReceiverTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
+    void testRoundRobinReceiver() throws Exception {
+        doRoundRobinReceiverTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
     }
 
     @Test
     @DisplayName("testTopicSubscribe")
-    void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
-        doTopicSubscribeTest(artemisManagement, new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
+    void testTopicSubscribe() throws Exception {
+        doTopicSubscribeTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
     }
 
     @Test
@@ -60,8 +56,8 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
 
     @Test
     @DisplayName("testMessageSelectorTopic")
-    void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
-        doMessageSelectorTopicTest(artemisManagement, new RheaClientSender(logPath), new RheaClientSender(logPath),
+    void testMessageSelectorTopic() throws Exception {
+        doMessageSelectorTopicTest(new RheaClientSender(logPath), new RheaClientSender(logPath),
                 new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
     }
 }

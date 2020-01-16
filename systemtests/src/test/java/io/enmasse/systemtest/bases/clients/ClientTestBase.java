@@ -11,7 +11,6 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestBaseShared;
-import io.enmasse.systemtest.broker.ArtemisManagement;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientType;
@@ -21,7 +20,6 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
@@ -126,7 +124,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 String.format("Expected %d received messages", expectedMsgCount));
     }
 
-    protected void doRoundRobinReceiverTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient receiver, AbstractClient receiver2)
+    protected void doRoundRobinReceiverTest(AbstractClient sender, AbstractClient receiver, AbstractClient receiver2)
             throws Exception {
         clients.addAll(Arrays.asList(sender, receiver, receiver2));
         int expectedMsgCount = 10;
@@ -172,11 +170,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> recResult = receiverClient1.runAsync();
         Future<Boolean> rec2Result = receiverClient2.runAsync();
 
-        if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
-        } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), dest, 2);
-        }
+        Thread.sleep(15000);
 
         assertTrue(senderClient.run(), "Sender failed, expected return code 0");
         assertTrue(recResult.get(), "Receiver failed, expected return code 0");
@@ -192,7 +186,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                         String.format("Expected %d sent messages", expectedMsgCount / 2)));
     }
 
-    protected void doTopicSubscribeTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2) throws Exception {
+    protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2) throws Exception {
         clients.addAll(Arrays.asList(sender, subscriber, subscriber2));
         int expectedMsgCount = 10;
 
@@ -240,11 +234,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> recResult = receiverClient1.runAsync();
         Future<Boolean> recResult2 = receiverClient2.runAsync();
 
-        if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
-        } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), dest, 2);
-        }
+        Thread.sleep(15000);
 
         assertAll(
                 () -> assertTrue(senderClient.run(), "Producer failed, expected return code 0"),
@@ -430,7 +420,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                         String.format("Expected %d received messages 'a OR b'", expectedMsgCount)));
     }
 
-    protected void doMessageSelectorTopicTest(ArtemisManagement artemisManagement, AbstractClient sender, AbstractClient sender2,
+    protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient sender2,
                                               AbstractClient subscriber, AbstractClient subscriber2) throws Exception {
         clients.addAll(Arrays.asList(sender, sender2, subscriber, subscriber2));
         int expectedMsgCount = 5;
@@ -496,11 +486,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> result1 = receiverClient1.runAsync();
         Future<Boolean> result2 = receiverClient2.runAsync();
 
-        if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), topic.getSpec().getAddress(), 2);
-        } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), topic, 2);
-        }
+        Thread.sleep(15000);
 
         assertTrue(senderClient1.run(), "Sender failed, expected return code 0");
         assertTrue(senderClient2.run(), "Sender2 failed, expected return code 0");

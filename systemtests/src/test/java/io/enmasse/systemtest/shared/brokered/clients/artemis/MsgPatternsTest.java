@@ -6,15 +6,11 @@ package io.enmasse.systemtest.shared.brokered.clients.artemis;
 
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
-import io.enmasse.systemtest.broker.ArtemisManagement;
 import io.enmasse.systemtest.messagingclients.artemis.ArtemisJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.artemis.ArtemisJMSClientSender;
-import io.enmasse.systemtest.resolvers.ArtemisManagementParameterResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith(ArtemisManagementParameterResolver.class)
 class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
 
     @Test
@@ -24,14 +20,14 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
 
     @Test
     @DisplayName("testRoundRobinReceiver")
-    void testRoundRobinReceiver(ArtemisManagement artemisManagement) throws Exception {
-        doRoundRobinReceiverTest(artemisManagement, new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
+    void testRoundRobinReceiver() throws Exception {
+        doRoundRobinReceiverTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
     }
 
     @Test
     @DisplayName("testTopicSubscribe")
-    void testTopicSubscribe(ArtemisManagement artemisManagement) throws Exception {
-        doTopicSubscribeTest(artemisManagement, new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
+    void testTopicSubscribe() throws Exception {
+        doTopicSubscribeTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
     }
 
     @Test
@@ -51,8 +47,8 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
 
     @Test
     @DisplayName("testMessageSelectorTopic")
-    void testMessageSelectorTopic(ArtemisManagement artemisManagement) throws Exception {
-        doMessageSelectorTopicTest(artemisManagement, new ArtemisJMSClientSender(), new ArtemisJMSClientSender(),
+    void testMessageSelectorTopic() throws Exception {
+        doMessageSelectorTopicTest(new ArtemisJMSClientSender(), new ArtemisJMSClientSender(),
                 new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
     }
 }
