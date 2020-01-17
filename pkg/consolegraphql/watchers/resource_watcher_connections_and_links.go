@@ -311,13 +311,7 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 			return err
 		}
 
-
 		_, currentLinks := agent.ToConnectionK8Style(agentcon)
-
-		for i, _ := range currentLinks {
-			log.Printf("Current %s", currentLinks[i].Name)
-		}
-
 
 		linkKey := fmt.Sprintf("Link/%s/%s/%s", con.Namespace, con.Spec.AddressSpace, con.Name)
 		existingLinks, err := clw.Cache.Get("hierarchy", linkKey, nil)
