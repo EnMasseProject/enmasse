@@ -251,9 +251,9 @@ func main() {
 			return watchers.NewAddressSpaceSchemaWatcher(objectCache, watchers.AddressSpaceSchemaWatcherConfig(config))
 		},
 		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewConnectionAndLinkWatcher(objectCache, infraNamespace, func() agent.AgentCollector {
+			return watchers.NewAgentWatcher(objectCache, infraNamespace, func() agent.AgentCollector {
 				return agent.AmqpAgentCollectorCreator(config.BearerToken)
-			},  watchers.ConnectionAndLinkWatcherConfig(config))
+			},  watchers.AgentWatcherConfig(config))
 		},
 	}
 
