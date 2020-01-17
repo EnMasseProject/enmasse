@@ -157,7 +157,7 @@ func (aac *AmqpAgentCollector) doCollect(host string, port int32) error {
 							AddressSpaceNamespace: aac.addressSpaceNamespace,
 							AddressSpace:          aac.addressSpace,
 							InfraUuid:             aac.infraUuid,
-							Type:                  AgentConnectionEventType,
+							Type:                  AgentEventInsertOrUpdateType,
 							Object:                agentcon,
 						}
 						err = aac.handler(evt)
@@ -176,7 +176,7 @@ func (aac *AmqpAgentCollector) doCollect(host string, port int32) error {
 							AddressSpaceNamespace: aac.addressSpaceNamespace,
 							AddressSpace:          aac.addressSpace,
 							InfraUuid:             aac.infraUuid,
-							Type:                  AgentConnectionEventTypeDelete,
+							Type:                  AgentEventTypeDelete,
 							Object:                agentcon,
 						}
 						err = aac.handler(evt)
@@ -195,7 +195,7 @@ func (aac *AmqpAgentCollector) doCollect(host string, port int32) error {
 							AddressSpaceNamespace: aac.addressSpaceNamespace,
 							AddressSpace:          aac.addressSpace,
 							InfraUuid:             aac.infraUuid,
-							Type:                  AgentAddressEventType,
+							Type:                  AgentEventInsertOrUpdateType,
 							Object:                agentaddr,
 						}
 						err = aac.handler(evt)
