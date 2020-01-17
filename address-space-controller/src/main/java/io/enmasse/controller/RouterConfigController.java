@@ -56,6 +56,10 @@ public class RouterConfigController implements Controller {
         return addressSpace;
     }
 
+    private static boolean needsUpdate(IntOrString existing, Integer updated) {
+        return updated != null && (existing == null || !updated.equals(existing.getIntVal()));
+    }
+
     private void reconcileRouterPodDistruptionBudget(AddressSpace addressSpace, RouterSet routerSet, StandardInfraConfig infraConfig) {
         if (infraConfig.getSpec() != null && infraConfig.getSpec().getRouter() != null && (infraConfig.getSpec().getRouter().getMinAvailable() != null || infraConfig.getSpec().getRouter().getMaxUnavailable() != null)) {
             String name = String.format("enmasse.%s.%s", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
@@ -75,18 +79,18 @@ public class RouterConfigController implements Controller {
                 }
 
                 Integer minAvailable = infraConfig.getSpec().getRouter().getMinAvailable();
-                if (minAvailable != null && podDisruptionBudget.getSpec().getMinAvailable() == null || !podDisruptionBudget.getSpec().getMinAvailable().getIntVal().equals(minAvailable)) {
+                if (needsUpdate(podDisruptionBudget.getSpec().getMinAvailable(), minAvailable)) {
                     podDisruptionBudget.getSpec().setMinAvailable(new IntOrString(minAvailable));
                     changed = true;
                 }
 
                 Integer maxUnavailable = infraConfig.getSpec().getRouter().getMaxUnavailable();
-                if (maxUnavailable != null && podDisruptionBudget.getSpec().getMaxUnavailable() == null || !podDisruptionBudget.getSpec().getMaxUnavailable().getIntVal().equals(maxUnavailable)) {
+                if (needsUpdate(podDisruptionBudget.getSpec().getMaxUnavailable(), maxUnavailable)) {
                     podDisruptionBudget.getSpec().setMaxUnavailable(new IntOrString(maxUnavailable));
                     changed = true;
                 }
 
-                if (!podDisruptionBudget.getSpec().getSelector().equals(routerSet.getStatefulSet().getSpec().getSelector())) {
+                if (!routerSet.getStatefulSet().getSpec().getSelector().equals(podDisruptionBudget.getSpec().getSelector())) {
                     podDisruptionBudget.getSpec().setSelector(routerSet.getStatefulSet().getSpec().getSelector());
                     changed = true;
                 }
