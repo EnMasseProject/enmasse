@@ -18,6 +18,15 @@ import (
 // - e in the event of a error preventing evaluation of the filter.
 type ObjectFilter = func(interface{}) (match bool, cont bool, e error)
 
+// ObjectMutator is used with Cache.Update function to mutate existing
+// object(s) in the cache within a transaction. The ObjectMutator function
+// receives the current value it uses to return a replacement  Returning
+// nil causes no change to be made for this value. Remaining objects will
+// continue to be considered for update.
+//
+// It is illegal for the updater function to mutate the object's key(s).
+type ObjectMutator = func(current interface{}) (replacement interface{}, e error)
+
 func And(filters... ObjectFilter) ObjectFilter {
 	return func(o interface{}) (bool, bool, error) {
 		c := true
@@ -45,6 +54,7 @@ type Cache interface {
 	Init(indexSpecifier ...IndexSpecifier) error
 
 	Add(objs ...interface{}) error
+	Update(mutator ObjectMutator, objs ...interface{}) error
 	Delete(objs ...interface{}) error
 	DeleteByPrefix(idxName, keyPrefix string) error
 
@@ -113,24 +123,63 @@ func (r *MemdbCache) Delete(objs ...interface{}) error {
 	return nil
 }
 
+func (r *MemdbCache) Update(mutator ObjectMutator, objs ...interface{}) error {
+	schema := r.schema.Tables["object"].Indexes["id"]
+	txn := r.db.Txn(true)
+	defer txn.Abort()
+	for _, o := range objs {
+		if ivFound, key, err := getKeyForObject(o, schema); err == nil && ivFound {
+			if current, err := txn.First("object", "id", key[:len(key) -1]); err == nil && ivFound && current != nil {
+				mutated, err := mutator(current)
+				if err != nil {
+					return err
+				}
+				if mutated != nil {
+					if newIvFound, mutatedKey,  err := getKeyForObject(mutated, schema); err == nil && newIvFound && mutatedKey == key {
+						if err := txn.Insert("object", mutated); err != nil {
+							return err
+						}
+					} else if err != nil {
+						return err
+					} else if !newIvFound {
+						return fmt.Errorf("failed to find the index value on the mutated object [original key: %s, mutated object %+v]", key, mutated)
+					} else if mutatedKey != key {
+						return fmt.Errorf("update mutator must not change the key [original: %s mutated :%s]", key, mutatedKey)
+					}
+				}
+			} else if err != nil {
+				return err
+			} else if current == nil {
+				return fmt.Errorf("failed to find the object in the cache [key: %s]", key)
+			}
+		} else if err != nil {
+			return err
+		} else if ! ivFound {
+			return fmt.Errorf("failed to find the index value on the object [object %+v]", o)
+		}
+	}
+	txn.Commit()
+	return nil
+}
+
+func getKeyForObject(obj interface{}, schema *memdb.IndexSchema) (bool, string, error) {
+	b, bytes, err := schema.Indexer.(memdb.SingleIndexer).FromObject(obj)
+	if err != nil {
+		return false, "", err
+	}
+	return b, string(bytes), nil
+}
+
 func (r *MemdbCache) Get(idxName string, keyPrefix string, filter ObjectFilter) ([]interface{}, error) {
 	schema := r.schema.Tables["object"].Indexes[idxName]
 
-	getKeyForObject := func(obj interface{}) (bool, string, error) {
-		b, bytes, err := schema.Indexer.(memdb.SingleIndexer).FromObject(obj)
-		if err != nil {
-			return false, "", err
-		}
-		return b, string(bytes), nil
-
-	}
 	txn := r.db.Txn(false)
 	defer txn.Abort()
 	objs := make([]interface{}, 0)
 	if itr, err := txn.LowerBound("object", idxName, keyPrefix); err == nil {
 		for obj := itr.Next(); obj != nil; obj = itr.Next() {
 
-			if b, key, err := getKeyForObject(obj); b && err == nil {
+			if b, key, err := getKeyForObject(obj, schema); b && err == nil {
 				if strings.HasPrefix(key, keyPrefix) {
 					if filter == nil {
 						objs = append(objs, obj)
