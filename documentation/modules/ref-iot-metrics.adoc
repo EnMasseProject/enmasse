@@ -3,25 +3,24 @@
 // assembly-iot-service-admin-guide.adoc
 
 [id='ref-iot-metrics-{context}']
-= IoT specific metrics
+= IoT-specific metrics
 
-The IoT specific components of {ProductName} will provide the metrics described in this section.
+The IoT-specific components of {ProductName} provide the metrics described in this section.
 
 == Common tags and metrics
 
-The following tags are available on all IoT related components:
+The following tags are available on all IoT-related components:
 
 [options="header",]
 |===
 |Tag |Value |Description
 
-|_host_ |_string_ |The name of the host that the component reporting the metric is running on.
-|_component-type_ |`+adapter+`, `+service+` |The type of component reporting the metric.
-|_component-name_ |_string_ |The name of the component reporting the metric. For a list of components, see the table below.
+|_host_ |_string_ |Specifies the name of the host that the component reporting the metric is running on.
+|_component-type_ |`+adapter+`, `+service+` |Specifies the type of component reporting the metric.
+|_component-name_ |_string_ |The name of the component reporting the metric. For a list of components, see the following table.
 |===
 
-The available components names are:
-
+.Component names
 [options="header",]
 |===
 |Component |_component-name_
@@ -33,82 +32,81 @@ The available components names are:
 
 == Protocol adapters
 
-Protocol adapters, components of type `+adapter+`, have some additional tags:
-
+Protocol adapters, components of type `+adapter+`, have some additional tags.
+.Protocol adapter tags
 [options="header",]
 |===
 |Name |Value |Description
-|_direction_ |`+one-way+`, `+request+`, `+response+` |The direction in
-which a Command & Control message is being sent:`+one-way+` indicates a
-command sent to a device for which the sending application doesn’t
-expect to receive a response.`+request+` indicates a command request
-message sent to a device.`+response+` indicates a command response
+|_direction_ |`+one-way+`, `+request+`, `+response+` |Specifies the direction in
+which a Command & Control message is being sent: `+one-way+` indicates a
+command sent to a device for which the sending application does not
+expect to receive a response; `+request+` indicates a command request
+message sent to a device; and `+response+` indicates a command response
 received from a device.
 
-|_qos_ |`+0+`, `+1+`, `+unknown+` |The quality of service used for a
-telemetry or event message.`+0+` indicates _at most once_,`+1+`
-indicates _at least once_ and `+none+` indicates unknown delivery
+|_qos_ |`+0+`, `+1+`, `+unknown+` |Indicates the quality of service used for a
+telemetry or event message: `+0+` indicates _at most once_,`+1+`
+indicates _at least once_, and `+none+` indicates unknown delivery
 semantics.
 
-|_status_ |`+forwarded+`, `+unprocessable+`, `+undeliverable+` |The
-processing status of a message.`+forwarded+` indicates that the message
-has been forwarded to a downstream consumer`+unprocessable+` indicates
-that the message has not been processed not forwarded, e.g. because the
-message was malformed`+undeliverable+` indicates that the message could
-not be forwarded, e.g. because there is no downstream consumer or due to
-an infrastructure problem
+|_status_ |`+forwarded+`, `+unprocessable+`, `+undeliverable+` |Indicates the
+processing status of a message. `+forwarded+` indicates that the message
+has been forwarded to a downstream consumer; `+unprocessable+` indicates
+that the message has not been processed or forwarded, for example, because the
+message was malformed; and `+undeliverable+` indicates that the message could
+not be forwarded, for example, because there is no downstream consumer or due to
+an infrastructure problem.
 
-|_tenant_ |_string_ |The identifier of the tenant that the metric is
-being reported for
+|_tenant_ |_string_ |Specifies the identifier of the tenant that the metric is
+being reported on.
 
-|_ttd_ |`+command+`, `+expired+`, `+none+` |A status indicating the
+|_ttd_ |`+command+`, `+expired+`, `+none+` |Indicates the status of the
 outcome of processing a TTD value contained in a message received from a
-device.`+command+` indicates that a command for the device has been
+device. `+command+` indicates that a command for the device has been
 included in the response to the device’s request for uploading the
-message.`+expired+` indicates that a response without a command has been
-sent to the device.`+none+` indicates that either no TTD value has been
+message; `+expired+` indicates that a response without a command has been
+sent to the device; and `+none+` indicates that either no TTD value has been
 specified by the device or that the protocol adapter does not support
 it.
 
-|_type_ |`+telemetry+`, `+event+` |The type of (downstream) message that
-the metric is being reported for.
+|_type_ |`+telemetry+`, `+event+` |Indicates the type of (downstream) message for
+the metric.
 |===
 
-The following metrics are specific to protocol adapters:
-
+.Protocol adapter metrics
 [width="100%",options="header",]
 |===
 |Metric |Type |Tags |Description
 |_hono.commands.received_ |Timer |_host_, _component-type_,
 _component-name_, _tenant_, _type_, _status_, _direction_ 
-|The time it took to process a message conveying a command or
+|Indicates the amount of time it took to process a message conveying a command or
 a response to a command.
 
 |_hono.commands.payload_ |DistributionSummary |_host_, _component-type_,
 _component-name_, _tenant_, _type_, _status_, _direction_ 
-|The number of bytes conveyed in the payload of a command message.
+|Indicates the number of bytes conveyed in the payload of a command message.
 
 |_hono.connections.authenticated_ |Gauge |_host_, _component-type_,
 _component-name_, _tenant_
 |Current number of connected, authenticated devices.
 
 NOTE: This metric is only supported by protocol adapters that
-maintain _connection state_ with authenticated devices. In particular,
+maintain a _connection state_ with authenticated devices. In particular,
 the HTTP adapter does not support this metric.
 
 |_hono.connections.unauthenticated_ |Gauge |_host_, _component-type_,
 _component-name_
 |Current number of connected, unauthenticated devices.
 
-NOTE: This metric is only supported by protocol adapters that maintain
+NOTE: This metric is only supported by protocol adapters that maintain a
 _connection state_ with authenticated devices. In particular, the HTTP
 adapter does not support this metric.
 
 |_hono.messages.received_ |Timer |_host_, _component-type_,
 _component-name_, _tenant_, _type_, _status_, _qos_, _ttd_
-|The time it took to process a message conveying a telemetry or event message.
+|Indicates the amount of time it took to process a message conveying a telemetry or event message.
 
 |_hono.messages.payload_ |DistributionSummary |_host_, _component-type_,
 _component-name_, _tenant_, _type_, _status_ 
-|The number of bytes conveyed in the payload of a telemetry or event message.
+|Indicates the number of bytes conveyed in the payload of a telemetry or event message.
 |===
