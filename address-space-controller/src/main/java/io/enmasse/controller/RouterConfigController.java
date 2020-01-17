@@ -62,7 +62,7 @@ public class RouterConfigController implements Controller {
             String name = String.format("enmasse.%s.%s", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
             try {
                 boolean changed = false;
-                PodDisruptionBudget podDisruptionBudget = client.policy().podDisruptionBudget().withName(name).get();
+                PodDisruptionBudget podDisruptionBudget = client.inNamespace(namespace).policy().podDisruptionBudget().withName(name).get();
                 if (podDisruptionBudget == null) {
                     podDisruptionBudget = new PodDisruptionBudgetBuilder()
                             .editOrNewMetadata()
@@ -86,7 +86,7 @@ public class RouterConfigController implements Controller {
                 }
 
                 if (changed) {
-                    client.policy().podDisruptionBudget().createOrReplace(podDisruptionBudget);
+                    client.inNamespace(namespace).policy().podDisruptionBudget().createOrReplace(podDisruptionBudget);
                 }
             } catch (KubernetesClientException e) {
                 log.warn("Error creating pod distruption budget", e);

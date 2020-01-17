@@ -11,6 +11,3 @@ rules:
   - apiGroups: [ "user.enmasse.io" ]
     resources: [ "messagingusers" ]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
-  - apiGroups: [ "policy" ]
-    resources: [ "poddistruptionbudgets" ]
-    verbs: [ "create", "update", "get", "patch", "delete" ]

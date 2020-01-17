@@ -490,6 +490,9 @@ spec:
         - apiGroups: [ "apps", "extensions" ]
           resources: [ "statefulsets", "deployments", "replicasets" ]
           verbs: [ "create", "update", "patch", "get", "list", "delete" ]
+        - apiGroups: [ "policy" ]
+          resources: [ "poddisruptionbudgets" ]
+          verbs: [ "create", "update", "get", "patch", "list", "watch", "delete" ]
       - serviceAccountName: address-space-admin
         rules:
         - apiGroups: [ "admin.enmasse.io" ]
@@ -538,9 +541,6 @@ spec:
         - apiGroups: [ "user.enmasse.io" ]
           resources: [ "messagingusers" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
-        - apiGroups: [ "policy" ]
-          resources: [ "poddistruptionbudgets" ]
-          verbs: [ "create", "update", "get", "patch", "delete" ]
       - serviceAccountName: address-space-admin
         rules:
         - apiGroups: [ "enmasse.io" ]
