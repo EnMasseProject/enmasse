@@ -88,6 +88,7 @@ func TestQueryAddressSpaceOrder(t *testing.T) {
 	assert.Equal(t, expected, actual, "Unexpected number of address spaces")
 
 	assert.Equal(t, as2.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, as1.ObjectMeta, objs.AddressSpaces[1].ObjectMeta, "Unexpected address space object meta")
 }
 
 func TestQueryAddressSpacePagination(t *testing.T) {
