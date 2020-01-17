@@ -123,7 +123,7 @@ func UpdateLinkMetrics(agentcon *AgentConnection, metrics []*consolegraphql.Metr
 				for _, ld := range l.Links {
 					backlog += ld.Backlog
 				}
-				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_backlog", "counter")
+				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_messages_backlog", "counter")
 				sm.Update(float64(backlog), now)
 
 			case "brokered":
