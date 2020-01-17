@@ -11,11 +11,9 @@ import (
 type AgentEventType string
 
 const (
-	AgentEventTypeRestart          = "restart"
-	AgentConnectionEventType       = "connection"
-	AgentConnectionEventTypeDelete = "connection_delete"
-	AgentAddressEventType          = "address"
-	AgentAddressEventTypeDelete    = "address_delete"
+	AgentEventTypeRestart        = "restart"
+	AgentEventInsertOrUpdateType = "insertOrUpdate"
+	AgentEventTypeDelete         = "delete"
 )
 
 type AgentEvent struct {

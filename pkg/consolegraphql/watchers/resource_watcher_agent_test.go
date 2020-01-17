@@ -6,6 +6,7 @@
 package watchers
 
 import (
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
@@ -22,8 +23,9 @@ import (
 
 const addressSpace = "myaddrspace"
 const namespace = "mynamespace"
+const addressName = "myqueue"
 
-func newTestConnectionsAndLinksWatcher(t *testing.T) (*ConnectionAndLinkWatcher, chan agent.AgentEvent) {
+func newTestAgentWatcher(t *testing.T) (*AgentWatcher, chan agent.AgentEvent) {
 	objectCache := &cache.MemdbCache{}
 	err := objectCache.Init(
 		cache.IndexSpecifier{
@@ -36,6 +38,7 @@ func newTestConnectionsAndLinksWatcher(t *testing.T) (*ConnectionAndLinkWatcher,
 				IndexCreators: map[string]cache.HierarchicalIndexCreator{
 					"Connection": ConnectionIndexCreator,
 					"Link": ConnectionLinkIndexCreator,
+					"Address": AddressIndexCreator,
 				},
 			},
 		}, cache.IndexSpecifier{
@@ -51,38 +54,17 @@ func newTestConnectionsAndLinksWatcher(t *testing.T) (*ConnectionAndLinkWatcher,
 
 	eventChan := make(chan agent.AgentEvent)
 
-	watcher, err := NewConnectionAndLinkWatcher(objectCache, v1.NamespaceAll, MockAgentCollectorCreator(eventChan), ConnectionAndLinkWatcherClient(fake.NewSimpleClientset().CoreV1()))
+	watcher, err := NewAgentWatcher(objectCache, v1.NamespaceAll, MockAgentCollectorCreator(eventChan), AgentWatcherClient(fake.NewSimpleClientset().CoreV1()))
 	assert.NoError(t, err)
 
 	return watcher, eventChan
 }
 
-func TestWatchConnection(t *testing.T) {
-	w, eventChan := newTestConnectionsAndLinksWatcher(t)
+func TestWatchAgent_NewConnection(t *testing.T) {
+	w, eventChan := newTestAgentWatcher(t)
 
-	agentservice := &v1.Service{
-		ObjectMeta: v1meta.ObjectMeta{
-			Name: "myagentservice",
-			Annotations: map[string]string{
-				"addressSpace":          addressSpace,
-				"addressSpaceNamespace": namespace,
-			},
-			Labels: map[string]string{
-				"infraUuid": "abcdef",
-				"app":       "enmasse",
-				"component": "agent"},
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{{
-				Name: "amqps",
-				Port: 5671,
-			}},
-		},
-	}
-
-	_, err := w.ClientInterface.Services("").(*fake2.FakeServices).Create(agentservice)
+	_, err := w.ClientInterface.Services("").(*fake2.FakeServices).Create(createService())
 	assert.NoError(t, err)
-
 
 	err = w.Watch()
 	assert.NoError(t, err)
@@ -95,7 +77,7 @@ func TestWatchConnection(t *testing.T) {
 	connectionUid := uuid.New().String()
 	linkUid := uuid.New().String()
 	eventChan <- agent.AgentEvent{
-		Type: agent.AgentConnectionEventType,
+		Type: agent.AgentEventInsertOrUpdateType,
 		Object: &agent.AgentConnection{
 			Uuid:                  connectionUid,
 			AddressSpace:          addressSpace,
@@ -146,7 +128,6 @@ func TestWatchConnection(t *testing.T) {
 
 	assert.Equal(t, 1, len(links), "Unexpected number of links")
 
-
 	assert.Equal(t, 4, len(conmetrics), "Unexpected number of connection metrics")
 
 	messagesInMetric := getMetric("enmasse_messages_in", conmetrics)
@@ -161,31 +142,10 @@ func TestWatchConnection(t *testing.T) {
 	assert.Equal(t, float64(6), releasedMetric.Value, "Unexpected released metric value")
 }
 
-func TestWatchConnectionWithChangingLinks(t *testing.T) {
-	w, eventChan := newTestConnectionsAndLinksWatcher(t)
+func TestWatchAgent_ConnectionWithWithChangingLinks(t *testing.T) {
+	w, eventChan := newTestAgentWatcher(t)
 
-	agentservice := &v1.Service{
-		ObjectMeta: v1meta.ObjectMeta{
-			Name: "myagentservice",
-			Annotations: map[string]string{
-				"addressSpace":          addressSpace,
-				"addressSpaceNamespace": namespace,
-			},
-			Labels: map[string]string{
-				"infraUuid": "abcdef",
-				"app":       "enmasse",
-				"component": "agent"},
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{{
-				Name: "amqps",
-				Port: 5671,
-			}},
-		},
-	}
-
-
-	_, err := w.ClientInterface.Services("").(*fake2.FakeServices).Create(agentservice)
+	_, err := w.ClientInterface.Services("").(*fake2.FakeServices).Create(createService())
 	assert.NoError(t, err)
 
 	err = w.Watch()
@@ -200,7 +160,7 @@ func TestWatchConnectionWithChangingLinks(t *testing.T) {
 	sendingLinkUuid2 := uuid.New().String()
 	receivingLinkUuid := uuid.New().String()
 	eventChan <- agent.AgentEvent{
-		Type: agent.AgentConnectionEventType,
+		Type: agent.AgentEventInsertOrUpdateType,
 		Object: &agent.AgentConnection{
 			Uuid:                  connectionUid,
 			AddressSpace:          addressSpace,
@@ -220,7 +180,7 @@ func TestWatchConnectionWithChangingLinks(t *testing.T) {
 	}
 
 	eventChan <- agent.AgentEvent{
-		Type: agent.AgentConnectionEventType,
+		Type: agent.AgentEventInsertOrUpdateType,
 		Object: &agent.AgentConnection{
 			Uuid:                  connectionUid,
 			AddressSpace:          addressSpace,
@@ -282,33 +242,13 @@ func TestWatchConnectionWithChangingLinks(t *testing.T) {
 	assert.Equal(t, 10, len(newReceivingLinkMetrics), "Unexpected number of link metrics for new receiving link")
 }
 
-func TestWatchDeletedConnection(t *testing.T) {
-	w, _ := newTestConnectionsAndLinksWatcher(t)
-
-	agentservice := &v1.Service{
-		ObjectMeta: v1meta.ObjectMeta{
-			Name: "myagentservice",
-			Annotations: map[string]string{
-				"addressSpace":          addressSpace,
-				"addressSpaceNamespace": namespace,
-			},
-			Labels: map[string]string{
-				"infraUuid": "abcdef",
-				"app":       "enmasse",
-				"component": "agent"},
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{{
-				Name: "amqps",
-				Port: 5671,
-			}},
-		},
-	}
+func TestWatchAgent_ClosedConnection(t *testing.T) {
+	w, _ := newTestAgentWatcher(t)
 
 	eventChan := make(chan agent.AgentEvent)
 	w.AgentCollectorCreator = MockAgentCollectorCreator(eventChan)
 
-	_, err := w.ClientInterface.Services("").(*fake2.FakeServices).Create(agentservice)
+	_, err := w.ClientInterface.Services("").(*fake2.FakeServices).Create(createService())
 	assert.NoError(t, err)
 
 	err = w.Watch()
@@ -320,7 +260,7 @@ func TestWatchDeletedConnection(t *testing.T) {
 
 	connectionUid1 := uuid.New().String()
 	eventChan <- agent.AgentEvent{
-		Type: agent.AgentConnectionEventType,
+		Type: agent.AgentEventInsertOrUpdateType,
 		Object: &agent.AgentConnection{
 			Uuid: connectionUid1,
 		},
@@ -328,14 +268,14 @@ func TestWatchDeletedConnection(t *testing.T) {
 
 	connectionUid2 := uuid.New().String()
 	eventChan <- agent.AgentEvent{
-		Type: agent.AgentConnectionEventType,
+		Type: agent.AgentEventInsertOrUpdateType,
 		Object: &agent.AgentConnection{
 			Uuid: connectionUid2,
 		},
 	}
 
 	eventChan <- agent.AgentEvent{
-		Type: agent.AgentConnectionEventTypeDelete,
+		Type: agent.AgentEventTypeDelete,
 		Object: &agent.AgentConnection{
 			Uuid: connectionUid1,
 		},
@@ -354,35 +294,15 @@ func TestWatchDeletedConnection(t *testing.T) {
 	assert.Equal(t, expectedConnectionUid, actualConnectionUid, "Unexpected connection UID")
 }
 
-func TestWatchNewAgent(t *testing.T) {
-	w, eventChan := newTestConnectionsAndLinksWatcher(t)
+func TestWatchAgent_NewConnection(t *testing.T) {
+	w, eventChan := newTestAgentWatcher(t)
 
 	err := w.Watch()
 	assert.NoError(t, err)
 
 	w.AwaitWatching()
 
-	agentservice := &v1.Service{
-		ObjectMeta: v1meta.ObjectMeta{
-			Name: "myagentservice",
-			Annotations: map[string]string{
-				"addressSpace":          addressSpace,
-				"addressSpaceNamespace": namespace,
-			},
-			Labels: map[string]string{
-				"infraUuid": "abcdef",
-				"app":       "enmasse",
-				"component": "agent",
-			},
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{{
-				Name: "amqps",
-				Port: 5671,
-			}},
-		},
-	}
-	_, err = w.ClientInterface.Services("").(*fake2.FakeServices).Create(agentservice)
+	_, err = w.ClientInterface.Services("").(*fake2.FakeServices).Create(createService())
 	assert.NoError(t, err)
 
 	eventChan <- agent.AgentEvent{
@@ -391,7 +311,7 @@ func TestWatchNewAgent(t *testing.T) {
 
 	connectionUid := uuid.New().String()
 	eventChan <- agent.AgentEvent{
-		Type: agent.AgentConnectionEventType,
+		Type: agent.AgentEventInsertOrUpdateType,
 		Object: &agent.AgentConnection{
 			Uuid: connectionUid,
 		},
@@ -406,7 +326,66 @@ func TestWatchNewAgent(t *testing.T) {
 	if actual != expected {
 		t.Fatalf("Unexpected number of connections, expected %d, actual %d", expected, actual)
 	}
+}
 
+func TestWatchAgent_AddressMetricsUpdated(t *testing.T) {
+	w, eventChan := newTestAgentWatcher(t)
+
+	addr := createAddress(namespace, addressSpace + "." + addressName)
+	err := w.Cache.Add(addr)
+	assert.NoError(t, err)
+
+	_, err = w.ClientInterface.Services("").(*fake2.FakeServices).Create(createService())
+	assert.NoError(t, err)
+
+	err = w.Watch()
+	assert.NoError(t, err)
+
+	eventChan <- agent.AgentEvent{
+		Type: agent.AgentEventTypeRestart,
+	}
+
+	eventChan <- agent.AgentEvent{
+		Type: agent.AgentEventInsertOrUpdateType,
+		Object: &agent.AgentAddress{
+			Name:                  addr.Name,
+			AddressSpace:          addressSpace,
+			AddressSpaceNamespace: namespace,
+			Depth:                 58,
+		},
+	}
+
+	w.Shutdown()
+	addrs, err := w.Cache.Get("hierarchy", "Address", nil)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 1, len(addrs), "Unexpected number of address")
+
+	actualAddress := addrs[0].(*consolegraphql.AddressHolder)
+
+	addressMetrics := actualAddress.Metrics
+
+	assert.Equal(t, 5, len(addressMetrics), "unexpected number of metrics")
+
+	storedMetric := getMetric("enmasse_messages_stored", addressMetrics)
+	assert.NotNil(t, storedMetric, "Released metric is absent")
+	assert.Equal(t, float64(58), storedMetric.Value, "Unexpected released metric value")
+}
+
+func createAddress(namespace, name string, metrics... *consolegraphql.Metric) (*consolegraphql.AddressHolder) {
+	return &consolegraphql.AddressHolder{
+		Address: v1beta1.Address {
+			TypeMeta: v1meta.TypeMeta {
+				Kind: "Address",
+			},
+			ObjectMeta: v1meta.ObjectMeta{
+				Name:      name,
+				Namespace: namespace,
+				UID:       types.UID(uuid.New().String()),
+			},
+		},
+		Metrics: metrics,
+	}
 }
 
 type MockAgentCollector struct {
@@ -456,4 +435,26 @@ func getMetric(name string, metrics []*consolegraphql.Metric) *consolegraphql.Me
 		}
 	}
 	return nil
+}
+
+func createService() *v1.Service {
+	return &v1.Service{
+		ObjectMeta: v1meta.ObjectMeta{
+			Name: "myagentservice",
+			Annotations: map[string]string{
+				"addressSpace":          addressSpace,
+				"addressSpaceNamespace": namespace,
+			},
+			Labels: map[string]string{
+				"infraUuid": "abcdef",
+				"app":       "enmasse",
+				"component": "agent"},
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{{
+				Name: "amqps",
+				Port: 5671,
+			}},
+		},
+	}
 }
