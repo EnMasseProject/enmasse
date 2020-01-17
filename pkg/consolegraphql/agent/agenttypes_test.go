@@ -167,7 +167,7 @@ const address = `{
       "consumers": 1,
       "enqueued": 350,
       "delivering": 0,
-      "acknowledged": 0,
+      "acknowledged": 1,
       "killed": 0
     }
   ],
@@ -344,6 +344,9 @@ func TestFromAgentAddress(t *testing.T) {
 		Receivers:             0,
 		AddressSpace:          "standard",
 		AddressSpaceNamespace: "enmasse-infra",
+		Shards: []AgentAddressShards {
+			{"broker-4f5fcdf-f0pv-0", 1, 350, 1, 0},
+		},
 	}
 
 	assert.Equal(t, expected, address)
