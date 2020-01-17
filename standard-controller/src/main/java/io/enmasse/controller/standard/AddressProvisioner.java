@@ -11,18 +11,35 @@ import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
-import io.enmasse.address.model.*;
-import io.enmasse.admin.model.AddressPlan;
-import io.enmasse.admin.model.AddressSpacePlan;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressPlanStatus;
+import io.enmasse.address.model.AddressResolver;
+import io.enmasse.address.model.AddressSpaceResolver;
+import io.enmasse.address.model.AddressStatus;
+import io.enmasse.address.model.AddressType;
+import io.enmasse.address.model.BrokerState;
+import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.Phase;
+import io.enmasse.admin.model.AddressPlan;
+import io.enmasse.admin.model.AddressSpacePlan;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
 
@@ -266,7 +283,11 @@ public class AddressProvisioner {
                 UsageInfo info = resourceUsage.computeIfAbsent("all", k -> new UsageInfo());
 
                 // Remove existing usage
-                if (appliedPlan != null && appliedPlan.getResources().get(resourceName) != null) {
+                if (
+                        appliedPlan != null
+                        && appliedPlan.getResources() != null
+                        && appliedPlan.getResources().get(resourceName) != null
+                        ) {
                     info.subUsed(appliedPlan.getResources().get(resourceName));
                 }
 
@@ -286,7 +307,11 @@ public class AddressProvisioner {
                     }
                 } else if ("queue".equals(address.getSpec().getType()) || resourceRequest.getValue() < 1) {
                     // Remove existing usage
-                    if (appliedPlan != null && appliedPlan.getResources().get(resourceName) != null && address.getStatus() != null) {
+                    if (
+                            appliedPlan != null
+                            && appliedPlan.getResources() != null
+                            && appliedPlan.getResources().get(resourceName) != null
+                            && address.getStatus() != null) {
                         for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
                             UsageInfo info = resourceUsage.get(brokerStatus.getClusterId());
                             if (info != null) {
