@@ -57,8 +57,7 @@ public class RouterConfigController implements Controller {
     }
 
     private void reconcileRouterPodDistruptionBudget(AddressSpace addressSpace, RouterSet routerSet, StandardInfraConfig infraConfig) {
-        if (infraConfig.getSpec() != null && infraConfig.getSpec().getRouter() != null && infraConfig.getSpec().getRouter().getMinAvailable() != null) {
-            int minAvailable = infraConfig.getSpec().getRouter().getMinAvailable();
+        if (infraConfig.getSpec() != null && infraConfig.getSpec().getRouter() != null && (infraConfig.getSpec().getRouter().getMinAvailable() != null || infraConfig.getSpec().getRouter().getMaxUnavailable() != null)) {
             String name = String.format("enmasse.%s.%s", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
             try {
                 boolean changed = false;
@@ -75,8 +74,15 @@ public class RouterConfigController implements Controller {
                     changed = true;
                 }
 
-                if (podDisruptionBudget.getSpec().getMinAvailable().getIntVal() != minAvailable) {
+                Integer minAvailable = infraConfig.getSpec().getRouter().getMinAvailable();
+                if (minAvailable != null && podDisruptionBudget.getSpec().getMinAvailable() == null || !podDisruptionBudget.getSpec().getMinAvailable().getIntVal().equals(minAvailable)) {
                     podDisruptionBudget.getSpec().setMinAvailable(new IntOrString(minAvailable));
+                    changed = true;
+                }
+
+                Integer maxUnavailable = infraConfig.getSpec().getRouter().getMaxUnavailable();
+                if (maxUnavailable != null && podDisruptionBudget.getSpec().getMaxUnavailable() == null || !podDisruptionBudget.getSpec().getMaxUnavailable().getIntVal().equals(maxUnavailable)) {
+                    podDisruptionBudget.getSpec().setMaxUnavailable(new IntOrString(maxUnavailable));
                     changed = true;
                 }
 

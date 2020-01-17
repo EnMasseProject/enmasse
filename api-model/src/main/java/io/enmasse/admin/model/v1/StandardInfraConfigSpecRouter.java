@@ -22,12 +22,13 @@ import io.sundr.builder.annotations.Inline;
         refs = {@BuildableReference(AbstractWithAdditionalProperties.class)},
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"minAvailable", "minReplicas", "resources", "linkCapacity", "handshakeTimeout", "idleTimeout", "workerThreads", "policy", "podTemplate"})
+@JsonPropertyOrder({"minAvailable", "maxUnavailable", "minReplicas", "resources", "linkCapacity", "handshakeTimeout", "idleTimeout", "workerThreads", "policy", "podTemplate"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalProperties {
     private StandardInfraConfigSpecRouterResources resources;
     private Integer minReplicas;
     private Integer minAvailable;
+    private Integer maxUnavailable;
     private Integer linkCapacity;
     private Integer handshakeTimeout;
     private Integer idleTimeout;
@@ -53,6 +54,18 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
 
     public Integer getMinAvailable() {
         return minAvailable;
+    }
+
+    public void setMinAvailable(Integer minAvailable) {
+        this.minAvailable = minAvailable;
+    }
+
+    public Integer getMaxUnavailable() {
+        return maxUnavailable;
+    }
+
+    public void setMaxUnavailable(Integer maxUnavailable) {
+        this.maxUnavailable = maxUnavailable;
     }
 
     public void setMinReplicas(Integer minReplicas) {
@@ -111,6 +124,7 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
         return Objects.equals(resources, that.resources) &&
                 Objects.equals(minReplicas, that.minReplicas) &&
                 Objects.equals(minAvailable, that.minAvailable) &&
+                Objects.equals(maxUnavailable, that.maxUnavailable) &&
                 Objects.equals(handshakeTimeout, that.handshakeTimeout) &&
                 Objects.equals(idleTimeout, that.idleTimeout) &&
                 Objects.equals(linkCapacity, that.linkCapacity) &&
@@ -121,7 +135,7 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, linkCapacity, minAvailable, minReplicas, handshakeTimeout, idleTimeout, workerThreads, policy, podTemplate);
+        return Objects.hash(resources, linkCapacity, minAvailable, maxUnavailable, minReplicas, handshakeTimeout, idleTimeout, workerThreads, policy, podTemplate);
     }
 
     @Override
@@ -130,6 +144,7 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
                 "resources=" + resources +
                 ", minReplicas=" + minReplicas +
                 ", minAvailable=" + minAvailable +
+                ", maxUnavailable=" + maxUnavailable +
                 ", linkCapacity=" + linkCapacity +
                 ", handshakeTimeout=" + handshakeTimeout +
                 ", idleTimeout=" + idleTimeout +
@@ -137,9 +152,5 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
                 ", policy=" + policy +
                 ", podTemplate=" + podTemplate +
                 '}';
-    }
-
-    public void setMinAvailable(Integer minAvailable) {
-        this.minAvailable = minAvailable;
     }
 }

@@ -150,6 +150,8 @@ spec:
                   type: integer
                 minAvailable:
                   type: integer
+                maxUnavailable:
+                  type: integer
                 linkCapacity:
                   type: integer
                 idleTimeout:
