@@ -188,12 +188,12 @@ const (
 )
 
 type AddressStatus struct {
-	IsReady        bool              `json:"isReady"`
-	Phase          string            `json:"phase,omitempty"`
-	Messages       []string          `json:"messages,omitempty"`
-	BrokerStatuses []BrokerStatus    `json:"brokerStatus,omitempty"`
-	PlanStatus     AddressPlanStatus `json:"planStatus,omitempty"`
-	Forwarders     []ForwarderStatus `json:"forwarders,omitempty"`
+	IsReady        bool               `json:"isReady"`
+	Phase          string             `json:"phase,omitempty"`
+	Messages       []string           `json:"messages,omitempty"`
+	BrokerStatuses []BrokerStatus     `json:"brokerStatus,omitempty"`
+	PlanStatus     *AddressPlanStatus `json:"planStatus,omitempty"`
+	Forwarders     []ForwarderStatus  `json:"forwarders,omitempty"`
 }
 
 type BrokerStatus struct {

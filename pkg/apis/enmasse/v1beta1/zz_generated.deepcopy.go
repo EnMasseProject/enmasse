@@ -268,7 +268,11 @@ func (in *AddressStatus) DeepCopyInto(out *AddressStatus) {
 		*out = make([]BrokerStatus, len(*in))
 		copy(*out, *in)
 	}
-	in.PlanStatus.DeepCopyInto(&out.PlanStatus)
+	if in.PlanStatus != nil {
+		in, out := &in.PlanStatus, &out.PlanStatus
+		*out = new(AddressPlanStatus)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Forwarders != nil {
 		in, out := &in.Forwarders, &out.Forwarders
 		*out = make([]ForwarderStatus, len(*in))
