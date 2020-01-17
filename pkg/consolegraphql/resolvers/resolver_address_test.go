@@ -307,28 +307,23 @@ func TestQueryAddressLinkPaginated(t *testing.T) {
 func TestQueryAddressMetrics(t *testing.T) {
 	r := newTestAddressResolver(t)
 	namespace := "mynamespace"
-	addressspace := "myaddressspace"
-	addr1 := "myaddr"
-	addr2 := "myaddr1"
-	addressName := "myaddressspace." + addr1
+	addressName := "myaddressspace.myaddr"
 
-	createMetric := func(namespace string, addr1 string, metricName string, metricValue float64) *consolegraphql.Metric {
+	createMetric := func(namespace string, metricName string, metricValue float64) *consolegraphql.Metric {
 		metric := consolegraphql.NewSimpleMetric(metricName, "gauge")
 		metric.Update(metricValue, time.Now())
 		return (*consolegraphql.Metric)(metric)
 	}
 
 	addr := createAddress(namespace, addressName,
-		createMetric(namespace, addr1, "enmasse_messages_stored", float64(100)),
-		createMetric(namespace, addr1, "enmasse_messages_in", float64(10)),
-		createMetric(namespace, addr1, "enmasse_messages_out", float64(20)),
+		createMetric(namespace, "enmasse_messages_stored", float64(100)),
+		createMetric(namespace, "enmasse_messages_in", float64(10)),
+		createMetric(namespace, "enmasse_messages_out", float64(20)),
+		createMetric(namespace, "enmasse_senders", float64(2)),
+		createMetric(namespace, "enmasse_receivers", float64(1)),
 	)
 
-	err := r.Cache.Add(addr,
-		createAddressLink(namespace, addressspace, addr1, "sender"),
-		createAddressLink(namespace, addressspace, addr1, "sender"),
-		createAddressLink(namespace, addressspace, addr1, "receiver"),
-		createAddressLink(namespace, addressspace, addr2, "receiver"))
+	err := r.Cache.Add(addr)
 	assert.NoError(t, err)
 
 	objs, err := r.Query().Addresses(context.TODO(), nil, nil, nil, nil)

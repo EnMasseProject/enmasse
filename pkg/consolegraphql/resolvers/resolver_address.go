@@ -14,7 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"strings"
-	"time"
 )
 
 func (r *Resolver) Address_consoleapi_enmasse_io_v1beta1() Address_consoleapi_enmasse_io_v1beta1Resolver {
@@ -100,46 +99,8 @@ func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, 
 	paged := objects[lower:upper]
 
 	addresses := make([]*consolegraphql.AddressHolder, len(paged))
-	for i, a := range paged {
-		obj := a.(*consolegraphql.AddressHolder)
-		now := time.Now()
-
-		linkCounts := make(map[string]int, 0)
-		linkCounts["sender"] = 0
-		linkCounts["receiver"] = 0
-		roleCountingFilter := func(obj interface{}) (bool, bool, error) {
-			asp, ok := obj.(*consolegraphql.Link)
-			if !ok {
-				return false, false, fmt.Errorf("unexpected type: %T", obj)
-			}
-
-			if val, ok := linkCounts[asp.Spec.Role]; ok {
-				linkCounts[asp.Spec.Role] = val + 1
-			}
-			return false, true, nil
-		}
-
-		addrtoks := strings.SplitN(obj.ObjectMeta.Name, ".", 2)
-		// address name not addressspace name prefixed in the link index
-		_, e := r.Cache.Get("addressLinkHierarchy", fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1]), roleCountingFilter)
-		if e != nil {
-			return nil, e
-		}
-
-		metrics := make([]*consolegraphql.Metric, 0)
-		senders, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_senders", "gauge" )
-		senders.Update(float64(linkCounts["sender"]), now)
-		receivers, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_receivers", "gauge" )
-		receivers.Update(float64(linkCounts["receiver"]), now)
-
-		for _, metric := range obj.Metrics {
-			metrics = append(metrics, metric)
-		}
-
-		addresses[i] = &consolegraphql.AddressHolder{
-			Address: obj.Address,
-			Metrics: metrics,
-		}
+	for i, _ := range paged {
+		addresses[i] = paged[i].(*consolegraphql.AddressHolder)
 	}
 
 	aqr := &AddressQueryResultConsoleapiEnmasseIoV1beta1{
