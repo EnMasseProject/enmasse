@@ -46,10 +46,18 @@ func (c CacheObj) GetObjectKind() schema.ObjectKind {
 }
 
 func (c CacheObj) DeepCopyObject() runtime.Object {
-	return CacheObj{
+	return &CacheObj{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: c.APIVersion,
+			Kind:       c.Kind,
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.Name,
 			UID:  c.UID,
+			Namespace: c.Namespace,
+		},
+		Spec: CacheObjSpec{
+			Attr: c.Spec.Attr,
 		},
 	}
 }
@@ -119,6 +127,7 @@ func TestInsert(t *testing.T) {
 	assert.Equal(t, 1, len(retrieved), "Unexpected object")
 	assert.Equal(t, obj, retrieved[0], "Unexpected object")
 }
+
 func TestMemdbCache_Delete(t *testing.T) {
 	c := newTestCache(t, false)
 
@@ -234,20 +243,6 @@ func TestMemdbCache_FilteredGetStop(t *testing.T) {
 	assert.Equal(t, obj2, actualObj, "Unexpected object")
 }
 
-func createObj(namespace string, name string) *CacheObj {
-	return &CacheObj{
-		TypeMeta: metav1.TypeMeta{
-			Kind: "CacheObject",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      name,
-			UID:       types.UID(uuid.New().String()),
-		},
-		Spec: CacheObjSpec{},
-	}
-}
-
 func TestMemdbCache_Get_AltIndex(t *testing.T) {
 	c := newTestCache(t, true)
 
@@ -298,6 +293,77 @@ func TestMemdbCache_DeleteByPrefix_AltIndex(t *testing.T) {
 	doSubsetTest("hierarchy", "CacheObject/ns1/bbc", 3)
 }
 
+func TestMemdbCache_Update(t *testing.T) {
+	c := newTestCache(t, false)
+
+	obj := createObj("ns1", "ob1")
+	err := c.Add(obj)
+	assert.NoError(t, err, "failed to insert object")
+
+	err = c.Update(func(curr interface{}) (interface{}, error) {
+		current := curr.(*CacheObj)
+		upd := current.DeepCopyObject().(*CacheObj)
+		upd.Spec.Attr = "upd"
+		return upd, nil
+	}, obj)
+	assert.NoError(t, err, "failed to update object")
+
+	retrieved, err := c.Get("id", string(obj.UID), nil)
+	assert.NoError(t, err, "failed to retrieve object")
+
+
+	assert.Equal(t, 1, len(retrieved), "Unexpected object")
+
+	expected := obj.DeepCopyObject().(*CacheObj)
+	expected.Spec.Attr = "upd"
+	assert.Equal(t, expected, retrieved[0], "Unexpected object")
+}
+
+func TestMemdbCache_UpdateNotRealised(t *testing.T) {
+	c := newTestCache(t, false)
+
+	obj1 := createObj("ns1", "ob1")
+	obj2 := createObj("ns1", "ob2")
+	obj3 := createObj("ns1", "ob3")
+	err := c.Add(obj1, obj2, obj3)
+	assert.NoError(t, err, "failed to insert objects")
+
+	err = c.Update(func(curr interface{}) (interface{}, error) {
+		current := curr.(*CacheObj)
+		if current.Name == "ob2" {
+			return nil, nil
+		}
+		upd := current.DeepCopyObject().(*CacheObj)
+		upd.Spec.Attr = "upd"
+		return upd, nil
+	}, obj1, obj2, obj3)
+	assert.NoError(t, err, "failed to update object2")
+
+	retrieved, err := c.Get("hierarchy", "CacheObject/", nil)
+	assert.NoError(t, err, "failed to retrieve objects")
+
+	assert.Equal(t, 3, len(retrieved), "Unexpected object")
+	withUpd := 0
+	for _, retrieved := range retrieved {
+		if retrieved.(*CacheObj).Spec.Attr == "upd" {
+			withUpd++
+		}
+	}
+	assert.Equal(t, 2, withUpd, "Unexpected number of objects with updated annotation")
+}
+
+func TestMemdbCache_UpdateAbsentObject(t *testing.T) {
+	c := newTestCache(t, false)
+
+	obj := createObj("ns1", "ob1")
+
+	err := c.Update(func(curr interface{}) (interface{}, error) {
+		assert.Fail(t, "unexpected invocation")
+		return nil, nil
+	}, obj)
+	assert.Error(t, err, "expected update to fail")
+}
+
 func TestDump(t *testing.T) {
 	c := newTestCache(t, false)
 
@@ -309,8 +375,23 @@ func TestDump(t *testing.T) {
 	assert.NoError(t, err, "failed to dump database")
 }
 
+
 func createObjWithAttr(namespace, name, attr string) *CacheObj {
 	obj := createObj(namespace, name)
 	obj.Spec.Attr = attr
 	return obj
+}
+
+func createObj(namespace string, name string) *CacheObj {
+	return &CacheObj{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "CacheObject",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+			UID:       types.UID(uuid.New().String()),
+		},
+		Spec: CacheObjSpec{},
+	}
 }

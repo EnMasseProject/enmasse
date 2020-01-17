@@ -217,12 +217,18 @@ func (kw *{{ .Name }}Watcher) doWatch(resource cp.{{ .Name }}Interface) error {
 		copy := res.DeepCopy()
 		kw.updateKind(copy)
 
-		if val, ok := curr[copy.UID]; ok {
-			if kw.update(copy, val) {
-				err = kw.Cache.Add(copy)
-				updated++
-			} else {
-				unchanged++
+		if _, ok := curr[copy.UID]; ok {
+			err = kw.Cache.Update(func (current interface{}) (interface{}, error) {
+				if kw.update(copy, current) {
+					updated++
+					return copy, nil
+				} else {
+					unchanged++
+					return nil, nil
+				}
+			}, copy)
+			if err != nil {
+				return err
 			}
 			delete(curr, copy.UID)
 		} else {
@@ -272,23 +278,14 @@ func (kw *{{ .Name }}Watcher) doWatch(resource cp.{{ .Name }}Interface) error {
 					case watch.Added:
 						err = kw.Cache.Add(kw.create(copy))
 					case watch.Modified:
-						// TODO fix me
-						curr, err := kw.Cache.GetMap("{{ .Name }}/", cache.UidKeyAccessor)
-						if val, ok := curr[copy.UID]; ok {
-							if kw.update(copy, val) {
-								err = kw.Cache.Add(copy)
-								updated++
-								if err != nil {
-									return err
-								}
+						updatingKey := kw.create(copy)
+						err = kw.Cache.Update(func (current interface{}) (interface{}, error) {
+							if kw.update(copy, current) {
+								return copy, nil
 							} else {
-								unchanged++
+								return nil, nil
 							}
-							delete(curr, copy.UID)
-						} else {
-							err = kw.Cache.Add(kw.create(copy))
-							added++
-						}
+						}, updatingKey)
 					case watch.Deleted:
 						err = kw.Cache.Delete(kw.create(copy))
 					}
