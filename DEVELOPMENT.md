@@ -31,7 +31,7 @@ Prefer to use plain Java whenever you can. Code should be easy to understand wit
 
 ## Go
 
-Golang dependencies are managed using glide (the project will move to go modules once dependencies have).
+Golang dependencies are managed using go modules
 
 Use `gofmt` to format all the source code.
 
