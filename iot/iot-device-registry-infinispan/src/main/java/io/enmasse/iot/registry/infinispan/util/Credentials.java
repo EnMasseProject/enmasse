@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.UUID;
 
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.service.management.credentials.GenericCredential;
@@ -96,7 +97,9 @@ public final class Credentials {
                         c.setSecrets(
                                 secrets
                                         .stream()
-                                        .map(Object::toString)
+                                        .map(JsonObject.class::cast)
+                                        .map(Credentials::addIdToSecret)
+                                        .map(JsonObject::encode)
                                         .collect(Collectors.toList()));
                     }
 
@@ -156,20 +159,17 @@ public final class Credentials {
         return credentials
                 .stream()
                 .map(Credentials::fromInternal)
-                // this breaks the get -> put operation flows.
-                // This should be re-enabled when the `id` feature for secret is implemented.
-                //.map(Credentials::removePasswordDetails)
+                .map(Credentials::removePasswordDetails)
                 .collect(Collectors.toList());
-
     }
 
     /**
      * Strips the hashed-password details from the secret if needed.
      */
-    @SuppressWarnings("unused")
     private static CommonCredential removePasswordDetails(final CommonCredential credential) {
 
         if (JsonObject.mapFrom(credential).getString(CredentialsConstants.FIELD_TYPE).equals(CredentialsConstants.SECRETS_TYPE_HASHED_PASSWORD)) {
+
             final PasswordCredential passwordCredential = (PasswordCredential) credential;
             passwordCredential.getSecrets().forEach(secret -> {
                 secret.setHashFunction(null);
@@ -182,5 +182,13 @@ public final class Credentials {
         } else {
             return credential;
         }
+    }
+
+    private static JsonObject addIdToSecret(final JsonObject secret) {
+
+        if (! secret.containsKey("id")){
+            secret.put("id", UUID.randomUUID().toString());
+        }
+        return secret;
     }
 }
