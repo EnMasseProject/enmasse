@@ -6,6 +6,6 @@
 [id='troubleshooting-guide-{context}']
 = Troubleshooting
 
-The troubleshooting provides solutions to common problems when running {ProductName}. Some of the steps in the guide may require service admin privileges.
+The following troubleshooting information provides solutions to common problems when running {ProductName}. Certain steps in the procedures might require service administrator privileges.
 
 include::../modules/proc-troubleshooting.adoc[leveloffset=+1]
