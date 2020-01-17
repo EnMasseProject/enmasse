@@ -23,8 +23,7 @@ public class IndicativeSentences extends DisplayNameGenerator.ReplaceUnderscores
 
     @Override
     public String generateDisplayNameForMethod(Class<?> testClass, Method testMethod) {
-        String name = testClass.getSimpleName() + ' ' + testMethod.getName();
-        return name.replace('_', ' ') + '.';
+        return testMethod.getName();
     }
 
 }

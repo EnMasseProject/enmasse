@@ -22,13 +22,13 @@ import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
-import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.CertificateUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
@@ -66,7 +66,7 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
     @AfterEach
     void undeployBroker(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
-            Path path = JunitCallbackListener.getPath(context);
+            Path path = TestUtils.getFailedTestLogsPath(context);
             SystemtestsKubernetesApps.collectAMQBrokerLogs(path, remoteBrokerNamespace);
         }
         SystemtestsKubernetesApps.deleteAMQBroker(remoteBrokerNamespace, remoteBrokerName);
