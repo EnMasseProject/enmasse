@@ -207,6 +207,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
       <DataToolbarGroup variant="filter-group">
         <DataToolbarFilter categoryName="Filter">
           <Dropdown
+            id="al-filter-dropdown"
             position="left"
             onSelect={onFilterSelect}
             isOpen={filterIsExpanded}
@@ -221,10 +222,12 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
             }
             dropdownItems={filterMenuItems.map(option => (
               <DropdownItem
+                id={`al-filter-dropdown${option.key}`}
                 key={option.key}
                 value={option.value}
                 itemID={option.key}
-                component={"button"}>
+                component={"button"}
+              >
                 {option.value}
               </DropdownItem>
             ))}
@@ -236,10 +239,12 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
               <DataToolbarFilter
                 chips={filterNames}
                 deleteChip={onDelete}
-                categoryName="Name">
+                categoryName="Name"
+              >
                 {filterValue && filterValue === "Name" && (
                   <InputGroup>
                     <Select
+                      id="al-filter-select-name"
                       variant={SelectVariant.typeahead}
                       aria-label="Select a Name"
                       onToggle={onNameSelectToggle}
@@ -254,17 +259,24 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                       ariaLabelledBy={"typeahead-select-id"}
                       placeholderText="Select name"
                       isDisabled={false}
-                      isCreatable={false}>
+                      isCreatable={false}
+                    >
                       {nameOptions &&
                         nameOptions.map((option, index) => (
-                          <SelectOption key={index} value={option} />
+                          <SelectOption
+                            id={`al-filter-select-name${index}`}
+                            key={index}
+                            value={option}
+                          />
                         ))}
                       {/* {} */}
                     </Select>
                     <Button
+                      id={"al-filter-select-name-search"}
                       variant={ButtonVariant.control}
                       aria-label="search button for search input"
-                      onClick={onClickSearchIcon}>
+                      onClick={onClickSearchIcon}
+                    >
                       <SearchIcon />
                     </Button>
                   </InputGroup>
@@ -275,9 +287,11 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
               <DataToolbarFilter
                 chips={typeValue ? [typeValue] : []}
                 deleteChip={onDelete}
-                categoryName="Type">
+                categoryName="Type"
+              >
                 {filterValue === "Type" && (
                   <Dropdown
+                    id={"al-filter-select-type-dropdown"}
                     position="left"
                     onSelect={onTypeSelect}
                     isOpen={typeIsExpanded}
@@ -289,10 +303,12 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                     }
                     dropdownItems={typeMenuItems.map(option => (
                       <DropdownItem
+                        id={`al-filter-select-type-dropdown-item${option.key}`}
                         key={option.key}
                         value={option.value}
                         itemID={option.key}
-                        component={"button"}>
+                        component={"button"}
+                      >
                         {option.value}
                       </DropdownItem>
                     ))}
@@ -304,9 +320,11 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
               <DataToolbarFilter
                 chips={statusValue ? [statusValue] : []}
                 deleteChip={onDelete}
-                categoryName="Status">
+                categoryName="Status"
+              >
                 {filterValue === "Status" && (
                   <Dropdown
+                    id={"al-filter-select-status-dropdown"}
                     position="left"
                     onSelect={onStatusSelect}
                     isOpen={statusIsExpanded}
@@ -318,10 +336,12 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                     }
                     dropdownItems={statusMenuItems.map(option => (
                       <DropdownItem
+                        id={`al-filter-select-status-dropdown-item${option.key}`}
                         key={option.key}
                         value={option.value}
                         itemID={option.key}
-                        component={"button"}>
+                        component={"button"}
+                      >
                         {option.value}
                       </DropdownItem>
                     ))}
@@ -348,7 +368,8 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
             )}
           </>
         }
-        breakpoint="xl">
+        breakpoint="xl"
+      >
         {toggleGroupItems}
       </DataToolbarToggleGroup>
     </>
@@ -360,10 +381,18 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
 }) => {
   const [isKebabOpen, setIsKebabOpen] = React.useState(false);
   const dropdownItems = [
-    <DropdownItem key="delete-all" onClick={() => console.log("deleted")}>
+    <DropdownItem
+      id="al-filter-dropdown-item-deleteall"
+      key="delete-all"
+      onClick={() => console.log("deleted")}
+    >
       Delete All
     </DropdownItem>,
-    <DropdownItem key="purge-all" onClick={() => console.log("purged")}>
+    <DropdownItem
+      id="al-filter-dropdown-item-purgeall"
+      key="purge-all"
+      onClick={() => console.log("purged")}
+    >
       Purge All
     </DropdownItem>
     // <OverflowMenuDropdownItem key="secondary" isShared={true}>
@@ -390,7 +419,8 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
               <Button
                 id="al-filter-overflow-button"
                 variant={ButtonVariant.primary}
-                onClick={createAddressOnClick}>
+                onClick={createAddressOnClick}
+              >
                 Create Address
               </Button>
             </OverflowMenuItem>
