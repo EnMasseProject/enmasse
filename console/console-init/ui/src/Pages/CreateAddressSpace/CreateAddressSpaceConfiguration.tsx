@@ -87,7 +87,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   };
   const [isPlanOpen, setIsPlanOpen] = React.useState(false);
   const onPlanSelect = (event: any) => {
-    //innertext being used here as value property is undefined, because of PF defect 
+    //innertext being used here as value property is undefined, because of PF defect
     setPlan(event.target.innerText);
     setIsPlanOpen(!isPlanOpen);
   };
@@ -163,6 +163,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
             <FormGroup label="Namespace" isRequired={true} fieldId="name-space">
               <br />
               <Dropdown
+                id="cas-dropdown-namespace"
                 position={DropdownPosition.left}
                 onSelect={onNameSpaceSelect}
                 isOpen={isNameSpaceOpen}
@@ -177,6 +178,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                 }
                 dropdownItems={namespaceOptions.map(option => (
                   <DropdownItem
+                    id={`cas-dropdown-item-namespace${option.value}`}
                     key={option.value}
                     value={option.value}
                     itemID={option.value}
@@ -229,6 +231,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
             >
               <br />
               <Dropdown
+                id="cas-dropdown-plan"
                 position={DropdownPosition.left}
                 onSelect={onPlanSelect}
                 isOpen={isPlanOpen}
@@ -243,6 +246,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                 }
                 dropdownItems={planOptions.map(option => (
                   <DropdownItem
+                    id={`cas-dropdown-item-plan${option.value}`}
                     key={option.value}
                     value={option.value}
                     itemID={option.value}
@@ -262,6 +266,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
             >
               <br />
               <Dropdown
+                id="cas-dropdown-auth-service"
                 position={DropdownPosition.right}
                 onSelect={onAuthenticationServiceSelect}
                 isOpen={isAuthenticationServiceOpen}
@@ -280,6 +285,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                 }
                 dropdownItems={authenticationServiceOptions.map(option => (
                   <DropdownItem
+                    id={`cas-dropdown-item-auth-service${option.value}`}
                     key={option.value}
                     value={option.value}
                     itemID={option.value}

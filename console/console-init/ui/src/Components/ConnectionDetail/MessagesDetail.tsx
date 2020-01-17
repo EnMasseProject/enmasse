@@ -27,12 +27,20 @@ export const MessagesDetail: React.FunctionComponent<IMessagesDetail> = ({
   isMobileView
 }) => {
   return (
-    <Split>
-      <SplitItem span={6} className={css(styles.message_split)}>
+    <Split id="message-detail">
+      <SplitItem
+        id="message-detail-message-in"
+        span={6}
+        className={css(styles.message_split)}
+      >
         {messagesIn || messagesIn === 0 ? messagesIn : "-"}{" "}
         {isMobileView ? "" : <br />} Message in
       </SplitItem>
-      <SplitItem span={6} className={css(styles.message_split)}>
+      <SplitItem
+        id="message-detail-message-out"
+        span={6}
+        className={css(styles.message_split)}
+      >
         {messagesOut || messagesOut === 0 ? messagesOut : "-"}{" "}
         {isMobileView ? "" : <br />} Message out
       </SplitItem>

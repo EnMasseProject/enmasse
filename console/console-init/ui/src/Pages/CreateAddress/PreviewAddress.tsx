@@ -89,7 +89,8 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           style={{
             borderRight: "0.1em solid",
             borderRightColor: "lightgrey"
-          }}>
+          }}
+        >
           <Grid>
             {name && name.trim() !== "" && (
               <>
@@ -126,7 +127,9 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Topic
                 </GridItem>
-                <GridItem span={8}>{topic}</GridItem>
+                <GridItem id="preview-addr-topic" span={8}>
+                  {topic}
+                </GridItem>
               </>
             )}
           </Grid>
@@ -137,13 +140,16 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
             <Tooltip
               position={TooltipPosition.top}
               enableFlip={keepInViewChecked}
-              content={<div>Copy the configuration details on clipboard</div>}>
+              content={<div>Copy the configuration details on clipboard</div>}
+            >
               <Button
+                id="preview-addr-copy-configuration-button"
                 variant={ButtonVariant.link}
                 aria-label="copy-configuration"
                 onClick={() => {
                   navigator.clipboard.writeText(data.addressCommand);
-                }}>
+                }}
+              >
                 <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
               </Button>
             </Tooltip>
