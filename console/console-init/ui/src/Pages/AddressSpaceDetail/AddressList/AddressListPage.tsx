@@ -90,7 +90,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     namespace: address.ObjectMeta.Namespace,
     type: address.Spec.Type,
     planLabel: address.Spec.Plan.Spec.DisplayName,
-    planValue : address.Spec.Plan.ObjectMeta.Name,
+    planValue: address.Spec.Plan.ObjectMeta.Name,
     messagesIn: getFilteredValue(address.Metrics, "enmasse_messages_in"),
     messagesOut: getFilteredValue(address.Metrics, "enmasse_messages_out"),
     storedMessages: getFilteredValue(
@@ -174,6 +174,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       {addresses.Total > 0 ? " " : <EmptyAddress />}
       {addressBeingEdited && (
         <Modal
+          id="al-modal-edit-address"
           title="Edit"
           isSmall
           isOpen={true}
@@ -183,14 +184,16 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
               key="confirm"
               id="al-edit-confirm"
               variant="primary"
-              onClick={handleSaving}>
+              onClick={handleSaving}
+            >
               Confirm
             </Button>,
             <Button
               key="cancel"
               id="al-edit-cancel"
               variant="link"
-              onClick={handleCancelEdit}>
+              onClick={handleCancelEdit}
+            >
               Cancel
             </Button>
           ]}

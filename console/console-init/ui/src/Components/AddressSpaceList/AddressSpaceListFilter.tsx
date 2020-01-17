@@ -272,6 +272,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       <DataToolbarGroup variant="filter-group">
         <DataToolbarFilter categoryName="Filter">
           <Dropdown
+            id="al-filter-dropdown"
             position="left"
             onSelect={onFilterSelect}
             isOpen={filterIsExpanded}
@@ -286,10 +287,12 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
             }
             dropdownItems={filterMenuItems.map(option => (
               <DropdownItem
+                id={`al-filter-dropdown${option.key}`}
                 key={option.key}
                 value={option.value}
                 itemID={option.key}
-                component={"button"}>
+                component={"button"}
+              >
                 {option.value}
               </DropdownItem>
             ))}
@@ -301,10 +304,12 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
               <DataToolbarFilter
                 chips={filterNames}
                 deleteChip={onDelete}
-                categoryName="Name">
+                categoryName="Name"
+              >
                 {filterValue && filterValue === "Name" && (
                   <InputGroup>
                     <Select
+                      id="al-filter-input-name"
                       variant={SelectVariant.typeahead}
                       aria-label="Select a Name"
                       onToggle={onNameSelectToggle}
@@ -319,7 +324,8 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       ariaLabelledBy={"typeahead-select-id"}
                       placeholderText="Select name"
                       isDisabled={false}
-                      isCreatable={false}>
+                      isCreatable={false}
+                    >
                       {nameOptions &&
                         nameOptions.map((option, index) => (
                           <SelectOption key={index} value={option} />
@@ -327,9 +333,11 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       {/* {} */}
                     </Select>
                     <Button
+                      id="al-filter-search-name"
                       variant={ButtonVariant.control}
                       aria-label="search button for search input"
-                      onClick={onClickSearchIcon}>
+                      onClick={onClickSearchIcon}
+                    >
                       <SearchIcon />
                     </Button>
                   </InputGroup>
@@ -340,10 +348,12 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
               <DataToolbarFilter
                 chips={filterNamespaces}
                 deleteChip={onDelete}
-                categoryName="Namespace">
+                categoryName="Namespace"
+              >
                 {filterValue && filterValue === "Namespace" && (
                   <InputGroup>
                     <Select
+                      id="al-filter-input-namespace"
                       variant={SelectVariant.typeahead}
                       aria-label="Select a Namespace"
                       onToggle={onNamespaceSelectToggle}
@@ -358,7 +368,8 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       ariaLabelledBy={"typeahead-select-id"}
                       placeholderText="Select Namespace"
                       isDisabled={false}
-                      isCreatable={false}>
+                      isCreatable={false}
+                    >
                       {namespaceOptions &&
                         namespaceOptions.map((option, index) => (
                           <SelectOption key={index} value={option} />
@@ -366,9 +377,11 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       {/* {} */}
                     </Select>
                     <Button
+                      id="al-filter-search-namespace"
                       variant={ButtonVariant.control}
                       aria-label="search button for search input"
-                      onClick={onClickSearchIcon}>
+                      onClick={onClickSearchIcon}
+                    >
                       <SearchIcon />
                     </Button>
                   </InputGroup>
@@ -379,10 +392,12 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
               <DataToolbarFilter
                 chips={filterType ? [filterType] : []}
                 deleteChip={onDelete}
-                categoryName="Type">
+                categoryName="Type"
+              >
                 {filterValue && filterValue === "Type" && (
                   <InputGroup>
                     <Dropdown
+                      id="al-filter-dropdown-type"
                       position="left"
                       onSelect={onTypeFilterSelect}
                       isOpen={typeFilterIsExpanded}
@@ -397,10 +412,12 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       }
                       dropdownItems={typeFilterMenuItems.map(option => (
                         <DropdownItem
+                          id={`al-filter-dropdown-item-type${option.key}`}
                           key={option.key}
                           value={option.value}
                           itemID={option.key}
-                          component={"button"}>
+                          component={"button"}
+                        >
                           {option.value}
                         </DropdownItem>
                       ))}
@@ -426,7 +443,8 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
           )}
         </>
       }
-      breakpoint="xl">
+      breakpoint="xl"
+    >
       {toggleGroupItems}
     </DataToolbarToggleGroup>
   );
@@ -465,7 +483,8 @@ export const AddressSpaceListKebab: React.FunctionComponent<IAddressSpaceListKeb
               <Button
                 id="al-filter-overflow-button"
                 variant={ButtonVariant.primary}
-                onClick={createAddressSpaceOnClick}>
+                onClick={createAddressSpaceOnClick}
+              >
                 Create Address Space
               </Button>
             </OverflowMenuItem>

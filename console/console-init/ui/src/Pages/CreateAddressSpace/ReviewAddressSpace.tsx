@@ -143,6 +143,7 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
           <Title size={"lg"} className={css(Style.bottom_padding)}>
             {`Configuration details  `}
             <Tooltip
+            id="preview-addr-copy-tooltip"
               position={TooltipPosition.top}
               enableFlip={keepInViewChecked}
               content={<div>Copy the configuration details on clipboard</div>}
