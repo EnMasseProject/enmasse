@@ -73,22 +73,27 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
   };
   const dropdownItems = [
     <DropdownItem
+      id="adheader-dropdown-item-edit"
       key="download"
       aria-label="download"
-      onClick={() => onEdit(name)}>
+      onClick={() => onEdit(name)}
+    >
       Edit
     </DropdownItem>,
     <DropdownItem
+      id="adheader-dropdown-item-delete"
       key="delete"
       aria-label="delete"
-      onClick={() => onDelete(name)}>
+      onClick={() => onDelete(name)}
+    >
       Delete
     </DropdownItem>
   ];
   return (
     <PageSection
       variant={PageSectionVariants.light}
-      className={css(styles.no_bottom_padding)}>
+      className={css(styles.no_bottom_padding)}
+    >
       <Split>
         <SplitItem className={css(styles.address_icon_align)}>
           <TypeBadge type={type} />
@@ -104,7 +109,8 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
           <Flex className={css(styles.namespace_info_margin)}>
             <FlexItem
               className={css(styles.flex_right_border)}
-              id="adheader-plans">
+              id="adheader-plans"
+            >
               <b>{plan}</b>
             </FlexItem>
             <FlexItem id="adheader-shards">

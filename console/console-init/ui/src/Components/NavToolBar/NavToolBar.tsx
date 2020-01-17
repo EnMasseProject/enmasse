@@ -17,6 +17,7 @@ const NavToolBar: React.FC = () => {
 
   const dropdownItems = [
     <DropdownItem
+      id="navtb-item-help"
       key="help"
       style={{
         paddingRight: 100,
@@ -28,6 +29,7 @@ const NavToolBar: React.FC = () => {
       Help
     </DropdownItem>,
     <DropdownItem
+      id="navtb-item-about"
       key="About"
       style={{
         paddingRight: 100,
@@ -42,6 +44,7 @@ const NavToolBar: React.FC = () => {
   return (
     <React.Fragment>
       <Dropdown
+        id="navtb-item-help-about"
         position={DropdownPosition.right}
         toggle={
           <DropdownToggle

@@ -49,10 +49,10 @@ export default function ConnectionDetailPage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link to={"/"}>Home</Link>
+          <Link id='cdetail-link-home' to={"/"}>Home</Link>
         </BreadcrumbItem>
         <BreadcrumbItem>
-          <Link to={`/address-spaces/${namespace}/${name}/${type}/connections`}>
+          <Link id='cdetail-link-connections' to={`/address-spaces/${namespace}/${name}/${type}/connections`}>
             {name}
           </Link>
         </BreadcrumbItem>
