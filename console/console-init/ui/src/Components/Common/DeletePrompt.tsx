@@ -22,6 +22,7 @@ export const DeletePrompt: React.FunctionComponent<IDeleteProps> = ({
 }) => {
   return (
     <Modal
+      id="delete-prompt-modal"
       isSmall={true}
       title={header}
       isOpen={true}
