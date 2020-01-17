@@ -9,13 +9,32 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.api.common.OpenShift;
-import io.enmasse.controller.auth.*;
+import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.auth.AuthController;
+import io.enmasse.controller.auth.CertBundleCertProvider;
+import io.enmasse.controller.auth.CertManager;
+import io.enmasse.controller.auth.CertProvider;
+import io.enmasse.controller.auth.OpenSSLCertManager;
+import io.enmasse.controller.auth.OpenshiftCertProvider;
+import io.enmasse.controller.auth.SelfsignedCertProvider;
+import io.enmasse.controller.auth.WildcardCertProvider;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.ControllerReason;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
 import io.enmasse.controller.keycloak.RealmController;
-import io.enmasse.k8s.api.*;
+import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
+import io.enmasse.k8s.api.CachingSchemaProvider;
+import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
+import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.KubeAddressSpaceApi;
+import io.enmasse.k8s.api.KubeEventLogger;
+import io.enmasse.k8s.api.KubeResourceApplier;
+import io.enmasse.k8s.api.KubeSchemaApi;
+import io.enmasse.k8s.api.LogEventLogger;
+import io.enmasse.k8s.api.SchemaAuthenticationServiceRegistry;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.user.keycloak.KeycloakFactory;
@@ -34,10 +53,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class AddressSpaceController {
@@ -89,49 +105,6 @@ public class AddressSpaceController {
                 : new LogEventLogger();
 
         // Convert all address spaces from configmaps to CRD variant
-        ConfigMapAddressSpaceApi legacyAddressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient, options.getVersion());
-        Map<AddressSpace, List<Address>> converted = new HashMap<>();
-
-        for (AddressSpace legacy : legacyAddressSpaceApi.listAllAddressSpaces()) {
-            String globalName = legacy.getMetadata().getNamespace() + "." + legacy.getMetadata().getName();
-            try {
-                legacy.getMetadata().setResourceVersion(null);
-                addressSpaceApi.createAddressSpace(legacy);
-
-                // Should not fail, but if it does it will be handled below
-                AddressSpace created = addressSpaceApi.getAddressSpaceWithName(legacy.getMetadata().getNamespace(), legacy.getMetadata().getName()).get();
-
-                AddressApi addressApi = addressSpaceApi.withAddressSpace(created);
-                AddressApi legacyAddressApi = legacyAddressSpaceApi.withAddressSpace(legacy);
-                List<Address> convertedAddresses = new ArrayList<>();
-                for (Address address : legacyAddressApi.listAddresses(legacy.getMetadata().getNamespace()).stream().filter(address -> address.getMetadata().getName().startsWith(legacy.getMetadata().getName())).collect(Collectors.toList())) {
-                    address.getMetadata().setResourceVersion(null);
-                    addressApi.createAddress(address);
-                    convertedAddresses.add(address);
-                    log.info("Converted address {} in {} from ConfigMap to Address CRD", address.getMetadata().getName(), address.getMetadata().getNamespace());
-                }
-                converted.put(legacy, convertedAddresses);
-                String message = String.format("Converted address space %s in %s from ConfigMap to AddressSpace CRD. %d addresses converted", legacy.getMetadata().getName(), legacy.getMetadata().getNamespace(), convertedAddresses.size());
-                eventLogger.log(ControllerReason.AddressSpaceConverted, message, EventLogger.Type.Normal, ControllerKind.AddressSpace, globalName);
-            } catch (Exception e) {
-                eventLogger.log(ControllerReason.AddressSpaceConversionFailed, String.format("Error converting address space %s: %s", legacy.getMetadata().getName(), e.getMessage()), EventLogger.Type.Warning, ControllerKind.AddressSpace, globalName);
-                throw e;
-            }
-        }
-
-        for (Map.Entry<AddressSpace, List<Address>> entry : converted.entrySet()) {
-            AddressSpace addressSpace = entry.getKey();
-            try {
-                AddressApi legacyAddressApi = legacyAddressSpaceApi.withAddressSpace(addressSpace);
-                for (Address address : entry.getValue()) {
-                    legacyAddressApi.deleteAddress(address);
-                }
-
-                legacyAddressSpaceApi.deleteAddressSpace(addressSpace);
-            } catch (Exception e) {
-                log.warn("Error deleting ConfigMaps for address space {}", addressSpace, e);
-            }
-        }
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
         CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
@@ -163,10 +136,53 @@ public class AddressSpaceController {
         controllerChain.addController(new ExportsController(controllerClient));
         controllerChain.addController(authController);
         controllerChain.addController(new MetricsReporterController(metrics, options.getVersion()));
-        controllerChain.start();
 
         metricsServer = new HTTPServer(8080, metrics);
         metricsServer.start();
+
+        convertLegacyConfigMaps(controllerClient, options, addressSpaceApi, eventLogger);
+
+        controllerChain.start();
+    }
+
+    private static void convertLegacyConfigMaps(NamespacedKubernetesClient controllerClient, AddressSpaceControllerOptions options, AddressSpaceApi addressSpaceApi, EventLogger eventLogger) throws Exception {
+        ConfigMapAddressSpaceApi legacyAddressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient, options.getVersion());
+
+        for (AddressSpace legacy : legacyAddressSpaceApi.listAllAddressSpaces()) {
+            String globalName = legacy.getMetadata().getNamespace() + "." + legacy.getMetadata().getName();
+            try {
+                legacy.getMetadata().setResourceVersion(null);
+                addressSpaceApi.createAddressSpace(legacy);
+
+                // Should not fail, but if it does it will be handled below
+                AddressSpace created = addressSpaceApi.getAddressSpaceWithName(legacy.getMetadata().getNamespace(), legacy.getMetadata().getName()).get();
+
+                AddressApi addressApi = addressSpaceApi.withAddressSpace(created);
+                AddressApi legacyAddressApi = legacyAddressSpaceApi.withAddressSpace(legacy);
+                List<Address> legacyAddresses = legacyAddressApi.listAddresses(legacy.getMetadata().getNamespace()).stream().filter(address -> address.getMetadata().getName().startsWith(legacy.getMetadata().getName())).collect(Collectors.toList());
+                for (Address address : legacyAddresses) {
+                    address.getMetadata().setResourceVersion(null);
+                    addressApi.createAddress(address);
+                    log.info("Converted address {} in {} from ConfigMap to Address CRD", address.getMetadata().getName(), address.getMetadata().getNamespace());
+                }
+                String message = String.format("Converted address space %s in %s from ConfigMap to AddressSpace CRD. %d addresses converted", legacy.getMetadata().getName(), legacy.getMetadata().getNamespace(), legacyAddresses.size());
+                eventLogger.log(ControllerReason.AddressSpaceConverted, message, EventLogger.Type.Normal, ControllerKind.AddressSpace, globalName);
+            } catch (Exception e) {
+                eventLogger.log(ControllerReason.AddressSpaceConversionFailed, String.format("Error converting address space %s: %s", legacy.getMetadata().getName(), e.getMessage()), EventLogger.Type.Warning, ControllerKind.AddressSpace, globalName);
+                throw e;
+            }
+        }
+
+        try {
+            log.info("Deleting all Address ConfigMaps");
+            controllerClient.configMaps().inNamespace(controllerClient.getNamespace()).withLabel(LabelKeys.TYPE, "address-config").delete();
+            log.info("Deleting all AddressSpace ConfigMaps");
+            controllerClient.configMaps().inNamespace(controllerClient.getNamespace()).withLabel(LabelKeys.TYPE, "address-space").delete();
+            log.info("Conversion completed");
+        } catch (Exception e) {
+            log.warn("Error deleting legacy ConfigMaps");
+            throw e;
+        }
     }
 
     private void stop() {
