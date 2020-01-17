@@ -177,7 +177,7 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 		applyImageEnv(container, "MQTT_GATEWAY_IMAGE", "mqtt-gateway")
 		applyImageEnv(container, "MQTT_LWT_IMAGE", "mqtt-lwt")
 
-		memoryEnv := util.GetEnvOrDefault("ADDRSS_SPACE_CONTROLLER_MEMORY_LIMIT", "512Mi")
+		memoryEnv := util.GetEnvOrDefault("ADDRESS_SPACE_CONTROLLER_MEMORY_LIMIT", "1Gi")
 		memoryLimit, err := resource.ParseQuantity(memoryEnv)
 		if err != nil {
 			return err
