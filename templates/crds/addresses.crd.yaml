@@ -132,6 +132,10 @@ spec:
                       - Draining
             planStatus:
               type: object
+              required:
+                - name
+                - partitions
+                - resources
               properties:
                 name:
                   type: string
