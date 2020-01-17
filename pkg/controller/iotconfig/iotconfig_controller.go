@@ -165,6 +165,8 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 
 	rc := &recon.ReconcileContext{}
 
+	original := config.DeepCopy()
+
 	// update and store credentials
 
 	rc.Process(func() (result reconcile.Result, e error) {
@@ -218,7 +220,7 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return r.processLoraWanAdapter(ctx, config, qdrProxyConfigCtx)
 	})
 
-	return r.updateFinalStatus(ctx, config, rc)
+	return r.updateFinalStatus(ctx, original, config, rc)
 }
 
 func syncConfigCondition(status *iotv1alpha1.IoTConfigStatus) {
@@ -226,7 +228,7 @@ func syncConfigCondition(status *iotv1alpha1.IoTConfigStatus) {
 	ready.SetStatusOkOrElse(status.Phase == iotv1alpha1.ConfigPhaseActive, "NotReady", "infrastructure is not ready yet")
 }
 
-func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alpha1.IoTConfig, err error) error {
+func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, original *iotv1alpha1.IoTConfig, config *iotv1alpha1.IoTConfig, err error) error {
 
 	// we are initialized when there is no error
 
@@ -238,15 +240,22 @@ func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alph
 
 	syncConfigCondition(&config.Status)
 
-	return r.client.Status().Update(ctx, config)
+	// update status
+	var updateError error = nil
+	if !reflect.DeepEqual(config, original) {
+		log.Info("Configuration changed, updating status")
+		updateError = r.client.Status().Update(ctx, config)
+	}
+
+	return updateError
 }
 
-func (r *ReconcileIoTConfig) updateFinalStatus(ctx context.Context, config *iotv1alpha1.IoTConfig, rc *recon.ReconcileContext) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) updateFinalStatus(ctx context.Context, original *iotv1alpha1.IoTConfig, config *iotv1alpha1.IoTConfig, rc *recon.ReconcileContext) (reconcile.Result, error) {
 
 	// do a status update
 
 	rc.ProcessSimple(func() error {
-		return r.updateStatus(ctx, config, rc.Error())
+		return r.updateStatus(ctx, original, config, rc.Error())
 	})
 
 	// return result ... including status update
@@ -468,7 +477,7 @@ func (r *ReconcileIoTConfig) processGeneratedCredentials(ctx context.Context, co
 
 	if !reflect.DeepEqual(original, config) {
 		log.Info("Credentials change detected. Updating status and re-queuing.")
-		return reconcile.Result{Requeue: true}, r.updateStatus(ctx, config, nil)
+		return reconcile.Result{Requeue: true}, r.updateStatus(ctx, original, config, nil)
 	} else {
 		return reconcile.Result{}, nil
 	}

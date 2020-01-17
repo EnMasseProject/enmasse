@@ -8,6 +8,7 @@ package iotproject
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -104,9 +105,9 @@ type ReconcileIoTProject struct {
 	scheme *runtime.Scheme
 }
 
-func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, project *iotv1alpha1.IoTProject, currentError error) (reconcile.Result, error) {
+func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalProject *iotv1alpha1.IoTProject, reconciledProject *iotv1alpha1.IoTProject, currentError error) (reconcile.Result, error) {
 
-	newProject := project.DeepCopy()
+	newProject := reconciledProject.DeepCopy()
 
 	// get conditions for ready
 
@@ -114,7 +115,7 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, project *
 	resourcesReadyCondition := newProject.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeResourcesReady)
 	readyCondition := newProject.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeReady)
 
-	if project.DeletionTimestamp != nil {
+	if reconciledProject.DeletionTimestamp != nil {
 
 		newProject.Status.Phase = iotv1alpha1.ProjectPhaseTerminating
 		newProject.Status.PhaseReason = "Project deleted"
@@ -159,8 +160,11 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, project *
 	}
 
 	// update status
-
-	err := r.client.Status().Update(ctx, newProject)
+	var err error = nil
+	if !reflect.DeepEqual(newProject, originalProject) {
+		log.Info("Project changed, updating status")
+		err = r.client.Status().Update(ctx, newProject)
+	}
 
 	// return
 
@@ -197,13 +201,14 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
+	original := project.DeepCopy()
 	// start reconcile process
 
 	rc := &recon.ReconcileContext{}
 
 	if project.DeletionTimestamp != nil && project.Status.Phase != iotv1alpha1.ProjectPhaseTerminating {
 		rc.Process(func() (result reconcile.Result, e error) {
-			return r.updateProjectStatus(ctx, project, nil)
+			return r.updateProjectStatus(ctx, original, project, nil)
 		})
 		return rc.Result()
 	}
@@ -235,7 +240,7 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 			return r.reconcileExternal(ctx, &request, project)
 		})
 		rc.Process(func() (result reconcile.Result, e error) {
-			return r.updateProjectStatus(ctx, project, rc.Error())
+			return r.updateProjectStatus(ctx, original, project, rc.Error())
 		})
 
 	} else if project.Spec.DownstreamStrategy.ProvidedDownstreamStrategy != nil {
@@ -248,7 +253,7 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 			return r.reconcileProvided(ctx, &request, project)
 		})
 		rc.Process(func() (result reconcile.Result, e error) {
-			return r.updateProjectStatus(ctx, project, rc.Error())
+			return r.updateProjectStatus(ctx, original, project, rc.Error())
 		})
 
 	} else if project.Spec.DownstreamStrategy.ManagedDownstreamStrategy != nil {
@@ -262,7 +267,7 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 			return r.reconcileManaged(ctx, &request, project)
 		})
 		rc.Process(func() (result reconcile.Result, e error) {
-			return r.updateProjectStatus(ctx, project, rc.Error())
+			return r.updateProjectStatus(ctx, original, project, rc.Error())
 		})
 
 	} else {
@@ -274,7 +279,7 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 		rc.Process(func() (result reconcile.Result, e error) {
 			err := fmt.Errorf("missing or unknown downstream strategy")
-			return r.updateProjectStatus(ctx, project, err)
+			return r.updateProjectStatus(ctx, original, project, err)
 		})
 
 	}
