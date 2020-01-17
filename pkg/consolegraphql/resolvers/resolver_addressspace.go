@@ -47,7 +47,7 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 	paged := objects[lower:upper]
 	addressspaces := make([]*consolegraphql.AddressSpaceHolder, len(paged))
 	for i, _ := range paged {
-		addressspaces[i] = paged[0].(*consolegraphql.AddressSpaceHolder)
+		addressspaces[i] = paged[i].(*consolegraphql.AddressSpaceHolder)
 	}
 
 	return &AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1{
