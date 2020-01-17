@@ -25,7 +25,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
           itemId="addresses"
           isActive={active === "addresses"}
         >
-          <NavLink to={`addresses`} style={{ color: "black" }}>
+          <NavLink id='ad-space-nav-addresses' to={`addresses`} style={{ color: "black" }}>
             Addresses
           </NavLink>
         </NavItem>
@@ -34,7 +34,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
           itemId="connections"
           isActive={active === "connections"}
         >
-          <NavLink to={`connections`} style={{ color: "black" }}>
+          <NavLink id='ad-space-nav-connections' to={`connections`} style={{ color: "black" }}>
             Connections
           </NavLink>
         </NavItem>

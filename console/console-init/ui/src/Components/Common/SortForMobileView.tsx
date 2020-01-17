@@ -15,11 +15,7 @@ import {
   SortAmountUpAltIcon,
   SortAmountDownIcon
 } from "@patternfly/react-icons";
-import {
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
-} from "@patternfly/react-core";
+import { Dropdown, DropdownToggle, DropdownItem } from "@patternfly/react-core";
 import useWindowDimensions from "src/Components/Common/WindowDimension";
 import { ISortBy } from "@patternfly/react-table";
 
@@ -56,18 +52,14 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
 
   const onSortUp = () => {
     if (sortData) {
-      const sortItem = sortMenu.filter(
-        object => object.value === sortData
-      );
+      const sortItem = sortMenu.filter(object => object.value === sortData);
       setSortValue({ index: sortItem[0].index, direction: "asc" });
       setSortDirection("asc");
     }
   };
   const onSortDown = () => {
     if (sortData) {
-      const sortItem = sortMenu.filter(
-        object => object.value === sortData
-      );
+      const sortItem = sortMenu.filter(object => object.value === sortData);
       setSortValue({ index: sortItem[0].index, direction: "desc" });
       setSortDirection("desc");
     }
@@ -91,6 +83,7 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
         {width < 769 && (
           <>
             <Dropdown
+              id="sort-mobilevw-dropdown"
               position="left"
               onSelect={onSortSelect}
               isOpen={sortIsExpanded}
@@ -101,14 +94,17 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
               }
               dropdownItems={sortMenu.map(option => (
                 <DropdownItem
+                  id={`sort-mobilevw-dropdown${option.key}`}
                   key={option.key}
                   value={option.value}
                   itemID={option.key}
-                  component={"button"}>
+                  component={"button"}
+                >
                   {option.value}
                 </DropdownItem>
               ))}
-            />&nbsp;&nbsp;
+            />
+            &nbsp;&nbsp;
             {SortIcons}
           </>
         )}
@@ -120,8 +116,11 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
     <DataToolbar
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
-      collapseListedFiltersBreakpoint="xl">
-      <DataToolbarContent style={{width:180}}>{toolbarItems}</DataToolbarContent>
+      collapseListedFiltersBreakpoint="xl"
+    >
+      <DataToolbarContent style={{ width: 180 }}>
+        {toolbarItems}
+      </DataToolbarContent>
     </DataToolbar>
   );
 };

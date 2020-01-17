@@ -92,7 +92,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
           header: "type",
           title: (
             <>
-              <AddressSpaceIcon />
+              <AddressSpaceIcon/>
               <AddressSpaceType type={row.type} />
             </>
           )

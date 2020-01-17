@@ -19,13 +19,17 @@ export const EmptyAddressSpace = () => {
   return (
     <EmptyState variant={EmptyStateVariant.full}>
       <EmptyStateIcon icon={PlusCircleIcon} />
-      <Title size="lg">Create an address space</Title>
-      <EmptyStateBody>
+      <Title id="empty-ad-space-title" size="lg">
+        Create an address space
+      </Title>
+      <EmptyStateBody id="empty-ad-space-body">
         There are currently no address spaces available. Please click on the
         button below to create one.Learn more about this on the
         <Link to="/"> documentation</Link>
       </EmptyStateBody>
-      <Button variant="primary">Create Address Space</Button>
+      <Button id="empty-ad-space-create-button" variant="primary">
+        Create Address Space
+      </Button>
     </EmptyState>
   );
 };

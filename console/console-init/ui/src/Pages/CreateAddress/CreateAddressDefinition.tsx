@@ -187,6 +187,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
             <FormGroup label="Type" isRequired={true} fieldId="address-type">
               <br />
               <Dropdown
+                id="address-definition-type-dropdown"
                 position={DropdownPosition.left}
                 onSelect={onTypeSelect}
                 isOpen={isTypeOpen}
@@ -194,16 +195,19 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                 toggle={
                   <DropdownToggle
                     style={{ flex: "1" }}
-                    onToggle={() => setIsTypeOpen(!isTypeOpen)}>
+                    onToggle={() => setIsTypeOpen(!isTypeOpen)}
+                  >
                     {type}
                   </DropdownToggle>
                 }
                 dropdownItems={typeOptions.map(option => (
                   <DropdownItem
+                    id={`address-definition-type-dropdown-item${option.value}`}
                     key={option.value}
                     value={option.value}
                     itemID={option.value}
-                    component={"button"}>
+                    component={"button"}
+                  >
                     <b className={css(styles.capitalize_labels)}>
                       {option.label}
                     </b>
@@ -217,6 +221,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
             <FormGroup label="Plan" isRequired={true} fieldId="address-plan">
               <br />
               <Dropdown
+                id="address-definition-plan-dropdown"
                 position={DropdownPosition.left}
                 onSelect={onPlanSelect}
                 isOpen={isPlanOpen}
@@ -224,16 +229,19 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                 toggle={
                   <DropdownToggle
                     style={{ flex: "1", position: "inherit" }}
-                    onToggle={() => setIsPlanOpen(!isPlanOpen)}>
+                    onToggle={() => setIsPlanOpen(!isPlanOpen)}
+                  >
                     {plan}
                   </DropdownToggle>
                 }
                 dropdownItems={planOptions.map(option => (
                   <DropdownItem
+                    id={`address-definition-plan-dropdown-item${option.value}`}
                     key={option.value}
                     value={option.value}
                     itemID={option.value}
-                    component={"button"}>
+                    component={"button"}
+                  >
                     <b>{option.label}</b>
                     <br />
                     {option.description}
@@ -245,9 +253,11 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
               <FormGroup
                 label="Topic"
                 isRequired={true}
-                fieldId="address-topic">
+                fieldId="address-topic"
+              >
                 <br />
                 <Dropdown
+                  id="address-definition-topic-dropdown"
                   position={DropdownPosition.left}
                   onSelect={onTopicSelect}
                   isOpen={isTopicOpen}
@@ -255,7 +265,8 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                   toggle={
                     <DropdownToggle
                       style={{ flex: "1", position: "inherit" }}
-                      onToggle={() => setIsTopicOpen(!isTopicOpen)}>
+                      onToggle={() => setIsTopicOpen(!isTopicOpen)}
+                    >
                       {topic}
                     </DropdownToggle>
                   }
@@ -263,10 +274,12 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                     topicsForSubscription &&
                     topicsForSubscription.map(option => (
                       <DropdownItem
+                        id={`address-definition-topic-dropdown-item${option.value}`}
                         key={option.value}
                         value={option.value}
                         itemID={option.value}
-                        component={"button"}>
+                        component={"button"}
+                      >
                         <b>{option.label}</b>
                         <br />
                         {option.value}

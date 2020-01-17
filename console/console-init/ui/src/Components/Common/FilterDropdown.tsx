@@ -33,6 +33,7 @@ export const FilterDropdown: React.FunctionComponent<IDropdown> = ({
   };
   return (
     <Dropdown
+      id="filter-dropdown"
       position="left"
       onSelect={onSelectFilter}
       isOpen={isOpen}
@@ -44,6 +45,7 @@ export const FilterDropdown: React.FunctionComponent<IDropdown> = ({
       }
       dropdownItems={options.map(option => (
         <DropdownItem
+          id={`filter-dropdown-item${option.value}`}
           key={option.value}
           value={option.value}
           itemID={option.value}
