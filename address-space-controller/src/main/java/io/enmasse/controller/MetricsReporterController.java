@@ -5,6 +5,7 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Phase;
 import io.enmasse.address.model.AddressSpaceStatusConnector;
 import io.enmasse.metrics.api.MetricLabel;
 import io.enmasse.metrics.api.MetricType;
@@ -12,9 +13,13 @@ import io.enmasse.metrics.api.MetricValue;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.metrics.api.ScalarMetric;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+
+import static io.enmasse.address.model.Phase.Active;
+import static io.enmasse.address.model.Phase.Configuring;
+import static io.enmasse.address.model.Phase.Failed;
+import static io.enmasse.address.model.Phase.Pending;
+import static io.enmasse.address.model.Phase.Terminating;
 
 public class MetricsReporterController implements Controller {
     private final String version;
@@ -24,6 +29,7 @@ public class MetricsReporterController implements Controller {
     private volatile List<MetricValue> notReadyConnectorValues = new ArrayList<>();
     private volatile List<MetricValue> numConnectors = new ArrayList<>();
     private volatile int numAddressSpaces = 0;
+    private volatile Map<Phase, Long> countByPhase = new HashMap<>();
 
     public MetricsReporterController(Metrics metrics, String version) {
         this.version = version;
@@ -37,11 +43,16 @@ public class MetricsReporterController implements Controller {
         List<MetricValue> notReadyConnectorValues = new ArrayList<>();
         List<MetricValue> numConnectors = new ArrayList<>();
 
+        for (Phase phase : Phase.values()) {
+            countByPhase.put(phase, 0L);
+        }
+
         for (AddressSpace addressSpace : addressSpaces) {
             MetricLabel[] labels = new MetricLabel[]{new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())};
             readyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 1 : 0, labels));
             notReadyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 0 : 1, labels));
             numConnectors.add(new MetricValue(addressSpace.getStatus().getConnectors().size(), labels));
+            countByPhase.put(addressSpace.getStatus().getPhase(), 1 + countByPhase.get(addressSpace.getStatus().getPhase()));
 
             for (AddressSpaceStatusConnector connectorStatus : addressSpace.getStatus().getConnectors()) {
 
@@ -101,6 +112,36 @@ public class MetricsReporterController implements Controller {
                 "Total number of connectors of address spaces",
                 MetricType.gauge,
                 () -> numConnectors));
+
+        metrics.registerMetric(new ScalarMetric(
+                "address_spaces_pending_total",
+                "Total number of address spaces in Pending state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(countByPhase.get(Pending)))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "address_spaces_failed_total",
+                "Total number of address spaces in Failed state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(countByPhase.get(Failed)))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "address_spaces_terminating_total",
+                "Total number of address spaces in Terminating state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(countByPhase.get(Terminating)))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "address_spaces_configuring_total",
+                "Total number of address spaces in Configuring state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(countByPhase.get(Configuring)))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "address_spaces_active_total",
+                "Total number of address spaces in Active state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(countByPhase.get(Active)))));
     }
 
     @Override

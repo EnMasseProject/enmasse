@@ -35,6 +35,11 @@ func CreateDefaultLabels(labels map[string]string, component string, name string
 	return labels
 }
 
+// Apply a custom label
+func CreateCustomLabel(service *corev1.Service, key string, value string) {
+	service.ObjectMeta.Labels[key] = value
+}
+
 // Apply standard set of labels
 func ApplyDefaultLabels(meta *v1.ObjectMeta, component string, name string) {
 	meta.Labels = CreateDefaultLabels(meta.Labels, component, name)

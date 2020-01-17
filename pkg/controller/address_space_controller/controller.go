@@ -237,6 +237,7 @@ func (r *ReconcileAddressSpaceController) ensureService(ctx context.Context, req
 
 func applyService(service *corev1.Service) error {
 	install.ApplyServiceDefaults(service, service.Name, service.Name)
+	install.CreateCustomLabel(service, "monitoring-key", "enmasse-tenants")
 	service.Spec.Ports = []corev1.ServicePort{
 		{
 			Port:       8080,
