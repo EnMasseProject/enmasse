@@ -533,6 +533,24 @@ function createConnection(addressSpace, hostname) {
   var port = Math.floor(Math.random() * 25536) + 40000;
   var hostport = hostname + ":" + port;
   var encrypted = (port % 2 === 0);
+  var properties = [];
+  if (addressSpace.Spec.Type === "standard") {
+    properties = [
+      {
+        "Key": "platform",
+        "Value": "JVM: 1.8.0_191, 25.191-b12, Oracle Corporation, OS: Mac OS X, 10.13.6, x86_64"
+      },
+      {
+        "Key": "product",
+        "Value": "QpidJMS"
+      },
+      {
+        "Key": "version",
+        "Value": "0.38.0-SNAPSHOT"
+      }
+    ];
+
+  }
   return {
     ObjectMeta: {
       Name: hostport,
@@ -546,22 +564,8 @@ function createConnection(addressSpace, hostname) {
       ContainerId: uuidv1() + "",
       Protocol: encrypted ? "amqps" : "amqp",
       Encrypted: encrypted,
-      Properties: [
-        {
-          "Key": "platform",
-          "Value": "JVM: 1.8.0_191, 25.191-b12, Oracle Corporation, OS: Mac OS X, 10.13.6, x86_64"
-        },
-        {
-          "Key": "product",
-          "Value": "QpidJMS"
-        },
-        {
-          "Key": "version",
-          "Value": "0.38.0-SNAPSHOT"
-        }
-        ],
+      Properties: properties,
       Metrics: []
-
     }
   };
 }
@@ -1328,7 +1332,6 @@ EOF
   ConnectionSpec_consoleapi_enmasse_io_v1beta1: {
     AddressSpace: (parent, args, context, info) => {
       var as = addressSpaces.find(as => as.ObjectMeta.Name ===  parent.AddressSpace);
-      console.log("KWDEBUG" + as);
       return as
     },
   },
