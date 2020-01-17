@@ -36,6 +36,15 @@ type AgentAddress struct {
 	MessagesOut           int `json:"messages_out"`
 	Senders               int
 	Receivers             int
+	Shards                []AgentAddressShards
+}
+
+type AgentAddressShards struct {
+	Name         string
+	Consumers    int
+	Enqueued     int
+	Acknowledged int
+	Killed       int
 }
 
 type AgentConnection struct {

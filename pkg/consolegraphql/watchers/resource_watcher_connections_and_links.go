@@ -400,9 +400,9 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 
 	case agent.AgentAddressEventType:
 		agentAddr := event.Object.(*agent.AgentAddress)
-		now := time.Now()
+		fmt.Printf("name %s  address %s" , agentAddr.Name, agentAddr.Address)
 
-		// TODO handle temporary subscription queues.
+		now := time.Now()
 
 
 		objs, err := clw.Cache.Get("hierarchy", fmt.Sprintf("Address/%s/%s/%s", agentAddr.AddressSpaceNamespace, agentAddr.AddressSpace, agentAddr.Name), nil)
@@ -414,31 +414,68 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 			addr := objs[0].(*consolegraphql.AddressHolder)
 			metrics := addr.Metrics
 
-			stored, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_messages_stored", "gauge")
-			err := stored.Update(float64(agentAddr.Depth), now)
+			var sm *consolegraphql.SimpleMetric
+			var rm *consolegraphql.RateCalculatingMetric
+
+			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_messages_stored", "gauge")
+			err := sm.Update(float64(agentAddr.Depth), now)
 			if err != nil {
 				return err
 			}
-			in, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
-			err = in.Update(float64(agentAddr.MessagesIn), now)
-			if err != nil {
-				return err
+
+			if addr.Spec.Type != "subscription" {
+				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_senders", "gauge" )
+				err := sm.Update(float64(agentAddr.Senders), now)
+				if err != nil {
+					return err
+				}
+
+				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_receivers", "gauge" )
+				err = sm.Update(float64(agentAddr.Receivers), now)
+				if err != nil {
+					return err
+				}
+
+				rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
+				err = rm.Update(float64(agentAddr.MessagesIn), now)
+				if err != nil {
+					return err
+				}
+
+				rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge")
+				err = rm.Update(float64(agentAddr.MessagesOut), now)
+				if err != nil {
+					return err
+				}
+			} else {
+				consumers := 0
+				messagesIn := 0
+				messagesOut := 0
+				for _, shard := range agentAddr.Shards {
+					consumers += shard.Consumers
+					messagesIn += shard.Enqueued
+					messagesOut += shard.Acknowledged + shard.Killed
+				}
+
+				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_receivers", "gauge" )
+				err = sm.Update(float64(consumers), now)
+				if err != nil {
+					return err
+				}
+
+				rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
+				err = rm.Update(float64(messagesIn), now)
+				if err != nil {
+					return err
+				}
+
+				rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge")
+				err = rm.Update(float64(messagesOut), now)
+				if err != nil {
+					return err
+				}
 			}
-			out, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge")
-			err = out.Update(float64(agentAddr.MessagesOut), now)
-			if err != nil {
-				return err
-			}
-			senders, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_senders", "gauge" )
-			senders.Update(float64(agentAddr.Senders), now)
-			if err != nil {
-				return err
-			}
-			receivers, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics,"enmasse_receivers", "gauge" )
-			receivers.Update(float64(agentAddr.Receivers), now)
-			if err != nil {
-				return err
-			}
+
 
 			addr.Metrics = metrics
 			err = clw.Cache.Add(addr)
