@@ -314,6 +314,11 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 
 		_, currentLinks := agent.ToConnectionK8Style(agentcon)
 
+		for i, _ := range currentLinks {
+			log.Printf("Current %s", currentLinks[i].Name)
+		}
+
+
 		linkKey := fmt.Sprintf("Link/%s/%s/%s", con.Namespace, con.Spec.AddressSpace, con.Name)
 		existingLinks, err := clw.Cache.Get("hierarchy", linkKey, nil)
 
@@ -327,7 +332,7 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 			existingLink := existingLinks[i].(*consolegraphql.Link)
 			orphan := true
 			for _, currentLink := range currentLinks {
-				if reflect.DeepEqual(currentLink, existingLink) {
+				if reflect.DeepEqual(currentLink.UID, existingLink.UID) {
 					orphan = false
 					break
 				}
@@ -341,7 +346,7 @@ func (clw *ConnectionAndLinkWatcher) handleEvent(event agent.AgentEvent) error {
 				}
 
 				for i, _ := range newLinks {
-					if reflect.DeepEqual(newLinks[i], existingLink) {
+					if reflect.DeepEqual(newLinks[i].UID, existingLink.UID) {
 						newLinks = remove(newLinks, i)
 						break
 					}
