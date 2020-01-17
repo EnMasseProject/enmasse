@@ -29,3 +29,6 @@ rules:
   - apiGroups: [ "apps", "extensions" ]
     resources: [ "statefulsets", "deployments", "replicasets" ]
     verbs: [ "create", "update", "patch", "get", "list", "delete" ]
+  - apiGroups: [ "policy" ]
+    resources: [ "poddisruptionbudgets" ]
+    verbs: [ "create", "update", "get", "patch", "list", "watch", "delete" ]

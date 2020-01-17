@@ -148,6 +148,10 @@ spec:
                       type: string
                 minReplicas:
                   type: integer
+                minAvailable:
+                  type: integer
+                maxUnavailable:
+                  type: integer
                 linkCapacity:
                   type: integer
                 idleTimeout:
