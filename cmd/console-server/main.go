@@ -7,7 +7,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"flag"
 	"github.com/99designs/gqlgen/cmd"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/handler"
@@ -27,7 +27,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"os"
 	"reflect"
 	"time"
@@ -35,83 +34,23 @@ import (
 
 /*
 
-For development purposes, you can run the console backend outside Kubernetes:
+console-server - presents a GraphQL API allowing the client to query details of address spaces, addresses,
+connections and links.
 
-export DISABLE_PROPAGATE_BEARER=1
-export ENMASSE_ADDRESS_SPACE_TYPE_FILE=.../console//console-server/src/main/resources/addressSpaceTypes.json
-ENMASSE_ADDRESS_TYPE_FILE=.../console//console-server/src/main/resources/addressTypes.json
-go run cmd/console-server/main.go
+For development purposes, you can run the console backend outside the container.  See the Makefile target 'run'.
 
-You can then point a browser at :
+TODO:
 
-http://localhost:8080/graphql
-
-You should then be able to query all objects except for connections, links and metrics.
-
-To test the integration with a single Agent locally, use an oc port forward to expose
-the AMQP port of the admin pod.
-
-oc port-forward deployment/admin.4f5fcdf 56710:56710
-
-then set:
-
-export AGENT_HOST=localhost:56710
-
-Now restart cmd/console-server/main.go.   Connections for Standard Address Spaces will now be
-available through GraphQL.
-
-Major items that are unfinished:
-
-6) Restrict query results to what the user may see
-8) Mutations
-9) Auth services.
-12) Refactor agent -> model conversion - currently ugly code and poor division of responsibilities
-13) Refactor cachedb index specification to avoid spreading of knowledge of the indices throughout the code
-
+1) Restrict query results to what the user may see
+2) Mutations
+3) Refactor cachedb index specification to avoid spreading of knowledge of the indices throughout the code
+4) Pass CA to the Go-AMQP client when connecting to agents.
 
 */
-
-type Tracer struct {
-	http.RoundTripper
-	name string
-}
-
-// RoundTrip calls the nested RoundTripper while printing each request and
-// response/error to os.Stderr on either side of the nested call.  WARNING: this
-// may output sensitive information including bearer tokens.
-func (t *Tracer) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Dump the request to os.Stderr.
-	b, err := httputil.DumpRequestOut(req, true)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("%s Tracing rep %+v", t.name, req)
-	log.Printf("REQ: %s\n", string(b))
-
-	// Call the nested RoundTripper.
-	resp, err := t.RoundTripper.RoundTrip(req)
-
-	// If an error was returned, dump it to os.Stderr.
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return resp, err
-	}
-
-	// Dump the response to os.Stderr.
-	b, err = httputil.DumpResponse(resp, req.URL.Query().Get("watch") != "true")
-	if err != nil {
-		return nil, err
-	}
-	os.Stderr.Write(b)
-	os.Stderr.Write([]byte{'\n'})
-
-	return resp, err
-}
 
 func authHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		accessToken := req.Header.Get("X-Forwarded-Access-Token")
-		log.Printf("KWDEBUG Bearer token : " + accessToken)
 
 		if accessToken == "" {
 			rw.WriteHeader(401)
@@ -126,7 +65,6 @@ func authHandler(next http.Handler) http.Handler {
 				},
 			},
 		)
-		log.Printf("KWDEBUG Using kubeconfig: %+v", kubeconfig)
 
 		config, err :=  kubeconfig.ClientConfig()
 
@@ -136,9 +74,36 @@ func authHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		log.Printf("Wrapping transport")
-		config.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
-			return &Tracer{rt, "auth"}
+		userclientset, err := user.NewForConfig(config)
+		if err != nil {
+			log.Printf("Failed to build client set : %v", err)
+			rw.WriteHeader(500)
+			return
+		}
+
+		requestState := &server.RequestState{
+			UserInterface: userclientset.Users(),
+		}
+
+		ctx := server.ContextWithRequestState(requestState, req.Context())
+		next.ServeHTTP(rw, req.WithContext(ctx))
+	})
+}
+
+func developmentHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+
+		kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+			clientcmd.NewDefaultClientConfigLoadingRules(),
+			&clientcmd.ConfigOverrides{},
+		)
+
+		config, err :=  kubeconfig.ClientConfig()
+
+		if err != nil {
+			log.Printf("Failed to build config : %v", err)
+			rw.WriteHeader(500)
+			return
 		}
 
 		userclientset, err := user.NewForConfig(config)
@@ -158,13 +123,30 @@ func authHandler(next http.Handler) http.Handler {
 }
 
 func main() {
-
 	infraNamespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
 	port := util.GetEnvOrDefault("PORT", "8080")
-	_, disablePropagateBearer := os.LookupEnv("DISABLE_PROPAGATE_BEARER")
+
+	var developmentMode = flag.Bool("developmentMode", false,
+		"set to true to run console-server outside of the OpenShift container.  It will look for" +
+		"manually established routes to agents rather than services.")
+	flag.Parse()
+
+	log.Printf("console-server starting\n")
+
+	if *developmentMode {
+		log.Printf("Running in DEVELOPMENT MODE.  This mode is not intended for use within the container.\n")
+		log.Printf(`Expose addressspace agents to the console server by *manually* running:
+
+oc create route passthrough  --service=console-4f5fcdf
+
+The GraphQL playground is available:
+http://localhost:` + port + `/graphql
+			`)
+	}
+
 	dumpCachePeriod, _ := os.LookupEnv("DUMP_CACHE_PERIOD")
 
-	log.Printf("Namespace: %s, Port: %s, Disable Propagate Bearer: %t\n", infraNamespace, port, disablePropagateBearer)
+	log.Printf("Namespace: %s\n", infraNamespace)
 
 	objectCache, err := createObjectCache()
 	if err != nil {
@@ -178,10 +160,6 @@ func main() {
 	)
 
 	config, err :=  kubeconfig.ClientConfig()
-	//config.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
-	//	return &Tracer{rt, "core"}
-	//}
-
 	if err != nil {
 		panic(err)
 	}
@@ -251,9 +229,14 @@ func main() {
 			return watchers.NewAddressSpaceSchemaWatcher(objectCache, watchers.AddressSpaceSchemaWatcherConfig(config))
 		},
 		func() (watchers.ResourceWatcher, error) {
+			watcherConfigs := make([]watchers.WatcherOption, 0)
+			watcherConfigs = append(watcherConfigs, watchers.AgentWatcherServiceConfig(config))
+			if *developmentMode {
+				watcherConfigs = append(watcherConfigs, watchers.AgentWatcherRouteConfig(config))
+			}
 			return watchers.NewAgentWatcher(objectCache, infraNamespace, func() agent.AgentCollector {
 				return agent.AmqpAgentCollectorCreator(config.BearerToken)
-			},  watchers.AgentWatcherConfig(config))
+			}, *developmentMode, watcherConfigs...)
 		},
 	}
 
@@ -283,14 +266,15 @@ func main() {
 		if err == nil {
 			schedule(func() {
 				_ = objectCache.Dump()
-				//objectCache.Dump()
-				//_ = metricCache.Dump()
 			}, duration)
 
 		}
 	}
 
-	playground := handler.Playground("GraphQL playground", "/graphql/query")
+	queryEndpoint := "/graphql/query"
+	playground := handler.Playground("GraphQL playground", queryEndpoint)
+	http.Handle("/graphql/", playground)
+
 	graphql := handler.GraphQL(resolvers.NewExecutableSchema(resolvers.Config{Resolvers: &resolver}),
 		handler.ErrorPresenter(
 			func(ctx context.Context, e error) *gqlerror.Error {
@@ -308,19 +292,16 @@ func main() {
 			if rctx != nil {
 				log.Printf("Query execution - op: %s %s\n", rctx.OperationName, time.Since(start))
 			}
-
 			return bytes
 		}),
 	)
 
-	http.Handle("/graphql/", playground)
-	if disablePropagateBearer {
-		http.Handle("/graphql/query", graphql)
+	if *developmentMode {
+		http.Handle(queryEndpoint, developmentHandler(graphql))
 	} else {
-		http.Handle("/graphql/query", authHandler(graphql))
+		http.Handle(queryEndpoint, authHandler(graphql))
 	}
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground\n", port)
 	err = http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		panic(err.Error())
