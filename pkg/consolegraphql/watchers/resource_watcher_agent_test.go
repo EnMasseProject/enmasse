@@ -54,7 +54,7 @@ func newTestAgentWatcher(t *testing.T) (*AgentWatcher, chan agent.AgentEvent) {
 
 	eventChan := make(chan agent.AgentEvent)
 
-	watcher, err := NewAgentWatcher(objectCache, v1.NamespaceAll, MockAgentCollectorCreator(eventChan), AgentWatcherClient(fake.NewSimpleClientset().CoreV1()))
+	watcher, err := NewAgentWatcher(objectCache, v1.NamespaceAll, MockAgentCollectorCreator(eventChan), false, AgentWatcherClient(fake.NewSimpleClientset().CoreV1()))
 	assert.NoError(t, err)
 
 	return watcher, eventChan
@@ -393,7 +393,7 @@ type MockAgentCollector struct {
 	stopped   chan struct{}
 }
 
-func (m *MockAgentCollector) Collect(addressSpaceNamespace string, addressSpace string, infraUuid string, host string, port int32, handler agent.AgentEventHandler) error {
+func (m *MockAgentCollector) Collect(addressSpaceNamespace string, addressSpace string, infraUuid string, host string, port int32, handler agent.AgentEventHandler, developmentMode bool) error {
 	go func() {
 		defer close(m.stopped)
 		for {
