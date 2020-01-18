@@ -59,8 +59,9 @@ type Cache interface {
 	DeleteByPrefix(idxName, keyPrefix string) error
 
 	Get(idxName string, keyPrefix string, filter ObjectFilter) ([]interface{}, error)
-	GetMap(keyPrefix string, keyaccessor func(interface{}) (interface{}, error)) (map[interface{}]interface{}, error)
 	Dump() error
+
+	GetKeyCreator(idxName string) (KeyCreator, error)
 }
 
 type MemdbCache struct {
@@ -208,23 +209,6 @@ func (r *MemdbCache) Get(idxName string, keyPrefix string, filter ObjectFilter) 
 	}
 }
 
-func (r *MemdbCache) GetMap(keyPrefix string, keyaccessor func(interface{}) (interface{}, error)) (map[interface{}]interface{}, error) {
-	objs, err := r.Get("hierarchy", keyPrefix, nil)
-	if err != nil {
-		return nil, err
-	}
-	mapped := make(map[interface{}]interface{}, len(objs))
-	for _, obj := range objs {
-		key, err := keyaccessor(obj)
-		if err != nil {
-			return nil, err
-		}
-		mapped[key] = obj
-	}
-
-	return mapped, nil
-}
-
 func (r *MemdbCache) DeleteByPrefix(idxName, keyPrefix string) error {
 	txn := r.db.Txn(true)
 	defer txn.Abort()
@@ -258,4 +242,53 @@ func (r *MemdbCache) Dump() error {
 		fmt.Printf("End Index: %s\n\n", name)
 	}
 	return nil
+}
+
+func (r *MemdbCache) GetKeyCreator(idxName string) (KeyCreator, error) {
+	if schema, ok := r.schema.Tables["object"].Indexes[idxName]; ok {
+		if indexer, ok  := schema.Indexer.(*hierarchyIndex); ok {
+			return indexer.keyCreator, nil
+		} else {
+			return nil, fmt.Errorf("unexpected indexer type %T", schema.Indexer)
+		}
+	} else {
+		return nil, fmt.Errorf("index not found %s", idxName)
+	}
+
+}
+
+type KeyCreator func(obj interface{}) (bool, string, error)
+
+type hierarchyIndex struct {
+	keyCreator KeyCreator
+}
+
+func (s *hierarchyIndex) FromObject(obj interface{}) (bool, []byte, error) {
+	rv, key, err := s.keyCreator(obj)
+	key += "\x00"
+	return rv, []byte(key), err
+}
+
+func (s *hierarchyIndex) FromArgs(args ...interface{}) ([]byte, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("must provide only a single argument")
+	}
+	arg, ok := args[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("argument must be a string: %#v", args[0])
+	}
+	// Add the null character as a terminator
+	arg += "\x00"
+	return []byte(arg), nil
+}
+
+func (s *hierarchyIndex) PrefixFromArgs(args ...interface{}) ([]byte, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("must provide only a single argument")
+	}
+	arg, ok := args[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("argument must be a string: %#v", args[0])
+	}
+	return []byte(arg), nil
 }

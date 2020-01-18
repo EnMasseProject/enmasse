@@ -10,14 +10,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"strings"
 	"testing"
 )
 
-const altHierarchy = "altHierarchy"
+const idIndex = "id"
+const altIndex = "altIndex"
+
 
 type CacheObj struct {
 	metav1.TypeMeta
@@ -29,23 +29,7 @@ type CacheObjSpec struct {
 	Attr string
 }
 
-func (c CacheObj) SetGroupVersionKind(kind schema.GroupVersionKind) {
-	panic("unused")
-}
-
-func (c CacheObj) GroupVersionKind() schema.GroupVersionKind {
-	return schema.GroupVersionKind{
-		Group:   "test.enmasse.io",
-		Version: "beta1",
-		Kind:    "CacheObj",
-	}
-}
-
-func (c CacheObj) GetObjectKind() schema.ObjectKind {
-	return c
-}
-
-func (c CacheObj) DeepCopyObject() runtime.Object {
+func (c *CacheObj) DeepCopyObject() *CacheObj {
 	return &CacheObj{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: c.APIVersion,
@@ -62,22 +46,22 @@ func (c CacheObj) DeepCopyObject() runtime.Object {
 	}
 }
 
-func ObjectIndexCreator(o runtime.Object) (string, error) {
+func cacheObjectKeyCreator(o interface{}) (bool, string, error) {
 	co, ok := o.(*CacheObj)
 	if !ok {
-		return "", fmt.Errorf("unexpected type")
+		return false, "", fmt.Errorf("unexpected type %T", co)
 	}
 
-	return co.Kind + "/" + co.Namespace + "/" + co.Name, nil
+	return true, co.Kind + "/" + co.Namespace + "/" + co.Name, nil
 }
 
-func LinkIndexCreator2(o runtime.Object) (string, error) {
+func altCacheObjectKeyCreator(o interface{}) (bool, string, error) {
 	co, ok := o.(*CacheObj)
 	if !ok {
-		return "", fmt.Errorf("unexpected type")
+		return false, "", fmt.Errorf("unexpected type %T", co)
 	}
 
-	return co.Kind + "/" + co.Namespace + "/" + co.Spec.Attr, nil
+	return true, co.Kind + "/" + co.Namespace + "/" + co.Spec.Attr, nil
 }
 
 func newTestCache(t *testing.T, alternativeHierarchy bool) Cache {
@@ -87,24 +71,16 @@ func newTestCache(t *testing.T, alternativeHierarchy bool) Cache {
 	specifiers := make([]IndexSpecifier, 0)
 	specifiers = append(specifiers,
 		IndexSpecifier{
-			Name:    "id",
-			Indexer: &UidIndex{},
-		},
-		IndexSpecifier{
-			Name: HierarchyIndexName,
-			Indexer: &HierarchyIndex{
-				IndexCreators: map[string]HierarchicalIndexCreator{
-					"CacheObj": ObjectIndexCreator,
-				},
+			Name: idIndex,
+			Indexer: &hierarchyIndex{
+				keyCreator: cacheObjectKeyCreator,
 			},
 		})
 	if alternativeHierarchy {
 		specifiers = append(specifiers, IndexSpecifier{
-			Name: altHierarchy,
-			Indexer: &HierarchyIndex{
-				IndexCreators: map[string]HierarchicalIndexCreator{
-					"CacheObj": LinkIndexCreator2,
-				},
+			Name: altIndex,
+			Indexer: &hierarchyIndex{
+				keyCreator: altCacheObjectKeyCreator,
 			},
 		})
 	}
@@ -121,10 +97,10 @@ func TestInsert(t *testing.T) {
 	err := c.Add(obj)
 	assert.NoError(t, err, "failed to insert object")
 
-	retrieved, err := c.Get("id", string(obj.UID), nil)
+	retrieved, err := c.Get(idIndex, "CacheObject/ns1/ob1", nil)
 	assert.NoError(t, err, "failed to retrieve object")
 
-	assert.Equal(t, 1, len(retrieved), "Unexpected object")
+	assert.Equal(t, 1, len(retrieved), "Unexpected number of objects retrieved")
 	assert.Equal(t, obj, retrieved[0], "Unexpected object")
 }
 
@@ -135,14 +111,14 @@ func TestMemdbCache_Delete(t *testing.T) {
 	err := c.Add(obj)
 	assert.NoError(t, err, "failed to insert object")
 
-	retrieved, err := c.Get("id", string(obj.UID), nil)
+	retrieved, err := c.Get(idIndex, "CacheObject/ns1/ob1", nil)
 	assert.NoError(t, err, "failed to query object")
 	assert.Equal(t, 1, len(retrieved), "failed to retrieve object")
 
 	err = c.Delete(obj)
 	assert.NoError(t, err, "failed to delete object")
 
-	reretrieved, err := c.Get("id", string(obj.UID), nil)
+	reretrieved, err := c.Get(idIndex, "CacheObject/ns1/ob1", nil)
 	assert.NoError(t, err, "failed to query object")
 	assert.Equal(t, 0, len(reretrieved), "unexpectedly retrieved object after deletion")
 }
@@ -168,16 +144,16 @@ func TestMemdbCache_DeleteByPrefix(t *testing.T) {
 		assert.Equalf(t, expected, actual, "Unexpected number of links after delete of prefix %s", idxpath)
 	}
 
-	doSubsetTest("hierarchy", "CacheObject", 0)
-	doSubsetTest("hierarchy", "CacheObject/ns1/a", 0)
-	doSubsetTest("hierarchy", "CacheObject/ns1/aa", 1)
+	doSubsetTest(idIndex, "CacheObject", 0)
+	doSubsetTest(idIndex, "CacheObject/ns1/a", 0)
+	doSubsetTest(idIndex, "CacheObject/ns1/aa", 1)
 }
 
 func TestMemdbCache_Get(t *testing.T) {
 	c := newTestCache(t, false)
 
 	doSubsetTest := func(idxpath string, expected int) {
-		subset, err := c.Get("hierarchy", idxpath, nil)
+		subset, err := c.Get(idIndex, idxpath, nil)
 		assert.NoError(t, err, "failed to retrieve objects")
 
 		actual := len(subset)
@@ -207,7 +183,7 @@ func TestMemdbCache_FilteredGet(t *testing.T) {
 	err := c.Add(obj1, obj2)
 	assert.NoError(t, err, "failed to insert objects")
 
-	subset, err := c.Get("hierarchy", "CacheObject", func(object interface{}) (bool, bool, error) {
+	subset, err := c.Get(idIndex, "CacheObject", func(object interface{}) (bool, bool, error) {
 		return object.(*CacheObj).Name == obj1.Name, true, nil
 	})
 	assert.NoError(t, err, "failed to retrieve objects")
@@ -229,7 +205,7 @@ func TestMemdbCache_FilteredGetStop(t *testing.T) {
 	err := c.Add(obj1, obj2, obj3)
 	assert.NoError(t, err, "failed to insert objects")
 
-	subset, err := c.Get("hierarchy", "CacheObject", func(object interface{}) (bool, bool, error) {
+	subset, err := c.Get(idIndex, "CacheObject", func(object interface{}) (bool, bool, error) {
 		name := object.(*CacheObj).Name
 		return strings.HasPrefix(obj1.Name, "a"), name == "a", nil
 	})
@@ -259,11 +235,11 @@ func TestMemdbCache_Get_AltIndex(t *testing.T) {
 	err := c.Add(obj1, obj2)
 	assert.NoError(t, err, "failed to insert objects")
 
-	doSubsetTest("hierarchy", "CacheObject", 2)
-	doSubsetTest("hierarchy", "CacheObject/ns1/foo", 2)
-	doSubsetTest("hierarchy", "CacheObject/ns1/foo1", 1)
-	doSubsetTest(altHierarchy, "CacheObject/ns1/bar", 2)
-	doSubsetTest(altHierarchy, "CacheObject/ns1/bar1", 1)
+	doSubsetTest(idIndex, "CacheObject", 2)
+	doSubsetTest(idIndex, "CacheObject/ns1/foo", 2)
+	doSubsetTest(idIndex, "CacheObject/ns1/foo1", 1)
+	doSubsetTest(altIndex, "CacheObject/ns1/bar", 2)
+	doSubsetTest(altIndex, "CacheObject/ns1/bar1", 1)
 }
 
 func TestMemdbCache_DeleteByPrefix_AltIndex(t *testing.T) {
@@ -287,10 +263,10 @@ func TestMemdbCache_DeleteByPrefix_AltIndex(t *testing.T) {
 		assert.Equalf(t, expected, actual, "Unexpected number of links after delete of prefix %s", idxpath)
 	}
 
-	doSubsetTest("hierarchy", "CacheObject/ns1/aa", 1)
-	doSubsetTest(altHierarchy, "CacheObject/ns1/bbc", 2)
+	doSubsetTest(idIndex, "CacheObject/ns1/aa", 1)
+	doSubsetTest(altIndex, "CacheObject/ns1/bbc", 2)
 	// Wrong index - won't delete anything
-	doSubsetTest("hierarchy", "CacheObject/ns1/bbc", 3)
+	doSubsetTest(idIndex, "CacheObject/ns1/bbc", 3)
 }
 
 func TestMemdbCache_Update(t *testing.T) {
@@ -302,19 +278,19 @@ func TestMemdbCache_Update(t *testing.T) {
 
 	err = c.Update(func(curr interface{}) (interface{}, error) {
 		current := curr.(*CacheObj)
-		upd := current.DeepCopyObject().(*CacheObj)
+		upd := current.DeepCopyObject()
 		upd.Spec.Attr = "upd"
 		return upd, nil
 	}, obj)
 	assert.NoError(t, err, "failed to update object")
 
-	retrieved, err := c.Get("id", string(obj.UID), nil)
+	retrieved, err := c.Get(idIndex, "CacheObject/ns1/ob1", nil)
 	assert.NoError(t, err, "failed to retrieve object")
 
 
 	assert.Equal(t, 1, len(retrieved), "Unexpected object")
 
-	expected := obj.DeepCopyObject().(*CacheObj)
+	expected := obj.DeepCopyObject()
 	expected.Spec.Attr = "upd"
 	assert.Equal(t, expected, retrieved[0], "Unexpected object")
 }
@@ -333,13 +309,13 @@ func TestMemdbCache_UpdateNotRealised(t *testing.T) {
 		if current.Name == "ob2" {
 			return nil, nil
 		}
-		upd := current.DeepCopyObject().(*CacheObj)
+		upd := current.DeepCopyObject()
 		upd.Spec.Attr = "upd"
 		return upd, nil
 	}, obj1, obj2, obj3)
 	assert.NoError(t, err, "failed to update object2")
 
-	retrieved, err := c.Get("hierarchy", "CacheObject/", nil)
+	retrieved, err := c.Get(idIndex, "CacheObject/", nil)
 	assert.NoError(t, err, "failed to retrieve objects")
 
 	assert.Equal(t, 3, len(retrieved), "Unexpected object")
