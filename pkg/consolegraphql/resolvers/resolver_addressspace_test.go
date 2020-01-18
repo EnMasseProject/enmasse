@@ -10,30 +10,16 @@ import (
 	"context"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func newTestAddressSpaceResolver(t *testing.T) *Resolver {
-	c := &cache.MemdbCache{}
-	err := c.Init(cache.IndexSpecifier{
-		Name:    "id",
-		Indexer: &cache.UidIndex{},
-	},
-		cache.IndexSpecifier{
-			Name: "hierarchy",
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"AddressSpace": watchers.AddressSpaceIndexCreator,
-					"Connection":   watchers.ConnectionIndexCreator,
-				},
-			},
-		})
+	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
 	resolver := Resolver{}
-	resolver.Cache = c
+	resolver.Cache = objectCache
 	return &resolver
 }
 

@@ -11,7 +11,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,29 +20,7 @@ import (
 )
 
 func newTestAddressResolver(t *testing.T) *Resolver {
-	objectCache := &cache.MemdbCache{}
-	err := objectCache.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: &cache.UidIndex{},
-		},
-		cache.IndexSpecifier{
-			Name: "hierarchy",
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"Address": watchers.AddressIndexCreator,
-					"Link":    watchers.ConnectionLinkIndexCreator,
-				},
-			},
-		}, cache.IndexSpecifier{
-			Name:         "addressLinkHierarchy",
-			AllowMissing: true,
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"Link": watchers.AddressLinkIndexCreator,
-				},
-			},
-		})
+	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
 	resolver := Resolver{}

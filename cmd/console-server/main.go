@@ -148,7 +148,7 @@ http://localhost:` + port + `/graphql
 
 	log.Printf("Namespace: %s\n", infraNamespace)
 
-	objectCache, err := createObjectCache()
+	objectCache, err := cache.CreateObjectCache()
 	if err != nil {
 		panic(err)
 	}
@@ -308,41 +308,6 @@ http://localhost:` + port + `/graphql
 	}
 
 	cmd.Execute()
-}
-
-func createObjectCache() (*cache.MemdbCache, error) {
-	c := &cache.MemdbCache{}
-	err := c.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: &cache.UidIndex{},
-		},
-		cache.IndexSpecifier{
-			Name: "hierarchy",
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"Namespace":        		watchers.NamespaceIndexCreator,
-					"AddressSpace":     		watchers.AddressSpaceIndexCreator,
-					"Address":          		watchers.AddressIndexCreator,
-					"AddressPlan":      		watchers.AddressPlanIndexCreator,
-					"AddressSpacePlan": 		watchers.AddressSpacePlanIndexCreator,
-					"AuthenticationService":	watchers.AuthenticationServiceIndexCreator,
-					"AddressSpaceSchema":    	watchers.AddressSpaceSchemaIndexCreator,
-					"Connection":       		watchers.ConnectionIndexCreator,
-					"Link":             		watchers.ConnectionLinkIndexCreator,
-				},
-			},
-		},
-		cache.IndexSpecifier{
-			Name:         "addressLinkHierarchy",
-			AllowMissing: true,
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"Link": watchers.AddressLinkIndexCreator,
-				},
-			},
-		})
-	return c, err
 }
 
 func schedule(f func(), delay time.Duration) (chan bool, chan bool) {

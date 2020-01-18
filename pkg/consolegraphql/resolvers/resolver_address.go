@@ -11,6 +11,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"strings"
@@ -36,7 +37,7 @@ func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.Addr
 
 		addrtoks := strings.SplitN(obj.ObjectMeta.Name, ".", 2)
 		// N.B. address name not prefixed in the link index
-		links, e := ar.Cache.Get("addressLinkHierarchy", fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1]), fltrfunc)
+		links, e := ar.Cache.Get(cache.AddressLinkHierarchyIndexName, fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1]), fltrfunc)
 		if e != nil {
 			return nil, e
 		}
