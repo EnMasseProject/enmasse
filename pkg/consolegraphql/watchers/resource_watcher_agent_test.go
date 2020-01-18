@@ -26,30 +26,7 @@ const namespace = "mynamespace"
 const addressName = "myqueue"
 
 func newTestAgentWatcher(t *testing.T) (*AgentWatcher, chan agent.AgentEvent) {
-	objectCache := &cache.MemdbCache{}
-	err := objectCache.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: &cache.UidIndex{},
-		},
-		cache.IndexSpecifier{
-			Name: "hierarchy",
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"Connection": ConnectionIndexCreator,
-					"Link": ConnectionLinkIndexCreator,
-					"Address": AddressIndexCreator,
-				},
-			},
-		}, cache.IndexSpecifier{
-			Name:         "addressLinkHierarchy",
-			AllowMissing: true,
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"Link": AddressLinkIndexCreator,
-				},
-			},
-		})
+	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
 	eventChan := make(chan agent.AgentEvent)

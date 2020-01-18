@@ -8,7 +8,6 @@ package resolvers
 import (
 	"context"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
@@ -18,24 +17,11 @@ import (
 )
 
 func newTestNamespaceResolver(t *testing.T) *Resolver {
-	c := &cache.MemdbCache{}
-	err := c.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: &cache.UidIndex{},
-		},
-		cache.IndexSpecifier{
-			Name: "hierarchy",
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"Namespace": watchers.NamespaceIndexCreator,
-				},
-			},
-		})
-	assert.NoError(t, err, "failed to create test resolver")
+	objectCache, err := cache.CreateObjectCache()
+	assert.NoError(t, err, "failed to create object cache")
 
 	resolver := Resolver{}
-	resolver.Cache = c
+	resolver.Cache = objectCache
 	return &resolver
 }
 

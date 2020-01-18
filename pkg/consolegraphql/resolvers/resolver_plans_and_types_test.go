@@ -10,7 +10,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,25 +18,11 @@ import (
 )
 
 func newTestPlansResolver(t *testing.T) *Resolver {
-	c := &cache.MemdbCache{}
-	err := c.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: &cache.UidIndex{},
-		},
-		cache.IndexSpecifier{
-			Name: "hierarchy",
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"AddressPlan":      watchers.AddressPlanIndexCreator,
-					"AddressSpacePlan": watchers.AddressSpacePlanIndexCreator,
-				},
-			},
-		})
-	assert.NoError(t, err, "failed to create test resolver")
+	objectCache, err := cache.CreateObjectCache()
+	assert.NoError(t, err, "failed to create object cache")
 
 	resolver := Resolver{}
-	resolver.Cache = c
+	resolver.Cache = objectCache
 	return &resolver
 }
 

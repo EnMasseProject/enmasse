@@ -9,7 +9,6 @@ import (
 	"context"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,23 +18,11 @@ import (
 )
 
 func newTestAuthenticationServiceResolver(t *testing.T) *Resolver {
-	c := &cache.MemdbCache{}
-	err := c.Init(cache.IndexSpecifier{
-		Name:    "id",
-		Indexer: &cache.UidIndex{},
-	},
-		cache.IndexSpecifier{
-			Name: "hierarchy",
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"AuthenticationService": watchers.AuthenticationServiceIndexCreator,
-				},
-			},
-		})
+	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
 	resolver := Resolver{}
-	resolver.Cache = c
+	resolver.Cache = objectCache
 	return &resolver
 
 }
