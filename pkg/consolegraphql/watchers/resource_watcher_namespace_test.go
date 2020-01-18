@@ -16,22 +16,9 @@ import (
 )
 
 func newTestNamespaceWatcher(t *testing.T) *NamespaceWatcher {
-	c := &cache.MemdbCache{}
-	err := c.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: &cache.UidIndex{},
-		},
-		cache.IndexSpecifier{
-			Name: "hierarchy",
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"Namespace": NamespaceIndexCreator,
-				},
-			},
-		})
-	assert.NoError(t, err, "failed to create test resolver")
-	watcher, err := NewNamespaceWatcher(c, NamespaceWatcherClient(fake.NewSimpleClientset().CoreV1()))
+	objectCache, err := cache.CreateObjectCache()
+	assert.NoError(t, err, "failed to create object cache")
+	watcher, err := NewNamespaceWatcher(objectCache, NamespaceWatcherClient(fake.NewSimpleClientset().CoreV1()))
 	assert.NoError(t, err, "failed to create test resolver")
 
 	return watcher.(*NamespaceWatcher)

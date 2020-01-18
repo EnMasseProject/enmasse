@@ -91,7 +91,7 @@ func newTestCache(t *testing.T, alternativeHierarchy bool) Cache {
 			Indexer: &UidIndex{},
 		},
 		IndexSpecifier{
-			Name: "hierarchy",
+			Name: HierarchyIndexName,
 			Indexer: &HierarchyIndex{
 				IndexCreators: map[string]HierarchicalIndexCreator{
 					"CacheObj": ObjectIndexCreator,

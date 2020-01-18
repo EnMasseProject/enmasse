@@ -11,7 +11,6 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,29 +19,7 @@ import (
 )
 
 func newTestLinkResolver(t *testing.T) *Resolver {
-	objectCache := &cache.MemdbCache{}
-	err := objectCache.Init(
-		cache.IndexSpecifier{
-			Name:    "id",
-			Indexer: &cache.UidIndex{},
-		},
-		cache.IndexSpecifier{
-			Name: "hierarchy",
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"Connection": watchers.ConnectionIndexCreator,
-					"Link":       watchers.ConnectionLinkIndexCreator,
-				},
-			},
-		}, cache.IndexSpecifier{
-			Name:         "addressLinkHierarchy",
-			AllowMissing: true,
-			Indexer: &cache.HierarchyIndex{
-				IndexCreators: map[string]cache.HierarchicalIndexCreator{
-					"Link": watchers.AddressLinkIndexCreator,
-				},
-			},
-		})
+	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
 	resolver := Resolver{}
