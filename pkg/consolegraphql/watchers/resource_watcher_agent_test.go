@@ -294,7 +294,7 @@ func TestWatchAgent_ClosedConnection(t *testing.T) {
 	assert.Equal(t, expectedConnectionUid, actualConnectionUid, "Unexpected connection UID")
 }
 
-func TestWatchAgent_NewConnection(t *testing.T) {
+func TestWatchAgent_NewAgent(t *testing.T) {
 	w, eventChan := newTestAgentWatcher(t)
 
 	err := w.Watch()
