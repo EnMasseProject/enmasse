@@ -4362,10 +4362,10 @@ func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1_PlanStatus(ctx con
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(v1beta1.AddressPlanStatus)
+	res := resTmp.(*v1beta1.AddressPlanStatus)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOAddressPlanStatus_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressPlanStatus(ctx, field.Selections, res)
+	return ec.marshalOAddressPlanStatus_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressPlanStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_AddressType(ctx context.Context, field graphql.CollectedField, obj *AddressTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
@@ -12242,6 +12242,13 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 
 func (ec *executionContext) marshalOAddressPlanStatus_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressPlanStatus(ctx context.Context, sel ast.SelectionSet, v v1beta1.AddressPlanStatus) graphql.Marshaler {
 	return ec._AddressPlanStatus_enmasse_io_v1beta1(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOAddressPlanStatus_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressPlanStatus(ctx context.Context, sel ast.SelectionSet, v *v1beta1.AddressPlanStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AddressPlanStatus_enmasse_io_v1beta1(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOAddressQueryResult_consoleapi_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressQueryResultConsoleapiEnmasseIoV1beta1(ctx context.Context, sel ast.SelectionSet, v AddressQueryResultConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
