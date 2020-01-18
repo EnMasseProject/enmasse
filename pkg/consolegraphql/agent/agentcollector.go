@@ -18,7 +18,7 @@ import (
 type AgentEventHandler = func(event AgentEvent) error
 
 type AgentCollector interface {
-	Collect(addressSpaceNamespace string, addressSpace string, infraUuid string, host string, port int32, handler AgentEventHandler) error
+	Collect(addressSpaceNamespace string, addressSpace string, infraUuid string, host string, port int32, handler AgentEventHandler, developmentMode bool) error
 	Shutdown()
 }
 
@@ -30,6 +30,7 @@ type AmqpAgentCollector struct {
 	handler               AgentEventHandler
 	stopchan              chan struct{}
 	stoppedchan           chan struct{}
+	developmentMode       bool
 }
 
 func AmqpAgentCollectorCreator(bearerToken string) AgentCollector {
@@ -40,11 +41,12 @@ func AmqpAgentCollectorCreator(bearerToken string) AgentCollector {
 	}
 }
 
-func (aac *AmqpAgentCollector) Collect(addressSpaceNamespace string, addressSpace string, infraUuid string, host string, port int32, handler AgentEventHandler) error {
+func (aac *AmqpAgentCollector) Collect(addressSpaceNamespace string, addressSpace string, infraUuid string, host string, port int32, handler AgentEventHandler, developmentMode bool) error {
 	aac.addressSpaceNamespace = addressSpaceNamespace
 	aac.addressSpace = addressSpace
 	aac.infraUuid = infraUuid
 	aac.handler = handler
+	aac.developmentMode = developmentMode
 
 	go func() {
 		defer close(aac.stoppedchan)
@@ -87,10 +89,16 @@ func (aac *AmqpAgentCollector) doCollect(host string, port int32) error {
 
 	addr := fmt.Sprintf("amqps://%s:%d", host, port)
 	log.Printf("Agent Collector %s - connecting %s", aac.infraUuid, addr)
+
+	tlsConfig := &tls.Config{}
+	if aac.developmentMode {
+		tlsConfig.InsecureSkipVerify = true
+	} else {
+		// TODO fix me - we need a CA that is the issuer of all the admin server certs.
+		tlsConfig.InsecureSkipVerify = true
+	}
 	client, err := amqp.Dial(addr,
-		amqp.ConnTLSConfig(&tls.Config{
-			InsecureSkipVerify: true,
-		}),
+		amqp.ConnTLSConfig(tlsConfig),
 		amqp.ConnSASLXOAUTH2("unused", aac.bearerToken, 4096),
 		amqp.ConnServerHostname(host),
 	)
@@ -205,7 +213,6 @@ func (aac *AmqpAgentCollector) doCollect(host string, port int32) error {
 
 					}
 
-					log.Printf("Address %v", body)
 				case "address_deleted":
 				default:
 					// Ignore messages with other subjects

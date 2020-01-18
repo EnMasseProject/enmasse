@@ -10,6 +10,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	tp "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -17,10 +18,7 @@ import (
 	cp "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"log"
-	"os"
 	"reflect"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -36,10 +34,13 @@ type AgentWatcher struct {
 	watchingAgentsStarted bool
 	stopchan              chan struct{}
 	stoppedchan           chan struct{}
+
+	developmentMode       bool
+	RouteClientInterface  *routev1.RouteV1Client
 }
 
 
-func NewAgentWatcher(c cache.Cache, namespace string, f func() agent.AgentCollector, options ...WatcherOption) (*AgentWatcher, error) {
+func NewAgentWatcher(c cache.Cache, namespace string, f func() agent.AgentCollector, developmentMode bool, options ...WatcherOption) (*AgentWatcher, error) {
 
 	clw := &AgentWatcher{
 		Namespace:             namespace,
@@ -49,6 +50,7 @@ func NewAgentWatcher(c cache.Cache, namespace string, f func() agent.AgentCollec
 		stoppedchan:           make(chan struct{}),
 		AgentCollectorCreator: f,
 		collectors:            make(map[string]agent.AgentCollector),
+		developmentMode:       developmentMode,
 	}
 
 	for _, option := range options {
@@ -64,7 +66,7 @@ func NewAgentWatcher(c cache.Cache, namespace string, f func() agent.AgentCollec
 	return clw, nil
 }
 
-func AgentWatcherConfig(config *rest.Config) WatcherOption {
+func AgentWatcherServiceConfig(config *rest.Config) WatcherOption {
 	return func(watcher ResourceWatcher) error {
 		w := watcher.(*AgentWatcher)
 
@@ -80,6 +82,22 @@ func AgentWatcherConfig(config *rest.Config) WatcherOption {
 		return nil
 	}
 }
+
+// Development only
+func AgentWatcherRouteConfig(config *rest.Config) WatcherOption {
+	return func(watcher ResourceWatcher) error {
+		w := watcher.(*AgentWatcher)
+
+		routeClient, err := routev1.NewForConfig(config)
+		if err != nil {
+			return err
+		}
+
+		w.RouteClientInterface = routeClient
+		return nil
+	}
+}
+
 
 func AgentWatcherClient(client cp.CoreV1Interface) WatcherOption {
 	return func(watcher ResourceWatcher) error {
@@ -150,7 +168,24 @@ func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {
 		}
 
 		if _, present := current[*infraUuid]; !present {
-			collector, err := clw.createCollectorForService(service, infraUuid, addressSpace, addressSpaceNamespace)
+			prt, err := util.GetPortForService(service.Spec.Ports, "amqps")
+			if err != nil {
+				return  err
+			}
+			host := fmt.Sprintf("%s.%s.svc", service.ObjectMeta.Name, clw.Namespace)
+			port := *prt
+
+			if clw.developmentMode && clw.RouteClientInterface != nil {
+				routes := clw.RouteClientInterface.Routes(clw.Namespace)
+				route, err := routes.Get(service.Name, v1.GetOptions{})
+				if err != nil {
+					return err
+				}
+				port = 443
+				host = route.Spec.Host
+			}
+
+			collector, err := clw.createCollector(host, port, infraUuid, addressSpace, addressSpaceNamespace)
 			if err != nil {
 				return err
 			}
@@ -197,7 +232,7 @@ func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {
 					switch event.Type {
 					case watch.Added:
 						if _, present := clw.collectors[*infraUuid]; !present {
-							collector, err := clw.createCollectorForService(*service, infraUuid, addressSpace, addressSpaceNamespace)
+							collector, err := clw.createCollector("", 0, infraUuid, addressSpace, addressSpaceNamespace)
 							if err != nil {
 								return err
 							}
@@ -221,25 +256,10 @@ func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {
 	}
 }
 
-func (clw *AgentWatcher) createCollectorForService(service tp.Service, infraUuid *string, addressSpace *string, addressSpaceNamespace *string) (agent.AgentCollector, error) {
-	port, err := util.GetPortForService(service.Spec.Ports, "amqps")
-	if err != nil {
-		return nil, err
-	}
-	host := service.ObjectMeta.Name
-	// For testing purposes only
-	if v, ok := os.LookupEnv("AGENT_HOST"); ok {
-		split := strings.Split(v, ":")
-		if len(split) == 2 {
-			host = split[0]
-			i, _ := strconv.Atoi(split[1])
-			i2 := int32(i)
-			port = &i2
-		}
-	}
+func (clw *AgentWatcher) createCollector(host string, port int32, infraUuid *string, addressSpace *string, addressSpaceNamespace *string) (agent.AgentCollector, error) {
 	// Create collector for this service
 	collector := clw.AgentCollectorCreator()
-	err = collector.Collect(*addressSpaceNamespace, *addressSpace, *infraUuid, host, *port, clw.handleEvent)
+	err := collector.Collect(*addressSpaceNamespace, *addressSpace, *infraUuid, host, port, clw.handleEvent, clw.developmentMode)
 	if err != nil {
 		return nil, err
 	}
