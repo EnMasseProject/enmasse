@@ -208,7 +208,21 @@ func (kw *{{ .Name }}Watcher) doWatch(resource cp.{{ .Name }}Interface) error {
 		return err
 	}
 
-	curr, err := kw.Cache.GetMap("{{ .Name }}/", cache.UidKeyAccessor)
+	keyCreator, err := kw.Cache.GetKeyCreator(cache.PrimaryObjectIndex)
+	if err != nil {
+		return err
+	}
+	curr := make(map[string]interface{}, 0)
+	_, err = kw.Cache.Get(cache.PrimaryObjectIndex, "{{ .Name }}/", func(obj interface{}) (bool, bool, error) {
+		gen, key, err := keyCreator(obj)
+		if err != nil {
+			return false, false, err
+		} else if !gen {
+			return false, false, fmt.Errorf("failed to generate key for existing object %+v", obj)
+		}
+		curr[key] = obj
+		return false, true, nil
+	})
 
 	var added = 0
 	var updated = 0
@@ -217,7 +231,14 @@ func (kw *{{ .Name }}Watcher) doWatch(resource cp.{{ .Name }}Interface) error {
 		copy := res.DeepCopy()
 		kw.updateKind(copy)
 
-		if _, ok := curr[copy.UID]; ok {
+		candidate := kw.create(copy)
+		gen, key, err := keyCreator(candidate)
+		if err != nil {
+			return err
+		} else if !gen {
+			return fmt.Errorf("failed to generate key for new object %+v", copy)
+		}
+		if existing, ok := curr[key]; ok {
 			err = kw.Cache.Update(func (current interface{}) (interface{}, error) {
 				if kw.update(copy, current) {
 					updated++
@@ -226,13 +247,13 @@ func (kw *{{ .Name }}Watcher) doWatch(resource cp.{{ .Name }}Interface) error {
 					unchanged++
 					return nil, nil
 				}
-			}, copy)
+			}, existing)
 			if err != nil {
 				return err
 			}
-			delete(curr, copy.UID)
+			delete(curr, key)
 		} else {
-			err = kw.Cache.Add(kw.create(copy))
+			err = kw.Cache.Add(candidate)
 			if err != nil {
 				return err
 			}

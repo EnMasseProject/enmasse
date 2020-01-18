@@ -16,8 +16,6 @@ import (
 	"github.com/prometheus/prometheus/storage"
 	"github.com/prometheus/prometheus/storage/remote"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"time"
 )
 
@@ -26,45 +24,6 @@ type Connection struct {
 	metav1.ObjectMeta
 	Spec    ConnectionSpec
 	Metrics []*Metric
-}
-
-func (c Connection) SetGroupVersionKind(kind schema.GroupVersionKind) {
-	panic("unused")
-}
-
-func (c Connection) GroupVersionKind() schema.GroupVersionKind {
-	return schema.GroupVersionKind{
-		Group:   "consoleapi.enmasse.io",
-		Version: "beta1",
-		Kind:    "Connection",
-	}
-}
-
-func (c Connection) GetObjectKind() schema.ObjectKind {
-	return c
-}
-
-func (c Connection) DeepCopyObject() runtime.Object {
-	var newProps map[string]string
-	if c.Spec.Properties != nil {
-		newProps = make(map[string]string, len(c.Spec.Properties))
-		for k, v := range c.Spec.Properties {
-			newProps[k] = v
-		}
-	}
-	return Connection{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: c.Name,
-			UID:  c.UID,
-		},
-		Spec: ConnectionSpec{
-			AddressSpace: c.Spec.AddressSpace,
-			Hostname:     c.Spec.Hostname,
-			ContainerId:  c.Spec.ContainerId,
-			Protocol:     c.Spec.Protocol,
-			Properties:   newProps,
-		},
-	}
 }
 
 type ConnectionSpec struct {
@@ -81,37 +40,6 @@ type Link struct {
 	metav1.ObjectMeta
 	Spec LinkSpec
 	Metrics []*Metric
-}
-
-func (l Link) SetGroupVersionKind(kind schema.GroupVersionKind) {
-	panic("unused")
-}
-
-func (l Link) GroupVersionKind() schema.GroupVersionKind {
-	return schema.GroupVersionKind{
-		Group:   "consoleapi.enmasse.io",
-		Version: "beta1",
-		Kind:    "Link",
-	}
-}
-
-func (l Link) GetObjectKind() schema.ObjectKind {
-	return l
-}
-
-func (l Link) DeepCopyObject() runtime.Object {
-	return Link{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: l.Name,
-			UID:  l.UID,
-		},
-		Spec: LinkSpec{
-			Connection:   l.Spec.Connection,
-			Address:      l.Spec.Address,
-			AddressSpace: l.Spec.AddressSpace,
-			Role:         l.Spec.Role,
-		},
-	}
 }
 
 type LinkSpec struct {
@@ -288,59 +216,14 @@ func (aq adaptingQueryable) Querier(ctx context.Context, mint, maxt int64) (stor
 	}, nil
 }
 
-
-
-
 type AddressSpaceHolder struct {
 	v1beta1.AddressSpace
 	Metrics     []*Metric
 }
 
-func (ash AddressSpaceHolder) SetGroupVersionKind(kind schema.GroupVersionKind) {
-	panic("unused")
-}
-
-func (ash AddressSpaceHolder) GroupVersionKind() schema.GroupVersionKind {
-	return ash.AddressSpace.GroupVersionKind()
-}
-
-func (ash AddressSpaceHolder) GetObjectKind() schema.ObjectKind {
-	return ash.AddressSpace.GetObjectKind()
-}
-
-func (ash AddressSpaceHolder) DeepCopyObject() runtime.Object {
-	return AddressSpaceHolder{
-		AddressSpace: *ash.AddressSpace.DeepCopy(),
-	}
-}
-
-func (ash AddressSpaceHolder) GetObjectMeta() metav1.Object {
-	return ash.AddressSpace.GetObjectMeta()
-}
 
 type AddressHolder struct {
 	v1beta1.Address
 	Metrics     []*Metric
 }
 
-func (ah AddressHolder) SetGroupVersionKind(kind schema.GroupVersionKind) {
-	panic("unused")
-}
-
-func (ah AddressHolder) GroupVersionKind() schema.GroupVersionKind {
-	return ah.Address.GroupVersionKind()
-}
-
-func (ah AddressHolder) GetObjectKind() schema.ObjectKind {
-	return ah.Address.GetObjectKind()
-}
-
-func (ah AddressHolder) DeepCopyObject() runtime.Object {
-	return AddressHolder{
-		Address: *ah.Address.DeepCopy(),
-	}
-}
-
-func (ah AddressHolder) GetObjectMeta() metav1.Object {
-	return ah.Address.GetObjectMeta()
-}

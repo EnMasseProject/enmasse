@@ -273,12 +273,12 @@ func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {
 		conKey := fmt.Sprintf("Connection/%s/%s/", event.AddressSpaceNamespace, event.AddressSpace)
 		linkKey := fmt.Sprintf("Link/%s/%s/", event.AddressSpaceNamespace, event.AddressSpace)
 
-		err := clw.Cache.DeleteByPrefix("hierarchy", conKey)
+		err := clw.Cache.DeleteByPrefix(cache.PrimaryObjectIndex, conKey)
 		if err != nil {
 			return err
 		}
 
-		err = clw.Cache.DeleteByPrefix("hierarchy", linkKey)
+		err = clw.Cache.DeleteByPrefix(cache.PrimaryObjectIndex, linkKey)
 		if err != nil {
 			return err
 		}
@@ -287,7 +287,7 @@ func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {
 		now := time.Now()
 		switch target := event.Object.(type) {
 		case *agent.AgentConnection:
-			objs, err := clw.Cache.Get("hierarchy", fmt.Sprintf("Connection/%s/%s/%s", target.AddressSpaceNamespace, target.AddressSpace, target.Uuid), nil)
+			objs, err := clw.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Connection/%s/%s/%s", target.AddressSpaceNamespace, target.AddressSpace, target.Uuid), nil)
 			if err != nil {
 				return err
 			}
@@ -312,7 +312,7 @@ func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {
 			currentLinks := toLinkObjects(target)
 
 			linkKey := fmt.Sprintf("Link/%s/%s/%s", con.Namespace, con.Spec.AddressSpace, con.Name)
-			existingLinks, err := clw.Cache.Get("hierarchy", linkKey, nil)
+			existingLinks, err := clw.Cache.Get(cache.PrimaryObjectIndex, linkKey, nil)
 			if err != nil {
 				return err
 			}
@@ -357,7 +357,7 @@ func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {
 			}
 
 		case *agent.AgentAddress:
-			objs, err := clw.Cache.Get("hierarchy", fmt.Sprintf("Address/%s/%s/%s", target.AddressSpaceNamespace, target.AddressSpace, target.Name), nil)
+			objs, err := clw.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s/%s", target.AddressSpaceNamespace, target.AddressSpace, target.Name), nil)
 			if err != nil {
 				return err
 			}
@@ -380,14 +380,14 @@ func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {
 		switch target := event.Object.(type) {
 		case *agent.AgentConnection:
 			// Remove the connection itself
-			err := clw.Cache.DeleteByPrefix("hierarchy", fmt.Sprintf("Connection/%s/%s/%s", target.AddressSpaceNamespace, target.AddressSpace, target.Uuid))
+			err := clw.Cache.DeleteByPrefix(cache.PrimaryObjectIndex, fmt.Sprintf("Connection/%s/%s/%s", target.AddressSpaceNamespace, target.AddressSpace, target.Uuid))
 			if err != nil {
 				return err
 			}
 
 			// Remove links belonging to this connection
 			linkKey := fmt.Sprintf("Link/%s/%s/%s", target.AddressSpaceNamespace, target.AddressSpace, target.Uuid)
-			err = clw.Cache.DeleteByPrefix("hierarchy", linkKey)
+			err = clw.Cache.DeleteByPrefix(cache.PrimaryObjectIndex, linkKey)
 			if err != nil {
 				return err
 			}

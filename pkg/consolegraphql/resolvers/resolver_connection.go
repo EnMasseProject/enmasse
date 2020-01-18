@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -31,7 +32,7 @@ func (cr connectionK8sResolver) Links(ctx context.Context, obj *consolegraphql.C
 			return nil, e
 		}
 
-		links, e := cr.Cache.Get("hierarchy", fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, obj.Spec.AddressSpace, obj.ObjectMeta.Name), fltrfunc)
+		links, e := cr.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, obj.Spec.AddressSpace, obj.ObjectMeta.Name), fltrfunc)
 		if e != nil {
 			return nil, e
 		}
@@ -74,7 +75,7 @@ func (cs connectionSpecK8sResolver) AddressSpace(ctx context.Context, obj *conso
 		con := conrsctx.Result.(**consolegraphql.Connection)
 
 		namespace := (*con).ObjectMeta.Namespace
-		objs, e := cs.Cache.Get("hierarchy", fmt.Sprintf("AddressSpace/%s/%s", namespace, obj.AddressSpace), nil)
+		objs, e := cs.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("AddressSpace/%s/%s", namespace, obj.AddressSpace), nil)
 		if e != nil {
 			return nil, e
 		}
@@ -126,7 +127,7 @@ func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int
 		return nil, e
 	}
 
-	objects, e := r.Cache.Get("hierarchy", "Connection/", fltrfunc)
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Connection/", fltrfunc)
 	if e != nil {
 		return nil, e
 	}

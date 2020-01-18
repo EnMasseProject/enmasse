@@ -9,13 +9,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 )
 
 
 type addressSpaceSchemaSpecK8sResolver struct{ *Resolver }
 
 func loadAddressSpaceSchemas(r *queryResolver) ([]*v1beta1.AddressSpaceSchema, error) {
-	objects, e := r.Cache.Get("hierarchy", "AddressSpaceSchema/", nil)
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpaceSchema/", nil)
 	if e != nil {
 		return nil, e
 	}

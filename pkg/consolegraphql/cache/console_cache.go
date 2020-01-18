@@ -13,142 +13,66 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"strings"
 )
 
-const HierarchyIndexName = "hierarchy"
-const AddressLinkHierarchyIndexName = "addressLinkHierarchy"
+const PrimaryObjectIndex = "id"
+const AddressLinkObjectIndex = "addressLinkHierarchy"
 
 func CreateObjectCache() (*MemdbCache, error) {
 	c := &MemdbCache{}
 	err := c.Init(
 		IndexSpecifier{
-			Name:    "id",
-			Indexer: &UidIndex{},
-		},
-		IndexSpecifier{
-			Name: HierarchyIndexName,
-			Indexer: &HierarchyIndex{
-				IndexCreators: map[string]HierarchicalIndexCreator{
-					"Namespace":        		NamespaceIndexCreator,
-					"AddressSpace":     		AddressSpaceIndexCreator,
-					"Address":          		AddressIndexCreator,
-					"AddressPlan":      		AddressPlanIndexCreator,
-					"AddressSpacePlan": 		AddressSpacePlanIndexCreator,
-					"AuthenticationService":	AuthenticationServiceIndexCreator,
-					"AddressSpaceSchema":    	AddressSpaceSchemaIndexCreator,
-					"Connection":       		ConnectionIndexCreator,
-					"Link":             		ConnectionLinkIndexCreator,
-				},
+			Name: PrimaryObjectIndex,
+			Indexer: &hierarchyIndex{
+				keyCreator: primaryUniqueKeyCreator,
 			},
 		},
 		IndexSpecifier{
-			Name:         AddressLinkHierarchyIndexName,
+			Name:         AddressLinkObjectIndex,
 			AllowMissing: true,
-			Indexer: &HierarchyIndex{
-				IndexCreators: map[string]HierarchicalIndexCreator{
-					"Link": AddressLinkIndexCreator,
-				},
+			Indexer: &hierarchyIndex{
+				keyCreator: addressLinkKeyCreator,
 			},
 		})
 	return c, err
 }
 
-
-func NamespaceIndexCreator(o runtime.Object) (string, error) {
-	ns, ok := o.(*v1.Namespace)
-	if !ok {
-		return "", fmt.Errorf("unexpected type %T", o)
+func primaryUniqueKeyCreator(obj interface{}) (b bool, s string, err error) {
+	switch o := obj.(type) {
+	case *v1.Namespace:
+		return true, o.Kind + "/" + o.Name, nil
+	case *consolegraphql.AddressSpaceHolder:
+		return true, o.Kind + "/" + o.Namespace + "/" + o.Name, nil
+	case *consolegraphql.AddressHolder:
+		i := strings.Index(o.Name, ".")
+		if i < 0 {
+			return false, "", fmt.Errorf("unexpected address name formation '%s', expected dot separator", o.Name)
+		}
+		addressSpaceName := o.Name[:i]
+		return true, o.Kind + "/" + o.Namespace + "/" + addressSpaceName + "/" + o.Name, nil
+	case *consolegraphql.Connection:
+		return true, o.Kind + "/" + o.Namespace + "/" + o.Spec.AddressSpace + "/" + o.Name, nil
+	case *consolegraphql.Link:
+		return true, o.Kind + "/" + o.Namespace + "/" + o.Spec.AddressSpace + "/" + o.Spec.Connection + "/" + o.ObjectMeta.Name, nil
+	case *v1beta2.AddressPlan:
+		return true, o.Kind + "/" + o.Name, nil
+	case *v1beta2.AddressSpacePlan:
+		return true, o.Kind + "/" + o.Name, nil
+	case *v1beta1.AddressSpaceSchema:
+		return true, o.Kind + "/" + o.Name, nil
+	case *adminv1beta1.AuthenticationService:
+		return true, o.Kind + "/" + o.Name, nil
 	}
-
-	return ns.Kind + "/" + ns.Name, nil
+	return false, "", nil
 }
 
-func AddressSpaceIndexCreator(o runtime.Object) (string, error) {
-	as, ok := o.(*consolegraphql.AddressSpaceHolder)
-	if !ok {
-		return "", fmt.Errorf("unexpected type")
+func addressLinkKeyCreator(obj interface{}) (b bool, s string, err error) {
+	switch o := obj.(type) {
+	case *consolegraphql.Link:
+		return true, o.Kind + "/" + o.Namespace + "/" + o.Spec.AddressSpace + "/" + o.Spec.Address + "/" + o.ObjectMeta.Name, nil
 	}
-
-	return as.Kind + "/" + as.Namespace + "/" + as.Name, nil
+	return false, "", nil
 }
 
-func AddressIndexCreator(o runtime.Object) (string, error) {
-	a, ok := o.(*consolegraphql.AddressHolder)
-	if !ok {
-		return "", fmt.Errorf("unexpected type")
-	}
-
-	i := strings.Index(a.Name, ".")
-	if i < 0 {
-		return "", fmt.Errorf("unexpected name formation '%s', expected dot separator", a.Name)
-	}
-	addressSpaceName := a.Name[:i]
-
-	return a.Kind + "/" + a.Namespace + "/" + addressSpaceName + "/" + a.Name, nil
-}
-
-func AddressPlanIndexCreator(o runtime.Object) (string, error) {
-	ap, ok := o.(*v1beta2.AddressPlan)
-	if !ok {
-		return "", fmt.Errorf("unexpected type")
-	}
-
-	return ap.Kind + "/" + ap.Namespace + "/" + ap.Name, nil
-}
-
-func AddressSpacePlanIndexCreator(o runtime.Object) (string, error) {
-	asp, ok := o.(*v1beta2.AddressSpacePlan)
-	if !ok {
-		return "", fmt.Errorf("unexpected type")
-	}
-
-	return asp.Kind + "/" + asp.Namespace + "/" + asp.Name, nil
-}
-
-func AuthenticationServiceIndexCreator(o runtime.Object) (string, error) {
-	as, ok := o.(*adminv1beta1.AuthenticationService)
-	if !ok {
-		return "", fmt.Errorf("unexpected type")
-	}
-
-	return as.Kind + "/" + as.Namespace + "/" + as.Name, nil
-}
-
-func AddressSpaceSchemaIndexCreator(o runtime.Object) (string, error) {
-	ass, ok := o.(*v1beta1.AddressSpaceSchema)
-	if !ok {
-		return "", fmt.Errorf("unexpected type")
-	}
-
-	return ass.Kind + "/" + ass.Namespace + "/" + ass.Name, nil
-}
-
-func ConnectionIndexCreator(o runtime.Object) (string, error) {
-	con, ok := o.(*consolegraphql.Connection)
-	if !ok {
-		return "", fmt.Errorf("unexpected type")
-	}
-
-	return con.Kind + "/" + con.Namespace + "/" + con.Spec.AddressSpace + "/" + con.Name, nil
-}
-
-func ConnectionLinkIndexCreator(o runtime.Object) (string, error) {
-	asp, ok := o.(*consolegraphql.Link)
-	if !ok {
-		return "", fmt.Errorf("unexpected type")
-	}
-
-	return asp.Kind + "/" + asp.Namespace + "/" + asp.Spec.AddressSpace + "/" + asp.Spec.Connection + "/" + asp.ObjectMeta.Name, nil
-}
-
-func AddressLinkIndexCreator(o runtime.Object) (string, error) {
-	asp, ok := o.(*consolegraphql.Link)
-	if !ok {
-		return "", fmt.Errorf("unexpected type")
-	}
-
-	return asp.Kind + "/" + asp.Namespace + "/" + asp.Spec.AddressSpace + "/" + asp.Spec.Address + "/" + asp.ObjectMeta.Name, nil
-}
 
