@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 )
 
 type authenticationServiceSpecK8sResolver struct{ *Resolver }
@@ -22,7 +23,7 @@ func (r *authenticationServiceSpecK8sResolver) Type(ctx context.Context, obj *v1
 }
 
 func (r *queryResolver) AuthenticationServices(ctx context.Context) ([]*v1beta1.AuthenticationService, error) {
-	objects, e := r.Cache.Get("hierarchy", "AuthenticationService/", nil)
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AuthenticationService/", nil)
 	if e != nil {
 		return nil, e
 	}

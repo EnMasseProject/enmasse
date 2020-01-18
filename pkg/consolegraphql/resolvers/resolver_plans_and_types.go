@@ -56,7 +56,7 @@ func (r *queryResolver) AddressPlans(ctx context.Context, addressSpacePlan *stri
 				return false, true, nil
 			}
 		}
-		objs, e := r.Cache.Get("hierarchy", "AddressSpacePlan/", spaceFilter)
+		objs, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpacePlan/", spaceFilter)
 		if e != nil {
 			return nil, e
 		}
@@ -92,7 +92,7 @@ func (r *queryResolver) AddressPlans(ctx context.Context, addressSpacePlan *stri
 		}
 	}
 
-	objects, e := r.Cache.Get("hierarchy", "AddressPlan/", cache.And(bySpacePlanFilter, byTypePlanFilter))
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressPlan/", cache.And(bySpacePlanFilter, byTypePlanFilter))
 	if e != nil {
 		return nil, e
 	}
@@ -117,7 +117,7 @@ func (r *queryResolver) AddressSpacePlans(ctx context.Context, addressSpaceType 
 		}
 	}
 
-	objects, e := r.Cache.Get("hierarchy", "AddressSpacePlan/", planFilter)
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpacePlan/", planFilter)
 	if e != nil {
 		return nil, e
 	}
@@ -150,7 +150,7 @@ func (r *addressSpacePlanSpecK8sResolver) AddressPlans(ctx context.Context, obj 
 		return false, true, nil
 	}
 
-	objects, e := r.Cache.Get("hierarchy", "AddressPlan", planFilter)
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressPlan", planFilter)
 	if e != nil {
 		return nil, e
 	}

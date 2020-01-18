@@ -11,6 +11,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,7 +34,7 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 		return nil, err
 	}
 
-	objects, e := r.Cache.Get("hierarchy", "AddressSpace/", fltrfunc)
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpace/", fltrfunc)
 	if e != nil {
 		return nil, e
 	}
@@ -72,7 +73,7 @@ func (r *addressSpaceSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.Add
 				return false, true, nil
 			}
 		}
-		objs, e := r.Cache.Get("hierarchy", "AddressSpacePlan", spaceFilter)
+		objs, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpacePlan", spaceFilter)
 		if e != nil {
 			return nil, e
 		}

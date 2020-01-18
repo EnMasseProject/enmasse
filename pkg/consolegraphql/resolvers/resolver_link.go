@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 )
 
 type linkK8sResolver struct{ *Resolver }
@@ -22,7 +23,7 @@ func (l linkSpecK8sResolver) Connection(ctx context.Context, obj *consolegraphql
 		link := linkrsctx.Result.(**consolegraphql.Link)
 
 		namespace := (*link).ObjectMeta.Namespace
-		objs, e := l.Cache.Get("hierarchy", fmt.Sprintf("Connection/%s/%s/%s", namespace, obj.AddressSpace, obj.Connection), nil)
+		objs, e := l.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Connection/%s/%s/%s", namespace, obj.AddressSpace, obj.Connection), nil)
 		if e != nil {
 			return nil, e
 		}

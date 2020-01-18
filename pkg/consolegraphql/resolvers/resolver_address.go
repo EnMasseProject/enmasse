@@ -37,7 +37,7 @@ func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.Addr
 
 		addrtoks := strings.SplitN(obj.ObjectMeta.Name, ".", 2)
 		// N.B. address name not prefixed in the link index
-		links, e := ar.Cache.Get(cache.AddressLinkHierarchyIndexName, fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1]), fltrfunc)
+		links, e := ar.Cache.Get(cache.AddressLinkObjectIndex, fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1]), fltrfunc)
 		if e != nil {
 			return nil, e
 		}
@@ -86,7 +86,7 @@ func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, 
 		return nil, e
 	}
 
-	objects, e := r.Cache.Get("hierarchy", "Address/", fltrfunc)
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Address/", fltrfunc)
 	if e != nil {
 		return nil, e
 	}
@@ -123,7 +123,7 @@ func (r *addressSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.AddressS
 			return asp.Name == addressPlanName, true, nil
 		}
 
-		objs, e := r.Cache.Get("hierarchy", "AddressPlan", planFilter)
+		objs, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressPlan", planFilter)
 		if e != nil {
 			return nil, e
 		}

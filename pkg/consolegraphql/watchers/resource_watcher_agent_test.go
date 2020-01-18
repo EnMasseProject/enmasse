@@ -73,7 +73,7 @@ func TestWatchAgent_NewConnection(t *testing.T) {
 	}
 
 	w.Shutdown()
-	cons, err := w.Cache.Get("hierarchy", "Connection", nil)
+	cons, err := w.Cache.Get(cache.PrimaryObjectIndex, "Connection", nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, len(cons), "Unexpected number of connections")
@@ -100,7 +100,7 @@ func TestWatchAgent_NewConnection(t *testing.T) {
 
 	assert.Equal(t, expectedConnection, actualConnection, "Unexpected connection")
 
-	links, err := w.Cache.Get("hierarchy", "Link", nil)
+	links, err := w.Cache.Get(cache.PrimaryObjectIndex, "Link", nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, len(links), "Unexpected number of links")
@@ -179,20 +179,20 @@ func TestWatchAgent_ConnectionWithWithChangingLinks(t *testing.T) {
 	}
 
 	w.Shutdown()
-	objs, err := w.Cache.Get("hierarchy", "Connection", nil)
+	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Connection", nil)
 	assert.NoError(t, err)
 
 	expected := 1
 	actual := len(objs)
 	assert.Equal(t, expected, actual, "Unexpected number of connections")
 
-	links, err := w.Cache.Get("hierarchy", "Link", nil)
+	links, err := w.Cache.Get(cache.PrimaryObjectIndex, "Link", nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(links), "Unexpected number of links")
 
 
-	remainingSendingLink, err := w.Cache.Get("hierarchy", "Link", func(o interface{}) (bool, bool, error) {
+	remainingSendingLink, err := w.Cache.Get(cache.PrimaryObjectIndex, "Link", func(o interface{}) (bool, bool, error) {
 		l := o.(*consolegraphql.Link)
 		if l.Name == sendingLinkUuid2 {
 			return true, false, nil
@@ -205,7 +205,7 @@ func TestWatchAgent_ConnectionWithWithChangingLinks(t *testing.T) {
 	remainingSendingLinkMetrics := remainingSendingLink[0].(*consolegraphql.Link).Metrics
 	assert.Equal(t, 10, len(remainingSendingLinkMetrics), "Unexpected number of link metrics for remaining sending link")
 
-	newReceivingLink, err := w.Cache.Get("hierarchy", "Link", func(o interface{}) (bool, bool, error) {
+	newReceivingLink, err := w.Cache.Get(cache.PrimaryObjectIndex, "Link", func(o interface{}) (bool, bool, error) {
 		l := o.(*consolegraphql.Link)
 		if l.Name == receivingLinkUuid {
 			return true, false, nil
@@ -259,7 +259,7 @@ func TestWatchAgent_ClosedConnection(t *testing.T) {
 	}
 
 	w.Shutdown()
-	objs, err := w.Cache.Get("hierarchy", "Connection", nil)
+	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Connection", nil)
 	assert.NoError(t, err)
 
 	expected := 1
@@ -295,7 +295,7 @@ func TestWatchAgent_NewAgent(t *testing.T) {
 	}
 
 	w.Shutdown()
-	objs, err := w.Cache.Get("hierarchy", "Connection", nil)
+	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Connection", nil)
 	assert.NoError(t, err)
 
 	expected := 1
@@ -333,7 +333,7 @@ func TestWatchAgent_AddressMetricsUpdated(t *testing.T) {
 	}
 
 	w.Shutdown()
-	addrs, err := w.Cache.Get("hierarchy", "Address", nil)
+	addrs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Address", nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, len(addrs), "Unexpected number of address")
