@@ -115,11 +115,83 @@ type addressSpaceK8sResolver struct{ *Resolver }
 
 
 func (r *addressSpaceK8sResolver) Connections(ctx context.Context, obj *consolegraphql.AddressSpaceHolder, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1beta1, error) {
-	panic("implement me")
+	if obj != nil {
+		fltrfunc, e := BuildFilter(filter)
+		if e != nil {
+			return nil, e
+		}
+
+		orderer, e := BuildOrderer(orderBy)
+		if e != nil {
+			return nil, e
+		}
+
+		key := fmt.Sprintf("Connection/%s/%s/", obj.Namespace, obj.Name)
+		objects, e := r.Cache.Get(cache.PrimaryObjectIndex, key, fltrfunc)
+		if e != nil {
+			return nil, e
+		}
+
+		e = orderer(objects)
+		if e != nil {
+			return nil, e
+		}
+
+		lower, upper := CalcLowerUpper(offset, first, len(objects))
+		paged := objects[lower:upper]
+
+		cons := make([]*consolegraphql.Connection, len(paged))
+		for i, _ := range paged {
+			cons[i] = paged[i].(*consolegraphql.Connection)
+		}
+
+		return &ConnectionQueryResultConsoleapiEnmasseIoV1beta1{
+			Total:       len(objects),
+			Connections: cons,
+		}, nil
+	}
+	return nil, nil
 }
 
 func (r *addressSpaceK8sResolver) Addresses(ctx context.Context, obj *consolegraphql.AddressSpaceHolder, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1beta1, error) {
-	panic("implement me")
+	if obj != nil {
+		fltrfunc, e := BuildFilter(filter)
+		if e != nil {
+			return nil, e
+		}
+
+		orderer, e := BuildOrderer(orderBy)
+		if e != nil {
+			return nil, e
+		}
+
+		key := fmt.Sprintf("Address/%s/%s/", obj.Namespace, obj.Name)
+		objects, e := r.Cache.Get(cache.PrimaryObjectIndex, key, fltrfunc)
+		if e != nil {
+			return nil, e
+		}
+
+		e = orderer(objects)
+		if e != nil {
+			return nil, e
+		}
+
+		lower, upper := CalcLowerUpper(offset, first, len(objects))
+		paged := objects[lower:upper]
+
+		addresses := make([]*consolegraphql.AddressHolder, len(paged))
+		for i, _ := range paged {
+			addresses[i] = paged[i].(*consolegraphql.AddressHolder)
+		}
+
+		aqr := &AddressQueryResultConsoleapiEnmasseIoV1beta1{
+			Total:     len(objects),
+			Addresses: addresses,
+		}
+
+		return aqr, nil
+	}
+	return nil, nil
 }
 
 func (r *queryResolver) MessagingCertificateChain(ctx context.Context, input v1.ObjectMeta) (string, error) {
