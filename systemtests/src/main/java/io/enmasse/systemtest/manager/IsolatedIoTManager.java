@@ -16,7 +16,6 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
@@ -71,24 +70,27 @@ public class IsolatedIoTManager extends ResourceManager {
             List<Throwable> exceptions = new ArrayList<>();
             try {
                 tearDownProjects();
-            } catch(Exception | AssertionFailedError e) {
+            } catch(Exception | AssertionError e) {
                 LOGGER.error("Error tearing down iotprojects", e);
                 exceptions.add(e);
+                TestUtils.collectLogs(context);
             }
             try {
                 tearDownConfigs();
-            } catch(Exception | AssertionFailedError e) {
+            } catch(Exception | AssertionError e) {
                 LOGGER.error("Error tearing down iotconfigs", e);
                 exceptions.add(e);
+                TestUtils.collectLogs(context);
             }
             try {
                 tearDownInfinispan(context);
-            } catch(Exception | AssertionFailedError e) {
+            } catch(Exception | AssertionError e) {
                 LOGGER.error("Error tearing down infinispan", e);
                 exceptions.add(e);
+                TestUtils.collectLogs(context);
             }
             if (!exceptions.isEmpty()) {
-                throw new IllegalStateException("Errors have been produced during tear down");
+                LOGGER.error("Errors have been produced during tear down");
             }
         }
     }

@@ -176,7 +176,7 @@ public class TestInfo {
     }
 
     public boolean isClassIoT() {
-        return currentTestClass.getTags().stream().anyMatch(TestTag.IOT_TAGS::contains);
+        return currentTestClass!=null && currentTestClass.getTags().stream().anyMatch(TestTag.IOT_TAGS::contains);
     }
 
     public boolean isEndOfIotTests() {

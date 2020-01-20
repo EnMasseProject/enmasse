@@ -20,7 +20,6 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
@@ -71,24 +70,27 @@ public class SharedIoTManager extends ResourceManager {
             List<Throwable> exceptions = new ArrayList<>();
             try {
                 tearDownSharedIoTProject();
-            } catch(Exception | AssertionFailedError e) {
+            } catch(Exception | AssertionError e) {
                 LOGGER.error("Error tearing down shared iotproject", e);
                 exceptions.add(e);
+                TestUtils.collectLogs(context);
             }
             try {
                 tearDownSharedIoTConfig();
-            } catch(Exception | AssertionFailedError e) {
+            } catch(Exception | AssertionError e) {
                 LOGGER.error("Error tearing down shared iotconfig", e);
                 exceptions.add(e);
+                TestUtils.collectLogs(context);
             }
             try {
                 tearDownInfinispan(context);
-            } catch(Exception | AssertionFailedError e) {
+            } catch(Exception | AssertionError e) {
                 LOGGER.error("Error tearing down infinispan", e);
                 exceptions.add(e);
+                TestUtils.collectLogs(context);
             }
             if (!exceptions.isEmpty()) {
-                throw new IllegalStateException("Errors have been produced during tear down");
+                LOGGER.error("Errors have been produced during tear down");
             }
         }
     }

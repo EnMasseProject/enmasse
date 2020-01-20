@@ -13,15 +13,18 @@ import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
+import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -34,10 +37,12 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -67,7 +72,7 @@ public class TestUtils {
     }
 
     private static final Random R = new Random();
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     /**
      * scale up/down specific pod (type: Deployment) in address space
@@ -141,7 +146,7 @@ public class TestUtils {
             } else {
                 actualReplicas = numReady(pods);
             }
-            log.info("Have {} out of {} replicas. Expecting={}, ReadyRequired={}", actualReplicas, pods.size(), expectedReplicas, readyRequired);
+            LOGGER.info("Have {} out of {} replicas. Expecting={}, ReadyRequired={}", actualReplicas, pods.size(), expectedReplicas, readyRequired);
 
             if (budget.timeoutExpired()) {
                 // our time budged expired ... throw exception
@@ -177,7 +182,7 @@ public class TestUtils {
 
         if (!"Running".equals(pod.getStatus().getPhase())) {
             if (doLog) {
-                log.info("POD {} in status : {}", pod.getMetadata().getName(), pod.getStatus().getPhase());
+                LOGGER.info("POD {} in status : {}", pod.getMetadata().getName(), pod.getStatus().getPhase());
             }
             return false;
         }
@@ -189,7 +194,7 @@ public class TestUtils {
 
         if (!nonReadyContainers.isEmpty()) {
             if (doLog) {
-                log.info("POD {} non-ready containers: [{}]", pod.getMetadata().getName(), String.join(", ", nonReadyContainers));
+                LOGGER.info("POD {} non-ready containers: [{}]", pod.getMetadata().getName(), String.join(", ", nonReadyContainers));
             }
             return false;
         }
@@ -211,7 +216,7 @@ public class TestUtils {
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
             Thread.sleep(2000);
             pods = listRunningPods(client, addressSpace);
-            log.info("Got {} pods, expected: {}", pods.size(), numExpected);
+            LOGGER.info("Got {} pods, expected: {}", pods.size(), numExpected);
         }
         if (pods.size() != numExpected) {
             throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
@@ -229,13 +234,13 @@ public class TestUtils {
     public static void waitForExpectedReadyPods(Kubernetes client, String namespace, int numExpected, TimeoutBudget budget) throws InterruptedException {
         boolean shouldRetry;
         do {
-            log.info("Waiting for expected ready pods: {}", numExpected);
+            LOGGER.info("Waiting for expected ready pods: {}", numExpected);
             shouldRetry = false;
             List<Pod> pods = listReadyPods(client, namespace);
             while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
                 Thread.sleep(2000);
                 pods = listReadyPods(client, namespace);
-                log.info("Got {} pods, expected: {}", pods.size(), numExpected);
+                LOGGER.info("Got {} pods, expected: {}", pods.size(), numExpected);
             }
             if (pods.size() != numExpected) {
                 throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
@@ -246,7 +251,7 @@ public class TestUtils {
                 } catch (NullPointerException | IllegalArgumentException e) {
                     // TODO: remove NPE guard once upgrade to Fabric8 kubernetes-client 4.6.0 or beyond is complete.
                     // (kubernetes-client 450b94745b68403293a55956be2aa7ec483c0a6c)
-                    log.warn("Failed to await pod %s", pod, e);
+                    LOGGER.warn("Failed to await pod %s", pod, e);
                     shouldRetry = true;
                     break;
                 }
@@ -414,10 +419,10 @@ public class TestUtils {
     public static <T> T runUntilPass(int retry, Callable<T> fn) throws InterruptedException {
         for (int i = 0; i < retry; i++) {
             try {
-                log.info("Running command, attempt: {}", i);
+                LOGGER.info("Running command, attempt: {}", i);
                 return fn.call();
             } catch (Exception ex) {
-                log.info("Command failed", ex);
+                LOGGER.info("Command failed", ex);
             }
             Thread.sleep(1000);
         }
@@ -479,14 +484,14 @@ public class TestUtils {
     }
 
     public static boolean isReachable(URL url) {
-        log.info("Trying to connect to {}", url.toString());
+        LOGGER.info("Trying to connect to {}", url.toString());
         try {
             url.openConnection();
             url.getContent();
-            log.info("Client is able to connect to the selenium hub");
+            LOGGER.info("Client is able to connect to the selenium hub");
             return true;
         } catch (Exception ex) {
-            log.warn("Cannot connect to hub: {}", ex.getMessage());
+            LOGGER.warn("Cannot connect to hub: {}", ex.getMessage());
             return false;
         }
     }
@@ -495,11 +500,11 @@ public class TestUtils {
         String actual = "Too small time out budget!!";
         while (!budget.timeoutExpired()) {
             actual = fn.call();
-            log.debug(actual);
+            LOGGER.debug(actual);
             if (actual.contains(expected)) {
                 return;
             }
-            log.debug("next iteration, remaining time: {}", budget.timeLeft());
+            LOGGER.debug("next iteration, remaining time: {}", budget.timeLeft());
             Thread.sleep(2000);
         }
         throw new IllegalStateException(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
@@ -510,7 +515,7 @@ public class TestUtils {
         Objects.requireNonNull(condition);
         Objects.requireNonNull(budget);
 
-        log.info("Waiting {} ms for - {}", budget.timeLeft(), forWhat);
+        LOGGER.info("Waiting {} ms for - {}", budget.timeLeft(), forWhat);
 
         waitUntilCondition(
 
@@ -520,14 +525,14 @@ public class TestUtils {
                 () -> {
                     // try once more
                     if (condition.test(WaitPhase.LAST_TRY)) {
-                        log.info("Successfully wait for: {} , it passed on last try", forWhat);
+                        LOGGER.info("Successfully wait for: {} , it passed on last try", forWhat);
                         return;
                     }
 
                     throw new IllegalStateException("Failed to wait for: " + forWhat);
                 });
 
-        log.info("Successfully waited for: {}, it took {} ms", forWhat, budget.timeSpent());
+        LOGGER.info("Successfully waited for: {}, it took {} ms", forWhat, budget.timeSpent());
 
     }
 
@@ -619,7 +624,7 @@ public class TestUtils {
 
             // otherwise sleep
 
-            log.debug("next iteration, remaining time: {}", remaining);
+            LOGGER.debug("next iteration, remaining time: {}", remaining);
             try {
                 Thread.sleep(delay.toMillis());
             } catch (InterruptedException e) {
@@ -659,7 +664,7 @@ public class TestUtils {
             try {
                 callable.call();
             } catch (Exception e) {
-                log.error("Error running async test", e);
+                LOGGER.error("Error running async test", e);
                 throw new RuntimeException(e);
             }
         }, e -> new Thread(e).start());
@@ -681,23 +686,23 @@ public class TestUtils {
         TestUtils.waitUntilCondition("All pods and container is ready", waitPhase -> {
             List<Pod> pods = Kubernetes.getInstance().listPods(namespace);
             if (pods.size() > 0) {
-                log.info("-------------------------------------------------------------");
+                LOGGER.info("-------------------------------------------------------------");
                 for (Pod pod : pods) {
                     List<ContainerStatus> initContainers = pod.getStatus().getInitContainerStatuses();
                     for (ContainerStatus s : initContainers) {
                         if (!s.getReady()) {
-                            log.info("Pod {} is in ready state, init container is not in ready state", pod.getMetadata().getName());
+                            LOGGER.info("Pod {} is in ready state, init container is not in ready state", pod.getMetadata().getName());
                             return false;
                         }
                     }
                     List<ContainerStatus> containers = pod.getStatus().getContainerStatuses();
                     for (ContainerStatus s : containers) {
                         if (!s.getReady()) {
-                            log.info("Pod {} is in ready state, container {} is not in ready state", pod.getMetadata().getName(), s.getName());
+                            LOGGER.info("Pod {} is in ready state, container {} is not in ready state", pod.getMetadata().getName(), s.getName());
                             return false;
                         }
                     }
-                    log.info("Pod {} is in ready state", pod.getMetadata().getName());
+                    LOGGER.info("Pod {} is in ready state", pod.getMetadata().getName());
                 }
                 return true;
             }
@@ -782,6 +787,55 @@ public class TestUtils {
             path = path.resolve(testMethod);
         }
         return path;
+    }
+
+    public static void collectLogs(ExtensionContext extensionContext) {
+        try {
+            Kubernetes kube = Kubernetes.getInstance();
+            Path path = getFailedTestLogsPath(extensionContext);
+            Files.createDirectories(path);
+            List<Pod> pods = kube.listPods();
+            for (Pod p : pods) {
+                try {
+                    List<Container> containers = kube.getContainersFromPod(p.getMetadata().getName());
+                    for (Container c : containers) {
+                        Path filePath = path.resolve(String.format("%s_%s.log", p.getMetadata().getName(), c.getName()));
+                        try {
+                            Files.writeString(filePath, kube.getLog(p.getMetadata().getName(), c.getName()));
+                        } catch (IOException e) {
+                            LOGGER.warn("Cannot write file {}", filePath, e);
+                        }
+                    }
+                } catch (Exception ex) {
+                    LOGGER.warn("Cannot access logs from container: ", ex);
+                }
+            }
+
+            kube.getLogsOfTerminatedPods(kube.getInfraNamespace()).forEach((name, podLogTerminated) -> {
+                Path filePath = path.resolve(String.format("%s.terminated.log", name));
+                try {
+                    Files.writeString(filePath, podLogTerminated);
+                } catch (IOException e) {
+                    LOGGER.warn("Cannot write file {}", filePath, e);
+                }
+            });
+
+            Files.writeString(path.resolve("describe_pods.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut());
+            Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
+            Files.writeString(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut());
+            Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(kube.getInfraNamespace()).getStdOut());
+            Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pv").getStdOut());
+            Files.writeString(path.resolve("pvcs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", Kubernetes.getInstance().getInfraNamespace()).getStdOut());
+            Files.writeString(path.resolve("storageclass.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "storageclass", "-o", "yaml").getStdOut());
+            if (TestInfo.getInstance().isClassIoT()) {
+                Files.writeString(path.resolve("iotconfig.yaml"), KubeCMDClient.getIoTConfig(kube.getInfraNamespace()).getStdOut());
+                GlobalLogCollector collectors = new GlobalLogCollector(kube, path, kube.getInfraNamespace());
+                collectors.collectAllAdapterQdrProxyState();
+            }
+            LOGGER.info("Pod logs and describe successfully stored into {}", path);
+        } catch (Exception ex) {
+            LOGGER.warn("Cannot save pod logs and info: ", ex);
+        }
     }
 
 }
