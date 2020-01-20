@@ -16,18 +16,13 @@
 'use strict';
 
 var log = require("./log.js").logger();
-var fs = require('fs');
 var http = require('http');
-var https = require('https');
-var path = require('path');
 var url = require('url');
-var util = require('util');
 var rhea = require('rhea');
 var AddressList = require('./address_list.js');
 var BufferedSender = require('./buffered_sender.js');
 var Registry = require('./registry.js');
 var tls_options = require('./tls_options.js');
-var myutils = require('./utils.js');
 var Metrics = require('./metrics.js');
 var queue = require('../lib/queue.js');
 var kubernetes = require('./kubernetes.js');
@@ -42,7 +37,6 @@ function ConsoleServer (address_ctrl, env, openshift) {
     this.openshift = openshift;
     var self = this;
     this.addresses.on('updated', function (address) {
-        log.warn("KWDEBUG address updated %j", address);
         self.publish({subject:'address',body:address});
 
     });
@@ -55,7 +49,6 @@ function ConsoleServer (address_ctrl, env, openshift) {
         self.publish({subject:'address_purged',body:address.address});
     });
     this.connections.on('updated', function (conn) {
-        log.warn("KWDEBUG connection updated %j", conn);
         self.publish({subject:'connection',body:conn});
     });
     this.connections.on('deleted', function (conn) {
@@ -144,40 +137,6 @@ ConsoleServer.prototype.close = function (callback) {
     }).then(callback);
 };
 
-// function authz(token) {
-//
-//     var options = {"token": token};
-//     var authn = new Promise();
-//
-//     const namespace = env.ADDRESS_SPACE_NAMESPACE;
-//     kubernetes.self_subject_access_review(options, namespace,
-//         "list", "enmasse.io", "addresses").then(({allowed: allowed_list, reason: reason_list}) => {
-//         if (allowed_list) {
-//             kubernetes.self_subject_access_review(options, namespace,
-//                 "create", "enmasse.io", "addresses").then(({allowed: allowed_create, reason: reason_create}) => {
-//                 if (allowed_create) {
-//                     authn.resolve({admin: allowed_create, console: true});
-//                 } else {
-//                     kubernetes.self_subject_access_review(options, namespace,
-//                         "delete", "enmasse.io", "addresses").then(({allowed: allowed_delete, reason: reason_delete}) => {
-//                         authn.resolve({admin: allowed_create, console: true});
-//                         if (!allowed_delete) {
-//                             log.info("User has neither create nor delete address permission, not granting admin permission. [%j, %j]",
-//                                 reason_create, reason_delete);
-//                         }
-//                     }).catch(authn.reject);
-//                 }
-//             }).catch(authn.reject);
-//         } else {
-//             log.warn("User does not have list address permission, granting no access. [%j]",
-//                 reason_list);
-//             authn.resolve({admin: allowed_create, console: true});
-//         }
-//     }).catch(authn.reject);
-//     return authn;
-// }
-
-
 ConsoleServer.prototype.listen = function (env, callback) {
     var self = this;
     this.authz = require('./authz.js').policy(env);
@@ -186,8 +145,6 @@ ConsoleServer.prototype.listen = function (env, callback) {
         var port = env.port === undefined ? 56710 : env.port;
         var opts = tls_options.get_console_server_options({port: port}, env);
 
-        // TODO - Vcabbage AMQP SASL does not support XOAUTH and is not pluggable.
-        // TODO - Instead We use PLAIN taking the token from the password
         self.amqp_container.sasl_server_mechanisms['XOAUTH2'] = function () {
             return {
                 outcome: undefined,
@@ -247,7 +204,6 @@ ConsoleServer.prototype.listen_health = function (env, callback) {
 
 function indexer(message) {
     if (message.subject === 'address' && message.body) {
-        log.warn("KWDEBUG address %j", message.body);
         return message.body.address;
     } else if (message.subject === 'address_deleted') {
         return message.body;
@@ -267,12 +223,10 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
     var buffered_sender = new BufferedSender(sender, indexer);
     this.listeners[name] = buffered_sender;
     this.addresses.for_each(function (address) {
-        log.info("KWDEBUG Sending addr : %j ", address);
         buffered_sender.send({subject:'address', body:address});
     }, this.authz.address_filter(sender.connection));
     this.connections.for_each(function (conn) {
         buffered_sender.send({subject:'connection', body:conn});
-        log.info("KWDEBUG Sending conn : %j ", conn);
     }, this.authz.connection_filter(sender.connection));
     //TODO: poll for changes in address_types
     var self = this;

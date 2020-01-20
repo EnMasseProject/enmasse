@@ -48,18 +48,9 @@ function get_server_options(config, env) {
     return options;
 }
 
-function get_console_paths(env) {
-    var opts = env || process.env;
-    var cert_dir = opts.CONSOLE_CERT_DIR || '/etc/console-certs';
-    var paths = {};
-    paths.cert = opts.CONSOLE_CERT_PATH || path.resolve(cert_dir, 'tls.crt');
-    paths.key = opts.CONSOLE_KEY_PATH || path.resolve(cert_dir, 'tls.key');
-    return paths;
-}
-
 function get_console_server_options(config, env) {
     var options = config || {};
-    var paths = get_console_paths(env);
+    var paths = get_paths(env);
     options.key = fs.readFileSync(paths.key);
     options.cert = fs.readFileSync(paths.cert);
     options.transport = 'tls';
