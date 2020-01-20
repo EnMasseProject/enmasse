@@ -97,6 +97,7 @@ func createIoTTenantCleanerJob(ctx finalizer.DeconstructorContext, project *iotv
 				install.ApplyOrRemoveEnvSimple(container, "infinispan.password", external.Password)
 				install.ApplyOrRemoveEnvSimple(container, "infinispan.saslServerName", external.SaslServerName)
 				install.ApplyOrRemoveEnvSimple(container, "infinispan.saslRealm", external.SaslRealm)
+				install.ApplyOrRemoveEnvSimple(container, "infinispan.uploadSchema", "true")
 				if external.CacheNames != nil {
 					install.ApplyOrRemoveEnvSimple(container, "infinispan.devicesCacheName", external.CacheNames.Devices)
 					install.ApplyOrRemoveEnvSimple(container, "infinispan.deviceStatesCacheName", external.CacheNames.DeviceStates)
