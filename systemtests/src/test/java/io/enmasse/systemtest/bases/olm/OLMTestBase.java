@@ -37,7 +37,6 @@ import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
@@ -109,7 +108,7 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
     @AfterEach
     void deleteAddressSpace(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
-            Path path = JunitCallbackListener.getPath(context);
+            Path path = TestUtils.getFailedTestLogsPath(context);
             GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, getInstallationNamespace());
             collector.collectLogsOfPodsInNamespace(getInstallationNamespace());
             collector.collectEvents(getInstallationNamespace());

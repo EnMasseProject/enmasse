@@ -6,7 +6,7 @@ package io.enmasse.systemtest.messagingclients;
 
 
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.listener.JunitCallbackListener;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -35,7 +35,7 @@ public class ExternalClientsExtension implements BeforeTestExecutionCallback, Af
     @Override
     public void afterTestExecution(ExtensionContext extensionContext) throws Exception {
         if (extensionContext.getExecutionException().isPresent()) {
-            Path path = JunitCallbackListener.getPath(extensionContext);
+            Path path = TestUtils.getFailedTestLogsPath(extensionContext);
             SystemtestsKubernetesApps.collectMessagingClientAppLogs(path);
         }
         if (!isFullClass) {

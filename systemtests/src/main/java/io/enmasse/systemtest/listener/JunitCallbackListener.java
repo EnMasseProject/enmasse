@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 
@@ -206,7 +205,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
         try {
             Kubernetes kube = Kubernetes.getInstance();
-            Path path = getPath(extensionContext);
+            Path path = TestUtils.getFailedTestLogsPath(extensionContext);
             Files.createDirectories(path);
             List<Pod> pods = kube.listPods();
             for (Pod p : pods) {
@@ -251,20 +250,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             LOGGER.warn("Cannot save pod logs and info: ", ex);
         }
         throw throwable;
-    }
-
-    public static Path getPath(ExtensionContext extensionContext) {
-        String testMethod = TestUtils.getTestName(extensionContext);
-        Class<?> testClass = extensionContext.getRequiredTestClass();
-        return getPath(testMethod, testClass);
-    }
-
-    public static Path getPath(String testMethod, Class<?> testClass) {
-        Path path = env.testLogDir().resolve(Paths.get("failed_test_logs", testClass.getName()));
-        if (testMethod != null) {
-            path = path.resolve(testMethod);
-        }
-        return path;
     }
 
     private void logPodsInInfraNamespace() {

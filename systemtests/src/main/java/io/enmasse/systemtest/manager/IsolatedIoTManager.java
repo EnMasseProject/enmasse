@@ -9,11 +9,12 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.IoTUtils;
+import io.enmasse.systemtest.utils.TestUtils;
+
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
@@ -70,7 +71,7 @@ public class IsolatedIoTManager extends ResourceManager {
                 tearDownProjects();
                 tearDownConfigs();
                 if (context.getExecutionException().isPresent()) {
-                    Path path = JunitCallbackListener.getPath(context);
+                    Path path = TestUtils.getFailedTestLogsPath(context);
                     SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
                 }
                 SystemtestsKubernetesApps.deleteInfinispanServer();

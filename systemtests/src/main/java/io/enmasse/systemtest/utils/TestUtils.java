@@ -12,6 +12,7 @@ import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -24,11 +25,8 @@ import io.enmasse.systemtest.time.WaitPhase;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.function.ThrowingSupplier;
-import org.junit.platform.commons.support.AnnotationSupport;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
@@ -36,11 +34,12 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
-import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
@@ -49,7 +48,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -776,27 +774,14 @@ public class TestUtils {
         void call() throws Exception;
     }
 
-    public static String getTestName(TestInfo testInfo) {
-        return getTestName(testInfo.getDisplayName(), testInfo.getTestMethod());
-    }
-
-    public static String getTestName(ExtensionContext extensionContext) {
-        return getTestName(extensionContext.getDisplayName(), extensionContext.getTestMethod());
-    }
-
-    public static String getTestName(String displayName, Optional<Method> testMethod) {
-        String testName;
-        if (testMethod.isPresent()) {
-            Optional<DisplayName> annotation = AnnotationSupport.findAnnotation(testMethod.get(), DisplayName.class);
-            if (annotation.isPresent()) {
-                testName = displayName;
-            } else {
-                testName = testMethod.get().getName();
-            }
-        } else {
-            testName = displayName;
+    public static Path getFailedTestLogsPath(ExtensionContext extensionContext) {
+        String testMethod = extensionContext.getDisplayName();
+        Class<?> testClass = extensionContext.getRequiredTestClass();
+        Path path = Environment.getInstance().testLogDir().resolve(Paths.get("failed_test_logs", testClass.getName()));
+        if (testMethod != null) {
+            path = path.resolve(testMethod);
         }
-        return testName;
+        return path;
     }
 
 }

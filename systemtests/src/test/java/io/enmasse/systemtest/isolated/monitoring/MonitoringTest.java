@@ -12,7 +12,6 @@ import io.enmasse.systemtest.apiclients.PrometheusApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
-import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -114,7 +113,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     @AfterEach
     void uninstallMonitoring(ExtensionContext context) {
         if (context.getExecutionException().isPresent()) { //test failed
-            Path path = JunitCallbackListener.getPath(context);
+            Path path = TestUtils.getFailedTestLogsPath(context);
             GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, environment.getMonitoringNamespace());
             collector.collectLogsOfPodsInNamespace(environment.getMonitoringNamespace());
             collector.collectEvents(environment.getMonitoringNamespace());
