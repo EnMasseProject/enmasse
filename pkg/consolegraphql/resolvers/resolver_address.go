@@ -178,5 +178,5 @@ func (r *mutationResolver) PurgeAddress(ctx context.Context, input metav1.Object
 }
 
 func (r *queryResolver) AddressCommand(ctx context.Context, input v1beta1.Address) (string, error) {
-	panic("implement me")
+	return "oc apply blah", nil
 }

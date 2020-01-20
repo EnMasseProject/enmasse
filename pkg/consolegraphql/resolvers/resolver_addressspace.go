@@ -211,5 +211,5 @@ func (r *mutationResolver) DeleteAddressSpace(ctx context.Context, input v1.Obje
 }
 
 func (r *queryResolver) AddressSpaceCommand(ctx context.Context, input v1beta1.AddressSpace) (string, error) {
-	panic("implement me")
+	return "oc apply blah", nil
 }
