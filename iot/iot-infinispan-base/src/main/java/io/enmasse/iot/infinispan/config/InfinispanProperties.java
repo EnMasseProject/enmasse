@@ -11,7 +11,8 @@ public class InfinispanProperties {
 
     private static final boolean DEFAULT_TRY_CREATE = false;
     public static final boolean DEFAULT_UPLOAD_SCHEMA = true;
-    public static final boolean DEFAULT_OVERRIDE_SCHEMA = true;
+    private static final boolean DEFAULT_OVERRIDE_SCHEMA = true;
+    private static final boolean DEFAULT_FAIL_ON_SCHEMA_MISMATCH = false;
 
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 11222;
@@ -20,6 +21,7 @@ public class InfinispanProperties {
     private static final String DEFAULT_ADAPTER_CREDENTIALS_CACHE_NAME = "adapterCredentials";
     private static final String DEFAULT_DEVICE_STATES_CACHE_NAME = "deviceStates";
     private static final String DEFAULT_DEVICES_CACHE_NAME = "devices";
+
 
     private boolean tryCreate = DEFAULT_TRY_CREATE;
 
@@ -40,6 +42,8 @@ public class InfinispanProperties {
      * this field has no effect.
      */
     private boolean overrideSchema = DEFAULT_OVERRIDE_SCHEMA;
+
+    private boolean failOnSchemaMismatch = DEFAULT_FAIL_ON_SCHEMA_MISMATCH;
 
     private String trustStorePath;
 
@@ -74,6 +78,14 @@ public class InfinispanProperties {
 
     public boolean isOverrideSchema() {
         return overrideSchema;
+    }
+
+    public void setFailOnSchemaMismatch(boolean failOnSchemaMismatch) {
+        this.failOnSchemaMismatch = failOnSchemaMismatch;
+    }
+
+    public boolean isFailOnSchemaMismatch() {
+        return failOnSchemaMismatch;
     }
 
     public void setHost(String host) {
