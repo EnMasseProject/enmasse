@@ -17,6 +17,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/metric"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/resolvers"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
@@ -27,7 +28,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 	"log"
 	"net/http"
-	"os"
 	"reflect"
 	"time"
 )
@@ -144,7 +144,8 @@ http://localhost:` + port + `/graphql
 			`)
 	}
 
-	dumpCachePeriod, _ := os.LookupEnv("DUMP_CACHE_PERIOD")
+	dumpCachePeriod := util.GetEnvOrDefault("DUMP_CACHE_PERIOD", "0s")
+	updateMetricsPeriod := util.GetEnvOrDefault("UPDATE_METRICS_PERIOD", "5s")
 
 	log.Printf("Namespace: %s\n", infraNamespace)
 
@@ -261,14 +262,26 @@ http://localhost:` + port + `/graphql
 		Cache:       objectCache,
 	}
 
-	if dumpCachePeriod != "" {
-		duration, err := time.ParseDuration(dumpCachePeriod)
-		if err == nil {
-			schedule(func() {
-				_ = objectCache.Dump()
-			}, duration)
+	dumpCache, err := time.ParseDuration(dumpCachePeriod)
+	if err == nil && dumpCache.Nanoseconds() > 0 {
+		schedule(func() {
+			_ = objectCache.Dump()
+		}, dumpCache)
 
-		}
+	}
+
+	updateMetrics, err := time.ParseDuration(updateMetricsPeriod)
+	if err == nil && updateMetrics.Nanoseconds() > 0 {
+		schedule(func() {
+			err, updated := metric.UpdateAllMetrics(objectCache)
+			if err != nil {
+				log.Printf("failed to update metrics, %s", err)
+			} else if updated > 0 {
+				log.Printf("%d object metric(s) updated", updated)
+
+			}
+		}, updateMetrics)
+
 	}
 
 	queryEndpoint := "/graphql/query"

@@ -404,26 +404,16 @@ func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {
 
 func updateConnectionMetrics(con *consolegraphql.Connection, agentCon *agent.AgentConnection, now time.Time) error {
 	metrics := con.Metrics
+
 	in, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
-	err := in.Update(float64(agentCon.MessagesIn), now)
-	if err != nil {
-		return err
-	}
+	in.Update(float64(agentCon.MessagesIn), now)
 	out, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge")
-	err = out.Update(float64(agentCon.MessagesOut), now)
-	if err != nil {
-		return err
-	}
+	out.Update(float64(agentCon.MessagesOut), now)
 	senders, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_senders", "gauge")
-	err = senders.Update(float64(len(agentCon.Senders)), now)
-	if err != nil {
-		return err
-	}
+	senders.Update(float64(len(agentCon.Senders)), now)
 	receivers, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_receivers", "gauge")
-	err = receivers.Update(float64(len(agentCon.Receivers)), now)
-	if err != nil {
-		return err
-	}
+	receivers.Update(float64(len(agentCon.Receivers)), now)
+
 	con.Metrics = metrics
 	return nil
 }
@@ -435,35 +425,20 @@ func updateAddressMetrics(addr *consolegraphql.AddressHolder, agentAddr *agent.A
 	var rm *consolegraphql.RateCalculatingMetric
 
 	sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_messages_stored", "gauge")
-	err := sm.Update(float64(agentAddr.Depth), now)
-	if err != nil {
-		return err
-	}
+	sm.Update(float64(agentAddr.Depth), now)
 
 	if addr.Spec.Type != "subscription" {
 		sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_senders", "gauge")
-		err := sm.Update(float64(agentAddr.Senders), now)
-		if err != nil {
-			return err
-		}
+		sm.Update(float64(agentAddr.Senders), now)
 
 		sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_receivers", "gauge")
-		err = sm.Update(float64(agentAddr.Receivers), now)
-		if err != nil {
-			return err
-		}
+		sm.Update(float64(agentAddr.Receivers), now)
 
 		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
-		err = rm.Update(float64(agentAddr.MessagesIn), now)
-		if err != nil {
-			return err
-		}
+		rm.Update(float64(agentAddr.MessagesIn), now)
 
 		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge")
-		err = rm.Update(float64(agentAddr.MessagesOut), now)
-		if err != nil {
-			return err
-		}
+		rm.Update(float64(agentAddr.MessagesOut), now)
 	} else {
 		consumers := 0
 		messagesIn := 0
@@ -475,22 +450,13 @@ func updateAddressMetrics(addr *consolegraphql.AddressHolder, agentAddr *agent.A
 		}
 
 		sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_receivers", "gauge")
-		err = sm.Update(float64(consumers), now)
-		if err != nil {
-			return err
-		}
+		sm.Update(float64(consumers), now)
 
 		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
-		err = rm.Update(float64(messagesIn), now)
-		if err != nil {
-			return err
-		}
+		rm.Update(float64(messagesIn), now)
 
 		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge")
-		err = rm.Update(float64(messagesOut), now)
-		if err != nil {
-			return err
-		}
+		rm.Update(float64(messagesOut), now)
 	}
 
 	addr.Metrics = metrics
@@ -644,55 +610,28 @@ func updateLinkMetrics(agentCon *agent.AgentConnection, metrics []*consolegraphq
 		if l.Uuid == link.Name {
 			var sm *consolegraphql.SimpleMetric
 			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_deliveries", "counter")
-			err := sm.Update(float64(l.Deliveries), now)
-			if err != nil {
-				return nil, err
-			}
+			sm.Update(float64(l.Deliveries), now)
 
 			var rm *consolegraphql.RateCalculatingMetric
 			rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, rateMetricName, "gauge")
-			err = rm.Update(float64(l.Deliveries), now)
-			if err != nil {
-				return nil, err
-			}
+			rm.Update(float64(l.Deliveries), now)
 
 			switch agentCon.AddressSpaceType {
 			case "standard":
 				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_accepted", "counter")
-				err = sm.Update(float64(l.Accepted), now)
-				if err != nil {
-					return nil, err
-				}
+				sm.Update(float64(l.Accepted), now)
 				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_modified", "counter")
-				err = sm.Update(float64(l.Modified), now)
-				if err != nil {
-					return nil, err
-				}
+				sm.Update(float64(l.Modified), now)
 				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_presettled", "counter")
-				err = sm.Update(float64(l.Presettled), now)
-				if err != nil {
-					return nil, err
-				}
+				sm.Update(float64(l.Presettled), now)
 				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_unsettled", "counter")
-				err = sm.Update(float64(l.Unsettled), now)
-				if err != nil {
-					return nil, err
-				}
+				sm.Update(float64(l.Unsettled), now)
 				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_undelivered", "counter")
-				err = sm.Update(float64(l.Undelivered), now)
-				if err != nil {
-					return nil, err
-				}
+				sm.Update(float64(l.Undelivered), now)
 				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_rejected", "counter")
-				err = sm.Update(float64(l.Rejected), now)
-				if err != nil {
-					return nil, err
-				}
+				sm.Update(float64(l.Rejected), now)
 				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_released", "counter")
-				err = sm.Update(float64(l.Released), now)
-				if err != nil {
-					return nil, err
-				}
+				sm.Update(float64(l.Released), now)
 
 				// backlog - agent calculates this field to be the sum of undelivered/unsettled metrics
 				backlog := 0
@@ -700,10 +639,7 @@ func updateLinkMetrics(agentCon *agent.AgentConnection, metrics []*consolegraphq
 					backlog += ld.Backlog
 				}
 				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_messages_backlog", "counter")
-				err = sm.Update(float64(backlog), now)
-				if err != nil {
-					return nil, err
-				}
+				sm.Update(float64(backlog), now)
 
 			case "brokered":
 				// No address space specific metrics
