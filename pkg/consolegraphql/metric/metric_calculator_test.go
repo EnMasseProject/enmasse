@@ -30,7 +30,7 @@ func TestMetric_CalcValue(t *testing.T) {
 
 	value, err := calculator.Calc(timeSeries)
 	assert.NoError(t, err)
-	assert.InDelta(t, float64(300), value, 0.1)
+	assert.InDelta(t, float64(5), value, 0.1)
 }
 
 func TestMetric_NoData(t *testing.T) {

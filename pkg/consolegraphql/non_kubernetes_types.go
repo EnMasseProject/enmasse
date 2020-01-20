@@ -94,14 +94,14 @@ func FindOrCreateSimpleMetric(existing []*Metric, n string, t string) (*SimpleMe
 	return m, existing
 }
 
-func FindOrCreateRateCalculatingMetric(existing []*Metric, n string, t string) (*RateCalculatingMetric, []*Metric) {
+func FindOrCreateRateCalculatingMetric(existing []*Metric, n string, t string, unit string) (*RateCalculatingMetric, []*Metric) {
 	for _, m := range existing {
 		if m.Name == n {
 			return (*RateCalculatingMetric)(m), existing
 		}
 	}
 
-	m := NewRateCalculatingMetric(n, t)
+	m := NewRateCalculatingMetric(n, t, unit)
 	existing = append(existing, (*Metric)(m))
 	return m, existing
 }
@@ -121,10 +121,11 @@ func (m *SimpleMetric) Update(v float64, ts time.Time) {
 	return
 }
 
-func NewRateCalculatingMetric(n string, t string) *RateCalculatingMetric {
+func NewRateCalculatingMetric(n string, t string, u string) *RateCalculatingMetric {
 	m := RateCalculatingMetric{
 		Name:       n,
 		Type:       t,
+		Unit:       u,
 		timeseries: ring.New(100),
 	}
 	return &m
