@@ -20,7 +20,8 @@ import { useQuery } from "@apollo/react-hooks";
 import { IDropdownOption } from "../../Components/Common/FilterDropdown";
 import {
   RETURN_ADDRESS_SPACE_PLANS,
-  RETURN_NAMESPACES
+  RETURN_NAMESPACES,
+  RETURN_AUTHENTICATION_SERVICES
 } from "src/Queries/Queries";
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
@@ -54,6 +55,20 @@ export interface IAddressSpacePlans {
     };
   }>;
 }
+
+export interface IAddressSpaceAuthServiceResponse {
+  addressSpaceSchema_v2: IAddressSpaceAuthService[]
+}
+
+export interface IAddressSpaceAuthService {
+  ObjectMeta: {
+    Name: string;
+  }
+  Spec: {
+    AuthenticationServices: string[];
+  }
+}
+
 export interface INamespaces {
   namespaces: Array<{
     ObjectMeta: {
@@ -88,7 +103,8 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   const [isPlanOpen, setIsPlanOpen] = React.useState(false);
   const onPlanSelect = (event: any) => {
     //innertext being used here as value property is undefined, because of PF defect
-    setPlan(event.target.innerText);
+    // trim() since an undesirable '\n' is being appended
+    setPlan(event.target.innerText.trim());
     setIsPlanOpen(!isPlanOpen);
   };
 
@@ -102,6 +118,10 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   };
 
   const { loading, error, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
+
+  const { data : authenticationServices } = useQuery<IAddressSpaceAuthServiceResponse>(RETURN_AUTHENTICATION_SERVICES) 
+    || { data: {addressSpaceSchema_v2 : []}}
+
   const { addressSpacePlans } = useQuery<IAddressSpacePlans>(
     RETURN_ADDRESS_SPACE_PLANS
   ).data || {
@@ -117,7 +137,9 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   let namespaceOptions: IDropdownOption[];
 
   let planOptions: any[] = [];
+
   let authenticationServiceOptions: any[] = [];
+  
   namespaceOptions = namespaces.map(namespace => {
     return {
       value: namespace.ObjectMeta.Name,
@@ -137,6 +159,20 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
           }
         })
         .filter(plan => plan !== undefined) || [];
+  }
+
+  if (authenticationServices) {
+    authenticationServices.addressSpaceSchema_v2
+      .forEach(authService => {
+        if(authService.ObjectMeta.Name === type){
+          authenticationServiceOptions = authService.Spec.AuthenticationServices.map(service => {
+            return {
+              value: service,
+              label: service
+            };
+          });
+        }
+      });
   }
 
   const handleBrokeredChange = () => {
