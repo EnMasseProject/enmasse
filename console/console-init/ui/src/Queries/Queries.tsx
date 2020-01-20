@@ -1207,3 +1207,16 @@ export const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_F
   );
   return ALL_CONECTION_LIST;
 };
+
+export const RETURN_AUTHENTICATION_SERVICES = gql
+  `query addressspace_schema {
+    addressSpaceSchema_v2  {
+      ObjectMeta {
+        Name
+      }
+      Spec {
+        AuthenticationServices
+      }
+    }
+  }
+`;
