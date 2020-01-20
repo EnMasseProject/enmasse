@@ -95,7 +95,7 @@ $(GOPRJ):
 	ln -s $(TOPDIR) $(GOPRJ)
 
 clean_go:
-	@rm -Rf $(GOPATH)
+	@rm -Rf $(GOPRJ)
 
 clean_java:
 	mvn -B -q clean $(MAVEN_ARGS)
