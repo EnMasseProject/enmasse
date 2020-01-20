@@ -75,7 +75,7 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
       </Title>
       <Title size="xl" style={{ marginBottom: 32 }}>
         {" "}
-        Review the information below and Click Finish to create the new address.
+        Review the information below and Click Finish to create the new address space.
         Use the Back button to make changes.
       </Title>
       <Grid>
@@ -89,50 +89,50 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
           <Grid>
             {name && (
               <>
-                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
                   Instance name
                 </GridItem>
-                <GridItem id="preview-addr-name" span={8}>
+                <GridItem id="preview-addr-name" span={7}>
                   {name}
                 </GridItem>
               </>
             )}
             {namespace && (
               <>
-                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
                   Namespace
                 </GridItem>
-                <GridItem id="preview-addr-name" span={8}>
+                <GridItem id="preview-addr-name" span={7}>
                   {namespace}
                 </GridItem>
               </>
             )}
             {type && type.trim() !== "" && (
               <>
-                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
                   Type
                 </GridItem>
-                <GridItem id="preview-addr-type" span={8}>
+                <GridItem id="preview-addr-type" span={7}>
                   {type}
                 </GridItem>
               </>
             )}
             {plan && plan.trim() !== "" && (
               <>
-                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
                   Plan
                 </GridItem>
-                <GridItem id="preview-addr-plan" span={8}>
+                <GridItem id="preview-addr-plan" span={7}>
                   {plan}
                 </GridItem>
               </>
             )}
             {authenticationService && authenticationService.trim() !== "" && (
               <>
-                <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
+                <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
                   Authentication Service
                 </GridItem>
-                <GridItem id="preview-addr-plan" span={8}>
+                <GridItem id="preview-addr-plan" span={7}>
                   {authenticationService}
                 </GridItem>
               </>
