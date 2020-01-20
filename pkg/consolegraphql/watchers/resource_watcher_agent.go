@@ -405,9 +405,9 @@ func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {
 func updateConnectionMetrics(con *consolegraphql.Connection, agentCon *agent.AgentConnection, now time.Time) error {
 	metrics := con.Metrics
 
-	in, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
+	in, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge", "messages/sec")
 	in.Update(float64(agentCon.MessagesIn), now)
-	out, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge")
+	out, metrics := consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge", "messages/sec")
 	out.Update(float64(agentCon.MessagesOut), now)
 	senders, metrics := consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_senders", "gauge")
 	senders.Update(float64(len(agentCon.Senders)), now)
@@ -434,10 +434,10 @@ func updateAddressMetrics(addr *consolegraphql.AddressHolder, agentAddr *agent.A
 		sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_receivers", "gauge")
 		sm.Update(float64(agentAddr.Receivers), now)
 
-		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
+		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge", "messages/sec")
 		rm.Update(float64(agentAddr.MessagesIn), now)
 
-		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge")
+		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge", "messages/sec")
 		rm.Update(float64(agentAddr.MessagesOut), now)
 	} else {
 		consumers := 0
@@ -452,10 +452,10 @@ func updateAddressMetrics(addr *consolegraphql.AddressHolder, agentAddr *agent.A
 		sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_receivers", "gauge")
 		sm.Update(float64(consumers), now)
 
-		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge")
+		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_in", "gauge", "messages/sec")
 		rm.Update(float64(messagesIn), now)
 
-		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge")
+		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, "enmasse_messages_out", "gauge", "messages/sec")
 		rm.Update(float64(messagesOut), now)
 	}
 
@@ -613,7 +613,7 @@ func updateLinkMetrics(agentCon *agent.AgentConnection, metrics []*consolegraphq
 			sm.Update(float64(l.Deliveries), now)
 
 			var rm *consolegraphql.RateCalculatingMetric
-			rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, rateMetricName, "gauge")
+			rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, rateMetricName, "gauge", "messages/sec")
 			rm.Update(float64(l.Deliveries), now)
 
 			switch agentCon.AddressSpaceType {

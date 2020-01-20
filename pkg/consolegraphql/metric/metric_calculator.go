@@ -16,6 +16,7 @@ import (
 	"github.com/prometheus/prometheus/promql"
 	"github.com/prometheus/prometheus/storage"
 	"github.com/prometheus/prometheus/storage/remote"
+	"math"
 	"time"
 )
 
@@ -42,7 +43,7 @@ func (p *promQLCalculator) Calc(timeSeries *ring.Ring) (float64, error) {
 	now := time.Now()
 	query, err := p.engine.NewInstantQuery(&adaptingQueryable{
 		dataPointRing: timeSeries,
-	}, "round(rate(unused_label[5m]) * 60)", now)  // Rate per minute
+	}, "round(rate(unused_label[5m]), 0.01)", now)  // Rate per second, rounded to hundredths
 	if err != nil {
 		return 0, err
 	}
@@ -56,7 +57,11 @@ func (p *promQLCalculator) Calc(timeSeries *ring.Ring) (float64, error) {
 	if len(vector) == 0 {
 		return 0, nil
 	} else {
-		return vector[0].V, nil
+		v := vector[0].V
+		if v > 1 {
+			v = math.Round(v)
+		}
+		return v, nil
 	}
 }
 
