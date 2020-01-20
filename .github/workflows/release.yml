@@ -136,4 +136,5 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ env.ASSETPATH }}
           asset_name: ${{ env.ASSETNAME }}
+          asset_content_type: application/gzip
     
