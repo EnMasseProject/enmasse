@@ -109,7 +109,7 @@ jobs:
           path: artifacts
 
       - name: Create Release
-        if: job.status == 'success' && contains(github.ref, 'refs/tags/0.')
+        if: job.status == 'success' && contains(github.ref, 'refs/tags/')
         id: create_release
         uses: actions/create-release@v1.0.0
         env:
@@ -120,16 +120,20 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: Set asset path
+        if: job.status == 'success' && contains(github.ref, 'refs/tags/')
+        run: |
+          echo "::set-env name=ASSETPATH::'templates/build/enmasse-$(echo $TAG).tgz'"
+          echo "::set-env name=ASSETNAME::'enmasse-$(echo $TAG).tgz'"
+
       - name: Upload Release Asset
-        if: job.status == 'success' && contains(github.ref, 'refs/tags/0.')
+        if: job.status == 'success' && contains(github.ref, 'refs/tags/')
         id: upload-release-asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: "templates/build/enmasse-${{ steps.create_release.outputs.tag }}.tgz"
-          asset_name: "enmasse-${{ steps.version.VERSION }}.tgz"
-          asset_content_type: application/gzip
-
+          asset_path: ${{ env.ASSETPATH }}
+          asset_name: ${{ env.ASSETNAME }}
     
