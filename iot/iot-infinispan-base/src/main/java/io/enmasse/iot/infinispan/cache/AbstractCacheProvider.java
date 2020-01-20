@@ -16,6 +16,7 @@ import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.configuration.ServerConfigurationBuilder;
 import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +81,25 @@ public abstract class AbstractCacheProvider implements AutoCloseable {
     @Override
     public void close() throws Exception {
         stop();
+    }
+
+    protected void uploadSchema(final String fileName, final String schema) {
+
+        if (!this.properties.isUploadSchema()) {
+            return;
+        }
+
+        var cache = this.remoteCacheManager
+                .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+
+        if (this.properties.isOverrideSchema()) {
+            log.info("Uploading (put) schema - name: {}, schema: {}", fileName, schema);
+            cache.put(fileName, schema);
+        } else {
+            log.info("Uploading (putIfAbsent) schema - name: {}, schema: {}", fileName, schema);
+            cache.putIfAbsent(fileName, schema);
+        }
+
     }
 
     /**

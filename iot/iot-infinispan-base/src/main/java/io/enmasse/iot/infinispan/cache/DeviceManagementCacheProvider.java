@@ -54,15 +54,7 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
     }
 
     private void uploadSchema() throws Exception {
-
-        if (this.properties.isUploadSchema()) {
-            log.info("Generated protobuf schema - {}", this.schema);
-
-            this.remoteCacheManager
-                    .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
-                    .put(GENERATED_PROTOBUF_FILE_NAME, this.schema);
-        }
-
+        uploadSchema(GENERATED_PROTOBUF_FILE_NAME, this.schema);
     }
 
     private String generateSchema() throws IOException {

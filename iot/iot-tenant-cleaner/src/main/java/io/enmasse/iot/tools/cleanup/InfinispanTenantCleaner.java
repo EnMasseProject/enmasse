@@ -41,6 +41,7 @@ public class InfinispanTenantCleaner implements AutoCloseable {
 
     public InfinispanTenantCleaner(final CleanerConfig config) {
         this.config = config;
+        this.config.getInfinispan().setOverrideSchema(false);
     }
 
     @Override
@@ -58,11 +59,9 @@ public class InfinispanTenantCleaner implements AutoCloseable {
 
         final LinkedList<Closer> cleanup = new LinkedList<>();
 
-        config.getInfinispan().setUploadSchema(false);
-
         try (
-                var mgmtProvider = new DeviceManagementCacheProvider(config.getInfinispan());
-                var deviceconProvider = new DeviceConnectionCacheProvider(config.getInfinispan());) {
+                var mgmtProvider = new DeviceManagementCacheProvider(this.config.getInfinispan());
+                var deviceconProvider = new DeviceConnectionCacheProvider(this.config.getInfinispan());) {
 
             mgmtProvider.start();
             final var devicesCache = mgmtProvider.getOrCreateDeviceManagementCache();
