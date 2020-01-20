@@ -126,7 +126,7 @@ public class KubernetesHelper implements Kubernetes {
         client.apps().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         client.network().networkPolicies().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         client.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
-        client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_UUID, infraUuid).delete();
+        client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         if (isOpenShift) {
             client.adapt(OpenShiftClient.class).routes().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         }
