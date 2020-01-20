@@ -31,7 +31,7 @@ func TestMetricUpdater(t *testing.T) {
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	addressname := fmt.Sprintf("%s.myaddr", addressspace)
-	addr := createAddress(namespace, addressname, (*consolegraphql.Metric)(consolegraphql.NewRateCalculatingMetric("foo", "mytype")))
+	addr := createAddress(namespace, addressname, (*consolegraphql.Metric)(consolegraphql.NewRateCalculatingMetric("foo", "mytype", "myunit")))
 
 	now := time.Now()
 	addr.Metrics[0].AddTimeSeriesDataPoint(0, now.Add(time.Minute * - 1))
