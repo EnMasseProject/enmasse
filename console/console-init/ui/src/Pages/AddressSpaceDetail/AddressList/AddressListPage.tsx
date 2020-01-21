@@ -35,6 +35,8 @@ export interface IAddressListPageProps {
   addressSpacePlan: string | null;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
+  isWizardOpen: boolean;
+  setIsWizardOpen: (value: boolean) => void;
 }
 export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = ({
   name,
@@ -48,7 +50,9 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   perPage,
   addressSpacePlan,
   sortValue,
-  setSortValue
+  setSortValue,
+  isWizardOpen,
+  setIsWizardOpen
 }) => {
   const [
     addressBeingEdited,
@@ -171,7 +175,14 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         sortBy={sortBy}
         onSort={onSort}
       />
-      {addresses.Total > 0 ? " " : <EmptyAddress />}
+      {addresses.Total > 0 ? (
+        " "
+      ) : (
+        <EmptyAddress
+          isWizardOpen={isWizardOpen}
+          setIsWizardOpen={setIsWizardOpen}
+        />
+      )}
       {addressBeingEdited && (
         <Modal
           id="al-modal-edit-address"
@@ -184,21 +195,18 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
               key="confirm"
               id="al-edit-confirm"
               variant="primary"
-              onClick={handleSaving}
-            >
+              onClick={handleSaving}>
               Confirm
             </Button>,
             <Button
               key="cancel"
               id="al-edit-cancel"
               variant="link"
-              onClick={handleCancelEdit}
-            >
+              onClick={handleCancelEdit}>
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned
-        >
+          isFooterLeftAligned>
           <EditAddress
             name={addressBeingEdited.name}
             type={addressBeingEdited.type}

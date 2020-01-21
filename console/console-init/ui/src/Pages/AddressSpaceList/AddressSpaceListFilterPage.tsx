@@ -31,7 +31,8 @@ interface IAddressSpaceListFilterPageProps {
   setOnCreationRefetch?: (value: boolean) => void;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
-  
+  isCreateWizardOpen: boolean;
+  setIsCreateWizardOpen: (value: boolean) => void;
 }
 export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceListFilterPageProps> = ({
   filterValue,
@@ -46,9 +47,9 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
   setOnCreationRefetch,
   sortValue,
   setSortValue,
-  
+  isCreateWizardOpen,
+  setIsCreateWizardOpen
 }) => {
-  const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
   const { width } = useWindowDimensions();
   const onClearAllFilters = () => {
     setFilterValue("Name");
@@ -94,7 +95,6 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
           createAddressSpaceOnClick={createAddressSpaceOnClick}
         />
       </DataToolbarItem>
-      
     </>
   );
   return (
@@ -102,8 +102,7 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onClearAllFilters}
-    >
+      clearAllFilters={onClearAllFilters}>
       <DataToolbarContent>{toolbarItems}</DataToolbarContent>
     </DataToolbar>
   );

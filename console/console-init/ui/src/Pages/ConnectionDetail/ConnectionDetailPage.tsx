@@ -67,7 +67,7 @@ export default function ConnectionDetailPage() {
   // useBreadcrumb(breadcrumb);
   const { loading, error, data } = useQuery<IConnectionDetailResponse>(
     RETURN_CONNECTION_DETAIL(name || "", namespace || "", connectionname || ""),
-    { pollInterval: 20000 }
+    { pollInterval: 2000 }
   );
   if (loading) return <Loading />;
   if (error) {
