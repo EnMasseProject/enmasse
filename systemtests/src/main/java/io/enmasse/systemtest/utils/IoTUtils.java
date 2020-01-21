@@ -4,6 +4,33 @@
  */
 package io.enmasse.systemtest.utils;
 
+import static io.enmasse.systemtest.apiclients.Predicates.any;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdaptersConfig;
@@ -28,34 +55,7 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 
-import org.slf4j.Logger;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
-
-import static io.enmasse.systemtest.apiclients.Predicates.any;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
 public class IoTUtils {
-
-    private static Kubernetes kubernetes = Kubernetes.getInstance();
 
     private static final String IOT_SIGFOX_ADAPTER = "iot-sigfox-adapter";
     private static final String IOT_MQTT_ADAPTER = "iot-mqtt-adapter";
@@ -66,9 +66,8 @@ public class IoTUtils {
     private static final String IOT_OPERATOR = "iot-operator";
     private static final String IOT_TENANT_SERVICE = "iot-tenant-service";
 
-
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
 
     public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
@@ -180,22 +179,78 @@ public class IoTUtils {
     }
 
     private static void waitForIoTProjectDeleted(Kubernetes kubernetes, IoTProject project) throws Exception {
-        if (project.getSpec().getDownstreamStrategy().getManagedStrategy() != null) {
-            String addressSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-            AddressSpace addressSpace = kubernetes.getAddressSpaceClient(project.getMetadata().getNamespace()).withName(addressSpaceName).get();
-            if (addressSpace != null) {
-                AddressSpaceUtils.waitForAddressSpaceDeleted(addressSpace);
+
+        var projectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
+        var asClient = kubernetes.getAddressSpaceClient(project.getMetadata().getNamespace());
+
+        // get inital address spaces
+
+        var initialAddressSpaces = projectClient
+                .list().getItems().stream()
+                .flatMap(p -> {
+            var managed = p.getSpec().getDownstreamStrategy().getManagedStrategy();
+            if ( managed == null )  {
+                return Stream.empty();
+            } else {
+                return Stream.ofNullable(managed.getAddressSpace().getName());
             }
-        }
+        })
+                .collect(Collectors.toSet());
+
+        // pre-fetch address spaces for later use
+
+        var deletedAddressSpaces = initialAddressSpaces.stream()
+                .<AddressSpace>map(asName -> asClient.withName(asName).get())
+                .collect(Collectors.<AddressSpace, String,AddressSpace>toMap(
+                        e -> e.getMetadata().getName(),
+                        e -> e));
+
+        // wait until the IoTProject is deleted
+
+        var projectName = project.getMetadata().getNamespace() + "/"+ project.getMetadata().getName();
         var client = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         TestUtils.waitUntilConditionOrFail(() -> {
             var updated = client.withName(project.getMetadata().getName()).get();
             if (updated != null) {
-                log.info("IoTProject {}/{} still exists -> {}", project.getMetadata().getNamespace(), project.getMetadata().getName(), updated.getStatus().getPhase());
+                log.info("IoTProject {} still exists -> {}", projectName, updated.getStatus().getPhase());
             }
             return updated == null;
         }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "IoT project failed to delete in time");
-        log.info("IoTProject {}/{} deleted", project.getMetadata().getNamespace(), project.getMetadata().getName());
+        log.info("IoTProject {} deleted", projectName);
+
+        // get the expected and actual address spaces
+
+        var expectedAddressSpaces = projectClient
+                .list().getItems().stream()
+                .flatMap(p -> {
+            var managed = p.getSpec().getDownstreamStrategy().getManagedStrategy();
+            if ( managed == null )  {
+                return Stream.empty();
+            } else {
+                return Stream.ofNullable(managed.getAddressSpace().getName());
+            }
+        })
+                .collect(Collectors.toSet());
+
+        var actualAddressSpaces = asClient
+                .list().getItems().stream()
+                .map(as -> as.getMetadata().getName())
+                .collect(Collectors.toSet());
+
+        // verify that we only have expected address spaces remaining
+
+        assertEquals(expectedAddressSpaces, actualAddressSpaces);
+
+        // retain only the addresses spaces which are expected to be deleted
+
+        deletedAddressSpaces.keySet().removeAll(expectedAddressSpaces);
+
+        // verify the destruction of the address spaces
+
+        for (final Map.Entry<String,AddressSpace> deleted : deletedAddressSpaces.entrySet()) {
+            log.info("Verify destruction of address space: {}", deleted.getKey());
+            AddressSpaceUtils.waitForAddressSpaceDeleted(deleted.getValue());
+        }
     }
 
     public static boolean isIoTInstalled(Kubernetes kubernetes) {
