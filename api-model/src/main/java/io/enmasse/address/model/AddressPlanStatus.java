@@ -12,6 +12,7 @@ import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
+import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -29,8 +30,11 @@ import java.util.Objects;
 )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AddressPlanStatus extends AbstractWithAdditionalProperties {
+    @NotNull
     private String name;
+    @NotNull
     private Integer partitions;
+    @NotNull
     private Map<String, Double> resources;
 
     public String getName() {
