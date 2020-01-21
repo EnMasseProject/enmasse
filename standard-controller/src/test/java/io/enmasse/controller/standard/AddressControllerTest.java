@@ -5,7 +5,37 @@
 
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.*;
+import static java.util.Collections.singletonList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressPlanStatus;
+import io.enmasse.address.model.AddressSpecForwarderDirection;
+import io.enmasse.address.model.AddressStatus;
+import io.enmasse.address.model.BrokerState;
+import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.Phase;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -17,16 +47,6 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.Vertx;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 public class AddressControllerTest {
     private Kubernetes mockHelper;
@@ -150,6 +170,14 @@ public class AddressControllerTest {
 
         controller.onUpdate(Arrays.asList(a1, a2));
 
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi, times(2)).replaceAddress(captor.capture());
+        List<Address> captured = captor.getAllValues();
+        assertThat(captured, hasSize(2));
+
+        a1 = captured.get(0);
+        a2 = captured.get(1);
+
         assertEquals(Phase.Configuring, a1.getStatus().getPhase());
 
         assertEquals(Phase.Pending, a2.getStatus().getPhase());
@@ -186,8 +214,16 @@ public class AddressControllerTest {
 
         controller.onUpdate(Arrays.asList(a1, a2));
 
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi, times(2)).replaceAddress(captor.capture());
+        List<Address> captured = captor.getAllValues();
+        assertThat(captured, hasSize(2));
+
+        a1 = captured.get(0);
+        a2 = captured.get(1);
+
         assertEquals(Phase.Pending, a1.getStatus().getPhase());
-        assertEquals("Address 'a' already exists with resource name 'myspace.a2'", a1.getStatus().getMessages().get(0));
+        assertThat(a1.getStatus().getMessages(), is(singletonList("Address 'a' already exists with resource name 'myspace.a2'")));
 
         assertEquals(Phase.Active, a2.getStatus().getPhase());
     }
@@ -222,10 +258,18 @@ public class AddressControllerTest {
 
         controller.onUpdate(Arrays.asList(a1, a2));
 
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi, times(2)).replaceAddress(captor.capture());
+        List<Address> captured = captor.getAllValues();
+        assertThat(captured, hasSize(2));
+
+        a1 = captured.get(0);
+        a2 = captured.get(1);
+
         assertEquals(Phase.Active, a1.getStatus().getPhase());
 
         assertEquals(Phase.Pending, a2.getStatus().getPhase());
-        assertEquals("Address 'a' already exists with resource name 'myspace.a1'", a2.getStatus().getMessages().get(0));
+        assertThat(a2.getStatus().getMessages(), is(singletonList("Address 'a' already exists with resource name 'myspace.a1'")));
     }
 
     @Test
@@ -260,6 +304,14 @@ public class AddressControllerTest {
                 .build();
 
         controller.onUpdate(Arrays.asList(a1, a2));
+
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi, times(2)).replaceAddress(captor.capture());
+        List<Address> captured = captor.getAllValues();
+        assertThat(captured, hasSize(2));
+
+        a1 = captured.get(0);
+        a2 = captured.get(1);
 
         assertEquals(Phase.Active, a1.getStatus().getPhase());
 
@@ -319,8 +371,12 @@ public class AddressControllerTest {
 
         controller.onUpdate(Arrays.asList(alive));
 
-        assertEquals(1, alive.getStatus().getBrokerStatuses().size());
-        assertEquals("broker-infra-0", alive.getStatus().getBrokerStatuses().get(0).getClusterId());
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi).replaceAddress(captor.capture());
+        Address captured = captor.getValue();
+
+        assertEquals(1, captured.getStatus().getBrokerStatuses().size());
+        assertEquals("broker-infra-0", captured.getStatus().getBrokerStatuses().get(0).getClusterId());
         verify(mockHelper).delete(any());
         verify(mockHelper).delete(eq(oldList));
     }
@@ -344,8 +400,12 @@ public class AddressControllerTest {
 
         controller.onUpdate(Arrays.asList(pending));
 
-        assertFalse(pending.getStatus().isReady());
-        assertFalse(pending.getStatus().getMessages().isEmpty());
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi).replaceAddress(captor.capture());
+        Address captured = captor.getValue();
+
+        assertFalse(captured.getStatus().isReady());
+        assertFalse(captured.getStatus().getMessages().isEmpty());
     }
 
     @Test
@@ -354,6 +414,7 @@ public class AddressControllerTest {
                 .withNewMetadata()
                 .withName("myspace.a1")
                 .withNamespace("ns")
+                .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "")
                 .endMetadata()
 
                 .withNewSpec()
@@ -374,9 +435,10 @@ public class AddressControllerTest {
         ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
         verify(mockApi).replaceAddress(captor.capture());
         Address captured = captor.getValue();
+        // ensure that the replaced address has the correct plan
         assertEquals(captured.getSpec().getPlan(), captured.getAnnotation(AnnotationKeys.APPLIED_PLAN));
-        assertEquals(a.getSpec().getPlan(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN));
-
+        // but the instance provided to onUpdate did not change
+        assertNotEquals(a.getSpec().getPlan(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
     @Test
@@ -418,11 +480,17 @@ public class AddressControllerTest {
                 new BrokerCluster("broker-infra-0", oldList),
                 new BrokerCluster("broker-infra-1", oldList)));
 
+
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+
         controller.onUpdate(Arrays.asList(alive));
 
-        assertEquals(2, alive.getStatus().getBrokerStatuses().size());
-        assertEquals("broker-infra-0", alive.getStatus().getBrokerStatuses().get(0).getClusterId());
-        assertEquals(BrokerState.Migrating, alive.getStatus().getBrokerStatuses().get(0).getState());
+        verify(mockApi).replaceAddress(captor.capture());
+        Address captured = captor.getValue();
+
+        assertEquals(2, captured.getStatus().getBrokerStatuses().size());
+        assertEquals("broker-infra-0", captured.getStatus().getBrokerStatuses().get(0).getClusterId());
+        assertEquals(BrokerState.Migrating, captured.getStatus().getBrokerStatuses().get(0).getState());
 
         oldList = new KubernetesListBuilder()
                 .addToStatefulSetItems(new StatefulSetBuilder()
@@ -442,11 +510,14 @@ public class AddressControllerTest {
                 new BrokerCluster("broker-infra-0", oldList),
                 new BrokerCluster("broker-infra-1", oldList)));
 
-        controller.onUpdate(Arrays.asList(alive));
+        controller.onUpdate(Arrays.asList(captured));
 
-        assertEquals(1, alive.getStatus().getBrokerStatuses().size());
-        assertEquals("broker-infra-1", alive.getStatus().getBrokerStatuses().get(0).getClusterId());
-        assertEquals(BrokerState.Active, alive.getStatus().getBrokerStatuses().get(0).getState());
+        verify(mockApi, times(2)).replaceAddress(captor.capture());
+        captured = captor.getValue();
+
+        assertEquals(1, captured.getStatus().getBrokerStatuses().size());
+        assertEquals("broker-infra-1", captured.getStatus().getBrokerStatuses().get(0).getClusterId());
+        assertEquals(BrokerState.Active, captured.getStatus().getBrokerStatuses().get(0).getState());
     }
 
     @Test
