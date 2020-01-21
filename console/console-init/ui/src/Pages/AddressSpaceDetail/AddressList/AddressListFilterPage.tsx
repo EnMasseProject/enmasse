@@ -34,6 +34,8 @@ interface AddressListFilterProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   totalAddresses: number;
+  isCreateWizardOpen: boolean;
+  setIsCreateWizardOpen: (value: boolean) => void;
 }
 export const AddressListFilterPage: React.FunctionComponent<AddressListFilterProps> = ({
   filterValue,
@@ -46,10 +48,11 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
   setStatusValue,
   sortValue,
   setSortValue,
-  totalAddresses
+  totalAddresses,
+  isCreateWizardOpen,
+  setIsCreateWizardOpen
 }) => {
   const { name, namespace, type } = useParams();
-  const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
   const [addressSpacePlan, setAddressSpacePlan] = React.useState();
   const client = useApolloClient();
   const { width } = useWindowDimensions();

@@ -30,6 +30,7 @@ export default function AddressSpaceListWithFilterAndPagination() {
   const [filterType, setFilterType] = React.useState<string | null>(null);
   const [totalAddressSpaces, setTotalAddressSpaces] = React.useState<number>(0);
   const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
+  const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
   const location = useLocation();
   const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
@@ -93,6 +94,8 @@ export default function AddressSpaceListWithFilterAndPagination() {
             setOnCreationRefetch={setOnCreationRefetch}
             sortValue={sortDropDownValue}
             setSortValue={setSortDropdownValue}
+            isCreateWizardOpen={isCreateWizardOpen}
+            setIsCreateWizardOpen={setIsCreateWizardOpen}
           />
         </GridItem>
         <GridItem span={5}>
@@ -112,6 +115,8 @@ export default function AddressSpaceListWithFilterAndPagination() {
         setOnCreationRefetch={setOnCreationRefetch}
         sortValue={sortDropDownValue}
         setSortValue={setSortDropdownValue}
+        isCreateWizardOpen={isCreateWizardOpen}
+        setIsCreateWizardOpen={setIsCreateWizardOpen}
       />
       {totalAddressSpaces > 0 && renderPagination(page, perPage)}
     </PageSection>
