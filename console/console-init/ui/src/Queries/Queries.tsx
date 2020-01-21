@@ -826,10 +826,10 @@ export const RETURN_CONNECTION_LINKS = (
         orderByString = "";
         break;
       case 1:
-        orderByString = "";
+        orderByString = "`$.ObjectMeta.Name` ";
         break;
       case 2:
-        orderByString = "";
+        orderByString = "`$.Spec.Address` ";
         break;
       case 3:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_deliveries')].Value` ";
