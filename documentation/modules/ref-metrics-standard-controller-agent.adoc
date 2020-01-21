@@ -1,0 +1,115 @@
+// Module included in the following assemblies:
+//
+// assembly-metrics.adoc
+
+[id='ref-metrics-standard-controller-agent-{context}']
+= Standard controller and agent metrics
+
+The following `standard-controller` and `agent` metrics are available for Brokered address spaces only in {ProductName}.
+
+== Summary
+The total number of addresses equals the sum of the total number of addresses in the ready state and the total number of addresses in the not ready state:
+[source,options="nowrap"]
+----
+enmasse_addresses_total == enmasse_addresses_ready_total + enmasse_addresses_not_ready_total
+----
+
+The total number of addresses equals the total number of addresses in all phases:
+[source,options="nowrap"]
+----
+enmasse_addresses_total == enmasse_addresses_active_total + enmasse_addresses_configuring_total + enmasse_addresses_failed_total + enmasse_addresses_pending_total + enmasse_addresses_terminating_total
+----
+
+`enmasse_addresses_total`::
+Description::: Provides the total number of addresses, per address space, regardless of state.
+Type::: Gauge
+Example:::
+----
+enmasse_addresses_total{addressspace="space-one"} 5
+enmasse_addresses_total{addressspace="space-two"} 3
+----
+
+`enmasse_addresses_ready_total`::
+Type::: Gauge
+Description::: Provides the total number of addresses currently in the ready state.
+Example:::
+----
+enmasse_addresses_ready_total{addressspace="space-one"} 3
+enmasse_addresses_ready_total{addressspace="space-two"} 2
+----
+
+`enmasse_addresses_not_ready_total`::
+Type::: Gauge
+Description::: Provides the total number of addresses currently in the not ready state.
+Example:::
+[source,options="nowrap"]
+----
+enmasse_addresses_not_ready_total{addressspace="space-one"} 2
+enmasse_addresses_not_ready_total{addressspace="space-two"} 1
+----
+
+`enmasse_addresses_active_total`::
+Type::: Gauge
+Description::: Provides the total number of addresses currently in the active phase.
+Example:::
+`enmasse_addresses_active_total{addressspace="space-one"} 2`
+
+`enmasse_addresses_configuring_total`::
+Type::: Gauge
+Description::: Provides the total number of addresses currently in the configuring phase.
+Example:::
+`enmasse_addresses_configuring_total{addressspace="space-one"} 2`
+
+`enmasse_addresses_failed_total`::
+Type::: Gauge
+Description::: Provides the total number of addresses currently in the failed phase.
+Example:::
+`enmasse_addresses_failed_total{addressspace="space-one"} 2`
+
+`enmasse_addresses_pending_total`::
+Type::: Gauge
+Description::: Provides the total number of addresses currently in the pending phase.
+Example:::
+`enmasse_addresses_pending_total{addressspace="space-one"} 2`
+
+`enmasse_addresses_terminating_total`::
+Type::: Gauge
+Description::: Provides the total number of addresses currently in the terminating phase.
+Example:::
+`enmasse_addresses_terminating_total{addressspace="space-one"} 2`
+
+`enmasse_standard_controller_loop_duration_seconds`::
+Type::: Gauge
+Description::: Provides the execution time, in seconds, for the most recent standard controller reconcile loop.
+Example:::
+`enmasse_standard_controller_loop_duration_seconds 0.33`
+
+`enmasse_standard_controller_router_check_failures_total`::
+Type::: Counter
+Description::: Provies the total number of router check failures during reconciliation loop.
+Example:::
+[source,options="nowrap"]
+----
+enmasse_standard_controller_router_check_failures_total{addressspace="firstspace"}	0
+enmasse_standard_controller_router_check_failures_total{addressspace="myspace"} 0
+----
+
+`enmasse_addresses_forwarders_ready_total`::
+Type::: Gauge
+Description::: Provides the total number of address forwarders in the ready state.
+Example:::
+`enmasse_addresses_forwarders_ready_total{addressspace="myspace"} 2`
+
+`enmasse_addresses_forwarders_not_ready_total`::
+Type::: Gauge
+Description::: Provides the total number of address forwarders in the not ready state.
+Example:::
+`enmasse_addresses_forwarders_not_ready_total{addressspace="myspace"} 0`
+
+`enmasse_addresses_forwarders_total`::
+Type::: Gauge
+Description::: Provides the total number of address forwarders, regardless of whether they are in a ready or not ready state.
+Example:::
+`enmasse_addresses_forwarders_total{addressspace="myspace"} 2`
+
+

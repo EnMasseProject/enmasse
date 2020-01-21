@@ -1,0 +1,26 @@
+// Module included in the following assemblies:
+//
+// assembly-metrics.adoc
+
+[id='ref-metrics-common-{context}']
+= Common metrics
+
+The following components export these common metrics:
+
+* `address-space-controller`
+* `api-server`
+* `standard-controller`
+
+
+`enmasse_version`::
+Type::: version
+Description::: Provides the current version of each component in {ProductName} using the version label. The metric always returns a value of `1`.
+Example:::
+[source,options="nowrap"]
+----
+enmasse_version{job="address-space-controller",version="1.0.1"} 1
+enmasse_version{job="api-server",version="1.0.1"} 1
+enmasse_version{job="standard-controller",version="1.0.1"} 1
+----
+
+

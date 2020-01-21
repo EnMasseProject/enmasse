@@ -1,0 +1,16 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-metrics-rules.adoc
+
+[id='assembly-rules-{context}]
+= Rules
+
+This section details Prometheus rules installed using the PrometheusRule CRD with {ProductName}. Two types of Prometheus rules are available in {ProductName}:
+
+* Record: Pre-computed expressions saved as a new set of time series.
+* Alert: Expressions that trigger an alert when evaluated as `true`.
+
+include::../modules/ref-rules-records.adoc[leveloffset=+1]
+
+include::../modules/ref-rules-alerts.adoc[leveloffset=+1]
+

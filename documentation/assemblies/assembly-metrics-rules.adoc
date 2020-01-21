@@ -1,0 +1,15 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-monitoring.adoc
+
+[id='assembly-metrics-rules-{context}]
+= Metrics and rules
+
+include::../modules/ref-metrics-common.adoc[leveloffset=+1]
+
+include::../modules/ref-metrics-address-space-controller.adoc[leveloffset=+1]
+
+include::../modules/ref-metrics-standard-controller-agent.adoc[leveloffset=+1]
+
+include::assembly-rules.adoc[leveloffset=+1]
+
