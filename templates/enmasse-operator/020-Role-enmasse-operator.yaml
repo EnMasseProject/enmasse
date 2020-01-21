@@ -23,3 +23,6 @@ rules:
   - apiGroups: [ "iot.enmasse.io" ]
     resources: [ "iotconfigs", "iotconfigs/finalizers", "iotconfigs/status" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+  - apiGroups: [ "batch" ]
+    resources: [ "jobs" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]

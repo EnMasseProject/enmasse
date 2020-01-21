@@ -48,7 +48,7 @@ func getIoTConfigName() (string, error) {
 }
 
 func getInfrastructureNamespace() (string, error) {
-	return util.GetEnvOrError("K8S_NAMESPACE")
+	return util.GetEnvOrError("NAMESPACE")
 }
 
 // get infrastructure config

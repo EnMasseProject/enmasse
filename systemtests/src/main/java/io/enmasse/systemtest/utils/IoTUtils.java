@@ -63,7 +63,6 @@ public class IoTUtils {
     private static final String IOT_HTTP_ADAPTER = "iot-http-adapter";
     private static final String IOT_AUTH_SERVICE = "iot-auth-service";
     private static final String IOT_DEVICE_REGISTRY = "iot-device-registry";
-    private static final String IOT_OPERATOR = "iot-operator";
     private static final String IOT_TENANT_SERVICE = "iot-tenant-service";
 
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
@@ -120,7 +119,7 @@ public class IoTUtils {
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getLoraWan, IOT_LORAWAN_ADAPTER);
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getMqtt, IOT_MQTT_ADAPTER);
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getSigfox, IOT_SIGFOX_ADAPTER);
-        expectedDeployments.addAll(Arrays.asList(IOT_AUTH_SERVICE, IOT_DEVICE_REGISTRY, IOT_OPERATOR, IOT_TENANT_SERVICE));
+        expectedDeployments.addAll(Arrays.asList(IOT_AUTH_SERVICE, IOT_DEVICE_REGISTRY, IOT_TENANT_SERVICE));
         return expectedDeployments.toArray(String[]::new);
     }
 

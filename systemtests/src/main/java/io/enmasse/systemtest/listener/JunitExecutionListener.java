@@ -104,7 +104,7 @@ public class JunitExecutionListener implements TestExecutionListener {
 
     private void performInfraCleanup() {
         try {
-            OperatorManager.getInstance().removeIoTOperator();
+            OperatorManager.getInstance().removeIoT();
             OperatorManager.getInstance().deleteEnmasseOlm();
             OperatorManager.getInstance().deleteEnmasseBundle();
         } catch (Exception e) {

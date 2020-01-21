@@ -80,7 +80,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                     if (!operatorManager.isEnmasseBundleDeployed()) {
                         operatorManager.installEnmasseBundle();
                     }
-                    if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
+                    if (testInfo.isClassIoT()) {
                         operatorManager.installIoTOperator();
                     }
                 }
@@ -102,8 +102,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                     operatorManager.deleteEnmasseOlm();
                 }
             } else if (env.installType() == EnmasseInstallType.BUNDLE) {
-                if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed()) {
-                    operatorManager.removeIoTOperator();
+                if (testInfo.isEndOfIotTests()) {
+                    operatorManager.removeIoT();
                 }
                 if (operatorManager.isEnmasseOlmDeployed()) {
                     operatorManager.deleteEnmasseOlm();

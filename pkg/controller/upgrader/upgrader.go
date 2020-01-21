@@ -191,12 +191,8 @@ func (u *Upgrader) performUpgrade(addressSpaceControllerDeployment *appsv1.Deplo
 		return err
 	}
 
-	// Scale up iot-operator if deployed
-	err = u.scale("iot-operator", 1)
-	if err != nil {
-		return err
-	}
-	return nil
+	// Delete iot-operator deployment
+	return u.deleteDeployment("iot-operator")
 }
 
 func (u *Upgrader) convertMessagingUsers() error {
@@ -291,21 +287,21 @@ func (u *Upgrader) convertMessagingUsers() error {
 }
 
 func (u *Upgrader) delete(name string) error {
+	u.deleteDeployment(name)
+
+	propagationPolicy := metav1.DeletePropagationBackground
+	serviceClient := u.client.CoreV1().Services(u.namespace)
+	return serviceClient.Delete(name, &metav1.DeleteOptions{
+		PropagationPolicy: &propagationPolicy,
+	})
+}
+
+func (u *Upgrader) deleteDeployment(name string) error {
 	deploymentClient := u.client.AppsV1().Deployments(u.namespace)
 	propagationPolicy := metav1.DeletePropagationBackground
-	err := deploymentClient.Delete(name, &metav1.DeleteOptions{
+	return deploymentClient.Delete(name, &metav1.DeleteOptions{
 		PropagationPolicy: &propagationPolicy,
 	})
-	if err != nil {
-		return err
-	}
-
-	serviceClient := u.client.CoreV1().Services(u.namespace)
-	err = serviceClient.Delete(name, &metav1.DeleteOptions{
-		PropagationPolicy: &propagationPolicy,
-	})
-
-	return err
 }
 
 func (u *Upgrader) scale(deploymentName string, replicas int32) error {

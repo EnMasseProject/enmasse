@@ -41,6 +41,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: IOT_CONFIG_NAME
+          value: "default"
         - name: OPERATOR_NAME
           value: "enmasse-operator"
         - name: IMAGE_PULL_POLICY
@@ -48,6 +50,8 @@ spec:
         - name: CONTROLLER_DISABLE_ALL
           value: "true"
         - name: CONTROLLER_ENABLE_UPGRADER
+          value: "true"
+        - name: CONTROLLER_ENABLE_IOT_PROJECT
           value: "true"
         - name: CONTROLLER_ENABLE_IOT_CONFIG
           value: "true"

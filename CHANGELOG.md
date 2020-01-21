@@ -1,5 +1,6 @@
 ## 0.31.0
 *  #2714: Allow setting security context of pods using persistent volumes
+*  #3622: Manage iot projects in enmasse-operator and remove iot-operator deployment
 *  #3407: AddressSpace, Address and MessagingUser resources are now backed by Custom Resource Definitions (CRD) rather than api-server:
    * On upgrade, existing address spaces, addresses and users in the standard authservices will be converted to CRDs.
    * The api-server is removed from the install. The enmasse-operator will automatically remove it when upgrading.
