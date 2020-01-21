@@ -5,15 +5,7 @@
 
 package io.enmasse.systemtest.iot;
 
-import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.time.TimeoutBudget;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
-import org.apache.qpid.proton.amqp.messaging.Data;
-import org.apache.qpid.proton.message.Message;
-import org.opentest4j.AssertionFailedError;
-import org.slf4j.Logger;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.Duration;
 import java.util.LinkedList;
@@ -23,7 +15,16 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.fail;
+import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.message.Message;
+import org.opentest4j.AssertionFailedError;
+import org.slf4j.Logger;
+
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
 
 /**
  * Run a message send test.
@@ -379,10 +380,14 @@ public class MessageSendTester {
 
             final int missing = MessageSendTester.this.amount - this.receivedMessages.size();
             if (missing > MessageSendTester.this.acceptableMessageLoss) {
-                fail(String.format("Unacceptable loss of messages - expected: %s, received: %s, acceptedLoss: %s, actualLoss: %s",
+                var msg = String.format("Unacceptable loss of messages - expected: %s, received: %s, acceptedLoss: %s, actualLoss: %s",
                         MessageSendTester.this.amount, this.receivedMessages.size(),
-                        MessageSendTester.this.acceptableMessageLoss, missing));
+                        MessageSendTester.this.acceptableMessageLoss, missing);
+                log.info("Test failed: {}", msg);
+                fail(msg);
             }
+
+            log.info("Result is ok");
         }
 
         private void startConsumer() {
