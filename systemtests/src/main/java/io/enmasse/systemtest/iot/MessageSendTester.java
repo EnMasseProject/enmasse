@@ -409,7 +409,7 @@ public class MessageSendTester {
 
             var json = new JsonObject(Buffer.buffer(((Data) body).getValue().getArray()));
             var testId = json.getString("test-id");
-            var timestamp = json.getInteger("timestamp");
+            var timestamp = json.getLong("timestamp");
             if (!this.testId.equals(testId) || timestamp == null) {
                 handleInvalidMessage(message);
                 return;
@@ -421,7 +421,7 @@ public class MessageSendTester {
         private void handleInvalidMessage(final Message message) {
         }
 
-        private void handleValidMessage(final Message message, int timestamp, final JsonObject payload) {
+        private void handleValidMessage(final Message message, long timestamp, final JsonObject payload) {
             var diff = System.currentTimeMillis() - timestamp;
             sendTime += diff;
             log.debug("Received message took {} ms", diff);
