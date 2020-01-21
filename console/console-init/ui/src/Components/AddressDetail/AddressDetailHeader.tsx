@@ -24,7 +24,7 @@ export interface IAddressDetailHeaderProps {
   type: string;
   name: string;
   plan: string;
-  shards: number;
+  partitions: number;
   onEdit: (name: string) => void;
   onDelete: (name: string) => void;
 }
@@ -60,7 +60,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
   type,
   name,
   plan,
-  shards,
+  partitions,
   onEdit,
   onDelete
 }) => {
@@ -113,9 +113,15 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
             >
               <b>{plan}</b>
             </FlexItem>
-            <FlexItem id="adheader-shards">
-              Stored in <b>{shards}</b> Shard
-            </FlexItem>
+            { 
+              type === "queue"
+                &&
+              (
+                <FlexItem id="adheader-partitions">
+                  Stored in <b>{partitions}</b> Partitions
+                </FlexItem>
+              )
+            }
           </Flex>
         </SplitItem>
         <SplitItem isFilled></SplitItem>

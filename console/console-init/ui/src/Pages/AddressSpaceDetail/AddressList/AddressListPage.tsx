@@ -103,7 +103,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     ),
     senders: getFilteredValue(address.Metrics, "enmasse_senders"),
     receivers: getFilteredValue(address.Metrics, "enmasse_receivers"),
-    shards: address.Status.PlanStatus.Partitions,
+    partitions: address.Status.PlanStatus.Partitions,
     isReady: address.Status.IsReady,
     status: address.Status.Phase,
     errorMessages: address.Status.Messages
