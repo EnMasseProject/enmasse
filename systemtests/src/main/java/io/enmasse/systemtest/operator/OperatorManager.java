@@ -234,7 +234,7 @@ public class OperatorManager {
     public void removeIoT() {
         LOGGER.info("Delete enmasse IoT from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
-        KubeCMDClient.runOnCluster("delete", "iotconfigs", "--all-namespaces=true");
+        KubeCMDClient.runOnCluster("delete", "iotconfigs", "-n", kube.getInfraNamespace());
     }
 
     public void deleteEnmasseAnsible() {
