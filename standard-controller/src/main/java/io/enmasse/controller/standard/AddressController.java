@@ -41,6 +41,7 @@ import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.AddressSpecForwarder;
 import io.enmasse.address.model.AddressSpecForwarderDirection;
 import io.enmasse.address.model.AddressStatus;
+import io.enmasse.address.model.AddressStatusBuilder;
 import io.enmasse.address.model.AddressStatusForwarder;
 import io.enmasse.address.model.AddressStatusForwarderBuilder;
 import io.enmasse.address.model.AddressType;
@@ -231,6 +232,7 @@ public class AddressController implements Watcher<Address> {
     @Override
     public void onUpdate(List<Address> addressList) throws Exception {
         long start = System.nanoTime();
+
         Schema schema = schemaProvider.getSchema();
         if (schema == null) {
             log.info("No schema available");
@@ -244,7 +246,12 @@ public class AddressController implements Watcher<Address> {
         }
 
         String addressPrefix = String.format("%s.", options.getAddressSpace());
-        addressList = addressList.stream().filter(a -> a.getMetadata().getName().startsWith(addressPrefix)).collect(Collectors.toList());
+        // make a deep copy of the list first, but only for relevant items
+        addressList = addressList.stream()
+                .filter(a -> a.getMetadata().getName().startsWith(addressPrefix))
+                // copy item
+                .map(a -> new AddressBuilder(a).build())
+                .collect(Collectors.toList());
 
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
 
@@ -268,8 +275,6 @@ public class AddressController implements Watcher<Address> {
         Map<String, Address> validAddresses = new HashMap<>();
         List<Phase> readyPhases = Arrays.asList(Configuring, Active);
         for (Address address : addressList) {
-            address = new AddressBuilder(address).build();
-
             address.getStatus().clearMessages();
             if (readyPhases.contains(address.getStatus().getPhase())) {
                 address.getStatus().setReady(true);
@@ -379,11 +384,16 @@ public class AddressController implements Watcher<Address> {
 
         int staleCount = 0;
         for (Address address : addressList) {
+            var addressName = address.getMetadata().getNamespace() + ":" + address.getMetadata().getName();
             ProvisionState previous = previousStatus.get(address.getMetadata().getName());
             ProvisionState current = new ProvisionState(address.getStatus(), address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+            log.debug("Compare current state\nPrevious: {}\nCurrent : {}", previous, current);
             if (!current.equals(previous)) {
+                log.debug("Address did change: {}", addressName);
                 try {
-                    addressApi.replaceAddress(address);
+                    if(!addressApi.replaceAddress(address)) {
+                        log.info("Failed to persist address state: {}", addressName);
+                    }
                 } catch (KubernetesClientException e) {
                     if (e.getStatus().getCode() == 409) {
                         // The address record is stale.  The address controller will be notified again by the watcher,
@@ -394,6 +404,8 @@ public class AddressController implements Watcher<Address> {
                         throw e;
                     }
                 }
+            } else {
+                log.debug("No change for address: {}", addressName);
             }
         }
 
@@ -818,7 +830,7 @@ public class AddressController implements Watcher<Address> {
         private final String plan;
 
         public ProvisionState(AddressStatus status, String plan) {
-            this.status = new AddressStatus(status);
+            this.status = new AddressStatusBuilder(status).build();
             this.plan = plan;
         }
 

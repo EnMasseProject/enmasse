@@ -33,6 +33,7 @@ import io.enmasse.address.model.AddressPlanStatus;
 import io.enmasse.address.model.AddressResolver;
 import io.enmasse.address.model.AddressSpaceResolver;
 import io.enmasse.address.model.AddressStatus;
+import io.enmasse.address.model.AddressStatusBuilder;
 import io.enmasse.address.model.AddressType;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
@@ -160,7 +161,7 @@ public class AddressProvisioner {
             Map<String, Map<String, UsageInfo>> newUsageMap, Map<String, Double> limits) {
         for (Address address : pending) {
             if (!Phase.Configuring.equals(address.getStatus().getPhase())) {
-                AddressStatus previousStatus = new AddressStatus(address.getStatus());
+                AddressStatus previousStatus = new AddressStatusBuilder(address.getStatus()).build();
 
                 Map<String, Map<String, UsageInfo>> neededMap = checkQuotaForAddress(limits, newUsageMap, address, all);
                 if (neededMap != null) {

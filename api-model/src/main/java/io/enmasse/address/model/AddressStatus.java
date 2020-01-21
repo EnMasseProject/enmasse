@@ -58,27 +58,6 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
         this.ready = ready;
     }
 
-    public AddressStatus(AddressStatus other) {
-        this.ready = other.isReady();
-        this.phase = other.getPhase();
-        this.messages = new ArrayList<>(other.getMessages());
-        this.brokerStatuses = new ArrayList<>();
-        for (BrokerStatus brokerStatus : other.getBrokerStatuses()) {
-            brokerStatuses.add(new BrokerStatus(brokerStatus.getClusterId(), brokerStatus.getContainerId(), brokerStatus.getState()));
-        }
-        if (other.getForwarders() != null) {
-            this.forwarders = new ArrayList<>();
-            for (AddressStatusForwarder forwarderStatus : other.getForwarders()) {
-                forwarders.add(new AddressStatusForwarderBuilder()
-                        .withName(forwarderStatus.getName())
-                        .withReady(forwarderStatus.isReady())
-                        .withMessages(new ArrayList<>(forwarderStatus.getMessages()))
-                        .build());
-            }
-        }
-
-    }
-
     public boolean isReady() {
         return ready;
     }
