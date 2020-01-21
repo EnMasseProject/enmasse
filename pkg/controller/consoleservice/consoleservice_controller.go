@@ -528,6 +528,10 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 	install.ApplyDeploymentDefaults(deployment, "consoleservice", consoleservice.Name)
 
+	if consoleservice.Spec.Replicas != nil {
+		deployment.Spec.Replicas = consoleservice.Spec.Replicas
+	}
+
 	install.ApplyEmptyDirVolume(deployment, "apps")
 	install.ApplyEmptyDirVolume(deployment, "httpd")
 	install.ApplySecretVolume(deployment, "console-tls", consoleservice.Spec.CertificateSecret.Name)
