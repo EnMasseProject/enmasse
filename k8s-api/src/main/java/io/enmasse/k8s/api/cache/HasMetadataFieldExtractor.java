@@ -17,4 +17,9 @@ public class HasMetadataFieldExtractor<T extends HasMetadata> implements FieldEx
     public String getResourceVersion(T item) {
         return item.getMetadata().getResourceVersion();
     }
+
+    @Override
+    public Long getGeneration(T item) {
+        return item.getMetadata().getGeneration();
+    }
 }

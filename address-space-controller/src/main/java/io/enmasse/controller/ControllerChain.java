@@ -87,12 +87,16 @@ public class ControllerChain implements Watcher<AddressSpace> {
 
         List<AddressSpace> updatedResources = new ArrayList<>();
 
-        for (AddressSpace addressSpace : resources) {
+        for (final AddressSpace original : resources) {
+
+            AddressSpace addressSpace = new AddressSpaceBuilder(original).build();
+            final String addressSpaceName = addressSpace.getMetadata().getNamespace() + ":" + addressSpace.getMetadata().getName();
 
             try {
-                AddressSpace original = new AddressSpaceBuilder(addressSpace).build();
 
-                log.info("Checking address space {}:{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
+                log.debug("Controller chain input: {}", original);
+
+                log.info("Checking address space {}", addressSpaceName);
                 addressSpace.getStatus().setReady(true);
                 addressSpace.getStatus().clearMessages();
                 for (Controller controller : chain) {
@@ -104,16 +108,12 @@ public class ControllerChain implements Watcher<AddressSpace> {
                 log.debug("Controller chain output: {}", addressSpace);
 
                 if (hasAddressSpaceChanged(original, addressSpace)) {
-                    if (!original.getMetadata().equals(addressSpace.getMetadata())) {
-                        log.debug("Meta changed from {} to {}", original.getMetadata(), addressSpace.getMetadata());
+                    log.debug("Change detected. Executing update.");
+                    if (!this.addressSpaceApi.replaceAddressSpace(addressSpace)) {
+                        log.info("Unable to persist address space state: {}", addressSpaceName);
                     }
-                    if (!original.getSpec().equals(addressSpace.getSpec())) {
-                        log.debug("Spec changed from {} to {}", original.getSpec(), addressSpace.getSpec());
-                    }
-                    if (!original.getStatus().equals(addressSpace.getStatus())) {
-                        log.debug("Status changed from {} to {}", original.getStatus(), addressSpace.getStatus());
-                    }
-                    addressSpaceApi.replaceAddressSpace(addressSpace);
+                } else {
+                    log.debug("No change detected. Not triggering update.");
                 }
             } catch (KubernetesClientException e) {
                 log.warn("Error syncing address space {}", addressSpace.getMetadata().getName(), e);
@@ -135,9 +135,23 @@ public class ControllerChain implements Watcher<AddressSpace> {
 
     }
 
-    private boolean hasAddressSpaceChanged(AddressSpace original, AddressSpace addressSpace) {
-        return !(original.getMetadata().equals(addressSpace.getMetadata()) &&
-                original.getSpec().equals(addressSpace.getSpec()) &&
-                original.getStatus().equals(addressSpace.getStatus()));
+    static boolean hasAddressSpaceChanged(AddressSpace original, AddressSpace addressSpace) {
+
+        boolean changed = false;
+
+        if (!original.getMetadata().equals(addressSpace.getMetadata())) {
+            log.debug("Meta changed from {} to {}", original.getMetadata(), addressSpace.getMetadata());
+            changed = true;
+        }
+        if (!original.getSpec().equals(addressSpace.getSpec())) {
+            log.debug("Spec changed from {} to {}", original.getSpec(), addressSpace.getSpec());
+            changed = true;
+        }
+        if (!original.getStatus().equals(addressSpace.getStatus())) {
+            log.debug("Status changed from {} to {}", original.getStatus(), addressSpace.getStatus());
+            changed = true;
+        }
+
+        return changed;
     }
 }

@@ -4,16 +4,23 @@
  */
 package io.enmasse.admin.model.v1;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+
 import io.enmasse.common.model.DefaultCustomResource;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
-
-import java.util.*;
 
 @Buildable(
         editableEnabled = false,
@@ -33,7 +40,10 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
 
     private String shortDescription;
     private String addressSpaceType;
+
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<ResourceAllowance> resources = new LinkedList<>();
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> addressPlans = new LinkedList<>();
 
     public AddressSpacePlan() {

@@ -4,13 +4,21 @@
  */
 package io.enmasse.admin.model.v1;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
-
-import java.util.*;
 
 @Buildable(
         editableEnabled = false,
@@ -25,7 +33,9 @@ public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
     private String displayName;
     private String shortDescription;
     private String addressSpaceType;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private Map<String, Double> resourceLimits = new HashMap<>();
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> addressPlans = new ArrayList<>();
     private String infraConfigRef;
 

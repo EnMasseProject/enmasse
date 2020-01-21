@@ -13,6 +13,8 @@ import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -34,16 +36,19 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AddressStatus extends AbstractWithAdditionalProperties {
 
     @JsonProperty("isReady")
     private boolean ready = false;
     private Phase phase = Phase.Pending;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> messages = new ArrayList<>();
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid BrokerStatus> brokerStatuses = new ArrayList<>();
     private AddressPlanStatus planStatus;
 
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid AddressStatusForwarder> forwarders;
 
     public AddressStatus() {

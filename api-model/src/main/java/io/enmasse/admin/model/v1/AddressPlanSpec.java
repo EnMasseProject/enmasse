@@ -4,16 +4,19 @@
  */
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import io.fabric8.kubernetes.api.model.Doneable;
-import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.Inline;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
@@ -27,6 +30,8 @@ public class AddressPlanSpec extends AbstractWithAdditionalProperties {
     private String shortDescription;
     private String addressType;
     private Integer partitions;
+
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private Map<String, Double> resources = new HashMap<>();
 
     public String getShortDescription() {

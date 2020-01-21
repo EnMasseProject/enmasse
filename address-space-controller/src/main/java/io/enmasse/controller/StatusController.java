@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceResolver;
+import io.enmasse.address.model.AddressSpaceSpec;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.address.model.ExposeType;
@@ -67,9 +68,13 @@ public class StatusController implements Controller {
         }
 
         if (addressSpace.getStatus().isReady()) {
-            AppliedConfig appliedConfig = AppliedConfig.parseCurrentAppliedConfig(addressSpace);
-            if (addressSpace.getSpec().equals(appliedConfig.getAddressSpaceSpec())) {
+            final AppliedConfig appliedConfig = AppliedConfig.parseCurrentAppliedConfig(addressSpace);
+            final AddressSpaceSpec spec = AppliedConfig.normalize(AddressSpaceSpec.class, addressSpace.getSpec());
+
+            if (spec.equals(appliedConfig.getAddressSpaceSpec())) {
                 addressSpace.getStatus().setPhase(Phase.Active);
+            } else if ( log.isDebugEnabled() ){
+                log.debug("Applied config does not match requested\nApplied  : {}\nRequested: {}", appliedConfig.getAddressSpaceSpec(), spec);
             }
         } else {
             if (Phase.Active.equals(addressSpace.getStatus().getPhase())) {

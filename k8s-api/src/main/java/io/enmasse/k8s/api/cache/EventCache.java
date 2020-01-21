@@ -4,14 +4,22 @@
  */
 package io.enmasse.k8s.api.cache;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static io.enmasse.k8s.api.cache.EventCache.EventType.Added;
+import static io.enmasse.k8s.api.cache.EventCache.EventType.Deleted;
+import static io.enmasse.k8s.api.cache.EventCache.EventType.Sync;
+import static io.enmasse.k8s.api.cache.EventCache.EventType.Updated;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.enmasse.k8s.api.cache.EventCache.EventType.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EventCache<T> implements WorkQueue<T> {
     private static final Logger log = LoggerFactory.getLogger(EventCache.class);
@@ -158,7 +166,9 @@ public class EventCache<T> implements WorkQueue<T> {
                 log.debug("Replacing {} (old {}, new {})", key, currentVersion, replaceVersion);
                 store.put(key, item);
             } else {
-                log.debug("Not replacing {} (old {}, new {})", key, currentVersion, replaceVersion);
+                final Long currentGeneration = fieldExtractor.getGeneration(current);
+                final Long replaceGeneration = fieldExtractor.getGeneration(item);
+                log.debug("Not replacing {} (old {}/{}, new {}/{})", key, currentVersion, currentGeneration, replaceVersion, replaceGeneration);
             }
         }
     }

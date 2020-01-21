@@ -40,7 +40,7 @@ public class AddressSpace extends AbstractHasMetadata<AddressSpace> {
 
     public static final String KIND = "AddressSpace";
 
-    @NotNull  @Valid
+    @NotNull @Valid
     private AddressSpaceSpec spec = new AddressSpaceSpec();
     @Valid
     private AddressSpaceStatus status = new AddressSpaceStatus(false);
@@ -72,7 +72,8 @@ public class AddressSpace extends AbstractHasMetadata<AddressSpace> {
 
         AddressSpace that = (AddressSpace) o;
 
-        return Objects.equals(getMetadata().getName(), that.getMetadata().getName()) && Objects.equals(getMetadata().getNamespace(), that.getMetadata().getNamespace());
+        return Objects.equals(getMetadata().getName(), that.getMetadata().getName())
+                && Objects.equals(getMetadata().getNamespace(), that.getMetadata().getNamespace());
     }
 
     @Override

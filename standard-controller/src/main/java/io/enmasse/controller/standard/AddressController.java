@@ -4,8 +4,35 @@
  */
 package io.enmasse.controller.standard;
 
+import static io.enmasse.address.model.Phase.Active;
+import static io.enmasse.address.model.Phase.Configuring;
+import static io.enmasse.address.model.Phase.Failed;
+import static io.enmasse.address.model.Phase.Pending;
+import static io.enmasse.address.model.Phase.Terminating;
+import static io.enmasse.controller.standard.ControllerKind.Broker;
+import static io.enmasse.controller.standard.ControllerReason.BrokerUpgraded;
+import static io.enmasse.k8s.api.EventLogger.Type.Normal;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressResolver;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceResolver;
@@ -50,30 +77,6 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.vertx.core.Vertx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import static io.enmasse.address.model.Phase.Active;
-import static io.enmasse.address.model.Phase.Configuring;
-import static io.enmasse.address.model.Phase.Failed;
-import static io.enmasse.address.model.Phase.Pending;
-import static io.enmasse.address.model.Phase.Terminating;
-import static io.enmasse.controller.standard.ControllerKind.Broker;
-import static io.enmasse.controller.standard.ControllerReason.BrokerUpgraded;
-import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 
 /**
  * Controller for a single standard address space
@@ -265,6 +268,8 @@ public class AddressController implements Watcher<Address> {
         Map<String, Address> validAddresses = new HashMap<>();
         List<Phase> readyPhases = Arrays.asList(Configuring, Active);
         for (Address address : addressList) {
+            address = new AddressBuilder(address).build();
+
             address.getStatus().clearMessages();
             if (readyPhases.contains(address.getStatus().getPhase())) {
                 address.getStatus().setReady(true);

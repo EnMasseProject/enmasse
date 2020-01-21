@@ -8,9 +8,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import io.enmasse.address.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpecForwarder;
+import io.enmasse.address.model.AddressStatusForwarder;
+import io.enmasse.address.model.BrokerStatus;
 
 class RouterStatus {
+    private static final Logger log = LoggerFactory.getLogger(RouterStatus.class);
+
     private final String routerId;
     private final List<String> addresses;
     private final List<List<String>> autoLinks;
@@ -83,9 +91,14 @@ class RouterStatus {
 
     public static int checkActiveAutoLink(Address address, List<RouterStatus> routerStatusList) {
         int ok = 0;
-        Set<String> active = new HashSet<>();
+        final Set<String> active = new HashSet<>();
+        final String addressName = address.getSpec().getAddress();
+
+        log.debug("Address: {}", addressName);
 
         for (RouterStatus routerStatus : routerStatusList) {
+
+            log.debug("Router Auto Links: {}", routerStatus.autoLinks);
 
             for (List<String> autoLink : routerStatus.autoLinks) {
                 if (autoLink.size() > 3) {
@@ -93,16 +106,22 @@ class RouterStatus {
                     String dir = autoLink.get(2);
                     String operStatus = autoLink.get(3);
 
-                    if (addr.equals(address.getSpec().getAddress()) && operStatus.equals("active")) {
+                    log.debug("Addr: {}, Dir: {}, operStatus: {}", addr, dir, operStatus);
+
+                    if (addr.equals(addressName) && operStatus.equals("active")) {
                         active.add(dir);
+                        log.debug("  Match!");
                     }
                 }
             }
         }
 
         if (active.size() < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " is missing active autoLink (active in dirs: " + active + ")");
+            var msg = "Address " + addressName + " is missing active autoLink (active in dirs: " + active + ")";
+            log.info(msg);
+            address.getStatus().setReady(false).appendMessage(msg);
         } else {
+            log.debug("Address {} has all required auto links: {}", addressName, active);
             ok++;
         }
         return ok;

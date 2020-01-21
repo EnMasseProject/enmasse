@@ -7,4 +7,5 @@ package io.enmasse.k8s.api.cache;
 public interface FieldExtractor<T> {
     String getKey(T obj);
     String getResourceVersion(T obj);
+    Long getGeneration(T obj);
 }

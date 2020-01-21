@@ -1,20 +1,21 @@
 /*
- * Copyright 2017-2018, EnMasse authors.
+ * Copyright 2017-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.controller;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Objects;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.enmasse.address.model.AddressSpaceSpec;
 import io.enmasse.address.model.AuthenticationServiceSettings;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Objects;
 
 public final class AppliedConfig {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -43,10 +44,26 @@ public final class AppliedConfig {
         metadata.getMetadata().getAnnotations().put(AnnotationKeys.APPLIED_CONFIGURATION, mapper.writeValueAsString(config));
     }
 
-    public static AppliedConfig create(AddressSpaceSpec spec, AuthenticationServiceSettings authServiceSettings) {
-        AppliedConfig config = new AppliedConfig();
-        config.setAddressSpaceSpec(spec);
-        config.setAuthenticationServiceSettings(authServiceSettings);
+    public static <T> T normalize(Class<T> clazz, final T data) throws JsonProcessingException {
+        if ( data == null ) {
+            return null;
+        } else {
+            return mapper.readValue(mapper.writeValueAsString(data), clazz);
+        }
+    }
+
+    public static AppliedConfig create(AddressSpaceSpec spec, AuthenticationServiceSettings authServiceSettings) throws JsonProcessingException {
+        // First normalize the values to your JSON convention.
+        // If we don't do this, then a serialized object might not be equal to an in-memory object
+        final AddressSpaceSpec normalizedSpec = normalize(AddressSpaceSpec.class, spec);
+        final AuthenticationServiceSettings normalizedAuth= normalize(AuthenticationServiceSettings.class, authServiceSettings);
+
+        // create the new instance
+        final AppliedConfig config = new AppliedConfig();
+        config.addressSpaceSpec = normalizedSpec;
+        config.authenticationServiceSettings = normalizedAuth;
+
+        // and return it
         return config;
     }
 
@@ -54,16 +71,8 @@ public final class AppliedConfig {
         return authenticationServiceSettings;
     }
 
-    public void setAuthenticationServiceSettings(AuthenticationServiceSettings authenticationServiceSettings) {
-        this.authenticationServiceSettings = authenticationServiceSettings;
-    }
-
     public AddressSpaceSpec getAddressSpaceSpec() {
         return addressSpaceSpec;
-    }
-
-    public void setAddressSpaceSpec(AddressSpaceSpec addressSpaceSpec) {
-        this.addressSpaceSpec = addressSpaceSpec;
     }
 
     @Override

@@ -11,6 +11,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -29,7 +31,7 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AddressSpec extends AbstractWithAdditionalProperties {
 
     @NotNull
@@ -41,6 +43,7 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
     private String plan;
     private String topic;
 
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid AddressSpecForwarder> forwarders;
 
     public void setAddress(String address) {

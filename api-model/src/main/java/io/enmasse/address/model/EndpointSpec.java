@@ -10,6 +10,8 @@ import java.util.Objects;
 import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -31,7 +33,7 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class EndpointSpec extends AbstractWithAdditionalProperties {
     private String name;
     private String service;
@@ -40,6 +42,7 @@ public class EndpointSpec extends AbstractWithAdditionalProperties {
     @Valid
     private CertSpec cert;
     @Valid
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<ExportSpec> exports;
 
     public void setName(String name) {
