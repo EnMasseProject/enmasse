@@ -14,9 +14,9 @@ describe("Address Detail Header", () => {
   test("it renders address space headers at top", () => {
     const props: IAddressDetailHeaderProps = {
       name: "newqueue",
-      type: "Queue",
+      type: "queue",
       plan: "Small",
-      shards: 2,
+      partitions: 2,
       onDelete: () => {},
       onEdit: () => {}
     };
@@ -25,6 +25,6 @@ describe("Address Detail Header", () => {
 
     getByText(props.name);
     getByText(props.plan);
-    getByText(String(props.shards));
+    getByText(String(props.partitions));
   });
 });
