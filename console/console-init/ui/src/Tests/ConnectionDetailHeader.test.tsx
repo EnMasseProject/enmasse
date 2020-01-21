@@ -18,6 +18,7 @@ describe("Connection Detail Header with all connection details", () => {
       protocol: "AMQP",
       product: "QpidJMS",
       version: "0.31.0",
+      encrypted: true,
       platform: "0.8.0_152.25.125.b16, Oracle Corporation",
       os: "Mac OS X 10.13.6,x86_64",
       messagesIn: 0,

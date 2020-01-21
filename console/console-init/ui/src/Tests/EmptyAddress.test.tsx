@@ -9,7 +9,9 @@ import { EmptyAddress } from "src/Components/AddressSpace/Address/EmptyAddress";
 
 describe("Empty Page with Empty state for Addresses", () => {
   test("it renders empty address state instead of list of addresses", () => {
-    const { getByText } = render(<EmptyAddress />);
+    const { getByText } = render(
+      <EmptyAddress isWizardOpen={false} setIsWizardOpen={() => void 0} />
+    );
 
     const descriptionNode = getByText(
       "There are currently no addresses available. Please click on the button below to create one.Learn more about this on the"
