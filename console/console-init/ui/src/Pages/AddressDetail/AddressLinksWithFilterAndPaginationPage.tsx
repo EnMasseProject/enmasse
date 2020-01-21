@@ -37,9 +37,9 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const [addresLinksTotal, setAddressLinksTotal] = React.useState<number>(0);
   const [filterValue, setFilterValue] = React.useState<string>("Name");
-  const [filterNames, setFilterNames] = React.useState<Array<string>>([]);
+  const [filterNames, setFilterNames] = React.useState<Array<any>>([]);
   const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
-  const [filterContainers, setFilterContainers] = React.useState<Array<string>>(
+  const [filterContainers, setFilterContainers] = React.useState<Array<any>>(
     []
   );
   const [filterRole, setFilterRole] = React.useState<string>();

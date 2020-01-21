@@ -38,8 +38,8 @@ import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from 
 interface IAddressListFilterProps {
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;
-  filterNames: string[];
-  setFilterNames: (value: Array<string>) => void;
+  filterNames: any[];
+  setFilterNames: (value: Array<any>) => void;
   typeValue: string | null;
   setTypeValue: (value: string | null) => void;
   statusValue: string | null;
@@ -74,6 +74,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   >(false);
   const [nameSelected, setNameSelected] = React.useState<string>();
   const [nameOptions, setNameOptions] = React.useState<Array<string>>();
+  const [nameInput, setNameInput] = React.useState<string>("");
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
     { key: "filterType", value: "Type" },
@@ -97,11 +98,18 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   const onClickSearchIcon = (event: any) => {
     if (filterValue && filterValue === "Name") {
       if (nameSelected && nameSelected.trim() !== "")
-        if (filterNames.indexOf(nameSelected.trim()) < 0) {
-          setFilterNames([...filterNames, nameSelected.trim()]);
+        if (
+          filterNames.map(filter => filter.value).indexOf(nameSelected.trim()) < 0
+        ) {
+          setFilterNames([...filterNames, { value: nameSelected.trim(), isExact: true }]);
           setNameSelected(undefined);
         }
     }
+    if (!nameSelected && nameInput && nameInput.trim() !== "")
+      if (
+        filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0
+      )
+        setFilterNames([...filterNames, { value: nameInput.trim(), isExact: false }]);
   };
 
   const onFilterSelect = (event: any) => {
@@ -156,6 +164,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   };
 
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNameInput(e.target.value);
     onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
@@ -178,7 +187,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
       case "Name":
         let index;
         if (filterNames && id) {
-          index = filterNames.indexOf(id.toString());
+          index = filterNames.map(filter => filter.value).indexOf(id.toString());
           if (index >= 0) filterNames.splice(index, 1);
           setFilterNames([...filterNames]);
         }
@@ -237,7 +246,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
           <>
             <DataToolbarItem>
               <DataToolbarFilter
-                chips={filterNames}
+                chips={filterNames.map(filter => filter.value)}
                 deleteChip={onDelete}
                 categoryName="Name"
               >
@@ -253,6 +262,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                         setNameSelected(undefined);
                         setIsSelectNameExpanded(false);
                       }}
+                      maxHeight="200px"
                       selections={nameSelected}
                       onFilter={onNameSelectFilterChange}
                       isExpanded={isSelectNameExpanded}

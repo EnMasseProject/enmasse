@@ -44,10 +44,10 @@ import {
 interface IAddressLinksFilterProps {
   filterValue: string;
   setFilterValue: (value: string) => void;
-  filterNames: string[];
-  setFilterNames: (value: Array<string>) => void;
-  filterContainers: string[];
-  setFilterContainers: (value: Array<string>) => void;
+  filterNames: any[];
+  setFilterNames: (value: Array<any>) => void;
+  filterContainers: any[];
+  setFilterContainers: (value: Array<any>) => void;
   filterRole?: string;
   setFilterRole: (role: string | undefined) => void;
   totalLinks: number;
@@ -92,6 +92,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   const [containerOptions, setContainerOptions] = React.useState<
     Array<string>
   >();
+  const [nameInput, setNameInput] = React.useState<string>("");
+  const [containerInput, setContainerInput] = React.useState<string>("");
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
     { key: "filterContainers", value: "Container" },
@@ -112,16 +114,22 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   const onAddInput = (event: any) => {
     if (filterValue && filterValue === "Name") {
       if (nameSelected && nameSelected.trim() !== "")
-        if (filterNames.indexOf(nameSelected.trim()) < 0) {
-          setFilterNames([...filterNames, nameSelected.trim()]);
+        if (filterNames.map(filter => filter.value).indexOf(nameSelected.trim()) < 0) {
+          setFilterNames([...filterNames, { value: nameSelected.trim(), isExact: true }]);
           setNameSelected(undefined);
         }
+      if(!nameSelected && nameInput && nameInput.trim() !== "")
+        if (filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0)
+          setFilterNames([...filterNames, { value: nameInput.trim(), isExact: false }]);
     } else if (filterValue && filterValue === "Container") {
       if (containerSelected && containerSelected.trim() !== "")
-        if (filterContainers.indexOf(containerSelected.trim()) < 0) {
-          setFilterContainers([...filterContainers, containerSelected.trim()]);
+        if (filterContainers.map(filter => filter.value).indexOf(containerSelected.trim()) < 0) {
+          setFilterContainers([...filterContainers, { value: containerSelected.trim(), isExact: true }]);
           setContainerSelected(undefined);
         }
+      if (!containerSelected && containerInput && containerInput.trim() !== "")
+        if (filterContainers.map(filter => filter.value).indexOf(containerInput.trim()) < 0)
+          setFilterContainers([...filterContainers, { value: containerInput.trim(), isExact: false }]);
     }
   };
 
@@ -175,6 +183,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     }
   };
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNameInput(e.target.value);
     const data = onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
@@ -223,6 +232,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   const onContainerSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
+    setContainerInput(e.target.value);
     const data = onChangeContainerData(e.target.value);
     const options: React.ReactElement[] = containerOptions
       ? containerOptions.map((option, index) => (
@@ -252,14 +262,14 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     switch (type) {
       case "Name":
         if (filterNames && id) {
-          let index = filterNames.indexOf(id.toString());
+          let index = filterNames.map(filter => filter.value).indexOf(id.toString());
           if (index >= 0) filterNames.splice(index, 1);
           setFilterNames([...filterNames]);
         }
         break;
       case "Container":
         if (filterContainers && id) {
-          let index = filterContainers.indexOf(id.toString());
+          let index = filterContainers.map(filter => filter.value).indexOf(id.toString());
           if (index >= 0) filterContainers.splice(index, 1);
           setFilterContainers([...filterContainers]);
         }
@@ -318,7 +328,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
         <>
           <DataToolbarItem>
             <DataToolbarFilter
-              chips={filterNames}
+              chips={filterNames.map(filter => filter.value)}
               deleteChip={onDelete}
               categoryName="Name"
             >
@@ -334,6 +344,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                       setNameSelected(undefined);
                       setIsSelectNameExpanded(false);
                     }}
+                    maxHeight="200px"
                     selections={nameSelected}
                     onFilter={onNameSelectFilterChange}
                     isExpanded={isSelectNameExpanded}
@@ -366,7 +377,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
           </DataToolbarItem>
           <DataToolbarItem>
             <DataToolbarFilter
-              chips={filterContainers}
+              chips={filterContainers.map(filter => filter.value)}
               deleteChip={onDelete}
               categoryName="Container"
             >
@@ -382,6 +393,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                       setContainerSelected(undefined);
                       setIsSelectContainerExpanded(false);
                     }}
+                    maxHeight="200px"
                     selections={containerSelected}
                     onFilter={onContainerSelectFilterChange}
                     isExpanded={isSelectContainerExpanded}
