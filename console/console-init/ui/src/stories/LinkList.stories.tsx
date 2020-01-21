@@ -11,7 +11,7 @@ import { action } from "@storybook/addon-actions";
 import { ConnectionLinksFilter } from "src/Pages/ConnectionDetail/ConnectionLinksFilter";
 
 export default {
-  title: "Connection Detail"
+  title: "Connection Details" 
 };
 
 const rows: ILink[] = [

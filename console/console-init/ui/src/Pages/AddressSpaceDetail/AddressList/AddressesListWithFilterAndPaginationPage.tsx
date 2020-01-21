@@ -63,6 +63,7 @@ export default function AddressesList() {
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
+  const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
 
   const { data } = useQuery<IAddressSpacePlanResponse>(
     CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
@@ -134,6 +135,8 @@ export default function AddressesList() {
             totalAddresses={totalAddresses}
             sortValue={sortDropDownValue}
             setSortValue={setSortDropdownValue}
+            isCreateWizardOpen={isCreateWizardOpen}
+            setIsCreateWizardOpen={setIsCreateWizardOpen}
           />
         </GridItem>
         <GridItem span={5}>
@@ -154,6 +157,8 @@ export default function AddressesList() {
         addressSpaceType={type}
         sortValue={sortDropDownValue}
         setSortValue={setSortDropdownValue}
+        isWizardOpen={isCreateWizardOpen}
+        setIsWizardOpen={setIsCreateWizardOpen}
       />
       {totalAddresses > 0 && renderPagination(page, perPage)}
     </PageSection>
