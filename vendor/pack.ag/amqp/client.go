@@ -469,12 +469,24 @@ func (s *Session) NewSender(opts ...LinkOption) (*Sender, error) {
 }
 
 func (s *Session) mux(remoteBegin *performBegin) {
-	defer close(s.done)
+	defer func() {
+		// clean up session record in conn.mux()
+		select {
+		case s.conn.delSession <- s:
+		case <-s.conn.done:
+			s.err = s.conn.getErr()
+		}
+		if s.err == nil {
+			s.err = ErrSessionClosed
+		}
+		// Signal goroutines waiting on the session.
+		close(s.done)
+	}()
 
 	var (
-		links       = make(map[uint32]*link)    // mapping of remote handles to links
-		linksByName = make(map[string]*link)    // maping of names to links
-		handles     = &bitmap{max: s.handleMax} // allocated handles
+		links      = make(map[uint32]*link)    // mapping of remote handles to links
+		linksByKey = make(map[linkKey]*link)   // mapping of name+role link
+		handles    = &bitmap{max: s.handleMax} // allocated handles
 
 		handlesByDeliveryID       = make(map[uint32]uint32) // mapping of deliveryIDs to handles
 		deliveryIDByHandle        = make(map[uint32]uint32) // mapping of handles to latest deliveryID
@@ -520,21 +532,13 @@ func (s *Session) mux(remoteBegin *performBegin) {
 					return
 				}
 			}
-
-			// release session
-			select {
-			case s.conn.delSession <- s:
-				s.err = ErrSessionClosed
-			case <-s.conn.done:
-				s.err = s.conn.getErr()
-			}
 			return
 
 		// handle allocation request
 		case l := <-s.allocateHandle:
 			// Check if link name already exists, if so then an error should be returned
-			if linksByName[l.name] != nil {
-				l.err = errorErrorf("link with name '%v' already exists", l.name)
+			if linksByKey[l.key] != nil {
+				l.err = errorErrorf("link with name '%v' already exists", l.key.name)
 				l.rx <- nil
 				continue
 			}
@@ -546,15 +550,15 @@ func (s *Session) mux(remoteBegin *performBegin) {
 				continue
 			}
 
-			l.handle = next         // allocate handle to the link
-			linksByName[l.name] = l // add to mapping
-			l.rx <- nil             // send nil on channel to indicate allocation complete
+			l.handle = next       // allocate handle to the link
+			linksByKey[l.key] = l // add to mapping
+			l.rx <- nil           // send nil on channel to indicate allocation complete
 
 		// handle deallocation request
 		case l := <-s.deallocateHandle:
 			delete(links, l.remoteHandle)
 			delete(deliveryIDByHandle, l.handle)
-			delete(linksByName, l.name)
+			delete(linksByKey, l.key)
 			handles.remove(l.handle)
 			close(l.rx) // close channel to indicate deallocation
 
@@ -664,7 +668,9 @@ func (s *Session) mux(remoteBegin *performBegin) {
 				// On Attach response link should be looked up by name, then added
 				// to the links map with the remote's handle contained in this
 				// attach frame.
-				link, linkOk := linksByName[body.Name]
+				//
+				// Note body.Role is the remote peer's role, we reverse for the local key.
+				link, linkOk := linksByKey[linkKey{name: body.Name, role: !body.Role}]
 				if !linkOk {
 					break
 				}
@@ -813,11 +819,22 @@ const (
 	DefaultLinkBatchMaxAge = 5 * time.Second
 )
 
+// linkKey uniquely identifies a link on a connection by name and direction.
+//
+// A link can be identified uniquely by the ordered tuple
+//     (source-container-id, target-container-id, name)
+// On a single connection the container ID pairs can be abbreviated
+// to a boolean flag indicating the direction of the link.
+type linkKey struct {
+	name string
+	role role // Local role: sender/receiver
+}
+
 // link is a unidirectional route.
 //
 // May be used for sending or receiving.
 type link struct {
-	name          string               // our name
+	key           linkKey              // Name and direction
 	handle        uint32               // our handle
 	remoteHandle  uint32               // remote's handle
 	dynamicAddr   bool                 // request a dynamic link address from the server
@@ -894,7 +911,7 @@ func attachLink(s *Session, r *Receiver, opts []LinkOption) (*link, error) {
 	}
 
 	attach := &performAttach{
-		Name:               l.name,
+		Name:               l.key.name,
 		Handle:             l.handle,
 		ReceiverSettleMode: l.receiverSettleMode,
 		SenderSettleMode:   l.senderSettleMode,
@@ -1031,7 +1048,7 @@ func (l *link) setSettleModes(resp *performAttach) error {
 
 func newLink(s *Session, r *Receiver, opts []LinkOption) (*link, error) {
 	l := &link{
-		name:          randString(40),
+		key:           linkKey{randString(40), role(r != nil)},
 		session:       s,
 		receiver:      r,
 		close:         make(chan struct{}),
@@ -1565,12 +1582,12 @@ func linkProperty(key string, value interface{}) LinkOption {
 
 // LinkName sets the name of the link.
 //
-// The link names must be unique per-connection.
+// The link names must be unique per-connection and direction.
 //
 // Default: randomly generated.
 func LinkName(name string) LinkOption {
 	return func(l *link) error {
-		l.name = name
+		l.key.name = name
 		return nil
 	}
 }

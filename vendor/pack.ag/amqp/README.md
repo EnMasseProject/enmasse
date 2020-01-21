@@ -8,6 +8,8 @@
 
 pack.ag/amqp is an AMQP 1.0 client implementation for Go.
 
+**NOTE: This project is no longer under active development. See [issue #205](https://github.com/vcabbage/amqp/issues/205) for details.**
+
 [AMQP 1.0](http://docs.oasis-open.org/amqp/core/v1.0/os/amqp-core-overview-v1.0-os.html) is not compatible with AMQP 0-9-1 or 0-10, which are
 the most common AMQP protocols in use today. A list of AMQP 1.0 brokers and other
 AMQP 1.0 resources can be found at [github.com/xinchen10/awesome-amqp](https://github.com/xinchen10/awesome-amqp).
