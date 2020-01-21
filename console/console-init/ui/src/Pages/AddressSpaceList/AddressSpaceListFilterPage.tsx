@@ -21,10 +21,10 @@ import useWindowDimensions from "src/Components/Common/WindowDimension";
 interface IAddressSpaceListFilterPageProps {
   filterValue?: string;
   setFilterValue: (value: string) => void;
-  filterNames: string[];
-  setFilterNames: (value: Array<string>) => void;
-  filterNamespaces: string[];
-  setFilterNamespaces: (value: Array<string>) => void;
+  filterNames: any[];
+  setFilterNames: (value: Array<any>) => void;
+  filterNamespaces: any[];
+  setFilterNamespaces: (value: Array<any>) => void;
   filterType?: string | null;
   setFilterType: (value: string | null) => void;
   totalAddressSpaces: number;

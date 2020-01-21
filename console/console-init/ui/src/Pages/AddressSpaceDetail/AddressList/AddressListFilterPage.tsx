@@ -25,8 +25,8 @@ import { ISortBy } from "@patternfly/react-table";
 interface AddressListFilterProps {
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;
-  filterNames: string[];
-  setFilterNames: (value: Array<string>) => void;
+  filterNames: any[];
+  setFilterNames: (value: Array<any>) => void;
   typeValue: string | null;
   setTypeValue: (value: string | null) => void;
   statusValue: string | null;
