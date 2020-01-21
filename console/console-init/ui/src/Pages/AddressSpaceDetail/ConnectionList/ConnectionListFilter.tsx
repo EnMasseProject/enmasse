@@ -37,10 +37,10 @@ import { IConnectionListNameSearchResponse } from "src/Types/ResponseTypes";
 interface IConnectionListFilterProps {
   filterValue?: string | null;
   setFilterValue: (value: string) => void;
-  hostnames?: Array<string>;
-  setHostnames: (value: Array<string>) => void;
-  containerIds?: Array<string>;
-  setContainerIds: (value: Array<string>) => void;
+  hostnames: Array<any>;
+  setHostnames: (value: Array<any>) => void;
+  containerIds: Array<any>;
+  setContainerIds: (value: Array<any>) => void;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   totalConnections: number;
@@ -77,6 +77,8 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   ] = React.useState<boolean>(false);
   const [hostnameSelected, setHostnameSelected] = React.useState<string>();
   const [containerSelected, setContainerSelected] = React.useState<string>();
+  const [hostNameInput, setHostNameInput] = React.useState<string>("");
+  const [containerInput, setContainerInput] = React.useState<string>("");
   const [hostnameOptions, setHostnameOptions] = React.useState<Array<string>>();
   const [containerOptions, setContainerOptions] = React.useState<
     Array<string>
@@ -105,16 +107,31 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
           containerSelected.trim() !== "" &&
           containerIds
         ) {
-          if (containerIds.indexOf(containerSelected.trim()) < 0) {
-            setContainerIds([...containerIds, containerSelected.trim()]);
+          if (containerIds.map(filter => filter.value).indexOf(containerSelected.trim()) < 0) {
+            setContainerIds([...containerIds, { value: containerSelected.trim(), isExact: true }]);
           }
+          setContainerSelected(undefined);
+        }
+        if (
+          !containerSelected &&
+          containerInput &&
+          containerInput.trim() !== "" &&
+          containerIds
+        ) {
+          if (containerIds.map(filter => filter.value).indexOf(containerInput.trim()) < 0)
+            setContainerIds([...containerIds, { value: containerInput.trim(), isExact: false }]);
           setContainerSelected(undefined);
         }
       } else if (filterValue === "Hostname") {
         if (hostnameSelected && hostnameSelected.trim() !== "" && hostnames) {
-          if (hostnames.indexOf(hostnameSelected) < 0) {
-            setHostnames([...hostnames, hostnameSelected]);
+          if (hostnames.map(filter => filter.value).indexOf(hostnameSelected) < 0) {
+            setHostnames([...hostnames, { value: hostnameSelected.trim(), isExact: true }]);
           }
+          setHostnameSelected(undefined);
+        }
+        if (!hostnameSelected && hostNameInput.trim() !== "" && hostnames) {
+          if (hostnames.map(filter => filter.value).indexOf(hostNameInput) < 0)
+            setHostnames([...hostnames, { value: hostNameInput.trim(), isExact: false }]);
           setHostnameSelected(undefined);
         }
       }
@@ -166,6 +183,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   const onHostnameSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
+    setHostNameInput(e.target.value);
     onChangeHostnameData(e.target.value);
     const options: React.ReactElement[] = hostnameOptions
       ? hostnameOptions.map((option, index) => (
@@ -212,6 +230,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   const onContainerSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
+    setContainerInput(e.target.value);
     onChangeContainerData(e.target.value);
     const options: React.ReactElement[] = containerOptions
       ? containerOptions.map((option, index) => (
@@ -246,7 +265,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
     switch (type) {
       case "Hostname":
         if (hostnames && id) {
-          index = hostnames.indexOf(id.toString());
+          index = hostnames.map(filter => filter.value).indexOf(id.toString());
           if (index >= 0) hostnames.splice(index, 1);
           setHostnames([...hostnames]);
         }
@@ -254,7 +273,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       case "Container":
         if (containerIds && id) {
           const containers = containerIds;
-          index = containerIds.indexOf(id.toString());
+          index = containerIds.map(filter => filter.value).indexOf(id.toString());
           if (index >= 0) containers.splice(index, 1);
           setContainerIds([...containers]);
         }
@@ -309,7 +328,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
         </DataToolbarFilter>
         <DataToolbarItem>
           <DataToolbarFilter
-            chips={hostnames}
+            chips={hostnames.map(filter => filter.value)}
             deleteChip={onDelete}
             categoryName="Hostname"
           >
@@ -325,6 +344,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                     setHostnameSelected(undefined);
                     setIsSelectHostnameExpanded(false);
                   }}
+                  maxHeight="200px"
                   selections={hostnameSelected}
                   onFilter={onHostnameSelectFilterChange}
                   isExpanded={isSelectHostnameExpanded}
@@ -353,7 +373,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
         </DataToolbarItem>
         <DataToolbarItem>
           <DataToolbarFilter
-            chips={containerIds}
+            chips={containerIds.map(filter => filter.value)}
             deleteChip={onDelete}
             categoryName="Container"
           >
@@ -369,6 +389,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                     setContainerSelected(undefined);
                     setIsSelectContainerExpanded(false);
                   }}
+                  maxHeight="200px"
                   selections={containerSelected}
                   onFilter={onContainerSelectFilterChange}
                   isExpanded={isSelectContainerExpanded}

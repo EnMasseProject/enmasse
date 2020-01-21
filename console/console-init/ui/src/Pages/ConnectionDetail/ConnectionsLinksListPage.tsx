@@ -19,8 +19,8 @@ interface IConnectionLinksListPageProps {
   page: number;
   perPage: number;
   setTotalLinks: (value: number) => void;
-  filterNames: string[];
-  filterAddresses: string[];
+  filterNames: any[];
+  filterAddresses: any[];
   filterRole?: string;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
@@ -65,7 +65,6 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
     connections: { Total: 0, Connections: [] }
   };
   const connection = connections.Connections[0];
-  console.log(connection.Links.Links);
   let linkRows: ILink[] = [];
   if (connection && connection.Links.Total > 0) {
     setTotalLinks(connection.Links.Total);
