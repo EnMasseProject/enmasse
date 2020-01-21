@@ -15,6 +15,7 @@ describe("Connection List", () => {
   test("it renders a list of connections", () => {
     const connections: IConnection[] = [
       {
+        name: "foo3",
         hostname: "foo1",
         containerId: "123",
         protocol: "AMQP",
@@ -23,9 +24,10 @@ describe("Connection List", () => {
         senders: 3,
         receivers: 4,
         status: "running",
-        encrypted:true
+        encrypted: true
       },
       {
+        name: "foo4",
         hostname: "foo2",
         containerId: "1234",
         protocol: "AMQ",
@@ -34,7 +36,7 @@ describe("Connection List", () => {
         senders: 6,
         receivers: 7,
         status: "running",
-        encrypted:true
+        encrypted: true
       }
     ];
 
