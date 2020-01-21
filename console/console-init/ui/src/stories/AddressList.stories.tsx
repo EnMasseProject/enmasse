@@ -5,7 +5,10 @@
 
 import React from "react";
 import { MemoryRouter } from "react-router";
-import { AddressList, IAddress } from "../Components/AddressSpace/Address/AddressList";
+import {
+  AddressList,
+  IAddress
+} from "../Components/AddressSpace/Address/AddressList";
 import { action } from "@storybook/addon-actions";
 import { select } from "@storybook/addon-knobs";
 // import { AddressListFilter } from "..//Components/AddressSpace/AddressListFilter";
@@ -21,7 +24,7 @@ const rows: IAddress[] = [
     namespace: "foo",
     type: "Queue",
     planLabel: "small",
-    planValue : "standard-small-queue",
+    planValue: "standard-small-queue",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
@@ -36,7 +39,7 @@ const rows: IAddress[] = [
     namespace: "foo",
     type: "Queue",
     planLabel: "small",
-    planValue : "standard-small-queue",
+    planValue: "standard-small-queue",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
@@ -51,7 +54,7 @@ const rows: IAddress[] = [
     namespace: "foo",
     type: "Queue",
     planLabel: "small",
-    planValue : "standard-small-queue",
+    planValue: "standard-small-queue",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
@@ -75,8 +78,11 @@ export const addressList = () => (
   </MemoryRouter>
 );
 
-export const emptyAddress = () => (
-  <MemoryRouter>
-    <EmptyAddress />
-  </MemoryRouter>
-);
+export const emptyAddress = () => {
+  const [isOpen, setIsOpen] = React.useState<boolean>(false);
+  return (
+    <MemoryRouter>
+      <EmptyAddress isWizardOpen={isOpen} setIsWizardOpen={setIsOpen} />
+    </MemoryRouter>
+  );
+};
