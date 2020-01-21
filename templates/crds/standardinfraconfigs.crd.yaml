@@ -74,6 +74,10 @@ spec:
             broker:
               type: object
               properties:
+                minAvailable:
+                  type: integer
+                maxUnavailable:
+                  type: integer
                 podTemplate:
                   type: object
                   properties:
