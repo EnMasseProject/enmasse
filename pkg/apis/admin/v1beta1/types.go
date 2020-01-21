@@ -139,6 +139,7 @@ type ConsoleService struct {
 }
 
 type ConsoleServiceSpec struct {
+	Replicas             *int32                  `json:"replicas,omitempty"`
 	DiscoveryMetadataURL *string                 `json:"discoveryMetadataURL,omitempty"`
 	Scope                *string                 `json:"scope,omitempty"`
 	OauthClientSecret    *corev1.SecretReference `json:"oauthClientSecret,omitempty"`
