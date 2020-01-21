@@ -3,14 +3,18 @@ include $(TOPDIR)/Makefile.env.mk
 NAMESPACE       ?= $(shell oc project -q)
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 SKIP_TESTS      ?= false
+MAVEN_BATCH     ?= true
 UNAME_S := $(shell uname -s)
 LN=ln
 BUILD_GOOS=linux
 BUILD_GOARCH=amd64
 
-
 ifeq ($(UNAME_S),Darwin)
 	LN = gln
+endif
+
+ifeq ($(MAVEN_BATCH),true)
+	MAVEN_ARGS+=-B
 endif
 
 all: init build test package
