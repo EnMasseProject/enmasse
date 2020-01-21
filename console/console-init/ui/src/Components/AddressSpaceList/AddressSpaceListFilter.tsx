@@ -414,11 +414,9 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       isOpen={typeFilterIsExpanded}
                       toggle={
                         <DropdownToggle onToggle={setTypeFilterIsExpanded}>
-                          <FilterIcon />
-                          &nbsp;
                           {filterType && filterType.trim() !== ""
                             ? filterType
-                            : "Type"}
+                            : "Select Type"}
                         </DropdownToggle>
                       }
                       dropdownItems={typeFilterMenuItems.map(option => (
