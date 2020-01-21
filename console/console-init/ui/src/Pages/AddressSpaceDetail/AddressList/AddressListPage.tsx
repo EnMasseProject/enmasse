@@ -26,7 +26,7 @@ export interface IAddressListPageProps {
   name?: string;
   namespace?: string;
   addressSpaceType?: string;
-  filterNames?: string[];
+  filterNames?: any[];
   typeValue?: string | null;
   statusValue?: string | null;
   page: number;

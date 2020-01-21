@@ -24,8 +24,8 @@ const ConnectionListFunction = () => {
   useA11yRouteChange();
   const { name, namespace } = useParams();
   const [filterValue, setFilterValue] = React.useState<string>("Hostname");
-  const [hostnames, setHostnames] = React.useState<Array<string>>([]);
-  const [containerIds, setContainerIds] = React.useState<Array<string>>([]);
+  const [hostnames, setHostnames] = React.useState<Array<any>>([]);
+  const [containerIds, setContainerIds] = React.useState<Array<any>>([]);
   const [totalConnections, setTotalConnections] = React.useState<number>(0);
   const location = useLocation();
   const history = useHistory();

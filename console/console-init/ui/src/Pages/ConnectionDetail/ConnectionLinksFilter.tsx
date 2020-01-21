@@ -43,9 +43,9 @@ import {
 interface IConnectionLinksFilterProps {
   filterValue: string;
   setFilterValue: (value: string) => void;
-  filterNames: string[];
+  filterNames: any[];
   setFilterNames: (value: Array<string>) => void;
-  filterAddresses: string[];
+  filterAddresses: any[];
   setFilterAddresses: (value: Array<string>) => void;
   filterRole?: string;
   setFilterRole: (role: string | undefined) => void;
@@ -85,6 +85,8 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
   >(false);
   const [nameSelected, setNameSelected] = React.useState<string>();
   const [addressSelected, setAddressSelected] = React.useState<string>();
+  const [nameInput, setNameInput] = React.useState<string>("");
+  const [addressInput, setAddressInput] = React.useState<string>("");
   const [nameOptions, setNameOptions] = React.useState<Array<string>>();
   const [addressOptions, setAddressOptions] = React.useState<Array<string>>();
 
@@ -113,16 +115,22 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
   const onClickSearchIcon = (event: any) => {
     if (filterValue && filterValue === "Name") {
       if (nameSelected && nameSelected.trim() !== "")
-        if (filterNames.indexOf(nameSelected.trim()) < 0) {
-          setFilterNames([...filterNames, nameSelected.trim()]);
+        if (filterNames.map(filter => filter.value).indexOf(nameSelected.trim()) < 0) {
+          setFilterNames([...filterNames, { value: nameSelected.trim(), isExact: true }]);
           setNameSelected(undefined);
         }
+      if (!nameSelected && nameInput && nameInput.trim() !== "")
+        if (filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0)
+          setFilterNames([...filterNames, { value: nameInput.trim(), isExact: false }]);
     } else if (filterValue && filterValue === "Address") {
       if (addressSelected && addressSelected.trim() !== "")
-        if (filterAddresses.indexOf(addressSelected.trim()) < 0) {
-          setFilterAddresses([...filterAddresses, addressSelected.trim()]);
+        if (filterAddresses.map(filter => filter.value).indexOf(addressSelected.trim()) < 0) {
+          setFilterAddresses([...filterAddresses, { value: addressSelected.trim(), isExact: true }]);
           setAddressSelected(undefined);
         }
+      if (!addressSelected && addressInput && addressInput.trim() !== "")
+        if (filterAddresses.map(filter => filter.value).indexOf(addressInput.trim()) < 0)
+          setFilterAddresses([...filterAddresses, { value: addressInput.trim(), isExact: false }]);
     }
   };
 
@@ -180,6 +188,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
   };
 
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNameInput(e.target.value);
     onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
@@ -227,6 +236,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
   const onAddressSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
+    setAddressInput(e.target.value);
     onChangeAddressData(e.target.value);
     const options: React.ReactElement[] = addressOptions
       ? addressOptions.map((option, index) => (
@@ -256,14 +266,14 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
     switch (type) {
       case "Name":
         if (filterNames && id) {
-          let index = filterNames.indexOf(id.toString());
+          let index = filterNames.map(filter => filter.value).indexOf(id.toString());
           if (index >= 0) filterNames.splice(index, 1);
           setFilterNames([...filterNames]);
         }
         break;
       case "Address":
         if (filterAddresses && id) {
-          let index = filterAddresses.indexOf(id.toString());
+          let index = filterAddresses.map(filter => filter.value).indexOf(id.toString());
           if (index >= 0) filterAddresses.splice(index, 1);
           setFilterAddresses([...filterAddresses]);
         }
@@ -321,7 +331,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
         <>
           <DataToolbarItem>
             <DataToolbarFilter
-              chips={filterNames}
+              chips={filterNames.map(filter => filter.value)}
               deleteChip={onDelete}
               categoryName="Name"
             >
@@ -337,6 +347,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                       setNameSelected(undefined);
                       setIsSelectNameExpanded(false);
                     }}
+                    maxHeight="200px"
                     selections={nameSelected}
                     onFilter={onNameSelectFilterChange}
                     isExpanded={isSelectNameExpanded}
@@ -365,7 +376,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
           </DataToolbarItem>
           <DataToolbarItem>
             <DataToolbarFilter
-              chips={filterAddresses}
+              chips={filterAddresses.map(filter => filter.value)}
               deleteChip={onDelete}
               categoryName="Address"
             >
@@ -381,6 +392,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                       setAddressSelected(undefined);
                       setIsSelectAddressExpanded(false);
                     }}
+                    maxHeight="200px"
                     selections={addressSelected}
                     onFilter={onAddressSelectFilterChange}
                     isExpanded={isSelectAddressExpanded}
