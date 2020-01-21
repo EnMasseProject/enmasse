@@ -123,8 +123,8 @@ jobs:
       - name: Set asset path
         if: job.status == 'success' && contains(github.ref, 'refs/tags/')
         run: |
-          echo "::set-env name=ASSETPATH::'templates/build/enmasse-$(echo $TAG).tgz'"
-          echo "::set-env name=ASSETNAME::'enmasse-$(echo $TAG).tgz'"
+          echo "::set-env name=ASSETPATH::templates/build/enmasse-$(echo $TAG).tgz"
+          echo "::set-env name=ASSETNAME::enmasse-$(echo $TAG).tgz"
 
       - name: Upload Release Asset
         if: job.status == 'success' && contains(github.ref, 'refs/tags/')
