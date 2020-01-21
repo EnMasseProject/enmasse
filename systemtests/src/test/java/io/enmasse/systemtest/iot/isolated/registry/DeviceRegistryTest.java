@@ -288,7 +288,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
             IoTUtils.checkCredentials(authId, newPassword, false, httpAdapterEndpoint, amqpClient, iotProject);
 
             // Now delete the tenant
-            IoTUtils.deleteIoTProjectAndWait(kubernetes, iotProject);
+            isolatedIoTManager.deleteIoTProject(iotProject);
 
             // second check, the credentials and device should be deleted
 
