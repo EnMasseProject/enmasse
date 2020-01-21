@@ -20,9 +20,17 @@ spec:
       type: object
       description: ConsoleService creates a console that can be used by messaging tenants to manage EnMasse. This resource is created by the service administrator.
       properties:
+        metadata:
+          type: object
+          properties:
+            name:
+              type: string
+              pattern: "console"
         spec:
           type: object
           properties:
+            replicas:
+              type: integer
             discoveryMetadataURL:
               type: string
             certificateSecret:
