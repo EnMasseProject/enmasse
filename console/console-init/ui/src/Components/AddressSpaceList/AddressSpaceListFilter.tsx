@@ -38,10 +38,10 @@ import { useApolloClient } from "@apollo/react-hooks";
 interface IAddressSpaceListFilterProps {
   filterValue?: string;
   setFilterValue: (value: string) => void;
-  filterNames: string[];
-  setFilterNames: (value: Array<string>) => void;
-  filterNamespaces: string[];
-  setFilterNamespaces: (value: Array<string>) => void;
+  filterNames: any[];
+  setFilterNames: (value: Array<any>) => void;
+  filterNamespaces: any[];
+  setFilterNamespaces: (value: Array<any>) => void;
   filterType?: string | null;
   setFilterType: (value: string | null) => void;
   totalAddressSpaces: number;
@@ -78,6 +78,8 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const [nameSelected, setNameSelected] = React.useState<string>();
   const [namespaceSelected, setNamespaceSelected] = React.useState<string>();
   const [nameOptions, setNameOptions] = React.useState<Array<string>>();
+  const [nameInput, setNameInput] = React.useState<string>("");
+  const [nameSpaceInput, setNameSpaceInput] = React.useState<string>("");
   const [namespaceOptions, setNamespaceOptions] = React.useState<
     Array<string>
   >();
@@ -98,15 +100,20 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     if (filterValue) {
       if (filterValue === "Name") {
         if (nameSelected && nameSelected.trim() !== "" && filterNames)
-          if (filterNames.indexOf(nameSelected) < 0) {
-            setFilterNames([...filterNames, nameSelected]);
-          }
+          if (filterNames.map(filter => filter.value).indexOf(nameSelected) < 0)
+            setFilterNames([...filterNames, { value: nameSelected.trim(), isExact: true }]);
+          if (!nameSelected && nameInput && nameInput.trim() !== "")
+            if (filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0)
+              setFilterNames([...filterNames, { value: nameInput.trim(), isExact: false }]);
         setNameSelected(undefined);
       } else if (filterValue === "Namespace") {
         if (namespaceSelected && namespaceSelected.trim() !== "" && filterNames)
-          if (filterNamespaces.indexOf(namespaceSelected) < 0) {
-            setFilterNamespaces([...filterNamespaces, namespaceSelected]);
+          if (filterNamespaces.map(filter => filter.value).indexOf(namespaceSelected) < 0) {
+            setFilterNamespaces([...filterNamespaces, { value: namespaceSelected.trim(), isExact: true }]);
           }
+          if (!namespaceSelected && nameSpaceInput && nameSpaceInput.trim() !== "")
+            if (filterNamespaces.map(filter => filter.value).indexOf(nameSpaceInput.trim()) < 0)
+              setFilterNamespaces([...filterNamespaces, { value: nameSpaceInput.trim(), isExact: false }]);
         setNamespaceSelected(undefined);
       }
     }
@@ -120,14 +127,14 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     switch (type) {
       case "Name":
         if (filterNames && id) {
-          index = filterNames.indexOf(id.toString());
+          index = filterNames.map(filter => filter.value).indexOf(id.toString());
           if (index >= 0) filterNames.splice(index, 1);
           setFilterNames([...filterNames]);
         }
         break;
-      case "NamespaAddressSpaceListKebabce":
+      case "Namespace":
         if (filterNamespaces && id) {
-          index = filterNamespaces.indexOf(id.toString());
+          index = filterNamespaces.map(filter => filter.value).indexOf(id.toString());
           if (index >= 0) filterNamespaces.splice(index, 1);
           setFilterNamespaces([...filterNamespaces]);
         }
@@ -188,6 +195,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   };
 
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNameInput(e.target.value);
     onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
@@ -235,6 +243,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const onNamespaceSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
+    setNameSpaceInput(e.target.value);
     onChangeNamespaceData(e.target.value);
     const options: React.ReactElement[] = namespaceOptions
       ? namespaceOptions.map((option, index) => (
@@ -302,7 +311,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
           <>
             <DataToolbarItem>
               <DataToolbarFilter
-                chips={filterNames}
+                chips={filterNames.map(filter => filter.value)}
                 deleteChip={onDelete}
                 categoryName="Name"
               >
@@ -318,6 +327,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                         setNameSelected(undefined);
                         setIsSelectNameExpanded(false);
                       }}
+                      maxHeight="200px"
                       selections={nameSelected}
                       onFilter={onNameSelectFilterChange}
                       isExpanded={isSelectNameExpanded}
@@ -346,7 +356,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
             </DataToolbarItem>
             <DataToolbarItem>
               <DataToolbarFilter
-                chips={filterNamespaces}
+                chips={filterNamespaces.map(filter => filter.value)}
                 deleteChip={onDelete}
                 categoryName="Namespace"
               >
@@ -362,6 +372,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                         setNamespaceSelected(undefined);
                         setIsSelectNamespaceExpanded(false);
                       }}
+                      maxHeight="200px"
                       selections={namespaceSelected}
                       onFilter={onNamespaceSelectFilterChange}
                       isExpanded={isSelectNamespaceExpanded}
