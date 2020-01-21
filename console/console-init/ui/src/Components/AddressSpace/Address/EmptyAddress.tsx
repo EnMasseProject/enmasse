@@ -10,22 +10,39 @@ import {
   EmptyStateIcon,
   EmptyStateBody,
   EmptyStateVariant,
-  Button
+  Button,
+  ButtonVariant
 } from "@patternfly/react-core";
 import { PlusCircleIcon } from "@patternfly/react-icons";
 import { Link } from "@storybook/router";
-
-export const EmptyAddress = () => {
+interface IEmptyAddressProps {
+  isWizardOpen: boolean;
+  setIsWizardOpen: (value: boolean) => void;
+}
+export const EmptyAddress: React.FunctionComponent<IEmptyAddressProps> = ({
+  isWizardOpen,
+  setIsWizardOpen
+}) => {
+  const createAddressOnClick = async () => {
+    setIsWizardOpen(true);
+  };
   return (
     <EmptyState variant={EmptyStateVariant.full}>
       <EmptyStateIcon icon={PlusCircleIcon} />
-      <Title id='empty-address-title' size="lg">Create an address</Title>
-      <EmptyStateBody id='empty-address-text'>
+      <Title id="empty-address-title" size="lg">
+        Create an address
+      </Title>
+      <EmptyStateBody id="empty-address-text">
         There are currently no addresses available. Please click on the button
         below to create one.Learn more about this on the
         <Link to="/"> documentation</Link>
       </EmptyStateBody>
-      <Button id='empty-address-create-button' variant="primary">Create Address</Button>
+      <Button
+        id="empty-address-create-button"
+        variant={ButtonVariant.primary}
+        onClick={createAddressOnClick}>
+        Create Address
+      </Button>
     </EmptyState>
   );
 };
