@@ -20,7 +20,7 @@ export const AddressDetailHead = () => (
       type={text("Type", "Queue")}
       name={text("Name", "newqueue")}
       plan={text("Plan", "Small")}
-      shards={number("shard", 1)}
+      partitions={number("partition", 1)}
       onEdit={action("onEdit Clicked")}
       onDelete={action("onDelete Clicked")}
     />

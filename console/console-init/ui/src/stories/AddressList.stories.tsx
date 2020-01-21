@@ -30,7 +30,7 @@ const rows: IAddress[] = [
     storedMessages: 123,
     senders: 123,
     receivers: 123,
-    shards: 123,
+    partitions: 123,
     isReady: true,
     status: "running"
   },
@@ -45,7 +45,7 @@ const rows: IAddress[] = [
     storedMessages: 123,
     senders: 123,
     receivers: 123,
-    shards: 123,
+    partitions: 123,
     isReady: true,
     status: "creating"
   },
@@ -60,7 +60,7 @@ const rows: IAddress[] = [
     storedMessages: 123,
     senders: 123,
     receivers: 123,
-    shards: 123,
+    partitions: 123,
     isReady: true,
     status: "deleting"
   }
