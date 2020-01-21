@@ -439,8 +439,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                   isOpen={roleIsExpanded}
                   toggle={
                     <DropdownToggle onToggle={setRoleIsExpanded}>
-                      <FilterIcon />
-                      &nbsp;{filterRole || "Select Role"}
+                      {filterRole || "Select Role"}
                     </DropdownToggle>
                   }
                   dropdownItems={roleMenuItems.map(option => (

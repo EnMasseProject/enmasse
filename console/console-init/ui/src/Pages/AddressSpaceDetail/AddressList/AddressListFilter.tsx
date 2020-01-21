@@ -307,8 +307,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                     isOpen={typeIsExpanded}
                     toggle={
                       <DropdownToggle onToggle={setTypeIsExpanded}>
-                        <FilterIcon />
-                        &nbsp;{typeValue || "Select Type"}
+                        {typeValue || "Select Type"}
                       </DropdownToggle>
                     }
                     dropdownItems={typeMenuItems.map(option => (
@@ -340,7 +339,6 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                     isOpen={statusIsExpanded}
                     toggle={
                       <DropdownToggle onToggle={setStatusIsExpanded}>
-                        <FilterIcon />
                         &nbsp;{statusValue || "Select Status"}
                       </DropdownToggle>
                     }
