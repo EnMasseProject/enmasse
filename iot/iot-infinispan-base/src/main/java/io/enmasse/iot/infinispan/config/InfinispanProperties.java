@@ -11,6 +11,8 @@ public class InfinispanProperties {
 
     private static final boolean DEFAULT_TRY_CREATE = false;
     public static final boolean DEFAULT_UPLOAD_SCHEMA = true;
+    private static final boolean DEFAULT_OVERRIDE_SCHEMA = true;
+    private static final boolean DEFAULT_FAIL_ON_SCHEMA_MISMATCH = false;
 
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 11222;
@@ -20,13 +22,29 @@ public class InfinispanProperties {
     private static final String DEFAULT_DEVICE_STATES_CACHE_NAME = "deviceStates";
     private static final String DEFAULT_DEVICES_CACHE_NAME = "devices";
 
+
     private boolean tryCreate = DEFAULT_TRY_CREATE;
 
     private String host = DEFAULT_HOST;
     private int port = DEFAULT_PORT;
 
     private boolean useTls = DEFAULT_USE_TLS;
+
+    /**
+     * If {@code true}, then schema should be uploaded to the registry.
+     */
     private boolean uploadSchema = DEFAULT_UPLOAD_SCHEMA;
+
+    /**
+     * If {@code true}, then schema should be overwritten when uploading to the registry.
+     * <br>
+     * <strong>Note:</strong> If the field {@link #uploadSchema} is set to {@code false}, then
+     * this field has no effect.
+     */
+    private boolean overrideSchema = DEFAULT_OVERRIDE_SCHEMA;
+
+    private boolean failOnSchemaMismatch = DEFAULT_FAIL_ON_SCHEMA_MISMATCH;
+
     private String trustStorePath;
 
     private String username;
@@ -52,6 +70,22 @@ public class InfinispanProperties {
 
     public boolean isUploadSchema() {
         return uploadSchema;
+    }
+
+    public void setOverrideSchema(boolean overrideSchema) {
+        this.overrideSchema = overrideSchema;
+    }
+
+    public boolean isOverrideSchema() {
+        return overrideSchema;
+    }
+
+    public void setFailOnSchemaMismatch(boolean failOnSchemaMismatch) {
+        this.failOnSchemaMismatch = failOnSchemaMismatch;
+    }
+
+    public boolean isFailOnSchemaMismatch() {
+        return failOnSchemaMismatch;
     }
 
     public void setHost(String host) {

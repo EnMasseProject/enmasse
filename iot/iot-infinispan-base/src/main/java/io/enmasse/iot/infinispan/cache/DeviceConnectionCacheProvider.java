@@ -14,9 +14,6 @@ import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Index;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
-import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,8 +22,6 @@ import io.enmasse.iot.infinispan.devcon.DeviceConnectionKey;
 
 @Component
 public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
-
-    private static final Logger log = LoggerFactory.getLogger(DeviceConnectionCacheProvider.class);
 
     private static final String GENERATED_PROTOBUF_FILE_NAME = "deviceConnection.proto";
 
@@ -47,20 +42,11 @@ public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
     }
 
     private void uploadSchema() throws Exception {
-
-        if (this.properties.isUploadSchema()) {
-
-            final String generatedSchema = createSchema();
-            log.info("Generated protobuf schema - {}", generatedSchema);
-
-            this.remoteCacheManager
-                    .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME)
-                    .put(GENERATED_PROTOBUF_FILE_NAME, generatedSchema);
-        }
-
+        final String generatedSchema = generateSchema();
+        uploadSchema(GENERATED_PROTOBUF_FILE_NAME, generatedSchema);
     }
 
-    private String createSchema() throws Exception {
+    private String generateSchema() throws Exception {
         final SerializationContext serCtx = ProtoStreamMarshaller.getSerializationContext(this.remoteCacheManager);
 
         return new ProtoSchemaBuilder()
