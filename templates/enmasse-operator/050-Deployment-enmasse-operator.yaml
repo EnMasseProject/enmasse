@@ -32,11 +32,6 @@ spec:
       - name: controller
         image: ${CONTROLLER_MANAGER_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
-        resources:
-          limits:
-            memory: 512Mi
-          requests:
-            memory: 512Mi
         env:
         - name: POD_NAME
           valueFrom:
