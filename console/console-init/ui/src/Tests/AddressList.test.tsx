@@ -18,7 +18,7 @@ describe("Address List", () => {
       {
         name: "leo_b",
         namespace: "leo_b",
-        type: "Queue",
+        type: "queue",
         planLabel: "small",
         planValue: "",
         messageIn: 8,
@@ -26,14 +26,14 @@ describe("Address List", () => {
         storedMessages: 10,
         senders: 11,
         receivers: 12,
-        shards: 13,
+        partitions: 13,
         status: "running",
         isReady: true
       },
       {
         name: "newqueue",
         namespace: "newqueue",
-        type: "Random",
+        type: "queue",
         planLabel: "large",
         planValue: "",
         messageIn: 2,
@@ -41,7 +41,7 @@ describe("Address List", () => {
         storedMessages: 4,
         senders: 5,
         receivers: 6,
-        shards: 7,
+        partitions: 7,
         status: "creating",
         isReady: true
       }
@@ -68,7 +68,7 @@ describe("Address List", () => {
     getByText(addresses[0].storedMessages.toString());
     getByText(addresses[0].senders.toString());
     getByText(addresses[0].receivers.toString());
-    getByText(addresses[0].shards.toString());
+    getByText(addresses[0].partitions.toString());
 
     //Testing elements of second row
     getByText(addresses[1].name);
@@ -79,7 +79,7 @@ describe("Address List", () => {
     getByText(addresses[1].storedMessages.toString());
     getByText(addresses[1].senders.toString());
     getByText(addresses[1].receivers.toString());
-    getByText(addresses[1].shards.toString());
+    getByText(addresses[1].partitions.toString());
   });
 });
 

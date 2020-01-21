@@ -31,7 +31,7 @@ export interface IAddress {
   storedMessages: number;
   senders: number;
   receivers: number;
-  shards: number;
+  partitions: number;
   isReady: boolean;
   errorMessages?: string[];
   status?: string;
@@ -95,7 +95,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
           row.type === "multicast" || row.type === "anycast"? "" : row.storedMessages,
           row.senders,
           row.receivers,
-          row.shards
+          row.type == "queue" ? row.partitions : ""
         ],
         originalData: row
       };
@@ -152,7 +152,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     { title: "Stored Messages", transforms: [sortable] },
     "Senders",
     "Receivers",
-    "Shards"
+    "Partitions"
   ];
 
   const onSelect = (
