@@ -142,7 +142,7 @@ export default function AddressDetailPage() {
           type={addressDetail.Spec.Plan.Spec.AddressType}
           name={addressDetail.Spec.Address}
           plan={addressDetail.Spec.Plan.Spec.DisplayName}
-          shards={getFilteredValue(
+          partitions={getFilteredValue(
             addressDetail.Metrics,
             "enmasse_messages_stored"
           )}
