@@ -228,6 +228,25 @@ func (o *performOpen) unmarshal(r *buffer) error {
 	}...)
 }
 
+func (o *performOpen) String() string {
+	return fmt.Sprintf("Open{ContainerID : %s, Hostname: %s, MaxFrameSize: %d, "+
+		"ChannelMax: %d, IdleTimeout: %v, "+
+		"OutgoingLocales: %v, IncomingLocales: %v, "+
+		"OfferedCapabilities: %v, DesiredCapabilities: %v, "+
+		"Properties: %v}",
+		o.ContainerID,
+		o.Hostname,
+		o.MaxFrameSize,
+		o.ChannelMax,
+		o.IdleTimeout,
+		o.OutgoingLocales,
+		o.IncomingLocales,
+		o.OfferedCapabilities,
+		o.DesiredCapabilities,
+		o.Properties,
+	)
+}
+
 /*
 <type name="begin" class="composite" source="list" provides="frame">
     <descriptor name="amqp:begin:list" code="0x00000000:0x00000011"/>
@@ -246,7 +265,7 @@ type performBegin struct {
 	// If a session is locally initiated, the remote-channel MUST NOT be set.
 	// When an endpoint responds to a remotely initiated session, the remote-channel
 	// MUST be set to the channel on which the remote session sent the begin.
-	RemoteChannel uint16
+	RemoteChannel *uint16
 
 	// the transfer-id of the first transfer id the sender will send
 	NextOutgoingID uint32 // required, sequence number http://www.ietf.org/rfc/rfc1982.txt
@@ -282,10 +301,10 @@ type performBegin struct {
 func (b *performBegin) frameBody() {}
 
 func (b *performBegin) String() string {
-	return fmt.Sprintf("Begin{RemoteChannel: %d, NextOutgoingID: %d, IncomingWindow: %d, "+
+	return fmt.Sprintf("Begin{RemoteChannel: %v, NextOutgoingID: %d, IncomingWindow: %d, "+
 		"OutgoingWindow: %d, HandleMax: %d, OfferedCapabilities: %v, DesiredCapabilities: %v, "+
 		"Properties: %v}",
-		b.RemoteChannel,
+		formatUint16Ptr(b.RemoteChannel),
 		b.NextOutgoingID,
 		b.IncomingWindow,
 		b.OutgoingWindow,
@@ -296,9 +315,16 @@ func (b *performBegin) String() string {
 	)
 }
 
+func formatUint16Ptr(p *uint16) string {
+	if p == nil {
+		return "<nil>"
+	}
+	return strconv.FormatUint(uint64(*p), 10)
+}
+
 func (b *performBegin) marshal(wr *buffer) error {
 	return marshalComposite(wr, typeCodeBegin, []marshalField{
-		{value: &b.RemoteChannel, omit: b.RemoteChannel == 0},
+		{value: b.RemoteChannel, omit: b.RemoteChannel == nil},
 		{value: &b.NextOutgoingID, omit: false},
 		{value: &b.IncomingWindow, omit: false},
 		{value: &b.OutgoingWindow, omit: false},
@@ -1632,7 +1658,7 @@ func (c *performClose) unmarshal(r *buffer) error {
 }
 
 func (c *performClose) String() string {
-	return fmt.Sprintf("*performClose{Error: %s}", c.Error)
+	return fmt.Sprintf("Close{Error: %s}", c.Error)
 }
 
 const maxDeliveryTagLength = 32
@@ -2412,6 +2438,14 @@ func (si *saslInit) unmarshal(r *buffer) error {
 	}...)
 }
 
+func (si *saslInit) String() string {
+	// Elide the InitialResponse as it may contain a plain text secret.
+	return fmt.Sprintf("SaslInit{Mechanism : %s, InitialResponse: ********, Hostname: %s}",
+		si.Mechanism,
+		si.Hostname,
+	)
+}
+
 /*
 <type name="sasl-mechanisms" class="composite" source="list" provides="sasl-frame">
     <descriptor name="amqp:sasl-mechanisms:list" code="0x00000000:0x00000040"/>
@@ -2434,6 +2468,12 @@ func (sm *saslMechanisms) marshal(wr *buffer) error {
 func (sm *saslMechanisms) unmarshal(r *buffer) error {
 	return unmarshalComposite(r, typeCodeSASLMechanism,
 		unmarshalField{field: &sm.Mechanisms, handleNull: func() error { return errorNew("saslMechanisms.Mechanisms is required") }},
+	)
+}
+
+func (sm *saslMechanisms) String() string {
+	return fmt.Sprintf("SaslMechanisms{Mechanisms : %v}",
+		sm.Mechanisms,
 	)
 }
 
@@ -2522,6 +2562,13 @@ func (so *saslOutcome) unmarshal(r *buffer) error {
 		{field: &so.Code, handleNull: func() error { return errorNew("saslOutcome.AdditionalData is required") }},
 		{field: &so.AdditionalData},
 	}...)
+}
+
+func (so *saslOutcome) String() string {
+	return fmt.Sprintf("SaslOutcome{Code : %v, AdditionalData: %v}",
+		so.Code,
+		so.AdditionalData,
+	)
 }
 
 // symbol is an AMQP symbolic string.

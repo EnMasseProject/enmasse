@@ -1,23 +1,25 @@
 # Contributing
 
-Whether it's code, documentation, and/or example, all contributions are appreciated.
+This repo is no longer under active development. See [issue #205](https://github.com/vcabbage/amqp/issues/205) for details.
 
-To ensure a smooth process, here are some guidelines and expectations:
+~~Whether it's code, documentation, and/or example, all contributions are appreciated.~~
 
-* An issue should be created discussing any non-trivial change. Small changes, such as a fixing a typo, don't need an issue.
-* Ideally, an issue should describe both the problem to be solved and a proposed solution.
-* Please indicate that you want to work on the change in the issue. If you change your mind about working on an issue you are always free to back out. There will be no hard feelings.
-* Depending on the scope, there may be some back and forth about the problem and solution. This is intended to be a collaborative discussion to ensure the problem is adequately solved in a manner that fits well in the library.
+~~To ensure a smooth process, here are some guidelines and expectations:~~
 
-Once you're ready to open a PR:
+* ~~An issue should be created discussing any non-trivial change. Small changes, such as a fixing a typo, don't need an issue.~~
+* ~~Ideally, an issue should describe both the problem to be solved and a proposed solution.~~
+* ~~Please indicate that you want to work on the change in the issue. If you change your mind about working on an issue you are always free to back out. There will be no hard feelings.~~
+* ~~Depending on the scope, there may be some back and forth about the problem and solution. This is intended to be a collaborative discussion to ensure the problem is adequately solved in a manner that fits well in the library.~~
 
-* Ensure code is formatted with `gofmt`.
-* You may also want to peruse https://github.com/golang/go/wiki/CodeReviewComments and check that code conforms to the recommendations.
-* Tests are appreciated, but not required. The integration tests are currently specific to Microsoft Azure and require a number of credentials provided via environment variables. This can be a high barrier if you don't already have setup that works with the tests.
-* When you open the PR CI will run unit tests. Integration tests will be run manually as part of the review.
-* All PRs will be merged as a single commit. If your PR includes multiple commits they will be squashed together before merging. This usually isn't a big deal, but if you have any questions feel free to ask.
+~~Once you're ready to open a PR:~~
 
-I do my best to respond to issues and PRs in a timely fashion. If it's been a couple days without a response or if it seems like I've overlooked something, feel free to ping me.
+* ~~Ensure code is formatted with `gofmt`.~~
+* ~~You may also want to peruse https://github.com/golang/go/wiki/CodeReviewComments and check that code conforms to the recommendations.~~
+* ~~Tests are appreciated, but not required. The integration tests are currently specific to Microsoft Azure and require a number of credentials provided via environment variables. This can be a high barrier if you don't already have setup that works with the tests.~~
+* ~~When you open the PR CI will run unit tests. Integration tests will be run manually as part of the review.~~
+* ~~All PRs will be merged as a single commit. If your PR includes multiple commits they will be squashed together before merging. This usually isn't a big deal, but if you have any questions feel free to ask.~~
+
+~~I do my best to respond to issues and PRs in a timely fashion. If it's been a couple days without a response or if it seems like I've overlooked something, feel free to ping me.~~
 
 ## Debugging
 
