@@ -370,7 +370,10 @@ func (c *conn) mux() {
 
 			// RemoteChannel should be used when frame is Begin
 			case *performBegin:
-				session, ok = sessionsByChannel[body.RemoteChannel]
+				if body.RemoteChannel == nil {
+					break
+				}
+				session, ok = sessionsByChannel[*body.RemoteChannel]
 				if !ok {
 					break
 				}
@@ -615,9 +618,11 @@ func (c *conn) connWriter() {
 		// connection complete
 		case <-c.done:
 			// send close
+			cls := &performClose{}
+			debug(1, "TX: %s", cls)
 			_ = c.writeFrame(frame{
 				type_: frameTypeAMQP,
-				body:  &performClose{},
+				body:  cls,
 			})
 			return
 		}
@@ -795,16 +800,18 @@ func (c *conn) startTLS() stateFunc {
 // openAMQP round trips the AMQP open performative
 func (c *conn) openAMQP() stateFunc {
 	// send open frame
+	open := &performOpen{
+		ContainerID:  c.containerID,
+		Hostname:     c.hostname,
+		MaxFrameSize: c.maxFrameSize,
+		ChannelMax:   c.channelMax,
+		IdleTimeout:  c.idleTimeout,
+		Properties:   c.properties,
+	}
+	debug(1, "TX: %s", open)
 	c.err = c.writeFrame(frame{
-		type_: frameTypeAMQP,
-		body: &performOpen{
-			ContainerID:  c.containerID,
-			Hostname:     c.hostname,
-			MaxFrameSize: c.maxFrameSize,
-			ChannelMax:   c.channelMax,
-			IdleTimeout:  c.idleTimeout,
-			Properties:   c.properties,
-		},
+		type_:   frameTypeAMQP,
+		body:    open,
 		channel: 0,
 	})
 	if c.err != nil {
@@ -822,6 +829,7 @@ func (c *conn) openAMQP() stateFunc {
 		c.err = errorErrorf("unexpected frame type %T", fr.body)
 		return nil
 	}
+	debug(1, "RX: %s", o)
 
 	// update peer settings
 	if o.MaxFrameSize > 0 {
@@ -853,6 +861,7 @@ func (c *conn) negotiateSASL() stateFunc {
 		c.err = errorErrorf("unexpected frame type %T", fr.body)
 		return nil
 	}
+	debug(1, "RX: %s", sm)
 
 	// return first match in c.saslHandlers based on order received
 	for _, mech := range sm.Mechanisms {
@@ -883,6 +892,7 @@ func (c *conn) saslOutcome() stateFunc {
 		c.err = errorErrorf("unexpected frame type %T", fr.body)
 		return nil
 	}
+	debug(1, "RX: %s", so)
 
 	// check if auth succeeded
 	if so.Code != codeSASLOK {

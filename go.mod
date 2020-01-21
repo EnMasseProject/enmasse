@@ -16,7 +16,7 @@ replace (
 	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.0.0-20191114014954-0e3176a6f3ed
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20190510232812-a01b7d5d6c22
 	k8s.io/kubernetes => k8s.io/kubernetes v1.14.9
-	pack.ag/amqp => github.com/k-wall/amqp v0.12.4-0.20191127100829-00205e9b7369
+	pack.ag/amqp => github.com/vcabbage/amqp v0.12.6-0.20191205183900-5a75e78e59d3
 )
 
 require (
@@ -24,7 +24,7 @@ require (
 	github.com/Nerzal/gocloak/v3 v3.7.0
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/go-logr/logr v0.1.0
-	github.com/google/go-cmp v0.3.2-0.20191216211814-5a6f75716e12
+	github.com/google/go-cmp v0.3.2-0.20191216211814-5a6f75716e12 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-memdb v1.0.4
 	github.com/openshift/api v3.9.1-0.20190813152110-b5570061b31f+incompatible

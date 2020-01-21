@@ -2,7 +2,6 @@ package amqp
 
 import (
 	"fmt"
-	"regexp"
 )
 
 // SASL Codes
@@ -48,13 +47,15 @@ func ConnSASLPlain(username, password string) ConnOption {
 		// add the handler the the map
 		c.saslHandlers[saslMechanismPLAIN] = func() stateFunc {
 			// send saslInit with PLAIN payload
+			init := &saslInit{
+				Mechanism:       "PLAIN",
+				InitialResponse: []byte("\x00" + username + "\x00" + password),
+				Hostname:        "",
+			}
+			debug(1, "TX: %s", init)
 			c.err = c.writeFrame(frame{
 				type_: frameTypeSASL,
-				body: &saslInit{
-					Mechanism:       "PLAIN",
-					InitialResponse: []byte("\x00" + username + "\x00" + password),
-					Hostname:        "",
-				},
+				body:  init,
 			})
 			if c.err != nil {
 				return nil
@@ -77,12 +78,14 @@ func ConnSASLAnonymous() ConnOption {
 
 		// add the handler the the map
 		c.saslHandlers[saslMechanismANONYMOUS] = func() stateFunc {
+			init := &saslInit{
+				Mechanism:       saslMechanismANONYMOUS,
+				InitialResponse: []byte("anonymous"),
+			}
+			debug(1, "TX: %s", init)
 			c.err = c.writeFrame(frame{
 				type_: frameTypeSASL,
-				body: &saslInit{
-					Mechanism:       saslMechanismANONYMOUS,
-					InitialResponse: []byte("anonymous"),
-				},
+				body:  init,
 			})
 			if c.err != nil {
 				return nil
@@ -96,6 +99,15 @@ func ConnSASLAnonymous() ConnOption {
 }
 
 // ConnSASLXOAUTH2 enables SASL XOAUTH2 authentication for the connection.
+//
+// The saslMaxFrameSizeOverride parameter allows the limit that governs the maximum frame size this client will allow
+// itself to generate to be raised for the sasl-init frame only.  Set this when the size of the size of the SASL XOAUTH2
+// initial client response (which contains the username and bearer token) would otherwise breach the 512 byte min-max-frame-size
+// (http://docs.oasis-open.org/amqp/core/v1.0/os/amqp-core-transport-v1.0-os.html#definition-MIN-MAX-FRAME-SIZE). Pass -1
+// to keep the default.
+//
+// SASL XOAUTH2 transmits the bearer in plain text and should only be used
+// on TLS/SSL enabled connection.
 func ConnSASLXOAUTH2(username, bearer string, saslMaxFrameSizeOverride uint32) ConnOption {
 	return func(c *conn) error {
 		// make handlers map if no other mechanism has
@@ -108,71 +120,100 @@ func ConnSASLXOAUTH2(username, bearer string, saslMaxFrameSizeOverride uint32) C
 			return err
 		}
 
+		handler := saslXOAUTH2Handler{
+			conn:                 c,
+			maxFrameSizeOverride: saslMaxFrameSizeOverride,
+			response:             response,
+		}
 		// add the handler the the map
-		c.saslHandlers[saslMechanismXOAUTH2] = func() stateFunc {
-			originalPeerMaxFrameSize := c.peerMaxFrameSize
-			if saslMaxFrameSizeOverride > c.peerMaxFrameSize {
-				c.peerMaxFrameSize = saslMaxFrameSizeOverride
-			}
-			c.err = c.writeFrame(frame{
+		c.saslHandlers[saslMechanismXOAUTH2] = handler.init
+		return nil
+	}
+}
+
+type saslXOAUTH2Handler struct {
+	conn                 *conn
+	maxFrameSizeOverride uint32
+	response             []byte
+	errorResponse        []byte // https://developers.google.com/gmail/imap/xoauth2-protocol#error_response
+}
+
+func (s saslXOAUTH2Handler) init() stateFunc {
+	originalPeerMaxFrameSize := s.conn.peerMaxFrameSize
+	if s.maxFrameSizeOverride > s.conn.peerMaxFrameSize {
+		s.conn.peerMaxFrameSize = s.maxFrameSizeOverride
+	}
+	s.conn.err = s.conn.writeFrame(frame{
+		type_: frameTypeSASL,
+		body: &saslInit{
+			Mechanism:       saslMechanismXOAUTH2,
+			InitialResponse: s.response,
+		},
+	})
+	s.conn.peerMaxFrameSize = originalPeerMaxFrameSize
+	if s.conn.err != nil {
+		return nil
+	}
+
+	return s.step
+}
+
+func (s saslXOAUTH2Handler) step() stateFunc {
+	// read challenge or outcome frame
+	fr, err := s.conn.readFrame()
+	if err != nil {
+		s.conn.err = err
+		return nil
+	}
+
+	switch v := fr.body.(type) {
+	case *saslOutcome:
+		// check if auth succeeded
+		if v.Code != codeSASLOK {
+			s.conn.err = errorErrorf("SASL XOAUTH2 auth failed with code %#00x: %s : %s",
+				v.Code, v.AdditionalData, s.errorResponse)
+			return nil
+		}
+
+		// return to c.negotiateProto
+		s.conn.saslComplete = true
+		return s.conn.negotiateProto
+	case *saslChallenge:
+		if s.errorResponse == nil {
+			s.errorResponse = v.Challenge
+
+			// The SASL protocol requires clients to send an empty response to this challenge.
+			s.conn.err = s.conn.writeFrame(frame{
 				type_: frameTypeSASL,
-				body: &saslInit{
-					Mechanism:       saslMechanismXOAUTH2,
-					InitialResponse: response,
+				body: &saslResponse{
+					Response: []byte{},
 				},
 			})
-			c.peerMaxFrameSize = originalPeerMaxFrameSize
-			if c.err != nil {
-				return nil
-			}
-
-			// go to c.saslXOAUTH2Step to handle the server response
-			return c.saslXOAUTH2Step
+			return s.step
+		} else {
+			s.conn.err = errorErrorf("SASL XOAUTH2 unexpected additional error response received during "+
+				"exchange. Initial error response: %s, additional response: %s", s.errorResponse, v.Challenge)
+			return nil
 		}
+	default:
+		s.conn.err = errorErrorf("unexpected frame type %T", fr.body)
 		return nil
 	}
 }
 
 func saslXOAUTH2InitialResponse(username string, bearer string) ([]byte, error) {
-	re := regexp.MustCompile("^[\x20-\x7E]+$")
-	if !re.MatchString(bearer) {
+	if len(bearer) == 0 {
 		return []byte{}, fmt.Errorf("unacceptable bearer token")
 	}
-
-	return []byte("user=" + username + "\x01auth=Bearer " + bearer + "\x01\x01"), nil
-}
-
-func (c *conn) saslXOAUTH2Step() stateFunc {
-	// read challenge or outcome frame
-	fr, err := c.readFrame()
-	if err != nil {
-		c.err = err
-		return nil
-	}
-
-	if so, ok := fr.body.(*saslOutcome); ok {
-		// check if auth succeeded
-		if so.Code != codeSASLOK {
-			c.err = errorErrorf("SASL XOAUTH2 auth failed with code %#00x: %s", so.Code, so.AdditionalData)
-			return nil
+	for _, char := range bearer {
+		if char < '\x20' || char > '\x7E' {
+			return []byte{}, fmt.Errorf("unacceptable bearer token")
 		}
-
-		// return to c.negotiateProto
-		c.saslComplete = true
-		return c.negotiateProto
-	} else if sc, ok := fr.body.(*saslChallenge); ok {
-		debug(1, "SASL XOAUTH2 - the server sent a challenge containing error message :%s", string(sc.Challenge))
-
-		// The SASL protocol requires clients to send an empty response to this challenge.
-		c.err = c.writeFrame(frame{
-			type_: frameTypeSASL,
-			body: &saslResponse{
-				Response: []byte{},
-			},
-		})
-		return c.saslXOAUTH2Step
-	} else {
-		c.err = errorErrorf("unexpected frame type %T", fr.body)
-		return nil
 	}
+	for _, char := range username {
+		if char == '\x01' {
+			return []byte{}, fmt.Errorf("unacceptable username")
+		}
+	}
+	return []byte("user=" + username + "\x01auth=Bearer " + bearer + "\x01\x01"), nil
 }
