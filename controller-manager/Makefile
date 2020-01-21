@@ -3,7 +3,7 @@ include ../Makefile.go.mk
 
 build_deps: build/operatorImageMap.yaml
 
-run:
+run: ./build/operatorImageMap.yaml ./build/controller-manager
 	ENMASSE_IMAGE_MAP_FILE=./build/operatorImageMap.yaml ./build/controller-manager
 
 build/operatorImageMap.yaml:
