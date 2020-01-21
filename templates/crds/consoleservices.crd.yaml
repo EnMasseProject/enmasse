@@ -16,9 +16,17 @@ spec:
   validation:
     openAPIV3Schema:
       properties:
+        metadata:
+          type: object
+          properties:
+            name:
+              type: string
+              pattern: "console"
         spec:
           type: object
           properties:
+            replicas:
+              type: integer
             discoveryMetadataURL:
               type: string
             certificateSecret:
