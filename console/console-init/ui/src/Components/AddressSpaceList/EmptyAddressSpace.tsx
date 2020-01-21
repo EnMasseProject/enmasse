@@ -10,12 +10,23 @@ import {
   EmptyStateIcon,
   EmptyStateBody,
   EmptyStateVariant,
-  Button
+  Button,
+  ButtonVariant
 } from "@patternfly/react-core";
 import { PlusCircleIcon } from "@patternfly/react-icons";
 import { Link } from "@storybook/router";
 
-export const EmptyAddressSpace = () => {
+interface IEmptyAddressSpaceProps {
+  isWizardOpen: boolean;
+  setIsWizardOpen: (value: boolean) => void;
+}
+export const EmptyAddressSpace: React.FunctionComponent<IEmptyAddressSpaceProps> = ({
+  isWizardOpen,
+  setIsWizardOpen
+}) => {
+  const createAddressSpaceOnClick = async () => {
+    setIsWizardOpen(true);
+  };
   return (
     <EmptyState variant={EmptyStateVariant.full}>
       <EmptyStateIcon icon={PlusCircleIcon} />
@@ -27,7 +38,10 @@ export const EmptyAddressSpace = () => {
         button below to create one.Learn more about this on the
         <Link to="/"> documentation</Link>
       </EmptyStateBody>
-      <Button id="empty-ad-space-create-button" variant="primary">
+      <Button
+        id="empty-ad-space-create-button"
+        variant={ButtonVariant.primary}
+        onClick={createAddressSpaceOnClick}>
         Create Address Space
       </Button>
     </EmptyState>

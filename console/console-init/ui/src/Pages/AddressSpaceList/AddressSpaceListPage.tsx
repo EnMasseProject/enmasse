@@ -34,6 +34,8 @@ interface AddressSpaceListPageProps {
   setOnCreationRefetch: (value: boolean) => void;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
+  isCreateWizardOpen: boolean;
+  setIsCreateWizardOpen: (value: boolean) => void;
 }
 export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageProps> = ({
   page,
@@ -46,7 +48,9 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   onCreationRefetch,
   setOnCreationRefetch,
   sortValue,
-  setSortValue
+  setSortValue,
+  isCreateWizardOpen,
+  setIsCreateWizardOpen
 }) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
@@ -169,7 +173,10 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           sortBy={sortBy}
         />
       ) : (
-        <EmptyAddressSpace />
+        <EmptyAddressSpace
+          isWizardOpen={isCreateWizardOpen}
+          setIsWizardOpen={setIsCreateWizardOpen}
+        />
       )}
       {addressSpaceBeingEdited && (
         <Modal
