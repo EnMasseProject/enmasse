@@ -26,16 +26,9 @@ function extract_spec(def) {
     if (def.spec === undefined) {
         console.error('no spec found on %j', def);
     }
-    var o = myutils.merge(def.spec, {status:def.status});
+    var o = myutils.merge({}, def.spec, {status:def.status});
     o.name = def.metadata ? def.metadata.name : def.address;
-    if (def.metadata && def.metadata.annotations && def.metadata.annotations['enmasse.io/broker-id']) {
-        var broker_id = def.metadata.annotations['enmasse.io/broker-id'];
-        var cluster_id = def.metadata.annotations['cluster_id'];
-        if (cluster_id === undefined) {
-            cluster_id = broker_id;
-        }
-        o.allocated_to = [{clusterId: cluster_id, containerId: broker_id, state: 'Active'}];
-    }
+
     if (def.status && def.status.brokerStatuses) {
         o.allocated_to = def.status.brokerStatuses;
     }

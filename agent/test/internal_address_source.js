@@ -59,8 +59,8 @@ describe('configmap backed address source', function() {
         });
     });
     it('indicates allocation to broker', function(done) {
-        address_server.add_address_definition({address:'foo', type:'queue'}, undefined, '1234', {'enmasse.io/broker-id':'broker-1'});
-        address_server.add_address_definition({address:'bar', type:'topic'}, undefined, '1234', {'enmasse.io/broker-id':'broker-2'});
+        address_server.add_address_definition({address:'foo', type:'queue'}, undefined, '1234', undefined, {brokerStatuses:[{containerId: 'broker-1'}]});
+        address_server.add_address_definition({address:'bar', type:'topic'}, undefined, '1234', undefined, {brokerStatuses:[{containerId: 'broker-2'}]});
         address_server.add_address_definition({address:'baz', type:'anycast'}, undefined, '1234');
         var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', INFRA_UUID: '1234'});
         source.start();
