@@ -31,13 +31,16 @@ DOCKER_DIRS = \
 
 FULL_BUILD       = true
 
-
 DOCKER_TARGETS   = docker_build docker_tag docker_push clean
 INSTALLDIR       = $(CURDIR)/templates/install
 SKIP_TESTS      ?= false
+MAVEN_BATCH     ?= true
 
 ifeq ($(SKIP_TESTS),true)
-	MAVEN_ARGS=-DskipTests -Dmaven.test.skip=true
+	MAVEN_ARGS+=-DskipTests -Dmaven.test.skip=true
+endif
+ifeq ($(MAVEN_BATCH),true)
+	MAVEN_ARGS+=-B
 endif
 
 all: build_java build_go templates
@@ -49,7 +52,7 @@ deploy: build_go
 	$(IMAGE_ENV) mvn -Prelease deploy $(MAVEN_ARGS)
 
 build_java: build_go templates
-	$(IMAGE_ENV) mvn package -q -B $(MAVEN_ARGS)
+	$(IMAGE_ENV) mvn package -q $(MAVEN_ARGS)
 
 build_go: $(GO_DIRS) test_go
 
@@ -98,7 +101,7 @@ clean_go:
 	@rm -Rf $(GOPATH)
 
 clean_java:
-	mvn -B -q clean $(MAVEN_ARGS)
+	mvn -q clean $(MAVEN_ARGS)
 
 template_clean:
 	$(MAKE) -C templates clean
@@ -110,8 +113,8 @@ coverage: java_coverage
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ coverage
 
 java_coverage:
-	mvn test -Pcoverage -B $(MAVEN_ARGS)
-	mvn jacoco:report-aggregate
+	mvn test -Pcoverage $(MAVEN_ARGS)
+	mvn jacoco:report-aggregate $(MAVEN_ARGS)
 
 $(DOCKER_TARGETS): $(DOCKER_DIRS) $(GO_DIRS)
 $(DOCKER_DIRS):
