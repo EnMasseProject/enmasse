@@ -165,9 +165,9 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
 
         // first create two projects for a single address space
 
-        var project1 = IoTUtils.getBasicIoTProjectObject("iot1", "as1",
+        var project1 = IoTUtils.getBasicIoTProjectObject("iot1", MANAGED_TEST_ADDRESSSPACE,
                 IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
-        var project2 = IoTUtils.getBasicIoTProjectObject("iot2", "as1",
+        var project2 = IoTUtils.getBasicIoTProjectObject("iot2", MANAGED_TEST_ADDRESSSPACE,
                 IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
 
         var tenant1 = IoTUtils.getTenantId(project1);
@@ -178,8 +178,8 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
         isolatedIoTManager.createIoTProject(project1);
         isolatedIoTManager.createIoTProject(project2);
 
-        assertManagedResources(Assertions::assertNotNull, project1, "as1");
-        assertManagedResources(Assertions::assertNotNull, project2, "as1");
+        assertManagedResources(Assertions::assertNotNull, project1, MANAGED_TEST_ADDRESSSPACE);
+        assertManagedResources(Assertions::assertNotNull, project2, MANAGED_TEST_ADDRESSSPACE);
 
         // register two devices with the same ids, but for different tenants
 
