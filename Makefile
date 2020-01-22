@@ -30,6 +30,7 @@ DOCKER_DIRS = \
 	iot/iot-tenant-cleaner \
 
 FULL_BUILD       = true
+GOOPTS          ?= -mod=vendor
 
 
 DOCKER_TARGETS   = docker_build docker_tag docker_push clean
@@ -69,20 +70,20 @@ test_go: test_go_vet test_go_run
 endif
 
 test_go_vet:
-	GO111MODULE=on go vet -mod=vendor ./cmd/... ./pkg/...
+	GO111MODULE=on go vet $(GOOPTS) ./cmd/... ./pkg/...
 
 ifeq (,$(GO2XUNIT))
 test_go_run:
-	GO111MODULE=on go test -mod=vendor -v ./...
+	GO111MODULE=on go test $(GOOPTS) -v ./...
 else
 test_go_run:
 	mkdir -p build
-	GO111MODULE=on go test -mod=vendor -v ./... 2>&1 | tee $(abspath build/go.testoutput)
+	GO111MODULE=on go test $(GOOPTS) -v ./... 2>&1 | tee $(abspath build/go.testoutput)
 	$(GO2XUNIT) -fail -input build/go.testoutput -output build/TEST-go.xml
 endif
 
 coverage_go:
-	GO111MODULE=on go test -mod=vendor -cover ./...
+	GO111MODULE=on go test $(GOOPTS) -cover ./...
 
 buildpush:
 	$(MAKE)
@@ -96,7 +97,7 @@ clean_java:
 template_clean:
 	$(MAKE) -C templates clean
 
-clean: clean_java clean_go docu_clean template_clean
+clean: clean_java docu_clean template_clean
 	rm -rf build
 
 coverage: java_coverage
