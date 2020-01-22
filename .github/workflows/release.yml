@@ -6,9 +6,9 @@ env:
   REGISTRY_USER: "enmasse+ci"
 
 on:
+  schedule:
+    - cron:  '0 * * * *'
   push:
-    branches:
-      - master
     tags:
       - '0.*'
 
