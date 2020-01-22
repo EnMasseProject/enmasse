@@ -17,6 +17,7 @@ describe("Address List", () => {
     const addresses: IAddress[] = [
       {
         name: "leo_b",
+        displayName:"leo_b",
         namespace: "leo_b",
         type: "Queue",
         planLabel: "small",
@@ -32,6 +33,7 @@ describe("Address List", () => {
       },
       {
         name: "newqueue",
+        displayName:"newqueue",
         namespace: "newqueue",
         type: "Random",
         planLabel: "large",
