@@ -85,8 +85,8 @@ export default function ConnectionDetailPage() {
   );
 
   const connectionDetail: IConnectionHeaderDetailProps = {
-    hostname: connection.ObjectMeta.Name,
-    containerId: connection.ObjectMeta.Namespace,
+    hostname: connection.Spec.Hostname,
+    containerId: connection.Spec.ContainerId,
     version: getProductFilteredValue(connection.Spec.Properties, "version"),
     protocol: connection.Spec.Protocol.toUpperCase(),
     encrypted: connection.Spec.Encrypted || false,
