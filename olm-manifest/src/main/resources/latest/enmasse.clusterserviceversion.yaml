@@ -446,14 +446,11 @@ spec:
       permissions:
       - serviceAccountName: enmasse-operator
         rules:
-        - apiGroups: [ "batch" ]
-          resources: [ "jobs" ]
-          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
         - apiGroups: [ "apps" ]
-          resources: [ "deployments" ]
+          resources: [ "deployments", "deployments/finalizers", "replicasets" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
         - apiGroups: [ "" ]
-          resources: [ "configmaps", "secrets", "persistentvolumeclaims", "services", "pods" ]
+          resources: [ "configmaps", "secrets", "persistentvolumeclaims", "services", "services/finalizers", "pods" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
         - apiGroups: [ "", "route.openshift.io" ]
           resources: [ "routes", "routes/custom-host", "routes/status"]
@@ -461,12 +458,18 @@ spec:
         - apiGroups: [ "apps.openshift.io" ]
           resources: [ "deploymentconfigs"]
           verbs: [  "get", "list", "watch" ]
+        - apiGroups: ["monitoring.coreos.com"]
+          resources: ["servicemonitors"]
+          verbs: ["create", "update", "patch", "get", "list", "watch", "delete"]
         - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "authenticationservices", "authenticationservices/finalizers", "consoleservices", "consoleservices/finalizers" ]
+          resources: [ "authenticationservices", "authenticationservices/finalizers", "consoleservices", "consoleservices/finalizers", "addressplans", "addressplans/finalizers", "addressspaceplans", "addressspaceplans/finalizers" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch" ]
         - apiGroups: [ "iot.enmasse.io" ]
-          resources: [ "iotconfigs", "iotconfigs/finalizers", "iotconfigs/status" ]
+          resources: [ "iotconfigs", "iotconfigs/finalizers", "iotconfigs/status", "iotprojects", "iotprojects/finalizers", "iotprojects/status" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+        - apiGroups: [ "batch" ]
+          resources: [ "jobs" ]
+          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
       - serviceAccountName: address-space-controller
         rules:
         - apiGroups: [ "admin.enmasse.io" ]
@@ -546,16 +549,16 @@ spec:
         - apiGroups: [ "user.enmasse.io" ]
           resources: [ "messagingusers", "messagingusers/finalizers", "messagingusers/status" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "iot.enmasse.io" ]
+          resources: [ "iotprojects", "iotprojects/finalizers", "iotprojects/status" ]
+          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
         - apiGroups: [ "enmasse.io" ]
           resources: [ "addressspaces", "addresses" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "apiregistration.k8s.io" ]
           resources: [ "apiservices" ]
-          resourceNames: [ "v1alpha1.enmasse.io", "v1beta1.enmasse.io" ]
+          resourceNames: [ "v1alpha1.enmasse.io", "v1beta1.enmasse.io", "v1alpha1.user.enmasse.io", "v1beta1.user.enmasse.io" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
-        - apiGroups: [ "iot.enmasse.io" ]
-          resources: [ "iotprojects", "iotprojects/finalizers", "iotprojects/status" ]
-          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
       - serviceAccountName: iot-device-registry
         rules:
         - apiGroups: [ "authentication.k8s.io" ]
@@ -615,6 +618,8 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.namespace
+                - name: IOT_CONFIG_NAME
+                  value: "default"
                 - name: OPERATOR_NAME
                   value: "enmasse-operator"
                 - name: IMAGE_PULL_POLICY
@@ -622,6 +627,8 @@ spec:
                 - name: CONTROLLER_DISABLE_ALL
                   value: "true"
                 - name: CONTROLLER_ENABLE_UPGRADER
+                  value: "true"
+                - name: CONTROLLER_ENABLE_IOT_PROJECT
                   value: "true"
                 - name: CONTROLLER_ENABLE_IOT_CONFIG
                   value: "true"
@@ -651,6 +658,8 @@ spec:
                   value: ${env.IOT_LORAWAN_ADAPTER_IMAGE}
                 - name: IOT_SIGFOX_ADAPTER_IMAGE
                   value: ${env.IOT_SIGFOX_ADAPTER_IMAGE}
+                - name: IOT_TENANT_CLEANER_IMAGE
+                  value: ${IOT_TENANT_CLEANER_IMAGE}
                 - name: IOT_TENANT_SERVICE_IMAGE
                   value: ${env.IOT_TENANT_SERVICE_IMAGE}
                 - name: IOT_PROXY_CONFIGURATOR_IMAGE
