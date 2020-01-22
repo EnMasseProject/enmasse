@@ -26,8 +26,10 @@ require (
 	// release-4.2
 	github.com/openshift/client-go v0.0.0-20190813201236-5a5508328169
 	github.com/operator-framework/operator-sdk v0.11.0
+	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.4.0
 	go.uber.org/multierr v1.1.0
+	go.uber.org/zap v1.10.0
 	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
