@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import io.enmasse.address.model.AddressSpaceSpecBuilder;
-import io.enmasse.address.model.AuthenticationService;
 import io.enmasse.address.model.AuthenticationServiceBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

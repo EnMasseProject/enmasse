@@ -40,12 +40,79 @@ public class EndpointController implements Controller {
 
     @Override
     public AddressSpace reconcileActive(AddressSpace addressSpace) {
-        updateEndpoints(addressSpace);
+        addressSpace = removeAddressSpaceConsoleEndpoint(addressSpace);
+        updateEndpointsStatuses(addressSpace);
         updateCaCert(addressSpace);
         return addressSpace;
     }
 
-    private void updateEndpoints(AddressSpace addressSpace) {
+    private AddressSpace removeAddressSpaceConsoleEndpoint(AddressSpace addressSpace) {
+        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        if (infraUuid == null) {
+            return addressSpace;
+        }
+
+        List<EndpointSpec> endpoints = addressSpace.getSpec().getEndpoints();
+        List<EndpointSpec> copy = new ArrayList<>(endpoints);
+
+        // Remove any address-space-specific console endpoint.
+        for (Iterator<EndpointSpec> iterator = copy.iterator(); iterator.hasNext(); ) {
+            EndpointSpec endpoint = iterator.next();
+
+            if ("console".equals(endpoint.getName())) {
+                iterator.remove();
+
+                if (endpoint.getService() != null) {
+                    String serviceName = KubeUtil.getAddressSpaceServiceName(endpoint.getService(), addressSpace);
+                    Service service = client.services().inNamespace(namespace).withName(serviceName).get();
+                    if (service != null && service.getMetadata().getLabels() != null && infraUuid.equals(service.getMetadata().getLabels().get(LabelKeys.INFRA_UUID))) {
+                        client.services().inNamespace(namespace).delete(service);
+                    }
+                }
+
+                CertSpec cert = endpoint.getCert();
+                if (cert != null && "selfsigned".equals(cert.getProvider()) && cert.getSecretName() != null) {
+                    Secret secret = client.secrets().inNamespace(namespace).withName(cert.getSecretName()).get();
+                    if (secret != null && secret.getMetadata().getLabels() != null && infraUuid.equals(secret.getMetadata().getLabels().get(LabelKeys.INFRA_UUID))) {
+                        client.secrets().inNamespace(namespace).delete(secret);
+                    }
+                }
+
+                if (endpoint.getExpose() != null) {
+                    ExposeType type = endpoint.getExpose().getType();
+                    switch (type) {
+                        case route:
+                            if (isOpenShift) {
+                                String routeName = KubeUtil.getAddressSpaceRouteName(endpoint.getName(), addressSpace);
+                                Route route = client.adapt(OpenShiftClient.class).routes().inNamespace(namespace).withName(routeName).get();
+                                if (route != null && route.getMetadata().getLabels() != null && infraUuid.equals(route.getMetadata().getLabels().get(LabelKeys.INFRA_UUID))) {
+                                    client.adapt(OpenShiftClient.class).routes().inNamespace(namespace).delete(route);
+                                }
+                            }
+                            break;
+                        case loadbalancer:
+                            String serviceName = KubeUtil.getAddressSpaceExternalServiceName(endpoint.getName(), addressSpace);
+                            Service service = client.services().inNamespace(namespace).withName(serviceName).get();
+                            if (service != null && service.getMetadata().getLabels() != null && infraUuid.equals(service.getMetadata().getLabels().get(LabelKeys.INFRA_UUID))) {
+                                client.services().inNamespace(namespace).delete(service);
+                            }
+                    }
+                }
+            }
+        }
+
+        if (copy.size() != endpoints.size()) {
+            return new AddressSpaceBuilder(addressSpace)
+                    .editOrNewSpec()
+                    .withEndpoints(copy)
+                    .endSpec()
+                    .build();
+        } else {
+            return addressSpace;
+        }
+    }
+
+    private void updateEndpointsStatuses(AddressSpace addressSpace) {
 
         Map<String, String> annotations = new HashMap<>();
         annotations.put(AnnotationKeys.ADDRESS_SPACE, addressSpace.getMetadata().getName());
@@ -249,7 +316,7 @@ public class EndpointController implements Controller {
 
     private Service ensureExternalServiceExists(AddressSpace addressSpace, EndpointSpec endpointSpec, ExposeSpec exposeSpec) {
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
-        String serviceName = endpointSpec.getName() + "-" + infraUuid + "-external";
+        String serviceName = KubeUtil.getAddressSpaceExternalServiceName(endpointSpec.getName(), addressSpace);
 
         Service existingService = client.services().inNamespace(namespace).withName(serviceName).get();
         if (existingService != null) {
@@ -299,4 +366,5 @@ public class EndpointController implements Controller {
     public String toString() {
         return "EndpointController";
     }
+
 }
