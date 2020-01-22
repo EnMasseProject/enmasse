@@ -29,9 +29,12 @@ export const ConnectionProtocolFormat: React.FunctionComponent<ProtocolIcon> = (
 };
 
 export const getFilteredValue = (object: IMetrics[], value: string) => {
-  const filtered = object.filter(obj => obj.Name === value);
-  if (filtered.length > 0) {
-    return filtered[0].Value;
+  if (object && object != null) {
+    const filtered = object.filter(obj => obj && obj.Name && obj.Name === value);
+    if (filtered.length > 0) {
+      return filtered[0].Value ? filtered[0].Value : 0;
+    }
   }
   return 0;
 };
+  
