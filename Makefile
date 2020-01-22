@@ -69,8 +69,11 @@ $(GO_DIRS):
 ifeq ($(SKIP_TESTS),true)
 test_go:
 else
-test_go: test_go_vet test_go_run
+test_go: test_go_vet test_go_codegen test_go_run
 endif
+
+test_go_codegen:
+	GO111MODULE=on ./hack/verify-codegen.sh
 
 test_go_vet:
 	GO111MODULE=on go vet $(GOOPTS) ./cmd/... ./pkg/...
@@ -100,8 +103,11 @@ clean_java:
 template_clean:
 	$(MAKE) -C templates clean
 
-clean: clean_java docu_clean template_clean
+clean: clean_java clean_go docu_clean template_clean
 	rm -rf build
+
+clean_go:
+	rm -Rf go-bin
 
 coverage: java_coverage
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ coverage

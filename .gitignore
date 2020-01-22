@@ -24,8 +24,8 @@ dependency-reduced-pom.xml
 velocity.log
 velocity.log.*
 
-# Local gopath
-/go/
+# Local go binary directory
+/go-bin/
 
 # Openshift local cluster files
 **/openshift.local.clusterup/
