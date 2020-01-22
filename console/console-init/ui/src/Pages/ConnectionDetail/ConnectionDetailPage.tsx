@@ -90,8 +90,8 @@ export default function ConnectionDetailPage() {
     version: getProductFilteredValue(connection.Spec.Properties, "version"),
     protocol: connection.Spec.Protocol.toUpperCase(),
     encrypted: connection.Spec.Encrypted || false,
-    messagesIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
-    messagesOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
+    messageIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
+    messageOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
     //Change this logic
     platform: jvmObject.jvm,
     os: jvmObject.os,

@@ -26,8 +26,8 @@ export interface IAddress {
   type: string;
   planLabel: string;
   planValue: string;
-  messagesIn: number;
-  messagesOut: number;
+  messageIn: number;
+  messageOut: number;
   storedMessages: number;
   senders: number;
   receivers: number;
@@ -77,8 +77,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
           {
             title: (
               <Messages
-                count={row.messagesIn}
-                column="MessagesIn"
+                count={row.messageIn}
+                column="MessageIn"
                 isReady={row.isReady}
               />
             )
@@ -86,8 +86,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
           {
             title: (
               <Messages
-                count={row.messagesOut}
-                column="MessagesOut"
+                count={row.messageOut}
+                column="MessageOut"
                 isReady={row.isReady}
               />
             )
@@ -127,7 +127,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       title:
         width > 769 ? (
           <span style={{ display: "inline-flex" }}>
-            Messages In
+            Message In
             <br />
             {`(over last 5 min)`}
           </span>
@@ -140,12 +140,12 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       title:
         width > 769 ? (
           <span style={{ display: "inline-flex" }}>
-            Messages Out
+            Message Out
             <br />
             {`(over last 5 min)`}
           </span>
         ) : (
-          "Messages Out"
+          "Message Out"
         ),
       transforms: [sortable]
     },

@@ -93,8 +93,8 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
     { key: "hostname", value: "Hostname", index: 0 },
     { key: "containerId", value: "Container ID", index: 1 },
     { key: "protocol", value: "Protocol", index: 2 },
-    { key: "messageIn", value: "Messages In", index: 3 },
-    { key: "messageOut", value: "Messages Out", index: 4 },
+    { key: "messageIn", value: "Message In", index: 3 },
+    { key: "messageOut", value: "Message Out", index: 4 },
     { key: "sender", value: "Senders", index: 5 },
     { key: "receiver", value: "Receivers", index: 6 }
   ];
