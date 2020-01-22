@@ -92,7 +92,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
               />
             )
           },
-          row.storedMessages,
+          row.type === "multicast" || row.type === "anycast"? "" : row.storedMessages,
           row.senders,
           row.receivers,
           row.shards
