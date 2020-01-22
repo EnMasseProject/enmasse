@@ -14,6 +14,7 @@ import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter"
 import { IConnectionListResponse } from "src/Types/ResponseTypes";
 import { RETURN_ALL_CONECTION_LIST } from "src/Queries/Queries";
 import { ISortBy } from "@patternfly/react-table";
+import { Loading } from "use-patternfly";
 
 export interface IConnectionListPageProps {
   name?: string;
@@ -62,7 +63,6 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
   const { connections } = data || {
     connections: { Total: 0, Connections: [] }
   };
-  
   setTotalConnections(connections.Total);
   const connectionList: IConnection[] = connections.Connections.map(
     connection => ({
@@ -75,7 +75,8 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
       senders: getFilteredValue(connection.Metrics, "enmasse_senders"),
       receivers: getFilteredValue(connection.Metrics, "enmasse_receivers"),
       status: "running",
-      name: connection.ObjectMeta.Name
+      name: connection.ObjectMeta.Name,
+      creationTimestamp:connection.ObjectMeta.CreationTimestamp
     })
   );
 

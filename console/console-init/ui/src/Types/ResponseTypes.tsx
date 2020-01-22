@@ -72,6 +72,7 @@ export interface IConnectionListResponse {
     Connections: Array<{
       ObjectMeta: {
         Name: string;
+        CreationTimestamp: string;
       };
       Spec: {
         Hostname: string;

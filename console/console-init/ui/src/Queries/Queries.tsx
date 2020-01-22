@@ -715,15 +715,18 @@ export const RETURN_ALL_CONECTION_LIST = (
         orderByString = "`$.Spec.Protocol` ";
         break;
       case 3:
+          orderByString = "`$.ObjectMeta.CreationTimestamp` ";
+          break;
+      case 4:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_in')].Value` ";
         break;
-      case 4:
+      case 5:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_out')].Value` ";
         break;
-      case 5:
+      case 6:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_senders')].Value` ";
         break;
-      case 6:
+      case 7:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_receivers')].Value` ";
         break;
     }
@@ -740,6 +743,7 @@ export const RETURN_ALL_CONECTION_LIST = (
       Connections {
         ObjectMeta {
           Name
+          CreationTimestamp
         }
         Spec {
           Hostname

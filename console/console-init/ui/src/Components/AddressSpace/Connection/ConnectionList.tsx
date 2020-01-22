@@ -16,6 +16,7 @@ import {
 import { Link } from "react-router-dom";
 import { ConnectionProtocolFormat } from "../../Common/ConnectionListFormatter";
 import useWindowDimensions from "src/Components/Common/WindowDimension";
+import { FormatDistance } from "use-patternfly";
 
 interface IConnectionListProps {
   rows: IConnection[];
@@ -34,6 +35,7 @@ export interface IConnection {
   receivers: number;
   status: "creating" | "deleting" | "running";
   name: string;
+  creationTimestamp: string;
 }
 
 export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
@@ -57,6 +59,13 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
             />
           )
         },
+        {
+          title: (
+            <>
+              <FormatDistance date={row.creationTimestamp} /> ago
+            </>
+          )
+        },
         row.messagesIn,
         row.messagesOut,
         row.senders,
@@ -70,7 +79,8 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   const tableColumns = [
     { title: "Hostname", dataLabel: "host", transforms: [sortable] },
     { title: "Container ID", transforms: [sortable] },
-    { title: "Protocol", transforms: [sortable] },
+    { title: "Protocol", transforms: [sortable] }, 
+    { title: "Time created", transforms: [sortable] }, 
     {
       title:
         width > 769 ? (
