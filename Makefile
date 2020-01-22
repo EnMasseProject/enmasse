@@ -59,7 +59,7 @@ imageenv:
 imagelist:
 	@echo $(IMAGE_LIST) > imagelist.txt
 
-$(GO_DIRS): $(GOPRJ)
+$(GO_DIRS):
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
 
 ifeq ($(SKIP_TESTS),true)
@@ -69,33 +69,26 @@ test_go: test_go_vet test_go_run
 endif
 
 test_go_vet:
-	cd $(GOPRJ) && GO111MODULE=on go vet -mod=vendor ./cmd/... ./pkg/...
+	GO111MODULE=on go vet -mod=vendor ./cmd/... ./pkg/...
 
 ifeq (,$(GO2XUNIT))
-test_go_run: $(GOPRJ)
-	cd $(GOPRJ) && GO111MODULE=on go test -mod=vendor -v ./...
+test_go_run:
+	GO111MODULE=on go test -mod=vendor -v ./...
 else
-test_go_run: $(GOPRJ)
+test_go_run:
 	mkdir -p build
-	-cd $(GOPRJ) && GO111MODULE=on go test -mod=vendor -v ./... 2>&1 | tee $(abspath build/go.testoutput)
+	GO111MODULE=on go test -mod=vendor -v ./... 2>&1 | tee $(abspath build/go.testoutput)
 	$(GO2XUNIT) -fail -input build/go.testoutput -output build/TEST-go.xml
 endif
 
 coverage_go:
-	cd $(GOPRJ) && GO111MODULE=on go test -mod=vendor -cover ./...
+	GO111MODULE=on go test -mod=vendor -cover ./...
 
 buildpush:
 	$(MAKE)
 	$(MAKE) docker_build
 	$(MAKE) docker_tag
 	$(MAKE) docker_push
-
-$(GOPRJ):
-	mkdir -p $(dir $(GOPRJ))
-	ln -s $(TOPDIR) $(GOPRJ)
-
-clean_go:
-	@rm -Rf $(GOPATH)
 
 clean_java:
 	mvn -B -q clean $(MAVEN_ARGS)
