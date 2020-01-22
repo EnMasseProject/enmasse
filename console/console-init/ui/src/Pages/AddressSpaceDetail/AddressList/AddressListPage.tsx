@@ -88,9 +88,11 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };
+  console.log(data);
   setTotalAddress(addresses.Total);
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
-    name: address.Spec.Address,
+    name: address.ObjectMeta.Name,
+    displayName:address.Spec.Address,
     namespace: address.ObjectMeta.Namespace,
     type: address.Spec.Type,
     planLabel: address.Spec.Plan.Spec.DisplayName,
@@ -218,7 +220,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       )}
       {addressBeingDeleted && (
         <DeletePrompt
-          detail={`Are you sure you want to delete ${addressBeingDeleted.name} ?`}
+          detail={`Are you sure you want to delete ${addressBeingDeleted.displayName} ?`}
           name={addressBeingDeleted.name}
           header="Delete this Address  ?"
           handleCancelDelete={handleCancelDelete}
