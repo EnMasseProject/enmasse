@@ -15,6 +15,7 @@ import (
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/metric"
@@ -24,6 +25,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util"
 	user "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
 	"github.com/vektah/gqlparser/gqlerror"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 	"log"
@@ -43,7 +45,6 @@ TODO:
 
 1) Restrict query results to what the user may see
 2) Mutations
-3) Refactor cachedb index specification to avoid spreading of knowledge of the indices throughout the code
 4) Pass CA to the Go-AMQP client when connecting to agents.
 
 */
@@ -68,6 +69,10 @@ func authHandler(next http.Handler) http.Handler {
 
 		config, err :=  kubeconfig.ClientConfig()
 
+		// KWTOOD
+		config.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
+			return &server.Tracer{RoundTripper: rt}
+		}
 		if err != nil {
 			log.Printf("Failed to build config : %v", err)
 			rw.WriteHeader(500)
@@ -88,10 +93,17 @@ func authHandler(next http.Handler) http.Handler {
 			return
 		}
 
+		kubeClient, err := kubernetes.NewForConfig(config)
+		if err != nil {
+			log.Printf("Failed to build client set : %v", err)
+			rw.WriteHeader(500)
+			return
+		}
 
 		requestState := &server.RequestState{
 			UserInterface: userclientset.Users(),
 			EnmasseV1beta1Client: coreClient,
+			AccessController: accesscontroller.NewKubernetesRBACAccessController(kubeClient),
 		}
 
 		ctx := server.ContextWithRequestState(requestState, req.Context())
@@ -131,7 +143,8 @@ func developmentHandler(next http.Handler) http.Handler {
 
 		requestState := &server.RequestState{
 			UserInterface:        userclientset.Users(),
-			EnmasseV1beta1Client: coreClient}
+			EnmasseV1beta1Client: coreClient,
+			AccessController:     accesscontroller.NewAllowAllAccessController()}
 
 		ctx := server.ContextWithRequestState(requestState, req.Context())
 		next.ServeHTTP(rw, req.WithContext(ctx))

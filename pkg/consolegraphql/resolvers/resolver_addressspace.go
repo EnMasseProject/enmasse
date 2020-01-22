@@ -26,6 +26,9 @@ func (r *Resolver) AddressSpaceSpec_enmasse_io_v1beta1() AddressSpaceSpec_enmass
 }
 
 func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1, error) {
+	requestState := server.GetRequestStateFromContext(ctx)
+	viewFilter := requestState.AccessController.ViewFilter()
+
 	fltrfunc, err := BuildFilter(filter)
 	if err != nil {
 		return nil, err
@@ -36,7 +39,7 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 		return nil, err
 	}
 
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpace/", fltrfunc)
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpace/", cache.And(viewFilter, fltrfunc))
 	if e != nil {
 		return nil, e
 	}

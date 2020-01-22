@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"k8s.io/api/core/v1"
 )
 
@@ -17,7 +18,10 @@ func (r *Resolver) NamespaceStatus_v1() NamespaceStatus_v1Resolver {
 }
 
 func (r *queryResolver) Namespaces(ctx context.Context) ([]*v1.Namespace, error) {
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Namespace/", nil)
+	requestState := server.GetRequestStateFromContext(ctx)
+	viewFilter := requestState.AccessController.ViewFilter()
+
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Namespace/", viewFilter)
 	if e != nil {
 		return nil, e
 	}
