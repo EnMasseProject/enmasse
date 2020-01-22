@@ -90,7 +90,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   };
   setTotalAddress(addresses.Total);
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
-    name: address.ObjectMeta.Name,
+    name: address.Spec.Address,
     namespace: address.ObjectMeta.Namespace,
     type: address.Spec.Type,
     planLabel: address.Spec.Plan.Spec.DisplayName,

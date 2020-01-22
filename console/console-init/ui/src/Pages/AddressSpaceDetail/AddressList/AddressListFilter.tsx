@@ -155,7 +155,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
       } else {
         const obtainedList = response.data.addresses.Addresses.map(
           (address: any) => {
-            return address.ObjectMeta.Name;
+            return address.Spec.Address;
           }
         );
         setNameOptions(obtainedList);
