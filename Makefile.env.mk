@@ -12,11 +12,6 @@ APP_BUNDLE_PREFIX   ?= $(shell grep "application.bundle.prefix" $(TOPDIR)/pom.pr
 OLM_PACKAGE_CHANNEL ?= $(shell grep "olm.package.channel" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 TAG                 ?= latest
 
-# Go settings
-GOPATH          := $(abspath $(TOPDIR))/go
-GOPRJ           := $(GOPATH)/src/github.com/enmasseproject/enmasse
-export GOPATH
-
 # Image settings
 DOCKER_REGISTRY_PREFIX ?= $(DOCKER_REGISTRY)/
 IMAGE_VERSION          ?= $(TAG)
