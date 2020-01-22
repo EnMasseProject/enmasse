@@ -23,8 +23,8 @@ export const connectionHeader = () => (
       encrypted={boolean("Encrypted", false)}
       platform={text("platform", "0.8.0_152.25.125.b16, Oracle Corporation")}
       os={text("os", "Mac OS X 10.13.6,x86_64")}
-      messagesIn={number("messagesIn", 0)}
-      messagesOut={number("messagesOut", 0)}
+      messageIn={number("messageIn", 0)}
+      messageOut={number("messageOut", 0)}
     />
   </MemoryRouter>
 );
