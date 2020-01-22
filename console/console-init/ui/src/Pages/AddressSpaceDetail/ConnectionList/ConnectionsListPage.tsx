@@ -14,7 +14,6 @@ import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter"
 import { IConnectionListResponse } from "src/Types/ResponseTypes";
 import { RETURN_ALL_CONECTION_LIST } from "src/Queries/Queries";
 import { ISortBy } from "@patternfly/react-table";
-import { Loading } from "use-patternfly";
 
 export interface IConnectionListPageProps {
   name?: string;

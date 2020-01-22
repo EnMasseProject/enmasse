@@ -18,6 +18,7 @@ import { MessagesDetail } from "./MessagesDetail";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { ConnectionProtocolFormat } from "../Common/ConnectionListFormatter";
 import useWindowDimensions from "../Common/WindowDimension";
+import { FormatDistance } from "use-patternfly";
 const styles = StyleSheet.create({
   expandable: {
     color: "rgb(0, 102, 204)"
@@ -33,6 +34,7 @@ export interface IConnectionHeaderDetailProps {
   containerId: string;
   protocol: string;
   encrypted: boolean;
+  creationTimestamp: string;
   product?: string;
   version?: string;
   platform?: string;
@@ -45,6 +47,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
   containerId,
   protocol,
   encrypted,
+  creationTimestamp,
   product,
   version,
   platform,
@@ -65,15 +68,20 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
         <Flex>
           <FlexItem
             id="cd-header-container-id"
-            className={css(styles.flex_right_border)}
-          >
+            className={css(styles.flex_right_border)}>
             in container <b>{containerId}</b>
           </FlexItem>
-          <FlexItem id="cd-header-protocol">
+          <FlexItem
+            id="cd-header-protocol"
+            className={css(styles.flex_right_border)}>
             <ConnectionProtocolFormat
               protocol={protocol}
               encrypted={encrypted}
             />
+          </FlexItem>
+          <FlexItem id="cd-header-protocol">
+            {console.log(creationTimestamp)}
+            <FormatDistance date={creationTimestamp} /> ago
           </FlexItem>
           {width > 992 && (
             <FlexItem
@@ -81,8 +89,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
               onClick={() => {
                 setIsHidden(!isHidden);
               }}
-              className={css(styles.expandable)}
-            >
+              className={css(styles.expandable)}>
               {isHidden ? (
                 <>
                   See more details <AngleDownIcon color="black" />
@@ -101,8 +108,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
           breakpointMods={[
             { modifier: "column", breakpoint: "sm" },
             { modifier: "row", breakpoint: "lg" }
-          ]}
-        >
+          ]}>
           {width < 992 || !isHidden ? (
             <>
               <ConnectionDetail

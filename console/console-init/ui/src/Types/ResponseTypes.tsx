@@ -17,7 +17,7 @@ export interface IConnectionDetailResponse {
       ObjectMeta: {
         Name: string;
         Namespace: string;
-        CreationTimeStamp: string;
+        CreationTimestamp: string;
       };
       Spec: {
         Hostname: string;
