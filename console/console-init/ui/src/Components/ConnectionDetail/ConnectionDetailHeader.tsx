@@ -37,8 +37,8 @@ export interface IConnectionHeaderDetailProps {
   version?: string;
   platform?: string;
   os?: string;
-  messagesIn?: number;
-  messagesOut?: number;
+  messageIn?: number;
+  messageOut?: number;
 }
 export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDetailProps> = ({
   hostname,
@@ -49,8 +49,8 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
   version,
   platform,
   os,
-  messagesIn,
-  messagesOut
+  messageIn,
+  messageOut
 }) => {
   const [isHidden, setIsHidden] = React.useState(true);
   const { width } = useWindowDimensions();
@@ -113,8 +113,8 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
                 isMobileView={width < 992 ? true : false}
               />
               <MessagesDetail
-                messagesIn={messagesIn}
-                messagesOut={messagesOut}
+                messageIn={messageIn}
+                messageOut={messageOut}
                 isMobileView={width < 992 ? true : false}
               />
             </>
