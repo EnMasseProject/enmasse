@@ -492,7 +492,7 @@ objects:
       infraType: standard
       infraUuid: ${INFRA_UUID}
       component: agent
-    name: console-${INFRA_UUID}
+    name: agent-${INFRA_UUID}
   spec:
     ports:
     - name: amqps

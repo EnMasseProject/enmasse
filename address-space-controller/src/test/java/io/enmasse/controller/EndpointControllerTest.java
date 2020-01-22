@@ -4,23 +4,20 @@
  */
 package io.enmasse.controller;
 
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 
+import io.enmasse.address.model.*;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.EndpointSpecBuilder;
-import io.enmasse.address.model.ExposeSpecBuilder;
-import io.enmasse.address.model.ExposeType;
-import io.enmasse.address.model.TlsTermination;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.util.JULInitializingTest;
@@ -208,5 +205,199 @@ public class EndpointControllerTest extends JULInitializingTest {
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getExternalPorts().size(), is(1));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getExternalPorts().get("amqps"), is(443));
         assertThat(newspace.getStatus().getEndpointStatuses().get(0).getExternalHost(), is("host1.example.com"));
+    }
+
+    @Test
+    public void testConsoleEndpointResourcesRemoved_Route() throws Exception {
+
+        String serviceName = "console-1234";
+        String secretName = "consolesecret";
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("mynamespace")
+                .addToAnnotations(AnnotationKeys.INFRA_UUID, "1234")
+                .endMetadata()
+
+                .withNewSpec()
+                .addToEndpoints(new EndpointSpecBuilder()
+                        .withName("console")
+                        .withService("console")
+                        .withNewCert("selfsigned", secretName, null, null)
+                        .withExpose(new ExposeSpecBuilder()
+                                .withType(ExposeType.route)
+                                .build())
+                        .build())
+
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
+                .build();
+
+        Service service = new ServiceBuilder()
+                .editOrNewMetadata()
+                .withName(serviceName)
+                .addToLabels(LabelKeys.INFRA_UUID, "1234")
+                .endMetadata()
+                .editOrNewSpec()
+                .addNewPort()
+                .withName("https")
+                .withPort(1234)
+                .withNewTargetPort("https")
+                .endPort()
+                .addToSelector("component", "router")
+                .endSpec()
+                .build();
+        client.services().create(service);
+
+        Secret secret = new SecretBuilder()
+                .editOrNewMetadata()
+                .withName(secretName)
+                .addToLabels(LabelKeys.INFRA_UUID, "1234")
+                .endMetadata()
+                .build();
+        client.secrets().create(secret);
+
+
+        // Problem with adapting the client prevents testing this path
+//        Route route = new RouteBuilder()
+//                .editOrNewMetadata()
+//                .withName(serviceName)
+//                .addToLabels(LabelKeys.INFRA_UUID, "1234")
+//                .endMetadata()
+//                .build();
+//        client.adapt(OpenShiftClient.class).routes().create(route);
+
+        EndpointController controller = new EndpointController(client, false, false);
+
+        AddressSpace newspace = controller.reconcileAnyState(addressSpace);
+
+        assertThat(newspace.getSpec().getEndpoints().size(), is(0));
+
+        assertThat(client.services().withName(serviceName).get(), nullValue());
+        assertThat(client.secrets().withName(secretName).get(), nullValue());
+    }
+
+    @Test
+    public void testConsoleEndpointResourcesRemoved_Loadbalance() throws Exception {
+
+        String serviceName = "console-1234";
+        String externalServiceName = serviceName + "-external";
+        String secretName = "consolesecret";
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("mynamespace")
+                .addToAnnotations(AnnotationKeys.INFRA_UUID, "1234")
+                .endMetadata()
+
+                .withNewSpec()
+                .addToEndpoints(new EndpointSpecBuilder()
+                        .withName("console")
+                        .withService("console")
+                        .withNewCert("selfsigned", secretName, null, null)
+                        .withExpose(new ExposeSpecBuilder()
+                                .withType(ExposeType.loadbalancer)
+                                .build())
+                        .build())
+
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
+                .build();
+
+        Service service = new ServiceBuilder()
+                .editOrNewMetadata()
+                .withName(serviceName)
+                .addToLabels(LabelKeys.INFRA_UUID, "1234")
+                .endMetadata()
+                .editOrNewSpec()
+                .addNewPort()
+                .withName("https")
+                .withPort(1234)
+                .withNewTargetPort("https")
+                .endPort()
+                .addToSelector("component", "router")
+                .endSpec()
+                .build();
+        Service extService = new ServiceBuilder()
+                .editOrNewMetadata()
+                .withName(externalServiceName)
+                .addToLabels(LabelKeys.INFRA_UUID, "1234")
+                .endMetadata()
+                .editOrNewSpec()
+                .addNewPort()
+                .withName("https")
+                .withPort(1234)
+                .withNewTargetPort("https")
+                .endPort()
+                .addToSelector("component", "router")
+                .endSpec()
+                .build();
+        client.services().create(service);
+        client.services().create(extService);
+
+        Secret secret = new SecretBuilder()
+                .editOrNewMetadata()
+                .withName(secretName)
+                .addToLabels(LabelKeys.INFRA_UUID, "1234")
+                .endMetadata()
+                .build();
+        client.secrets().create(secret);
+
+        EndpointController controller = new EndpointController(client, false, false);
+
+        AddressSpace newspace = controller.reconcileAnyState(addressSpace);
+
+        assertThat(newspace.getSpec().getEndpoints().size(), is(0));
+
+        assertThat(client.secrets().withName(secretName).get(), nullValue());
+        assertThat(client.services().withName(serviceName).get(), nullValue());
+        assertThat(client.services().withName(externalServiceName).get(), nullValue());
+    }
+
+    @Test
+    public void testConsoleEndpointRemoved_UserSecretSurvives() throws Exception {
+        String myCustomisedSecret = "consolesecret";
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("mynamespace")
+                .addToAnnotations(AnnotationKeys.INFRA_UUID, "1234")
+                .endMetadata()
+
+                .withNewSpec()
+                .addToEndpoints(new EndpointSpecBuilder()
+                        .withName("console")
+                        .withService("console")
+                        .withNewCert("selfsigned", myCustomisedSecret, null, null)
+                        .build())
+
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
+                .build();
+
+        // Secret does not belong to infra (missing annotation)
+        Secret secret = new SecretBuilder()
+                .editOrNewMetadata()
+                .withName(myCustomisedSecret)
+                .endMetadata()
+                .build();
+        client.secrets().create(secret);
+
+        EndpointController controller = new EndpointController(client, false, false);
+
+        AddressSpace newspace = controller.reconcileAnyState(addressSpace);
+
+        assertThat(newspace.getSpec().getEndpoints().size(), is(0));
+
+        assertThat(client.secrets().withName(myCustomisedSecret).get(), notNullValue());
     }
 }
