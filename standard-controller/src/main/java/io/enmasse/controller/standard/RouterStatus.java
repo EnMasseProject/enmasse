@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018, EnMasse authors.
+ * Copyright 2016-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.controller.standard;
@@ -40,29 +40,42 @@ class RouterStatus {
     }
 
     public int checkAddress(Address address) {
+
         int ok = 0;
-        boolean found = addresses.contains(address.getSpec().getAddress());
+        final String addressName = address.getSpec().getAddress();
+
+        boolean found = this.addresses.contains(addressName);
         if (!found) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " not found on " + routerId);
+            var msg = "Address " + addressName + " not found on " + this.routerId;
+            log.debug(msg);
+            address.getStatus().setReady(false).appendMessage(msg);
         } else {
             ok++;
+            log.debug("Address found for '{}'", addressName);
         }
+
         return ok;
     }
 
     public int checkAutoLinks(Address address) {
 
         int ok = 0;
+        final String addressName = address.getSpec().getAddress();
+
         for (List<String> autoLink : autoLinks) {
             String addr = autoLink.get(0);
 
-            if (addr.equals(address.getSpec().getAddress())) {
+            if (addr.equals(addressName)) {
                 ok++;
             }
         }
 
         if (ok < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " is missing autoLinks on " + routerId);
+            var msg = "Address " + addressName + " is missing autoLinks on " + routerId;
+            log.debug(msg);
+            address.getStatus().setReady(false).appendMessage(msg);
+        } else {
+            log.debug("Address {} has all required auto links: {}", addressName);
         }
 
         return ok;
@@ -70,20 +83,25 @@ class RouterStatus {
 
     public int checkLinkRoutes(Address address) {
         int ok = 0;
+        final String addressName = address.getSpec().getAddress();
 
         for (List<String> linkRoute : linkRoutes) {
             if (linkRoute.size() > 0) {
                 String prefix = linkRoute.get(0);
 
                 // Pooled topics have active link routes
-                if (prefix.equals(address.getSpec().getAddress())) {
+                if (prefix.equals(addressName)) {
                     ok++;
                 }
             }
         }
 
         if (ok < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " is missing linkRoutes on " + routerId);
+            var msg = "Address " + addressName + " is missing linkRoutes on " + this.routerId;
+            log.debug(msg);
+            address.getStatus().setReady(false).appendMessage(msg);
+        } else {
+            log.debug("Address {} has all required link routes: {}", addressName);
         }
 
         return ok;
@@ -93,8 +111,6 @@ class RouterStatus {
         int ok = 0;
         final Set<String> active = new HashSet<>();
         final String addressName = address.getSpec().getAddress();
-
-        log.debug("Address: {}", addressName);
 
         for (RouterStatus routerStatus : routerStatusList) {
 
@@ -118,7 +134,7 @@ class RouterStatus {
 
         if (active.size() < 2) {
             var msg = "Address " + addressName + " is missing active autoLink (active in dirs: " + active + ")";
-            log.info(msg);
+            log.debug(msg);
             address.getStatus().setReady(false).appendMessage(msg);
         } else {
             log.debug("Address {} has all required auto links: {}", addressName, active);
@@ -130,6 +146,7 @@ class RouterStatus {
     public static int checkActiveLinkRoute(Address address, List<RouterStatus> routerStatusList) {
         int ok = 0;
         Set<String> active = new HashSet<>();
+        final String addressName = address.getSpec().getAddress();
 
         for (RouterStatus routerStatus : routerStatusList) {
 
@@ -141,7 +158,7 @@ class RouterStatus {
                     String dir = linkRoute.get(2);
                     String operStatus = linkRoute.get(3);
 
-                    if (addr.equals(address.getSpec().getAddress()) && operStatus.equals("active")) {
+                    if (addr.equals(addressName) && operStatus.equals("active")) {
                         active.add(dir);
                     }
                 }
@@ -149,8 +166,11 @@ class RouterStatus {
         }
 
         if (active.size() < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " is missing active linkRoute (active in dirs: " + active + ")");
+            var msg = "Address " + addressName + " is missing active linkRoute (active in dirs: " + active + ")";
+            log.debug(msg);
+            address.getStatus().setReady(false).appendMessage(msg);
         } else {
+            log.debug("Address {} has all required link routes: {}", addressName, active);
             ok++;
         }
         return ok;
@@ -174,8 +194,13 @@ class RouterStatus {
             }
         }
 
+        final String addressName = address.getSpec().getAddress();
         if (ok == 0) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " is missing connection from broker");
+            var msg = "Address " + addressName + " is missing connection from broker";
+            log.debug(msg);
+            address.getStatus().setReady(false).appendMessage(msg);
+        } else {
+            log.debug("Address {} has all required connections", addressName);
         }
         return ok;
     }
@@ -184,6 +209,8 @@ class RouterStatus {
         if (address.getSpec().getForwarders() == null || address.getSpec().getForwarders().isEmpty()) {
             return 0;
         }
+
+        final String addressName = address.getSpec().getAddress();
 
         int ok = 0;
         for (AddressSpecForwarder forwarder : address.getSpec().getForwarders()) {
@@ -204,20 +231,23 @@ class RouterStatus {
                 }
             }
 
+            final String forwarderName = forwarder.getName();
             if (!found) {
-                updateForwarderStatus(forwarder.getName(), false, "Unable to find link for forwarder '" + forwarder.getName() + "'", address.getStatus().getForwarders());
+                updateForwarderStatus(addressName, forwarderName, false, "Unable to find link for forwarder '" + forwarderName + "'", address.getStatus().getForwarders());
             } else if (!isUp) {
-                updateForwarderStatus(forwarder.getName(), false, "Unable to find link in the up state for forwarder '" + forwarder.getName() + "'", address.getStatus().getForwarders());
+                updateForwarderStatus(addressName, forwarderName, false, "Unable to find link in the up state for forwarder '" + forwarderName + "'", address.getStatus().getForwarders());
             } else {
                 ok++;
+                log.debug("Forwarder {} for address {} is ok", forwarder.getName(), address.getSpec().getAddress());
             }
         }
         return ok;
     }
 
-    private static void updateForwarderStatus(String name, boolean isReady, String message, List<AddressStatusForwarder> forwarderStatuses) {
+    private static void updateForwarderStatus(String addressName, String forwarderName, boolean isReady, String message, List<AddressStatusForwarder> forwarderStatuses) {
+        log.debug("Address: {} - {}", addressName, message);
         forwarderStatuses.stream()
-                .filter(c -> c.getName().equals(name))
+                .filter(c -> c.getName().equals(forwarderName))
                 .findFirst().ifPresent(s -> {
             s.setReady(isReady);
             s.appendMessage(message);

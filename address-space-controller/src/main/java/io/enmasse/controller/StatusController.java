@@ -73,7 +73,7 @@ public class StatusController implements Controller {
 
             if (spec.equals(appliedConfig.getAddressSpaceSpec())) {
                 addressSpace.getStatus().setPhase(Phase.Active);
-            } else if ( log.isDebugEnabled() ){
+            } else if (log.isDebugEnabled()) {
                 log.debug("Applied config does not match requested\nApplied  : {}\nRequested: {}", appliedConfig.getAddressSpaceSpec(), spec);
             }
         } else {
@@ -87,9 +87,12 @@ public class StatusController implements Controller {
     private void checkExposedEndpoints(AddressSpace addressSpace) {
         Map<String, EndpointSpec> exposedEndpoints = new HashMap<>();
 
-        if (addressSpace.getSpec() != null && addressSpace.getSpec().getEndpoints() != null ) {
+        if (addressSpace.getSpec() != null && addressSpace.getSpec().getEndpoints() != null) {
             for (EndpointSpec endpointSpec : addressSpace.getSpec().getEndpoints()) {
-                if (endpointSpec != null && endpointSpec.getExpose() != null && endpointSpec.getExpose().getType() != null && endpointSpec.getExpose().getType().equals(ExposeType.route)) {
+                if (endpointSpec != null
+                        && endpointSpec.getExpose() != null
+                        && endpointSpec.getExpose().getType() != null
+                        && endpointSpec.getExpose().getType().equals(ExposeType.route)) {
                     exposedEndpoints.put(endpointSpec.getName(), endpointSpec);
                 }
             }
