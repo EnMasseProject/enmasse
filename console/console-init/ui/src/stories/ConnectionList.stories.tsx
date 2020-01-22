@@ -26,7 +26,8 @@ const rows: IConnection[] = [
     senders: 123,
     receivers: 123,
     status: "running",
-    name: "juno2"
+    name: "juno2",
+    creationTimestamp:"2020-01-20T11:44:28.607Z"
   },
   {
     hostname: "foo",
@@ -38,7 +39,8 @@ const rows: IConnection[] = [
     senders: 123,
     receivers: 123,
     status: "running",
-    name: "juno3"
+    name: "juno3",
+    creationTimestamp:"2020-01-20T11:44:28.607Z"
   },
   {
     hostname: "foo",
@@ -50,7 +52,8 @@ const rows: IConnection[] = [
     senders: 123,
     receivers: 123,
     status: "running",
-    name: "juno4"
+    name: "juno4",
+    creationTimestamp:"2020-01-20T11:44:28.607Z"
   }
 ];
 

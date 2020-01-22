@@ -90,6 +90,7 @@ export default function ConnectionDetailPage() {
     version: getProductFilteredValue(connection.Spec.Properties, "version"),
     protocol: connection.Spec.Protocol.toUpperCase(),
     encrypted: connection.Spec.Encrypted || false,
+    creationTimestamp:connection.ObjectMeta.CreationTimestamp,
     messageIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
     messageOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
     //Change this logic
