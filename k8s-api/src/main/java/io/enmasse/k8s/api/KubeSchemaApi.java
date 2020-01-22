@@ -200,8 +200,7 @@ public class KubeSchemaApi implements SchemaApi {
         builder.withAvailableEndpoints(Arrays.asList(
                 createEndpointSpec("messaging", "messaging", "amqps", TlsTermination.passthrough),
                 createEndpointSpec("messaging-wss", "messaging", "https", TlsTermination.reencrypt),
-                createEndpointSpec("mqtt", "mqtt", "secure-mqtt", TlsTermination.passthrough),
-                createEndpointSpec("console", "console", "https", TlsTermination.reencrypt)));
+                createEndpointSpec("mqtt", "mqtt", "secure-mqtt", TlsTermination.passthrough)));
 
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
                 .filter(plan -> "standard".equals(plan.getAddressSpaceType()))
@@ -253,8 +252,7 @@ public class KubeSchemaApi implements SchemaApi {
 
         builder.withAvailableEndpoints(Arrays.asList(
                 createEndpointSpec("messaging", "messaging", "amqps", TlsTermination.passthrough),
-                createEndpointSpec("messaging-wss", "messaging", "amqps", TlsTermination.reencrypt),
-                createEndpointSpec("console", "console", "https", TlsTermination.reencrypt)));
+                createEndpointSpec("messaging-wss", "messaging", "amqps", TlsTermination.reencrypt)));
 
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
                 .filter(plan -> "brokered".equals(plan.getAddressSpaceType()))

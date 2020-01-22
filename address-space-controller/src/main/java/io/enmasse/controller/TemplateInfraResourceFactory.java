@@ -43,11 +43,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                                    AuthenticationServiceSettings authServiceSettings,
                                    Map<String, String> parameters) {
 
-        Optional<ConsoleService> console = schemaProvider.getSchema().findConsoleService(WELL_KNOWN_CONSOLE_SERVICE_NAME);
-        if (console.isEmpty()) {
-            log.warn("No ConsoleService found named '{}', address space console service will be unavailable", WELL_KNOWN_CONSOLE_SERVICE_NAME);
-        }
-
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         parameters.put(TemplateParameter.INFRA_NAMESPACE, kubernetes.getNamespace());
         parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getMetadata().getName());
@@ -83,31 +78,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             }
         }
         parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertMapping.get("messaging").getSecretName());
-        parameters.put(TemplateParameter.CONSOLE_SECRET, serviceCertMapping.get("console").getSecretName());
-
-        if (console.isPresent()) {
-            ConsoleService consoleService = console.get();
-            ConsoleServiceSpec spec = consoleService.getSpec();
-
-            parameters.put(TemplateParameter.CONSOLE_OAUTH_DISCOVERY_URL, spec.getDiscoveryMetadataURL());
-            parameters.put(TemplateParameter.CONSOLE_OAUTH_SCOPE, spec.getScope());
-
-            SecretReference oauthClientSecret = spec.getOauthClientSecret();
-            if (oauthClientSecret != null) {
-                parameters.put(TemplateParameter.CONSOLE_OAUTH_SECRET_SECRET_NAME, oauthClientSecret.getName());
-            }
-
-            SecretReference cookieSecret = spec.getSsoCookieSecret();
-            if (cookieSecret != null) {
-                parameters.put(TemplateParameter.CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME, cookieSecret.getName());
-            }
-
-            ConsoleServiceStatus status = consoleService.getStatus();
-            if (status != null && status.getUrl() != null) {
-                parameters.put(TemplateParameter.CONSOLE_LINK, status.getUrl());
-            }
-
-        }
     }
 
     private void prepareMqttParameters(AddressSpace addressSpace, Map<String, String> parameters) {

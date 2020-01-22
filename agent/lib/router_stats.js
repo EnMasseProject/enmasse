@@ -304,7 +304,6 @@ RouterStats.prototype.close = function () {
 RouterStats.prototype.retrieve = function (addresses, connection_registry) {
     return this._retrieve().then(function (results) {
         if (results) {
-            log.warn("KWDEBUG connections:  %j", results.connections)
             connection_registry.set(results.connections);
             for (var a in results.addresses) {
                 var i = a.indexOf('::');

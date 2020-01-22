@@ -339,9 +339,6 @@ objects:
           - mountPath: /opt/agent/authservice-ca
             name: authservice-ca
             readOnly: true
-          - mountPath: /etc/console-certs
-            name: console-external-cert
-            readOnly: true
           - mountPath: /etc/enmasse-certs
             name: agent-internal-cert
             readOnly: true
@@ -353,9 +350,6 @@ objects:
         - name: authservice-ca
           secret:
             secretName: authservice-ca.${INFRA_UUID}
-        - name: console-external-cert
-          secret:
-            secretName: ${CONSOLE_SECRET}
         - name: agent-internal-cert
           secret:
             secretName: agent-internal-cert.${INFRA_UUID}
@@ -375,7 +369,7 @@ objects:
       infraType: brokered
       infraUuid: ${INFRA_UUID}
       component: agent
-    name: console-${INFRA_UUID}
+    name: agent-${INFRA_UUID}
   spec:
     ports:
     - name: amqps
@@ -409,9 +403,6 @@ parameters:
   required: true
 - description: Certificate to be used for public messaging service
   name: MESSAGING_SECRET
-  required: true
-- description: Certificate to be used for public console service
-  name: CONSOLE_SECRET
   required: true
 - description: The hostname of the authentication service used by this address space
   name: AUTHENTICATION_SERVICE_HOST
