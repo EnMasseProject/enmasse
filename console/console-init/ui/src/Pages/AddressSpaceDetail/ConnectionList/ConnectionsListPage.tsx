@@ -52,7 +52,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
       namespace,
       sortBy
     ),
-    { pollInterval: 20000 }
+    { pollInterval: 2000 }
   );
 
   if (error) {
@@ -69,8 +69,8 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
       containerId: connection.Spec.ContainerId,
       protocol: connection.Spec.Protocol,
       encrypted: connection.Spec.Encrypted,
-      messagesIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
-      messagesOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
+      messageIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
+      messageOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
       senders: getFilteredValue(connection.Metrics, "enmasse_senders"),
       receivers: getFilteredValue(connection.Metrics, "enmasse_receivers"),
       status: "running",

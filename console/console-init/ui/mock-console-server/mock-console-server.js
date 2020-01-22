@@ -1351,9 +1351,13 @@ const mocks = {
   Float: () => 22.1,
   String: () => undefined,
   User_v1: () => ({
-    Identities: ['fred'],
-    Groups: ['admin']
-  }),
+    ObjectMeta: {
+      Name: "vtereshkova"
+    },
+    Identities: ["vtereshkova"],
+    FullName: "Valentina Tereshkova",
+    Groups: ["admin"]
+  })
 };
 
 

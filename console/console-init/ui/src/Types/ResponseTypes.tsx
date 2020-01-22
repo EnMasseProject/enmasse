@@ -289,8 +289,8 @@ export interface IAddressListNameSearchResponse {
   addresses: {
     Total: number;
     Addresses: Array<{
-      ObjectMeta: {
-        Name: string;
+      Spec: {
+        Address: string;
       };
     }>;
   };

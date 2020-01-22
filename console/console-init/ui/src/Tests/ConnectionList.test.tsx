@@ -20,8 +20,8 @@ describe("Connection List", () => {
         hostname: "foo1",
         containerId: "123",
         protocol: "AMQP",
-        messagesIn: 1,
-        messagesOut: 2,
+        messageIn: 1,
+        messageOut: 2,
         senders: 3,
         receivers: 4,
         status: "running",
@@ -33,8 +33,8 @@ describe("Connection List", () => {
         hostname: "foo2",
         containerId: "1234",
         protocol: "AMQ",
-        messagesIn: 12,
-        messagesOut: 5,
+        messageIn: 12,
+        messageOut: 5,
         senders: 6,
         receivers: 7,
         status: "running",
@@ -52,7 +52,7 @@ describe("Connection List", () => {
     const hostnameNodeOne = getByText(connections[0].hostname);
     const containerIdOne = getByText(connections[0].containerId);
     const protocolNodeOne = getByText(connections[0].protocol);
-    const messagesInNodeOne = getByText(connections[0].messagesIn.toString());
+    const messagesInNodeOne = getByText(connections[0].messageIn.toString());
 
     expect(hostnameNodeOne).toBeDefined();
     expect(containerIdOne).toBeDefined();
@@ -63,7 +63,7 @@ describe("Connection List", () => {
     const hostnameNodeTwo = getByText(connections[1].hostname);
     const containerIdTwo = getByText(connections[1].containerId);
     const protocolNodeTwo = getByText(connections[1].protocol);
-    const messagesInNodeTwo = getByText(connections[1].messagesIn.toString());
+    const messagesInNodeTwo = getByText(connections[1].messageIn.toString());
 
     expect(hostnameNodeTwo).toBeDefined();
     expect(containerIdTwo).toBeDefined();

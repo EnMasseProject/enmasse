@@ -81,29 +81,31 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       statusValue,
       sortBy
     ),
-    { pollInterval: 20000, fetchPolicy: "network-only" }
+    { pollInterval: 2000, fetchPolicy: "network-only" }
   );
   if (loading) return <Loading />;
   if (error) return <Loading />;
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };
+  console.log(data);
   setTotalAddress(addresses.Total);
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
     name: address.ObjectMeta.Name,
+    displayName:address.Spec.Address,
     namespace: address.ObjectMeta.Namespace,
     type: address.Spec.Type,
     planLabel: address.Spec.Plan.Spec.DisplayName,
     planValue: address.Spec.Plan.ObjectMeta.Name,
-    messagesIn: getFilteredValue(address.Metrics, "enmasse_messages_in"),
-    messagesOut: getFilteredValue(address.Metrics, "enmasse_messages_out"),
+    messageIn: getFilteredValue(address.Metrics, "enmasse_messages_in"),
+    messageOut: getFilteredValue(address.Metrics, "enmasse_messages_out"),
     storedMessages: getFilteredValue(
       address.Metrics,
       "enmasse_messages_stored"
     ),
     senders: getFilteredValue(address.Metrics, "enmasse_senders"),
     receivers: getFilteredValue(address.Metrics, "enmasse_receivers"),
-    shards: address.Status.PlanStatus.Partitions,
+    partitions: address.Status.PlanStatus.Partitions,
     isReady: address.Status.IsReady,
     status: address.Status.Phase,
     errorMessages: address.Status.Messages
@@ -218,7 +220,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       )}
       {addressBeingDeleted && (
         <DeletePrompt
-          detail={`Are you sure you want to delete ${addressBeingDeleted.name} ?`}
+          detail={`Are you sure you want to delete ${addressBeingDeleted.displayName} ?`}
           name={addressBeingDeleted.name}
           header="Delete this Address  ?"
           handleCancelDelete={handleCancelDelete}

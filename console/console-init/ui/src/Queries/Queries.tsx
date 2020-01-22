@@ -162,25 +162,25 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
   if (filterNames && filterNames.length > 0) {
     if (filterNames.length > 1) {
       if(filterNames[0].isExact)
-        filterString += "(`$.ObjectMeta.Name` = '" + filterNames[0].value.trim() + "'";
+        filterString += "(`$.Spec.Address` = '" + filterNames[0].value.trim() + "'";
       else
-        filterString += "(`$.ObjectMeta.Name` LIKE '" + filterNames[0].value.trim() + "%' ";
+        filterString += "(`$.Spec.Address` LIKE '" + filterNames[0].value.trim() + "%' ";
       for (let i = 1; i < filterNames.length; i++) {
         if(filterNames[i].isExact){
           filterString +=
-            "OR `$.ObjectMeta.Name` = '" + filterNames[i].value.trim() + "'";
+            "OR `$.Spec.Address` = '" + filterNames[i].value.trim() + "'";
         }
         else{
           filterString +=
-            "OR `$.ObjectMeta.Name` LIKE '" + filterNames[i].value.trim() + "%' ";
+            "OR `$.Spec.Address` LIKE '" + filterNames[i].value.trim() + "%' ";
         }   
       }
       filterString += ")";
     } else {
         if(filterNames[0].isExact)
-          filterString += "`$.ObjectMeta.Name` = '" + filterNames[0].value.trim() + "'";
+          filterString += "`$.Spec.Address` = '" + filterNames[0].value.trim() + "'";
         else
-          filterString += "`$.ObjectMeta.Name` LIKE '" + filterNames[0].value.trim() + "%' ";
+          filterString += "`$.Spec.Address` LIKE '" + filterNames[0].value.trim() + "%' ";
     }
   }
   if (filterNames && filterNames.length > 0 && (typeValue || statusValue)) {
@@ -1230,7 +1230,7 @@ export const RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
   }
   if (name && name.trim() != "") {
     filterString += " AND ";
-    filterString += "`$.ObjectMeta.Name` LIKE '" + name.trim() + "%' ";
+    filterString += "`$.Spec.Address` LIKE '" + name.trim() + "%' ";
   }
   const ALL_ADDRESS_FOR_ADDRESS_SPACE = gql`
   query all_addresses_for_addressspace_view {
@@ -1239,8 +1239,8 @@ export const RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
     ) {
       Total
       Addresses {
-        ObjectMeta {
-          Name
+        Spec{
+          Address
         }
       }
     }

@@ -12,7 +12,7 @@ describe("Messages", () => {
     // Arrange
     const props = {
       count: 9,
-      column: "MessagesIn",
+      column: "MessageIn",
       isReady: true
     };
 
@@ -25,7 +25,7 @@ describe("Messages", () => {
   test("it renders the icon", () => {
     const props = {
       count: 9,
-      column: "MessagesIn",
+      column: "MessageIn",
       isReady: true
     };
 

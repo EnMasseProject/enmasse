@@ -22,16 +22,17 @@ import useWindowDimensions from "src/Components/Common/WindowDimension";
 
 export interface IAddress {
   name: string;
+  displayName:string;
   namespace: string;
   type: string;
   planLabel: string;
   planValue: string;
-  messagesIn: number;
-  messagesOut: number;
+  messageIn: number;
+  messageOut: number;
   storedMessages: number;
   senders: number;
   receivers: number;
-  shards: number;
+  partitions: number;
   isReady: boolean;
   errorMessages?: string[];
   status?: string;
@@ -72,13 +73,13 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     if (row.isReady) {
       const tableRow: IRowData = {
         cells: [
-          { title: <Link to={`addresses/${row.name}`}>{row.name}</Link> },
+          { title: <Link to={`addresses/${row.name}`}>{row.displayName}</Link> },
           { title: <TypePlan type={row.type} plan={row.planLabel} /> },
           {
             title: (
               <Messages
-                count={row.messagesIn}
-                column="MessagesIn"
+                count={row.messageIn}
+                column="MessageIn"
                 isReady={row.isReady}
               />
             )
@@ -86,16 +87,16 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
           {
             title: (
               <Messages
-                count={row.messagesOut}
-                column="MessagesOut"
+                count={row.messageOut}
+                column="MessageOut"
                 isReady={row.isReady}
               />
             )
           },
-          row.storedMessages,
+          row.type === "multicast" || row.type === "anycast"? "" : row.storedMessages,
           row.senders,
           row.receivers,
-          row.shards
+          row.type == "queue" ? row.partitions : ""
         ],
         originalData: row
       };
@@ -103,7 +104,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     } else {
       const tableRow: IRowData = {
         cells: [
-          { title: <Link to={`addresses/${row.name}`}>{row.name}</Link> },
+          { title: <Link to={`addresses/${row.name}`}>{row.displayName}</Link> },
           { title: <TypePlan type={row.type} plan={row.planLabel} /> },
           {
             title: row.errorMessages ? (
@@ -127,7 +128,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       title:
         width > 769 ? (
           <span style={{ display: "inline-flex" }}>
-            Messages In
+            Message In
             <br />
             {`(over last 5 min)`}
           </span>
@@ -140,19 +141,19 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       title:
         width > 769 ? (
           <span style={{ display: "inline-flex" }}>
-            Messages Out
+            Message Out
             <br />
             {`(over last 5 min)`}
           </span>
         ) : (
-          "Messages Out"
+          "Message Out"
         ),
       transforms: [sortable]
     },
     { title: "Stored Messages", transforms: [sortable] },
     "Senders",
     "Receivers",
-    "Shards"
+    "Partitions"
   ];
 
   const onSelect = (

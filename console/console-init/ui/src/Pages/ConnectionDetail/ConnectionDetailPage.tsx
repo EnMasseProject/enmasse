@@ -85,14 +85,14 @@ export default function ConnectionDetailPage() {
   );
 
   const connectionDetail: IConnectionHeaderDetailProps = {
-    hostname: connection.ObjectMeta.Name,
-    containerId: connection.ObjectMeta.Namespace,
+    hostname: connection.Spec.Hostname,
+    containerId: connection.Spec.ContainerId,
     version: getProductFilteredValue(connection.Spec.Properties, "version"),
     protocol: connection.Spec.Protocol.toUpperCase(),
     encrypted: connection.Spec.Encrypted || false,
     creationTimestamp:connection.ObjectMeta.CreationTimestamp,
-    messagesIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
-    messagesOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
+    messageIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
+    messageOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
     //Change this logic
     platform: jvmObject.jvm,
     os: jvmObject.os,
