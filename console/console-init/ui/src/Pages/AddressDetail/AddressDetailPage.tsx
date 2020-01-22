@@ -68,6 +68,7 @@ export default function AddressDetailPage() {
     RETURN_ADDRESS_DETAIL(name, namespace, addressname),
     { pollInterval: 20000 }
   );
+  console.log(data)
 
   const addressSpaces = useQuery<IAddressSpacePlanResponse>(
     CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
@@ -120,7 +121,7 @@ export default function AddressDetailPage() {
     if (addressDetail && type) {
       await client.mutate({
         mutation: EDIT_ADDRESS,
-        variables: {
+        variables: {  
           a: {
             Name: addressDetail.ObjectMeta.Name,
             Namespace: addressDetail.ObjectMeta.Namespace.toString()
