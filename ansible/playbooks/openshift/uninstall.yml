@@ -3,6 +3,8 @@
   tasks:
     - name: Delete iot CRDs
       shell: oc delete crd -l app=enmasse,enmasse-component=iot
+    - name: Delete messaging user CRD
+      shell: oc delete crd messagingusers.user.enmasse.io --cascade=false
     - name: Delete tenant-api CRDs
       shell: oc delete crd -l app=enmasse,enmasse-component=tenant-api
     - name: Delete CRDs
