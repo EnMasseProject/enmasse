@@ -28,8 +28,8 @@ export interface IConnection {
   containerId: string;
   protocol: string;
   encrypted: boolean;
-  messagesIn: number;
-  messagesOut: number;
+  messageIn: number;
+  messageOut: number;
   senders: number;
   receivers: number;
   status: "creating" | "deleting" | "running";
@@ -57,8 +57,8 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
             />
           )
         },
-        row.messagesIn,
-        row.messagesOut,
+        row.messageIn,
+        row.messageOut,
         row.senders,
         row.receivers
       ],
@@ -75,12 +75,12 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       title:
         width > 769 ? (
           <span style={{ display: "inline-flex" }}>
-            Messages In
+            Message In
             <br />
             {`(over last 5 min)`}
           </span>
         ) : (
-          "Messages In"
+          "Message In"
         ),
       transforms: [sortable]
     },
@@ -88,12 +88,12 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       title:
         width > 769 ? (
           <span style={{ display: "inline-flex" }}>
-            Messages Out
+            Message Out
             <br />
             {`(over last 5 min)`}
           </span>
         ) : (
-          "Messages Out"
+          "Message Out"
         ),
       transforms: [sortable]
     },
