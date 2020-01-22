@@ -20,7 +20,8 @@ export default {
 
 const rows: IAddress[] = [
   {
-    name: "foo",
+    name: "foo.juu",
+    displayName:"juu",
     namespace: "foo",
     type: "Queue",
     planLabel: "small",
@@ -35,7 +36,8 @@ const rows: IAddress[] = [
     status: "running"
   },
   {
-    name: "foo",
+    name: "foo.hui",
+    displayName:"hui",
     namespace: "foo",
     type: "Queue",
     planLabel: "small",
@@ -50,7 +52,8 @@ const rows: IAddress[] = [
     status: "creating"
   },
   {
-    name: "foo",
+    name: "foo.ganymede",
+    displayName:"ganymede",
     namespace: "foo",
     type: "Queue",
     planLabel: "small",
