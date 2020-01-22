@@ -81,7 +81,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       statusValue,
       sortBy
     ),
-    { pollInterval: 20000, fetchPolicy: "network-only" }
+    { pollInterval: 2000, fetchPolicy: "network-only" }
   );
   if (loading) return <Loading />;
   if (error) return <Loading />;
@@ -95,8 +95,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     type: address.Spec.Type,
     planLabel: address.Spec.Plan.Spec.DisplayName,
     planValue: address.Spec.Plan.ObjectMeta.Name,
-    messagesIn: getFilteredValue(address.Metrics, "enmasse_messages_in"),
-    messagesOut: getFilteredValue(address.Metrics, "enmasse_messages_out"),
+    messageIn: getFilteredValue(address.Metrics, "enmasse_messages_in"),
+    messageOut: getFilteredValue(address.Metrics, "enmasse_messages_out"),
     storedMessages: getFilteredValue(
       address.Metrics,
       "enmasse_messages_stored"

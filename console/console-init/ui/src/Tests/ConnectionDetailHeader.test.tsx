@@ -21,8 +21,8 @@ describe("Connection Detail Header with all connection details", () => {
       encrypted: true,
       platform: "0.8.0_152.25.125.b16, Oracle Corporation",
       os: "Mac OS X 10.13.6,x86_64",
-      messagesIn: 0,
-      messagesOut: 1
+      messageIn: 0,
+      messageOut: 1
     };
 
     const { getByText } = render(<ConnectionDetailHeader {...props} />);
@@ -37,7 +37,7 @@ describe("Connection Detail Header with all connection details", () => {
     getByText(props.version + "");
     getByText(props.platform + "");
     getByText(props.os + "");
-    getByText(props.messagesIn + " Message in");
-    getByText(props.messagesOut + " Message out");
+    getByText(props.messageIn + " Message in");
+    getByText(props.messageOut + " Message out");
   });
 });
