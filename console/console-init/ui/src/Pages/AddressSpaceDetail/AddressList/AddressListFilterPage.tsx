@@ -22,6 +22,7 @@ import {
 import useWindowDimensions from "src/Components/Common/WindowDimension";
 import { SortForMobileView } from "src/Components/Common/SortForMobileView";
 import { ISortBy } from "@patternfly/react-table";
+import { IAddress } from "src/Components/AddressSpace/Address/AddressList";
 interface AddressListFilterProps {
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;
@@ -33,9 +34,12 @@ interface AddressListFilterProps {
   setStatusValue: (value: string | null) => void;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
+  setOnCreationRefetch?: (value: boolean) => void;
   totalAddresses: number;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
+  onDeleteAllAddress:()=>void;
+  onPurgeAllAddress:()=>void;
 }
 export const AddressListFilterPage: React.FunctionComponent<AddressListFilterProps> = ({
   filterValue,
@@ -48,9 +52,12 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
   setStatusValue,
   sortValue,
   setSortValue,
+  setOnCreationRefetch,
   totalAddresses,
   isCreateWizardOpen,
-  setIsCreateWizardOpen
+  setIsCreateWizardOpen,
+  onDeleteAllAddress,
+  onPurgeAllAddress
 }) => {
   const { name, namespace, type } = useParams();
   const [addressSpacePlan, setAddressSpacePlan] = React.useState();
@@ -123,11 +130,12 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
             addressSpaceType={type || ""}
             isCreateWizardOpen={isCreateWizardOpen}
             setIsCreateWizardOpen={setIsCreateWizardOpen}
+            setOnCreationRefetch={setOnCreationRefetch}
           />
         )}
       </DataToolbarItem>
       <DataToolbarItem>
-        <AddressListKebab createAddressOnClick={createAddressOnClick} />
+        <AddressListKebab createAddressOnClick={createAddressOnClick} onDeleteAllAddress={onDeleteAllAddress} onPurgeAllAddress={onPurgeAllAddress}/>
       </DataToolbarItem>
     </>
   );

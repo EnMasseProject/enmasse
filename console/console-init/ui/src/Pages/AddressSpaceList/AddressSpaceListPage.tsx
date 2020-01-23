@@ -20,7 +20,8 @@ import {
 } from "src/Queries/Queries";
 import { IAddressSpacesResponse } from "src/Types/ResponseTypes";
 import { EditAddressSpace } from "../EditAddressSpace";
-import { ISortBy } from "@patternfly/react-table";
+import { ISortBy, IRowData } from "@patternfly/react-table";
+import { compareTwoAddress } from "../AddressSpaceDetail/AddressList/AddressListPage";
 
 interface AddressSpaceListPageProps {
   page: number;
@@ -36,6 +37,9 @@ interface AddressSpaceListPageProps {
   setSortValue: (value: ISortBy) => void;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
+  onSelectAddressSpace:(data:IAddressSpace, isSelected:boolean)=>void;
+  onSelectAllAddressSpace:(dataList:IAddressSpace[],isSelected:boolean)=>void;
+  selectedAddressSpaces: Array<IAddressSpace>;
 }
 export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageProps> = ({
   page,
@@ -50,7 +54,10 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   sortValue,
   setSortValue,
   isCreateWizardOpen,
-  setIsCreateWizardOpen
+  setIsCreateWizardOpen,
+  onSelectAddressSpace,
+  onSelectAllAddressSpace,
+  selectedAddressSpaces
 }) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
@@ -68,21 +75,6 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   const [sortBy, setSortBy] = React.useState<ISortBy>();
   if (sortValue && sortBy != sortValue) {
     setSortBy(sortValue);
-  }
-  const { loading, error, data, refetch } = useQuery<IAddressSpacesResponse>(
-    RETURN_ALL_ADDRESS_SPACES(
-      page,
-      perPage,
-      filter_Names,
-      filter_NameSpace,
-      filter_Type,
-      sortBy
-    ),
-    { pollInterval: 20000, fetchPolicy: "network-only" }
-  );
-  if (onCreationRefetch) {
-    refetch();
-    setOnCreationRefetch(false);
   }
   const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
   const handleSaving = async () => {
@@ -139,34 +131,59 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     }
   };
 
+  const { loading, error, data, refetch } = useQuery<IAddressSpacesResponse>(
+    RETURN_ALL_ADDRESS_SPACES(
+      page,
+      perPage,
+      filter_Names,
+      filter_NameSpace,
+      filter_Type,
+      sortBy
+    ),
+    { pollInterval: 20000, fetchPolicy: "network-only" }
+  );
+
   if (error) {
     console.log(error);
+  }
+
+  if (onCreationRefetch) {
+    refetch();
+    setOnCreationRefetch(false);
   }
 
   const { addressSpaces } = data || {
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
-  console.log(addressSpaces.AddressSpaces);
   setTotalAddressSpaces(addressSpaces.Total);
-  const addressSpacesList = addressSpaces.AddressSpaces.map(addSpace => ({
+  const addressSpacesList:IAddressSpace[] = addressSpaces.AddressSpaces.map(addSpace => ({
     name: addSpace.ObjectMeta.Name,
     nameSpace: addSpace.ObjectMeta.Namespace,
     creationTimestamp: addSpace.ObjectMeta.CreationTimestamp,
     type: addSpace.Spec.Type,
     displayName: addSpace.Spec.Plan.Spec.DisplayName,
-    isReady: addSpace.Status.IsReady
+    isReady: addSpace.Status.IsReady,
+    selected:
+      selectedAddressSpaces.filter(({ name, nameSpace }) =>
+        compareTwoAddress(
+          name,
+          addSpace.ObjectMeta.Name,
+          nameSpace,
+          addSpace.ObjectMeta.Namespace
+        )
+      ).length == 1
   }));
-
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
   };
-
   return (
     <>
       {totalAddressSpaces > 0 ? (
         <AddressSpaceList
           rows={addressSpacesList}
+          onSelectAddressSpace={onSelectAddressSpace}
+          onSelectAllAddressSpace={onSelectAllAddressSpace}
           onEdit={handleEditChange}
           onDelete={handleDeleteChange}
           onSort={onSort}

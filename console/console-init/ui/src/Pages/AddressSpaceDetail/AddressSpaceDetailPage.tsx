@@ -91,7 +91,7 @@ export default function AddressSpaceDetailPage() {
     { pollInterval: 20000 }
   );
   const client = useApolloClient();
-  if (loading) return <Loading />;
+  // if (loading) return <Loading />;
 
   if (error) {
     console.log(error);
@@ -142,7 +142,6 @@ export default function AddressSpaceDetailPage() {
         }
       }
     });
-    console.log(deletedData);
     if (deletedData.data && deletedData.data.deleteAddressSpace) {
       setIsDeleteModalOpen(!isDeleteModalOpen);
       history.push("/");

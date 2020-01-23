@@ -20,9 +20,9 @@ interface ICreateAddressProps {
   addressSpace: string;
   addressSpacePlan: string;
   addressSpaceType: string;
-  refetch?: () => void;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
+  setOnCreationRefetch?:(value:boolean)=>void;
 }
 export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = ({
   name,
@@ -30,9 +30,9 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
   addressSpace,
   addressSpacePlan,
   addressSpaceType,
-  refetch,
   isCreateWizardOpen,
-  setIsCreateWizardOpen
+  setIsCreateWizardOpen,
+  setOnCreationRefetch
 }) => {
   const [addressName, setAddressName] = React.useState("");
   const [addressType, setAddressType] = React.useState(" ");
@@ -86,8 +86,8 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
         setIsCreateWizardOpen(false);
         setAddressType("");
         setPlan("");
+        setOnCreationRefetch && setOnCreationRefetch(true);
       }
-      if (refetch) refetch();
     }
   };
   const steps = [
