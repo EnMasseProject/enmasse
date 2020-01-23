@@ -5,6 +5,21 @@
 
 package io.enmasse.systemtest.isolated.api;
 
+import static io.enmasse.systemtest.platform.KubeCMDClient.createCR;
+import static io.enmasse.systemtest.platform.KubeCMDClient.patchCR;
+import static io.enmasse.systemtest.platform.KubeCMDClient.updateCR;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Collections;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.jupiter.api.Test;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
@@ -31,20 +46,6 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.enmasse.user.model.v1.UserBuilder;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.Test;
-
-import java.util.Collections;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import static io.enmasse.systemtest.platform.KubeCMDClient.createCR;
-import static io.enmasse.systemtest.platform.KubeCMDClient.patchCR;
-import static io.enmasse.systemtest.platform.KubeCMDClient.updateCR;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITestIsolatedStandard {
 
@@ -80,7 +81,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
     void testReplacePatchAddressSpace() throws Exception {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
-                .withName("crd-pach-space")
+                .withName("crd-patch-space")
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
@@ -232,7 +233,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                     CliOutputData.CliOutputDataType.ADDRESS_SPACE);
             assertTrue(((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).isReady());
             if (((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).isReady()) {
-                assertEquals("[]", ((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).getStatus());
+                assertEquals("", ((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).getStatus());
             } else {
                 assertThat(((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).getStatus(),
                         containsString("Following deployments and statefulsets are not ready"));
@@ -245,7 +246,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             assertTrue(((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).isReady());
             assertTrue(((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).isReady());
             assertEquals("Active", ((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).getPhase());
-            assertEquals("[]", ((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).getStatus());
+            assertEquals("", ((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).getStatus());
 
             //===========================
             // User part
