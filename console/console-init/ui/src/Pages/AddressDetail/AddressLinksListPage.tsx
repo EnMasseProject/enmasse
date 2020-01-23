@@ -7,7 +7,6 @@ import * as React from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { RETURN_ADDRESS_LINKS } from "src/Queries/Queries";
 import { IAddressLinksResponse } from "src/Types/ResponseTypes";
-import { Loading } from "use-patternfly";
 import { IClient, ClientList } from "src/Components/AddressDetail/ClientList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { EmptyLinks } from "src/Components/Common/EmptyLinks";
@@ -59,7 +58,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
     ),
     { pollInterval: 20000 }
   );
-  if (loading) return <Loading />;
+  // if (loading) return <Loading />;
   if (error) console.log(error);
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
@@ -77,7 +76,6 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
     addresses.Addresses[0].Links.Total > 0 &&
     addresses.Addresses[0].Links;
 
-  console.log(links);
   let clientRows: IClient[] = addresses.Addresses[0].Links.Links.map(link => ({
     role: link.Spec.Role.toString(),
     containerId: link.Spec.Connection.Spec.ContainerId,

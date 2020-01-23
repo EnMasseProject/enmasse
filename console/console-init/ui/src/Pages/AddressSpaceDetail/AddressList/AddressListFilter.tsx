@@ -51,6 +51,8 @@ interface IAddressListFilterProps {
 
 interface IAddressListKebabProps {
   createAddressOnClick: () => void;
+  onDeleteAllAddress:()=>void;
+  onPurgeAllAddress:()=>void;
 }
 export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps> = ({
   filterValue,
@@ -385,21 +387,25 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
 };
 
 export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> = ({
-  createAddressOnClick
+  createAddressOnClick,
+  onDeleteAllAddress,
+  onPurgeAllAddress
 }) => {
   const [isKebabOpen, setIsKebabOpen] = React.useState(false);
   const dropdownItems = [
     <DropdownItem
       id="al-filter-dropdown-item-deleteall"
       key="delete-all"
-      onClick={() => console.log("deleted")}
+      value="deleteAll"
+      component="button"
     >
       Delete All
     </DropdownItem>,
     <DropdownItem
       id="al-filter-dropdown-item-purgeall"
       key="purge-all"
-      onClick={() => console.log("purged")}
+      value="purgeAll"
+      component="button"
     >
       Purge All
     </DropdownItem>
@@ -414,8 +420,15 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
     setIsKebabOpen(isOpen);
   };
 
-  const onKebabSelect = (event: any) => {
-    setIsKebabOpen(isKebabOpen);
+  const onKebabSelect = async(event: any) => {
+    if(event.target.value){
+      if(event.target.value==="purgeAll"){
+        await onPurgeAllAddress();
+      } else if(event.target.value==="deleteAll") {
+        await onDeleteAllAddress();
+      }
+    }
+    setIsKebabOpen(!isKebabOpen);
   };
   return (
     <>

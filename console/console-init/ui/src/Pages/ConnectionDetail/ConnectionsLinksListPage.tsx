@@ -56,10 +56,10 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
     ),
     { pollInterval: 20000 }
   );
-  if (loading) return <Loading />;
+  // if (loading) return <Loading />;
   if (error) {
     console.log(error);
-    return <Loading />;
+    // return <Loading />;
   }
   const { connections } = data || {
     connections: { Total: 0, Connections: [] }
