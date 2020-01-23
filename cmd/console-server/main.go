@@ -6,7 +6,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"flag"
 	"github.com/99designs/gqlgen/cmd"
 	"github.com/99designs/gqlgen/graphql"
@@ -44,13 +46,13 @@ For development purposes, you can run the console backend outside the container.
 
 TODO:
 
-1) Restrict query results to what the user may see
 2) Mutations
 4) Pass CA to the Go-AMQP client when connecting to agents.
 
 */
 
 const accessControllerStateCookieName = "accessControllerState"
+const sessionOwner = "sessionOwner"
 
 func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Handler {
 
@@ -60,8 +62,22 @@ func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 		accessToken := req.Header.Get("X-Forwarded-Access-Token")
 
 		if accessToken == "" {
+			http.Error(rw, "No access token", http.StatusUnauthorized)
 			rw.WriteHeader(401)
 			return
+		}
+
+		accessTokenSha := getShaSum(accessToken)
+		if sessionManager.Exists(req.Context(), sessionOwner) {
+			sessionOwnerAccessTokenSha := sessionManager.Get(req.Context(), sessionOwner).([]byte)
+			if !bytes.Equal(sessionOwnerAccessTokenSha, accessTokenSha) {
+				// This session must have belonged to a different accessToken, destroy it.
+				// New session created automatically.
+				_ = sessionManager.Destroy(req.Context())
+				sessionManager.Put(req.Context(), sessionOwner, accessTokenSha)
+			}
+		} else {
+			sessionManager.Put(req.Context(), sessionOwner, accessTokenSha)
 		}
 
 		kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -398,4 +414,9 @@ func schedule(f func(), delay time.Duration) (chan bool, chan bool) {
 	}()
 
 	return stop, bump
+}
+
+func getShaSum(accessToken string) []byte {
+	accessTokenSha := sha256.Sum256([]byte(accessToken))
+	return accessTokenSha[:]
 }
