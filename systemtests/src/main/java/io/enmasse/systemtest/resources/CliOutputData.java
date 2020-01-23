@@ -318,7 +318,7 @@ public class CliOutputData {
         private String phase;
 
         UserRow(String[] parsedData) {
-            expectColumns(6, parsedData);
+            expectColumns(5, parsedData);
             this.name = parsedData[0];
             this.username = parsedData[1];
             this.type = parsedData[2];

@@ -51,13 +51,13 @@ public class CliOutputDataTest {
     @Test
     public void testMessagingUser () {
         var cli = new CliOutputData(
-                "NAME                                               USERNAME                                       TYPE       PHASE    MESSAGE   AGE\n" +
-                "iot.adapter-074334ae-3d1f-11ea-a7b2-00163e294db3   adapter-074334ae-3d1f-11ea-a7b2-00163e294db3   password   Active             18h\n" +
-                "iot.consumer                                       consumer                                       password   Active             18h\n" +
+                "NAME                                               USERNAME                                       TYPE       PHASE    AGE\n" +
+                "iot.adapter-074334ae-3d1f-11ea-a7b2-00163e294db3   adapter-074334ae-3d1f-11ea-a7b2-00163e294db3   password   Active   18h\n" +
+                "iot.consumer                                       consumer                                       password   Active   18h\n" +
                 "", CliOutputDataType.USER);
         assertThat(cli.getData(), is(Arrays.asList(
-                new CliOutputData.UserRow(new String[] {"iot.adapter-074334ae-3d1f-11ea-a7b2-00163e294db3", "adapter-074334ae-3d1f-11ea-a7b2-00163e294db3", "password", "Active", "", "18h", }),
-                new CliOutputData.UserRow(new String[] {"iot.consumer", "consumer", "password", "Active", "", "18h", })
+                new CliOutputData.UserRow(new String[] {"iot.adapter-074334ae-3d1f-11ea-a7b2-00163e294db3", "adapter-074334ae-3d1f-11ea-a7b2-00163e294db3", "password", "Active", "18h", }),
+                new CliOutputData.UserRow(new String[] {"iot.consumer", "consumer", "password", "Active", "18h", })
                 )));
     }
 
