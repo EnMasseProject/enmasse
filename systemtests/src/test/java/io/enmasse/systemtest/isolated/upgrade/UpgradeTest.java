@@ -239,7 +239,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
     private void installEnmasseAnsible(Path templatePaths, boolean upgrade) throws Exception {
         log.info("Application will be installed using ansible");
-        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", "systemtests.inventory");
+        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kubernetes.getOcpVersion() == 3 ? "systemtests.inventory" : "systemtests.ocp4.inventory");
         Path ansiblePlaybook = Paths.get(templatePaths.toString(), "ansible", "playbooks", "openshift", "deploy_all.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
                 "--extra-vars", String.format("namespace=%s authentication_services=[\"standard\"]", kubernetes.getInfraNamespace()));
