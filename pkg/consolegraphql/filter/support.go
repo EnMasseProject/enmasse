@@ -10,6 +10,7 @@ package filter
 
 import (
 	"fmt"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/third_party/forked/golang/template"
 	"k8s.io/client-go/util/jsonpath"
 	"math"
@@ -17,31 +18,32 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 )
 
 const (
-	EqualStr             = "="
-	LessThanStr          = "<"
-	GreaterThanStr       = ">"
-	LessEqualStr         = "<="
-	GreaterEqualStr      = ">="
-	NotEqualStr          = "!="
-	LikeStr              = "like"
-	NotLikeStr           = "not like"
-	IsNull               = "is null"
-	IsNotNull            = "is not null"
+	EqualStr        = "="
+	LessThanStr     = "<"
+	GreaterThanStr  = ">"
+	LessEqualStr    = "<="
+	GreaterEqualStr = ">="
+	NotEqualStr     = "!="
+	LikeStr         = "like"
+	NotLikeStr      = "not like"
+	IsNull          = "is null"
+	IsNotNull       = "is not null"
 )
 
 func ParseFilterExpression(s string) (Expr, error) {
 	lexer := newLexer([]byte(s))
-	lexer.startToks = []int {START_EXPRESSION}
+	lexer.startToks = []int{START_EXPRESSION}
 	_ = FilterParse(lexer)
 	return lexer.expr, lexer.e
 }
 
 func ParseOrderByExpression(s string) (OrderBy, error) {
 	lexer := newLexer([]byte(s))
-	lexer.startToks = []int {START_ORDER_LIST}
+	lexer.startToks = []int{START_ORDER_LIST}
 	_ = FilterParse(lexer)
 	return lexer.orderBy, lexer.e
 }
@@ -70,7 +72,6 @@ func (e boolExpr) Eval(v interface{}) (interface{}, error) {
 		return false, nil
 	}
 }
-
 
 func NewAndExpr(left, right Expr) Expr {
 	return &andExpr{left, right}
@@ -159,14 +160,13 @@ func (e notExpr) Eval(v interface{}) (interface{}, error) {
 	}
 }
 
-
 func NewIsNullExpr(expr Expr, operator string) Expr {
 	return &isNullExpr{operator, expr}
 }
 
 type isNullExpr struct {
-	Operator    string
-	Expr Expr
+	Operator string
+	Expr     Expr
 }
 
 func (e isNullExpr) Eval(v interface{}) (interface{}, error) {
@@ -533,7 +533,6 @@ func (e BoolVal) Eval(interface{}) (interface{}, error) {
 
 type StringVal string
 
-
 func (e StringVal) Eval(interface{}) (interface{}, error) {
 	return string(e), nil
 }
@@ -556,7 +555,6 @@ func NewNullVal() nullVal {
 
 type nullVal struct{}
 
-
 func (e nullVal) Eval(interface{}) (interface{}, error) {
 	return e, nil
 }
@@ -566,7 +564,6 @@ func NewJSONPathVal(jsonPath *jsonpath.JSONPath) JSONPathVal {
 		jsonPath,
 	}
 }
-
 
 type JSONPathVal struct {
 	*jsonpath.JSONPath
@@ -580,7 +577,7 @@ func (e JSONPathVal) Eval(v interface{}) (interface{}, error) {
 	}
 	if len(results) > 0 && len(results[0]) > 0 {
 		value, b := template.PrintableValue(results[0][0])
-		if (b) {
+		if b {
 			return value, nil
 		}
 	}
@@ -704,7 +701,6 @@ func widenNumeric(s interface{}, dst reflect.Type) interface{} {
 	}
 }
 
-
 type OrderBy []*Order
 
 func NewEmptyOrderBy() OrderBy {
@@ -731,7 +727,7 @@ func (o OrderBy) Sort(slice interface{}) error {
 		for k = 0; k < len(o)-1; k++ {
 			rv, err := o[k].compare(p, q)
 			if err != nil {
-				return false;
+				return false
 			}
 			if rv > 0 {
 				return false
@@ -754,7 +750,7 @@ func (o OrderBy) Sort(slice interface{}) error {
 func NewOrder(expr Expr, dir string) *Order {
 	return &Order{
 		Expr:      expr,
-		Direction:dir,
+		Direction: dir,
 	}
 }
 
@@ -912,7 +908,6 @@ func (o Order) compare(p interface{}, q interface{}) (int, error) {
 				return pltq, nil
 			}
 		}
-
 	case float32:
 
 		switch qc := qv.(type) {
@@ -931,6 +926,28 @@ func (o Order) compare(p interface{}, q interface{}) (int, error) {
 			if pc == qc {
 				return 0, nil
 			} else if pc > qc {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case time.Time:
+		switch qc := qv.(type) {
+		case time.Time:
+			if pc == qc {
+				return 0, nil
+			} else if pc.After(qc) {
+				return pgtq, nil
+			} else {
+				return pltq, nil
+			}
+		}
+	case v1.Time:
+		switch qc := qv.(type) {
+		case v1.Time:
+			if pc == qc {
+				return 0, nil
+			} else if !pc.Before(&qc) {
 				return pgtq, nil
 			} else {
 				return pltq, nil
