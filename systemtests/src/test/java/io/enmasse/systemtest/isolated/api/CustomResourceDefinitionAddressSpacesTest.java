@@ -97,6 +97,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         isolatedResourcesManager.addToAddressSpaces(standard);
         resourcesManager.waitForAddressSpaceReady(standard);
         String currentConfig = resourcesManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
+        log.info("Initial config: {}", currentConfig);
 
         standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_UNLIMITED).endSpec().done();
         updateCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
