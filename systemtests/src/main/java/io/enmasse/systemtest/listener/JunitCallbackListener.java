@@ -87,7 +87,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                     if (!operatorManager.isEnmasseBundleDeployed()) {
                         operatorManager.installEnmasseBundle();
                     }
-                    if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
+                    if (testInfo.isClassIoT()) {
                         LOGGER.warn("Before certs " + Kubernetes.getInstance().getCluster().getClass() + " == " + MinikubeCluster.class);
                         operatorManager.installIoTOperator();
                     }

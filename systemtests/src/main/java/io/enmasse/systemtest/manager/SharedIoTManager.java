@@ -22,10 +22,12 @@ import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
+import io.fabric8.kubernetes.api.model.Quantity;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.HashMap;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -161,6 +163,13 @@ public class SharedIoTManager extends ResourceManager {
                             .withNewSecretName("iot-mqtt-adapter-tls")
                             .endSecretNameStrategy()
                     .endEndpoint()
+                    .withNewContainers()
+                        .withNewAdapter()
+                            .withNewResources()
+                                .withLimits(Collections.singletonMap("memory", new Quantity("128", "Mi")))
+                            .endResources()
+                        .endAdapter()
+                    .endContainers()
                 .endMqtt()
                 .withNewHttp()
                     .withNewEndpoint()
@@ -168,6 +177,13 @@ public class SharedIoTManager extends ResourceManager {
                             .withNewSecretName("iot-http-adapter-tls")
                         .endSecretNameStrategy()
                     .endEndpoint()
+                    .withNewContainers()
+                        .withNewAdapter()
+                            .withNewResources()
+                                .withLimits(Collections.singletonMap("memory", new Quantity("128", "Mi")))
+                            .endResources()
+                        .endAdapter()
+                    .endContainers()
                 .endHttp()
                 .withNewSigfox()
                     .withNewEndpoint()
