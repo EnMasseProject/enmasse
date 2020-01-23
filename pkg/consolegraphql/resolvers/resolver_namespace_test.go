@@ -34,6 +34,10 @@ func (a *testAccController) ViewFilter() cache.ObjectFilter {
 	return accesscontroller.FilterAdapter(a)
 }
 
+func (a *testAccController) GetState() (bool, interface{}) {
+	return false, nil
+}
+
 func newTestNamespaceResolver(t *testing.T) (*Resolver, context.Context) {
 	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err, "failed to create object cache")

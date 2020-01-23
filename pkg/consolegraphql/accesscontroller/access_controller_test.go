@@ -33,7 +33,7 @@ func newAcTestResource(*testing.T) *acTestResource {
 func TestReadAddressAllowed(t *testing.T) {
 	tr := newAcTestResource(t)
 
-	accessController := NewKubernetesRBACAccessController(tr.clientset)
+	accessController := NewKubernetesRBACAccessController(tr.clientset, nil)
 	address := createAddress("foons", "foo")
 
 	configureReactor(tr.clientset, ssarResponseYielding(true))
@@ -45,12 +45,12 @@ func TestReadAddressAllowed(t *testing.T) {
 func TestAllowedAccessRequestsCached(t *testing.T) {
 	tr := newAcTestResource(t)
 
-	accessController := NewKubernetesRBACAccessController(tr.clientset)
+	accessController := NewKubernetesRBACAccessController(tr.clientset, nil)
 	address1 := createAddress("foons", "foo1")
 	address2 := createAddress("foons", "foo2")
 
 	ssars := 0
-	configureReactor(tr.clientset, ssarResponseYielding(true, func() {ssars++}))
+	configureReactor(tr.clientset, ssarResponseYielding(true, func() { ssars++ }))
 
 	read, err := accessController.CanRead(address1)
 	assert.NoError(t, err)
@@ -72,16 +72,16 @@ func TestAllowedAccessRequestsCached(t *testing.T) {
 func TestReadAddressesDifferentNamespacePermissions(t *testing.T) {
 	tr := newAcTestResource(t)
 
-	accessController := NewKubernetesRBACAccessController(tr.clientset)
+	accessController := NewKubernetesRBACAccessController(tr.clientset, nil)
 	addr1 := createAddress("secretns", "myaddr")
 	addr2 := createAddress("publicns", "myaddr")
 
 	configureReactor(tr.clientset, ssarResponseDenyMatching(
 		&authv1.ResourceAttributes{
-			Namespace:   addr1.Namespace,
-			Group:       "enmasse.io",
-			Version:     "v1beta1",
-			Resource:    "addresses",
+			Namespace: addr1.Namespace,
+			Group:     "enmasse.io",
+			Version:   "v1beta1",
+			Resource:  "addresses",
 		}))
 
 	addr1Readable, err := accessController.CanRead(addr1)
@@ -94,11 +94,34 @@ func TestReadAddressesDifferentNamespacePermissions(t *testing.T) {
 
 }
 
+func TestAuthorizationState(t *testing.T) {
+	tr := newAcTestResource(t)
+
+	accessController := NewKubernetesRBACAccessController(tr.clientset, nil)
+	address1 := createAddress("foons", "foo1")
+
+	ssars := 0
+	configureReactor(tr.clientset, ssarResponseYielding(true, func() { ssars++ }))
+
+	read, err := accessController.CanRead(address1)
+	assert.NoError(t, err)
+	assert.True(t, read)
+	assert.Equal(t, 1, ssars)
+
+	stateUpdated, state := accessController.GetState()
+	assert.True(t, stateUpdated)
+	accessController = NewKubernetesRBACAccessController(tr.clientset, state)
+
+	read, err = accessController.CanRead(address1)
+	assert.NoError(t, err)
+	assert.True(t, read)
+	assert.Equal(t, 1, ssars)
+}
 
 func TestReadNamespaceAllowed(t *testing.T) {
 	tr := newAcTestResource(t)
 
-	accessController := NewKubernetesRBACAccessController(tr.clientset)
+	accessController := NewKubernetesRBACAccessController(tr.clientset, nil)
 	namespace := createNamespace("foons")
 
 	configureReactor(tr.clientset, ssarResponseYielding(true))
@@ -110,23 +133,20 @@ func TestReadNamespaceAllowed(t *testing.T) {
 func TestReadNamespaceDenied(t *testing.T) {
 	tr := newAcTestResource(t)
 
-	accessController := NewKubernetesRBACAccessController(tr.clientset)
+	accessController := NewKubernetesRBACAccessController(tr.clientset, nil)
 	namespace := createNamespace("foons")
 
 	configureReactor(tr.clientset, ssarResponseDenyMatching(
 		&authv1.ResourceAttributes{
-			Namespace:   namespace.Name,
-			Version:     "v1",
-			Resource:    "namespaces",
+			Namespace: namespace.Name,
+			Version:   "v1",
+			Resource:  "namespaces",
 		}))
 
 	read, err := accessController.CanRead(namespace)
 	assert.NoError(t, err)
 	assert.False(t, read)
 }
-
-
-/* {"namespace":"foo","verb":"get","resource":"namespaces"} */
 
 func createAddress(namespace, name string) *consolegraphql.AddressHolder {
 	address := &consolegraphql.AddressHolder{
@@ -136,8 +156,8 @@ func createAddress(namespace, name string) *consolegraphql.AddressHolder {
 				Kind:       "Address",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-					Namespace: namespace,
-					Name: name,
+				Namespace: namespace,
+				Name:      name,
 			},
 		},
 	}
@@ -157,17 +177,15 @@ func createNamespace(name string) *corev1.Namespace {
 	return namespace
 }
 
-
 func configureReactor(clientset kubernetes.Interface, function func(action clientTesting.Action) (handled bool, ret runtime.Object, err error)) {
 	clientset.(*fake.Clientset).Fake.AddReactor("create", "selfsubjectaccessreviews", function)
 }
 
-func ssarResponseDenyMatching(denied... *authv1.ResourceAttributes) func(action clientTesting.Action) (handled bool, ret runtime.Object, err error) {
+func ssarResponseDenyMatching(denied ...*authv1.ResourceAttributes) func(action clientTesting.Action) (handled bool, ret runtime.Object, err error) {
 	return func(action clientTesting.Action) (handled bool, ret runtime.Object, err error) {
 		// NB 'create' here refers to the sending of the SSAR itself rather than its object
 		create := action.(clientTesting.CreateAction)
 		review := create.GetObject().(*authv1.SelfSubjectAccessReview).Spec.ResourceAttributes
-
 
 		allowed := true
 		for _, deny := range denied {
@@ -191,7 +209,7 @@ func ssarResponseDenyMatching(denied... *authv1.ResourceAttributes) func(action 
 	}
 }
 
-func ssarResponseYielding(result bool, cbs... func()) func(action clientTesting.Action) (handled bool, ret runtime.Object, err error) {
+func ssarResponseYielding(result bool, cbs ...func()) func(action clientTesting.Action) (handled bool, ret runtime.Object, err error) {
 	return func(action clientTesting.Action) (handled bool, ret runtime.Object, err error) {
 
 		for _, cb := range cbs {

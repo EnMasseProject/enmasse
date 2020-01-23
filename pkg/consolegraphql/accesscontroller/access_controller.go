@@ -7,6 +7,7 @@
 package accesscontroller
 
 import (
+	"encoding/gob"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	authv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -14,9 +15,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// Access controllers make decisions concerning access to objects.  An instance must not be shared between threads.
 type AccessController interface {
 	CanRead(obj interface{}) (bool, error)
 	ViewFilter() cache.ObjectFilter
+	GetState() (bool, interface{})
 }
 
 type AccessControlledResource interface {
@@ -40,15 +43,31 @@ func (a *allowAll) ViewFilter() cache.ObjectFilter {
 	}
 }
 
-type kubernetesRbac struct {
-	clientSet         kubernetes.Interface
-	cachedPermissions map[authv1.ResourceAttributes]bool
+func (a *allowAll) GetState() (bool, interface{}) {
+	return false, nil
 }
 
-func NewKubernetesRBACAccessController(clientSet kubernetes.Interface) AccessController {
+type kubernetesRbac struct {
+	clientSet    kubernetes.Interface
+	cached       map[authv1.ResourceAttributes]bool
+	cacheUpdated bool
+}
+
+// Creates a RBAC-based access controller with the given authentication state.  The authentication state may be nil
+// or that returned by the GetState method of a previous instance.
+func NewKubernetesRBACAccessController(clientSet kubernetes.Interface, existingState interface{}) AccessController {
+	gob.Register(map[authv1.ResourceAttributes]bool{})
+	state := make(map[authv1.ResourceAttributes]bool, 0)
+	if existingState != nil {
+		if s, ok := existingState.(map[authv1.ResourceAttributes]bool); ok {
+			for k, v := range s {
+				state[k] = v
+			}
+		}
+	}
 	return &kubernetesRbac{
 		clientSet: clientSet,
-		cachedPermissions: make(map[authv1.ResourceAttributes]bool, 0),
+		cached:    state,
 	}
 }
 
@@ -79,14 +98,16 @@ func (k *kubernetesRbac) CanRead(obj interface{}) (bool, error) {
 	}
 }
 
-func (a *kubernetesRbac) ViewFilter() cache.ObjectFilter {
-	return FilterAdapter(a)
+func (k *kubernetesRbac) ViewFilter() cache.ObjectFilter {
+	return FilterAdapter(k)
 }
 
-func  (k *kubernetesRbac) makeAccessDecision(resourceAttributes *authv1.ResourceAttributes) (bool, error) {
-	if decision, present := k.cachedPermissions[*resourceAttributes]; present {
-		// TODO: Implement expiry
-		// TODO: use of map - thread safety concerns? check me.
+func (k *kubernetesRbac) GetState() (bool, interface{}) {
+	return k.cacheUpdated, k.cached
+}
+
+func (k *kubernetesRbac) makeAccessDecision(resourceAttributes *authv1.ResourceAttributes) (bool, error) {
+	if decision, present := k.cached[*resourceAttributes]; present {
 		return decision, nil
 	}
 
@@ -100,11 +121,11 @@ func  (k *kubernetesRbac) makeAccessDecision(resourceAttributes *authv1.Resource
 	if err != nil {
 		return false, err
 	} else {
-		k.cachedPermissions[*resourceAttributes] = resp.Status.Allowed
+		k.cached[*resourceAttributes] = resp.Status.Allowed
+		k.cacheUpdated = true
 		return resp.Status.Allowed, nil
 	}
 }
-
 
 func FilterAdapter(controller AccessController) cache.ObjectFilter {
 	return func(obj interface{}) (bool, bool, error) {
@@ -112,5 +133,3 @@ func FilterAdapter(controller AccessController) cache.ObjectFilter {
 		return readable, true, err
 	}
 }
-
-

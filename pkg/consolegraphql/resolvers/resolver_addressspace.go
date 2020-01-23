@@ -114,10 +114,7 @@ func (r *addressSpaceSpecK8sResolver) Type(ctx context.Context, obj *v1beta1.Add
 	return spaceType, nil
 }
 
-
-
 type addressSpaceK8sResolver struct{ *Resolver }
-
 
 func (r *addressSpaceK8sResolver) Connections(ctx context.Context, obj *consolegraphql.AddressSpaceHolder, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
@@ -160,6 +157,9 @@ func (r *addressSpaceK8sResolver) Connections(ctx context.Context, obj *consoleg
 
 func (r *addressSpaceK8sResolver) Addresses(ctx context.Context, obj *consolegraphql.AddressSpaceHolder, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
+		requestState := server.GetRequestStateFromContext(ctx)
+		viewFilter := requestState.AccessController.ViewFilter()
+
 		fltrfunc, e := BuildFilter(filter)
 		if e != nil {
 			return nil, e
@@ -171,7 +171,7 @@ func (r *addressSpaceK8sResolver) Addresses(ctx context.Context, obj *consolegra
 		}
 
 		key := fmt.Sprintf("Address/%s/%s/", obj.Namespace, obj.Name)
-		objects, e := r.Cache.Get(cache.PrimaryObjectIndex, key, fltrfunc)
+		objects, e := r.Cache.Get(cache.PrimaryObjectIndex, key, cache.And(viewFilter, fltrfunc))
 		if e != nil {
 			return nil, e
 		}
