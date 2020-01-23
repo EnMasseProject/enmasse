@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
@@ -27,8 +28,8 @@ import io.sundr.builder.annotations.Inline;
 public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalProperties {
     private StandardInfraConfigSpecRouterResources resources;
     private Integer minReplicas;
-    private Integer minAvailable;
-    private Integer maxUnavailable;
+    private IntOrString minAvailable;
+    private IntOrString maxUnavailable;
     private Integer linkCapacity;
     private Integer handshakeTimeout;
     private Integer idleTimeout;
@@ -52,19 +53,19 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
         return linkCapacity;
     }
 
-    public Integer getMinAvailable() {
+    public IntOrString getMinAvailable() {
         return minAvailable;
     }
 
-    public void setMinAvailable(Integer minAvailable) {
+    public void setMinAvailable(IntOrString minAvailable) {
         this.minAvailable = minAvailable;
     }
 
-    public Integer getMaxUnavailable() {
+    public IntOrString getMaxUnavailable() {
         return maxUnavailable;
     }
 
-    public void setMaxUnavailable(Integer maxUnavailable) {
+    public void setMaxUnavailable(IntOrString maxUnavailable) {
         this.maxUnavailable = maxUnavailable;
     }
 
