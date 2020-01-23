@@ -241,7 +241,7 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
         LOGGER.info("            Enmasse operator delete by ansible");
         LOGGER.info("***********************************************************");
-        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", "systemtests.inventory");
+        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kube.getOcpVersion() == 3 ? "systemtests.inventory": "systemtests.ocp4.inventory");
         Path ansiblePlaybook = Paths.get(Environment.getInstance().getUpgradeTemplates(), "ansible", "playbooks", "openshift", "uninstall.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
                 "--extra-vars", String.format("namespace=%s", kube.getInfraNamespace()));
@@ -251,7 +251,6 @@ public class OperatorManager {
 
     public boolean clean() throws Exception {
         KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse,enmasse-component=iot");
-        KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse,enmasse-component=tenant-api");
         KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
