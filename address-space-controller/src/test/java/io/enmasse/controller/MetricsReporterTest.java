@@ -6,6 +6,7 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.Phase;
 import io.enmasse.metrics.api.Metric;
 import io.enmasse.metrics.api.MetricSnapshot;
 import io.enmasse.metrics.api.Metrics;
@@ -30,7 +31,7 @@ public class MetricsReporterTest {
                 createAddressSpace("s3", false)));
 
         List<Metric> metricList = metrics.getMetrics();
-        assertEquals(7, metricList.size());
+        assertEquals(12, metricList.size());
         MetricSnapshot numReady = createSnapshot("address_space_status_ready", metricList);
         assertNotNull(numReady);
         assertEquals(3, numReady.getValues().size());
@@ -43,6 +44,9 @@ public class MetricsReporterTest {
         assertNotNull(total);
         assertEquals(3, total.getValues().iterator().next().getValue());
 
+        MetricSnapshot numActive = createSnapshot("address_spaces_active_total", metricList);
+        assertNotNull(numActive);
+        assertEquals(Long.valueOf(2), numActive.getValues().iterator().next().getValue());
     }
 
     private MetricSnapshot createSnapshot(String name, List<Metric> metricList) {
@@ -55,6 +59,7 @@ public class MetricsReporterTest {
     }
 
     private AddressSpace createAddressSpace(String name, boolean isReady) {
+        Phase phase = isReady ? Phase.Active : Phase.Configuring;
         return new AddressSpaceBuilder()
                 .editOrNewMetadata()
                 .withName(name)
@@ -65,6 +70,7 @@ public class MetricsReporterTest {
                 .endSpec()
                 .editOrNewStatus()
                 .withReady(isReady)
+                .withPhase(phase)
                 .endStatus()
                 .build();
 
