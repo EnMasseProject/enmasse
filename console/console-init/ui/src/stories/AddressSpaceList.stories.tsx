@@ -54,6 +54,8 @@ const rows: IAddressSpace[] = [
 stories.add("Address Space List", () => (
   <MemoryRouter>
     <AddressSpaceList
+      onSelectAddressSpace={action("select addressSpace")}
+      onSelectAllAddressSpace={action("SelectAllAddressSpaces")}
       rows={rows}
       onEdit={action("onEdit")}
       onDelete={action("onDelete")}

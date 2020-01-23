@@ -23,11 +23,13 @@ import { RETURN_CONNECTION_DETAIL } from "src/Queries/Queries";
 import { ConnectionLinksWithFilterAndPaginationPage } from "./ConnectionLinksWithFilterAndPaginationPage";
 
 const getProductFilteredValue = (object: any[], value: string) => {
-  const filtered = object.filter(obj => obj.Key === value);
-  if (filtered.length > 0) {
-    return filtered[0].Value;
+  if (object && object != null) {
+    const filtered = object.filter(obj => obj.Key === value);
+    if (filtered.length > 0) {
+      return filtered[0].Value;
+    }
   }
-  return 0;
+  return "-";
 };
 
 const getSplitValue = (value: string) => {
@@ -50,10 +52,14 @@ export default function ConnectionDetailPage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link id='cdetail-link-home' to={"/"}>Home</Link>
+          <Link id="cdetail-link-home" to={"/"}>
+            Home
+          </Link>
         </BreadcrumbItem>
         <BreadcrumbItem>
-          <Link id='cdetail-link-connections' to={`/address-spaces/${namespace}/${name}/${type}/connections`}>
+          <Link
+            id="cdetail-link-connections"
+            to={`/address-spaces/${namespace}/${name}/${type}/connections`}>
             {name}
           </Link>
         </BreadcrumbItem>
@@ -70,10 +76,10 @@ export default function ConnectionDetailPage() {
     RETURN_CONNECTION_DETAIL(name || "", namespace || "", connectionname || ""),
     { pollInterval: 2000 }
   );
-  if (loading) return <Loading />;
+  // if (loading) return <Loading />;
   if (error) {
     console.log(error);
-    return <Loading />;
+    // return <Loading />;
   }
   const { connections } = data || {
     connections: { Total: 0, Connections: [] }
@@ -81,9 +87,12 @@ export default function ConnectionDetailPage() {
   const connection = connections.Connections[0];
   // setTotalLinks(connections.Total);
   //Change this logic
-  const jvmObject = getSplitValue(
-    getProductFilteredValue(connection.Spec.Properties, "platform")
-  );
+  const jvmObject =
+    connection.Spec.Properties && connection.Spec.Properties.length > 0
+      ? getSplitValue(
+          getProductFilteredValue(connection.Spec.Properties, "platform")
+        )
+      : { jvm: "-", os: "-" };
 
   const connectionDetail: IConnectionHeaderDetailProps = {
     hostname: connection.Spec.Hostname,
@@ -95,9 +104,12 @@ export default function ConnectionDetailPage() {
     messageIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
     messageOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
     //Change this logic
-    platform: jvmObject.jvm,
-    os: jvmObject.os,
-    product: getProductFilteredValue(connection.Spec.Properties, "product")
+    platform: jvmObject && jvmObject.jvm,
+    os: jvmObject && jvmObject.os,
+    product:
+      connection.Spec.Properties && connection.Spec.Properties.length > 0
+        ? getProductFilteredValue(connection.Spec.Properties, "product")
+        : "-"
   };
 
   return (

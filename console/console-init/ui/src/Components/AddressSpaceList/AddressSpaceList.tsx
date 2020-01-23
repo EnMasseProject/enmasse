@@ -30,10 +30,16 @@ export interface IAddressSpace {
   displayName: string;
   isReady: boolean;
   status?: "creating" | "deleting" | "running";
+  selected?: boolean;
 }
 
 interface IAddressListProps {
   rows: IAddressSpace[];
+  onSelectAddressSpace: (data: IAddressSpace, isSelected: boolean) => void;
+  onSelectAllAddressSpace: (
+    dataList: IAddressSpace[],
+    isSelected: boolean
+  ) => void;
   onEdit: (rowData: IAddressSpace) => void;
   onDelete: (rowData: IAddressSpace) => void;
   sortBy?: ISortBy;
@@ -42,13 +48,14 @@ interface IAddressListProps {
 
 export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   rows,
+  onSelectAddressSpace,
+  onSelectAllAddressSpace,
   onEdit,
   onDelete,
   sortBy,
   onSort
 }) => {
   //TODO: Add loading icon based on status
-  const [tableRows, setTableRows] = React.useState<IRowData[]>([]);
 
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddressSpace;
@@ -73,14 +80,14 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
 
   const toTableCells = (row: IAddressSpace) => {
     const tableRow: IRowData = {
+      selected: row.selected,
       cells: [
         {
           header: "name",
           title: (
             <>
               <Link
-                to={`address-spaces/${row.nameSpace}/${row.name}/${row.type}/addresses`}
-              >
+                to={`address-spaces/${row.nameSpace}/${row.name}/${row.type}/addresses`}>
                 {row.name}
               </Link>
               <br />
@@ -92,7 +99,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
           header: "type",
           title: (
             <>
-              <AddressSpaceIcon/>
+              <AddressSpaceIcon />
               <AddressSpaceType type={row.type} />
             </>
           )
@@ -110,12 +117,10 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
     };
     return tableRow;
   };
-
-  useEffect(() => setTableRows(rows.map(toTableCells)), [rows]);
   const tableColumns = [
-    { 
+    {
       title: (
-        <span style={{ display: "inline-flex"}}>
+        <span style={{ display: "inline-flex" }}>
           <div>
             Name
             <br />
@@ -129,8 +134,8 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
     "Status",
     "Time created"
   ];
-
-  const onSelect = (
+  const tableRows = rows.map(toTableCells);
+  const onSelect = async (
     event: React.MouseEvent,
     isSelected: boolean,
     rowIndex: number,
@@ -139,15 +144,20 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   ) => {
     let rows;
     if (rowIndex === -1) {
-      rows = tableRows.map(oneRow => {
-        oneRow.selected = isSelected;
-        return oneRow;
+      rows = tableRows.map(a => {
+        const data = a;
+        data.selected = isSelected;
+        return data;
       });
+      onSelectAllAddressSpace(
+        rows.map(row => row.originalData),
+        isSelected
+      );
     } else {
       rows = [...tableRows];
       rows[rowIndex].selected = isSelected;
+      onSelectAddressSpace(rows[rowIndex].originalData, isSelected);
     }
-    setTableRows(rows);
   };
 
   return (
@@ -159,8 +169,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
       actionResolver={actionResolver}
       aria-label="address space list"
       onSort={onSort}
-      sortBy={sortBy}
-    >
+      sortBy={sortBy}>
       <TableHeader id="aslist-table-header" />
       <TableBody />
     </Table>
