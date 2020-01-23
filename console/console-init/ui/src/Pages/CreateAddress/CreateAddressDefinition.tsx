@@ -112,6 +112,8 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
             description: plan.Spec.ShortDescription
           };
         });
+        setPlan(" ");
+        setTopic(" ");
         setPlanOptions(planOptions);
       }
       if (type === "subscription") {
