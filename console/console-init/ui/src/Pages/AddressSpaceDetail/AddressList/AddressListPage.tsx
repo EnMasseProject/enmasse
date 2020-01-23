@@ -106,7 +106,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     senders: getFilteredValue(address.Metrics, "enmasse_senders"),
     receivers: getFilteredValue(address.Metrics, "enmasse_receivers"),
     partitions:
-      address.Status.PlanStatus !== null || undefined
+      address.Status.PlanStatus 
         ? address.Status.PlanStatus.Partitions
         : null,
     isReady: address.Status.IsReady,
