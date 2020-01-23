@@ -49,6 +49,7 @@ interface IAddressSpaceListFilterProps {
 
 interface IAddressSpaceListKebabProps {
   createAddressSpaceOnClick: () => void;
+  onDeleteAll:()=>void;
 }
 export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFilterProps> = ({
   filterValue,
@@ -93,8 +94,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     { key: "typeStandard", value: "Standard" },
     { key: "typeBrokered", value: "Brokered" }
   ];
-
-  const sortMenuItems = [{ key: "name", value: "Name", index: 1 }];
 
   const onClickSearchIcon = (event: any) => {
     if (filterValue) {
@@ -460,12 +459,13 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
 };
 
 export const AddressSpaceListKebab: React.FunctionComponent<IAddressSpaceListKebabProps> = ({
-  createAddressSpaceOnClick
+  createAddressSpaceOnClick,
+  onDeleteAll
 }) => {
   const [isKebabOpen, setIsKebabOpen] = React.useState(false);
 
   const dropdownItems = [
-    <DropdownItem key="delete-all" onClick={() => {}}>
+    <DropdownItem key="delete-all" component="button" value="deleteAll">
       Delete All
     </DropdownItem>
     // <OverflowMenuDropdownItem key="secondary" isShared={true}>
@@ -479,8 +479,11 @@ export const AddressSpaceListKebab: React.FunctionComponent<IAddressSpaceListKeb
     setIsKebabOpen(isOpen);
   };
 
-  const onKebabSelect = (event: any) => {
-    setIsKebabOpen(isKebabOpen);
+  const onKebabSelect = async (event: any) => {
+    if(event.target.value === "deleteAll"){
+      await onDeleteAll();
+    }
+    setIsKebabOpen(!isKebabOpen);
   };
   return (
     <>

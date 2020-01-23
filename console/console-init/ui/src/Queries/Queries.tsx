@@ -21,6 +21,11 @@ export const DELETE_ADDRESS = gql`
     deleteAddress(input: $a)
   }
 `;
+export const PURGE_ADDRESS = gql`
+  mutation purge_addr($a:ObjectMeta_v1_Input!) {
+    purgeAddress(input:$a)
+  }
+`;
 
 export const RETURN_ALL_ADDRESS_SPACES = (
   page: number,
