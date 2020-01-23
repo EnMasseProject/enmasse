@@ -113,7 +113,18 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
 
   useEffect(() => setTableRows(rows.map(toTableCells)), [rows]);
   const tableColumns = [
-    { title: "Name/Name Space", transforms: [sortable] },
+    { 
+      title: (
+        <span style={{ display: "inline-flex"}}>
+          <div>
+            Name
+            <br />
+            <small>Namespace</small>
+          </div>
+        </span>
+      ),
+      transforms: [sortable]
+    },
     "Type",
     "Status",
     "Time created"
