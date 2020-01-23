@@ -22,7 +22,7 @@ import useWindowDimensions from "src/Components/Common/WindowDimension";
 
 export interface IAddress {
   name: string;
-  displayName:string;
+  displayName: string;
   namespace: string;
   type: string;
   planLabel: string;
@@ -32,7 +32,7 @@ export interface IAddress {
   storedMessages: number;
   senders: number;
   receivers: number;
-  partitions: number;
+  partitions: number | null;
   isReady: boolean;
   errorMessages?: string[];
   status?: string;
@@ -73,7 +73,9 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     if (row.isReady) {
       const tableRow: IRowData = {
         cells: [
-          { title: <Link to={`addresses/${row.name}`}>{row.displayName}</Link> },
+          {
+            title: <Link to={`addresses/${row.name}`}>{row.displayName}</Link>
+          },
           { title: <TypePlan type={row.type} plan={row.planLabel} /> },
           {
             title: (
@@ -93,7 +95,9 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
               />
             )
           },
-          row.type === "multicast" || row.type === "anycast"? "" : row.storedMessages,
+          row.type === "multicast" || row.type === "anycast"
+            ? ""
+            : row.storedMessages,
           row.senders,
           row.receivers,
           row.type == "queue" ? row.partitions : ""
@@ -104,7 +108,9 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     } else {
       const tableRow: IRowData = {
         cells: [
-          { title: <Link to={`addresses/${row.name}`}>{row.displayName}</Link> },
+          {
+            title: <Link to={`addresses/${row.name}`}>{row.displayName}</Link>
+          },
           { title: <TypePlan type={row.type} plan={row.planLabel} /> },
           {
             title: row.errorMessages ? (
