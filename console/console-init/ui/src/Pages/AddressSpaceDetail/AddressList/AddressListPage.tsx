@@ -92,7 +92,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   setTotalAddress(addresses.Total);
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
     name: address.ObjectMeta.Name,
-    displayName:address.Spec.Address,
+    displayName: address.Spec.Address,
     namespace: address.ObjectMeta.Namespace,
     type: address.Spec.Type,
     planLabel: address.Spec.Plan.Spec.DisplayName,
@@ -105,7 +105,10 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     ),
     senders: getFilteredValue(address.Metrics, "enmasse_senders"),
     receivers: getFilteredValue(address.Metrics, "enmasse_receivers"),
-    partitions: address.Status.PlanStatus.Partitions,
+    partitions:
+      address.Status.PlanStatus !== null || undefined
+        ? address.Status.PlanStatus.Partitions
+        : null,
     isReady: address.Status.IsReady,
     status: address.Status.Phase,
     errorMessages: address.Status.Messages
@@ -197,18 +200,21 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
               key="confirm"
               id="al-edit-confirm"
               variant="primary"
-              onClick={handleSaving}>
+              onClick={handleSaving}
+            >
               Confirm
             </Button>,
             <Button
               key="cancel"
               id="al-edit-cancel"
               variant="link"
-              onClick={handleCancelEdit}>
+              onClick={handleCancelEdit}
+            >
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned>
+          isFooterLeftAligned
+        >
           <EditAddress
             name={addressBeingEdited.name}
             type={addressBeingEdited.type}
