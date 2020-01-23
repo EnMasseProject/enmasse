@@ -142,7 +142,6 @@ export default function AddressSpaceDetailPage() {
         }
       }
     });
-    console.log(deletedData);
     if (deletedData.data && deletedData.data.deleteAddressSpace) {
       setIsDeleteModalOpen(!isDeleteModalOpen);
       history.push("/");

@@ -77,7 +77,6 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
     addresses.Addresses[0].Links.Total > 0 &&
     addresses.Addresses[0].Links;
 
-  console.log(links);
   let clientRows: IClient[] = addresses.Addresses[0].Links.Links.map(link => ({
     role: link.Spec.Role.toString(),
     containerId: link.Spec.Connection.Spec.ContainerId,

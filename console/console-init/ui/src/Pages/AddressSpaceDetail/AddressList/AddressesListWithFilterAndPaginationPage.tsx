@@ -18,9 +18,12 @@ import { StyleSheet } from "@patternfly/react-styles";
 import { AddressListFilterPage } from "./AddressListFilterPage";
 import { AddressListPage } from "./AddressListPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
-import { useQuery } from "@apollo/react-hooks";
-import { CURRENT_ADDRESS_SPACE_PLAN } from "src/Queries/Queries";
-import { ISortBy } from "@patternfly/react-table";
+import { useQuery, useApolloClient } from "@apollo/react-hooks";
+import {
+  CURRENT_ADDRESS_SPACE_PLAN,
+  DELETE_ADDRESS
+} from "src/Queries/Queries";
+import { ISortBy, IRowData } from "@patternfly/react-table";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -59,11 +62,15 @@ export default function AddressesList() {
   );
   const location = useLocation();
   const history = useHistory();
+  const client = useApolloClient();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
   const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
+  const [onCreationRefetch, setOnCreationRefetch] = React.useState<boolean>(
+    false
+  );
 
   const { data } = useQuery<IAddressSpacePlanResponse>(
     CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
@@ -119,6 +126,41 @@ export default function AddressesList() {
       />
     );
   };
+
+  let selectedAddresses: IRowData[] = [];
+  const setSelectedAddressesFunc = (values: IRowData[]) => {
+    const selectedData = values.filter(value => value.selected === true);
+    selectedAddresses = selectedData.map(data => data.originalData);
+  };
+
+  let errorData = [];
+
+  const deleteAddress = async (data: any) => {
+    const deletedData = await client.mutate({
+      mutation: DELETE_ADDRESS,
+      variables: {
+        a: {
+          Name: data.name,
+          Namespace: data.namespace
+        }
+      }
+    });
+    if (deletedData.errors) {
+      errorData.push(data);
+    }
+    return deletedData;
+  };
+
+  const onDeleteAll = async () => {
+    if (selectedAddresses && selectedAddresses.length > 0)
+      selectedAddresses.map(address => deleteAddress(address));
+    setOnCreationRefetch(true);
+  };
+
+  const onPurgeAll = async () => {
+    console.log("Purge", selectedAddresses);
+  };
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
@@ -134,9 +176,12 @@ export default function AddressesList() {
             setStatusValue={setStatusValue}
             totalAddresses={totalAddresses}
             sortValue={sortDropDownValue}
+            setOnCreationRefetch={setOnCreationRefetch}
             setSortValue={setSortDropdownValue}
             isCreateWizardOpen={isCreateWizardOpen}
             setIsCreateWizardOpen={setIsCreateWizardOpen}
+            onDeleteAllAddress={onDeleteAll}
+            onPurgeAllAddress={onPurgeAll}
           />
         </GridItem>
         <GridItem span={5}>
@@ -159,6 +204,9 @@ export default function AddressesList() {
         setSortValue={setSortDropdownValue}
         isWizardOpen={isCreateWizardOpen}
         setIsWizardOpen={setIsCreateWizardOpen}
+        setSelectedAddresses={setSelectedAddressesFunc}
+        onCreationRefetch={onCreationRefetch}
+        setOnCreationRefetch={setOnCreationRefetch}
       />
       {totalAddresses > 0 && renderPagination(page, perPage)}
     </PageSection>

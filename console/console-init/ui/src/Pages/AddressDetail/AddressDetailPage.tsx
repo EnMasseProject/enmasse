@@ -68,7 +68,6 @@ export default function AddressDetailPage() {
     RETURN_ADDRESS_DETAIL(name, namespace, addressname),
     { pollInterval: 20000 }
   );
-  console.log(data)
 
   const addressSpaces = useQuery<IAddressSpacePlanResponse>(
     CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
@@ -82,7 +81,6 @@ export default function AddressDetailPage() {
 
   if (loading) return <Loading />;
   if (error) console.log(error);
-  console.log(data);
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };

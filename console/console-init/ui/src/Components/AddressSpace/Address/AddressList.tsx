@@ -36,6 +36,7 @@ export interface IAddress {
   isReady: boolean;
   errorMessages?: string[];
   status?: string;
+  selected?:boolean;
 }
 
 interface IAddressListProps {
@@ -44,6 +45,7 @@ interface IAddressListProps {
   onDelete: (rowData: IAddress) => void;
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
+  setSelectedAddresses:(values:IRowData[])=>void;
 }
 
 export const AddressList: React.FunctionComponent<IAddressListProps> = ({
@@ -51,7 +53,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   onEdit,
   onDelete,
   sortBy,
-  onSort
+  onSort,
+  setSelectedAddresses
 }) => {
   const [tableRows, setTableRows] = React.useState<IRowData[]>([]);
   const { width } = useWindowDimensions();
@@ -70,6 +73,10 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   };
   //TODO: Display error after the phase variable is exposed from backend.
   const toTableCells = (row: IAddress) => {
+    const matchData = tableRows.filter(r=>r && r.originalData &&  r.originalData.name===row.name);
+    if(matchData && matchData.length>0) {
+      row.selected=matchData[0].selected;
+    }
     if (row.isReady) {
       const tableRow: IRowData = {
         cells: [
@@ -104,6 +111,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
         ],
         originalData: row
       };
+      tableRow.selected=row.selected && row.selected;
       return tableRow;
     } else {
       const tableRow: IRowData = {
@@ -123,6 +131,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
         ],
         originalData: row
       };
+      tableRow.selected=row.selected && row.selected;
       return tableRow;
     }
   };
@@ -179,9 +188,9 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       rows = [...tableRows];
       rows[rowIndex].selected = isSelected;
     }
-    // setTableRows(rows);
+    setTableRows(rows);
+    setSelectedAddresses(rows);
   };
-
   return (
     <Table
       variant={TableVariant.compact}

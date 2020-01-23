@@ -21,7 +21,7 @@ import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "src/Components/AddressSpace/Address/EmptyAddress";
 import { EditAddress } from "../../EditAddressPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { ISortBy } from "@patternfly/react-table";
+import { ISortBy, IRowData } from "@patternfly/react-table";
 export interface IAddressListPageProps {
   name?: string;
   namespace?: string;
@@ -37,6 +37,9 @@ export interface IAddressListPageProps {
   setSortValue: (value: ISortBy) => void;
   isWizardOpen: boolean;
   setIsWizardOpen: (value: boolean) => void;
+  setSelectedAddresses:(values:IRowData[])=>void;
+  onCreationRefetch?: boolean;
+  setOnCreationRefetch: (value: boolean) => void;
 }
 export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = ({
   name,
@@ -52,7 +55,10 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   sortValue,
   setSortValue,
   isWizardOpen,
-  setIsWizardOpen
+  setIsWizardOpen,
+  setSelectedAddresses,
+  onCreationRefetch,
+  setOnCreationRefetch
 }) => {
   const [
     addressBeingEdited,
@@ -81,14 +87,19 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       statusValue,
       sortBy
     ),
-    { pollInterval: 2000, fetchPolicy: "network-only" }
+    { pollInterval: 10000, fetchPolicy: "network-only" }
   );
+
+  if (onCreationRefetch) {
+    refetch();
+    setOnCreationRefetch(false);
+  }
+  
   if (loading) return <Loading />;
   if (error) return <Loading />;
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };
-  console.log(data);
   setTotalAddress(addresses.Total);
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
     name: address.ObjectMeta.Name,
@@ -179,6 +190,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         onDelete={handleDeleteChange}
         sortBy={sortBy}
         onSort={onSort}
+        setSelectedAddresses={setSelectedAddresses}
       />
       {addresses.Total > 0 ? (
         " "

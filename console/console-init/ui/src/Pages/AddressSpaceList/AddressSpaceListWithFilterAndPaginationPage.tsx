@@ -16,11 +16,14 @@ import {
 import { AddressSpaceListPage } from "./AddressSpaceListPage";
 import { AddressSpaceListFilterPage } from "./AddressSpaceListFilterPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
-import { ISortBy } from "@patternfly/react-table";
+import { ISortBy, IRowData } from "@patternfly/react-table";
+import { DELETE_ADDRESS_SPACE } from "src/Queries/Queries";
+import { useApolloClient } from "@apollo/react-hooks";
 
 export default function AddressSpaceListWithFilterAndPagination() {
   useDocumentTitle("Address Space List");
   useA11yRouteChange();
+  const client = useApolloClient();
   const [filterValue, setFilterValue] = React.useState<string>("Name");
   const [filterNames, setFilterNames] = React.useState<string[]>([]);
   const [onCreationRefetch, setOnCreationRefetch] = React.useState<boolean>(
@@ -77,6 +80,35 @@ export default function AddressSpaceListWithFilterAndPagination() {
       />
     );
   };
+  let addressSpacesToDelete: IRowData[] = [];
+  const setSelectedAddressSpacesFunc = (values: IRowData[]) => {
+    const selectedData = values.filter(value => value.selected === true);
+    addressSpacesToDelete = selectedData.map(data => data.originalData);
+  };
+  let errorData = [];
+  const deleteAddressSpace = async (data: any) => {
+    const deletedData = await client.mutate({
+      mutation: DELETE_ADDRESS_SPACE,
+      variables: {
+        a: {
+          Name: data.name,
+          Namespace: data.nameSpace
+        }
+      }
+    });
+    if (deletedData.errors) {
+      errorData.push(data);
+    }
+    return deletedData;
+  };
+  const onDeleteAll = async() => {
+    if (addressSpacesToDelete && addressSpacesToDelete.length > 0)
+      addressSpacesToDelete.map(addressspace =>
+        deleteAddressSpace(addressspace)
+      );
+      setOnCreationRefetch(true);
+  };
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
@@ -96,6 +128,7 @@ export default function AddressSpaceListWithFilterAndPagination() {
             setSortValue={setSortDropdownValue}
             isCreateWizardOpen={isCreateWizardOpen}
             setIsCreateWizardOpen={setIsCreateWizardOpen}
+            onDeleteAll={onDeleteAll}
           />
         </GridItem>
         <GridItem span={5}>
@@ -117,6 +150,7 @@ export default function AddressSpaceListWithFilterAndPagination() {
         setSortValue={setSortDropdownValue}
         isCreateWizardOpen={isCreateWizardOpen}
         setIsCreateWizardOpen={setIsCreateWizardOpen}
+        setSelectedAddressSpaces={setSelectedAddressSpacesFunc}
       />
       {totalAddressSpaces > 0 && renderPagination(page, perPage)}
     </PageSection>

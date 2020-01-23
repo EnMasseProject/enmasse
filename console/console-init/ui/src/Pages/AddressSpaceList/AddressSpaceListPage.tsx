@@ -20,7 +20,7 @@ import {
 } from "src/Queries/Queries";
 import { IAddressSpacesResponse } from "src/Types/ResponseTypes";
 import { EditAddressSpace } from "../EditAddressSpace";
-import { ISortBy } from "@patternfly/react-table";
+import { ISortBy, IRowData } from "@patternfly/react-table";
 
 interface AddressSpaceListPageProps {
   page: number;
@@ -36,6 +36,7 @@ interface AddressSpaceListPageProps {
   setSortValue: (value: ISortBy) => void;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
+  setSelectedAddressSpaces:(values:IRowData[])=>void;
 }
 export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageProps> = ({
   page,
@@ -50,7 +51,8 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   sortValue,
   setSortValue,
   isCreateWizardOpen,
-  setIsCreateWizardOpen
+  setIsCreateWizardOpen,
+  setSelectedAddressSpaces
 }) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
@@ -78,7 +80,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
       filter_Type,
       sortBy
     ),
-    { pollInterval: 20000, fetchPolicy: "network-only" }
+    { pollInterval: 5000, fetchPolicy: "network-only" }
   );
   if (onCreationRefetch) {
     refetch();
@@ -146,7 +148,6 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   const { addressSpaces } = data || {
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
-  console.log(addressSpaces.AddressSpaces);
   setTotalAddressSpaces(addressSpaces.Total);
   const addressSpacesList = addressSpaces.AddressSpaces.map(addSpace => ({
     name: addSpace.ObjectMeta.Name,
@@ -161,7 +162,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
   };
-
+  const [rcvData,setRcvData] = React.useState([]);
   return (
     <>
       {totalAddressSpaces > 0 ? (
@@ -171,6 +172,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           onDelete={handleDeleteChange}
           onSort={onSort}
           sortBy={sortBy}
+          setSelectedAddressSpaces={setSelectedAddressSpaces}
         />
       ) : (
         <EmptyAddressSpace

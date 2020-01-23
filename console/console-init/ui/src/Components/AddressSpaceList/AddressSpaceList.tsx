@@ -38,6 +38,12 @@ interface IAddressListProps {
   onDelete: (rowData: IAddressSpace) => void;
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
+  setSelectedAddressSpaces: (values: IRowData[]) => void;
+}
+
+export interface IAddressSpaceNameAndNameSpace {
+  name: string;
+  namespace: string;
 }
 
 export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
@@ -45,7 +51,8 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   onEdit,
   onDelete,
   sortBy,
-  onSort
+  onSort,
+  setSelectedAddressSpaces
 }) => {
   //TODO: Add loading icon based on status
   const [tableRows, setTableRows] = React.useState<IRowData[]>([]);
@@ -72,15 +79,27 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   };
 
   const toTableCells = (row: IAddressSpace) => {
+    const dataPresentInTableRow = tableRows.filter(
+      data => data.originalData.name === row.name
+    );
+    let isSelected;
+    if (dataPresentInTableRow && dataPresentInTableRow.length > 0) {
+      if (dataPresentInTableRow[0].selected) {
+        isSelected = dataPresentInTableRow[0].selected;
+      }
+    }
+    return getRowData(row, isSelected);
+  };
+  const getRowData = (row: IAddressSpace, isSelected?: boolean) => {
     const tableRow: IRowData = {
+      selected: isSelected,
       cells: [
         {
           header: "name",
           title: (
             <>
               <Link
-                to={`address-spaces/${row.nameSpace}/${row.name}/${row.type}/addresses`}
-              >
+                to={`address-spaces/${row.nameSpace}/${row.name}/${row.type}/addresses`}>
                 {row.name}
               </Link>
               <br />
@@ -92,7 +111,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
           header: "type",
           title: (
             <>
-              <AddressSpaceIcon/>
+              <AddressSpaceIcon />
               <AddressSpaceType type={row.type} />
             </>
           )
@@ -130,7 +149,17 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
     "Time created"
   ];
 
-  const onSelect = (
+  const matchAndUpdateRow = (rowData: IAddressSpace) => {
+    const dataFromOldTableRows = tableRows.filter(
+      row => row.originalData.name === rowData.name
+    );
+    if (dataFromOldTableRows && dataFromOldTableRows.length > 0) {
+      return getRowData(rowData, dataFromOldTableRows[0].selected);
+    }
+    return getRowData(rowData, undefined);
+  };
+
+  const onSelect = async (
     event: React.MouseEvent,
     isSelected: boolean,
     rowIndex: number,
@@ -147,7 +176,8 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
       rows = [...tableRows];
       rows[rowIndex].selected = isSelected;
     }
-    setTableRows(rows);
+    setTableRows(rows)
+    setSelectedAddressSpaces(rows);
   };
 
   return (
@@ -159,8 +189,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
       actionResolver={actionResolver}
       aria-label="address space list"
       onSort={onSort}
-      sortBy={sortBy}
-    >
+      sortBy={sortBy}>
       <TableHeader id="aslist-table-header" />
       <TableBody />
     </Table>

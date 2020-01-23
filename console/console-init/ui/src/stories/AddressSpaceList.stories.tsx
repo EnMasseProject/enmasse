@@ -57,6 +57,7 @@ stories.add("Address Space List", () => (
       rows={rows}
       onEdit={action("onEdit")}
       onDelete={action("onDelete")}
+      setSelectedAddressSpaces={action("OnSelect")}
     />
   </MemoryRouter>
 ));
