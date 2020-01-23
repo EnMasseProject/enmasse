@@ -178,12 +178,16 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   const handleBrokeredChange = () => {
     setIsBrokeredChecked(true);
     setIsStandardChecked(false);
+    setPlan(" ");
+    setAuthenticationService(" ");
     setType("brokered");
   };
 
   const handleStandardChange = () => {
     setIsStandardChecked(true);
     setIsBrokeredChecked(false);
+    setPlan(" ");
+    setAuthenticationService(" ");
     setType("standard");
   };
 
@@ -268,12 +272,13 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
               <br />
               <Dropdown
                 id="cas-dropdown-plan"
-                position={DropdownPosition.left}
+                position={DropdownPosition.right}
                 onSelect={onPlanSelect}
                 isOpen={isPlanOpen}
                 style={{ display: "flex" }}
                 toggle={
                   <DropdownToggle
+                    isDisabled={type.trim() === ""}
                     style={{ flex: "1", position: "inherit" }}
                     onToggle={() => setIsPlanOpen(!isPlanOpen)}
                   >
@@ -309,6 +314,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                 style={{ display: "flex" }}
                 toggle={
                   <DropdownToggle
+                    isDisabled={type.trim() === ""}
                     style={{ flex: "1", position: "inherit" }}
                     onToggle={() =>
                       setIsAuthenticationServiceOpen(
@@ -328,8 +334,6 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                     component={"button"}
                   >
                     <b>{option.label}</b>
-                    <br />
-                    {option.description}
                   </DropdownItem>
                 ))}
               />
