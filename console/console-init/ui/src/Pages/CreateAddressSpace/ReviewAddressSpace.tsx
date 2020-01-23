@@ -87,7 +87,7 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
           }}
         >
           <Grid>
-            {name && (
+            {name && name.trim() !== "" && (
               <>
                 <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
                   Instance name
@@ -97,7 +97,7 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
                 </GridItem>
               </>
             )}
-            {namespace && (
+            {namespace && namespace.trim() !== "" && (
               <>
                 <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
                   Namespace
