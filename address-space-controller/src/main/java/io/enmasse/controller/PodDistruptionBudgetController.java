@@ -114,13 +114,13 @@ public class PodDistruptionBudgetController implements Controller {
                     changed = true;
                 }
 
-                Integer minAvailable = infraConfig.getSpec().getRouter().getMinAvailable();
+                Integer minAvailable = infraConfig.getSpec().getBroker().getMinAvailable();
                 if (needsUpdate(podDisruptionBudget.getSpec().getMinAvailable(), minAvailable)) {
                     podDisruptionBudget.getSpec().setMinAvailable(new IntOrString(minAvailable));
                     changed = true;
                 }
 
-                Integer maxUnavailable = infraConfig.getSpec().getRouter().getMaxUnavailable();
+                Integer maxUnavailable = infraConfig.getSpec().getBroker().getMaxUnavailable();
                 if (needsUpdate(podDisruptionBudget.getSpec().getMaxUnavailable(), maxUnavailable)) {
                     podDisruptionBudget.getSpec().setMaxUnavailable(new IntOrString(maxUnavailable));
                     changed = true;
