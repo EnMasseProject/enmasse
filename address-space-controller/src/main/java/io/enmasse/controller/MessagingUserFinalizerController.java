@@ -47,7 +47,9 @@ public class MessagingUserFinalizerController extends AbstractFinalizerControlle
             final List<User> users = userClient.inNamespace(addressSpace.getMetadata().getNamespace()).list().getItems().stream()
                     .filter(user -> user.getMetadata().getName().startsWith(addressSpace.getMetadata().getName() + "."))
                     .collect(Collectors.toList());
-            userClient.inNamespace(addressSpace.getMetadata().getNamespace()).delete(users);
+            for (User user : users) {
+                userClient.inNamespace(user.getMetadata().getNamespace()).withName(user.getMetadata().getName()).cascading(true).delete();
+            }
             return Result.completed(addressSpace);
         } catch (KubernetesClientException e) {
             // If not found, the address CRD does not exist so we drop the finalizer
