@@ -1,5 +1,6 @@
 ## 0.31.0
-*  #3686: Add metrics endpoint to controller-manager
+*  Adding example partitioned/sharded queue example plans
+*  #3686: Add metrics endpoint to controller-managerxs
 *  #2714: Allow setting security context of pods using persistent volumes
 *  #3622: Manage iot projects in enmasse-operator and remove iot-operator deployment
 *  #3407: AddressSpace, Address and MessagingUser resources are now backed by Custom Resource Definitions (CRD) rather than api-server:

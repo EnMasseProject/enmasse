@@ -16,20 +16,23 @@ spec:
     broker: 10000.0
     aggregate: 10000.0
   addressPlans:
-  - standard-small-anycast
-  - standard-medium-anycast
-  - standard-large-anycast
-  - standard-small-multicast
-  - standard-medium-multicast
-  - standard-large-multicast
-  - standard-small-queue
-  - standard-medium-queue
-  - standard-large-queue
-  - standard-xlarge-queue
-  - standard-small-topic
-  - standard-medium-topic
-  - standard-large-topic
-  - standard-xlarge-topic
-  - standard-small-subscription
-  - standard-medium-subscription
-  - standard-large-subscription
+    - standard-small-anycast
+    - standard-medium-anycast
+    - standard-large-anycast
+    - standard-small-multicast
+    - standard-medium-multicast
+    - standard-large-multicast
+    - standard-small-queue
+    - standard-medium-queue
+    - standard-large-queue
+    - standard-xlarge-queue
+    - standard-small-partitioned-queue
+    - standard-medium-partitioned-queue
+    - standard-large-partitioned-queue
+    - standard-small-topic
+    - standard-medium-topic
+    - standard-large-topic
+    - standard-xlarge-topic
+    - standard-small-subscription
+    - standard-medium-subscription
+    - standard-large-subscription
