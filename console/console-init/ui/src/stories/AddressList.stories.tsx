@@ -75,6 +75,10 @@ export const addressList = () => (
       rowsData={rows}
       onEdit={action("onEdit")}
       onDelete={action("onDelete")}
+      onSelectAddress={action("select address")}
+      onSelectAllAddress={action("SelectAllAddress")}
+      // setSelectedAddresses={action("onSelect")}
+      // setSelectedAddress={action("on select")}
       // onCheckboxEdit={action("onCheckBoxEdit")}
       // rows={[]}
     />
