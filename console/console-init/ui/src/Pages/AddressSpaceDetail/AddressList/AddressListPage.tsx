@@ -21,7 +21,7 @@ import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "src/Components/AddressSpace/Address/EmptyAddress";
 import { EditAddress } from "../../EditAddressPage";
 import { DeletePrompt } from "src/Components/Common/DeletePrompt";
-import { ISortBy } from "@patternfly/react-table";
+import { ISortBy, IRowData } from "@patternfly/react-table";
 export interface IAddressListPageProps {
   name?: string;
   namespace?: string;
@@ -37,6 +37,20 @@ export interface IAddressListPageProps {
   setSortValue: (value: ISortBy) => void;
   isWizardOpen: boolean;
   setIsWizardOpen: (value: boolean) => void;
+  onCreationRefetch?: boolean;
+  setOnCreationRefetch: (value: boolean) => void;
+  selectedAddresses: Array<IAddress>;
+  onSelectAddress: (address: IAddress, isSelected: boolean) => void;
+  onSelectAllAddress: (addresses: IAddress[], isSelected: boolean) => void;
+}
+
+export function compareTwoAddress(
+  name1: string,
+  name2: string,
+  namespace1: string,
+  namespace2: string
+) {
+  return name1 === name2 && namespace1 === namespace2;
 }
 export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = ({
   name,
@@ -52,7 +66,12 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   sortValue,
   setSortValue,
   isWizardOpen,
-  setIsWizardOpen
+  setIsWizardOpen,
+  onCreationRefetch,
+  setOnCreationRefetch,
+  selectedAddresses,
+  onSelectAddress,
+  onSelectAllAddress
 }) => {
   const [
     addressBeingEdited,
@@ -81,14 +100,19 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       statusValue,
       sortBy
     ),
-    { pollInterval: 2000, fetchPolicy: "network-only" }
+    { pollInterval: 10000, fetchPolicy: "network-only" }
   );
+
+  if (onCreationRefetch) {
+    refetch();
+    setOnCreationRefetch(false);
+  }
+
   if (loading) return <Loading />;
   if (error) return <Loading />;
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };
-  console.log(data);
   setTotalAddress(addresses.Total);
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
     name: address.ObjectMeta.Name,
@@ -105,14 +129,23 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     ),
     senders: getFilteredValue(address.Metrics, "enmasse_senders"),
     receivers: getFilteredValue(address.Metrics, "enmasse_receivers"),
-    partitions:
-      address.Status.PlanStatus 
-        ? address.Status.PlanStatus.Partitions
-        : null,
+    partitions: address.Status.PlanStatus
+      ? address.Status.PlanStatus.Partitions
+      : null,
     isReady: address.Status.IsReady,
     status: address.Status.Phase,
-    errorMessages: address.Status.Messages
+    errorMessages: address.Status.Messages,
+    selected:
+      selectedAddresses.filter(({ name, namespace }) =>
+        compareTwoAddress(
+          name,
+          address.ObjectMeta.Name,
+          namespace,
+          address.ObjectMeta.Namespace
+        )
+      ).length == 1
   }));
+
   const handleEdit = (data: IAddress) => {
     if (!addressBeingEdited) {
       setAddressBeingEdited(data);
@@ -179,6 +212,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         onDelete={handleDeleteChange}
         sortBy={sortBy}
         onSort={onSort}
+        onSelectAddress={onSelectAddress}
+        onSelectAllAddress={onSelectAllAddress}
       />
       {addresses.Total > 0 ? (
         " "
@@ -200,21 +235,18 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
               key="confirm"
               id="al-edit-confirm"
               variant="primary"
-              onClick={handleSaving}
-            >
+              onClick={handleSaving}>
               Confirm
             </Button>,
             <Button
               key="cancel"
               id="al-edit-cancel"
               variant="link"
-              onClick={handleCancelEdit}
-            >
+              onClick={handleCancelEdit}>
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned
-        >
+          isFooterLeftAligned>
           <EditAddress
             name={addressBeingEdited.name}
             type={addressBeingEdited.type}
