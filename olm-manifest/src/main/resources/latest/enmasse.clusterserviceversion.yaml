@@ -440,6 +440,61 @@ spec:
   - type: AllNamespaces
     supported: true
 
+  relatedImages:
+    - name: address-space-controller
+      image: ${env.ADDRESS_SPACE_CONTROLLER_IMAGE}
+    - name: standard-controller
+      image: ${env.STANDARD_CONTROLLER_IMAGE}
+    - name: router
+      image: ${env.ROUTER_IMAGE}
+    - name: broker
+      image: ${env.BROKER_IMAGE}
+    - name: broker-plugin
+      image: ${env.BROKER_PLUGIN_IMAGE}
+    - name: topic-forwarder
+      image: ${env.TOPIC_FORWARDER_IMAGE}
+    - name: agent
+      image: ${env.AGENT_IMAGE}
+    - name: none-authservice
+      image: ${env.NONE_AUTHSERVICE_IMAGE}
+    - name: keycloak
+      image: ${env.KEYCLOAK_IMAGE}
+    - name: keycloak-plugin
+      image: ${env.KEYCLOAK_PLUGIN_IMAGE}
+    - name: mqtt-gateway
+      image: ${env.MQTT_GATEWAY_IMAGE}
+    - name: mqtt-lwt
+      image: ${env.MQTT_LWT_IMAGE}
+    - name: console-init
+      image: ${env.CONSOLE_INIT_IMAGE}
+    - name: console-proxy-openshift
+      image: ${env.CONSOLE_PROXY_OPENSHIFT_IMAGE}
+    - name: console-proxy-kubernetes
+      image: ${env.CONSOLE_PROXY_KUBERNETES_IMAGE}
+    - name: console-httpd
+      image: ${env.CONSOLE_HTTPD_IMAGE}
+    - name: controller-manager
+      image: ${env.CONTROLLER_MANAGER_IMAGE}
+    - name: iot-proxy-configurator
+      image: ${env.IOT_PROXY_CONFIGURATOR_IMAGE}
+    - name: iot-auth-service
+      image: ${env.IOT_AUTH_SERVICE_IMAGE}
+    - name: iot-device-registry-file
+      image: ${env.IOT_DEVICE_REGISTRY_FILE_IMAGE}
+    - name: iot-device-registry-infinispan
+      image: ${env.IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
+    - name: iot-http-adapter
+      image: ${env.IOT_HTTP_ADAPTER_IMAGE}
+    - name: iot-mqtt-adapter
+      image: ${env.IOT_MQTT_ADAPTER_IMAGE}
+    - name: iot-lorawan-adapter
+      image: ${env.IOT_LORAWAN_ADAPTER_IMAGE}
+    - name: iot-sigfox-adapter
+      image: ${env.IOT_SIGFOX_ADAPTER_IMAGE}
+    - name: iot-tenant-service
+      image: ${env.IOT_TENANT_SERVICE_IMAGE}
+    - name: iot-tenant-cleaner
+      image: ${env.IOT_TENANT_CLEANER_IMAGE}
   install:
     strategy: deployment
     spec:
