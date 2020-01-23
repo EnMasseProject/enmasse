@@ -251,7 +251,6 @@ public class OperatorManager {
 
     public boolean clean() throws Exception {
         KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse,enmasse-component=iot");
-        KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse,enmasse-component=tenant-api");
         KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
