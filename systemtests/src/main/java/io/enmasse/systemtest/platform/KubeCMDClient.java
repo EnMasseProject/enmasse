@@ -288,7 +288,7 @@ public class KubeCMDClient {
                 "--output", "custom-columns=LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}",
                 "--sort-by={.lastTimestamp}");
 
-        return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
+        return Exec.execute(command, ONE_MINUTE_TIMEOUT, true);
     }
 
     public static ExecutionResultData getApiServices(String name) {
@@ -306,11 +306,11 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData describePods(String namespace) {
-        return Exec.execute(DEFAULT_SYNC_TIMEOUT, false, CMD, "-n", namespace, "describe", "pods");
+        return Exec.execute(DEFAULT_SYNC_TIMEOUT, true, CMD, "-n", namespace, "describe", "pods");
     }
 
     public static ExecutionResultData describeNodes() {
-        return Exec.execute(DEFAULT_SYNC_TIMEOUT, false, CMD, "describe", "nodes");
+        return Exec.execute(DEFAULT_SYNC_TIMEOUT, true, CMD, "describe", "nodes");
     }
 
     public static ExecutionResultData createFromFile(String namespace, Path path) {
