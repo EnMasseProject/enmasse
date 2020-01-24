@@ -11,6 +11,7 @@ import { IClient, ClientList } from "src/Components/AddressDetail/ClientList";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { EmptyLinks } from "src/Components/Common/EmptyLinks";
 import { ISortBy } from "@patternfly/react-table";
+import { Loading } from "use-patternfly";
 
 export interface IAddressLinksListProps {
   page: number;
@@ -56,9 +57,9 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
       sortBy,
       filterRole
     ),
-    { pollInterval: 20000 }
+    { pollInterval: 5000 }
   );
-  // if (loading) return <Loading />;
+  if (loading) return <Loading />;
   if (error) console.log(error);
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }

@@ -9,12 +9,6 @@ import { AddressSpaceConfiguration } from "src/Pages/CreateAddressSpace/CreateAd
 import { ReviewAddressSpace } from "src/Pages/CreateAddressSpace/ReviewAddressSpace";
 import { useApolloClient } from "@apollo/react-hooks";
 import { CREATE_ADDRESS_SPACE } from "src/Queries/Queries";
-import { getPlanAndTypeForAddressEdit } from "src/Components/Common/AddressFormatter";
-interface ICreateAddressSpaceProps {
-  refetch?: () => void;
-  isCreateWizardOpen: boolean;
-  setIsCreateWizardOpen: (value: boolean) => void;
-}
 
 interface ICreateAddressSpaceProps {
   isCreateWizardOpen: boolean;
@@ -24,18 +18,17 @@ interface ICreateAddressSpaceProps {
 export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProps> = ({
   isCreateWizardOpen,
   setIsCreateWizardOpen,
-  refetch,
   setOnCreationRefetch
 }) => {
   const [addressSpaceName, setAddressSpaceName] = React.useState("");
-  // State has been initialized to " " instead of null string 
+  // State has been initialized to " " instead of null string
   // due to dropdown arrow positioning issues
   const [addressSpaceType, setAddressSpaceType] = React.useState(" ");
   const [addressSpacePlan, setAddressSpacePlan] = React.useState(" ");
   const [namespace, setNamespace] = React.useState(" ");
   const [authenticationService, setAuthenticationService] = React.useState(" ");
-  const [message,setMessage] = React.useState("");
-  const [isError,setIsError] = React.useState();
+  const [message, setMessage] = React.useState("");
+  const [isError, setIsError] = React.useState();
   const client = useApolloClient();
 
   const handleSave = async () => {
@@ -61,10 +54,9 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
           }
         }
       });
-      console.log(data);
-      if(data.errors) {
+      if (data.errors) {
         setIsError(true);
-        console.log("Error",data)
+        console.log("Error", data);
       }
       if (data.data) {
         setIsCreateWizardOpen(false);
@@ -73,10 +65,8 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
         setAddressSpaceName("");
         setNamespace("");
         setAuthenticationService("");
-
-        if (setOnCreationRefetch) setOnCreationRefetch(true);
       }
-      if (refetch) refetch();
+      if (setOnCreationRefetch) setOnCreationRefetch(true);
     }
   };
 
@@ -97,18 +87,17 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
           setAuthenticationService={setAuthenticationService}
         />
       ),
-      enableNext: (
+      enableNext:
         addressSpaceName.trim() !== "" &&
         addressSpaceType.trim() !== "" &&
         authenticationService.trim() !== "" &&
         addressSpacePlan.trim() !== "" &&
-        namespace.trim() !== ""
-      ),
+        namespace.trim() !== "",
       backButton: "hide"
     },
     {
       name: "Review",
-      isDisabled : true,
+      isDisabled: true,
       component: (
         <ReviewAddressSpace
           name={addressSpaceName}
@@ -118,20 +107,18 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
           authenticationService={authenticationService}
         />
       ),
-      enableNext: (
+      enableNext:
         addressSpaceName.trim() !== "" &&
         addressSpaceType.trim() !== "" &&
         authenticationService.trim() !== "" &&
         addressSpacePlan.trim() !== "" &&
-        namespace.trim() !== ""
-      ),
-      canJumpTo: (
+        namespace.trim() !== "",
+      canJumpTo:
         addressSpaceName.trim() !== "" &&
         addressSpaceType.trim() !== "" &&
         authenticationService.trim() !== "" &&
         addressSpacePlan.trim() !== "" &&
-        namespace.trim() !== ""
-      ),
+        namespace.trim() !== "",
       nextButtonText: "Finish"
     }
   ];

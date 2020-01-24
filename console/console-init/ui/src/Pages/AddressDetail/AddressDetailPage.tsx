@@ -66,7 +66,7 @@ export default function AddressDetailPage() {
   );
   const { loading, error, data, refetch } = useQuery<IAddressDetailResponse>(
     RETURN_ADDRESS_DETAIL(name, namespace, addressname),
-    { pollInterval: 20000 }
+    { pollInterval: 5000 }
   );
 
   const addressSpaces = useQuery<IAddressSpacePlanResponse>(
@@ -84,6 +84,7 @@ export default function AddressDetailPage() {
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };
+
   const addressDetail = addresses && addresses.Addresses[0];
   if (addressPlan === null) {
     setAddressPlan(addressDetail.Spec.Plan.Spec.DisplayName);

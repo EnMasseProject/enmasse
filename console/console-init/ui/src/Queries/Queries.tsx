@@ -22,8 +22,8 @@ export const DELETE_ADDRESS = gql`
   }
 `;
 export const PURGE_ADDRESS = gql`
-  mutation purge_addr($a:ObjectMeta_v1_Input!) {
-    purgeAddress(input:$a)
+  mutation purge_addr($a: ObjectMeta_v1_Input!) {
+    purgeAddress(input: $a)
   }
 `;
 
@@ -38,22 +38,30 @@ export const RETURN_ALL_ADDRESS_SPACES = (
   let filter = "";
   if (filter_Names && filter_Names.length > 0) {
     if (filter_Names.length > 1) {
-      if(filter_Names[0].isExact)
-        filter += "(`$.ObjectMeta.Name` = '" + filter_Names[0].value.trim() + "'";
+      if (filter_Names[0].isExact)
+        filter +=
+          "(`$.ObjectMeta.Name` = '" + filter_Names[0].value.trim() + "'";
       else
-        filter += "(`$.ObjectMeta.Name` LIKE '" + filter_Names[0].value.trim() + "%'";
+        filter +=
+          "(`$.ObjectMeta.Name` LIKE '" + filter_Names[0].value.trim() + "%'";
       for (let i = 1; i < filter_Names.length; i++) {
-        if(filter_Names[i].isExact)
-          filter += "OR `$.ObjectMeta.Name` = '" + filter_Names[i].value.trim() + "'";
+        if (filter_Names[i].isExact)
+          filter +=
+            "OR `$.ObjectMeta.Name` = '" + filter_Names[i].value.trim() + "'";
         else
-          filter += "OR `$.ObjectMeta.Name` LIKE '" + filter_Names[i].value.trim() + "%'";
+          filter +=
+            "OR `$.ObjectMeta.Name` LIKE '" +
+            filter_Names[i].value.trim() +
+            "%'";
       }
       filter += ")";
     } else {
-        if(filter_Names[0].isExact)
-          filter += "`$.ObjectMeta.Name` = '" + filter_Names[0].value.trim() + "'";
-        else
-          filter += "`$.ObjectMeta.Name` LIKE '" + filter_Names[0].value.trim() + "%'";
+      if (filter_Names[0].isExact)
+        filter +=
+          "`$.ObjectMeta.Name` = '" + filter_Names[0].value.trim() + "'";
+      else
+        filter +=
+          "`$.ObjectMeta.Name` LIKE '" + filter_Names[0].value.trim() + "%'";
     }
   }
   if (
@@ -68,26 +76,38 @@ export const RETURN_ALL_ADDRESS_SPACES = (
     if (filter_NameSpace.length > 1) {
       if (filter_NameSpace[0].isExact)
         filter +=
-          "(`$.ObjectMeta.Namespace` = '" + filter_NameSpace[0].value.trim() + "'";
+          "(`$.ObjectMeta.Namespace` = '" +
+          filter_NameSpace[0].value.trim() +
+          "'";
       else
         filter +=
-          "(`$.ObjectMeta.Namespace` LIKE '" + filter_NameSpace[0].value.trim() + "%'";
+          "(`$.ObjectMeta.Namespace` LIKE '" +
+          filter_NameSpace[0].value.trim() +
+          "%'";
       for (let i = 1; i < filter_NameSpace.length; i++) {
         if (filter_NameSpace[i].isExact)
           filter +=
-            "OR `$.ObjectMeta.Namespace` = '" + filter_NameSpace[i].value.trim() + "'";
+            "OR `$.ObjectMeta.Namespace` = '" +
+            filter_NameSpace[i].value.trim() +
+            "'";
         else
-        filter +=
-          "OR `$.ObjectMeta.Namespace` LIKE '" + filter_NameSpace[i].value.trim() + "%'";
+          filter +=
+            "OR `$.ObjectMeta.Namespace` LIKE '" +
+            filter_NameSpace[i].value.trim() +
+            "%'";
       }
       filter += ")";
     } else {
       if (filter_NameSpace[0].isExact)
         filter +=
-          "`$.ObjectMeta.Namespace` = '" + filter_NameSpace[0].value.trim() + "'";
+          "`$.ObjectMeta.Namespace` = '" +
+          filter_NameSpace[0].value.trim() +
+          "'";
       else
         filter +=
-          "`$.ObjectMeta.Namespace` LIKE '" + filter_NameSpace[0].value.trim() + "%'";
+          "`$.ObjectMeta.Namespace` LIKE '" +
+          filter_NameSpace[0].value.trim() +
+          "%'";
     }
   }
   if (
@@ -106,6 +126,13 @@ export const RETURN_ALL_ADDRESS_SPACES = (
     switch (sortBy.index) {
       case 1:
         orderByString = "`$.ObjectMeta.Name` ";
+        break;
+      case 2:
+        break;
+      case 3:
+        break;
+      case 4:
+        orderByString = "`$.ObjectMeta.CreationTimestamp` ";
         break;
       default:
         break;
@@ -136,6 +163,7 @@ export const RETURN_ALL_ADDRESS_SPACES = (
           }
           Status {
             IsReady
+            Phase
           }
         }
       }
@@ -166,26 +194,29 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
   }
   if (filterNames && filterNames.length > 0) {
     if (filterNames.length > 1) {
-      if(filterNames[0].isExact)
-        filterString += "(`$.Spec.Address` = '" + filterNames[0].value.trim() + "'";
+      if (filterNames[0].isExact)
+        filterString +=
+          "(`$.Spec.Address` = '" + filterNames[0].value.trim() + "'";
       else
-        filterString += "(`$.Spec.Address` LIKE '" + filterNames[0].value.trim() + "%' ";
+        filterString +=
+          "(`$.Spec.Address` LIKE '" + filterNames[0].value.trim() + "%' ";
       for (let i = 1; i < filterNames.length; i++) {
-        if(filterNames[i].isExact){
+        if (filterNames[i].isExact) {
           filterString +=
             "OR `$.Spec.Address` = '" + filterNames[i].value.trim() + "'";
-        }
-        else{
+        } else {
           filterString +=
             "OR `$.Spec.Address` LIKE '" + filterNames[i].value.trim() + "%' ";
-        }   
+        }
       }
       filterString += ")";
     } else {
-        if(filterNames[0].isExact)
-          filterString += "`$.Spec.Address` = '" + filterNames[0].value.trim() + "'";
-        else
-          filterString += "`$.Spec.Address` LIKE '" + filterNames[0].value.trim() + "%' ";
+      if (filterNames[0].isExact)
+        filterString +=
+          "`$.Spec.Address` = '" + filterNames[0].value.trim() + "'";
+      else
+        filterString +=
+          "`$.Spec.Address` LIKE '" + filterNames[0].value.trim() + "%' ";
     }
   }
   if (filterNames && filterNames.length > 0 && (typeValue || statusValue)) {
@@ -445,24 +476,30 @@ export const RETURN_ADDRESS_LINKS = (
   let filterForLink = "";
   if (filterNames && filterNames.length > 0) {
     if (filterNames.length > 1) {
-      if(filterNames[0].isExact)
-        filterForLink += "(`$.ObjectMeta.Name` = '" + filterNames[0].value.trim() + "'";
+      if (filterNames[0].isExact)
+        filterForLink +=
+          "(`$.ObjectMeta.Name` = '" + filterNames[0].value.trim() + "'";
       else
-        filterForLink += "(`$.ObjectMeta.Name` LIKE '" + filterNames[0].value.trim() + "%' ";
+        filterForLink +=
+          "(`$.ObjectMeta.Name` LIKE '" + filterNames[0].value.trim() + "%' ";
       for (let i = 1; i < filterNames.length; i++) {
-        if(filterNames[i].isExact)
+        if (filterNames[i].isExact)
           filterForLink +=
             "OR `$.ObjectMeta.Name` = '" + filterNames[i].value.trim() + "'";
         else
           filterForLink +=
-            "OR `$.ObjectMeta.Name` LIKE '" + filterNames[i].value.trim() + "%' ";
+            "OR `$.ObjectMeta.Name` LIKE '" +
+            filterNames[i].value.trim() +
+            "%' ";
       }
       filterForLink += ")";
     } else {
-        if(filterNames[0].isExact)
-          filterForLink += "(`$.ObjectMeta.Name` = '" + filterNames[0].value.trim() + "')";
-        else
-          filterForLink += "(`$.ObjectMeta.Name` LIKE '" + filterNames[0].value.trim() + "%')";
+      if (filterNames[0].isExact)
+        filterForLink +=
+          "(`$.ObjectMeta.Name` = '" + filterNames[0].value.trim() + "')";
+      else
+        filterForLink +=
+          "(`$.ObjectMeta.Name` LIKE '" + filterNames[0].value.trim() + "%')";
     }
     if (
       (filterContainers && filterContainers.length > 0) ||
@@ -473,7 +510,7 @@ export const RETURN_ADDRESS_LINKS = (
   }
   if (filterContainers && filterContainers.length > 0) {
     if (filterContainers.length > 1) {
-      if(filterContainers[0].isExact)
+      if (filterContainers[0].isExact)
         filterForLink +=
           "(`$.Spec.Connection.Spec.ContainerId` = '" +
           filterContainers[0].value.trim() +
@@ -484,7 +521,7 @@ export const RETURN_ADDRESS_LINKS = (
           filterContainers[0].value.trim() +
           "%'";
       for (let i = 1; i < filterContainers.length; i++) {
-        if(filterContainers[i].isExact)
+        if (filterContainers[i].isExact)
           filterForLink +=
             "OR `$.Spec.Connection.Spec.ContainerId` = '" +
             filterContainers[i].value.trim() +
@@ -497,7 +534,7 @@ export const RETURN_ADDRESS_LINKS = (
       }
       filterForLink += ")";
     } else {
-      if(filterContainers[0].isExact)
+      if (filterContainers[0].isExact)
         filterForLink +=
           "(`$.Spec.Connection.Spec.ContainerId` = '" +
           filterContainers[0].value.trim() +
@@ -653,8 +690,7 @@ export const RETURN_ALL_CONECTION_LIST = (
     filter += "`$.Spec.AddressSpace` = '" + name + "'";
   }
   if (namespace) {
-    filter +=
-      " AND `$.ObjectMeta.Namespace` = '" + namespace + "'";
+    filter += " AND `$.ObjectMeta.Namespace` = '" + namespace + "'";
   }
   if (
     (hostnames && hostnames.length > 0) ||
@@ -667,19 +703,23 @@ export const RETURN_ALL_CONECTION_LIST = (
       if (hostnames[0].isExact)
         filter += "(`$.Spec.Hostname` = '" + hostnames[0].value.trim() + "'";
       else
-        filter += "(`$.Spec.Hostname` LIKE '" + hostnames[0].value.trim() + "%' ";
+        filter +=
+          "(`$.Spec.Hostname` LIKE '" + hostnames[0].value.trim() + "%' ";
       for (let i = 1; i < hostnames.length; i++) {
         if (hostnames[i].isExact)
-          filter += "OR `$.Spec.Hostname` = '" + hostnames[i].value.trim() + "'";
+          filter +=
+            "OR `$.Spec.Hostname` = '" + hostnames[i].value.trim() + "'";
         else
-          filter += "OR `$.Spec.Hostname` LIKE '" + hostnames[i].value.trim() + "%' ";
+          filter +=
+            "OR `$.Spec.Hostname` LIKE '" + hostnames[i].value.trim() + "%' ";
       }
       filter += ")";
     } else {
-        if (hostnames[0].isExact)
-          filter += "(`$.Spec.Hostname` = '" + hostnames[0].value.trim() + "')";
-        else
-          filter += "(`$.Spec.Hostname` LIKE '" + hostnames[0].value.trim() + "%')";
+      if (hostnames[0].isExact)
+        filter += "(`$.Spec.Hostname` = '" + hostnames[0].value.trim() + "')";
+      else
+        filter +=
+          "(`$.Spec.Hostname` LIKE '" + hostnames[0].value.trim() + "%')";
     }
   }
 
@@ -689,21 +729,29 @@ export const RETURN_ALL_CONECTION_LIST = (
     }
     if (containers.length > 1) {
       if (containers[0].isExact)
-        filter += "(`$.Spec.ContainerId` = '" + containers[0].value.trim() + "'";
+        filter +=
+          "(`$.Spec.ContainerId` = '" + containers[0].value.trim() + "'";
       else
-        filter += "(`$.Spec.ContainerId` LIKE '" + containers[0].value.trim() + "%' ";
+        filter +=
+          "(`$.Spec.ContainerId` LIKE '" + containers[0].value.trim() + "%' ";
       for (let i = 1; i < containers.length; i++) {
         if (containers[i].isExact)
-          filter += "OR `$.Spec.ContainerId` = '" + containers[i].value.trim() + "'";
+          filter +=
+            "OR `$.Spec.ContainerId` = '" + containers[i].value.trim() + "'";
         else
-          filter += "OR `$.Spec.ContainerId` LIKE '" + containers[i].value.trim() + "%' ";
+          filter +=
+            "OR `$.Spec.ContainerId` LIKE '" +
+            containers[i].value.trim() +
+            "%' ";
       }
       filter += ")";
     } else {
-        if (containers[0].isExact)
-          filter += "(`$.Spec.ContainerId` = '" + containers[0].value.trim() + "')";
-        else
-          filter += "(`$.Spec.ContainerId` LIKE '" + containers[0].value.trim() + "%')";
+      if (containers[0].isExact)
+        filter +=
+          "(`$.Spec.ContainerId` = '" + containers[0].value.trim() + "')";
+      else
+        filter +=
+          "(`$.Spec.ContainerId` LIKE '" + containers[0].value.trim() + "%')";
     }
   }
 
@@ -720,8 +768,8 @@ export const RETURN_ALL_CONECTION_LIST = (
         orderByString = "`$.Spec.Protocol` ";
         break;
       case 3:
-          orderByString = "`$.ObjectMeta.CreationTimestamp` ";
-          break;
+        orderByString = "`$.ObjectMeta.CreationTimestamp` ";
+        break;
       case 4:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_in')].Value` ";
         break;
@@ -776,14 +824,10 @@ export const RETURN_CONNECTION_DETAIL = (
 ) => {
   let filter = "";
   if (addressSpaceName) {
-    filter +=
-      "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
+    filter += "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
   }
   if (addressSpaceNameSpcae) {
-    filter +=
-      "`$.ObjectMeta.Namespace` = '" +
-      addressSpaceNameSpcae +
-      "' AND ";
+    filter += "`$.ObjectMeta.Namespace` = '" + addressSpaceNameSpcae + "' AND ";
   }
   if (connectionName) {
     filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
@@ -803,7 +847,8 @@ export const RETURN_CONNECTION_DETAIL = (
         Spec {
           Hostname
           ContainerId
-          Protocol,
+          Protocol
+          Encrypted
           Properties{
             Key
             Value
@@ -877,14 +922,10 @@ export const RETURN_CONNECTION_LINKS = (
 ) => {
   let filter = "";
   if (addressSpaceName) {
-    filter +=
-      "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
+    filter += "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
   }
   if (addressSpaceNameSpcae) {
-    filter +=
-      "`$.ObjectMeta.Namespace` = '" +
-      addressSpaceNameSpcae +
-      "' AND ";
+    filter += "`$.ObjectMeta.Namespace` = '" + addressSpaceNameSpcae + "' AND ";
   }
   if (connectionName) {
     filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
@@ -928,23 +969,29 @@ export const RETURN_CONNECTION_LINKS = (
   if (filterNames && filterNames.length > 0) {
     if (filterNames.length > 1) {
       if (filterNames[0].isExact)
-        filterForLink += "(`$.ObjectMeta.Name` = '" + filterNames[0].value.trim() + "'";
+        filterForLink +=
+          "(`$.ObjectMeta.Name` = '" + filterNames[0].value.trim() + "'";
       else
-        filterForLink += "(`$.ObjectMeta.Name` LIKE '" + filterNames[0].value.trim() + "%' ";
+        filterForLink +=
+          "(`$.ObjectMeta.Name` LIKE '" + filterNames[0].value.trim() + "%' ";
       for (let i = 1; i < filterNames.length; i++) {
         if (filterNames[i].isExact)
           filterForLink +=
             "OR `$.ObjectMeta.Name` = '" + filterNames[i].value.trim() + "'";
         else
           filterForLink +=
-            "OR `$.ObjectMeta.Name` LIKE '" + filterNames[i].value.trim() + "%' ";
+            "OR `$.ObjectMeta.Name` LIKE '" +
+            filterNames[i].value.trim() +
+            "%' ";
       }
       filterForLink += ")";
     } else {
-        if (filterNames[0].isExact)
-          filterForLink += "`$.ObjectMeta.Name` = '" + filterNames[0].value.trim() + "'";
-        else
-          filterForLink += "`$.ObjectMeta.Name` LIKE '" + filterNames[0].value.trim() + "%' ";
+      if (filterNames[0].isExact)
+        filterForLink +=
+          "`$.ObjectMeta.Name` = '" + filterNames[0].value.trim() + "'";
+      else
+        filterForLink +=
+          "`$.ObjectMeta.Name` LIKE '" + filterNames[0].value.trim() + "%' ";
     }
     if (
       (filterAddresses && filterAddresses.length > 0) ||
@@ -956,23 +1003,29 @@ export const RETURN_CONNECTION_LINKS = (
   if (filterAddresses && filterAddresses.length > 0) {
     if (filterAddresses.length > 1) {
       if (filterAddresses[0].isExact)
-        filterForLink += "(`$.Spec.Address` = '" + filterAddresses[0].value.trim() + "'";
+        filterForLink +=
+          "(`$.Spec.Address` = '" + filterAddresses[0].value.trim() + "'";
       else
-        filterForLink += "(`$.Spec.Address` LIKE '" + filterAddresses[0].value.trim() + "%' ";
+        filterForLink +=
+          "(`$.Spec.Address` LIKE '" + filterAddresses[0].value.trim() + "%' ";
       for (let i = 1; i < filterAddresses.length; i++) {
         if (filterAddresses[i].isExact)
           filterForLink +=
             "OR `$.Spec.Address` = '" + filterAddresses[i].value.trim() + "'";
         else
           filterForLink +=
-            "OR `$.Spec.Address` LIKE '" + filterAddresses[i].value.trim() + "%' ";
+            "OR `$.Spec.Address` LIKE '" +
+            filterAddresses[i].value.trim() +
+            "%' ";
       }
       filterForLink += ")";
     } else {
-        if (filterAddresses[0].isExact)
-          filterForLink += "`$.Spec.Address` = '" + filterAddresses[0].value.trim() + "'";
-        else
-          filterForLink += "`$.Spec.Address` LIKE '" + filterAddresses[0].value.trim() + "%' ";
+      if (filterAddresses[0].isExact)
+        filterForLink +=
+          "`$.Spec.Address` = '" + filterAddresses[0].value.trim() + "'";
+      else
+        filterForLink +=
+          "`$.Spec.Address` LIKE '" + filterAddresses[0].value.trim() + "%' ";
     }
     if (filterRole && filterRole.trim() != "") {
       filterForLink += " AND ";
@@ -1129,8 +1182,7 @@ export const RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH = (
 ) => {
   let filter = "";
   if (namespace) {
-    filter +=
-      "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
+    filter += "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
   }
   if (connectionName) {
     filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
@@ -1164,8 +1216,7 @@ export const RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH = (
 ) => {
   let filter = "";
   if (namespace) {
-    filter +=
-      "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
+    filter += "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
   }
   if (connectionName) {
     filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
@@ -1265,8 +1316,7 @@ export const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_F
     filter += "`$.Spec.AddressSpace` = '" + name + "'";
   }
   if (namespace) {
-    filter +=
-      " AND `$.ObjectMeta.Namespace` = '" + namespace + "'";
+    filter += " AND `$.ObjectMeta.Namespace` = '" + namespace + "'";
   }
   if (searchValue.trim() != "") {
     filter += " AND ";
@@ -1295,9 +1345,9 @@ export const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_F
   return ALL_CONECTION_LIST;
 };
 
-export const RETURN_AUTHENTICATION_SERVICES = gql
-  `query addressspace_schema {
-    addressSpaceSchema_v2  {
+export const RETURN_AUTHENTICATION_SERVICES = gql`
+  query addressspace_schema {
+    addressSpaceSchema_v2 {
       ObjectMeta {
         Name
       }
@@ -1308,13 +1358,13 @@ export const RETURN_AUTHENTICATION_SERVICES = gql
   }
 `;
 
-export const RETURN_WHOAMI = gql `
-  query whoami { 
+export const RETURN_WHOAMI = gql`
+  query whoami {
     whoami {
-      ObjectMeta{
+      ObjectMeta {
         Name
       }
       FullName
     }
   }
-`
+`;

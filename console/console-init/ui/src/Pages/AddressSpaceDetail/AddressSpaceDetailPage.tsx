@@ -88,10 +88,10 @@ export default function AddressSpaceDetailPage() {
 
   const { loading, error, data } = useQuery<IAddressSpaceDetailResponse>(
     RETURN_ADDRESS_SPACE_DETAIL(name, namespace),
-    { pollInterval: 20000 }
+    { pollInterval: 5000 }
   );
   const client = useApolloClient();
-  // if (loading) return <Loading />;
+  if (loading) return <Loading />;
 
   if (error) {
     console.log(error);
