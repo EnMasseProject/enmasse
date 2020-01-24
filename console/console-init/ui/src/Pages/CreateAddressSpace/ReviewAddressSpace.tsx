@@ -59,7 +59,10 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
           },
           Spec: {
             Plan: plan ? plan.toLowerCase() : "",
-            Type: type ? type.toLowerCase() : ""
+            Type: type ? type.toLowerCase() : "",
+            AuthenticationService: {
+              Name: authenticationService
+            }
           }
         }
       }
