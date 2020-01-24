@@ -38,7 +38,7 @@ describe("Connection Detail Header with all connection details", () => {
     getByText(props.version + "");
     getByText(props.platform + "");
     getByText(props.os + "");
-    getByText(props.messageIn + " Message in");
-    getByText(props.messageOut + " Message out");
+    getByText(props.messageIn + " Message in/sec");
+    getByText(props.messageOut + " Message out/sec");
   });
 });
