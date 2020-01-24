@@ -6,7 +6,6 @@ package io.enmasse.systemtest.bases.infra;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.systemtest.bases.ITestBase;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -37,7 +36,6 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
             "kubernetes.io/azure-file", "kubernetes.io/azure-disk", "kubernetes.io/glusterfs", "kubernetes.io/cinder",
             "kubernetes.io/portworx-volume", "kubernetes.io/rbd");
     private static Logger log = CustomLogger.getLogger();
-    protected InfraConfig testInfra;
     protected AddressPlan exampleAddressPlan;
     protected AddressSpace exampleAddressSpace;
 

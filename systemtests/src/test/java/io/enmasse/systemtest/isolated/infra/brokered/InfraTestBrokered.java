@@ -39,7 +39,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
     void testCreateInfra() throws Exception {
         PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
         PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
-        testInfra = new BrokeredInfraConfigBuilder()
+        BrokeredInfraConfig testInfra = new BrokeredInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test-infra-3-brokered")
                 .endMetadata()
@@ -61,7 +61,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig((BrokeredInfraConfig) testInfra);
+        resourcesManager.createInfraConfig(testInfra);
 
         exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-brokered", AddressType.QUEUE,
                 Collections.singletonList(new ResourceRequest("broker", 1.0)));
@@ -181,7 +181,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
 
     @Test
     void testReadInfra() throws Exception {
-        testInfra = new BrokeredInfraConfigBuilder()
+        BrokeredInfraConfig testInfra = new BrokeredInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test-infra-1-brokered")
                 .endMetadata()
@@ -201,17 +201,17 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig((BrokeredInfraConfig) testInfra);
+        resourcesManager.createInfraConfig(testInfra);
 
         BrokeredInfraConfig actualInfra = resourcesManager.getBrokeredInfraConfig(testInfra.getMetadata().getName());
 
         assertEquals(testInfra.getMetadata().getName(), actualInfra.getMetadata().getName());
 
-        BrokeredInfraConfigSpecAdmin expectedAdmin = ((BrokeredInfraConfig) testInfra).getSpec().getAdmin();
+        BrokeredInfraConfigSpecAdmin expectedAdmin = testInfra.getSpec().getAdmin();
         BrokeredInfraConfigSpecAdmin actualAdmin = actualInfra.getSpec().getAdmin();
         assertEquals(expectedAdmin.getResources().getMemory(), actualAdmin.getResources().getMemory());
 
-        BrokeredInfraConfigSpecBroker expectedBroker = ((BrokeredInfraConfig) testInfra).getSpec().getBroker();
+        BrokeredInfraConfigSpecBroker expectedBroker = testInfra.getSpec().getBroker();
         BrokeredInfraConfigSpecBroker actualBroker = actualInfra.getSpec().getBroker();
         assertEquals(expectedBroker.getResources().getMemory(), actualBroker.getResources().getMemory());
         assertEquals(expectedBroker.getResources().getStorage(), actualBroker.getResources().getStorage());

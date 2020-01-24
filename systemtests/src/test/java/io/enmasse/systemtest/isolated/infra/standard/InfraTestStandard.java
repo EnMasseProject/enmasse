@@ -29,9 +29,12 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudget;
+
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -43,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
@@ -54,7 +58,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
         PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
         PodTemplateSpec routerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "router"), "myrouternode", "router");
-        testInfra = new StandardInfraConfigBuilder()
+        StandardInfraConfig testInfra = new StandardInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test-infra-1-standard")
                 .endMetadata()
@@ -82,7 +86,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig((StandardInfraConfig) testInfra);
+        resourcesManager.createInfraConfig(testInfra);
 
         exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-standard", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0)));
@@ -216,7 +220,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
     @Test
     void testReadInfra() throws Exception {
-        testInfra = new StandardInfraConfigBuilder()
+        StandardInfraConfig testInfra = new StandardInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test-infra-3-standard")
                 .endMetadata()
@@ -243,23 +247,199 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
         assertEquals(testInfra.getMetadata().getName(), actualInfra.getMetadata().getName());
 
-        StandardInfraConfigSpecAdmin expectedAdmin = ((StandardInfraConfig) testInfra).getSpec().getAdmin();
+        StandardInfraConfigSpecAdmin expectedAdmin = testInfra.getSpec().getAdmin();
         StandardInfraConfigSpecAdmin actualAdmin = actualInfra.getSpec().getAdmin();
         assertEquals(expectedAdmin.getResources().getMemory(), actualAdmin.getResources().getMemory());
 
-        StandardInfraConfigSpecBroker expectedBroker = ((StandardInfraConfig) testInfra).getSpec().getBroker();
+        StandardInfraConfigSpecBroker expectedBroker = testInfra.getSpec().getBroker();
         StandardInfraConfigSpecBroker actualBroker = actualInfra.getSpec().getBroker();
         assertEquals(expectedBroker.getResources().getMemory(), actualBroker.getResources().getMemory());
         assertEquals(expectedBroker.getResources().getStorage(), actualBroker.getResources().getStorage());
         assertEquals(expectedBroker.getAddressFullPolicy(), actualBroker.getAddressFullPolicy());
         assertEquals(expectedBroker.getStorageClassName(), actualBroker.getStorageClassName());
 
-        StandardInfraConfigSpecRouter expectedRouter = ((StandardInfraConfig) testInfra).getSpec().getRouter();
+        StandardInfraConfigSpecRouter expectedRouter = testInfra.getSpec().getRouter();
         StandardInfraConfigSpecRouter actualRouter = actualInfra.getSpec().getRouter();
         assertEquals(expectedRouter.getResources().getMemory(), actualRouter.getResources().getMemory());
         assertEquals(expectedRouter.getLinkCapacity(), actualRouter.getLinkCapacity());
         assertEquals(expectedRouter.getMinReplicas(), actualRouter.getMinReplicas());
         assertEquals(expectedRouter.getPolicy(), actualRouter.getPolicy());
+    }
+
+    @Test
+    void testCreateDeletePodDistruptionBudget() throws Exception {
+
+        testCreatePdb();
+
+        resourcesManager.deleteAddressSpace(exampleAddressSpace);
+
+        String pdbRouterName = getRouterPdbName();
+        String pdbBrokerName = getBrokerPdbName();
+        try {
+            TestUtils.waitUntilCondition("Router PodDisruptionBudget deleted", phase -> {
+                return getPodDisruptionBudget(pdbRouterName) == null;
+            }, new TimeoutBudget(30, TimeUnit.SECONDS));
+            TestUtils.waitUntilCondition("Broker PodDisruptionBudget deleted", phase -> {
+                return getPodDisruptionBudget(pdbBrokerName) == null;
+            }, new TimeoutBudget(30, TimeUnit.SECONDS));
+        } finally {
+            var pdb = getPodDisruptionBudget(pdbRouterName);
+            if (pdb != null) {
+                deletePodDisruptionBudget(pdbRouterName);
+            }
+            pdb = getPodDisruptionBudget(pdbBrokerName);
+            if (pdb != null) {
+                deletePodDisruptionBudget(pdbBrokerName);
+            }
+        }
+
+    }
+
+    @Test
+    void testAddRemovePodDistruptionBudget() throws Exception {
+
+        testCreatePdb();
+
+        StandardInfraConfig infraWithOutPdb = new StandardInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("test-infra-no-pdb")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new StandardInfraConfigSpecBrokerBuilder()
+                        .build())
+                .withRouter(new StandardInfraConfigSpecRouterBuilder()
+                        .build())
+                .endSpec()
+                .build();
+        resourcesManager.createInfraConfig(infraWithOutPdb);
+
+        AddressSpacePlan spacePlanWithOutPdb = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName("example-space-plan-standard-no-pdb")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withAddressSpaceType(AddressSpaceType.STANDARD.toString())
+                .withShortDescription("Custom systemtests defined address space plan")
+                .withInfraConfigRef(infraWithOutPdb.getMetadata().getName())
+                .withResourceLimits(Arrays.asList(
+                        new ResourceAllowance("broker", 2.0),
+                        new ResourceAllowance("router", 2.0),
+                        new ResourceAllowance("aggregate", 5.0))
+                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Collections.singletonList(exampleAddressPlan)
+                        .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
+                .endSpec()
+                .build();
+        resourcesManager.createAddressSpacePlan(spacePlanWithOutPdb);
+
+        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(spacePlanWithOutPdb.getMetadata().getName()).endSpec().done();
+        isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
+
+        String pdbRouterName = getRouterPdbName();
+        String pdbBrokerName = getBrokerPdbName();
+        try {
+            TestUtils.waitUntilCondition("Router PodDisruptionBudget deleted", phase -> {
+                return getPodDisruptionBudget(pdbRouterName) == null;
+            }, new TimeoutBudget(30, TimeUnit.SECONDS));
+            TestUtils.waitUntilCondition("Broker PodDisruptionBudget deleted", phase -> {
+                return getPodDisruptionBudget(pdbBrokerName) == null;
+            }, new TimeoutBudget(30, TimeUnit.SECONDS));
+        } finally {
+            var pdb = getPodDisruptionBudget(pdbRouterName);
+            if (pdb != null) {
+                deletePodDisruptionBudget(pdbRouterName);
+            }
+            pdb = getPodDisruptionBudget(pdbBrokerName);
+            if (pdb != null) {
+                deletePodDisruptionBudget(pdbBrokerName);
+            }
+        }
+
+    }
+
+    private void testCreatePdb() throws Exception {
+        String maxUnavailable = "50%";
+        StandardInfraConfig infraWithPdb = new StandardInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("test-infra-pdb")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new StandardInfraConfigSpecBrokerBuilder()
+                        .withMaxUnavailable(new IntOrString(maxUnavailable))
+                        .build())
+                .withRouter(new StandardInfraConfigSpecRouterBuilder()
+                        .withMaxUnavailable(new IntOrString(maxUnavailable))
+                        .build())
+                .endSpec()
+                .build();
+        resourcesManager.createInfraConfig(infraWithPdb);
+
+        exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-standard", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0)));
+
+        resourcesManager.createAddressPlan(exampleAddressPlan);
+
+        AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName("example-space-plan-standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withAddressSpaceType(AddressSpaceType.STANDARD.toString())
+                .withShortDescription("Custom systemtests defined address space plan")
+                .withInfraConfigRef(infraWithPdb.getMetadata().getName())
+                .withResourceLimits(Arrays.asList(
+                        new ResourceAllowance("broker", 2.0),
+                        new ResourceAllowance("router", 2.0),
+                        new ResourceAllowance("aggregate", 5.0))
+                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Collections.singletonList(exampleAddressPlan)
+                        .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
+                .endSpec()
+                .build();
+        resourcesManager.createAddressSpacePlan(exampleSpacePlan);
+
+        exampleAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("example-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(exampleSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(exampleAddressSpace);
+
+        String pdbRouterName = getRouterPdbName();
+
+        TestUtils.waitUntilCondition("Router PodDisruptionBudget created", phase -> {
+            return getPodDisruptionBudget(pdbRouterName) != null;
+        }, new TimeoutBudget(30, TimeUnit.SECONDS));
+
+        PodDisruptionBudget pdbRouter = getPodDisruptionBudget(pdbRouterName);
+
+        assertNotNull(pdbRouter);
+        assertEquals(maxUnavailable, pdbRouter.getSpec().getMaxUnavailable().getStrVal());
+
+        String pdbBrokerName = getBrokerPdbName();
+
+        TestUtils.waitUntilCondition("Router PodDisruptionBudget created", phase -> {
+            return getPodDisruptionBudget(pdbBrokerName) != null;
+        }, new TimeoutBudget(30, TimeUnit.SECONDS));
+
+        PodDisruptionBudget pdbBroker = getPodDisruptionBudget(pdbBrokerName);
+
+        assertNotNull(pdbBroker);
+        assertEquals(maxUnavailable, pdbBroker.getSpec().getMaxUnavailable().getStrVal());
+
     }
 
     private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, int routerReplicas, String routermemory, PodTemplateSpec routerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec) {
@@ -284,6 +464,22 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         assertAdminConsole(adminMemory, adminTemplateSpec);
         assertBroker(brokerMemory, brokerStorage, brokerTemplateSpec);
         return true;
+    }
+
+    private PodDisruptionBudget getPodDisruptionBudget(String name) {
+        return kubernetes.getPodDisruptionBudget(kubernetes.getInfraNamespace(), name);
+    }
+
+    private void deletePodDisruptionBudget(String name) {
+        kubernetes.deletePodDisruptionBudget(kubernetes.getInfraNamespace(), name);
+    }
+
+    private String getBrokerPdbName() {
+        return String.format("enmasse.%s.%s.broker", exampleAddressSpace.getMetadata().getNamespace(), exampleAddressSpace.getMetadata().getName());
+    }
+
+    private String getRouterPdbName() {
+        return String.format("enmasse.%s.%s.qdrouterd", exampleAddressSpace.getMetadata().getNamespace(), exampleAddressSpace.getMetadata().getName());
     }
 
 }
