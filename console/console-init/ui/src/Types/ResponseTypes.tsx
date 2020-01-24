@@ -307,3 +307,12 @@ export interface IConnectionListNameSearchResponse {
     }>;
   };
 }
+
+export interface IUserDetail {
+  whoami: {
+    ObjectMeta:{
+      Name:string;
+    }
+    FullName:string;
+  }
+}
