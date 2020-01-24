@@ -11,6 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -117,6 +118,9 @@ func (r *Resolver) LinkSpec_consoleapi_enmasse_io_v1beta1() LinkSpec_consoleapi_
 }
 
 func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1beta1, error) {
+	requestState := server.GetRequestStateFromContext(ctx)
+	viewFilter := requestState.AccessController.ViewFilter()
+
 	fltrfunc, e := BuildFilter(filter)
 	if e != nil {
 		return nil, e
@@ -127,7 +131,7 @@ func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int
 		return nil, e
 	}
 
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Connection/", fltrfunc)
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Connection/", cache.And(viewFilter, fltrfunc))
 	if e != nil {
 		return nil, e
 	}
