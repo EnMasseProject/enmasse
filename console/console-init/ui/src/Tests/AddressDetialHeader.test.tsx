@@ -16,6 +16,7 @@ describe("Address Detail Header", () => {
       name: "newqueue",
       type: "queue",
       plan: "Small",
+      storedMessages: 1,
       partitions: 2,
       onDelete: () => {},
       onEdit: () => {}
@@ -25,6 +26,7 @@ describe("Address Detail Header", () => {
 
     getByText(props.name);
     getByText(props.plan);
-    getByText(String(props.partitions));
+    // getByText(String(props.partitions));
+    getByText(String(props.storedMessages));
   });
 });
