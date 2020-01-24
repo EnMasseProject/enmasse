@@ -1,0 +1,16 @@
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: standard-medium-partitioned-queue
+  labels:
+    app: enmasse
+spec:
+  displayName: Medium HA Queue
+  displayOrder: 5
+  shortDescription: Creates a medium sized HA queue sharing underlying broker with other queues.
+  longDescription: Creates a medium sized HA queue sharing underlying broker with other queues. The queue is sharded accross multiple brokers for HA and improved performance. A sharded queue no longer guarantees message ordering.
+  addressType: queue
+  resources:
+    router: 0.01
+    broker: 0.1
+  partitions: 3
