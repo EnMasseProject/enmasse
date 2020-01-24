@@ -46,8 +46,8 @@ public class PodDistruptionBudgetController implements Controller {
 
 
     private void reconcileRouterPodDisruptionBudget(AddressSpace addressSpace, RouterSet routerSet, StandardInfraConfig infraConfig) {
+        String name = String.format("enmasse.%s.%s.qdrouterd", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
         if (infraConfig.getSpec() != null && infraConfig.getSpec().getRouter() != null && (infraConfig.getSpec().getRouter().getMinAvailable() != null || infraConfig.getSpec().getRouter().getMaxUnavailable() != null)) {
-            String name = String.format("enmasse.%s.%s.qdrouterd", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
             String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
             try {
                 boolean changed = false;
@@ -90,14 +90,29 @@ public class PodDistruptionBudgetController implements Controller {
             } catch (KubernetesClientException e) {
                 log.warn("Error creating pod distruption budget for router", e);
             }
+        } else {
+            deleteIfExists(name);
+        }
+    }
+
+    private void deleteIfExists(String name) {
+        // Make sure it does not exist
+        PodDisruptionBudget podDisruptionBudget = client.inNamespace(namespace).policy().podDisruptionBudget()
+                .withName(name).get();
+        if (podDisruptionBudget != null) {
+            try {
+                client.inNamespace(namespace).policy().podDisruptionBudget().withName(name).delete();
+            } catch (KubernetesClientException e) {
+                log.warn("Error deleting PodDisruptionBudget {}", name, e);
+            }
         }
     }
 
     private void reconcileBrokerPodDisruptionBudget(AddressSpace addressSpace, StandardInfraConfig infraConfig) {
+        String name = String.format("enmasse.%s.%s.broker", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
         if (infraConfig.getSpec() != null && infraConfig.getSpec().getBroker() != null &&
                 (infraConfig.getSpec().getBroker().getMinAvailable() != null || infraConfig.getSpec().getBroker().getMaxUnavailable() != null)) {
 
-            String name = String.format("enmasse.%s.%s.broker", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
             String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
             try {
                 boolean changed = false;
@@ -140,6 +155,8 @@ public class PodDistruptionBudgetController implements Controller {
             } catch (KubernetesClientException e) {
                 log.warn("Error creating pod distruption budget for broker", e);
             }
+        } else {
+            deleteIfExists(name);
         }
     }
 }
