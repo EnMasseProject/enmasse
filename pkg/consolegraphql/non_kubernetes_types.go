@@ -8,7 +8,10 @@ package consolegraphql
 import (
 	"container/ring"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	authv1 "k8s.io/api/authorization/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"time"
 )
 
@@ -21,6 +24,15 @@ type Connection struct {
 	metav1.ObjectMeta
 	Spec    ConnectionSpec
 	Metrics []*Metric
+}
+
+func (c *Connection) GetControllingResourceAttributes() *authv1.ResourceAttributes {
+	return &authv1.ResourceAttributes{
+		Resource:  "addressspaces",
+		Group:     "enmasse.io",
+		Version:   "v1beta1",
+		Namespace: c.ObjectMeta.Namespace,
+	}
 }
 
 func (c *Connection) GetMetrics() []*Metric {
@@ -46,7 +58,6 @@ type Link struct {
 func (l *Link) GetMetrics() []*Metric {
 	return l.Metrics
 }
-
 
 type LinkSpec struct {
 	Connection   string
@@ -147,6 +158,10 @@ func (ash *AddressSpaceHolder) GetMetrics() []*Metric {
 	return ash.Metrics
 }
 
+func (ash *AddressSpaceHolder) GetControllingResourceAttributes() *authv1.ResourceAttributes {
+	gvk := ash.TypeMeta.GroupVersionKind()
+	return getResourceAttributes(gvk, ash.Namespace)
+}
 
 type AddressHolder struct {
 	v1beta1.Address
@@ -156,3 +171,24 @@ type AddressHolder struct {
 func (ah *AddressHolder) GetMetrics() []*Metric {
 	return ah.Metrics
 }
+
+func (ah *AddressHolder) GetControllingResourceAttributes() *authv1.ResourceAttributes {
+	gvk := ah.TypeMeta.GroupVersionKind()
+	return getResourceAttributes(gvk, ah.Namespace)
+}
+
+func getResourceAttributes(gvk schema.GroupVersionKind, name string) *authv1.ResourceAttributes {
+	return &authv1.ResourceAttributes{
+		Resource:  kindToResource(gvk),
+		Group:     gvk.Group,
+		Version:   gvk.Version,
+		Namespace: name,
+	}
+}
+
+func kindToResource(gvk schema.GroupVersionKind) string {
+	plural, _ := meta.UnsafeGuessKindToResource(gvk)
+	resource := plural.Resource
+	return resource
+}
+

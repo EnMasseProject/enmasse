@@ -11,28 +11,36 @@ import (
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
 
-func newTestAddressSpaceResolver(t *testing.T) *Resolver {
+func newTestAddressSpaceResolver(t *testing.T) (*Resolver, context.Context) {
 	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
 	resolver := Resolver{}
 	resolver.Cache = objectCache
-	return &resolver
+
+	requestState := &server.RequestState{
+		AccessController: accesscontroller.NewAllowAllAccessController(),
+	}
+
+	ctx := server.ContextWithRequestState(requestState, context.TODO())
+	return &resolver, ctx
 }
 
 func TestQueryAddressSpace(t *testing.T) {
-	r := newTestAddressSpaceResolver(t)
+	r, ctx := newTestAddressSpaceResolver(t)
 	as := createAddressSpace("mynamespace", "myaddressspace")
 	err := r.Cache.Add(as)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().AddressSpaces(context.TODO(), nil, nil, nil, nil)
+	objs, err := r.Query().AddressSpaces(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)
 
 	expected := 1
@@ -44,14 +52,14 @@ func TestQueryAddressSpace(t *testing.T) {
 }
 
 func TestQueryAddressSpaceFilter(t *testing.T) {
-	r := newTestAddressSpaceResolver(t)
+	r, ctx := newTestAddressSpaceResolver(t)
 	as1 := createAddressSpace("mynamespace1", "myaddressspace")
 	as2 := createAddressSpace("mynamespace2", "myaddressspace")
 	err := r.Cache.Add(as1, as2)
 	assert.NoError(t, err)
 
 	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s'", as1.ObjectMeta.Name)
-	objs, err := r.Query().AddressSpaces(context.TODO(), nil, nil, &filter, nil)
+	objs, err := r.Query().AddressSpaces(ctx, nil, nil, &filter, nil)
 	assert.NoError(t, err)
 
 	expected := 1
@@ -62,14 +70,14 @@ func TestQueryAddressSpaceFilter(t *testing.T) {
 }
 
 func TestQueryAddressSpaceOrder(t *testing.T) {
-	r := newTestAddressSpaceResolver(t)
+	r, ctx := newTestAddressSpaceResolver(t)
 	as1 := createAddressSpace("mynamespace1", "myaddressspace")
 	as2 := createAddressSpace("mynamespace2", "myaddressspace")
 	err := r.Cache.Add(as1, as2)
 	assert.NoError(t, err)
 
 	orderby := "`$.ObjectMeta.Name` DESC"
-	objs, err := r.Query().AddressSpaces(context.TODO(), nil, nil, nil,  &orderby)
+	objs, err := r.Query().AddressSpaces(ctx, nil, nil, nil,  &orderby)
 	assert.NoError(t, err)
 
 	expected := 2
@@ -81,7 +89,7 @@ func TestQueryAddressSpaceOrder(t *testing.T) {
 }
 
 func TestQueryAddressSpacePagination(t *testing.T) {
-	r := newTestAddressSpaceResolver(t)
+	r, ctx := newTestAddressSpaceResolver(t)
 	as1 := createAddressSpace("mynamespace1", "myaddressspace")
 	as2 := createAddressSpace("mynamespace2", "myaddressspace")
 	as3 := createAddressSpace("mynamespace3", "myaddressspace")
@@ -89,19 +97,19 @@ func TestQueryAddressSpacePagination(t *testing.T) {
 	err := r.Cache.Add(as1, as2, as3, as4)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().AddressSpaces(context.TODO(), nil, nil, nil,  nil)
+	objs, err := r.Query().AddressSpaces(ctx, nil, nil, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 
 	one := 1
 	two := 2
-	objs, err = r.Query().AddressSpaces(context.TODO(), nil, &one, nil,  nil)
+	objs, err = r.Query().AddressSpaces(ctx, nil, &one, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 3, len(objs.AddressSpaces), "Unexpected number of address spaces in page")
 	assert.Equal(t, as2.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
 
-	objs, err = r.Query().AddressSpaces(context.TODO(), &one, &two, nil,  nil)
+	objs, err = r.Query().AddressSpaces(ctx, &one, &two, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 1, len(objs.AddressSpaces), "Unexpected number of address spaces in page")
@@ -109,7 +117,7 @@ func TestQueryAddressSpacePagination(t *testing.T) {
 }
 
 func TestQueryAddressSpaceConnections(t *testing.T) {
-	r := newTestAddressSpaceResolver(t)
+	r, ctx := newTestAddressSpaceResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	con1 := createConnection("host:1234", namespace, addressspace)
@@ -126,13 +134,13 @@ func TestQueryAddressSpaceConnections(t *testing.T) {
 			},
 		},
 	}
-	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Connections(context.TODO(), ash, nil, nil, nil, nil)
+	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Connections(ctx, ash, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, objs.Total, "Unexpected number of connections associated with the addressspace")
 }
 
 func TestQueryAddressSpaceConnectionFilter(t *testing.T) {
-	r := newTestAddressSpaceResolver(t)
+	r, ctx := newTestAddressSpaceResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	con1 := createConnection("host:1234", namespace, addressspace)
@@ -150,14 +158,14 @@ func TestQueryAddressSpaceConnectionFilter(t *testing.T) {
 	}
 
 	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s'", con2.ObjectMeta.Name)
-	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Connections(context.TODO(), ash, nil, nil, &filter, nil)
+	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Connections(ctx, ash, nil, nil, &filter, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, objs.Total, "Unexpected number of filtered connections associated with the addressspace")
 	assert.Equal(t, con2, objs.Connections[0], "Unexpected connection")
 }
 
 func TestQueryAddressSpaceConnectionOrder(t *testing.T) {
-	r := newTestAddressSpaceResolver(t)
+	r, ctx := newTestAddressSpaceResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	con1 := createConnection("host:1234", namespace, addressspace)
@@ -175,14 +183,14 @@ func TestQueryAddressSpaceConnectionOrder(t *testing.T) {
 	}
 
 	orderby := "`$.ObjectMeta.Name` DESC"
-	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Connections(context.TODO(), ash, nil, nil, nil, &orderby)
+	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Connections(ctx, ash, nil, nil, nil, &orderby)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, objs.Total, "Unexpected number of connections associated with the addressspace")
 	assert.Equal(t, con2, objs.Connections[0], "Unexpected connection")
 }
 
 func TestQueryAddressSpaceAddress(t *testing.T) {
-	r := newTestAddressSpaceResolver(t)
+	r, ctx := newTestAddressSpaceResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	addr := createAddress(namespace, fmt.Sprintf("%s.addr1", addressspace))
@@ -197,13 +205,13 @@ func TestQueryAddressSpaceAddress(t *testing.T) {
 			},
 		},
 	}
-	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Addresses(context.TODO(), ash, nil, nil, nil, nil)
+	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Addresses(ctx, ash, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, objs.Total, "Unexpected number of address associated with the addressspace")
 }
 
 func TestQueryAddressSpaceAddressFilter(t *testing.T) {
-	r := newTestAddressSpaceResolver(t)
+	r, ctx := newTestAddressSpaceResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	addr1 := createAddress(namespace, fmt.Sprintf("%s.addr1", addressspace))
@@ -220,7 +228,7 @@ func TestQueryAddressSpaceAddressFilter(t *testing.T) {
 		},
 	}
 	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s'", addr2.ObjectMeta.Name)
-	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Addresses(context.TODO(), ash, nil, nil, &filter, nil)
+	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Addresses(ctx, ash, nil, nil, &filter, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, objs.Total, "Unexpected number of address associated with the addressspace")
 	assert.Equal(t, 1, objs.Total, "Unexpected number of filtered addresses associated with the addressspace")

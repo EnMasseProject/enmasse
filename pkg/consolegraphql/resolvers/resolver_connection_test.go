@@ -9,7 +9,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,17 +20,24 @@ import (
 	"time"
 )
 
-func newTestConnectionResolver(t *testing.T) *Resolver {
+func newTestConnectionResolver(t *testing.T) (*Resolver, context.Context) {
 	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
 	resolver := Resolver{}
 	resolver.Cache = objectCache
-	return &resolver
+
+	requestState := &server.RequestState{
+		AccessController: accesscontroller.NewAllowAllAccessController(),
+	}
+
+	ctx := server.ContextWithRequestState(requestState, context.TODO())
+
+	return &resolver, ctx
 }
 
 func TestQueryConnection(t *testing.T) {
-	r := newTestConnectionResolver(t)
+	r, ctx := newTestConnectionResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
@@ -36,7 +45,7 @@ func TestQueryConnection(t *testing.T) {
 	err := r.Cache.Add(con)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().Connections(context.TODO(), nil, nil, nil, nil)
+	objs, err := r.Query().Connections(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)
 
 	expected := 1
@@ -48,7 +57,7 @@ func TestQueryConnection(t *testing.T) {
 }
 
 func TestQueryConnectionFilter(t *testing.T) {
-	r := newTestConnectionResolver(t)
+	r, ctx := newTestConnectionResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
@@ -58,7 +67,7 @@ func TestQueryConnectionFilter(t *testing.T) {
 	assert.NoError(t, err)
 
 	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s'", con1.ObjectMeta.Name)
-	objs, err := r.Query().Connections(context.TODO(), nil, nil, &filter, nil)
+	objs, err := r.Query().Connections(ctx, nil, nil, &filter, nil)
 	assert.NoError(t, err)
 
 	expected := 1
@@ -70,7 +79,7 @@ func TestQueryConnectionFilter(t *testing.T) {
 }
 
 func TestQueryConnectionOrder(t *testing.T) {
-	r := newTestConnectionResolver(t)
+	r, ctx := newTestConnectionResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
@@ -80,7 +89,7 @@ func TestQueryConnectionOrder(t *testing.T) {
 	assert.NoError(t, err)
 
 	orderby := "`$.ObjectMeta.Name` DESC"
-	objs, err := r.Query().Connections(context.TODO(), nil, nil, nil, &orderby)
+	objs, err := r.Query().Connections(ctx, nil, nil, nil, &orderby)
 	assert.NoError(t, err)
 
 	expected := 2
@@ -92,7 +101,7 @@ func TestQueryConnectionOrder(t *testing.T) {
 }
 
 func TestQueryConnectionPagination(t *testing.T) {
-	r := newTestConnectionResolver(t)
+	r, ctx := newTestConnectionResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
@@ -103,19 +112,19 @@ func TestQueryConnectionPagination(t *testing.T) {
 	err := r.Cache.Add(con1, con2, con3, con4)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().Connections(context.TODO(), nil, nil, nil, nil)
+	objs, err := r.Query().Connections(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of connections")
 
 	one := 1
 	two := 2
-	objs, err = r.Query().Connections(context.TODO(), nil, &one, nil,  nil)
+	objs, err = r.Query().Connections(ctx, nil, &one, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 3, len(objs.Connections), "Unexpected number of addresses in page")
 	assert.Equal(t, con2.ObjectMeta, objs.Connections[0].ObjectMeta, "Unexpected addresses object meta")
 
-	objs, err = r.Query().Connections(context.TODO(), &one, &two, nil,  nil)
+	objs, err = r.Query().Connections(ctx, &one, &two, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 1, len(objs.Connections), "Unexpected number of address spaces in page")
@@ -123,7 +132,7 @@ func TestQueryConnectionPagination(t *testing.T) {
 }
 
 func TestQueryConnectionLinks(t *testing.T) {
-	r := newTestConnectionResolver(t)
+	r, ctx := newTestConnectionResolver(t)
 	con1 := uuid.New().String()
 	con2 := uuid.New().String()
 	namespace := "mynamespace"
@@ -142,7 +151,7 @@ func TestQueryConnectionLinks(t *testing.T) {
 			AddressSpace: addressspace,
 		},
 	}
-	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, nil, nil, nil)
+	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, nil, nil, nil)
 	assert.NoError(t, err)
 
 	expected := 1
@@ -151,7 +160,7 @@ func TestQueryConnectionLinks(t *testing.T) {
 }
 
 func TestQueryConnectionLinkFilter(t *testing.T) {
-	r := newTestConnectionResolver(t)
+	r, ctx := newTestConnectionResolver(t)
 	conuuid := uuid.New().String()
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
@@ -173,7 +182,7 @@ func TestQueryConnectionLinkFilter(t *testing.T) {
 	}
 
 	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s'", link1.ObjectMeta.Name)
-	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, nil, &filter, nil)
+	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, nil, &filter, nil)
 	assert.NoError(t, err)
 
 	expected := 1
@@ -184,7 +193,7 @@ func TestQueryConnectionLinkFilter(t *testing.T) {
 }
 
 func TestQueryConnectionLinkOrder(t *testing.T) {
-	r := newTestConnectionResolver(t)
+	r, ctx := newTestConnectionResolver(t)
 	conuuid := uuid.New().String()
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
@@ -206,7 +215,7 @@ func TestQueryConnectionLinkOrder(t *testing.T) {
 	}
 
 	orderby := "`$.Spec.Role`"
-	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, nil, nil, &orderby)
+	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, nil, nil, &orderby)
 	assert.NoError(t, err)
 
 	expected := 2
@@ -217,7 +226,7 @@ func TestQueryConnectionLinkOrder(t *testing.T) {
 }
 
 func TestQueryConnectionLinkPaged(t *testing.T) {
-	r := newTestConnectionResolver(t)
+	r, ctx := newTestConnectionResolver(t)
 	conuuid := uuid.New().String()
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
@@ -240,18 +249,18 @@ func TestQueryConnectionLinkPaged(t *testing.T) {
 		},
 	}
 
-	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, nil, nil, nil)
+	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of links")
 
 	one := 1
 	two := 2
-	objs, err = r.Connection_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, &one, nil,  nil)
+	objs, err = r.Connection_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, &one, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of links")
 	assert.Equal(t, 3, len(objs.Links), "Unexpected number of links in page")
 
-	objs, err = r.Connection_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, &one, &two, nil,  nil)
+	objs, err = r.Connection_consoleapi_enmasse_io_v1beta1().Links(ctx, con, &one, &two, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of links")
 	assert.Equal(t, 1, len(objs.Links), "Unexpected number of links in page")
@@ -259,7 +268,7 @@ func TestQueryConnectionLinkPaged(t *testing.T) {
 
 
 func TestQueryConnectionMetrics(t *testing.T) {
-	r := newTestConnectionResolver(t)
+	r, ctx := newTestConnectionResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
@@ -278,7 +287,7 @@ func TestQueryConnectionMetrics(t *testing.T) {
 	err := r.Cache.Add(con)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().Connections(context.TODO(), nil, nil, nil, nil)
+	objs, err := r.Query().Connections(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, objs.Total, "Unexpected number of connections")
@@ -307,7 +316,7 @@ func TestQueryConnectionMetrics(t *testing.T) {
 }
 
 func TestQueryConnectionLinkMetric(t *testing.T) {
-	r := newTestConnectionResolver(t)
+	r, ctx := newTestConnectionResolver(t)
 	conuuid := uuid.New().String()
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
@@ -335,7 +344,7 @@ func TestQueryConnectionLinkMetric(t *testing.T) {
 		},
 	}
 
-	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, nil, nil, nil)
+	objs, err := r.Connection_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, objs.Total, "Unexpected number of links")
 

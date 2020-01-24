@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,23 +21,30 @@ import (
 	"time"
 )
 
-func newTestAddressResolver(t *testing.T) *Resolver {
+func newTestAddressResolver(t *testing.T) (*Resolver, context.Context) {
 	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
 	resolver := Resolver{}
 	resolver.Cache = objectCache
-	return &resolver
+
+	requestState := &server.RequestState{
+		AccessController: accesscontroller.NewAllowAllAccessController(),
+	}
+
+	ctx := server.ContextWithRequestState(requestState, context.TODO())
+
+	return &resolver, ctx
 }
 
 func TestQueryAddress(t *testing.T) {
-	r := newTestAddressResolver(t)
+	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addr := createAddress(namespace, "myaddrspace.myaddr")
 	err := r.Cache.Add(addr)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().Addresses(context.TODO(), nil, nil, nil, nil)
+	objs, err := r.Query().Addresses(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)
 
 	expected := 1
@@ -47,7 +56,7 @@ func TestQueryAddress(t *testing.T) {
 }
 
 func TestQueryAddressFilter(t *testing.T) {
-	r := newTestAddressResolver(t)
+	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addr1 := createAddress(namespace, "myaddrspace.myaddr1")
 	addr2 := createAddress(namespace, "myaddrspace.myaddr2")
@@ -55,7 +64,7 @@ func TestQueryAddressFilter(t *testing.T) {
 	assert.NoError(t, err)
 
 	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s'", addr1.ObjectMeta.Name)
-	objs, err := r.Query().Addresses(context.TODO(), nil, nil, &filter, nil)
+	objs, err := r.Query().Addresses(ctx, nil, nil, &filter, nil)
 	assert.NoError(t, err)
 
 	expected := 1
@@ -67,7 +76,7 @@ func TestQueryAddressFilter(t *testing.T) {
 }
 
 func TestQueryAddressOrder(t *testing.T) {
-	r := newTestAddressResolver(t)
+	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addr1 := createAddress(namespace, "myaddrspace.myaddr1")
 	addr2 := createAddress(namespace, "myaddrspace.myaddr2")
@@ -75,7 +84,7 @@ func TestQueryAddressOrder(t *testing.T) {
 	assert.NoError(t, err)
 
 	orderby := "`$.ObjectMeta.Name` DESC"
-	objs, err := r.Query().Addresses(context.TODO(), nil, nil, nil, &orderby)
+	objs, err := r.Query().Addresses(ctx, nil, nil, nil, &orderby)
 	assert.NoError(t, err)
 
 	expected := 2
@@ -87,7 +96,7 @@ func TestQueryAddressOrder(t *testing.T) {
 }
 
 func TestQueryAddressPagination(t *testing.T) {
-	r := newTestAddressResolver(t)
+	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addr1 := createAddress(namespace, "myaddrspace.myaddr1")
 	addr2 := createAddress(namespace, "myaddrspace.myaddr2")
@@ -96,19 +105,19 @@ func TestQueryAddressPagination(t *testing.T) {
 	err := r.Cache.Add(addr1, addr2, addr3, addr4)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().Addresses(context.TODO(), nil, nil, nil, nil)
+	objs, err := r.Query().Addresses(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of addresses")
 
 	one := 1
 	two := 2
-	objs, err = r.Query().Addresses(context.TODO(), nil, &one, nil,  nil)
+	objs, err = r.Query().Addresses(ctx, nil, &one, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of addresses")
 	assert.Equal(t, 3, len(objs.Addresses), "Unexpected number of addresses in page")
 	assert.Equal(t, addr2.ObjectMeta, objs.Addresses[0].ObjectMeta, "Unexpected addresses object meta")
 
-	objs, err = r.Query().Addresses(context.TODO(), &one, &two, nil,  nil)
+	objs, err = r.Query().Addresses(ctx, &one, &two, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of addresses")
 	assert.Equal(t, 1, len(objs.Addresses), "Unexpected number of address in page")
@@ -116,7 +125,7 @@ func TestQueryAddressPagination(t *testing.T) {
 }
 
 func TestQueryAddressLinks(t *testing.T) {
-	r := newTestAddressResolver(t)
+	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
@@ -147,7 +156,7 @@ func TestQueryAddressLinks(t *testing.T) {
 		},
 	}
 
-	objs, err := r.Address_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, nil, nil, nil)
+	objs, err := r.Address_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, nil, nil, nil)
 	assert.NoError(t, err)
 
 	expected := 3
@@ -156,7 +165,7 @@ func TestQueryAddressLinks(t *testing.T) {
 }
 
 func TestQueryAddressLinkFilter(t *testing.T) {
-	r := newTestAddressResolver(t)
+	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
@@ -184,7 +193,7 @@ func TestQueryAddressLinkFilter(t *testing.T) {
 	}
 
 	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s'", link1.ObjectMeta.Name)
-	objs, err := r.Address_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, nil, &filter, nil)
+	objs, err := r.Address_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, nil, &filter, nil)
 	assert.NoError(t, err)
 
 	expected := 1
@@ -195,7 +204,7 @@ func TestQueryAddressLinkFilter(t *testing.T) {
 }
 
 func TestQueryAddressLinkOrder(t *testing.T) {
-	r := newTestAddressResolver(t)
+	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
@@ -223,7 +232,7 @@ func TestQueryAddressLinkOrder(t *testing.T) {
 	}
 
 	orderby := "`$.Spec.Role`"
-	objs, err := r.Address_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, nil, nil, &orderby)
+	objs, err := r.Address_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, nil, nil, &orderby)
 	assert.NoError(t, err)
 
 	expected := 2
@@ -234,7 +243,7 @@ func TestQueryAddressLinkOrder(t *testing.T) {
 }
 
 func TestQueryAddressLinkPaginated(t *testing.T) {
-	r := newTestAddressResolver(t)
+	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
@@ -263,18 +272,18 @@ func TestQueryAddressLinkPaginated(t *testing.T) {
 		},
 	}
 
-	objs, err := r.Address_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, nil, nil, nil)
+	objs, err := r.Address_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equalf(t, 4, objs.Total, "Unexpected number of links for address %s", addr1)
 
 	one := 1
 	two := 2
-	objs, err = r.Address_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, nil, &one, nil,  nil)
+	objs, err = r.Address_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, &one, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of links")
 	assert.Equal(t, 3, len(objs.Links), "Unexpected number of links in page")
 
-	objs, err = r.Address_consoleapi_enmasse_io_v1beta1().Links(context.TODO(), con, &one, &two, nil,  nil)
+	objs, err = r.Address_consoleapi_enmasse_io_v1beta1().Links(ctx, con, &one, &two, nil,  nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of links")
 	assert.Equal(t, 1, len(objs.Links), "Unexpected number of links in page")
@@ -282,7 +291,7 @@ func TestQueryAddressLinkPaginated(t *testing.T) {
 }
 
 func TestQueryAddressMetrics(t *testing.T) {
-	r := newTestAddressResolver(t)
+	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addressName := "myaddressspace.myaddr"
 
@@ -303,7 +312,7 @@ func TestQueryAddressMetrics(t *testing.T) {
 	err := r.Cache.Add(addr)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().Addresses(context.TODO(), nil, nil, nil, nil)
+	objs, err := r.Query().Addresses(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, objs.Total, "Unexpected number of addresses")
 

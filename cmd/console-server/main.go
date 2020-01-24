@@ -6,15 +6,19 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"flag"
 	"github.com/99designs/gqlgen/cmd"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/handler"
+	"github.com/alexedwards/scs/v2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/metric"
@@ -24,6 +28,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util"
 	user "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
 	"github.com/vektah/gqlparser/gqlerror"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 	"log"
@@ -41,23 +46,41 @@ For development purposes, you can run the console backend outside the container.
 
 TODO:
 
-1) Restrict query results to what the user may see
 2) Mutations
-3) Refactor cachedb index specification to avoid spreading of knowledge of the indices throughout the code
 4) Pass CA to the Go-AMQP client when connecting to agents.
 
 */
 
-func authHandler(next http.Handler) http.Handler {
+const accessControllerStateCookieName = "accessControllerState"
+const sessionOwner = "sessionOwner"
+
+func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Handler {
+
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		var state *server.RequestState
+
 		accessToken := req.Header.Get("X-Forwarded-Access-Token")
 
 		if accessToken == "" {
+			http.Error(rw, "No access token", http.StatusUnauthorized)
 			rw.WriteHeader(401)
 			return
 		}
 
-		kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		accessTokenSha := getShaSum(accessToken)
+		if sessionManager.Exists(req.Context(), sessionOwner) {
+			sessionOwnerAccessTokenSha := sessionManager.Get(req.Context(), sessionOwner).([]byte)
+			if !bytes.Equal(sessionOwnerAccessTokenSha, accessTokenSha) {
+				// This session must have belonged to a different accessToken, destroy it.
+				// New session created automatically.
+				_ = sessionManager.Destroy(req.Context())
+				sessionManager.Put(req.Context(), sessionOwner, accessTokenSha)
+			}
+		} else {
+			sessionManager.Put(req.Context(), sessionOwner, accessTokenSha)
+		}
+
+		kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 			clientcmd.NewDefaultClientConfigLoadingRules(),
 			&clientcmd.ConfigOverrides{
 				AuthInfo: api.AuthInfo{
@@ -66,40 +89,56 @@ func authHandler(next http.Handler) http.Handler {
 			},
 		)
 
-		config, err :=  kubeconfig.ClientConfig()
+		config, err := kubeConfig.ClientConfig()
 
+		//config.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
+		//	return &server.Tracer{RoundTripper: rt}
+		//}
+
+		kubeClient, err := kubernetes.NewForConfig(config)
 		if err != nil {
-			log.Printf("Failed to build config : %v", err)
-			rw.WriteHeader(500)
+			log.Printf("Failed to build client set : %v", err)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		userclientset, err := user.NewForConfig(config)
+		if err != nil {
+			log.Printf("Failed to build config : %v", err)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		userClient, err := user.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
-			rw.WriteHeader(500)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		coreClient, err := enmassev1beta1.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
-			rw.WriteHeader(500)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
+		accessControllerState := sessionManager.Get(req.Context(), accessControllerStateCookieName)
 
-		requestState := &server.RequestState{
-			UserInterface: userclientset.Users(),
+		controller := accesscontroller.NewKubernetesRBACAccessController(kubeClient, accessControllerState)
+
+		state = &server.RequestState{
+			UserInterface:        userClient.Users(),
 			EnmasseV1beta1Client: coreClient,
+			AccessController:     controller,
 		}
 
-		ctx := server.ContextWithRequestState(requestState, req.Context())
+		ctx := server.ContextWithRequestState(state, req.Context())
+
 		next.ServeHTTP(rw, req.WithContext(ctx))
 	})
 }
 
-func developmentHandler(next http.Handler) http.Handler {
+func developmentHandler(next http.Handler, sessionManager *scs.SessionManager) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 
 		kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -107,31 +146,32 @@ func developmentHandler(next http.Handler) http.Handler {
 			&clientcmd.ConfigOverrides{},
 		)
 
-		config, err :=  kubeconfig.ClientConfig()
+		config, err := kubeconfig.ClientConfig()
 
 		if err != nil {
 			log.Printf("Failed to build config : %v", err)
-			rw.WriteHeader(500)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		userclientset, err := user.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
-			rw.WriteHeader(500)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		coreClient, err := enmassev1beta1.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
-			rw.WriteHeader(500)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		requestState := &server.RequestState{
 			UserInterface:        userclientset.Users(),
-			EnmasseV1beta1Client: coreClient}
+			EnmasseV1beta1Client: coreClient,
+			AccessController:     accesscontroller.NewAllowAllAccessController()}
 
 		ctx := server.ContextWithRequestState(requestState, req.Context())
 		next.ServeHTTP(rw, req.WithContext(ctx))
@@ -143,8 +183,8 @@ func main() {
 	port := util.GetEnvOrDefault("PORT", "8080")
 
 	var developmentMode = flag.Bool("developmentMode", false,
-		"set to true to run console-server outside of the OpenShift container.  It will look for" +
-		"manually established routes to agents rather than services.")
+		"set to true to run console-server outside of the OpenShift container.  It will look for"+
+			"manually established routes to agents rather than services.")
 	flag.Parse()
 
 	log.Printf("console-server starting\n")
@@ -170,13 +210,12 @@ http://localhost:` + port + `/graphql
 		panic(err)
 	}
 
-
 	kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},
 	)
 
-	config, err :=  kubeconfig.ClientConfig()
+	config, err := kubeconfig.ClientConfig()
 	if err != nil {
 		panic(err)
 	}
@@ -191,7 +230,7 @@ http://localhost:` + port + `/graphql
 		panic(err.Error())
 	}
 
-	creators := []func() (watchers.ResourceWatcher, error) {
+	creators := []func() (watchers.ResourceWatcher, error){
 		func() (watchers.ResourceWatcher, error) {
 			return watchers.NewAddressSpaceWatcher(objectCache, watchers.AddressSpaceWatcherConfig(config),
 				watchers.AddressSpaceWatcherFactory(
@@ -257,7 +296,7 @@ http://localhost:` + port + `/graphql
 		},
 	}
 
-	resourcewatchers := make([]watchers.ResourceWatcher,0)
+	resourcewatchers := make([]watchers.ResourceWatcher, 0)
 
 	for _, f := range creators {
 		watcher, err := f()
@@ -304,6 +343,13 @@ http://localhost:` + port + `/graphql
 	playground := handler.Playground("GraphQL playground", queryEndpoint)
 	http.Handle("/graphql/", playground)
 
+	sessionManager := scs.New()
+	sessionManager.Lifetime = 30 * time.Minute
+	sessionManager.IdleTimeout = 5 * time.Minute
+	sessionManager.Cookie.HttpOnly = true
+	sessionManager.Cookie.Persist = false
+	sessionManager.Cookie.Secure = true
+
 	graphql := handler.GraphQL(resolvers.NewExecutableSchema(resolvers.Config{Resolvers: &resolver}),
 		handler.ErrorPresenter(
 			func(ctx context.Context, e error) *gqlerror.Error {
@@ -316,22 +362,34 @@ http://localhost:` + port + `/graphql
 		),
 		handler.RequestMiddleware(func(ctx context.Context, next func(ctx context.Context) []byte) []byte {
 			rctx := graphql.GetRequestContext(ctx)
+
 			start := time.Now()
 			bytes := next(ctx)
 			if rctx != nil {
 				log.Printf("Query execution - op: %s %s\n", rctx.OperationName, time.Since(start))
+			}
+
+			requestState := server.GetRequestStateFromContext(ctx)
+			if requestState != nil {
+				if updated, accessControllerState := requestState.AccessController.GetState(); updated {
+					if accessControllerState == nil {
+						sessionManager.Remove(ctx, accessControllerStateCookieName)
+					} else {
+						sessionManager.Put(ctx, accessControllerStateCookieName, accessControllerState)
+					}
+				}
 			}
 			return bytes
 		}),
 	)
 
 	if *developmentMode {
-		http.Handle(queryEndpoint, developmentHandler(graphql))
+		http.Handle(queryEndpoint, developmentHandler(graphql, sessionManager))
 	} else {
-		http.Handle(queryEndpoint, authHandler(graphql))
+		http.Handle(queryEndpoint, authHandler(graphql, sessionManager))
 	}
 
-	err = http.ListenAndServe(":"+port, nil)
+	err = http.ListenAndServe(":"+port, sessionManager.LoadAndSave(http.DefaultServeMux))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -356,4 +414,9 @@ func schedule(f func(), delay time.Duration) (chan bool, chan bool) {
 	}()
 
 	return stop, bump
+}
+
+func getShaSum(accessToken string) []byte {
+	accessTokenSha := sha256.Sum256([]byte(accessToken))
+	return accessTokenSha[:]
 }
