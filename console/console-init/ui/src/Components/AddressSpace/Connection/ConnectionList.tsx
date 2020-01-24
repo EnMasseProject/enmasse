@@ -85,12 +85,12 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       title:
         width > 769 ? (
           <span style={{ display: "inline-flex" }}>
-            Message In
+            Message In/sec
             <br />
             {`(over last 5 min)`}
           </span>
         ) : (
-          "Message In"
+          "Message In/sec"
         ),
       transforms: [sortable]
     },
@@ -98,12 +98,12 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       title:
         width > 769 ? (
           <span style={{ display: "inline-flex" }}>
-            Message Out
+            Message Out/sec
             <br />
             {`(over last 5 min)`}
           </span>
         ) : (
-          "Message Out"
+          "Message Out/sec"
         ),
       transforms: [sortable]
     },
