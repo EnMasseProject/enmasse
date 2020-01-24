@@ -35,7 +35,7 @@ export const EmptyAddress: React.FunctionComponent<IEmptyAddressProps> = ({
       <EmptyStateBody id="empty-address-text">
         There are currently no addresses available. Please click on the button
         below to create one.Learn more about this on the
-        <Link to="/"> documentation</Link>
+        <a href={process.env.REACT_APP_DOCS}> documentation</a>
       </EmptyStateBody>
       <Button
         id="empty-address-create-button"
