@@ -22,7 +22,7 @@ import {
 import useWindowDimensions from "src/Components/Common/WindowDimension";
 import { SortForMobileView } from "src/Components/Common/SortForMobileView";
 import { ISortBy } from "@patternfly/react-table";
-import { IAddress } from "src/Components/AddressSpace/Address/AddressList";
+
 interface AddressListFilterProps {
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;
@@ -65,13 +65,13 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
   const { width } = useWindowDimensions();
 
   const onDeleteAll = () => {
-    setFilterValue("Name");
+    setFilterValue("Address");
     setTypeValue(null);
     setStatusValue(null);
     setFilterNames([]);
   };
   const sortMenuItems = [
-    { key: "name", value: "Name", index: 1 },
+    { key: "name", value: "Address", index: 1 },
     { key: "messageIn", value: "Message In", index: 3 },
     { key: "messageOut", value: "Message Out", index: 4 },
     { key: "storedMessage", value: "Stored Messages", index: 5 }

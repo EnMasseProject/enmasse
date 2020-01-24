@@ -54,9 +54,9 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
       sortBy,
       filterRole
     ),
-    { pollInterval: 20000 }
+    { pollInterval: 5000 }
   );
-  // if (loading) return <Loading />;
+  if (loading) return <Loading />;
   if (error) {
     console.log(error);
     // return <Loading />;

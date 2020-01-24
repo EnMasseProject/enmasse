@@ -100,7 +100,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       statusValue,
       sortBy
     ),
-    { pollInterval: 10000, fetchPolicy: "network-only" }
+    { pollInterval: 5000, fetchPolicy: "network-only" }
   );
 
   if (onCreationRefetch) {

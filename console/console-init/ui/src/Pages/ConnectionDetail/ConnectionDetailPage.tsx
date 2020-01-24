@@ -71,12 +71,11 @@ export default function ConnectionDetailPage() {
 
   useBreadcrumb(breadcrumb);
   useA11yRouteChange();
-  // useBreadcrumb(breadcrumb);
   const { loading, error, data } = useQuery<IConnectionDetailResponse>(
     RETURN_CONNECTION_DETAIL(name || "", namespace || "", connectionname || ""),
-    { pollInterval: 2000 }
+    { pollInterval: 5000 } 
   );
-  // if (loading) return <Loading />;
+  if (loading) return <Loading />;
   if (error) {
     console.log(error);
     // return <Loading />;
@@ -88,7 +87,7 @@ export default function ConnectionDetailPage() {
   // setTotalLinks(connections.Total);
   //Change this logic
   const jvmObject =
-    connection.Spec.Properties && connection.Spec.Properties.length > 0
+    connection.Spec &&connection.Spec.Properties && connection.Spec.Properties.length > 0
       ? getSplitValue(
           getProductFilteredValue(connection.Spec.Properties, "platform")
         )

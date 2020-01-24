@@ -22,7 +22,8 @@ describe("Address space List", () => {
         type: "Brokered",
         displayName: "sample_namespace_1",
         isReady: true,
-        status: "creating"
+        status: "creating",
+        phase: "Active"
       },
       {
         name: "sample_2",
@@ -31,7 +32,8 @@ describe("Address space List", () => {
         type: "Standard",
         displayName: "sample_namespace_2",
         isReady: true,
-        status: "running"
+        status: "running",
+        phase: "Active"
       }
     ];
     const handleEdit = (data: IAddressSpace) => void 0;
@@ -46,8 +48,8 @@ describe("Address space List", () => {
           onDelete={handleDelete}
           sortBy={sortBy}
           onSort={onSort}
-          onSelectAddressSpace={()=>{}}
-          onSelectAllAddressSpace={()=>{}}
+          onSelectAddressSpace={() => {}}
+          onSelectAllAddressSpace={() => {}}
         />
       </MemoryRouter>
     );
