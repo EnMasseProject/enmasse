@@ -57,6 +57,8 @@ describe("Address List", () => {
           rowsData={addresses}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onSelectAddress={()=>{}}
+          onSelectAllAddress={()=>{}}
         />
       </MemoryRouter>
     );
