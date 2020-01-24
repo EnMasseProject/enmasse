@@ -46,6 +46,8 @@ describe("Address space List", () => {
           onDelete={handleDelete}
           sortBy={sortBy}
           onSort={onSort}
+          onSelectAddressSpace={()=>{}}
+          onSelectAllAddressSpace={()=>{}}
         />
       </MemoryRouter>
     );
