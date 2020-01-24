@@ -207,7 +207,7 @@ public class OperatorManager {
         if (isEnmasseOlmDeployed(kube.getInfraNamespace())) {
             remover.accept(kube.getInfraNamespace());
         }
-        KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse");
+        cleanCRDs();
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
@@ -250,8 +250,7 @@ public class OperatorManager {
     }
 
     public boolean clean() throws Exception {
-        KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse,enmasse-component=iot");
-        KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse");
+        cleanCRDs();
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
@@ -265,6 +264,11 @@ public class OperatorManager {
             }
         }
         return true;
+    }
+
+    private void cleanCRDs() {
+        KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse,enmasse-component=iot");
+        KubeCMDClient.runOnCluster("delete", "-v", "6", "crd", "-l", "app=enmasse");
     }
 
     public void waitUntilOperatorReadyOlm() throws Exception {
