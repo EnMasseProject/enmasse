@@ -30,7 +30,6 @@ export interface IAddressSpace {
   displayName: string;
   isReady: boolean;
   status?: "creating" | "deleting" | "running";
-  selected?: boolean;
 }
 
 interface IAddressListProps {
@@ -77,8 +76,13 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   };
 
   const toTableCells = (row: IAddressSpace) => {
+    const oldRowData = tableRows.filter(r=>r.originalData.name===row.name);
+    let selected;
+    if(oldRowData && oldRowData.length>0) {
+      selected= oldRowData[0].selected;
+    }
     const tableRow: IRowData = {
-      selected: row.selected,
+      selected: selected,
       cells: [
         {
           header: "name",

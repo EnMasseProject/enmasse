@@ -73,10 +73,6 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   if (sortValue && sortBy != sortValue) {
     setSortBy(sortValue);
   }
-  const [allAddressSpaces, setAllAddressSpaces] = React.useState<
-    IAddressSpace[]
-  >([]);
-
   const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
   const handleSaving = async () => {
     addressSpaceBeingEdited &&
@@ -165,51 +161,15 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     displayName: addSpace.Spec.Plan.Spec.DisplayName,
     isReady: addSpace.Status.IsReady
   }));
-  if (allAddressSpaces.toString() != addressSpacesList.toString()) {
-    const addressSpacesListMap = addressSpacesList.map(as => {
-      const addressSpace: IAddressSpace = as;
-      const dataInState = allAddressSpaces.filter(ad => ad.name === as.name);
-      if (dataInState && dataInState.length > 0) {
-        addressSpace.selected = dataInState[0].selected;
-      }
-      return addressSpace;
-    });
-    setAllAddressSpaces(addressSpacesListMap);
-  }
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
   };
-  // const onSelect = (data: IRowData, isSelected: boolean) => {
-  //   const asToSet = allAddressSpaces.map(as => {
-  //     const d = as;
-  //     if (as.name === data.originalData.name) {
-  //       as.selected = isSelected;
-  //     }
-  //     return d;
-  //   });
-  //   setAllAddressSpaces(asToSet);
-  //   setSelectedAddressSpaces(
-  //     asToSet.filter(as => as.selected && as.selected === true)
-  //   );
-  // };
-  // const onSelectAll = (isSelected: boolean) => {
-  //   const asToSet = allAddressSpaces.map(as => {
-  //     const d = as;
-  //     as.selected = isSelected;
-  //     return d;
-  //   });
-  //   setAllAddressSpaces(asToSet);
-  //   setSelectedAddressSpaces(
-  //     asToSet.filter(as => as.selected && as.selected === true)
-  //   );
-  // };
-
   return (
     <>
       {totalAddressSpaces > 0 ? (
         <AddressSpaceList
-          rows={allAddressSpaces}
+          rows={addressSpacesList}
           onSelectAddressSpace={onSelectAddressSpace}
           onSelectAllAddressSpace={onSelectAllAddressSpace}
           onEdit={handleEditChange}
