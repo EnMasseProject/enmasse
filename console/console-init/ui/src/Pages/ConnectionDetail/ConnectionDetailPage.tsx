@@ -15,7 +15,7 @@ import {
 } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
 import { useParams } from "react-router";
-import { Loading, useA11yRouteChange, useBreadcrumb } from "use-patternfly";
+import { Loading, useA11yRouteChange, useBreadcrumb, useDocumentTitle } from "use-patternfly";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionDetailResponse } from "src/Types/ResponseTypes";
 import { Link } from "react-router-dom";
@@ -45,6 +45,7 @@ const getSplitValue = (value: string) => {
 
 export default function ConnectionDetailPage() {
   const { name, namespace, type, connectionname } = useParams();
+  useDocumentTitle("Connection Details");
   const breadcrumb = React.useMemo(
     () => (
       <Breadcrumb>
