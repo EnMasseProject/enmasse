@@ -36,7 +36,6 @@ export interface IAddress {
   isReady: boolean;
   errorMessages?: string[];
   status?: string;
-  selected?: boolean;
 }
 
 interface IAddressListProps {
@@ -183,8 +182,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   ) => {
     let rows;
     if (rowIndex === -1) {
-      rows = tableRows.map(a=>{
-        const data =a;
+      rows = tableRows.map(row=>{
+        const data =row;
         data.selected=isSelected
         return data;
       })
