@@ -934,7 +934,7 @@ func (o Order) compare(p interface{}, q interface{}) (int, error) {
 	case time.Time:
 		switch qc := qv.(type) {
 		case time.Time:
-			if pc == qc {
+			if pc.Equal(qc) {
 				return 0, nil
 			} else if pc.After(qc) {
 				return pgtq, nil
@@ -945,7 +945,7 @@ func (o Order) compare(p interface{}, q interface{}) (int, error) {
 	case v1.Time:
 		switch qc := qv.(type) {
 		case v1.Time:
-			if pc == qc {
+			if pc.Equal(&qc) {
 				return 0, nil
 			} else if !pc.Before(&qc) {
 				return pgtq, nil
