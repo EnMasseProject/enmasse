@@ -176,6 +176,7 @@ export interface IAddressSpacesResponse {
       };
       Status: {
         IsReady: boolean;
+        Phase:string;
       };
     }>;
   };

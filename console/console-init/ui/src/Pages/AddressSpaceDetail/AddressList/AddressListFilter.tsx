@@ -78,7 +78,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   const [nameOptions, setNameOptions] = React.useState<Array<string>>();
   const [nameInput, setNameInput] = React.useState<string>("");
   const filterMenuItems = [
-    { key: "filterName", value: "Name" },
+    { key: "filterAddress", value: "Address" },
     { key: "filterType", value: "Type" },
     { key: "filterStatus", value: "Status" }
   ];
@@ -98,7 +98,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   ];
 
   const onClickSearchIcon = (event: any) => {
-    if (filterValue && filterValue === "Name") {
+    if (filterValue && filterValue === "Address") {
       if (nameSelected && nameSelected.trim() !== "")
         if (
           filterNames.map(filter => filter.value).indexOf(nameSelected.trim()) < 0
@@ -186,7 +186,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
     id: string | DataToolbarChip
   ) => {
     switch (type) {
-      case "Name":
+      case "Address":
         let index;
         if (filterNames && id) {
           index = filterNames.map(filter => filter.value).indexOf(id.toString());
@@ -250,14 +250,14 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
               <DataToolbarFilter
                 chips={filterNames.map(filter => filter.value)}
                 deleteChip={onDelete}
-                categoryName="Name"
+                categoryName="Address"
               >
-                {filterValue && filterValue === "Name" && (
+                {filterValue && filterValue === "Address" && (
                   <InputGroup>
                     <Select
                       id="al-filter-select-name"
                       variant={SelectVariant.typeahead}
-                      aria-label="Select a Name"
+                      aria-label="Select a Address"
                       onToggle={onNameSelectToggle}
                       onSelect={onNameSelect}
                       onClear={() => {
@@ -269,7 +269,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                       onFilter={onNameSelectFilterChange}
                       isExpanded={isSelectNameExpanded}
                       ariaLabelledBy={"typeahead-select-id"}
-                      placeholderText="Select name"
+                      placeholderText="Select Address"
                       isDisabled={false}
                       isCreatable={false}
                     >
