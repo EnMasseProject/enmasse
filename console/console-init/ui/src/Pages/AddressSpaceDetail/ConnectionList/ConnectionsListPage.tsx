@@ -52,7 +52,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
       namespace,
       sortBy
     ),
-    { pollInterval: 2000 }
+    { pollInterval: 5000 }
   );
 
   if (error) {

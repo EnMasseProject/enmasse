@@ -134,7 +134,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   };
   const tableRows = rowsData.map(toTableCells);
   const tableColumns = [
-    { title: "Name", transforms: [sortable] },
+    { title: "Address", transforms: [sortable] },
     "Type/Plan",
     {
       title:
