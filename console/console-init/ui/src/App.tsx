@@ -8,14 +8,13 @@ import "./App.css";
 import "@patternfly/react-core/dist/styles/base.css";
 import { AppLayout } from "use-patternfly";
 import { useHistory } from "react-router-dom";
-import { Brand, Text, TextVariants, Avatar } from "@patternfly/react-core";
+import { Brand, Avatar } from "@patternfly/react-core";
 import brandImg from "./brand_logo.svg";
 import NavToolBar from "./Components/NavToolBar/NavToolBar";
 import { AppRoutes } from "./AppRoutes";
 import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
 import avatarImg from "./img_avatar.svg";
-import { UserDetail } from "./Components/NavToolBar/User";
 
 const graphqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT ? process.env.REACT_APP_GRAPHQL_ENDPOINT : "http://localhost:4000";
 const client = new ApolloClient({

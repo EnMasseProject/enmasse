@@ -5,7 +5,7 @@
 
 import React from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
-import { useA11yRouteChange, useDocumentTitle } from "use-patternfly";
+import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
 import { Button, Modal } from "@patternfly/react-core";
 import {
   AddressSpaceList,
@@ -37,8 +37,11 @@ interface AddressSpaceListPageProps {
   setSortValue: (value: ISortBy) => void;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
-  onSelectAddressSpace:(data:IAddressSpace, isSelected:boolean)=>void;
-  onSelectAllAddressSpace:(dataList:IAddressSpace[],isSelected:boolean)=>void;
+  onSelectAddressSpace: (data: IAddressSpace, isSelected: boolean) => void;
+  onSelectAllAddressSpace: (
+    dataList: IAddressSpace[],
+    isSelected: boolean
+  ) => void;
   selectedAddressSpaces: Array<IAddressSpace>;
 }
 export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageProps> = ({
@@ -140,9 +143,12 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
       filter_Type,
       sortBy
     ),
-    { pollInterval: 20000, fetchPolicy: "network-only" }
+    { pollInterval: 5000, fetchPolicy: "network-only" }
   );
 
+  if (loading) {
+    return <Loading />;
+  }
   if (error) {
     console.log(error);
   }
@@ -156,23 +162,26 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
   setTotalAddressSpaces(addressSpaces.Total);
-  const addressSpacesList:IAddressSpace[] = addressSpaces.AddressSpaces.map(addSpace => ({
-    name: addSpace.ObjectMeta.Name,
-    nameSpace: addSpace.ObjectMeta.Namespace,
-    creationTimestamp: addSpace.ObjectMeta.CreationTimestamp,
-    type: addSpace.Spec.Type,
-    displayName: addSpace.Spec.Plan.Spec.DisplayName,
-    isReady: addSpace.Status.IsReady,
-    selected:
-      selectedAddressSpaces.filter(({ name, nameSpace }) =>
-        compareTwoAddress(
-          name,
-          addSpace.ObjectMeta.Name,
-          nameSpace,
-          addSpace.ObjectMeta.Namespace
-        )
-      ).length == 1
-  }));
+  const addressSpacesList: IAddressSpace[] = addressSpaces.AddressSpaces.map(
+    addSpace => ({
+      name: addSpace.ObjectMeta.Name,
+      nameSpace: addSpace.ObjectMeta.Namespace,
+      creationTimestamp: addSpace.ObjectMeta.CreationTimestamp,
+      type: addSpace.Spec.Type,
+      displayName: addSpace.Spec.Plan.Spec.DisplayName,
+      isReady: addSpace.Status.IsReady,
+      phase: addSpace.Status.Phase,
+      selected:
+        selectedAddressSpaces.filter(({ name, nameSpace }) =>
+          compareTwoAddress(
+            name,
+            addSpace.ObjectMeta.Name,
+            nameSpace,
+            addSpace.ObjectMeta.Namespace
+          )
+        ).length == 1
+    })
+  );
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });

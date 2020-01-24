@@ -54,7 +54,7 @@ export default function AddressesList() {
   useDocumentTitle("Address List");
   useA11yRouteChange();
   const { name, namespace, type } = useParams();
-  const [filterValue, setFilterValue] = React.useState<string | null>("Name");
+  const [filterValue, setFilterValue] = React.useState<string | null>("Address");
   const [filterNames, setFilterNames] = React.useState<any[]>([]);
   const [typeValue, setTypeValue] = React.useState<string | null>(null);
   const [statusValue, setStatusValue] = React.useState<string | null>(null);

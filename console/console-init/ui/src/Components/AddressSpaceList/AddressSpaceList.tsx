@@ -29,6 +29,7 @@ export interface IAddressSpace {
   type: string;
   displayName: string;
   isReady: boolean;
+  phase:string;
   status?: "creating" | "deleting" | "running";
   selected?: boolean;
 }
@@ -104,7 +105,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
             </>
           )
         },
-        { title: <AddressSpaceStatus isReady={row.isReady} /> },
+        { title: <AddressSpaceStatus phase ={row.phase}/> },
         {
           title: (
             <>
@@ -132,7 +133,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
     },
     "Type",
     "Status",
-    "Time created"
+    { title: "Time created", transforms: [sortable] }
   ];
   const tableRows = rows.map(toTableCells);
   const onSelect = async (
