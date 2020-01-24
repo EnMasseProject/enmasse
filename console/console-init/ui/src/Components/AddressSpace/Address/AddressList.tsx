@@ -36,6 +36,7 @@ export interface IAddress {
   isReady: boolean;
   errorMessages?: string[];
   status?: string;
+  selected?:boolean;
 }
 
 interface IAddressListProps {
@@ -57,7 +58,6 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   onSelectAddress,
   onSelectAllAddress
 }) => {
-  const [tableRows, setTableRows] = React.useState<IRowData[]>([]);
   const { width } = useWindowDimensions();
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;
@@ -74,14 +74,9 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   };
   //TODO: Display error after the phase variable is exposed from backend.
   const toTableCells = (row: IAddress) => {
-    const oldRowData = tableRows.filter(r=>r.originalData.name===row.name);
-    let selected;
-    if(oldRowData && oldRowData.length>0) {
-      selected= oldRowData[0].selected;
-    }
     if (row.isReady) {
       const tableRow: IRowData = {
-        selected:selected,
+        selected:row.selected,
         cells: [
           {
             title: <Link to={`addresses/${row.name}`}>{row.displayName}</Link>
@@ -117,7 +112,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       return tableRow;
     } else {
       const tableRow: IRowData = {
-        selected: selected,
+        selected: row.selected,
         cells: [
           {
             title: <Link to={`addresses/${row.name}`}>{row.displayName}</Link>
@@ -137,7 +132,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       return tableRow;
     }
   };
-  useEffect(() => setTableRows(rowsData.map(toTableCells)), [rowsData]);
+  const tableRows = rowsData.map(toTableCells);
   const tableColumns = [
     { title: "Name", transforms: [sortable] },
     "Type/Plan",
@@ -193,7 +188,6 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       rows[rowIndex].selected = isSelected;
       onSelectAddress(rows[rowIndex].originalData,isSelected);
     }
-    setTableRows(rows);
   };
   return (
     <Table

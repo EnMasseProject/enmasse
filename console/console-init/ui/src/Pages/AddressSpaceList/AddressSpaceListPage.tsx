@@ -21,6 +21,7 @@ import {
 import { IAddressSpacesResponse } from "src/Types/ResponseTypes";
 import { EditAddressSpace } from "../EditAddressSpace";
 import { ISortBy, IRowData } from "@patternfly/react-table";
+import { compareTwoAddress } from "../AddressSpaceDetail/AddressList/AddressListPage";
 
 interface AddressSpaceListPageProps {
   page: number;
@@ -38,6 +39,7 @@ interface AddressSpaceListPageProps {
   setIsCreateWizardOpen: (value: boolean) => void;
   onSelectAddressSpace:(data:IAddressSpace, isSelected:boolean)=>void;
   onSelectAllAddressSpace:(dataList:IAddressSpace[],isSelected:boolean)=>void;
+  selectedAddressSpaces: Array<IAddressSpace>;
 }
 export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageProps> = ({
   page,
@@ -54,7 +56,8 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   isCreateWizardOpen,
   setIsCreateWizardOpen,
   onSelectAddressSpace,
-  onSelectAllAddressSpace
+  onSelectAllAddressSpace,
+  selectedAddressSpaces
 }) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
@@ -153,13 +156,22 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
   setTotalAddressSpaces(addressSpaces.Total);
-  const addressSpacesList = addressSpaces.AddressSpaces.map(addSpace => ({
+  const addressSpacesList:IAddressSpace[] = addressSpaces.AddressSpaces.map(addSpace => ({
     name: addSpace.ObjectMeta.Name,
     nameSpace: addSpace.ObjectMeta.Namespace,
     creationTimestamp: addSpace.ObjectMeta.CreationTimestamp,
     type: addSpace.Spec.Type,
     displayName: addSpace.Spec.Plan.Spec.DisplayName,
-    isReady: addSpace.Status.IsReady
+    isReady: addSpace.Status.IsReady,
+    selected:
+      selectedAddressSpaces.filter(({ name, nameSpace }) =>
+        compareTwoAddress(
+          name,
+          addSpace.ObjectMeta.Name,
+          nameSpace,
+          addSpace.ObjectMeta.Namespace
+        )
+      ).length == 1
   }));
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });

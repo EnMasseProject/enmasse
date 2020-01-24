@@ -16,7 +16,7 @@ import {
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import { StyleSheet } from "@patternfly/react-styles";
 import { AddressListFilterPage } from "./AddressListFilterPage";
-import { AddressListPage } from "./AddressListPage";
+import { AddressListPage, compareTwoAddress } from "./AddressListPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import {
@@ -74,6 +74,10 @@ export default function AddressesList() {
     false
   );
 
+  const [selectedAddresses, setSelectedAddresses] = React.useState<IAddress[]>(
+    []
+  );
+
   const { data } = useQuery<IAddressSpacePlanResponse>(
     CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
   );
@@ -129,7 +133,6 @@ export default function AddressesList() {
     );
   };
 
-  let selectedAddresses: IAddress[] = [];
   let deleteErrorData = [],
     purgeErrorData = [];
 
@@ -146,7 +149,9 @@ export default function AddressesList() {
     if (deletedData.errors) {
       deleteErrorData.push(deletedData);
     }
-    return deletedData;
+    if (deletedData.data) {
+      return deletedData;
+    }
   };
 
   const purgeAddress = async (data: any) => {
@@ -162,13 +167,16 @@ export default function AddressesList() {
     if (purgeData.errors) {
       purgeErrorData.push(purgeData);
     }
-    return purgeData;
+    if (purgeData.data) {
+      return purgeData;
+    }
   };
 
   const onDeleteAll = async () => {
     if (selectedAddresses && selectedAddresses.length > 0) {
       const data = selectedAddresses;
-      data.map(address => deleteAddress(address));
+      await Promise.all(data.map(address => deleteAddress(address)));
+      setSelectedAddresses([]);
     }
     setOnCreationRefetch(true);
   };
@@ -176,24 +184,34 @@ export default function AddressesList() {
   const onPurgeAll = async () => {
     if (selectedAddresses && selectedAddresses.length > 0) {
       const data = selectedAddresses;
-      data.map(address => purgeAddress(address));
+      await Promise.all(data.map(address => purgeAddress(address)));
+      setSelectedAddresses([]);
     }
     setOnCreationRefetch(true);
   };
 
   const onSelectAddress = (data: IAddress, isSelected: boolean) => {
-    if (isSelected === true && selectedAddresses.indexOf(data) === -1)
-      selectedAddresses.push(data);
-    else if (isSelected === false && selectedAddresses.indexOf(data) != -1)
-      selectedAddresses.splice(selectedAddresses.indexOf(data), 1);
+    if (isSelected === true && selectedAddresses.indexOf(data) === -1) {
+      setSelectedAddresses([...selectedAddresses, data]);
+    } else if (isSelected === false && selectedAddresses.indexOf(data) != -1) {
+      setSelectedAddresses(
+        selectedAddresses.filter(address =>
+          compareTwoAddress(
+            address.name,
+            data.name,
+            address.namespace,
+            data.namespace
+          )
+        )
+      );
+    }
   };
 
   const onSelectAllAddress = (dataList: IAddress[], isSelected: boolean) => {
     if (isSelected === true) {
-      const allData = dataList;
-      selectedAddresses = allData;
+      setSelectedAddresses(dataList);
     } else if (isSelected === false) {
-      selectedAddresses = [];
+      setSelectedAddresses([]);
     }
   };
 
@@ -242,6 +260,7 @@ export default function AddressesList() {
         setIsWizardOpen={setIsCreateWizardOpen}
         onCreationRefetch={onCreationRefetch}
         setOnCreationRefetch={setOnCreationRefetch}
+        selectedAddresses={selectedAddresses}
         onSelectAddress={onSelectAddress}
         onSelectAllAddress={onSelectAllAddress}
       />

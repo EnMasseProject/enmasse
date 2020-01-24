@@ -39,8 +39,18 @@ export interface IAddressListPageProps {
   setIsWizardOpen: (value: boolean) => void;
   onCreationRefetch?: boolean;
   setOnCreationRefetch: (value: boolean) => void;
-  onSelectAddress:(data:IAddress, isSelected:boolean)=>void;
-  onSelectAllAddress:(dataList:IAddress[],isSelected:boolean)=>void;
+  selectedAddresses: Array<IAddress>;
+  onSelectAddress: (address: IAddress, isSelected: boolean) => void;
+  onSelectAllAddress: (addresses: IAddress[], isSelected: boolean) => void;
+}
+
+export function compareTwoAddress(
+  name1: string,
+  name2: string,
+  namespace1: string,
+  namespace2: string
+) {
+  return name1 === name2 && namespace1 === namespace2;
 }
 export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = ({
   name,
@@ -59,6 +69,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   setIsWizardOpen,
   onCreationRefetch,
   setOnCreationRefetch,
+  selectedAddresses,
   onSelectAddress,
   onSelectAllAddress
 }) => {
@@ -118,14 +129,23 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     ),
     senders: getFilteredValue(address.Metrics, "enmasse_senders"),
     receivers: getFilteredValue(address.Metrics, "enmasse_receivers"),
-    partitions:
-      address.Status.PlanStatus 
-        ? address.Status.PlanStatus.Partitions
-        : null,
+    partitions: address.Status.PlanStatus
+      ? address.Status.PlanStatus.Partitions
+      : null,
     isReady: address.Status.IsReady,
     status: address.Status.Phase,
-    errorMessages: address.Status.Messages
+    errorMessages: address.Status.Messages,
+    selected:
+      selectedAddresses.filter(({ name, namespace }) =>
+        compareTwoAddress(
+          name,
+          address.ObjectMeta.Name,
+          namespace,
+          address.ObjectMeta.Namespace
+        )
+      ).length == 1
   }));
+
   const handleEdit = (data: IAddress) => {
     if (!addressBeingEdited) {
       setAddressBeingEdited(data);
@@ -215,21 +235,18 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
               key="confirm"
               id="al-edit-confirm"
               variant="primary"
-              onClick={handleSaving}
-            >
+              onClick={handleSaving}>
               Confirm
             </Button>,
             <Button
               key="cancel"
               id="al-edit-cancel"
               variant="link"
-              onClick={handleCancelEdit}
-            >
+              onClick={handleCancelEdit}>
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned
-        >
+          isFooterLeftAligned>
           <EditAddress
             name={addressBeingEdited.name}
             type={addressBeingEdited.type}

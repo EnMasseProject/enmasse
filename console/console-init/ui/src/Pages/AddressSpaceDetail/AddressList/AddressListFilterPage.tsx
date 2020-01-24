@@ -22,6 +22,7 @@ import {
 import useWindowDimensions from "src/Components/Common/WindowDimension";
 import { SortForMobileView } from "src/Components/Common/SortForMobileView";
 import { ISortBy } from "@patternfly/react-table";
+import { IAddress } from "src/Components/AddressSpace/Address/AddressList";
 interface AddressListFilterProps {
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;

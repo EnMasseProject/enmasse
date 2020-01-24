@@ -20,6 +20,7 @@ import { ISortBy, IRowData } from "@patternfly/react-table";
 import { DELETE_ADDRESS_SPACE } from "src/Queries/Queries";
 import { useApolloClient } from "@apollo/react-hooks";
 import { IAddressSpace } from "src/Components/AddressSpaceList/AddressSpaceList";
+import { compareTwoAddress } from "../AddressSpaceDetail/AddressList/AddressListPage";
 
 export default function AddressSpaceListWithFilterAndPagination() {
   useDocumentTitle("Address Space List");
@@ -40,6 +41,9 @@ export default function AddressSpaceListWithFilterAndPagination() {
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+  const [selectedAddressSpaces, setSelectedAddressSpaces] = React.useState<
+    IAddressSpace[]
+  >([]);
 
   const setSearchParam = React.useCallback(
     (name: string, value: string) => {
@@ -81,8 +85,6 @@ export default function AddressSpaceListWithFilterAndPagination() {
       />
     );
   };
-  let addressSpacesToDelete: IAddressSpace[] = [];
-
   let errorData = [];
   const deleteAddressSpace = async (data: IAddressSpace) => {
     const deletedData = await client.mutate({
@@ -97,29 +99,36 @@ export default function AddressSpaceListWithFilterAndPagination() {
     if (deletedData.errors) {
       errorData.push(data);
     }
-    return deletedData;
+    if (deletedData.data) {
+      return deletedData;
+    }
   };
   const onDeleteAll = async () => {
-    if (addressSpacesToDelete && addressSpacesToDelete.length > 0)
-      addressSpacesToDelete.map(addressspace =>
-        deleteAddressSpace(addressspace)
-      );
+    if (selectedAddressSpaces && selectedAddressSpaces.length > 0) {
+      const data = selectedAddressSpaces;
+    await Promise.all(data.map(addressSpace => deleteAddressSpace(addressSpace)));
+    setSelectedAddressSpaces([]);
+  }
     setOnCreationRefetch(true);
   };
 
   const onSelectAddressSpace = (data: IAddressSpace, isSelected: boolean) => {
-    if (
-      isSelected === true &&
-      addressSpacesToDelete.indexOf(data) === -1
-    )
-      addressSpacesToDelete.push(data);
+    if (isSelected === true && selectedAddressSpaces.indexOf(data) === -1){
+      setSelectedAddressSpaces([...selectedAddressSpaces, data]);
+    }
     else if (
       isSelected === false &&
-      addressSpacesToDelete.indexOf(data) != -1
+      selectedAddressSpaces.indexOf(data) != -1
     ) {
-      addressSpacesToDelete.splice(
-        addressSpacesToDelete.indexOf(data),
-        1
+      setSelectedAddressSpaces(
+        selectedAddressSpaces.filter(addressSpace =>
+          compareTwoAddress(
+            addressSpace.name,
+            data.name,
+            addressSpace.nameSpace,
+            data.nameSpace
+          )
+        )
       );
     }
   };
@@ -129,10 +138,9 @@ export default function AddressSpaceListWithFilterAndPagination() {
     isSelected: boolean
   ) => {
     if (isSelected === true) {
-      const allData = dataList;
-      addressSpacesToDelete = allData;
+      setSelectedAddressSpaces(dataList);
     } else if (isSelected === false) {
-      addressSpacesToDelete = [];
+      setSelectedAddressSpaces([]);
     }
   };
 
@@ -177,6 +185,7 @@ export default function AddressSpaceListWithFilterAndPagination() {
         setSortValue={setSortDropdownValue}
         isCreateWizardOpen={isCreateWizardOpen}
         setIsCreateWizardOpen={setIsCreateWizardOpen}
+        selectedAddressSpaces={selectedAddressSpaces}
         onSelectAddressSpace={onSelectAddressSpace}
         onSelectAllAddressSpace={onSelectAllAddressSpace}
       />
