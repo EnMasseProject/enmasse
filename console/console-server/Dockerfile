@@ -10,6 +10,6 @@ ARG commit
 ARG maven_version
 ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit} 
 
-ADD target/console-server-${MAVEN_VERSION}-dist.tar.gz /
+ADD target/console-server-${maven_version}-dist.tar.gz /
 
 ENTRYPOINT /console-server
