@@ -97,14 +97,12 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   const [isStandardChecked, setIsStandardChecked] = React.useState(false);
   const [isBrokeredChecked, setIsBrokeredChecked] = React.useState(false);
   const onNameSpaceSelect = (event: any) => {
-    setNamespace(event.target.value);
+    setNamespace(event.currentTarget.childNodes[0].value);
     setIsNameSpaceOpen(!isNameSpaceOpen);
   };
   const [isPlanOpen, setIsPlanOpen] = React.useState(false);
   const onPlanSelect = (event: any) => {
-    //innertext being used here as value property is undefined, because of PF defect
-    // trim() since an undesirable '\n' is being appended
-    setPlan(event.target.innerText.trim());
+    setPlan(event.currentTarget.childNodes[0].value);
     setIsPlanOpen(!isPlanOpen);
   };
 
@@ -113,7 +111,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
     setIsAuthenticationServiceOpen
   ] = React.useState(false);
   const onAuthenticationServiceSelect = (event: any) => {
-    setAuthenticationService(event.target.value);
+    setAuthenticationService(event.currentTarget.childNodes[0].value);
     setIsAuthenticationServiceOpen(!isAuthenticationServiceOpen);
   };
 
