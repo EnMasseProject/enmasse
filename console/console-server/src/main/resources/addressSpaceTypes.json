@@ -19,7 +19,7 @@
       "AddressSpaceType": "standard",
       "DisplayName": "standard",
       "ShortDescription": "The standard address space.",
-      "LongDescription": "The standard address space type is the default type in EnMasse, and is focused on scaling in the number of connections and the throughput of the system. It supports AMQP and MQTT protocols.",
+      "LongDescription": "The standard address space type is the default address space type, and is focused on scaling in the number of connections and the throughput of the system. It supports AMQP and MQTT protocols.",
       "DisplayOrder": 1
     }
   }
