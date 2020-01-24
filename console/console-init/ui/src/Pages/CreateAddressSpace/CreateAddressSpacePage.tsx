@@ -97,7 +97,7 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
           setAuthenticationService={setAuthenticationService}
         />
       ),
-      enableNext : (
+      enableNext: (
         addressSpaceName.trim() !== "" &&
         addressSpaceType.trim() !== "" &&
         authenticationService.trim() !== "" &&
@@ -118,7 +118,14 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
           authenticationService={authenticationService}
         />
       ),
-      enableNext : (
+      enableNext: (
+        addressSpaceName.trim() !== "" &&
+        addressSpaceType.trim() !== "" &&
+        authenticationService.trim() !== "" &&
+        addressSpacePlan.trim() !== "" &&
+        namespace.trim() !== ""
+      ),
+      canJumpTo: (
         addressSpaceName.trim() !== "" &&
         addressSpaceType.trim() !== "" &&
         authenticationService.trim() !== "" &&
