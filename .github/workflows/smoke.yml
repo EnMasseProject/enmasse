@@ -50,7 +50,7 @@ jobs:
 
       - name: Upload artifacts
         if: failure()
-        uses: actions/upload-artifact@v1.0.0
+        uses: actions/upload-artifact@master
         with:
           name: unit-test-logs
           path: test-logs.zip
@@ -70,7 +70,7 @@ jobs:
 
       - name: Upload artifacts
         if: failure()
-        uses: actions/upload-artifact@v1.0.0
+        uses: actions/upload-artifact@master
         with:
           name: smoke-test-logs
           path: test-logs.zip
