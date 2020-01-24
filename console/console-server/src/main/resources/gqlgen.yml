@@ -98,6 +98,8 @@ models:
     model: v1beta1.AddressSpace
   AddressSpaceSpec_enmasse_io_v1beta1_Input:
     model: v1beta1.AddressSpaceSpec
+  AuthenticationService_enmasse_io_v1beta1_Input:
+    model: v1beta1.AuthenticationService
 
   Metric_consoleapi_enmasse_io_v1beta1:
     model: consolegraphql.Metric

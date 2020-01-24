@@ -112,6 +112,7 @@ type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
 # done below for the address.spec.plan and type fields.
 #
 
+
 type AddressSpace_consoleapi_enmasse_io_v1beta1 {
   ObjectMeta: ObjectMeta_v1!
   Spec: AddressSpaceSpec_enmasse_io_v1beta1!
@@ -122,8 +123,13 @@ type AddressSpace_consoleapi_enmasse_io_v1beta1 {
 }
 
 type AddressSpaceSpec_enmasse_io_v1beta1 {
-  Plan:      AddressSpacePlan_admin_enmasse_io_v1beta2!
-  Type:      AddressSpaceType!
+  Plan:                   AddressSpacePlan_admin_enmasse_io_v1beta2!
+  Type:                   AddressSpaceType!
+  AuthenticationService:  AuthenticationService_enmasse_io_v1beta1
+}
+
+type AuthenticationService_enmasse_io_v1beta1 {
+  Name: String!
 }
 
 type AddressSpaceStatus_enmasse_io_v1beta1 {
@@ -325,8 +331,13 @@ input ObjectMeta_v1_Input {
 }
 
 input AddressSpaceSpec_enmasse_io_v1beta1_Input {
-  Type:         String!
-  Plan:         String!
+  Type:                   String!
+  Plan:                   String!
+  AuthenticationService:  AuthenticationService_enmasse_io_v1beta1_Input
+}
+
+input AuthenticationService_enmasse_io_v1beta1_Input {
+  Name:  String!
 }
 
 input AddressSpace_enmasse_io_v1beta1_Input {
