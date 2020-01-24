@@ -75,9 +75,13 @@ spec:
               type: object
               properties:
                 minAvailable:
-                  type: int-or-string
+                  anyOf:
+                  - type: integer
+                  - type: string
                 maxUnavailable:
-                  type: int-or-string
+                  anyOf:
+                  - type: integer
+                  - type: string
                 podTemplate:
                   type: object
                   properties:
@@ -153,9 +157,13 @@ spec:
                 minReplicas:
                   type: integer
                 minAvailable:
-                  type: int-or-string
+                  anyOf:
+                  - type: integer
+                  - type: string
                 maxUnavailable:
-                  type: int-or-string
+                  anyOf:
+                  - type: integer
+                  - type: string
                 linkCapacity:
                   type: integer
                 idleTimeout:

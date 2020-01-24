@@ -71,6 +71,7 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
+import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudget;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -873,6 +874,14 @@ public abstract class Kubernetes {
 
     public CustomResourceDefinition getCRD(String name) {
         return client.customResourceDefinitions().withName(name).get();
+    }
+
+    public PodDisruptionBudget getPodDisruptionBudget(String namespace, String name) {
+        return client.policy().podDisruptionBudget().inNamespace(namespace).withName(name).get();
+    }
+
+    public void deletePodDisruptionBudget(String namespace, String name) {
+        client.policy().podDisruptionBudget().inNamespace(namespace).withName(name).delete();
     }
 
     public abstract void createExternalEndpoint(String name, String namespace, Service service, ServicePort targetPort);
