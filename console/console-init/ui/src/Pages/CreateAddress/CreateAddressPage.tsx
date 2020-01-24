@@ -114,7 +114,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           setTopicForSubscripitons={setTopicForSubscription}
         />
       ),
-      enableNext : (
+      enableNext: (
         addressName.trim() !== "" &&
         plan.trim() !== "" &&
         addressType.trim() !== "" &&
@@ -137,7 +137,16 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           addressspace={addressSpace}
         />
       ),
-      enableNext : (
+      enableNext: (
+        addressName.trim() !== "" &&
+        plan.trim() !== "" &&
+        addressType.trim() !== "" &&
+        (
+          (addressType === "subscription") === 
+            (topic.trim() !== "")
+        )
+      ),
+      canJumpTo: (
         addressName.trim() !== "" &&
         plan.trim() !== "" &&
         addressType.trim() !== "" &&
