@@ -17,6 +17,7 @@ export default {
 export const AddressDetailHead = () => (
   <MemoryRouter>
     <AddressDetailHeader
+      storedMessages={number("Stored Messages", 1)}
       type={text("Type", "Queue")}
       name={text("Name", "newqueue")}
       plan={text("Plan", "Small")}
@@ -26,7 +27,6 @@ export const AddressDetailHead = () => (
     />
   </MemoryRouter>
 );
-
 
 // export const AddressLinksFilterStory = () => {
 //   const options=["","Sender","Receiver"];
