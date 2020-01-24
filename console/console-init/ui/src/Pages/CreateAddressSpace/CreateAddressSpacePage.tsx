@@ -49,7 +49,10 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
             },
             Spec: {
               Type: addressSpaceType.toLowerCase(),
-              Plan: addressSpacePlan.toLowerCase()
+              Plan: addressSpacePlan.toLowerCase(),
+              AuthenticationService: {
+                Name: authenticationService
+              }
             }
           }
         }
