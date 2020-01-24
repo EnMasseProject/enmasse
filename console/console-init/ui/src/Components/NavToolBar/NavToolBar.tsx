@@ -11,10 +11,20 @@ import {
   DropdownPosition
 } from "@patternfly/react-core";
 import { QuestionCircleIcon } from "@patternfly/react-icons";
+import { About } from "../Common/About";
+import { UserDetail } from "./User";
 
 const NavToolBar: React.FC = () => {
   const [isOpen, onToggle] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
+  const selectAbout = () => {
+    setIsAboutModalOpen(true);
+  };
+    const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);
 
+    const onUserDropdownSelect = () => {
+        setIsUserDropdownOpen(!isUserDropdownOpen);
+    };
   const dropdownItems = [
     <DropdownItem
       id="navtb-item-help"
@@ -37,8 +47,13 @@ const NavToolBar: React.FC = () => {
         paddingTop: 10,
         paddingBottom: 20
       }}
-    >
+      onClick={selectAbout}>
       About
+    </DropdownItem>
+  ];
+  const userDropdownItems = [
+    <DropdownItem id="dd-menuitem-logout" key={"logout"} href="oauth/sign_in">
+      Logout
     </DropdownItem>
   ];
   return (
@@ -59,6 +74,24 @@ const NavToolBar: React.FC = () => {
         isPlain
         dropdownItems={dropdownItems}
       />
+      <Dropdown
+        id="dd-user"
+        isPlain
+        position="right"
+        onSelect={onUserDropdownSelect}
+        isOpen={isUserDropdownOpen}
+        toggle={
+          <DropdownToggle onToggle={setIsUserDropdownOpen}>
+            <UserDetail />
+          </DropdownToggle>
+        }
+        dropdownItems={userDropdownItems}
+      />
+
+        <About
+            isAboutModalOpen={isAboutModalOpen}
+            handleAboutModalToggle={() => setIsAboutModalOpen(!isAboutModalOpen)}
+        />
     </React.Fragment>
   );
 };

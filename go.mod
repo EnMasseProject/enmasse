@@ -22,6 +22,7 @@ replace (
 require (
 	github.com/99designs/gqlgen v0.10.1
 	github.com/Nerzal/gocloak/v3 v3.7.0
+	github.com/alexedwards/scs/v2 v2.2.0
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/google/go-cmp v0.3.2-0.20191216211814-5a6f75716e12 // indirect

@@ -49,7 +49,16 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
   };
 
   const handleSave = async () => {
-    if (addressSpace && addressName && plan && namespace) {
+    if (
+      addressSpace &&
+      addressName.trim() !== "" &&
+      plan.trim() !== "" &&
+      addressType.trim() !== "" &&
+        (
+          (addressType === "subscription") === 
+            (topic.trim() !== "")
+        )
+    ) {
       const getVariables = () => {
         let variable:any = {
           ObjectMeta: {
@@ -105,6 +114,15 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           setTopicForSubscripitons={setTopicForSubscription}
         />
       ),
+      enableNext: (
+        addressName.trim() !== "" &&
+        plan.trim() !== "" &&
+        addressType.trim() !== "" &&
+        (
+          (addressType === "subscription") === 
+            (topic.trim() !== "")
+        )
+      ),
       backButton: "hide"
     },
     {
@@ -118,6 +136,24 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           namespace={namespace || ""}
           addressspace={addressSpace}
         />
+      ),
+      enableNext: (
+        addressName.trim() !== "" &&
+        plan.trim() !== "" &&
+        addressType.trim() !== "" &&
+        (
+          (addressType === "subscription") === 
+            (topic.trim() !== "")
+        )
+      ),
+      canJumpTo: (
+        addressName.trim() !== "" &&
+        plan.trim() !== "" &&
+        addressType.trim() !== "" &&
+        (
+          (addressType === "subscription") === 
+            (topic.trim() !== "")
+        )
       ),
       nextButtonText: "Finish"
     }

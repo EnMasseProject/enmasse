@@ -25,6 +25,7 @@ export interface IAddressDetailHeaderProps {
   name: string;
   plan: string;
   partitions: number;
+  storedMessages:number,
   onEdit: (name: string) => void;
   onDelete: (name: string) => void;
 }
@@ -61,6 +62,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
   name,
   plan,
   partitions,
+  storedMessages,
   onEdit,
   onDelete
 }) => {
@@ -117,8 +119,8 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
               type === "queue"
                 &&
               (
-                <FlexItem id="adheader-partitions">
-                  Stored in <b>{partitions}</b> Partitions
+                <FlexItem id="adheader-stored-messages">
+                  <b>{storedMessages}</b> stored messages
                 </FlexItem>
               )
             }

@@ -8,12 +8,14 @@ package server
 import (
 	"context"
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	userv1 "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
 )
 
 type RequestState struct {
-	UserInterface userv1.UserInterface
+	UserInterface        userv1.UserInterface
 	EnmasseV1beta1Client v1beta1.EnmasseV1beta1Interface
+	AccessController     accesscontroller.AccessController
 }
 
 func ContextWithRequestState(requestState *RequestState, ctx context.Context) context.Context {

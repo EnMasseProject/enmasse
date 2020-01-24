@@ -28,6 +28,8 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
   setOnCreationRefetch
 }) => {
   const [addressSpaceName, setAddressSpaceName] = React.useState("");
+  // State has been initialized to " " instead of null string 
+  // due to dropdown arrow positioning issues
   const [addressSpaceType, setAddressSpaceType] = React.useState(" ");
   const [addressSpacePlan, setAddressSpacePlan] = React.useState(" ");
   const [namespace, setNamespace] = React.useState(" ");
@@ -95,10 +97,18 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
           setAuthenticationService={setAuthenticationService}
         />
       ),
+      enableNext: (
+        addressSpaceName.trim() !== "" &&
+        addressSpaceType.trim() !== "" &&
+        authenticationService.trim() !== "" &&
+        addressSpacePlan.trim() !== "" &&
+        namespace.trim() !== ""
+      ),
       backButton: "hide"
     },
     {
       name: "Review",
+      isDisabled : true,
       component: (
         <ReviewAddressSpace
           name={addressSpaceName}
@@ -107,6 +117,20 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
           plan={addressSpacePlan}
           authenticationService={authenticationService}
         />
+      ),
+      enableNext: (
+        addressSpaceName.trim() !== "" &&
+        addressSpaceType.trim() !== "" &&
+        authenticationService.trim() !== "" &&
+        addressSpacePlan.trim() !== "" &&
+        namespace.trim() !== ""
+      ),
+      canJumpTo: (
+        addressSpaceName.trim() !== "" &&
+        addressSpaceType.trim() !== "" &&
+        authenticationService.trim() !== "" &&
+        addressSpacePlan.trim() !== "" &&
+        namespace.trim() !== ""
       ),
       nextButtonText: "Finish"
     }

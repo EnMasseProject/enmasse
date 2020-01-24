@@ -98,8 +98,8 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
   const client = useApolloClient();
 
   const onTypeSelect = async (event: any) => {
-    if (event.target.value) {
-      const type = event.target.value;
+    if (event.currentTarget.childNodes[0].value) {
+      const type = event.currentTarget.childNodes[0].value;
       setType(type);
       const addressPlans = await client.query<IAddressPlans>({
         query: RETURN_ADDRESS_PLANS(addressSpacePlan, type)
@@ -112,6 +112,8 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
             description: plan.Spec.ShortDescription
           };
         });
+        setPlan(" ");
+        setTopic(" ");
         setPlanOptions(planOptions);
       }
       if (type === "subscription") {
@@ -144,11 +146,11 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
 
   const [isPlanOpen, setIsPlanOpen] = React.useState(false);
   const onPlanSelect = (event: any) => {
-    setPlan(event.target.value);
+    setPlan(event.currentTarget.childNodes[0].value);
     setIsPlanOpen(!isPlanOpen);
   };
   const onTopicSelect = (event: any) => {
-    setTopic(event.target.value);
+    setTopic(event.currentTarget.childNodes[0].value);
     setIsTopicOpen(!isTopicOpen);
   };
   const { loading, error, data } = useQuery<IAddressTypes>(
@@ -229,6 +231,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                 toggle={
                   <DropdownToggle
                     style={{ flex: "1", position: "inherit" }}
+                    isDisabled={type.trim() === ""}
                     onToggle={() => setIsPlanOpen(!isPlanOpen)}
                   >
                     {plan}
@@ -266,6 +269,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                     <DropdownToggle
                       style={{ flex: "1", position: "inherit" }}
                       onToggle={() => setIsTopicOpen(!isTopicOpen)}
+                      isDisabled={type.trim() !== "subscription"}
                     >
                       {topic}
                     </DropdownToggle>

@@ -70,7 +70,7 @@ describe("Address List", () => {
     getByText(addresses[0].storedMessages.toString());
     getByText(addresses[0].senders.toString());
     getByText(addresses[0].receivers.toString());
-    getByText(addresses[0].partitions.toString());
+    // getByText(addresses[0].partitions.toString());
 
     //Testing elements of second row
     getByText(addresses[1].name);
@@ -81,7 +81,7 @@ describe("Address List", () => {
     getByText(addresses[1].storedMessages.toString());
     getByText(addresses[1].senders.toString());
     getByText(addresses[1].receivers.toString());
-    getByText(addresses[1].partitions.toString());
+    // getByText(addresses[1].partitions.toString());
   });
 });
 

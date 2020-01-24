@@ -97,14 +97,12 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   const [isStandardChecked, setIsStandardChecked] = React.useState(false);
   const [isBrokeredChecked, setIsBrokeredChecked] = React.useState(false);
   const onNameSpaceSelect = (event: any) => {
-    setNamespace(event.target.value);
+    setNamespace(event.currentTarget.childNodes[0].value);
     setIsNameSpaceOpen(!isNameSpaceOpen);
   };
   const [isPlanOpen, setIsPlanOpen] = React.useState(false);
   const onPlanSelect = (event: any) => {
-    //innertext being used here as value property is undefined, because of PF defect
-    // trim() since an undesirable '\n' is being appended
-    setPlan(event.target.innerText.trim());
+    setPlan(event.currentTarget.childNodes[0].value);
     setIsPlanOpen(!isPlanOpen);
   };
 
@@ -113,7 +111,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
     setIsAuthenticationServiceOpen
   ] = React.useState(false);
   const onAuthenticationServiceSelect = (event: any) => {
-    setAuthenticationService(event.target.value);
+    setAuthenticationService(event.currentTarget.childNodes[0].value);
     setIsAuthenticationServiceOpen(!isAuthenticationServiceOpen);
   };
 
@@ -178,12 +176,16 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   const handleBrokeredChange = () => {
     setIsBrokeredChecked(true);
     setIsStandardChecked(false);
+    setPlan(" ");
+    setAuthenticationService(" ");
     setType("brokered");
   };
 
   const handleStandardChange = () => {
     setIsStandardChecked(true);
     setIsBrokeredChecked(false);
+    setPlan(" ");
+    setAuthenticationService(" ");
     setType("standard");
   };
 
@@ -268,12 +270,13 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
               <br />
               <Dropdown
                 id="cas-dropdown-plan"
-                position={DropdownPosition.left}
+                position={DropdownPosition.right}
                 onSelect={onPlanSelect}
                 isOpen={isPlanOpen}
                 style={{ display: "flex" }}
                 toggle={
                   <DropdownToggle
+                    isDisabled={type.trim() === ""}
                     style={{ flex: "1", position: "inherit" }}
                     onToggle={() => setIsPlanOpen(!isPlanOpen)}
                   >
@@ -309,6 +312,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                 style={{ display: "flex" }}
                 toggle={
                   <DropdownToggle
+                    isDisabled={type.trim() === ""}
                     style={{ flex: "1", position: "inherit" }}
                     onToggle={() =>
                       setIsAuthenticationServiceOpen(
@@ -328,8 +332,6 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                     component={"button"}
                   >
                     <b>{option.label}</b>
-                    <br />
-                    {option.description}
                   </DropdownItem>
                 ))}
               />

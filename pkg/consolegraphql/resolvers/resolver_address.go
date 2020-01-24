@@ -77,6 +77,9 @@ func (r *Resolver) AddressSpec_enmasse_io_v1beta1() AddressSpec_enmasse_io_v1bet
 type addressSpecK8sResolver struct{ *Resolver }
 
 func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1beta1, error) {
+	requestState := server.GetRequestStateFromContext(ctx)
+	viewFilter := requestState.AccessController.ViewFilter()
+
 	fltrfunc, e := BuildFilter(filter)
 	if e != nil {
 		return nil, e
@@ -87,7 +90,7 @@ func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, 
 		return nil, e
 	}
 
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Address/", fltrfunc)
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Address/", cache.And(viewFilter, fltrfunc))
 	if e != nil {
 		return nil, e
 	}

@@ -119,7 +119,7 @@ export default function AddressDetailPage() {
     if (addressDetail && type) {
       await client.mutate({
         mutation: EDIT_ADDRESS,
-        variables: {  
+        variables: {
           a: {
             Name: addressDetail.ObjectMeta.Name,
             Namespace: addressDetail.ObjectMeta.Namespace.toString()
@@ -141,10 +141,11 @@ export default function AddressDetailPage() {
           type={addressDetail.Spec.Plan.Spec.AddressType}
           name={addressDetail.Spec.Address}
           plan={addressDetail.Spec.Plan.Spec.DisplayName}
-          partitions={getFilteredValue(
+          storedMessages={getFilteredValue(
             addressDetail.Metrics,
             "enmasse_messages_stored"
           )}
+          partitions={addressDetail.Status.PlanStatus.Partitions}
           onEdit={() => setIsEditModalOpen(!isEditModalOpen)}
           onDelete={() => setIsDeleteModalOpen(!isDeleteModalOpen)}
         />
