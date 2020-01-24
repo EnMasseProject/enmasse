@@ -8,7 +8,7 @@ endif
 
 ifneq ($(FULL_BUILD),true)
 build:
-	cd $(TOPDIR); $(IMAGE_ENV) mvn -pl $(MVNPROJ) -am clean install $(MAVEN_ARGS)
+	cd $(TOPDIR); $(IMAGE_ENV) IMAGE_ENV="$(IMAGE_ENV)" mvn -pl $(MVNPROJ) -am clean install $(MAVEN_ARGS)
 
 test:
 ifeq ($(SKIP_TESTS),true)
@@ -18,7 +18,7 @@ else
 endif
 
 package_java:
-	$(IMAGE_ENV) mvn package -DskipTests $(MAVEN_ARGS)
+	$(IMAGE_ENV) IMAGE_ENV="$(IMAGE_ENV)" mvn package -DskipTests $(MAVEN_ARGS)
 
 package: package_java
 endif

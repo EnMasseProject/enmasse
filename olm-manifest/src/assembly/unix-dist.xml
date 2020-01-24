@@ -40,6 +40,12 @@
     </fileSets>
     <files>
         <file>
+          <source>${project.basedir}/target/classes/sh/replace-images.sh</source>
+          <outputDirectory>/bin</outputDirectory>
+          <destName>replace-images.sh</destName>
+          <fileMode>0755</fileMode>
+        </file>
+        <file>
           <source>${project.basedir}/target/classes/latest/enmasse.package.yaml</source>
           <outputDirectory>/manifests</outputDirectory>
           <destName>${application.bundle.prefix}.package.yaml</destName>
