@@ -15,6 +15,7 @@ import { AppRoutes } from "./AppRoutes";
 import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
 import avatarImg from "./img_avatar.svg";
+import { UserDetail } from "./Components/NavToolBar/User";
 
 const graphqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT ? process.env.REACT_APP_GRAPHQL_ENDPOINT : "http://localhost:4000";
 const client = new ApolloClient({
@@ -23,7 +24,6 @@ const client = new ApolloClient({
 
 const avatar = (
   <React.Fragment>
-    <Text component={TextVariants.p}>User</Text>
     <Avatar src={avatarImg} alt="avatar" />
   </React.Fragment>
 );
