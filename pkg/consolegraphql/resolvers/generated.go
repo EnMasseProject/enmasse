@@ -115,8 +115,9 @@ type ComplexityRoot struct {
 	}
 
 	AddressSpaceSpecEnmasseIoV1beta1 struct {
-		Plan func(childComplexity int) int
-		Type func(childComplexity int) int
+		AuthenticationService func(childComplexity int) int
+		Plan                  func(childComplexity int) int
+		Type                  func(childComplexity int) int
 	}
 
 	AddressSpaceStatusEnmasseIoV1beta1 struct {
@@ -197,6 +198,10 @@ type ComplexityRoot struct {
 		ObjectMeta func(childComplexity int) int
 		Spec       func(childComplexity int) int
 		Status     func(childComplexity int) int
+	}
+
+	AuthenticationServiceEnmasseIoV1beta1 struct {
+		Name func(childComplexity int) int
 	}
 
 	ConnectionQueryResultConsoleapiEnmasseIoV1beta1 struct {
@@ -580,6 +585,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressSpaceSchemaEnmasseIoV1beta1.Spec(childComplexity), true
 
+	case "AddressSpaceSpec_enmasse_io_v1beta1.AuthenticationService":
+		if e.complexity.AddressSpaceSpecEnmasseIoV1beta1.AuthenticationService == nil {
+			break
+		}
+
+		return e.complexity.AddressSpaceSpecEnmasseIoV1beta1.AuthenticationService(childComplexity), true
+
 	case "AddressSpaceSpec_enmasse_io_v1beta1.Plan":
 		if e.complexity.AddressSpaceSpecEnmasseIoV1beta1.Plan == nil {
 			break
@@ -916,6 +928,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AuthenticationServiceAdminEnmasseIoV1beta1.Status(childComplexity), true
+
+	case "AuthenticationService_enmasse_io_v1beta1.Name":
+		if e.complexity.AuthenticationServiceEnmasseIoV1beta1.Name == nil {
+			break
+		}
+
+		return e.complexity.AuthenticationServiceEnmasseIoV1beta1.Name(childComplexity), true
 
 	case "ConnectionQueryResult_consoleapi_enmasse_io_v1beta1.Connections":
 		if e.complexity.ConnectionQueryResultConsoleapiEnmasseIoV1beta1.Connections == nil {
@@ -1636,6 +1655,7 @@ type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
 # done below for the address.spec.plan and type fields.
 #
 
+
 type AddressSpace_consoleapi_enmasse_io_v1beta1 {
   ObjectMeta: ObjectMeta_v1!
   Spec: AddressSpaceSpec_enmasse_io_v1beta1!
@@ -1646,8 +1666,13 @@ type AddressSpace_consoleapi_enmasse_io_v1beta1 {
 }
 
 type AddressSpaceSpec_enmasse_io_v1beta1 {
-  Plan:      AddressSpacePlan_admin_enmasse_io_v1beta2!
-  Type:      AddressSpaceType!
+  Plan:                   AddressSpacePlan_admin_enmasse_io_v1beta2!
+  Type:                   AddressSpaceType!
+  AuthenticationService:  AuthenticationService_enmasse_io_v1beta1
+}
+
+type AuthenticationService_enmasse_io_v1beta1 {
+  Name: String!
 }
 
 type AddressSpaceStatus_enmasse_io_v1beta1 {
@@ -1849,8 +1874,13 @@ input ObjectMeta_v1_Input {
 }
 
 input AddressSpaceSpec_enmasse_io_v1beta1_Input {
-  Type:         String!
-  Plan:         String!
+  Type:                   String!
+  Plan:                   String!
+  AuthenticationService:  AuthenticationService_enmasse_io_v1beta1_Input
+}
+
+input AuthenticationService_enmasse_io_v1beta1_Input {
+  Name:  String!
 }
 
 input AddressSpace_enmasse_io_v1beta1_Input {
@@ -3445,6 +3475,40 @@ func (ec *executionContext) _AddressSpaceSpec_enmasse_io_v1beta1_Type(ctx contex
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNAddressSpaceType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AddressSpaceSpec_enmasse_io_v1beta1_AuthenticationService(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSpec) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "AddressSpaceSpec_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AuthenticationService, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*v1beta1.AuthenticationService)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOAuthenticationService_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAuthenticationService(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1_IsReady(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceStatus) (ret graphql.Marshaler) {
@@ -5070,6 +5134,43 @@ func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1_Stat
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNAuthenticationServiceStatus_admin_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta1ᚐAuthenticationServiceStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AuthenticationService_enmasse_io_v1beta1_Name(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AuthenticationService) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "AuthenticationService_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_Total(ctx context.Context, field graphql.CollectedField, obj *ConnectionQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
@@ -8790,6 +8891,12 @@ func (ec *executionContext) unmarshalInputAddressSpaceSpec_enmasse_io_v1beta1_In
 			if err != nil {
 				return it, err
 			}
+		case "AuthenticationService":
+			var err error
+			it.AuthenticationService, err = ec.unmarshalOAuthenticationService_enmasse_io_v1beta1_Input2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAuthenticationService(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -8877,6 +8984,24 @@ func (ec *executionContext) unmarshalInputAddress_enmasse_io_v1beta1_Input(ctx c
 		case "Spec":
 			var err error
 			it.Spec, err = ec.unmarshalOAddressSpec_enmasse_io_v1beta1_Input2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpec(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAuthenticationService_enmasse_io_v1beta1_Input(ctx context.Context, obj interface{}) (v1beta1.AuthenticationService, error) {
+	var it v1beta1.AuthenticationService
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "Name":
+			var err error
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9304,6 +9429,8 @@ func (ec *executionContext) _AddressSpaceSpec_enmasse_io_v1beta1(ctx context.Con
 				}
 				return res
 			})
+		case "AuthenticationService":
+			out.Values[i] = ec._AddressSpaceSpec_enmasse_io_v1beta1_AuthenticationService(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9815,6 +9942,33 @@ func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1(ctx 
 			}
 		case "Status":
 			out.Values[i] = ec._AuthenticationService_admin_enmasse_io_v1beta1_Status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var authenticationService_enmasse_io_v1beta1Implementors = []string{"AuthenticationService_enmasse_io_v1beta1"}
+
+func (ec *executionContext) _AuthenticationService_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.AuthenticationService) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, authenticationService_enmasse_io_v1beta1Implementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AuthenticationService_enmasse_io_v1beta1")
+		case "Name":
+			out.Values[i] = ec._AuthenticationService_enmasse_io_v1beta1_Name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -12335,6 +12489,29 @@ func (ec *executionContext) marshalOAddressType2ᚖgithubᚗcomᚋenmasseproject
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOAuthenticationService_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAuthenticationService(ctx context.Context, sel ast.SelectionSet, v v1beta1.AuthenticationService) graphql.Marshaler {
+	return ec._AuthenticationService_enmasse_io_v1beta1(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOAuthenticationService_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAuthenticationService(ctx context.Context, sel ast.SelectionSet, v *v1beta1.AuthenticationService) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AuthenticationService_enmasse_io_v1beta1(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOAuthenticationService_enmasse_io_v1beta1_Input2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAuthenticationService(ctx context.Context, v interface{}) (v1beta1.AuthenticationService, error) {
+	return ec.unmarshalInputAuthenticationService_enmasse_io_v1beta1_Input(ctx, v)
+}
+
+func (ec *executionContext) unmarshalOAuthenticationService_enmasse_io_v1beta1_Input2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAuthenticationService(ctx context.Context, v interface{}) (*v1beta1.AuthenticationService, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOAuthenticationService_enmasse_io_v1beta1_Input2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAuthenticationService(ctx, v)
+	return &res, err
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
