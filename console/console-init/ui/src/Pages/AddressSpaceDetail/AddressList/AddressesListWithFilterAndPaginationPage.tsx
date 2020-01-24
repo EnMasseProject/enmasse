@@ -21,9 +21,11 @@ import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import {
   CURRENT_ADDRESS_SPACE_PLAN,
-  DELETE_ADDRESS
+  DELETE_ADDRESS,
+  PURGE_ADDRESS
 } from "src/Queries/Queries";
 import { ISortBy, IRowData } from "@patternfly/react-table";
+import { IAddress } from "src/Components/AddressSpace/Address/AddressList";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -127,13 +129,9 @@ export default function AddressesList() {
     );
   };
 
-  let selectedAddresses: IRowData[] = [];
-  const setSelectedAddressesFunc = (values: IRowData[]) => {
-    const selectedData = values.filter(value => value.selected === true);
-    selectedAddresses = selectedData.map(data => data.originalData);
-  };
-
-  let errorData = [];
+  let selectedAddresses: IAddress[] = [];
+  let deleteErrorData = [],
+    purgeErrorData = [];
 
   const deleteAddress = async (data: any) => {
     const deletedData = await client.mutate({
@@ -146,19 +144,57 @@ export default function AddressesList() {
       }
     });
     if (deletedData.errors) {
-      errorData.push(data);
+      deleteErrorData.push(deletedData);
     }
     return deletedData;
   };
 
+  const purgeAddress = async (data: any) => {
+    const purgeData = await client.mutate({
+      mutation: PURGE_ADDRESS,
+      variables: {
+        a: {
+          Name: data.name,
+          Namespace: data.namespace
+        }
+      }
+    });
+    if (purgeData.errors) {
+      purgeErrorData.push(purgeData);
+    }
+    return purgeData;
+  };
+
   const onDeleteAll = async () => {
-    if (selectedAddresses && selectedAddresses.length > 0)
-      selectedAddresses.map(address => deleteAddress(address));
+    if (selectedAddresses && selectedAddresses.length > 0) {
+      const data = selectedAddresses;
+      data.map(address => deleteAddress(address));
+    }
     setOnCreationRefetch(true);
   };
 
   const onPurgeAll = async () => {
-    console.log("Purge", selectedAddresses);
+    if (selectedAddresses && selectedAddresses.length > 0) {
+      const data = selectedAddresses;
+      data.map(address => purgeAddress(address));
+    }
+    setOnCreationRefetch(true);
+  };
+
+  const onSelectAddress = (data: IAddress, isSelected: boolean) => {
+    if (isSelected === true && selectedAddresses.indexOf(data) === -1)
+      selectedAddresses.push(data);
+    else if (isSelected === false && selectedAddresses.indexOf(data) != -1)
+      selectedAddresses.splice(selectedAddresses.indexOf(data), 1);
+  };
+
+  const onSelectAllAddress = (dataList: IAddress[], isSelected: boolean) => {
+    if (isSelected === true) {
+      const allData = dataList;
+      selectedAddresses = allData;
+    } else if (isSelected === false) {
+      selectedAddresses = [];
+    }
   };
 
   return (
@@ -204,9 +240,10 @@ export default function AddressesList() {
         setSortValue={setSortDropdownValue}
         isWizardOpen={isCreateWizardOpen}
         setIsWizardOpen={setIsCreateWizardOpen}
-        setSelectedAddresses={setSelectedAddressesFunc}
         onCreationRefetch={onCreationRefetch}
         setOnCreationRefetch={setOnCreationRefetch}
+        onSelectAddress={onSelectAddress}
+        onSelectAllAddress={onSelectAllAddress}
       />
       {totalAddresses > 0 && renderPagination(page, perPage)}
     </PageSection>

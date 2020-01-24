@@ -37,9 +37,10 @@ export interface IAddressListPageProps {
   setSortValue: (value: ISortBy) => void;
   isWizardOpen: boolean;
   setIsWizardOpen: (value: boolean) => void;
-  setSelectedAddresses:(values:IRowData[])=>void;
   onCreationRefetch?: boolean;
   setOnCreationRefetch: (value: boolean) => void;
+  onSelectAddress:(data:IAddress, isSelected:boolean)=>void;
+  onSelectAllAddress:(dataList:IAddress[],isSelected:boolean)=>void;
 }
 export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = ({
   name,
@@ -56,9 +57,10 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   setSortValue,
   isWizardOpen,
   setIsWizardOpen,
-  setSelectedAddresses,
   onCreationRefetch,
-  setOnCreationRefetch
+  setOnCreationRefetch,
+  onSelectAddress,
+  onSelectAllAddress
 }) => {
   const [
     addressBeingEdited,
@@ -94,7 +96,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     refetch();
     setOnCreationRefetch(false);
   }
-  
+
   if (loading) return <Loading />;
   if (error) return <Loading />;
   const { addresses } = data || {
@@ -190,7 +192,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         onDelete={handleDeleteChange}
         sortBy={sortBy}
         onSort={onSort}
-        setSelectedAddresses={setSelectedAddresses}
+        onSelectAddress={onSelectAddress}
+        onSelectAllAddress={onSelectAllAddress}
       />
       {addresses.Total > 0 ? (
         " "

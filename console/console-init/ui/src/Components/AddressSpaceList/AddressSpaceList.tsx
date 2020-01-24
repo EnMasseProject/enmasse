@@ -30,29 +30,27 @@ export interface IAddressSpace {
   displayName: string;
   isReady: boolean;
   status?: "creating" | "deleting" | "running";
+  selected?: boolean;
 }
 
 interface IAddressListProps {
   rows: IAddressSpace[];
+  onSelectAddressSpace: (data: IAddressSpace, isSelected: boolean) => void;
+  onSelectAllAddressSpace: (dataList:IAddressSpace[], isSelected: boolean) => void;
   onEdit: (rowData: IAddressSpace) => void;
   onDelete: (rowData: IAddressSpace) => void;
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
-  setSelectedAddressSpaces: (values: IRowData[]) => void;
-}
-
-export interface IAddressSpaceNameAndNameSpace {
-  name: string;
-  namespace: string;
 }
 
 export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   rows,
+  onSelectAddressSpace,
+  onSelectAllAddressSpace,
   onEdit,
   onDelete,
   sortBy,
-  onSort,
-  setSelectedAddressSpaces
+  onSort
 }) => {
   //TODO: Add loading icon based on status
   const [tableRows, setTableRows] = React.useState<IRowData[]>([]);
@@ -79,20 +77,8 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   };
 
   const toTableCells = (row: IAddressSpace) => {
-    const dataPresentInTableRow = tableRows.filter(
-      data => data.originalData.name === row.name
-    );
-    let isSelected;
-    if (dataPresentInTableRow && dataPresentInTableRow.length > 0) {
-      if (dataPresentInTableRow[0].selected) {
-        isSelected = dataPresentInTableRow[0].selected;
-      }
-    }
-    return getRowData(row, isSelected);
-  };
-  const getRowData = (row: IAddressSpace, isSelected?: boolean) => {
     const tableRow: IRowData = {
-      selected: isSelected,
+      selected: row.selected,
       cells: [
         {
           header: "name",
@@ -129,7 +115,6 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
     };
     return tableRow;
   };
-
   useEffect(() => setTableRows(rows.map(toTableCells)), [rows]);
   const tableColumns = [
     { 
@@ -149,16 +134,6 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
     "Time created"
   ];
 
-  const matchAndUpdateRow = (rowData: IAddressSpace) => {
-    const dataFromOldTableRows = tableRows.filter(
-      row => row.originalData.name === rowData.name
-    );
-    if (dataFromOldTableRows && dataFromOldTableRows.length > 0) {
-      return getRowData(rowData, dataFromOldTableRows[0].selected);
-    }
-    return getRowData(rowData, undefined);
-  };
-
   const onSelect = async (
     event: React.MouseEvent,
     isSelected: boolean,
@@ -166,18 +141,21 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
     rowData: IRowData,
     extraData: IExtraData
   ) => {
+
     let rows;
     if (rowIndex === -1) {
-      rows = tableRows.map(oneRow => {
-        oneRow.selected = isSelected;
-        return oneRow;
-      });
+      rows = tableRows.map(a=>{
+        const data =a;
+        data.selected=isSelected
+        return data;
+      })
+      onSelectAllAddressSpace(rows.map(row=>row.originalData),isSelected);
     } else {
       rows = [...tableRows];
       rows[rowIndex].selected = isSelected;
+      onSelectAddressSpace(rows[rowIndex].originalData,isSelected);
     }
-    setTableRows(rows)
-    setSelectedAddressSpaces(rows);
+    setTableRows(rows);
   };
 
   return (

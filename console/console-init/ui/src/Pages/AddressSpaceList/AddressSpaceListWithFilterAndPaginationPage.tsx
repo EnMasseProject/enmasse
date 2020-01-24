@@ -19,6 +19,7 @@ import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy, IRowData } from "@patternfly/react-table";
 import { DELETE_ADDRESS_SPACE } from "src/Queries/Queries";
 import { useApolloClient } from "@apollo/react-hooks";
+import { IAddressSpace } from "src/Components/AddressSpaceList/AddressSpaceList";
 
 export default function AddressSpaceListWithFilterAndPagination() {
   useDocumentTitle("Address Space List");
@@ -80,13 +81,10 @@ export default function AddressSpaceListWithFilterAndPagination() {
       />
     );
   };
-  let addressSpacesToDelete: IRowData[] = [];
-  const setSelectedAddressSpacesFunc = (values: IRowData[]) => {
-    const selectedData = values.filter(value => value.selected === true);
-    addressSpacesToDelete = selectedData.map(data => data.originalData);
-  };
+  let addressSpacesToDelete: IAddressSpace[] = [];
+
   let errorData = [];
-  const deleteAddressSpace = async (data: any) => {
+  const deleteAddressSpace = async (data: IAddressSpace) => {
     const deletedData = await client.mutate({
       mutation: DELETE_ADDRESS_SPACE,
       variables: {
@@ -101,12 +99,41 @@ export default function AddressSpaceListWithFilterAndPagination() {
     }
     return deletedData;
   };
-  const onDeleteAll = async() => {
+  const onDeleteAll = async () => {
     if (addressSpacesToDelete && addressSpacesToDelete.length > 0)
       addressSpacesToDelete.map(addressspace =>
         deleteAddressSpace(addressspace)
       );
-      setOnCreationRefetch(true);
+    setOnCreationRefetch(true);
+  };
+
+  const onSelectAddressSpace = (data: IAddressSpace, isSelected: boolean) => {
+    if (
+      isSelected === true &&
+      addressSpacesToDelete.indexOf(data) === -1
+    )
+      addressSpacesToDelete.push(data);
+    else if (
+      isSelected === false &&
+      addressSpacesToDelete.indexOf(data) != -1
+    ) {
+      addressSpacesToDelete.splice(
+        addressSpacesToDelete.indexOf(data),
+        1
+      );
+    }
+  };
+
+  const onSelectAllAddressSpace = (
+    dataList: IAddressSpace[],
+    isSelected: boolean
+  ) => {
+    if (isSelected === true) {
+      const allData = dataList;
+      addressSpacesToDelete = allData;
+    } else if (isSelected === false) {
+      addressSpacesToDelete = [];
+    }
   };
 
   return (
@@ -150,7 +177,8 @@ export default function AddressSpaceListWithFilterAndPagination() {
         setSortValue={setSortDropdownValue}
         isCreateWizardOpen={isCreateWizardOpen}
         setIsCreateWizardOpen={setIsCreateWizardOpen}
-        setSelectedAddressSpaces={setSelectedAddressSpacesFunc}
+        onSelectAddressSpace={onSelectAddressSpace}
+        onSelectAllAddressSpace={onSelectAllAddressSpace}
       />
       {totalAddressSpaces > 0 && renderPagination(page, perPage)}
     </PageSection>

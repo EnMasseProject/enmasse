@@ -36,7 +36,8 @@ interface AddressSpaceListPageProps {
   setSortValue: (value: ISortBy) => void;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
-  setSelectedAddressSpaces:(values:IRowData[])=>void;
+  onSelectAddressSpace:(data:IAddressSpace, isSelected:boolean)=>void;
+  onSelectAllAddressSpace:(dataList:IAddressSpace[],isSelected:boolean)=>void;
 }
 export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageProps> = ({
   page,
@@ -52,7 +53,8 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   setSortValue,
   isCreateWizardOpen,
   setIsCreateWizardOpen,
-  setSelectedAddressSpaces
+  onSelectAddressSpace,
+  onSelectAllAddressSpace
 }) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
@@ -71,21 +73,10 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   if (sortValue && sortBy != sortValue) {
     setSortBy(sortValue);
   }
-  const { loading, error, data, refetch } = useQuery<IAddressSpacesResponse>(
-    RETURN_ALL_ADDRESS_SPACES(
-      page,
-      perPage,
-      filter_Names,
-      filter_NameSpace,
-      filter_Type,
-      sortBy
-    ),
-    { pollInterval: 5000, fetchPolicy: "network-only" }
-  );
-  if (onCreationRefetch) {
-    refetch();
-    setOnCreationRefetch(false);
-  }
+  const [allAddressSpaces, setAllAddressSpaces] = React.useState<
+    IAddressSpace[]
+  >([]);
+
   const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
   const handleSaving = async () => {
     addressSpaceBeingEdited &&
@@ -141,8 +132,25 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     }
   };
 
+  const { loading, error, data, refetch } = useQuery<IAddressSpacesResponse>(
+    RETURN_ALL_ADDRESS_SPACES(
+      page,
+      perPage,
+      filter_Names,
+      filter_NameSpace,
+      filter_Type,
+      sortBy
+    ),
+    { pollInterval: 20000, fetchPolicy: "network-only" }
+  );
+
   if (error) {
     console.log(error);
+  }
+
+  if (onCreationRefetch) {
+    refetch();
+    setOnCreationRefetch(false);
   }
 
   const { addressSpaces } = data || {
@@ -157,22 +165,57 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     displayName: addSpace.Spec.Plan.Spec.DisplayName,
     isReady: addSpace.Status.IsReady
   }));
-
+  if (allAddressSpaces.toString() != addressSpacesList.toString()) {
+    const addressSpacesListMap = addressSpacesList.map(as => {
+      const addressSpace: IAddressSpace = as;
+      const dataInState = allAddressSpaces.filter(ad => ad.name === as.name);
+      if (dataInState && dataInState.length > 0) {
+        addressSpace.selected = dataInState[0].selected;
+      }
+      return addressSpace;
+    });
+    setAllAddressSpaces(addressSpacesListMap);
+  }
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
   };
-  const [rcvData,setRcvData] = React.useState([]);
+  // const onSelect = (data: IRowData, isSelected: boolean) => {
+  //   const asToSet = allAddressSpaces.map(as => {
+  //     const d = as;
+  //     if (as.name === data.originalData.name) {
+  //       as.selected = isSelected;
+  //     }
+  //     return d;
+  //   });
+  //   setAllAddressSpaces(asToSet);
+  //   setSelectedAddressSpaces(
+  //     asToSet.filter(as => as.selected && as.selected === true)
+  //   );
+  // };
+  // const onSelectAll = (isSelected: boolean) => {
+  //   const asToSet = allAddressSpaces.map(as => {
+  //     const d = as;
+  //     as.selected = isSelected;
+  //     return d;
+  //   });
+  //   setAllAddressSpaces(asToSet);
+  //   setSelectedAddressSpaces(
+  //     asToSet.filter(as => as.selected && as.selected === true)
+  //   );
+  // };
+
   return (
     <>
       {totalAddressSpaces > 0 ? (
         <AddressSpaceList
-          rows={addressSpacesList}
+          rows={allAddressSpaces}
+          onSelectAddressSpace={onSelectAddressSpace}
+          onSelectAllAddressSpace={onSelectAllAddressSpace}
           onEdit={handleEditChange}
           onDelete={handleDeleteChange}
           onSort={onSort}
           sortBy={sortBy}
-          setSelectedAddressSpaces={setSelectedAddressSpaces}
         />
       ) : (
         <EmptyAddressSpace

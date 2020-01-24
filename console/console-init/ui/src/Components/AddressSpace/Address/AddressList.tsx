@@ -36,7 +36,7 @@ export interface IAddress {
   isReady: boolean;
   errorMessages?: string[];
   status?: string;
-  selected?:boolean;
+  selected?: boolean;
 }
 
 interface IAddressListProps {
@@ -45,7 +45,8 @@ interface IAddressListProps {
   onDelete: (rowData: IAddress) => void;
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
-  setSelectedAddresses:(values:IRowData[])=>void;
+  onSelectAddress: (rowData: IAddress, isSelected: boolean) => void;
+  onSelectAllAddress: (datas:IAddress[], isSelected: boolean) => void;
 }
 
 export const AddressList: React.FunctionComponent<IAddressListProps> = ({
@@ -54,7 +55,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   onDelete,
   sortBy,
   onSort,
-  setSelectedAddresses
+  onSelectAddress,
+  onSelectAllAddress
 }) => {
   const [tableRows, setTableRows] = React.useState<IRowData[]>([]);
   const { width } = useWindowDimensions();
@@ -73,12 +75,14 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   };
   //TODO: Display error after the phase variable is exposed from backend.
   const toTableCells = (row: IAddress) => {
-    const matchData = tableRows.filter(r=>r && r.originalData &&  r.originalData.name===row.name);
-    if(matchData && matchData.length>0) {
-      row.selected=matchData[0].selected;
+    const oldRowData = tableRows.filter(r=>r.originalData.name===row.name);
+    let selected;
+    if(oldRowData && oldRowData.length>0) {
+      selected= oldRowData[0].selected;
     }
     if (row.isReady) {
       const tableRow: IRowData = {
+        selected:selected,
         cells: [
           {
             title: <Link to={`addresses/${row.name}`}>{row.displayName}</Link>
@@ -111,10 +115,10 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
         ],
         originalData: row
       };
-      tableRow.selected=row.selected && row.selected;
       return tableRow;
     } else {
       const tableRow: IRowData = {
+        selected: selected,
         cells: [
           {
             title: <Link to={`addresses/${row.name}`}>{row.displayName}</Link>
@@ -131,7 +135,6 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
         ],
         originalData: row
       };
-      tableRow.selected=row.selected && row.selected;
       return tableRow;
     }
   };
@@ -180,16 +183,18 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   ) => {
     let rows;
     if (rowIndex === -1) {
-      rows = tableRows.map((oneRow: IRowData) => {
-        oneRow.selected = isSelected;
-        return oneRow;
-      });
+      rows = tableRows.map(a=>{
+        const data =a;
+        data.selected=isSelected
+        return data;
+      })
+      onSelectAllAddress(rows.map(row=>row.originalData),isSelected)
     } else {
       rows = [...tableRows];
       rows[rowIndex].selected = isSelected;
+      onSelectAddress(rows[rowIndex].originalData,isSelected);
     }
     setTableRows(rows);
-    setSelectedAddresses(rows);
   };
   return (
     <Table
@@ -201,8 +206,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       aria-label="Address List"
       canSelectAll={true}
       sortBy={sortBy}
-      onSort={onSort}
-    >
+      onSort={onSort}>
       <TableHeader id="address-list-table-bodheader" />
       <TableBody />
     </Table>

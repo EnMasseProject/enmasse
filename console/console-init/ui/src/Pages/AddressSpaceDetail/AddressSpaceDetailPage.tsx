@@ -91,7 +91,7 @@ export default function AddressSpaceDetailPage() {
     { pollInterval: 20000 }
   );
   const client = useApolloClient();
-  if (loading) return <Loading />;
+  // if (loading) return <Loading />;
 
   if (error) {
     console.log(error);
