@@ -1302,3 +1302,14 @@ export const RETURN_AUTHENTICATION_SERVICES = gql
     }
   }
 `;
+
+export const RETURN_WHOAMI = gql `
+  query whoami { 
+    whoami {
+      ObjectMeta{
+        Name
+      }
+      FullName
+    }
+  }
+`
