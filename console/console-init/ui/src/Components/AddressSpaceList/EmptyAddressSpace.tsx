@@ -36,7 +36,8 @@ export const EmptyAddressSpace: React.FunctionComponent<IEmptyAddressSpaceProps>
       <EmptyStateBody id="empty-ad-space-body">
         There are currently no address spaces available. Please click on the
         button below to create one.Learn more about this on the
-        <Link to="/"> documentation</Link>
+        <a href={process.env.REACT_APP_DOCS}> documentation</a>
+        {console.log(process.env.REACT_APP_DOCS)}
       </EmptyStateBody>
       <Button
         id="empty-ad-space-create-button"
