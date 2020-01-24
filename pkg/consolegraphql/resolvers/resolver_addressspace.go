@@ -62,6 +62,15 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 	}, nil
 }
 
+func (r *addressSpaceSpecK8sResolver) AuthenticationService(ctx context.Context, obj *v1beta1.AddressSpaceSpec) (*v1beta1.AuthenticationService, error) {
+	if obj != nil {
+		authenticationServiceName := obj.AuthenticationService.Name
+		return &v1beta1.AuthenticationService {
+			Name: authenticationServiceName,
+		}, nil
+	}
+	return nil, nil
+}
 type addressSpaceSpecK8sResolver struct{ *Resolver }
 
 func (r *addressSpaceSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.AddressSpaceSpec) (*v1beta2.AddressSpacePlan, error) {
@@ -231,5 +240,14 @@ func (r *mutationResolver) DeleteAddressSpace(ctx context.Context, input v1.Obje
 }
 
 func (r *queryResolver) AddressSpaceCommand(ctx context.Context, input v1beta1.AddressSpace) (string, error) {
-	return "oc apply blah", nil
+	return  `apiVersion: enmasse.io/v1beta1
+kind: AddressSpace
+metadata:
+  namespace: `+ input.Namespace +`
+  name: `+ input.Name +`
+spec:
+  authenticationService:
+    name: `+ input.Spec.AuthenticationService.Name +`
+  type: `+ input.Spec.Type +`
+  plan: `+ input.Spec.Plan, nil
 }

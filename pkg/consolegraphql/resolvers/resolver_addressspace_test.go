@@ -235,3 +235,30 @@ func TestQueryAddressSpaceAddressFilter(t *testing.T) {
 	assert.Equal(t, addr2, objs.Addresses[0], "Unexpected connection")
 
 }
+
+func TestQueryAddressSpaceCommand(t *testing.T) {
+	r, ctx := newTestAddressSpaceResolver(t)
+	as := createAddressSpace("mynamespace", "myaddressspace")
+	auth := "auth"
+	as.Spec= v1beta1.AddressSpaceSpec{
+		AuthenticationService: &v1beta1.AuthenticationService{
+			Name: auth,
+		},
+	}
+	err := r.Cache.Add(as)
+	assert.NoError(t, err)
+	obj, err := r.Query().AddressSpaceCommand(ctx, as.AddressSpace)
+	assert.NoError(t, err)
+
+	assert.NoError(t, err)
+	expected := `kind: AddressSpace
+metadata:
+  namespace: myaddressspace
+  name: mynamespace
+spec:
+  authenticationService:
+    name: auth
+`
+	assert.Contains(t, obj, expected, "Expect name and namespace to be set")
+}
+
