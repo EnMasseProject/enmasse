@@ -25,6 +25,20 @@
         <format>zip</format>
     </formats>
     <includeBaseDirectory>False</includeBaseDirectory>
+    <fileSets>
+        <fileSet>
+            <directory>../templates/grafana-dashboards/</directory>
+            <outputDirectory>./templates</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>../templates/prometheus-rules/</directory>
+            <outputDirectory>./templates</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>../templates/service-monitors/</directory>
+            <outputDirectory>./templates</outputDirectory>
+        </fileSet>
+    </fileSets>
     <files>
         <file>
             <source>${project.basedir}/build/controller-manager</source>

@@ -24,6 +24,7 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
 	v1 "k8s.io/api/core/v1"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
@@ -91,6 +92,17 @@ func main() {
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
+	}
+
+	serverClient, err := client.New(cfg, client.Options{})
+
+	// Install monitoring resources
+	monitoring := os.Getenv("ENABLE_MONITORING")
+	if monitoring == "true" {
+		err = installMonitoring(ctx, serverClient)
+		if err != nil {
+			fmt.Print(err)
+		}
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
@@ -262,6 +274,28 @@ func addMonitoringKeyLabelToOperatorService(ctx context.Context, cfg *rest.Confi
 	err = kclient.Update(ctx, service)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func installMonitoring(ctx context.Context, client client.Client) error {
+
+	params := map[string]string{"Namespace": os.Getenv("NAMESPACE")}
+
+	templateHelper := NewTemplateHelper(params)
+
+	for _, template := range templateHelper.TemplateList {
+		resource, err := templateHelper.CreateResource(template)
+		if err != nil {
+			return fmt.Errorf("createResource failed: %w", err)
+		}
+		err = client.Create(ctx, resource)
+		if err != nil {
+			if !kerrors.IsAlreadyExists(err) {
+				return fmt.Errorf("error creating resource: %w", err)
+			}
+		}
 	}
 
 	return nil
