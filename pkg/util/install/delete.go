@@ -250,3 +250,15 @@ func BulkRemoveOwner(ctx context.Context, c client.Client, owner runtime.Object,
 func RemoveAsOwner(owner runtime.Object, object interface{}, controller bool) (OwnerResult, error) {
 	return ProcessOwnedByObject(owner, object, controller, true)
 }
+
+// Test if an object is being deleted
+func IsDeleted(obj interface{}) (bool, error) {
+	switch v := obj.(type) {
+	case *unstructured.Unstructured:
+		return v.GetDeletionTimestamp() != nil, nil
+	case v1.ObjectMetaAccessor:
+		return v.GetObjectMeta().GetDeletionTimestamp() != nil, nil
+	default:
+		return false, fmt.Errorf("provided unknown type: %T", v)
+	}
+}
