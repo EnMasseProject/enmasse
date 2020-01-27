@@ -147,7 +147,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeHostnameData = async (value: string) => {
     setHostnameOptions(undefined);
-    if (value.trim().length < 6) {
+    if (value.trim().length < 5) {
       setHostnameOptions([]);
       return;
     }
@@ -175,7 +175,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
             return connection.Spec.Hostname;
           }
         );
-        setHostnameOptions(obtainedList);
+        setHostnameOptions(Array.from(new Set(obtainedList)));
       }
     }
   };
@@ -195,7 +195,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeContainerData = async (value: string) => {
     setContainerOptions(undefined);
-    if (value.trim().length < 6) {
+    if (value.trim().length < 5) {
       setContainerOptions([]);
       return;
     }
@@ -223,7 +223,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
             return connection.Spec.ContainerId;
           }
         );
-        setContainerOptions(obtainedList);
+        setContainerOptions(Array.from(new Set(obtainedList)));
       }
     }
   };
@@ -353,10 +353,23 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   isDisabled={false}
                   isCreatable={false}
                 >
-                  {hostnameOptions &&
-                    hostnameOptions.map((option, index) => (
-                      <SelectOption key={index} value={option} />
-                    ))}
+                 {hostnameOptions && hostnameOptions.length > 0 ? (
+                        hostnameOptions.map((option, index) => (
+                          <SelectOption key={index} value={option} />
+                        ))
+                      ) : hostNameInput.trim().length < 5 ? (
+                        <SelectOption
+                          key={"invalid-input-length"}
+                          value={"Enter more characters"}
+                          disabled={true}
+                        />
+                      ) : (
+                        <SelectOption
+                          key={"no-results-found"}
+                          value={"No results found"}
+                          disabled={true}
+                        />
+                      )}
                   {/* {} */}
                 </Select>
                 <Button
@@ -398,10 +411,23 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   isDisabled={false}
                   isCreatable={false}
                 >
-                  {containerOptions &&
-                    containerOptions.map((option, index) => (
-                      <SelectOption key={index} value={option} />
-                    ))}
+                  {containerOptions && containerOptions.length > 0 ? (
+                        containerOptions.map((option, index) => (
+                          <SelectOption key={index} value={option} />
+                        ))
+                      ) : containerInput.trim().length < 5 ? (
+                        <SelectOption
+                          key={"invalid-input-length"}
+                          value={"Enter more characters"}
+                          disabled={true}
+                        />
+                      ) : (
+                        <SelectOption
+                          key={"no-results-found"}
+                          value={"No results found"}
+                          disabled={true}
+                        />
+                      )}
                   {/* {} */}
                 </Select>
                 <Button

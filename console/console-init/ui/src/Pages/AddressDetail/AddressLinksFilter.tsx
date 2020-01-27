@@ -114,22 +114,47 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   const onAddInput = (event: any) => {
     if (filterValue && filterValue === "Name") {
       if (nameSelected && nameSelected.trim() !== "")
-        if (filterNames.map(filter => filter.value).indexOf(nameSelected.trim()) < 0) {
-          setFilterNames([...filterNames, { value: nameSelected.trim(), isExact: true }]);
+        if (
+          filterNames.map(filter => filter.value).indexOf(nameSelected.trim()) <
+          0
+        ) {
+          setFilterNames([
+            ...filterNames,
+            { value: nameSelected.trim(), isExact: true }
+          ]);
           setNameSelected(undefined);
         }
-      if(!nameSelected && nameInput && nameInput.trim() !== "")
-        if (filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0)
-          setFilterNames([...filterNames, { value: nameInput.trim(), isExact: false }]);
+      if (!nameSelected && nameInput && nameInput.trim() !== "")
+        if (
+          filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0
+        )
+          setFilterNames([
+            ...filterNames,
+            { value: nameInput.trim(), isExact: false }
+          ]);
     } else if (filterValue && filterValue === "Container") {
       if (containerSelected && containerSelected.trim() !== "")
-        if (filterContainers.map(filter => filter.value).indexOf(containerSelected.trim()) < 0) {
-          setFilterContainers([...filterContainers, { value: containerSelected.trim(), isExact: true }]);
+        if (
+          filterContainers
+            .map(filter => filter.value)
+            .indexOf(containerSelected.trim()) < 0
+        ) {
+          setFilterContainers([
+            ...filterContainers,
+            { value: containerSelected.trim(), isExact: true }
+          ]);
           setContainerSelected(undefined);
         }
       if (!containerSelected && containerInput && containerInput.trim() !== "")
-        if (filterContainers.map(filter => filter.value).indexOf(containerInput.trim()) < 0)
-          setFilterContainers([...filterContainers, { value: containerInput.trim(), isExact: false }]);
+        if (
+          filterContainers
+            .map(filter => filter.value)
+            .indexOf(containerInput.trim()) < 0
+        )
+          setFilterContainers([
+            ...filterContainers,
+            { value: containerInput.trim(), isExact: false }
+          ]);
     }
   };
 
@@ -178,7 +203,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
             return link.ObjectMeta.Name;
           }
         );
-        setNameOptions(obtainedList);
+        setNameOptions(Array.from(new Set(obtainedList)));
       }
     }
   };
@@ -224,7 +249,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
             return link.Spec.Connection.Spec.ContainerId;
           }
         );
-        setContainerOptions(obtainedList);
+        setContainerOptions(Array.from(new Set(obtainedList)));
       }
     }
   };
@@ -262,14 +287,18 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     switch (type) {
       case "Name":
         if (filterNames && id) {
-          let index = filterNames.map(filter => filter.value).indexOf(id.toString());
+          let index = filterNames
+            .map(filter => filter.value)
+            .indexOf(id.toString());
           if (index >= 0) filterNames.splice(index, 1);
           setFilterNames([...filterNames]);
         }
         break;
       case "Container":
         if (filterContainers && id) {
-          let index = filterContainers.map(filter => filter.value).indexOf(id.toString());
+          let index = filterContainers
+            .map(filter => filter.value)
+            .indexOf(id.toString());
           if (index >= 0) filterContainers.splice(index, 1);
           setFilterContainers([...filterContainers]);
         }
@@ -318,8 +347,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                 key={option.key}
                 value={option.value}
                 itemID={option.key}
-                component={"button"}
-              >
+                component={"button"}>
                 {option.value}
               </DropdownItem>
             ))}
@@ -330,8 +358,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
             <DataToolbarFilter
               chips={filterNames.map(filter => filter.value)}
               deleteChip={onDelete}
-              categoryName="Name"
-            >
+              categoryName="Name">
               {filterValue && filterValue === "Name" && (
                 <InputGroup>
                   <Select
@@ -351,24 +378,31 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                     ariaLabelledBy={"typeahead-select-id"}
                     placeholderText="Select name"
                     isDisabled={false}
-                    isCreatable={false}
-                  >
-                    {nameOptions &&
+                    isCreatable={false}>
+                    {nameOptions && nameOptions.length > 0 ? (
                       nameOptions.map((option, index) => (
-                        <SelectOption
-                          id={`ad-links-filter-select-option-name${index}`}
-                          key={index}
-                          value={option}
-                        />
-                      ))}
+                        <SelectOption key={index} value={option} />
+                      ))
+                    ) : nameInput.trim().length < 5 ? (
+                      <SelectOption
+                        key={"invalid-input-length"}
+                        value={"Enter more characters"}
+                        disabled={true}
+                      />
+                    ) : (
+                      <SelectOption
+                        key={"no-results-found"}
+                        value={"No results found"}
+                        disabled={true}
+                      />
+                    )}
                     {/* {} */}
                   </Select>
                   <Button
                     id="ad-links-filter-search-name"
                     variant={ButtonVariant.control}
                     aria-label="search button for search name"
-                    onClick={onAddInput}
-                  >
+                    onClick={onAddInput}>
                     <SearchIcon />
                   </Button>
                 </InputGroup>
@@ -379,8 +413,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
             <DataToolbarFilter
               chips={filterContainers.map(filter => filter.value)}
               deleteChip={onDelete}
-              categoryName="Container"
-            >
+              categoryName="Container">
               {filterValue && filterValue === "Container" && (
                 <InputGroup>
                   <Select
@@ -400,24 +433,31 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                     ariaLabelledBy={"typeahead-select-id"}
                     placeholderText="Select container"
                     isDisabled={false}
-                    isCreatable={false}
-                  >
-                    {containerOptions &&
-                      containerOptions.map((option, index) => (
+                    isCreatable={false}>
+                   {containerOptions && containerOptions.length > 0 ? (
+                        containerOptions.map((option, index) => (
+                          <SelectOption key={index} value={option} />
+                        ))
+                      ) : containerInput.trim().length < 5 ? (
                         <SelectOption
-                          id={`ad-links-filter-select-option-container${index}`}
-                          key={index}
-                          value={option}
+                          key={"invalid-input-length"}
+                          value={"Enter more characters"}
+                          disabled={true}
                         />
-                      ))}
+                      ) : (
+                        <SelectOption
+                          key={"no-results-found"}
+                          value={"No results found"}
+                          disabled={true}
+                        />
+                      )}
                     {/* {} */}
                   </Select>
                   <Button
                     id="ad-links-filter-search-container"
                     variant={ButtonVariant.control}
                     aria-label="search button for search containers"
-                    onClick={onAddInput}
-                  >
+                    onClick={onAddInput}>
                     <SearchIcon />
                   </Button>
                 </InputGroup>
@@ -429,8 +469,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
             <DataToolbarFilter
               chips={filterRole ? [filterRole] : []}
               deleteChip={onDelete}
-              categoryName="Role"
-            >
+              categoryName="Role">
               {filterValue === "Role" && (
                 <Dropdown
                   id="ad-links-filter-select-role"
@@ -448,8 +487,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                       key={option.key}
                       value={option.value}
                       itemID={option.key}
-                      component={"button"}
-                    >
+                      component={"button"}>
                       {option.value}
                     </DropdownItem>
                   ))}
@@ -467,8 +505,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onDeleteAll}
-    >
+      clearAllFilters={onDeleteAll}>
       <DataToolbarContent>
         <>
           <DataToolbarToggleGroup
@@ -482,8 +519,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                 )}
               </>
             }
-            breakpoint="xl"
-          >
+            breakpoint="xl">
             {toggleGroupItems}
           </DataToolbarToggleGroup>
           {width < 769 && (
