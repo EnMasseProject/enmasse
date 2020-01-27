@@ -76,11 +76,11 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData createCR(String definition) throws IOException {
-        return createOrUpdateCR(Environment.getInstance().namespace(), definition, false, DEFAULT_SYNC_TIMEOUT);
+        return createCR(Environment.getInstance().namespace(), definition);
     }
 
     public static ExecutionResultData createCR(String namespace, String definition) throws IOException {
-        return createOrUpdateCR(namespace, definition, false, DEFAULT_SYNC_TIMEOUT);
+        return createCR(namespace, definition, DEFAULT_SYNC_TIMEOUT);
     }
 
     public static ExecutionResultData createCR(String namespace, String definition, int timeoutMillis) throws IOException {
@@ -88,16 +88,16 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData updateCR(String definition) throws IOException {
-        return createOrUpdateCR(Environment.getInstance().namespace(), definition, true, DEFAULT_SYNC_TIMEOUT);
+        return updateCR(Environment.getInstance().namespace(), definition);
+    }
+
+    public static ExecutionResultData updateCR(String namespace, String definition) throws IOException {
+        return createOrUpdateCR(namespace, definition, true, DEFAULT_SYNC_TIMEOUT);
     }
 
     public static ExecutionResultData patchCR(String kind, String name, String patchData) {
         log.info("Patching {} {} in {}", kind, name, Environment.getInstance().namespace());
         return Exec.execute(Arrays.asList(CMD, "patch", "--type=merge", "-n", Environment.getInstance().namespace(), kind, name, "-p", patchData), DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-    public static ExecutionResultData updateCR(String namespace, String definition) throws IOException {
-        return createOrUpdateCR(namespace, definition, true, DEFAULT_SYNC_TIMEOUT);
     }
 
     public static String getOCUser() {
