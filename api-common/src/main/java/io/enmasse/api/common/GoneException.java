@@ -7,6 +7,7 @@ package io.enmasse.api.common;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Response;
 
+@SuppressWarnings("serial")
 public class GoneException extends ClientErrorException {
 
     public GoneException(String message, Response response) {

@@ -5,6 +5,13 @@
 
 package io.enmasse.controller.common;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.admin.model.v1.InfraConfig;
@@ -13,27 +20,23 @@ import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.AppliedConfig;
 import io.enmasse.controller.InfraConfigs;
 import io.enmasse.k8s.util.Templates;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.OpenShiftClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Wraps the Kubernetes client and adds some helper methods.
  */
 public class KubernetesHelper implements Kubernetes {
-    private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class);
-
     private static final String TEMPLATE_SUFFIX = ".yaml";
 
     private final NamespacedKubernetesClient client;

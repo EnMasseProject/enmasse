@@ -16,9 +16,6 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.UUID;
 
-import io.enmasse.address.model.AddressSpaceSpecBuilder;
-import io.enmasse.address.model.AuthenticationService;
-import io.enmasse.address.model.AuthenticationServiceBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -29,6 +26,8 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.AddressSpaceSpecBuilder;
+import io.enmasse.address.model.AuthenticationServiceBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressApi;

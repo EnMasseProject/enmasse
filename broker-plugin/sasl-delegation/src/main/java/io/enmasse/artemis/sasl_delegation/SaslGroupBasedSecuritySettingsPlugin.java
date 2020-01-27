@@ -5,14 +5,19 @@
 
 package io.enmasse.artemis.sasl_delegation;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.activemq.artemis.core.security.Role;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
 import org.apache.activemq.artemis.core.settings.HierarchicalRepository;
 import org.jboss.logging.Logger;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
+@SuppressWarnings("serial")
 public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlugin {
 
     private static final Logger LOG = Logger.getLogger(SaslGroupBasedSecuritySettingsPlugin.class);

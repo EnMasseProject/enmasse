@@ -4,16 +4,16 @@
  */
 package io.enmasse.systemtest.selenium.page;
 
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.selenium.SeleniumProvider;
+import java.time.Duration;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
-import java.time.Duration;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 
 public class OpenshiftLoginWebPage implements IWebPage {
 

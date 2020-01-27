@@ -4,23 +4,23 @@
  */
 package io.enmasse.address.model;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
+
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.enmasse.model.validation.AddressSpaceConnectorName;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,

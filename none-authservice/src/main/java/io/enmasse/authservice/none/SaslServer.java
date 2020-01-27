@@ -4,18 +4,19 @@
  */
 package io.enmasse.authservice.none;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonServer;
-import io.vertx.proton.ProtonServerOptions;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.qpid.proton.amqp.Symbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonServer;
+import io.vertx.proton.ProtonServerOptions;
 
 public class SaslServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(SaslServer.class);
@@ -27,7 +28,7 @@ public class SaslServer extends AbstractVerticle {
     }
 
     @Override
-    public void start(Future<Void> startPromise) {
+    public void start(Promise<Void> startPromise) {
 
         ProtonServer server = ProtonServer.create(vertx, options);
         server.connectHandler(SaslServer::connectHandler);

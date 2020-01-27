@@ -4,19 +4,15 @@
  */
 package io.enmasse.authservice.none;
 
+import java.io.File;
+import java.util.Map;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.proton.ProtonServerOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.util.Map;
 
 public class NoneAuthService {
-    private static final Logger log = LoggerFactory.getLogger(NoneAuthService.class);
-
     public static void main(String[] args) {
         Map<String, String> env = System.getenv();
         String certDir = env.getOrDefault("CERT_DIR", "/opt/none-authservice/cert");

@@ -4,6 +4,7 @@
  */
 package io.enmasse.user.keycloak;
 
+@SuppressWarnings("serial")
 public class KeycloakUnavailableException extends RuntimeException {
     public KeycloakUnavailableException(String message) {
         super(message);
