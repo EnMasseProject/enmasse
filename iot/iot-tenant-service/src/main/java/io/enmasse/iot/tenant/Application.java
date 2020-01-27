@@ -18,6 +18,7 @@ import org.springframework.context.annotation.ComponentScan;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Verticle;
 
 @ComponentScan("io.enmasse.iot.tenant")
@@ -55,9 +56,9 @@ public class Application extends AbstractBaseApplication {
 
             for (final Verticle verticle : this.verticles) {
                 log.info("Deploying: {}", verticle);
-                final Future<String> result = Future.future();
+                final Promise<String> result = Promise.promise();
                 getVertx().deployVerticle(verticle, result);
-                futures.add(result);
+                futures.add(result.future());
             }
 
             return CompositeFuture.all(futures);

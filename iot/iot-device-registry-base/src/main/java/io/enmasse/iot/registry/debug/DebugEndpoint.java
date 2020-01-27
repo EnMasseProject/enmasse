@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 import io.enmasse.iot.utils.ConfigBase;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -49,7 +49,8 @@ public class DebugEndpoint extends AbstractVerticle {
         this.port = port;
     }
 
-    public void start(final Future<Void> future) {
+    @Override
+    public void start(final Promise<Void> future) {
 
         var router = Router
                 .router(this.vertx);

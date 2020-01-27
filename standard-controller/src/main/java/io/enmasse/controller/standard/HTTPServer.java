@@ -4,28 +4,27 @@
  */
 package io.enmasse.controller.standard;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import io.enmasse.metrics.api.Metric;
-import io.enmasse.metrics.api.Metrics;
-import io.enmasse.metrics.api.MetricsFormatter;
-import io.enmasse.metrics.api.PrometheusMetricsFormatter;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+
+import io.enmasse.metrics.api.Metrics;
+import io.enmasse.metrics.api.MetricsFormatter;
+import io.enmasse.metrics.api.PrometheusMetricsFormatter;
 
 public class HTTPServer {
     private final HttpServer server;
 
     public HTTPServer(int port, Metrics metrics) throws IOException {
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
-        server.createContext("/healthz", new HealthHandler());
-        server.createContext("/metrics", new MetricsHandler(metrics));
-        server.setExecutor(null); // creates a default executor
+        this.server.createContext("/healthz", new HealthHandler());
+        this.server.createContext("/metrics", new MetricsHandler(metrics));
+        this.server.setExecutor(null); // creates a default executor
     }
 
     public void start() {

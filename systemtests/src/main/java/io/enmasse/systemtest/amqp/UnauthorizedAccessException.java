@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.amqp;
 
+@SuppressWarnings("serial")
 public class UnauthorizedAccessException extends RuntimeException {
     public UnauthorizedAccessException(String description) {
         super(description);

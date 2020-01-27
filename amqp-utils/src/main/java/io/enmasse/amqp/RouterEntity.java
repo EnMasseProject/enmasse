@@ -4,9 +4,6 @@
  */
 package io.enmasse.amqp;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class RouterEntity {
     private final String name;
     private final String[] attributes;

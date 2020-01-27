@@ -5,6 +5,11 @@
 
 package io.enmasse.iot.tools.cleanup.config;
 
+import java.nio.file.Path;
+import java.util.LinkedList;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.MoreObjects;
 
@@ -13,14 +18,9 @@ import io.enmasse.iot.utils.MoreFutures;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
-import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-
-import java.nio.file.Path;
-import java.util.LinkedList;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CleanerConfig {
@@ -113,6 +113,7 @@ public class CleanerConfig {
         return this;
     }
 
+    @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("tenantId", this.tenantId)
@@ -155,12 +156,13 @@ public class CleanerConfig {
 
             // set up futures
 
-            final Future<JsonObject> configured = Future.future();
+            final Promise<JsonObject> configured = Promise.promise();
             retriever.getConfig(configured);
 
             // fetch config
 
             var result = configured
+                    .future()
                     .map(json -> json.mapTo(CleanerConfig.class))
                     .map(CleanerConfig::verify);
 

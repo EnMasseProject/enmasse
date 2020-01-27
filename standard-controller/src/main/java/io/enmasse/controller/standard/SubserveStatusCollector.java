@@ -4,6 +4,20 @@
  */
 package io.enmasse.controller.standard;
 
+import java.io.File;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.amqp.ProtonRequestClient;
@@ -15,19 +29,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
-import org.apache.qpid.proton.Proton;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.message.Message;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 public class SubserveStatusCollector {
     private static final Logger log = LoggerFactory.getLogger(RouterStatusCollector.class);
@@ -79,6 +80,7 @@ public class SubserveStatusCollector {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Set<String> collectRegisteredTopics(SyncRequestClient client) throws Exception {
         Message message = Proton.message();
         message.setSubject("list_topics");

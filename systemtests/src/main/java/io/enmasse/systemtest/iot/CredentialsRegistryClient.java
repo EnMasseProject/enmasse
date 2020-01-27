@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
 
-import io.enmasse.systemtest.platform.Kubernetes;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.service.management.credentials.PasswordCredential;
 import org.eclipse.hono.service.management.credentials.PasswordSecret;

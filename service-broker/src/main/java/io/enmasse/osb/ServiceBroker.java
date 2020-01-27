@@ -5,11 +5,24 @@
 
 package io.enmasse.osb;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Base64;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
-import io.enmasse.k8s.api.*;
+import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.CachingSchemaProvider;
+import io.enmasse.k8s.api.KubeAddressSpaceApi;
+import io.enmasse.k8s.api.KubeSchemaApi;
+import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
@@ -21,16 +34,8 @@ import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.Base64;
 
 public class ServiceBroker extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ServiceBroker.class.getName());
@@ -53,7 +58,7 @@ public class ServiceBroker extends AbstractVerticle {
     }
 
     @Override
-    public void start(Future<Void> startPromise) throws Exception {
+    public void start(Promise<Void> startPromise) throws Exception {
         SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace(), options.getVersion(), true, false);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());

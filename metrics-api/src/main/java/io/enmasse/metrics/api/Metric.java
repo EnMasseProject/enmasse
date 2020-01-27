@@ -4,8 +4,6 @@
  */
 package io.enmasse.metrics.api;
 
-import java.util.List;
-
 public interface Metric {
     String getName();
     String getDescription();

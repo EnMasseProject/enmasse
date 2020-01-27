@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.platform.cluster;
 
+@SuppressWarnings("serial")
 public class NoClusterException extends IllegalStateException {
     public NoClusterException(String message) {
         super(message);

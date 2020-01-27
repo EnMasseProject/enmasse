@@ -4,19 +4,18 @@
  */
 package io.enmasse.controller.common;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceSpec;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.controller.AppliedConfig;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Interface for Kubernetes operations done by the address space controller

@@ -7,6 +7,7 @@ package io.enmasse.api.common;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Response;
 
+@SuppressWarnings("serial")
 public class UnprocessableEntityException extends ClientErrorException {
 
     public static final int STATUS = 422;
@@ -14,7 +15,7 @@ public class UnprocessableEntityException extends ClientErrorException {
     public UnprocessableEntityException(String message) {
         super(message, STATUS);
     }
-    
+
     public UnprocessableEntityException(String message, Response response) {
         super(message, response);
     }

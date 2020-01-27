@@ -8,6 +8,7 @@ package io.enmasse.iot.service.base;
 import static java.util.Objects.requireNonNull;
 
 import java.util.concurrent.Callable;
+
 import org.eclipse.hono.service.HealthCheckProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.ext.healthchecks.HealthCheckHandler;
 import io.vertx.ext.healthchecks.Status;
 
@@ -28,26 +30,26 @@ public abstract class AbstractKubernetesBasedService extends AbstractVerticle im
     private DefaultKubernetesClient client;
 
     protected <T> Future<T> runBlocking(final Runnable runnable) {
-        final Future<T> future = Future.future();
-        runBlocking(runnable, future);
-        return future;
+        final Promise<T> promise = Promise.promise();
+        runBlocking(runnable, promise);
+        return promise.future();
     }
 
     protected <T> void runBlocking(final Runnable runnable, final Handler<AsyncResult<T>> handler) {
-        this.vertx.executeBlocking(future -> {
+        this.vertx.executeBlocking(promise -> {
             try {
                 runnable.run();
-                future.complete();
+                promise.complete();
             } catch (final Exception e) {
-                future.fail(e);
+                promise.fail(e);
             }
         }, handler);
     }
 
     protected <T> Future<T> callBlocking(final Callable<T> callable) {
-        final Future<T> future = Future.future();
-        callBlocking(callable, future);
-        return future;
+        final Promise<T> promise = Promise.promise();
+        callBlocking(callable, promise);
+        return promise.future();
     }
 
     protected <T> void callBlocking(final Callable<T> callable, final Handler<AsyncResult<T>> handler) {
@@ -111,9 +113,9 @@ public abstract class AbstractKubernetesBasedService extends AbstractVerticle im
     }
 
     protected <T> Future<T> withClient(final KubernetesOperation<T> operation) {
-        final Future<T> future = Future.future();
-        withClient(operation, future);
-        return future;
+        final Promise<T> promise = Promise.promise();
+        withClient(operation, promise);
+        return promise.future();
     }
 
     protected <T> void withClient(final KubernetesOperation<T> operation, final Handler<AsyncResult<T>> resultHandler) {

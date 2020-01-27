@@ -6,20 +6,30 @@
 
 package io.enmasse.amqp;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.proton.*;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.qpid.proton.amqp.messaging.Source;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Context;
+import io.vertx.core.Promise;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonHelper;
+import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonSender;
+import io.vertx.proton.ProtonServer;
+import io.vertx.proton.ProtonSession;
 
 public class PubSubBroker extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(PubSubBroker.class.getName());
@@ -171,7 +181,7 @@ public class PubSubBroker extends AbstractVerticle {
     }
 
     @Override
-    public void start(Future<Void> startPromise) {
+    public void start(Promise<Void> startPromise) {
         server = ProtonServer.create(vertx);
         server.connectHandler(this::connectHandler);
         server.listen(0, result -> {

@@ -4,18 +4,17 @@
  */
 package io.enmasse.systemtest.apiclients;
 
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.ext.web.codec.BodyCodec;
-
 import java.net.HttpURLConnection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import io.enmasse.systemtest.Endpoint;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.ext.web.codec.BodyCodec;
 
 public class OpenshiftCertValidatorApiClient extends ApiClient {
 

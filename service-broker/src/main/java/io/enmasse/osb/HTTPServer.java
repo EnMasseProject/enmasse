@@ -5,6 +5,13 @@
 
 package io.enmasse.osb;
 
+import java.io.File;
+
+import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
+import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.enmasse.api.auth.AllowAllAuthInterceptor;
 import io.enmasse.api.auth.ApiHeaderConfig;
 import io.enmasse.api.auth.AuthApi;
@@ -19,16 +26,10 @@ import io.enmasse.osb.api.lastoperation.OSBLastOperationService;
 import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.osb.api.provision.OSBProvisioningService;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
-import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
-import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 public class HTTPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
@@ -57,7 +58,7 @@ public class HTTPServer extends AbstractVerticle {
     }
 
     @Override
-    public void start(Future<Void> startPromise) {
+    public void start(Promise<Void> startPromise) {
         VertxResteasyDeployment deployment = new VertxResteasyDeployment();
         deployment.start();
 
@@ -100,7 +101,7 @@ public class HTTPServer extends AbstractVerticle {
         }
     }
 
-    private HttpServer createServer(VertxRequestHandler requestHandler, Future<Void> startPromise) {
+    private HttpServer createServer(VertxRequestHandler requestHandler, Promise<Void> startPromise) {
         if (certDir != null && new File(certDir).exists()) {
             HttpServerOptions options = new HttpServerOptions();
             File keyFile = new File(certDir, "tls.key");
