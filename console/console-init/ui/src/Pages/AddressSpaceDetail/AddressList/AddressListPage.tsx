@@ -129,12 +129,18 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     ),
     senders: getFilteredValue(address.Metrics, "enmasse_senders"),
     receivers: getFilteredValue(address.Metrics, "enmasse_receivers"),
-    partitions: address.Status.PlanStatus
-      ? address.Status.PlanStatus.Partitions
-      : null,
-    isReady: address.Status.IsReady,
-    status: address.Status.Phase,
-    errorMessages: address.Status.Messages,
+    partitions:
+      address.Status &&
+      address.Status.PlanStatus &&
+      address.Status.PlanStatus !== null
+        ? address.Status.PlanStatus.Partitions
+        : null,
+    isReady:
+      address.Status && address.Status !== null && address.Status.IsReady,
+    status:
+      address.Status && address.Status !== null ? address.Status.Phase : "",
+    errorMessages:
+      address.Status && address.Status !== null ? address.Status.Messages : [],
     selected:
       selectedAddresses.filter(({ name, namespace }) =>
         compareTwoAddress(
