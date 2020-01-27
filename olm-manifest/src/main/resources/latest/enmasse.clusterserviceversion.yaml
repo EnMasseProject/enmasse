@@ -11,7 +11,7 @@ metadata:
     categories: "Streaming & Messaging"
     certified: "false"
     description: ${olm.csv.name.long} provides messaging as a managed service on ${olm.csv.platform}
-    containerImage: ${env.CONTROLLER_MANAGER_IMAGE}
+    containerImage: ${CONTROLLER_MANAGER_IMAGE}
     createdAt: 2019-02-19T00:00:00Z
     capabilities: Seamless Upgrades
     repository: ${olm.csv.repository}
@@ -442,59 +442,59 @@ spec:
 
   relatedImages:
     - name: address-space-controller
-      image: ${env.ADDRESS_SPACE_CONTROLLER_IMAGE}
+      image: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
     - name: standard-controller
-      image: ${env.STANDARD_CONTROLLER_IMAGE}
+      image: ${STANDARD_CONTROLLER_IMAGE}
     - name: router
-      image: ${env.ROUTER_IMAGE}
+      image: ${ROUTER_IMAGE}
     - name: broker
-      image: ${env.BROKER_IMAGE}
+      image: ${BROKER_IMAGE}
     - name: broker-plugin
-      image: ${env.BROKER_PLUGIN_IMAGE}
+      image: ${BROKER_PLUGIN_IMAGE}
     - name: topic-forwarder
-      image: ${env.TOPIC_FORWARDER_IMAGE}
+      image: ${TOPIC_FORWARDER_IMAGE}
     - name: agent
-      image: ${env.AGENT_IMAGE}
+      image: ${AGENT_IMAGE}
     - name: none-authservice
-      image: ${env.NONE_AUTHSERVICE_IMAGE}
+      image: ${NONE_AUTHSERVICE_IMAGE}
     - name: keycloak
-      image: ${env.KEYCLOAK_IMAGE}
+      image: ${KEYCLOAK_IMAGE}
     - name: keycloak-plugin
-      image: ${env.KEYCLOAK_PLUGIN_IMAGE}
+      image: ${KEYCLOAK_PLUGIN_IMAGE}
     - name: mqtt-gateway
-      image: ${env.MQTT_GATEWAY_IMAGE}
+      image: ${MQTT_GATEWAY_IMAGE}
     - name: mqtt-lwt
-      image: ${env.MQTT_LWT_IMAGE}
+      image: ${MQTT_LWT_IMAGE}
     - name: console-init
-      image: ${env.CONSOLE_INIT_IMAGE}
+      image: ${CONSOLE_INIT_IMAGE}
     - name: console-proxy-openshift
-      image: ${env.CONSOLE_PROXY_OPENSHIFT_IMAGE}
+      image: ${CONSOLE_PROXY_OPENSHIFT_IMAGE}
     - name: console-proxy-kubernetes
-      image: ${env.CONSOLE_PROXY_KUBERNETES_IMAGE}
+      image: ${CONSOLE_PROXY_KUBERNETES_IMAGE}
     - name: console-httpd
-      image: ${env.CONSOLE_HTTPD_IMAGE}
+      image: ${CONSOLE_HTTPD_IMAGE}
     - name: controller-manager
-      image: ${env.CONTROLLER_MANAGER_IMAGE}
+      image: ${CONTROLLER_MANAGER_IMAGE}
     - name: iot-proxy-configurator
-      image: ${env.IOT_PROXY_CONFIGURATOR_IMAGE}
+      image: ${IOT_PROXY_CONFIGURATOR_IMAGE}
     - name: iot-auth-service
-      image: ${env.IOT_AUTH_SERVICE_IMAGE}
+      image: ${IOT_AUTH_SERVICE_IMAGE}
     - name: iot-device-registry-file
-      image: ${env.IOT_DEVICE_REGISTRY_FILE_IMAGE}
+      image: ${IOT_DEVICE_REGISTRY_FILE_IMAGE}
     - name: iot-device-registry-infinispan
-      image: ${env.IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
+      image: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
     - name: iot-http-adapter
-      image: ${env.IOT_HTTP_ADAPTER_IMAGE}
+      image: ${IOT_HTTP_ADAPTER_IMAGE}
     - name: iot-mqtt-adapter
-      image: ${env.IOT_MQTT_ADAPTER_IMAGE}
+      image: ${IOT_MQTT_ADAPTER_IMAGE}
     - name: iot-lorawan-adapter
-      image: ${env.IOT_LORAWAN_ADAPTER_IMAGE}
+      image: ${IOT_LORAWAN_ADAPTER_IMAGE}
     - name: iot-sigfox-adapter
-      image: ${env.IOT_SIGFOX_ADAPTER_IMAGE}
+      image: ${IOT_SIGFOX_ADAPTER_IMAGE}
     - name: iot-tenant-service
-      image: ${env.IOT_TENANT_SERVICE_IMAGE}
+      image: ${IOT_TENANT_SERVICE_IMAGE}
     - name: iot-tenant-cleaner
-      image: ${env.IOT_TENANT_CLEANER_IMAGE}
+      image: ${IOT_TENANT_CLEANER_IMAGE}
   install:
     strategy: deployment
     spec:
@@ -662,7 +662,7 @@ spec:
               serviceAccountName: enmasse-operator
               containers:
               - name: controller
-                image: ${env.CONTROLLER_MANAGER_IMAGE}
+                image: ${CONTROLLER_MANAGER_IMAGE}
                 imagePullPolicy: ${env.IMAGE_PULL_POLICY}
                 env:
                 - name: POD_NAME
@@ -694,63 +694,61 @@ spec:
                 - name: CONTROLLER_ENABLE_MESSAGING_USER
                   value: "true"
                 - name: ADDRESS_SPACE_CONTROLLER_IMAGE
-                  value: ${env.ADDRESS_SPACE_CONTROLLER_IMAGE}
+                  value: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
                 - name: CONTROLLER_MANAGER_IMAGE
-                  value: ${env.CONTROLLER_MANAGER_IMAGE}
+                  value: ${CONTROLLER_MANAGER_IMAGE}
                 - name: IOT_AUTH_SERVICE_IMAGE
-                  value: ${env.IOT_AUTH_SERVICE_IMAGE}
+                  value: ${IOT_AUTH_SERVICE_IMAGE}
                 - name: IOT_DEVICE_REGISTRY_FILE_IMAGE
-                  value: ${env.IOT_DEVICE_REGISTRY_FILE_IMAGE}
+                  value: ${IOT_DEVICE_REGISTRY_FILE_IMAGE}
                 - name: IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE
-                  value: ${env.IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
-                - name: IOT_GC_IMAGE
-                  value: ${env.IOT_GC_IMAGE}
+                  value: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
                 - name: IOT_HTTP_ADAPTER_IMAGE
-                  value: ${env.IOT_HTTP_ADAPTER_IMAGE}
+                  value: ${IOT_HTTP_ADAPTER_IMAGE}
                 - name: IOT_MQTT_ADAPTER_IMAGE
-                  value: ${env.IOT_MQTT_ADAPTER_IMAGE}
+                  value: ${IOT_MQTT_ADAPTER_IMAGE}
                 - name: IOT_LORAWAN_ADAPTER_IMAGE
-                  value: ${env.IOT_LORAWAN_ADAPTER_IMAGE}
+                  value: ${IOT_LORAWAN_ADAPTER_IMAGE}
                 - name: IOT_SIGFOX_ADAPTER_IMAGE
-                  value: ${env.IOT_SIGFOX_ADAPTER_IMAGE}
+                  value: ${IOT_SIGFOX_ADAPTER_IMAGE}
                 - name: IOT_TENANT_CLEANER_IMAGE
                   value: ${IOT_TENANT_CLEANER_IMAGE}
                 - name: IOT_TENANT_SERVICE_IMAGE
-                  value: ${env.IOT_TENANT_SERVICE_IMAGE}
+                  value: ${IOT_TENANT_SERVICE_IMAGE}
                 - name: IOT_PROXY_CONFIGURATOR_IMAGE
-                  value: ${env.IOT_PROXY_CONFIGURATOR_IMAGE}
+                  value: ${IOT_PROXY_CONFIGURATOR_IMAGE}
                 - name: ROUTER_IMAGE
-                  value: ${env.ROUTER_IMAGE}
+                  value: ${ROUTER_IMAGE}
                 - name: STANDARD_CONTROLLER_IMAGE
-                  value: ${env.STANDARD_CONTROLLER_IMAGE}
+                  value: ${STANDARD_CONTROLLER_IMAGE}
                 - name: AGENT_IMAGE
-                  value: ${env.AGENT_IMAGE}
+                  value: ${AGENT_IMAGE}
                 - name: BROKER_IMAGE
-                  value: ${env.BROKER_IMAGE}
+                  value: ${BROKER_IMAGE}
                 - name: BROKER_PLUGIN_IMAGE
-                  value: ${env.BROKER_PLUGIN_IMAGE}
+                  value: ${BROKER_PLUGIN_IMAGE}
                 - name: TOPIC_FORWARDER_IMAGE
-                  value: ${env.TOPIC_FORWARDER_IMAGE}
+                  value: ${TOPIC_FORWARDER_IMAGE}
                 - name: MQTT_GATEWAY_IMAGE
-                  value: ${env.MQTT_GATEWAY_IMAGE}
+                  value: ${MQTT_GATEWAY_IMAGE}
                 - name: MQTT_LWT_IMAGE
-                  value: ${env.MQTT_LWT_IMAGE}
+                  value: ${MQTT_LWT_IMAGE}
                 - name: NONE_AUTHSERVICE_IMAGE
-                  value: ${env.NONE_AUTHSERVICE_IMAGE}
+                  value: ${NONE_AUTHSERVICE_IMAGE}
                 - name: KEYCLOAK_IMAGE
-                  value: ${env.KEYCLOAK_IMAGE}
+                  value: ${KEYCLOAK_IMAGE}
                 - name: KEYCLOAK_PLUGIN_IMAGE
-                  value: ${env.KEYCLOAK_PLUGIN_IMAGE}
+                  value: ${KEYCLOAK_PLUGIN_IMAGE}
                 - name: CONTROLLER_ENABLE_CONSOLE_SERVICE
                   value: "true"
                 - name: CONSOLE_INIT_IMAGE
-                  value: "${env.CONSOLE_INIT_IMAGE}"
+                  value: "${CONSOLE_INIT_IMAGE}"
                 - name: CONSOLE_PROXY_OPENSHIFT_IMAGE
-                  value: "${env.CONSOLE_PROXY_OPENSHIFT_IMAGE}"
+                  value: "${CONSOLE_PROXY_OPENSHIFT_IMAGE}"
                 - name: CONSOLE_PROXY_KUBERNETES_IMAGE
-                  value: "${env.CONSOLE_PROXY_KUBERNETES_IMAGE}"
+                  value: "${CONSOLE_PROXY_KUBERNETES_IMAGE}"
                 - name: CONSOLE_HTTPD_IMAGE
-                  value: "${env.CONSOLE_HTTPD_IMAGE}"
+                  value: "${CONSOLE_HTTPD_IMAGE}"
                 - name: "FS_GROUP_FALLBACK_MAP"
                   value: "{\"standard-authservice\": 1000}"
   customresourcedefinitions:
