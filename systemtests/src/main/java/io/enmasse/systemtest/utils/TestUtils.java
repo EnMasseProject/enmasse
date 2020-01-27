@@ -50,7 +50,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
@@ -58,7 +57,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class TestUtils {
 
@@ -68,22 +66,6 @@ public class TestUtils {
 
     private static final Random R = new Random();
     private static Logger log = CustomLogger.getLogger();
-
-    /**
-     * scale up/down specific pod (type: Deployment) in address space
-     */
-    public static void setReplicas(Kubernetes kubernetes, String infraUuid, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        kubernetes.setDeploymentReplicas(kubernetes.getInfraNamespace(), deployment, numReplicas);
-        Map<String, String> labels = new HashMap<>();
-        labels.put("name", deployment);
-        if (infraUuid != null) {
-            labels.put("infraUuid", infraUuid);
-        }
-        waitForNReplicas(
-                numReplicas,
-                labels,
-                budget);
-    }
 
     public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
         waitForNReplicas(expectedReplicas, labelSelector, Collections.emptyMap(), budget);
@@ -200,27 +182,6 @@ public class TestUtils {
     /**
      * Wait for expected count of pods within AddressSpace
      *
-     * @param client       client for manipulation with kubernetes cluster
-     * @param addressSpace
-     * @param numExpected  count of expected pods
-     * @param budget       timeout budget - this method throws Exception when timeout is reached
-     * @throws InterruptedException
-     */
-    public static void waitForExpectedReadyPods(Kubernetes client, AddressSpace addressSpace, int numExpected, TimeoutBudget budget) throws Exception {
-        List<Pod> pods = listRunningPods(client, addressSpace);
-        while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
-            Thread.sleep(2000);
-            pods = listRunningPods(client, addressSpace);
-            log.info("Got {} pods, expected: {}", pods.size(), numExpected);
-        }
-        if (pods.size() != numExpected) {
-            throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
-        }
-    }
-
-    /**
-     * Wait for expected count of pods within AddressSpace
-     *
      * @param client      client for manipulation with kubernetes cluster
      * @param numExpected count of expected pods
      * @param budget      timeout budget - this method throws Exception when timeout is reached
@@ -280,30 +241,6 @@ public class TestUtils {
     }
 
     /**
-     * Get list of all running pods from specific AddressSpace
-     *
-     * @param kubernetes client for manipulation with kubernetes cluster
-     * @return
-     */
-    public static List<Pod> listRunningPods(Kubernetes kubernetes) {
-        return kubernetes.listPods().stream()
-                .filter(pod -> pod.getStatus().getPhase().equals("Running"))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Get list of all ready pods
-     *
-     * @param kubernetes client for manipulation with kubernetes cluster
-     * @return
-     */
-    public static List<Pod> listReadyPods(Kubernetes kubernetes) {
-        return kubernetes.listPods().stream()
-                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady))
-                .collect(Collectors.toList());
-    }
-
-    /**
      * Get list of all ready pods
      *
      * @param kubernetes client for manipulation with kubernetes cluster
@@ -313,21 +250,6 @@ public class TestUtils {
         return kubernetes.listPods(namespace).stream()
                 .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady))
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Get list of all non-ready pods
-     *
-     * @param kubernetes client for manipulation with kubernetes cluster
-     * @return
-     */
-    public static Stream<Pod> streamNonReadyPods(Kubernetes kubernetes, String namespace) {
-        return kubernetes.listPods(namespace).stream()
-                .filter(pod -> !isPodReady(pod, false));
-    }
-
-    public static List<Pod> listBrokerPods(Kubernetes kubernetes) {
-        return kubernetes.listPods(Collections.singletonMap("role", "broker"));
     }
 
     public static List<Pod> listBrokerPods(Kubernetes kubernetes, AddressSpace addressSpace) {
@@ -652,17 +574,6 @@ public class TestUtils {
 
     public static String getGlobalConsoleRoute() throws Exception {
         return Kubernetes.getInstance().getConsoleServiceClient().withName("console").get().getStatus().getUrl();
-    }
-
-    public static CompletableFuture<Void> runAsync(ThrowingCallable callable) {
-        return CompletableFuture.runAsync(() -> {
-            try {
-                callable.call();
-            } catch (Exception e) {
-                log.error("Error running async test", e);
-                throw new RuntimeException(e);
-            }
-        }, e -> new Thread(e).start());
     }
 
     /**
