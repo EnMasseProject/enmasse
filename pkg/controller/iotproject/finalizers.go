@@ -123,11 +123,22 @@ func cleanupResource(ctx context.Context, c client.Client, project *iotv1alpha1.
 	if err != nil {
 
 		if errors.IsNotFound(err) {
+			// if the object is not found, we got rid of it already
 			return reconcile.Result{}, nil
 		} else {
 			return reconcile.Result{}, err
 		}
 
+	}
+
+	deleted, err := install.IsDeleted(obj)
+	if err != nil {
+		// failed to check if the object was deleted: re-try
+		return reconcile.Result{}, err
+	}
+	if deleted {
+		// object was already deleted: we are done here
+		return reconcile.Result{}, nil
 	}
 
 	result, err := install.RemoveAsOwner(project, obj, false)
@@ -138,12 +149,19 @@ func cleanupResource(ctx context.Context, c client.Client, project *iotv1alpha1.
 
 	switch result {
 	case install.Found:
-		err = c.Update(ctx, obj)
+		// resource was found, but some other owner still exists
+		return reconcile.Result{}, c.Update(ctx, obj)
 	case install.FoundAndEmpty:
-		err = c.Delete(ctx, obj)
+		// The resource was found, and ownership is empty now.
+		// We re-queue, to verify later on that the resource was in fact deleted.
+		// Deleting an address space might take a bit longer.
+		return reconcile.Result{RequeueAfter: 30 * time.Second}, c.Delete(ctx, obj)
+	default:
+		// currently this could only be "Not Found", which couldn't be
+		// the case here. But go cannot check switch statements for completeness,
+		// so we resort to "default" here.
+		return reconcile.Result{}, nil
 	}
-
-	return reconcile.Result{}, err
 
 }
 
