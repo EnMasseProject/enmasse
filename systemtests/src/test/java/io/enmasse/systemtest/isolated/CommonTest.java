@@ -177,7 +177,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
 
         log.info("------------------------------------------------------------");
-        log.info("------------------- Start with restating -------------------");
+        log.info("------------------- Start with restarting -------------------");
         log.info("------------------------------------------------------------");
 
         List<Pod> pods = kubernetes.listPods();
@@ -299,7 +299,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         }
 
         log.info("------------------------------------------------------------");
-        log.info("------------------- Start with restating -------------------");
+        log.info("------------------- Start with restarting -------------------");
         log.info("------------------------------------------------------------");
 
         List<Pod> pods = kubernetes.listPods();
@@ -401,7 +401,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
 
         log.info("------------------------------------------------------------");
-        log.info("------------------- Start with restating -------------------");
+        log.info("------------------- Start with restarting -------------------");
         log.info("------------------------------------------------------------");
 
         List<Pod> pods = kubernetes.listPods();
@@ -482,7 +482,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         }
         stopSend.complete(new Object());
         try {
-            Thread.sleep(sleepMillis);
+            Thread.sleep(10_000);
         } catch (InterruptedException e) {
             log.error("Error waiting between stop sender and receiver", e);
         }
