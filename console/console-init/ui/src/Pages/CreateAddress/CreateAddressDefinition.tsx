@@ -132,8 +132,8 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
           const topics = topics_addresses.data.addresses.Addresses.map(
             address => {
               return {
-                value: address.ObjectMeta.Name,
-                label: address.Spec.Address
+                value: address.Spec.Address,
+                label: address.ObjectMeta.Name
               };
             }
           );
