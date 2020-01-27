@@ -7,3 +7,4 @@ for i in `find . -name "TEST-*.xml"`
 do
     cp ${i} artifacts/test-reports
 done
+zip -r test-logs.zip artifacts

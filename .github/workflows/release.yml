@@ -42,8 +42,8 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v1.0.0
         with:
-          name: unit-logs
-          path: artifacts
+          name: unit-test-logs
+          path: test-logs.zip
 
 
   smoke:
@@ -105,8 +105,8 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v1.0.0
         with:
-          name: smoke-logs
-          path: artifacts
+          name: smoke-test-logs
+          path: test-logs.zip
 
       - name: Create Release
         if: job.status == 'success' && contains(github.ref, 'refs/tags/')
