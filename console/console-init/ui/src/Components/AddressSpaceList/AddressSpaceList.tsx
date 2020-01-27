@@ -32,6 +32,7 @@ export interface IAddressSpace {
   phase:string;
   status?: "creating" | "deleting" | "running";
   selected?: boolean;
+  messages:Array<string>
 }
 
 interface IAddressListProps {
@@ -105,7 +106,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
             </>
           )
         },
-        { title: <AddressSpaceStatus phase ={row.phase}/> },
+        { title: <AddressSpaceStatus phase ={row.phase} messages={row.messages}/> },
         {
           title: (
             <>
