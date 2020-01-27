@@ -4,13 +4,6 @@
  */
 package io.enmasse.systemtest.platform;
 
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.fabric8.kubernetes.api.model.Pod;
-import org.slf4j.Logger;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,6 +18,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.fabric8.kubernetes.api.model.Pod;
+
 /**
  * Class represent abstract client which keeps common features of client
  */
@@ -32,8 +33,8 @@ public class KubeCMDClient {
     protected static final int DEFAULT_SYNC_TIMEOUT = 10000;
     protected static final int ONE_MINUTE_TIMEOUT = 60000;
     protected static final int FIVE_MINUTES_TIMEOUT = 300000;
-    protected static String CMD = getCMD();
-    private static Logger log = CustomLogger.getLogger();
+    protected static final String CMD = getCMD();
+    private static final Logger log = CustomLogger.getLogger();
 
     public static String getCMD() {
         return Kubernetes.getInstance().getCluster().getKubeCmd();
