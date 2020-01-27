@@ -1,0 +1,21 @@
+updateCredentials: |
+   UPDATE %s
+   SET
+      credentials=:data::jsonb,
+      version=:next_version
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+
+updateCredentialsVersioned: |
+   UPDATE %s
+   SET
+      credentials=:data::jsonb,
+      version=:next_version
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+   AND
+      version=:expected_version

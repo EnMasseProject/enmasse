@@ -154,13 +154,17 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 		return err
 	}
 
+	// reset init containers
+
+	deployment.Spec.Template.Spec.InitContainers = nil
+
 	// tracing
 
 	SetupTracing(config, deployment, tracingContainer)
 
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "config", nameLoraWanAdapter+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameLoraWanAdapter+"-config")
 
 	// inter service secrets
 

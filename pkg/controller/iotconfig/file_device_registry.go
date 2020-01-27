@@ -166,14 +166,18 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 		return err
 	}
 
+	// reset init containers
+
+	deployment.Spec.Template.Spec.InitContainers = nil
+
 	// tracing
 
 	SetupTracing(config, deployment, tracingContainer)
 
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "config", nameDeviceRegistry+"-config")
-	install.ApplyPersistentVolume(deployment, "registry", nameDeviceRegistry+"-pvc")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameDeviceRegistry+"-config")
+	install.ApplyPersistentVolume(&deployment.Spec.Template.Spec, "registry", nameDeviceRegistry+"-pvc")
 
 	// inter service secrets
 

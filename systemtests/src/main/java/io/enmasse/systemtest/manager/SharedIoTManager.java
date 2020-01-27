@@ -4,6 +4,17 @@
  */
 package io.enmasse.systemtest.manager;
 
+import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
+import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
+import static io.enmasse.systemtest.utils.IoTUtils.createIoTProject;
+
+import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.util.UUID;
+
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
@@ -19,17 +30,6 @@ import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
-import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.util.UUID;
-
-import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
-import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
-import static io.enmasse.systemtest.utils.IoTUtils.createIoTProject;
 
 
 public class SharedIoTManager extends ResourceManager {
@@ -54,7 +54,9 @@ public class SharedIoTManager extends ResourceManager {
 
     @Override
     public AddressSpace getSharedAddressSpace() {
-        if (sharedIoTProject == null) return null;
+        if (sharedIoTProject == null) {
+            return null;
+        }
         String addSpaceName = sharedIoTProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
         return kubernetes.getAddressSpaceClient(sharedIoTProject.getMetadata().getNamespace()).withName(addSpaceName).get();
     }
@@ -82,6 +84,8 @@ public class SharedIoTManager extends ResourceManager {
                 SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
             }
             SystemtestsKubernetesApps.deleteInfinispanServer();
+            SystemtestsKubernetesApps.deletePostgresqlServer();
+            SystemtestsKubernetesApps.deleteH2Server();
         }
     }
 
@@ -131,7 +135,7 @@ public class SharedIoTManager extends ResourceManager {
                 .endMetadata()
                 .withNewSpec()
                 .withNewServices()
-                .withDeviceRegistry(DefaultDeviceRegistry.newInfinispanBased())
+                .withDeviceRegistry(DefaultDeviceRegistry.newDefaultInstance())
                 .endServices()
                 .withNewAdapters()
                 .withNewMqtt()

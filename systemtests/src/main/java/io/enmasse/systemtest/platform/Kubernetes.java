@@ -1,10 +1,15 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest.platform;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -12,10 +17,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
 
 import io.enmasse.address.model.Address;
@@ -73,6 +81,7 @@ import io.enmasse.user.model.v1.UserList;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
@@ -91,11 +100,17 @@ import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.VersionInfo;
+import io.fabric8.kubernetes.client.dsl.ExecListener;
+import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
+import okhttp3.Response;
 
 public abstract class Kubernetes {
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
     private static Kubernetes instance;
     protected final Environment environment;
     protected final KubernetesClient client;
@@ -882,4 +897,103 @@ public abstract class Kubernetes {
     public abstract void deleteExternalEndpoint(String namespace, String name);
 
     public abstract String getOlmNamespace();
+
+
+    @FunctionalInterface
+    public static interface AfterInput {
+        public void afterInput(final OutputStream remoteInput) throws IOException;
+    }
+
+    /**
+     * Run a remote command, with an input stream as remote side input.
+     * <p>
+     * <strong>Note:</strong> The remote command must exit by itself in the specified timeout. If you
+     * are attached to some kind of "shell", you can use the {@code afterInput} handler so send some
+     * "exit" command after the input stream has been transmitted.
+     *
+     * @param podAccess Access to the pod.
+     * @param input The input to stream to the remote side "stdin".
+     * @param afterInput Called after all the input has been streamed. May be used for an additional
+     *        command. There is no need to flush or close the stream, this will be done automatically.
+     * @param timeout The time to wait for the remote side to exit.
+     * @param command The command to execute in the pod.
+     * @throws IOException If any of the calls throws an {@link IOException}.
+     * @throws TimeoutException When waiting for the command times out.
+     * @throws InterruptedException If waiting for the command fails.
+     * @return The output from the {@code stdout} stream of the application.
+     */
+    public static String executeWithInput(final PodResource<Pod, DoneablePod> podAccess, final InputStream input, final AfterInput afterInput, final Duration timeout,
+            final String... command) throws IOException, InterruptedException, TimeoutException {
+
+        final ByteArrayOutputStream errorChannel = new ByteArrayOutputStream();
+        final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        final Semaphore execWait = new Semaphore(0);
+        try (
+                final ExecWatch exec = podAccess
+                        .redirectingInput()
+                        .writingOutput(stdout)
+                        .writingError(System.err)
+                        .writingErrorChannel(errorChannel)
+                        .usingListener(new ExecListener() {
+
+                            @Override
+                            public void onOpen(Response response) {
+                                log.info("Channel opened: {}", response);
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t, Response response) {
+                                log.info("Failed to execute: {}", response, t);
+                                execWait.release();
+                            }
+
+                            @Override
+                            public void onClose(int code, String reason) {
+                                log.info("Channel closed - code: {}, reason: '{}'", code, reason);
+                                execWait.release();
+                            }
+                        })
+                        .exec(command);) {
+
+            var in = exec.getInput();
+
+            if (input != null) {
+                // transfer the main content
+                log.info("Send content");
+                input.transferTo(in);
+            } else {
+                log.info("No input to send");
+            }
+
+            if (afterInput != null) {
+                // ensure the provided code does not close the input stream
+                afterInput.afterInput(new CloseShieldOutputStream(in));
+                // flush everything, to ensure it was written
+                in.flush();
+            }
+
+            // wait for remote side to close, or local timeout
+            log.info("Wait for channel to close!");
+            if (!execWait.tryAcquire(timeout.toMillis() + 1, TimeUnit.MILLISECONDS)) {
+                throw new TimeoutException("Failed to wait for command to finish");
+            }
+            log.info("Done!");
+        }
+
+        // eval error channel
+
+        final JsonObject result = new JsonObject(Buffer.buffer(errorChannel.toByteArray()));
+        final String status = result.getString("status");
+        if (status == null) {
+            throw new IllegalStateException("'status' is missing in response");
+        }
+        if (!status.equals("Success")) {
+            throw new IllegalStateException(String.format("Command failed: ", result.getString("message")));
+        }
+
+        final String stdoutString = stdout.toString(StandardCharsets.UTF_8);
+        log.info("Output: {}", stdoutString);
+        return stdoutString;
+    }
+
 }

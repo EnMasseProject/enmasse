@@ -1,15 +1,14 @@
 /*
- * Copyright 2018-2019, EnMasse authors.
+ * Copyright 2018-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.iot.tenant.impl;
 
+import static io.vertx.core.Future.failedFuture;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
-import static java.util.concurrent.CompletableFuture.failedFuture;
 
 import java.net.HttpURLConnection;
-import java.util.concurrent.CompletableFuture;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -25,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.enmasse.iot.model.v1.IoTProject;
 import io.opentracing.Span;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 @Service
@@ -35,7 +35,7 @@ public class TenantServiceImpl extends AbstractKubernetesTenantService {
     private static final TenantResult<JsonObject> RESULT_NOT_FOUND = TenantResult.from(HTTP_NOT_FOUND);
 
     @Override
-    protected CompletableFuture<TenantResult<JsonObject>> processGet(final String tenantName, final Span span) {
+    protected Future<TenantResult<JsonObject>> processGet(final String tenantName, final Span span) {
 
         logger.debug("Get tenant - name: {}", tenantName);
 
@@ -46,14 +46,14 @@ public class TenantServiceImpl extends AbstractKubernetesTenantService {
 
         return getProject(tenantName)
 
-                .thenApply(project -> project
+                .map(project -> project
                         .map(p -> convertToHono(tenantName, p))
                         .orElse(RESULT_NOT_FOUND));
 
     }
 
     @Override
-    protected CompletableFuture<TenantResult<JsonObject>> processGet(final X500Principal subjectDn, final Span span) {
+    protected Future<TenantResult<JsonObject>> processGet(final X500Principal subjectDn, final Span span) {
         return failedFuture(new ServerErrorException(HttpURLConnection.HTTP_NOT_IMPLEMENTED));
     }
 

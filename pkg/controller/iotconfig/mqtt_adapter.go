@@ -156,13 +156,17 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 		return err
 	}
 
+	// reset init containers
+
+	deployment.Spec.Template.Spec.InitContainers = nil
+
 	// tracing
 
 	SetupTracing(config, deployment, tracingContainer)
 
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "config", nameMqttAdapter+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameMqttAdapter+"-config")
 
 	// inter service secrets
 

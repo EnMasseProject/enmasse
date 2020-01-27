@@ -7,6 +7,7 @@ package install
 
 import (
 	"fmt"
+	"sort"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
@@ -118,6 +119,25 @@ func DropContainer(deployment *appsv1.Deployment, name string) {
 	}
 }
 
+// Delete all containers which are not expected
+func DeleteOtherContainers(containers []corev1.Container, expectedNames []string) []corev1.Container {
+
+	sort.Strings(expectedNames)
+
+	result := make([]corev1.Container, 0)
+
+	for _, c := range containers {
+		if !util.ContainsString(expectedNames, c.Name) {
+			continue
+		}
+
+		result = append(result, c)
+	}
+
+	return result
+
+}
+
 func ApplyContainerWithError(containers []corev1.Container, name string, mutator func(*corev1.Container) error) ([]corev1.Container, error) {
 
 	if containers == nil {
@@ -173,8 +193,8 @@ func ApplyJobContainerWithError(job *batchv1.Job, name string, mutator func(*cor
 	return err
 }
 
-func ApplyPersistentVolume(deployment *appsv1.Deployment, name string, claimName string) {
-	ApplyVolume(deployment, name, func(volume *corev1.Volume) {
+func ApplyPersistentVolume(pod *corev1.PodSpec, name string, claimName string) {
+	ApplyVolume(pod, name, func(volume *corev1.Volume) {
 		if volume.PersistentVolumeClaim == nil {
 			volume.PersistentVolumeClaim = &corev1.PersistentVolumeClaimVolumeSource{}
 		}
@@ -182,8 +202,8 @@ func ApplyPersistentVolume(deployment *appsv1.Deployment, name string, claimName
 	})
 }
 
-func ApplyConfigMapVolume(deployment *appsv1.Deployment, name string, configMapName string) {
-	ApplyVolume(deployment, name, func(volume *corev1.Volume) {
+func ApplyConfigMapVolume(pod *corev1.PodSpec, name string, configMapName string) {
+	ApplyVolume(pod, name, func(volume *corev1.Volume) {
 		if volume.ConfigMap == nil {
 			volume.ConfigMap = &corev1.ConfigMapVolumeSource{}
 		}
@@ -191,8 +211,8 @@ func ApplyConfigMapVolume(deployment *appsv1.Deployment, name string, configMapN
 	})
 }
 
-func ApplySecretVolume(deployment *appsv1.Deployment, name string, secretName string) {
-	ApplyVolume(deployment, name, func(volume *corev1.Volume) {
+func ApplySecretVolume(pod *corev1.PodSpec, name string, secretName string) {
+	ApplyVolume(pod, name, func(volume *corev1.Volume) {
 		if volume.Secret == nil {
 			volume.Secret = &corev1.SecretVolumeSource{}
 		}
@@ -200,31 +220,31 @@ func ApplySecretVolume(deployment *appsv1.Deployment, name string, secretName st
 	})
 }
 
-func ApplyEmptyDirVolume(deployment *appsv1.Deployment, name string) {
-	ApplyVolume(deployment, name, func(volume *corev1.Volume) {
+func ApplyEmptyDirVolume(pod *corev1.PodSpec, name string) {
+	ApplyVolume(pod, name, func(volume *corev1.Volume) {
 		if volume.EmptyDir == nil {
 			volume.EmptyDir = &corev1.EmptyDirVolumeSource{}
 		}
 	})
 }
 
-func ApplyVolume(deployment *appsv1.Deployment, name string, mutator func(*corev1.Volume)) {
+func ApplyVolume(pod *corev1.PodSpec, name string, mutator func(*corev1.Volume)) {
 	// call "with error", and eat up the error
-	_ = ApplyVolumeWithError(deployment, name, func(volume *corev1.Volume) error {
+	_ = ApplyVolumeWithError(pod, name, func(volume *corev1.Volume) error {
 		mutator(volume)
 		return nil
 	})
 }
 
-func ApplyVolumeWithError(deployment *appsv1.Deployment, name string, mutator func(*corev1.Volume) error) error {
+func ApplyVolumeWithError(pod *corev1.PodSpec, name string, mutator func(*corev1.Volume) error) error {
 
-	if deployment.Spec.Template.Spec.Volumes == nil {
-		deployment.Spec.Template.Spec.Volumes = make([]corev1.Volume, 0)
+	if pod.Volumes == nil {
+		pod.Volumes = make([]corev1.Volume, 0)
 	}
 
-	for i, c := range deployment.Spec.Template.Spec.Volumes {
+	for i, c := range pod.Volumes {
 		if c.Name == name {
-			return mutator(&deployment.Spec.Template.Spec.Volumes[i])
+			return mutator(&pod.Volumes[i])
 		}
 	}
 
@@ -234,25 +254,25 @@ func ApplyVolumeWithError(deployment *appsv1.Deployment, name string, mutator fu
 
 	err := mutator(v)
 	if err == nil {
-		deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, *v)
+		pod.Volumes = append(pod.Volumes, *v)
 	}
 
 	return err
 }
 
-func DropVolume(deployment *appsv1.Deployment, name string) {
-	if deployment.Spec.Template.Spec.Volumes == nil {
+func DropVolume(pod *corev1.PodSpec, name string) {
+	if pod.Volumes == nil {
 		return
 	}
 
 	// removing an entry from an array in go is tricky ...
 
-	for i := len(deployment.Spec.Template.Spec.Volumes) - 1; i >= 0; i-- {
-		v := deployment.Spec.Template.Spec.Volumes[i]
+	for i := len(pod.Volumes) - 1; i >= 0; i-- {
+		v := pod.Volumes[i]
 		if v.Name == name {
-			deployment.Spec.Template.Spec.Volumes = append(
-				deployment.Spec.Template.Spec.Volumes[:i],
-				deployment.Spec.Template.Spec.Volumes[i+1:]...,
+			pod.Volumes = append(
+				pod.Volumes[:i],
+				pod.Volumes[i+1:]...,
 			)
 		}
 	}
@@ -469,6 +489,33 @@ func ApplyEnvConfigMap(container *corev1.Container, name string, configMapKey st
 				Optional: optional,
 			},
 		}
+	})
+}
+
+// Append a string to the value of an env-var. If the env-var doesn't exist, it will be created with the provided value.
+// A whitespace is added between the existing value and the new value.
+func AppendEnvVarValue(container *corev1.Container, name string, value string) {
+	if container.Env == nil {
+		container.Env = make([]corev1.EnvVar, 0)
+	}
+
+	opts := ""
+
+	for _, env := range container.Env {
+		if env.Name == name {
+			opts = env.Value
+		}
+	}
+
+	if len(opts) > 0 {
+		opts += " "
+	}
+
+	opts += value
+
+	container.Env = append(container.Env, corev1.EnvVar{
+		Name:  name,
+		Value: opts,
 	})
 }
 

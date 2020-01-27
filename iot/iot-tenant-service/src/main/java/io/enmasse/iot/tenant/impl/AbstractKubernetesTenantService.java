@@ -5,9 +5,7 @@
 
 package io.enmasse.iot.tenant.impl;
 
-import static io.enmasse.iot.utils.MoreFutures.completeHandler;
-
-import java.util.concurrent.CompletableFuture;
+import static io.enmasse.iot.utils.MoreFutures.finishHandler;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -19,6 +17,7 @@ import io.enmasse.iot.service.base.AbstractProjectBasedService;
 import io.opentracing.Span;
 import io.opentracing.noop.NoopSpan;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 
@@ -26,8 +25,9 @@ public abstract class AbstractKubernetesTenantService extends AbstractProjectBas
 
     protected TenantServiceConfigProperties configuration;
 
-    protected abstract CompletableFuture<TenantResult<JsonObject>> processGet(String tenantName, Span span);
-    protected abstract CompletableFuture<TenantResult<JsonObject>> processGet(X500Principal subjectDn, Span span);
+    protected abstract Future<TenantResult<JsonObject>> processGet(String tenantName, Span span);
+
+    protected abstract Future<TenantResult<JsonObject>> processGet(X500Principal subjectDn, Span span);
 
     @Autowired
     public void setConfig(final TenantServiceConfigProperties configuration) {
@@ -46,11 +46,11 @@ public abstract class AbstractKubernetesTenantService extends AbstractProjectBas
 
     @Override
     public void get(final String tenantId, final Span span, final Handler<AsyncResult<TenantResult<JsonObject>>> resultHandler) {
-        completeHandler(() -> processGet(tenantId, span), resultHandler);
+        finishHandler(() -> processGet(tenantId, span), resultHandler);
     }
 
     @Override
     public void get(final X500Principal subjectDn, final Span span, final Handler<AsyncResult<TenantResult<JsonObject>>> resultHandler) {
-        completeHandler(() ->processGet(subjectDn, span), resultHandler);
+        finishHandler(() -> processGet(subjectDn, span), resultHandler);
     }
 }

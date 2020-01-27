@@ -1,0 +1,11 @@
+readCredentials: |
+   SELECT
+      device_id,
+      version,
+      credentials
+   FROM
+      %s
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id

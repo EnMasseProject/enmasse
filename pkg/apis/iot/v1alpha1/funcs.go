@@ -170,3 +170,42 @@ func (c *CommonCondition) SetStatusOkOrElse(ok bool, reason string, message stri
 		c.SetStatus(corev1.ConditionTrue, "", "")
 	}
 }
+
+type DeviceRegistryImplementation int
+
+const (
+	DeviceRegistryDefault = iota
+	DeviceRegistryIllegal
+	DeviceRegistryFileBased
+	DeviceRegistryInfinispan
+	DeviceRegistryJdbc
+)
+
+func (config IoTConfig) EvalDeviceRegistryImplementation() DeviceRegistryImplementation {
+
+	var file = config.Spec.ServicesConfig.DeviceRegistry.File
+	if file != nil && file.Disabled {
+		file = nil
+	}
+	var infinispan = config.Spec.ServicesConfig.DeviceRegistry.Infinispan
+	if infinispan != nil && infinispan.Disabled {
+		infinispan = nil
+	}
+	var jdbc = config.Spec.ServicesConfig.DeviceRegistry.JDBC
+	if jdbc != nil && jdbc.Disabled {
+		jdbc = nil
+	}
+
+	if false { // this is just here to align the other lines
+	} else if infinispan == nil && jdbc == nil && file == nil {
+		return DeviceRegistryIllegal
+	} else if infinispan != nil && jdbc == nil && file == nil {
+		return DeviceRegistryInfinispan
+	} else if infinispan == nil && jdbc != nil && file == nil {
+		return DeviceRegistryJdbc
+	} else if infinispan == nil && jdbc == nil && file != nil {
+		return DeviceRegistryFileBased
+	}
+
+	return DeviceRegistryIllegal
+}

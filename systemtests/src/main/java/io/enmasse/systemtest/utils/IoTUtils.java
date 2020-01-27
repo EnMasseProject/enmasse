@@ -38,6 +38,7 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
+import io.enmasse.iot.model.v1.Mode;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
@@ -383,6 +384,12 @@ public class IoTUtils {
         final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
         assertNotNull(deployment);
         assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.type"));
+    }
+
+    public static void assertCorrectRegistryMode (final Mode mode) {
+        final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
+        assertNotNull(deployment);
+        assertEquals(mode.name(), deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.jdbc.mode"));
     }
 
     public static void checkCredentials(String authId, String password, boolean authFail, Endpoint httpAdapterEndpoint, AmqpClient iotAmqpClient, IoTProject ioTProject) throws Exception {

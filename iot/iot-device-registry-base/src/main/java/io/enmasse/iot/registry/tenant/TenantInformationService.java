@@ -5,15 +5,14 @@
 
 package io.enmasse.iot.registry.tenant;
 
-import java.util.concurrent.CompletableFuture;
-
-import io.opentracing.Span;
+import io.opentracing.SpanContext;
+import io.vertx.core.Future;
 
 /**
  * A service which provides tenant information to internal service implementations.
  */
 public interface TenantInformationService {
 
-    public CompletableFuture<TenantInformation> tenantExists(String tenantName, int notFoundStatusCode, Span span);
+    public Future<TenantInformation> tenantExists(String tenantName, int notFoundStatusCode, SpanContext span);
 
 }

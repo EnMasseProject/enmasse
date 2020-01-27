@@ -87,7 +87,7 @@ func applyNoneAuthServiceDeployment(authservice *adminv1beta1.AuthenticationServ
 		return err
 	}
 
-	install.ApplySecretVolume(deployment, "none-authservice-cert", authservice.Spec.None.CertificateSecret.Name)
+	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "none-authservice-cert", authservice.Spec.None.CertificateSecret.Name)
 
 	return nil
 }

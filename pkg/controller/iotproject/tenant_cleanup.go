@@ -6,7 +6,10 @@
 package iotproject
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/enmasseproject/enmasse/pkg/controller/iotconfig"
+	"github.com/enmasseproject/enmasse/pkg/util/ext"
 	"strconv"
 	"time"
 
@@ -59,6 +62,8 @@ func createIoTTenantCleanerJob(ctx finalizer.DeconstructorContext, project *iotv
 		},
 	}
 
+	var extensions []iotv1alpha1.ExtensionImage = nil
+
 	// create a non-caching client to reduce required permissions
 	apiclient := altclient.NewForwarding(ctx.Reader, ctx.Client, ctx.Client)
 
@@ -76,7 +81,7 @@ func createIoTTenantCleanerJob(ctx finalizer.DeconstructorContext, project *iotv
 
 		job.Annotations["iot.enmasse.io/tenantId"] = tenantId
 
-		return install.ApplyJobContainerWithError(job, "cleanup", func(container *corev1.Container) error {
+		err := install.ApplyJobContainerWithError(job, "cleanup", func(container *corev1.Container) error {
 
 			if err := install.SetContainerImage(container, "iot-tenant-cleaner", config); err != nil {
 				return err
@@ -90,26 +95,96 @@ func createIoTTenantCleanerJob(ctx finalizer.DeconstructorContext, project *iotv
 
 			install.ApplyEnvSimple(container, "tenantId", tenantId)
 
-			if external := config.Spec.ServicesConfig.DeviceRegistry.Infinispan.Server.External; external != nil {
-				install.ApplyOrRemoveEnvSimple(container, "infinispan.host", external.Host)
-				install.ApplyOrRemoveEnvSimple(container, "infinispan.port", strconv.Itoa(int(external.Port)))
-				install.ApplyOrRemoveEnvSimple(container, "infinispan.username", external.Username)
-				install.ApplyOrRemoveEnvSimple(container, "infinispan.password", external.Password)
-				install.ApplyOrRemoveEnvSimple(container, "infinispan.saslServerName", external.SaslServerName)
-				install.ApplyOrRemoveEnvSimple(container, "infinispan.saslRealm", external.SaslRealm)
-				if external.CacheNames != nil {
-					install.ApplyOrRemoveEnvSimple(container, "infinispan.devicesCacheName", external.CacheNames.Devices)
-					install.ApplyOrRemoveEnvSimple(container, "infinispan.deviceStatesCacheName", external.CacheNames.DeviceStates)
+			switch config.EvalDeviceRegistryImplementation() {
+
+			case iotv1alpha1.DeviceRegistryInfinispan:
+
+				if external := config.Spec.ServicesConfig.DeviceRegistry.Infinispan.Server.External; external != nil {
+
+					install.ApplyOrRemoveEnvSimple(container, "registry.type", "infinispan")
+
+					install.ApplyOrRemoveEnvSimple(container, "infinispan.host", external.Host)
+					install.ApplyOrRemoveEnvSimple(container, "infinispan.port", strconv.Itoa(int(external.Port)))
+					install.ApplyOrRemoveEnvSimple(container, "infinispan.username", external.Username)
+					install.ApplyOrRemoveEnvSimple(container, "infinispan.password", external.Password)
+					install.ApplyOrRemoveEnvSimple(container, "infinispan.saslServerName", external.SaslServerName)
+					install.ApplyOrRemoveEnvSimple(container, "infinispan.saslRealm", external.SaslRealm)
+					if external.CacheNames != nil {
+						install.ApplyOrRemoveEnvSimple(container, "infinispan.devicesCacheName", external.CacheNames.Devices)
+						install.ApplyOrRemoveEnvSimple(container, "infinispan.deviceStatesCacheName", external.CacheNames.DeviceStates)
+					}
+					if external.DeletionChunkSize > 0 {
+						install.ApplyEnvSimple(container, "deletionChunkSize", strconv.FormatUint(uint64(external.DeletionChunkSize), 10))
+					}
+
+				} else {
+
+					return fmt.Errorf("unknown infinispan configuration")
+
 				}
-				if external.DeletionChunkSize > 0 {
-					install.ApplyEnvSimple(container, "deletionChunkSize", strconv.FormatUint(uint64(external.DeletionChunkSize), 10))
+
+			case iotv1alpha1.DeviceRegistryJdbc:
+				if external := config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External; external != nil {
+
+					devices, deviceInformation, err := iotconfig.JdbcConnections(config)
+					if err != nil {
+						return err
+					}
+
+					devicesStr, err := json.Marshal(devices)
+					if err != nil {
+						return err
+					}
+					deviceInformationStr, err := json.Marshal(deviceInformation)
+					if err != nil {
+						return err
+					}
+
+					install.ApplyOrRemoveEnvSimple(container, "registry.type", "jdbc")
+					install.ApplyEnvSimple(container, "jdbc.devices", string(devicesStr))
+					install.ApplyEnvSimple(container, "jdbc.deviceInformation", string(deviceInformationStr))
+
+					// extension containers
+
+					ext.MapExtensionVolume(container)
+					extensions = config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Extensions
+
+				} else {
+
+					return fmt.Errorf("unknown jdbc configuration")
+
 				}
-			} else {
-				return fmt.Errorf("unknown infinispan configuration")
+
+			case iotv1alpha1.DeviceRegistryFileBased:
+				// nothing to do
+
+			default:
+				return fmt.Errorf("unknown device registry configuration")
 			}
+
+			iotconfig.AppendStandardHonoJavaOptions(container)
+
+			// done
 
 			return nil
 		})
+
+		if err != nil {
+			return err
+		}
+
+		// add extension volume
+
+		if extensions != nil {
+			if err := ext.AddExtensionContainers(extensions, &job.Spec.Template.Spec); err != nil {
+				return err
+			}
+			ext.AddExtensionVolume(&job.Spec.Template.Spec)
+		}
+
+		// done
+
+		return nil
 
 	})
 

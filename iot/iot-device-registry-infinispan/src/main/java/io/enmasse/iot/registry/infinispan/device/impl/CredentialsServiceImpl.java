@@ -27,6 +27,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
 import javax.annotation.PreDestroy;
 
 import org.eclipse.hono.service.management.tenant.Tenant;
@@ -45,14 +46,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.registry.device.AbstractCredentialsService;
-import io.enmasse.iot.registry.infinispan.config.DeviceServiceProperties;
-import io.enmasse.iot.registry.device.CredentialKey;
 import io.enmasse.iot.infinispan.device.DeviceCredential;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
+import io.enmasse.iot.registry.device.AbstractCredentialsService;
+import io.enmasse.iot.registry.device.CredentialKey;
+import io.enmasse.iot.registry.infinispan.config.DeviceServiceProperties;
 import io.enmasse.iot.registry.infinispan.util.Credentials;
 import io.enmasse.iot.registry.tenant.TenantInformation;
+import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 @Component
@@ -100,9 +103,9 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     }
 
     @Override
-    protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final TenantInformation tenant, final CredentialKey key, final Span span) {
+    protected Future<CredentialsResult<JsonObject>> processGet(final TenantInformation tenant, final CredentialKey key, final Span span) {
 
-        return this.adapterCache
+        final CompletableFuture<CredentialsResult<JsonObject>> future = this.adapterCache
                 .getWithMetadataAsync(credentialKey(key))
                 .thenCompose(result -> {
 
@@ -136,6 +139,8 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
                 });
 
+        return MoreFutures.map(future);
+
     }
 
     private Duration calculateRemainingTtl(final TenantInformation tenant, final MetadataValue<?> result) {
@@ -152,7 +157,8 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         }
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final TenantInformation tenant, final io.enmasse.iot.infinispan.device.CredentialKey key, final Span span) {
+    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final TenantInformation tenant, final io.enmasse.iot.infinispan.device.CredentialKey key,
+            final Span span) {
 
         return searchCredentials(key)
                 .thenCompose(r -> {
@@ -203,7 +209,8 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         return completedFuture(notFound(getStoreTtl(tenant)));
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final TenantInformation tenant, final io.enmasse.iot.infinispan.device.CredentialKey key, final JsonObject cacheEntry) {
+    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final TenantInformation tenant, final io.enmasse.iot.infinispan.device.CredentialKey key,
+            final JsonObject cacheEntry) {
 
         final Duration ttl = getStoreTtl(tenant);
 
@@ -245,7 +252,8 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         final QueryFactory queryFactory = Search.getQueryFactory(this.managementCache);
 
         final Query query = queryFactory
-                .create(String.format("from %s d where d.tenantId=:tenantId and d.credentials.authId=:authId and d.credentials.type=:type", DeviceInformation.class.getName()), IndexedQueryMode.BROADCAST)
+                .create(String.format("from %s d where d.tenantId=:tenantId and d.credentials.authId=:authId and d.credentials.type=:type", DeviceInformation.class.getName()),
+                        IndexedQueryMode.BROADCAST)
                 .setParameter("tenantId", key.getTenantId())
                 .setParameter("authId", key.getAuthId())
                 .setParameter("type", key.getType());

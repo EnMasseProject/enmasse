@@ -683,9 +683,9 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		deployment.Spec.Replicas = consoleservice.Spec.Replicas
 	}
 
-	install.ApplyEmptyDirVolume(deployment, "apps")
-	install.ApplyEmptyDirVolume(deployment, "httpd")
-	install.ApplySecretVolume(deployment, "console-tls", consoleservice.Spec.CertificateSecret.Name)
+	install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "apps")
+	install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "httpd")
+	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "console-tls", consoleservice.Spec.CertificateSecret.Name)
 
 	if err := install.ApplyInitContainerWithError(deployment, "console-init", func(container *corev1.Container) error {
 		if err := install.ApplyContainerImage(container, "console-init", nil); err != nil {
