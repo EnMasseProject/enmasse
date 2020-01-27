@@ -105,6 +105,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           plan={plan}
           setPlan={setPlan}
           topic={topic}
+          addressSpaceType={addressSpaceType}
           setTopic={setTopic}
           typeOptions={addressTypes}
           setTypeOptions={setAddressTypes}
