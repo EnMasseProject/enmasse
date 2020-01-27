@@ -28,6 +28,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util"
 	user "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
 	"github.com/vektah/gqlparser/gqlerror"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
@@ -52,7 +53,8 @@ TODO:
 */
 
 const accessControllerStateCookieName = "accessControllerState"
-const sessionOwner = "sessionOwner"
+const sessionOwnerSessionAttribute = "sessionOwnerSessionAttribute"
+const loggedOnUserSessionAttribute = "loggedOnUserSessionAttribute"
 
 func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Handler {
 
@@ -68,16 +70,16 @@ func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 		}
 
 		accessTokenSha := getShaSum(accessToken)
-		if sessionManager.Exists(req.Context(), sessionOwner) {
-			sessionOwnerAccessTokenSha := sessionManager.Get(req.Context(), sessionOwner).([]byte)
+		if sessionManager.Exists(req.Context(), sessionOwnerSessionAttribute) {
+			sessionOwnerAccessTokenSha := sessionManager.Get(req.Context(), sessionOwnerSessionAttribute).([]byte)
 			if !bytes.Equal(sessionOwnerAccessTokenSha, accessTokenSha) {
 				// This session must have belonged to a different accessToken, destroy it.
 				// New session created automatically.
 				_ = sessionManager.Destroy(req.Context())
-				sessionManager.Put(req.Context(), sessionOwner, accessTokenSha)
+				sessionManager.Put(req.Context(), sessionOwnerSessionAttribute, accessTokenSha)
 			}
 		} else {
-			sessionManager.Put(req.Context(), sessionOwner, accessTokenSha)
+			sessionManager.Put(req.Context(), sessionOwnerSessionAttribute, accessTokenSha)
 		}
 
 		kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -122,6 +124,19 @@ func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 			return
 		}
 
+		loggedOnUser := "<unknown>"
+		if sessionManager.Exists(req.Context(), loggedOnUserSessionAttribute) {
+			loggedOnUser = sessionManager.GetString(req.Context(), loggedOnUserSessionAttribute)
+		} else {
+			if util.IsOpenshift() {
+				usr, err := userClient.Users().Get("~", metav1.GetOptions{})
+				if err == nil {
+					loggedOnUser = usr.ObjectMeta.Name
+					sessionManager.Put(req.Context(), loggedOnUserSessionAttribute, loggedOnUser)
+				}
+			}
+		}
+
 		accessControllerState := sessionManager.Get(req.Context(), accessControllerStateCookieName)
 
 		controller := accesscontroller.NewKubernetesRBACAccessController(kubeClient, accessControllerState)
@@ -130,6 +145,7 @@ func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 			UserInterface:        userClient.Users(),
 			EnmasseV1beta1Client: coreClient,
 			AccessController:     controller,
+			User:                 loggedOnUser,
 		}
 
 		ctx := server.ContextWithRequestState(state, req.Context())
@@ -171,7 +187,9 @@ func developmentHandler(next http.Handler, sessionManager *scs.SessionManager) h
 		requestState := &server.RequestState{
 			UserInterface:        userclientset.Users(),
 			EnmasseV1beta1Client: coreClient,
-			AccessController:     accesscontroller.NewAllowAllAccessController()}
+			AccessController:     accesscontroller.NewAllowAllAccessController(),
+			User:                 "<unknown>",
+		}
 
 		ctx := server.ContextWithRequestState(requestState, req.Context())
 		next.ServeHTTP(rw, req.WithContext(ctx))
@@ -361,16 +379,14 @@ http://localhost:` + port + `/graphql
 			},
 		),
 		handler.RequestMiddleware(func(ctx context.Context, next func(ctx context.Context) []byte) []byte {
-			rctx := graphql.GetRequestContext(ctx)
 
+			loggedOnUser := "<unknown>"
 			start := time.Now()
-			bytes := next(ctx)
-			if rctx != nil {
-				log.Printf("Query execution - op: %s %s\n", rctx.OperationName, time.Since(start))
-			}
+			result := next(ctx)
 
 			requestState := server.GetRequestStateFromContext(ctx)
 			if requestState != nil {
+				loggedOnUser = requestState.User
 				if updated, accessControllerState := requestState.AccessController.GetState(); updated {
 					if accessControllerState == nil {
 						sessionManager.Remove(ctx, accessControllerStateCookieName)
@@ -379,7 +395,12 @@ http://localhost:` + port + `/graphql
 					}
 				}
 			}
-			return bytes
+
+			rctx := graphql.GetRequestContext(ctx)
+			if rctx != nil {
+				log.Printf("[%s] Query execution - op: %s %s\n", loggedOnUser, rctx.OperationName, time.Since(start))
+			}
+			return result
 		}),
 	)
 
