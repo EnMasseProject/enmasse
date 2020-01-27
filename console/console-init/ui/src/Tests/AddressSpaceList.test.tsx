@@ -23,7 +23,8 @@ describe("Address space List", () => {
         displayName: "sample_namespace_1",
         isReady: true,
         status: "creating",
-        phase: "Active"
+        phase: "Active",
+        messages:[]
       },
       {
         name: "sample_2",
@@ -33,7 +34,8 @@ describe("Address space List", () => {
         displayName: "sample_namespace_2",
         isReady: true,
         status: "running",
-        phase: "Active"
+        phase: "Active",
+        messages:[]
       }
     ];
     const handleEdit = (data: IAddressSpace) => void 0;
