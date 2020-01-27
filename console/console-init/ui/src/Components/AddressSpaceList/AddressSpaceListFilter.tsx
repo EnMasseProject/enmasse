@@ -49,7 +49,7 @@ interface IAddressSpaceListFilterProps {
 
 interface IAddressSpaceListKebabProps {
   createAddressSpaceOnClick: () => void;
-  onDeleteAll:()=>void;
+  onDeleteAll: () => void;
 }
 export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFilterProps> = ({
   filterValue,
@@ -100,19 +100,46 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       if (filterValue === "Name") {
         if (nameSelected && nameSelected.trim() !== "" && filterNames)
           if (filterNames.map(filter => filter.value).indexOf(nameSelected) < 0)
-            setFilterNames([...filterNames, { value: nameSelected.trim(), isExact: true }]);
-          if (!nameSelected && nameInput && nameInput.trim() !== "")
-            if (filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0)
-              setFilterNames([...filterNames, { value: nameInput.trim(), isExact: false }]);
+            setFilterNames([
+              ...filterNames,
+              { value: nameSelected.trim(), isExact: true }
+            ]);
+        if (!nameSelected && nameInput && nameInput.trim() !== "")
+          if (
+            filterNames.map(filter => filter.value).indexOf(nameInput.trim()) <
+            0
+          )
+            setFilterNames([
+              ...filterNames,
+              { value: nameInput.trim(), isExact: false }
+            ]);
         setNameSelected(undefined);
       } else if (filterValue === "Namespace") {
         if (namespaceSelected && namespaceSelected.trim() !== "" && filterNames)
-          if (filterNamespaces.map(filter => filter.value).indexOf(namespaceSelected) < 0) {
-            setFilterNamespaces([...filterNamespaces, { value: namespaceSelected.trim(), isExact: true }]);
+          if (
+            filterNamespaces
+              .map(filter => filter.value)
+              .indexOf(namespaceSelected) < 0
+          ) {
+            setFilterNamespaces([
+              ...filterNamespaces,
+              { value: namespaceSelected.trim(), isExact: true }
+            ]);
           }
-          if (!namespaceSelected && nameSpaceInput && nameSpaceInput.trim() !== "")
-            if (filterNamespaces.map(filter => filter.value).indexOf(nameSpaceInput.trim()) < 0)
-              setFilterNamespaces([...filterNamespaces, { value: nameSpaceInput.trim(), isExact: false }]);
+        if (
+          !namespaceSelected &&
+          nameSpaceInput &&
+          nameSpaceInput.trim() !== ""
+        )
+          if (
+            filterNamespaces
+              .map(filter => filter.value)
+              .indexOf(nameSpaceInput.trim()) < 0
+          )
+            setFilterNamespaces([
+              ...filterNamespaces,
+              { value: nameSpaceInput.trim(), isExact: false }
+            ]);
         setNamespaceSelected(undefined);
       }
     }
@@ -126,14 +153,18 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     switch (type) {
       case "Name":
         if (filterNames && id) {
-          index = filterNames.map(filter => filter.value).indexOf(id.toString());
+          index = filterNames
+            .map(filter => filter.value)
+            .indexOf(id.toString());
           if (index >= 0) filterNames.splice(index, 1);
           setFilterNames([...filterNames]);
         }
         break;
       case "Namespace":
         if (filterNamespaces && id) {
-          index = filterNamespaces.map(filter => filter.value).indexOf(id.toString());
+          index = filterNamespaces
+            .map(filter => filter.value)
+            .indexOf(id.toString());
           if (index >= 0) filterNamespaces.splice(index, 1);
           setFilterNamespaces([...filterNamespaces]);
         }
@@ -164,7 +195,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if (value.trim().length < 6) {
+    if (value.trim().length < 5) {
       setNameOptions([]);
       return;
     }
@@ -188,7 +219,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
             return link.ObjectMeta.Name;
           }
         );
-        setNameOptions(obtainedList);
+        setNameOptions(Array.from(new Set(obtainedList)));
       }
     }
   };
@@ -207,7 +238,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const onChangeNamespaceData = async (value: string) => {
     setNamespaceOptions(undefined);
     setNameOptions(undefined);
-    if (value.trim().length < 6) {
+    if (value.trim().length < 5) {
       setNameOptions([]);
       return;
     }
@@ -234,7 +265,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
             return link.ObjectMeta.Namespace;
           }
         );
-        setNamespaceOptions(obtainedList);
+        setNamespaceOptions(Array.from(new Set(obtainedList)));
       }
     }
   };
@@ -299,8 +330,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                 key={option.key}
                 value={option.value}
                 itemID={option.key}
-                component={"button"}
-              >
+                component={"button"}>
                 {option.value}
               </DropdownItem>
             ))}
@@ -312,8 +342,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
               <DataToolbarFilter
                 chips={filterNames.map(filter => filter.value)}
                 deleteChip={onDelete}
-                categoryName="Name"
-              >
+                categoryName="Name">
                 {filterValue && filterValue === "Name" && (
                   <InputGroup>
                     <Select
@@ -333,20 +362,31 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       ariaLabelledBy={"typeahead-select-id"}
                       placeholderText="Select name"
                       isDisabled={false}
-                      isCreatable={false}
-                    >
-                      {nameOptions &&
+                      isCreatable={false}>
+                      {nameOptions && nameOptions.length > 0 ? (
                         nameOptions.map((option, index) => (
                           <SelectOption key={index} value={option} />
-                        ))}
+                        ))
+                      ) : nameInput.trim().length < 5 ? (
+                        <SelectOption
+                          key={"invalid-input-length"}
+                          value={"Enter more characters"}
+                          disabled={true}
+                        />
+                      ) : (
+                        <SelectOption
+                          key={"no-results-found"}
+                          value={"No results found"}
+                          disabled={true}
+                        />
+                      )}
                       {/* {} */}
                     </Select>
                     <Button
                       id="al-filter-search-name"
                       variant={ButtonVariant.control}
                       aria-label="search button for search input"
-                      onClick={onClickSearchIcon}
-                    >
+                      onClick={onClickSearchIcon}>
                       <SearchIcon />
                     </Button>
                   </InputGroup>
@@ -357,8 +397,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
               <DataToolbarFilter
                 chips={filterNamespaces.map(filter => filter.value)}
                 deleteChip={onDelete}
-                categoryName="Namespace"
-              >
+                categoryName="Namespace">
                 {filterValue && filterValue === "Namespace" && (
                   <InputGroup>
                     <Select
@@ -378,20 +417,31 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       ariaLabelledBy={"typeahead-select-id"}
                       placeholderText="Select Namespace"
                       isDisabled={false}
-                      isCreatable={false}
-                    >
-                      {namespaceOptions &&
+                      isCreatable={false}>
+                      {namespaceOptions && namespaceOptions.length > 0 ? (
                         namespaceOptions.map((option, index) => (
                           <SelectOption key={index} value={option} />
-                        ))}
+                        ))
+                      ) : nameSpaceInput.trim().length < 5 ? (
+                        <SelectOption
+                          key={"invalid-input-length"}
+                          value={"Enter more characters"}
+                          disabled={true}
+                        />
+                      ) : (
+                        <SelectOption
+                          key={"no-results-found"}
+                          value={"No results found"}
+                          disabled={true}
+                        />
+                      )}
                       {/* {} */}
                     </Select>
                     <Button
                       id="al-filter-search-namespace"
                       variant={ButtonVariant.control}
                       aria-label="search button for search input"
-                      onClick={onClickSearchIcon}
-                    >
+                      onClick={onClickSearchIcon}>
                       <SearchIcon />
                     </Button>
                   </InputGroup>
@@ -402,8 +452,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
               <DataToolbarFilter
                 chips={filterType ? [filterType] : []}
                 deleteChip={onDelete}
-                categoryName="Type"
-              >
+                categoryName="Type">
                 {filterValue && filterValue === "Type" && (
                   <InputGroup>
                     <Dropdown
@@ -424,8 +473,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                           key={option.key}
                           value={option.value}
                           itemID={option.key}
-                          component={"button"}
-                        >
+                          component={"button"}>
                           {option.value}
                         </DropdownItem>
                       ))}
@@ -451,8 +499,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
           )}
         </>
       }
-      breakpoint="xl"
-    >
+      breakpoint="xl">
       {toggleGroupItems}
     </DataToolbarToggleGroup>
   );
@@ -480,7 +527,7 @@ export const AddressSpaceListKebab: React.FunctionComponent<IAddressSpaceListKeb
   };
 
   const onKebabSelect = async (event: any) => {
-    if(event.target.value === "deleteAll"){
+    if (event.target.value === "deleteAll") {
       await onDeleteAll();
     }
     setIsKebabOpen(!isKebabOpen);
@@ -495,8 +542,7 @@ export const AddressSpaceListKebab: React.FunctionComponent<IAddressSpaceListKeb
               <Button
                 id="al-filter-overflow-button"
                 variant={ButtonVariant.primary}
-                onClick={createAddressSpaceOnClick}
-              >
+                onClick={createAddressSpaceOnClick}>
                 Create Address Space
               </Button>
             </OverflowMenuItem>

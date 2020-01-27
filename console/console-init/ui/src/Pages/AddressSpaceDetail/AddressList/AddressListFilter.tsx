@@ -134,7 +134,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if (value.trim().length < 6) {
+    if (value.trim().length < 5) {
       setNameOptions([]);
       return;
     }
@@ -160,7 +160,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
             return address.Spec.Address;
           }
         );
-        setNameOptions(obtainedList);
+        setNameOptions(Array.from(new Set(obtainedList)));
       }
     }
   };
@@ -273,14 +273,23 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                       isDisabled={false}
                       isCreatable={false}
                     >
-                      {nameOptions &&
+                      {nameOptions && nameOptions.length > 0 ? (
                         nameOptions.map((option, index) => (
-                          <SelectOption
-                            id={`al-filter-select-name${index}`}
-                            key={index}
-                            value={option}
-                          />
-                        ))}
+                          <SelectOption key={index} value={option} />
+                        ))
+                      ) : nameInput.trim().length < 5 ? (
+                        <SelectOption
+                          key={"invalid-input-length"}
+                          value={"Enter more characters"}
+                          disabled={true}
+                        />
+                      ) : (
+                        <SelectOption
+                          key={"no-results-found"}
+                          value={"No results found"}
+                          disabled={true}
+                        />
+                      )}
                       {/* {} */}
                     </Select>
                     <Button
