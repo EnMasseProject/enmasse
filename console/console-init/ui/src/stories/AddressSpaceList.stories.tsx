@@ -24,7 +24,8 @@ const rows: IAddressSpace[] = [
     type: "standard",
     displayName: "Small",
     isReady: false,
-    phase:"Configuring"
+    phase:"Configuring",
+    messages:[]
   },
   {
     name: "saturn-as2",
@@ -33,7 +34,8 @@ const rows: IAddressSpace[] = [
     type: "brokered",
     displayName: "Small",
     isReady: true,
-    phase:"Active"
+    phase:"Active",
+    messages:[]
   },
   {
     name: "mars_as2",
@@ -42,7 +44,8 @@ const rows: IAddressSpace[] = [
     type: "standard",
     displayName: "Large",
     isReady: false,
-    phase:"Failed"
+    phase:"Failed",
+    messages:[]
   },
   {
     name: "earth_as3",
@@ -51,7 +54,8 @@ const rows: IAddressSpace[] = [
     type: "brokered",
     displayName: "Medium",
     isReady: false,
-    phase:"Configuring"
+    phase:"Configuring",
+    messages:[]
   }
 ];
 

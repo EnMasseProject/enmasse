@@ -164,6 +164,7 @@ export const RETURN_ALL_ADDRESS_SPACES = (
           Status {
             IsReady
             Phase
+            Messages
           }
         }
       }
