@@ -50,10 +50,13 @@ export const statusToDisplay = (phase: string) => {
     case "pending":
       icon = <ExclamationCircleIcon color="red" />;
       break;
+    case "":
+      icon=<InProgressIcon />;
+      break;
   }
   return (
     <>
-      {icon}&nbsp;{phase}
+      {icon}&nbsp;{phase.trim()!=""?phase:"Configuring"}
     </>
   );
 };
