@@ -7,7 +7,8 @@ import * as React from "react";
 import {
   CheckCircleIcon,
   TimesCircleIcon,
-  InProgressIcon
+  InProgressIcon,
+  ExclamationCircleIcon
 } from "@patternfly/react-icons";
 import { Badge } from "@patternfly/react-core";
 
@@ -16,6 +17,7 @@ interface AddressSpaceTypeProps {
 }
 interface AddressSpaceStatusProps {
   phase: string;
+  messages: Array<string>;
 }
 const typeToDisplay = (type: string) => {
   switch (type.toLowerCase()) {
@@ -36,7 +38,7 @@ export const AddressSpaceIcon = () => {
     </Badge>
   );
 };
-const statusToDisplay = (phase: string) => {
+export const statusToDisplay = (phase: string) => {
   let icon;
   switch (phase.toLowerCase()) {
     case "active":
@@ -45,11 +47,15 @@ const statusToDisplay = (phase: string) => {
     case "configuring":
       icon = <InProgressIcon />;
       break;
-    case "failed":
-      icon = <TimesCircleIcon color="red" />;
+    case "pending":
+      icon = <ExclamationCircleIcon color="red" />;
       break;
   }
-  return <>{icon}&nbsp;{phase}</>
+  return (
+    <>
+      {icon}&nbsp;{phase}
+    </>
+  );
 };
 export const AddressSpaceType: React.FunctionComponent<AddressSpaceTypeProps> = ({
   type
@@ -58,7 +64,18 @@ export const AddressSpaceType: React.FunctionComponent<AddressSpaceTypeProps> = 
 };
 
 export const AddressSpaceStatus: React.FunctionComponent<AddressSpaceStatusProps> = ({
-  phase
+  phase,
+  messages
 }) => {
-  return <>{statusToDisplay(phase)}</>;
+  return (
+    <>
+      {statusToDisplay(phase)}
+      {messages.map(message => (
+        <>
+          <br />
+          {message}
+        </>
+      ))}
+    </>
+  );
 };
