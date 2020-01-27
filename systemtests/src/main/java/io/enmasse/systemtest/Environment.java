@@ -5,16 +5,17 @@
 
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.fabric8.kubernetes.client.Config;
-import org.eclipse.hono.util.Strings;
-import org.slf4j.Logger;
-
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Optional;
+
+import org.eclipse.hono.util.Strings;
+import org.slf4j.Logger;
+
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.fabric8.kubernetes.client.Config;
 
 public class Environment {
     public static final String TEST_LOG_DIR_ENV = "TEST_LOGDIR";
@@ -41,7 +42,11 @@ public class Environment {
     public static final String OLM_INSTALL_TYPE = "OLM_INSTALL_TYPE";
     private static final String SKIP_SAVE_STATE = "SKIP_SAVE_STATE";
     private static final String SKIP_DEPLOY_INFINISPAN = "SKIP_DEPLOY_INFINISPAN";
+    private static final String SKIP_DEPLOY_POSTGRESQL = "SKIP_DEPLOY_POSTGRESQL";
+    private static final String SKIP_DEPLOY_H2 = "SKIP_DEPLOY_H2";
     private static final String INFINISPAN_PROJECT = "INFINISPAN_PROJECT";
+    private static final String POSTGRESQL_PROJECT = "POSTGRESQL_PROJECT";
+    private static final String H2_PROJECT = "H2_PROJECT";
     private static Logger log = CustomLogger.getLogger();
     private static Environment instance;
     private final String namespace = System.getenv().getOrDefault(K8S_NAMESPACE_ENV, "enmasse-infra");
@@ -59,7 +64,11 @@ public class Environment {
     private final String productName = System.getenv().getOrDefault(PRODUCT_NAME_ENV, "enmasse");
     private final boolean skipSaveState = Boolean.parseBoolean(System.getenv(SKIP_SAVE_STATE));
     private final boolean skipDeployInfinispan = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_INFINISPAN));
+    private final boolean skipDeployPostgresql = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_POSTGRESQL));
+    private final boolean skipDeployH2 = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_H2));
     private String infinispanProject = System.getenv().getOrDefault(INFINISPAN_PROJECT, "systemtests-infinispan");
+    private String postgresqlProject = System.getenv().getOrDefault(POSTGRESQL_PROJECT, "systemtests-postgresql");
+    private String h2Project = System.getenv().getOrDefault(H2_PROJECT, "systemtests-h2");
     private final Duration kubernetesApiConnectTimeout = Optional.ofNullable(System.getenv().get(K8S_API_CONNECT_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
     private final Duration kubernetesApiReadTimeout = Optional.ofNullable(System.getenv().get(K8S_API_READ_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
     private final Duration kubernetesApiWriteTimeout = Optional.ofNullable(System.getenv().get(K8S_API_WRITE_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
@@ -225,6 +234,14 @@ public class Environment {
         return this.skipDeployInfinispan;
     }
 
+    public boolean isSkipDeployPostgresql() {
+        return this.skipDeployPostgresql;
+    }
+
+    public boolean isSkipDeployH2() {
+        return this.skipDeployH2;
+    }
+
     public String getTemplatesPath() {
         return templatesPath;
     }
@@ -243,5 +260,13 @@ public class Environment {
 
     public String getInfinispanProject() {
         return infinispanProject;
+    }
+
+    public String getPostgresqlProject() {
+        return postgresqlProject;
+    }
+
+    public String getH2Project() {
+        return h2Project;
     }
 }

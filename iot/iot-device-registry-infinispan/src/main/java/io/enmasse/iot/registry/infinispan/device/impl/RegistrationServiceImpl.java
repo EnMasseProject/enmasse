@@ -8,7 +8,6 @@ package io.enmasse.iot.registry.infinispan.device.impl;
 import static io.enmasse.iot.infinispan.device.DeviceKey.deviceKey;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
-import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.hono.util.RegistrationConstants;
 import org.eclipse.hono.util.RegistrationResult;
@@ -19,9 +18,11 @@ import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.registry.device.AbstractRegistrationService;
+import io.enmasse.iot.registry.device.DeviceKey;
+import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 @Component
@@ -38,9 +39,9 @@ public class RegistrationServiceImpl extends AbstractRegistrationService {
     }
 
     @Override
-    protected CompletableFuture<RegistrationResult> processGetDevice(final DeviceKey key, final Span span) {
+    protected Future<RegistrationResult> processGetDevice(final DeviceKey key, final Span span) {
 
-        return this.managementCache
+        var f = this.managementCache
 
                 .getWithMetadataAsync(deviceKey(key))
                 .thenApply(result -> {
@@ -53,6 +54,8 @@ public class RegistrationServiceImpl extends AbstractRegistrationService {
 
                     return RegistrationResult.from(HTTP_OK, convertTo(result.getValue().getRegistrationInformationAsJson()));
                 });
+
+        return MoreFutures.map(f);
 
     }
 

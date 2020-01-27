@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: postgresql
+  name: postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+      - name: postgresql
+        image: centos/postgresql-10-centos7
+        env:
+        - name: POSTGRESQL_ADMIN_PASSWORD
+          value: admin1234
+        - name: POSTGRESQL_DATABASE
+          value: device-registry
+        - name: POSTGRESQL_PASSWORD
+          value: user12
+        - name: POSTGRESQL_USER
+          value: registry
+        ports:
+        - containerPort: 5432
+          name: postgresql
+          protocol: TCP
+        readinessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        volumeMounts:
+        - mountPath: /var/lib/pgsql/data
+          name: data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: postgresql

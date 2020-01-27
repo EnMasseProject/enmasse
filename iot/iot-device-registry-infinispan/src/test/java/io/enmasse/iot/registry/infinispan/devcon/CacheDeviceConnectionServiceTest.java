@@ -1,9 +1,15 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.iot.registry.infinispan.devcon;
+
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.net.HttpURLConnection.HTTP_OK;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.UUID;
 
 import org.eclipse.hono.util.DeviceConnectionConstants;
 import org.junit.jupiter.api.AfterEach;
@@ -13,15 +19,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.enmasse.iot.infinispan.EmbeddedHotRodServer;
 import io.opentracing.noop.NoopSpan;
-import io.vertx.core.Future;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
-import static java.net.HttpURLConnection.HTTP_OK;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.UUID;
+import io.vertx.rxjava.core.Promise;
 
 /**
  * Tests verifying behavior of {@link CacheDeviceConnectionService}.
@@ -64,11 +64,11 @@ public class CacheDeviceConnectionServiceTest {
 
         final String deviceId = UUID.randomUUID().toString();
 
-        Future<Object> phase1 = Future.future();
+        Promise<Object> phase1 = Promise.promise();
         service.setLastKnownGatewayForDevice(DEFAULT_TENANT, deviceId, "gw1", NoopSpan.INSTANCE, ctx.succeeding(phase1::complete));
 
-        Future<Object> phase2 = Future.future();
-        phase1.setHandler(x -> {
+        Promise<Object> phase2 = Promise.promise();
+        phase1.future().setHandler(x -> {
             service.getLastKnownGatewayForDevice(DEFAULT_TENANT, deviceId, NoopSpan.INSTANCE, ctx.succeeding(r -> {
                 ctx.verify(() -> {
                     assertEquals(HTTP_OK, r.getStatus());
@@ -79,13 +79,13 @@ public class CacheDeviceConnectionServiceTest {
             }));
         });
 
-        Future<Object> phase3 = Future.future();
-        phase2.setHandler(x -> {
+        Promise<Object> phase3 = Promise.promise();
+        phase2.future().setHandler(x -> {
             service.setLastKnownGatewayForDevice(DEFAULT_TENANT, deviceId, "gw2", NoopSpan.INSTANCE, ctx.succeeding(phase3::complete));
         });
 
-        Future<Object> phase4 = Future.future();
-        phase3.setHandler(x -> {
+        Promise<Object> phase4 = Promise.promise();
+        phase3.future().setHandler(x -> {
             service.getLastKnownGatewayForDevice(DEFAULT_TENANT, deviceId, NoopSpan.INSTANCE, ctx.succeeding(r -> {
                 ctx.verify(() -> {
                     assertEquals(HTTP_OK, r.getStatus());
@@ -96,7 +96,7 @@ public class CacheDeviceConnectionServiceTest {
             }));
         });
 
-        phase4.setHandler(ctx.succeeding(r -> ctx.completeNow()));
+        phase4.future().setHandler(ctx.succeeding(r -> ctx.completeNow()));
 
     }
 

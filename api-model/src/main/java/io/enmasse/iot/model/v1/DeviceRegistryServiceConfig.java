@@ -23,15 +23,28 @@ import io.sundr.builder.annotations.Inline;
 public class DeviceRegistryServiceConfig extends ServiceConfig {
     private FileBasedDeviceRegistry file;
     private InfinispanDeviceRegistry infinispan;
+    private JdbcDeviceRegistry jdbc;
 
     public FileBasedDeviceRegistry getFile() {
         return file;
     }
+
     public void setFile(FileBasedDeviceRegistry file) {
         this.file = file;
     }
 
-    public InfinispanDeviceRegistry getInfinispan(){ return infinispan;}
+    public InfinispanDeviceRegistry getInfinispan() {
+        return infinispan;
+    }
+
+    public void setJdbc(JdbcDeviceRegistry infinispan) {
+        this.jdbc = infinispan;
+    }
+
+    public JdbcDeviceRegistry getJdbc() {
+        return jdbc;
+    }
+
     public void setInfinispan(InfinispanDeviceRegistry infinispan) {
         this.infinispan = infinispan;
     }

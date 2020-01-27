@@ -82,7 +82,7 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
                 .endMetadata()
                 .withNewSpec()
                 .withNewServices()
-                .withDeviceRegistry(DefaultDeviceRegistry.newInfinispanBased())
+                .withDeviceRegistry(DefaultDeviceRegistry.newDefaultInstance())
                 .endServices()
                 .withNewAdapters()
                 .withNewMqtt()

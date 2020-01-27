@@ -1,0 +1,67 @@
+create: |
+   INSERT INTO %s (
+      tenant_id,
+      device_id,
+      version,
+      data
+   ) VALUES (
+      :tenant_id,
+      :device_id,
+      :version,
+      :data
+   )
+
+readRegistration: |
+   SELECT
+      device_id,
+      version,
+      data
+   FROM
+      %s
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+
+updateRegistration: |
+   UPDATE %s
+   SET
+      data=:data,
+      version=:next_version
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+
+updateRegistrationVersioned: |
+   UPDATE %s
+   SET
+      data=:data,
+      version=:next_version
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+   AND
+      version=:expected_version
+
+delete: |
+   DELETE FROM %s
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+
+deleteVersioned: |
+   DELETE FROM %s
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+   AND
+      version=:expected_version
+
+dropTenant: |
+   DELETE FROM %s
+   WHERE
+      tenant_id=:tenant_id

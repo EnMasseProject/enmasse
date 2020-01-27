@@ -2,21 +2,24 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
 package io.enmasse.systemtest.iot.isolated.registry;
-
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-
-import java.net.HttpURLConnection;
 
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newInfinispanBased;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
+import java.net.HttpURLConnection;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
+
 class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
 
-    static {
-        TENANT_DOESNT_EXISTS_CODE = HttpURLConnection.HTTP_UNAUTHORIZED;
+    @Override
+    protected int tenantDoesNotExistCode() {
+        return HttpURLConnection.HTTP_UNAUTHORIZED;
     }
 
     @Override
