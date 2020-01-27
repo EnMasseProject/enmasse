@@ -153,7 +153,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if (value.trim().length < 6) {
+    if (value.trim().length < 5) {
       setNameOptions([]);
       return;
     }
@@ -182,7 +182,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
             return link.ObjectMeta.Name;
           }
         );
-        setNameOptions(obtainedList);
+        setNameOptions(Array.from(new Set(obtainedList)));
       }
     }
   };
@@ -229,7 +229,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
             return link.Spec.Address;
           }
         );
-        setAddressOptions(obtainedList);
+        setAddressOptions(Array.from(new Set(obtainedList)));
       }
     }
   };
@@ -356,10 +356,23 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     isDisabled={false}
                     isCreatable={false}
                   >
-                    {nameOptions &&
-                      nameOptions.map((option, index) => (
-                        <SelectOption key={index} value={option} />
-                      ))}
+                   {nameOptions && nameOptions.length > 0 ? (
+                        nameOptions.map((option, index) => (
+                          <SelectOption key={index} value={option} />
+                        ))
+                      ) : nameInput.trim().length < 5 ? (
+                        <SelectOption
+                          key={"invalid-input-length"}
+                          value={"Enter more characters"}
+                          disabled={true}
+                        />
+                      ) : (
+                        <SelectOption
+                          key={"no-results-found"}
+                          value={"No results found"}
+                          disabled={true}
+                        />
+                      )}
                     {/* {} */}
                   </Select>
                   <Button
@@ -401,10 +414,23 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     isDisabled={false}
                     isCreatable={false}
                   >
-                    {addressOptions &&
-                      addressOptions.map((option, index) => (
-                        <SelectOption key={index} value={option} />
-                      ))}
+                   {addressOptions && addressOptions.length > 0 ? (
+                        addressOptions.map((option, index) => (
+                          <SelectOption key={index} value={option} />
+                        ))
+                      ) : addressInput.trim().length < 5 ? (
+                        <SelectOption
+                          key={"invalid-input-length"}
+                          value={"Enter more characters"}
+                          disabled={true}
+                        />
+                      ) : (
+                        <SelectOption
+                          key={"no-results-found"}
+                          value={"No results found"}
+                          disabled={true}
+                        />
+                      )}
                     {/* {} */}
                   </Select>
                   <Button
