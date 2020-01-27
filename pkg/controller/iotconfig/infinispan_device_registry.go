@@ -47,9 +47,6 @@ func (r *ReconcileIoTConfig) processInfinispanDeviceRegistry(ctx context.Context
 			return r.processService(ctx, nameDeviceRegistry+"-external", config, false, r.reconcileInfinispanDeviceRegistryServiceExternal)
 		})
 	}
-	rc.ProcessSimple(func() error {
-		return r.processPersistentVolumeClaim(ctx, nameDeviceRegistry+"-pvc", config, false, r.reconcileInfinispanDeviceRegistryPersistentVolumeClaim)
-	})
 
 	if util.IsOpenshift() {
 		routesEnabled := config.WantDefaultRoutes(nil)
@@ -306,18 +303,6 @@ enmasse:
       svc:
         maxBcryptIterations: 10
 `
-	return nil
-}
-
-func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryPersistentVolumeClaim(config *iotv1alpha1.IoTConfig, pvc *corev1.PersistentVolumeClaim) error {
-
-	install.ApplyDefaultLabels(&pvc.ObjectMeta, "iot", pvc.Name)
-
-	pvc.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
-	pvc.Spec.Resources.Requests = corev1.ResourceList{
-		corev1.ResourceStorage: *resource.NewQuantity(256*1024*1024 /* 256Mi */, resource.BinarySI),
-	}
-
 	return nil
 }
 
