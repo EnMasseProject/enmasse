@@ -23,6 +23,11 @@ function calcLowerUpper(offset, first, len) {
   return {lower, upper};
 }
 
+var stateChangeTimeout = process.env.STATE_CHANGE_TIMEOUT;
+if (!stateChangeTimeout) {
+  stateChangeTimeout = 30000;
+}
+
 const availableAddressSpaceTypes = [
   {
     ObjectMeta: {
@@ -384,6 +389,19 @@ function getRandomCreationDate(floor) {
   return date;
 }
 
+function scheduleSetAddressSpaceStatus(addressSpace, phase, messages) {
+  setTimeout(() => {
+    addressSpace.Status = {
+      IsReady: phase === "Active",
+      Messages: messages,
+      Phase: phase
+    };
+    if (phase !== "Active") {
+      scheduleSetAddressSpaceStatus(addressSpace, "Active", []);
+    }
+  }, stateChangeTimeout);
+}
+
 function createAddressSpace(as) {
   var namespace = availableNamespaces.find(n => n.ObjectMeta.Name === as.ObjectMeta.Namespace);
   if (namespace === undefined) {
@@ -425,12 +443,10 @@ function createAddressSpace(as) {
       Plan: spacePlan,
       Type: as.Spec.Type
     },
-    Status: {
-      IsReady: phase === "Active",
-      Messages: messages,
-      Phase: phase
-    }
+    Status: null
   };
+
+  scheduleSetAddressSpaceStatus(addressSpace, phase, messages);
 
   addressSpaces.push(addressSpace);
   return addressSpace.ObjectMeta;
@@ -625,6 +641,20 @@ addressSpaces.forEach(as => {
 
 var addresses = [];
 
+function scheduleSetAddressStatus(address, phase, messages, planStatus) {
+  setTimeout(() => {
+    address.Status = {
+      IsReady: phase === "Active",
+      Messages: messages,
+      Phase: phase,
+      PlanStatus: planStatus
+    };
+    if (phase !== "Active") {
+      scheduleSetAddressStatus(address, "Active", [], planStatus);
+    }
+  }, stateChangeTimeout);
+}
+
 function createAddress(addr) {
   var namespace = availableNamespaces.find(n => n.ObjectMeta.Name === addr.ObjectMeta.Namespace);
   if (namespace === undefined) {
@@ -683,6 +713,15 @@ function createAddress(addr) {
   if (phase !== "Active") {
     messages.push("Address " + addr.ObjectMeta.Name + " not found on qdrouterd")
   }
+
+  var planStatus = null;
+  if (addressSpace.Spec.Type === "standard") {
+    planStatus = {
+      Name: plan.ObjectMeta.Name,
+      Partitions: 1
+    }
+  }
+
   var address = {
     ObjectMeta: {
       Name: addr.ObjectMeta.Name,
@@ -697,16 +736,9 @@ function createAddress(addr) {
       Type: addr.Spec.Type,
       Topic: addr.Spec.Topic
     },
-    Status: {
-      IsReady: "Active" === phase,
-      Messages: messages,
-      Phase: phase,
-      PlanStatus: {
-        Name: plan.ObjectMeta.Name,
-        Partitions: 1
-      }
-    }
+    Status: null,
   };
+  scheduleSetAddressStatus(address, phase, messages, planStatus);
   addresses.push(address);
   return address.ObjectMeta;
 }
