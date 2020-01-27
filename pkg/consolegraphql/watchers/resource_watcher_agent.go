@@ -35,10 +35,9 @@ type AgentWatcher struct {
 	stopchan              chan struct{}
 	stoppedchan           chan struct{}
 
-	developmentMode       bool
-	RouteClientInterface  *routev1.RouteV1Client
+	developmentMode      bool
+	RouteClientInterface *routev1.RouteV1Client
 }
-
 
 func NewAgentWatcher(c cache.Cache, namespace string, f func() agent.AgentCollector, developmentMode bool, options ...WatcherOption) (*AgentWatcher, error) {
 
@@ -71,7 +70,7 @@ func AgentWatcherServiceConfig(config *rest.Config) WatcherOption {
 		w := watcher.(*AgentWatcher)
 
 		var cl interface{}
-		cl, _  = cp.NewForConfig(config)
+		cl, _ = cp.NewForConfig(config)
 
 		client, ok := cl.(cp.CoreV1Interface)
 		if !ok {
@@ -97,7 +96,6 @@ func AgentWatcherRouteConfig(config *rest.Config) WatcherOption {
 		return nil
 	}
 }
-
 
 func AgentWatcherClient(client cp.CoreV1Interface) WatcherOption {
 	return func(watcher ResourceWatcher) error {
@@ -168,21 +166,16 @@ func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {
 		}
 
 		if _, present := current[*infraUuid]; !present {
-			prt, err := util.GetPortForService(service.Spec.Ports, "amqps")
+			host, port, err := clw.getHostPortFrom(service)
 			if err != nil {
-				return  err
+				return err
 			}
-			host := fmt.Sprintf("%s.%s.svc", service.ObjectMeta.Name, clw.Namespace)
-			port := *prt
 
 			if clw.developmentMode && clw.RouteClientInterface != nil {
-				routes := clw.RouteClientInterface.Routes(clw.Namespace)
-				route, err := routes.Get(service.Name, v1.GetOptions{})
+				host, port, err = clw.tryRouteForHostPort(service, infraUuid)
 				if err != nil {
-					return err
+					continue
 				}
-				port = 443
-				host = route.Spec.Host
 			}
 
 			collector, err := clw.createCollector(host, port, infraUuid, addressSpace, addressSpaceNamespace)
@@ -232,7 +225,19 @@ func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {
 					switch event.Type {
 					case watch.Added:
 						if _, present := clw.collectors[*infraUuid]; !present {
-							collector, err := clw.createCollector("", 0, infraUuid, addressSpace, addressSpaceNamespace)
+							host, port, err := clw.getHostPortFrom(*service)
+							if err != nil {
+								return err
+							}
+
+							if clw.developmentMode && clw.RouteClientInterface != nil {
+								host, port, err = clw.tryRouteForHostPort(*service, infraUuid)
+								if err != nil {
+									break
+								}
+							}
+
+							collector, err := clw.createCollector(host, port, infraUuid, addressSpace, addressSpaceNamespace)
 							if err != nil {
 								return err
 							}
@@ -400,6 +405,30 @@ func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {
 		panic(fmt.Errorf("unrecognised event type %s", event.Type))
 	}
 	return nil
+}
+
+func (clw *AgentWatcher) getHostPortFrom(service tp.Service) (string, int32, error) {
+	prt, err := util.GetPortForService(service.Spec.Ports, "amqps")
+	if err != nil {
+		return "", 0, err
+	}
+	host := fmt.Sprintf("%s.%s.svc", service.ObjectMeta.Name, clw.Namespace)
+	port := *prt
+	return host, port, nil
+}
+
+// Development mode
+func (clw *AgentWatcher) tryRouteForHostPort(service tp.Service, infraUuid *string) (string, int32, error) {
+	routes := clw.RouteClientInterface.Routes(clw.Namespace)
+	route, err := routes.Get(service.Name, v1.GetOptions{})
+	if err != nil {
+		log.Printf("Development mode - can't find route '%s', skipping this agent: %v", service.Name, err)
+		log.Printf(`Maybe you want to run:
+oc create route passthrough --service=agent-%s
+and restart this program.`, *infraUuid)
+		return "", 0, err
+	}
+	return route.Spec.Host, int32(443), nil
 }
 
 func updateConnectionMetrics(con *consolegraphql.Connection, agentCon *agent.AgentConnection, now time.Time) error {
@@ -620,17 +649,17 @@ func updateLinkMetrics(agentCon *agent.AgentConnection, metrics []*consolegraphq
 			case "standard":
 				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_accepted", "counter")
 				sm.Update(float64(l.Accepted), now)
-				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_modified", "counter")
+				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_modified", "counter")
 				sm.Update(float64(l.Modified), now)
-				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_presettled", "counter")
+				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_presettled", "counter")
 				sm.Update(float64(l.Presettled), now)
-				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_unsettled", "counter")
+				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_unsettled", "counter")
 				sm.Update(float64(l.Unsettled), now)
 				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_undelivered", "counter")
 				sm.Update(float64(l.Undelivered), now)
-				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_rejected", "counter")
+				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_rejected", "counter")
 				sm.Update(float64(l.Rejected), now)
-				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_released", "counter")
+				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_released", "counter")
 				sm.Update(float64(l.Released), now)
 
 				// backlog - agent calculates this field to be the sum of undelivered/unsettled metrics
@@ -638,7 +667,7 @@ func updateLinkMetrics(agentCon *agent.AgentConnection, metrics []*consolegraphq
 				for _, ld := range l.Links {
 					backlog += ld.Backlog
 				}
-				sm, metrics =  consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_messages_backlog", "counter")
+				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_messages_backlog", "counter")
 				sm.Update(float64(backlog), now)
 
 			case "brokered":
@@ -652,5 +681,3 @@ func updateLinkMetrics(agentCon *agent.AgentConnection, metrics []*consolegraphq
 
 	return metrics, nil
 }
-
-
