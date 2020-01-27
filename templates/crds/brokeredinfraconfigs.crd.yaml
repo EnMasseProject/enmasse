@@ -22,6 +22,8 @@ spec:
       storage: false
   validation:
     openAPIV3Schema:
+      type: object
+      description: BrokeredInfraConfig defines configuration applied to brokers for an instance of the brokered address space type. This resource is created by the service administrator.
       properties:
         spec:
           type: object

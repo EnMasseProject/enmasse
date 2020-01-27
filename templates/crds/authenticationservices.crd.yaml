@@ -30,6 +30,8 @@ spec:
     JSONPath: .metadata.creationTimestamp
   validation:
     openAPIV3Schema:
+      type: object
+      description: AuthenticationService describes a service that can be used for authenticating messaging clients for one or more address spaces. This resource is created by the service administrator.
       properties:
         spec:
           type: object

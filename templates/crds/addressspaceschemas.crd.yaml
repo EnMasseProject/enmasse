@@ -17,3 +17,7 @@ spec:
     - name: v1beta1
       served: true
       storage: true
+  validation:
+    openAPIV3Schema:
+      type: object
+      description: AddressSpaceSchema describes the available plans and authentication services for an address space type.

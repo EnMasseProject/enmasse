@@ -51,6 +51,7 @@ spec:
   validation:
     openAPIV3Schema:
       type: object
+      description: AddressSpace is a group of addresses that can be accessed through a single connection (per protocol). An AddressSpace can support multiple protocols, as defined by the type. This resource is created by messaging tenants.
       properties:
         spec:
           type: object

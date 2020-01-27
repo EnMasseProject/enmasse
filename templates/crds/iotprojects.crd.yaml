@@ -38,3 +38,7 @@ spec:
     JSONPath: .status.phase
   subresources:
     status: {}
+  validation:
+    openAPIV3Schema:
+      type: object
+      description: IoTProject applies IoT configuration of the IoT services for a particular project. This resource is created by the messaging tenant.
