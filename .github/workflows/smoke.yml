@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v1.0.0
         with:
           name: unit-test-logs
-          path: artifacts
+          path: test-logs.zip
 
       - name: Smoke tests
         run: ./.github/scripts/smoke_test.sh
@@ -70,4 +70,4 @@ jobs:
         uses: actions/upload-artifact@v1.0.0
         with:
           name: smoke-test-logs
-          path: artifacts
+          path: test-logs.zip
