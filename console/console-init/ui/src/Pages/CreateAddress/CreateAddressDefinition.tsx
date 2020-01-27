@@ -43,6 +43,7 @@ export interface IAddressDefinition {
   plan: string;
   setPlan: (value: any) => void;
   topic: string;
+  addressSpaceType: string;
   setTopic: (value: string) => void;
   planDisabled?: boolean;
   typeOptions: IDropdownOption[];
@@ -84,6 +85,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
   plan,
   setPlan,
   planDisabled,
+  addressSpaceType,
   topic,
   setTopic,
   typeOptions,
@@ -154,7 +156,12 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
     setIsTopicOpen(!isTopicOpen);
   };
   const { loading, error, data } = useQuery<IAddressTypes>(
-    RETURN_ADDRESS_TYPES
+    RETURN_ADDRESS_TYPES, {
+      variables:
+      {
+        a: addressSpaceType
+      }
+    }
   );
   if (loading) return <Loading />;
   if (error) return <Loading />;
