@@ -269,6 +269,24 @@ const availableAddressPlans = [
         "router": 0.001
       },
       2),
+  createAddressPlan("standard-medium-anycast",
+      "anycast",
+      "Medium Anycast",
+      "Creates a medium anycast address.",
+      "Creates a medium anycast address where messages go via a router that does not take ownership of the messages.",
+      {
+        "router": 0.001
+      },
+      3),
+  createAddressPlan("standard-large-anycast",
+      "anycast",
+      "Large Anycast",
+      "Creates a large anycast address.",
+      "Creates a large anycast address where messages go via a router that does not take ownership of the messages.",
+      {
+        "router": 0.001
+      },
+      4),
   createAddressPlan("standard-small-multicast",
       "multicast",
       "Small Multicast",
@@ -277,7 +295,16 @@ const availableAddressPlans = [
       {
         "router": 0.001
       },
-      3),
+      5),
+  createAddressPlan("standard-medium-multicast",
+      "multicast",
+      "Medium Multicast",
+      "Creates a medium multicast address.",
+      "Creates a medium multicast address where messages go via a router that does not take ownership of the messages.",
+      {
+        "router": 0.001
+      },
+      6),
   createAddressPlan("standard-small-topic",
       "topic",
       "Small Topic",
@@ -286,7 +313,25 @@ const availableAddressPlans = [
       {
         "broker": 0
       },
-      4),
+      7),
+  createAddressPlan("standard-small-topic",
+      "topic",
+      "Small Topic",
+      "Creates a small topic sharing underlying broker with other topics.",
+      "Creates a small topic sharing underlying broker with other topics.",
+      {
+        "broker": 0
+      },
+      8),
+  createAddressPlan("standard-medium-topic",
+      "topic",
+      "Medium Topic",
+      "Creates a medium topic sharing underlying broker with other topics.",
+      "Creates a medium topic sharing underlying broker with other topics.",
+      {
+        "broker": 0
+      },
+      9),
   createAddressPlan("standard-small-subscription",
       "subscription",
       "Small Subscription",
@@ -295,7 +340,7 @@ const availableAddressPlans = [
       {
         "broker": 0
       },
-      5),
+      10),
   createAddressPlan("brokered-queue",
       "queue",
       "Brokered Queue",
