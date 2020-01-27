@@ -231,15 +231,6 @@ public class IoTUtils {
         })
                 .collect(Collectors.toSet());
 
-        var actualAddressSpaces = asClient
-                .list().getItems().stream()
-                .map(as -> as.getMetadata().getName())
-                .collect(Collectors.toSet());
-
-        // verify that we only have expected address spaces remaining
-
-        assertEquals(expectedAddressSpaces, actualAddressSpaces);
-
         // retain only the addresses spaces which are expected to be deleted
 
         deletedAddressSpaces.keySet().removeAll(expectedAddressSpaces);
@@ -250,6 +241,16 @@ public class IoTUtils {
             log.info("Verify destruction of address space: {}", deleted.getKey());
             AddressSpaceUtils.waitForAddressSpaceDeleted(deleted.getValue());
         }
+
+        var actualAddressSpaces = asClient
+                .list().getItems().stream()
+                .map(as -> as.getMetadata().getName())
+                .collect(Collectors.toSet());
+
+        // verify that we only have expected address spaces remaining
+
+        assertEquals(expectedAddressSpaces, actualAddressSpaces);
+
     }
 
     public static boolean isIoTInstalled(Kubernetes kubernetes) {
