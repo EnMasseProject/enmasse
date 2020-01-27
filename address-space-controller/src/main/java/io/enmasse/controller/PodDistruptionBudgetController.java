@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudget;
 import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudgetBuilder;
@@ -47,6 +48,7 @@ public class PodDistruptionBudgetController implements Controller {
     private void reconcileRouterPodDisruptionBudget(AddressSpace addressSpace, RouterSet routerSet, StandardInfraConfig infraConfig) {
         if (infraConfig.getSpec() != null && infraConfig.getSpec().getRouter() != null && (infraConfig.getSpec().getRouter().getMinAvailable() != null || infraConfig.getSpec().getRouter().getMaxUnavailable() != null)) {
             String name = String.format("enmasse.%s.%s.qdrouterd", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
+            String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
             try {
                 boolean changed = false;
                 PodDisruptionBudget podDisruptionBudget = client.inNamespace(namespace).policy().podDisruptionBudget().withName(name).get();
@@ -55,6 +57,8 @@ public class PodDistruptionBudgetController implements Controller {
                             .editOrNewMetadata()
                             .withName(name)
                             .addToLabels("app", "enmasse")
+                            .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
+                            .addToLabels(LabelKeys.INFRA_TYPE, "standard")
                             .endMetadata()
                             .editOrNewSpec()
                             .endSpec()
@@ -74,7 +78,8 @@ public class PodDistruptionBudgetController implements Controller {
                     changed = true;
                 }
 
-                if (!routerSet.getStatefulSet().getSpec().getSelector().equals(podDisruptionBudget.getSpec().getSelector())) {
+                if (!routerSet.getStatefulSet().getSpec().getSelector()
+                        .equals(podDisruptionBudget.getSpec().getSelector())) {
                     podDisruptionBudget.getSpec().setSelector(routerSet.getStatefulSet().getSpec().getSelector());
                     changed = true;
                 }
@@ -102,13 +107,15 @@ public class PodDistruptionBudgetController implements Controller {
                             .editOrNewMetadata()
                             .withName(name)
                             .addToLabels("app", "enmasse")
+                            .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
+                            .addToLabels(LabelKeys.INFRA_TYPE, "standard")
                             .endMetadata()
                             .editOrNewSpec()
                             .withNewSelector()
                             .addToMatchLabels("app", "enmasse")
                             .addToMatchLabels("role", "broker")
-                            .addToMatchLabels("infraType", "standard")
-                            .addToMatchLabels("infraUuid", infraUuid)
+                            .addToMatchLabels(LabelKeys.INFRA_TYPE, "standard")
+                            .addToMatchLabels(LabelKeys.INFRA_UUID, infraUuid)
                             .endSelector()
                             .endSpec()
                             .build();
