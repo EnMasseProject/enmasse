@@ -101,7 +101,10 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         log.info("Initial config: {}", currentConfig);
 
         // change plan to "unlimited"
-        standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_UNLIMITED).endSpec().done();
+        standard = new DoneableAddressSpace(standard)
+                .editMetadata().withResourceVersion(null).endMetadata()
+                .editSpec().withPlan(AddressSpacePlans.STANDARD_UNLIMITED).endSpec()
+                .done();
         assertTrue(updateCR(AddressSpaceUtils.addressSpaceToJson(standard).toString()).getRetCode());
         AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(standard, currentConfig);
         assertThat(resourcesManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_UNLIMITED));
