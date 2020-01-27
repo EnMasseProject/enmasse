@@ -71,8 +71,6 @@ spec:
           value: ${IOT_DEVICE_REGISTRY_FILE_IMAGE}
         - name: IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE
           value: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
-        - name: IOT_GC_IMAGE
-          value: ${IOT_GC_IMAGE}
         - name: IOT_HTTP_ADAPTER_IMAGE
           value: ${IOT_HTTP_ADAPTER_IMAGE}
         - name: IOT_MQTT_ADAPTER_IMAGE
