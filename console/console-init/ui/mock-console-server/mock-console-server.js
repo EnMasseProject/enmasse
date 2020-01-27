@@ -656,9 +656,9 @@ function createAddress(addr) {
       var topics  = addresses.filter(a => a.ObjectMeta.Name.startsWith(prefix) && a.Spec.Type === "topic");
       if (!addr.Spec.Topic) {
         throw `Spec.Topic is mandatory for the subscription type`;
-      } else if (topics.find(t => t.ObjectMeta.Name === addr.Spec.Topic) === undefined) {
-        var topicNames  = topics.map(t => t.ObjectMeta.Name);
-        throw `Unrecognised topic name '${addr.Spec.Topic}', known ones are : '${topicNames}'`;
+      } else if (topics.find(t => t.Spec.Address === addr.Spec.Topic) === undefined) {
+        var topicNames  = topics.map(t => t.Spec.Address);
+        throw `Unrecognised topic address '${addr.Spec.Topic}', known ones are : '${topicNames}'`;
       }
   } else {
       if (addr.Spec.Topic) {
@@ -798,23 +798,23 @@ function closeConnection(objectmeta) {
       }
     })));
 
-function createTopicWithSub(addressSpace, n) {
+function createTopicWithSub(addressSpace, topicName) {
     createAddress({
       ObjectMeta: {
-        Name: addressSpace.ObjectMeta.Name + "." + n,
+        Name: addressSpace.ObjectMeta.Name + "." + topicName,
         Namespace: addressSpace.ObjectMeta.Namespace
       },
       Spec: {
-        Address: n,
+        Address: topicName,
         AddressSpace: addressSpace.ObjectMeta.Name,
         Plan: "standard-small-topic",
         Type: "topic"
       },
       Status: {
-        Phase: n.startsWith("c") ? "Configuring" : (n.startsWith("p") ? "Pending" : "Active")
+        Phase: topicName.startsWith("c") ? "Configuring" : (topicName.startsWith("p") ? "Pending" : "Active")
       }
     });
-    var subname = n + '-sub';
+    var subname = topicName + '-sub';
     createAddress({
       ObjectMeta: {
         Name: addressSpaces[0].ObjectMeta.Name + "." + subname,
@@ -825,10 +825,10 @@ function createTopicWithSub(addressSpace, n) {
         AddressSpace: addressSpace.ObjectMeta.Name,
         Plan: "standard-small-subscription",
         Type: "subscription",
-        Topic: addressSpace.ObjectMeta.Name + "." + n
+        Topic: topicName
       },
       Status: {
-        Phase: n.startsWith("c") ? "Configuring" : (n.startsWith("p") ? "Pending" : "Active")
+        Phase: topicName.startsWith("c") ? "Configuring" : (topicName.startsWith("p") ? "Pending" : "Active")
       }
     });
 }
