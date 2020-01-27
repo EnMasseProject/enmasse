@@ -56,6 +56,13 @@ arguments are `first` which specifies the number of rows to be returned and `off
 the starting index within the result set. The object return provides a count
 of the number of rows in the result set in total.
 
+
+# Environment
+
+The following environment variables are understood:
+
+STATE_CHANGE_TIMEOUT - length of time in ms between state transitions of new address space and addres objects
+
 # Example Queries
 
 ## all address space types
