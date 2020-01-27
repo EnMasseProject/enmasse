@@ -117,14 +117,14 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
 
   const { loading, error, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
 
-  const { data : authenticationServices } = useQuery<IAddressSpaceAuthServiceResponse>(RETURN_AUTHENTICATION_SERVICES) 
-    || { data: {addressSpaceSchema_v2 : []}}
+  const { data: authenticationServices } = useQuery<IAddressSpaceAuthServiceResponse>(RETURN_AUTHENTICATION_SERVICES)
+    || { data: { addressSpaceSchema_v2: [] } }
 
   const { addressSpacePlans } = useQuery<IAddressSpacePlans>(
     RETURN_ADDRESS_SPACE_PLANS
   ).data || {
-    addressSpacePlans: []
-  };
+      addressSpacePlans: []
+    };
 
   if (loading) return <Loading />;
   if (error) return <Loading />;
@@ -137,7 +137,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   let planOptions: any[] = [];
 
   let authenticationServiceOptions: any[] = [];
-  
+
   namespaceOptions = namespaces.map(namespace => {
     return {
       value: namespace.ObjectMeta.Name,
@@ -152,7 +152,6 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
             return {
               value: plan.ObjectMeta.Name,
               label: plan.ObjectMeta.Name
-              // description: plan.Spec.ShortDescription
             };
           }
         })
@@ -162,7 +161,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   if (authenticationServices) {
     authenticationServices.addressSpaceSchema_v2
       .forEach(authService => {
-        if(authService.ObjectMeta.Name === type){
+        if (authService.ObjectMeta.Name === type) {
           authenticationServiceOptions = authService.Spec.AuthenticationServices.map(service => {
             return {
               value: service,

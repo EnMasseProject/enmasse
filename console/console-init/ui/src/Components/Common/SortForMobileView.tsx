@@ -72,8 +72,8 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
       ) : sortDirection === "asc" ? (
         <SortAmountUpAltIcon color="blue" onClick={onSortDown} />
       ) : (
-        <SortAmountDownAltIcon color="blue" onClick={onSortUp} />
-      )}
+            <SortAmountDownAltIcon color="blue" onClick={onSortUp} />
+          )}
     </>
   );
 

@@ -38,8 +38,8 @@ interface AddressListFilterProps {
   totalAddresses: number;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
-  onDeleteAllAddress:()=>void;
-  onPurgeAllAddress:()=>void;
+  onDeleteAllAddress: () => void;
+  onPurgeAllAddress: () => void;
 }
 export const AddressListFilterPage: React.FunctionComponent<AddressListFilterProps> = ({
   filterValue,
@@ -135,7 +135,7 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
         )}
       </DataToolbarItem>
       <DataToolbarItem>
-        <AddressListKebab createAddressOnClick={createAddressOnClick} onDeleteAllAddress={onDeleteAllAddress} onPurgeAllAddress={onPurgeAllAddress}/>
+        <AddressListKebab createAddressOnClick={createAddressOnClick} onDeleteAllAddress={onDeleteAllAddress} onPurgeAllAddress={onPurgeAllAddress} />
       </DataToolbarItem>
     </>
   );

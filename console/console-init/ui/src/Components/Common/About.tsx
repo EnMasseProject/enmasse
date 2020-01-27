@@ -17,7 +17,6 @@ export const About: React.FunctionComponent<IAboutProps> = ({
 }) => {
   const createPropsWithLogoAndBgImages = (productName: string) => {
     var imagePrefix = productName.toLowerCase().split(" ")[0];
-    var productIconName = imagePrefix + "_about_logo.svg";
     var modalImgProps = {
       backgroundImageSrc: "",
       brandImageSrc: "",
@@ -52,7 +51,7 @@ export const About: React.FunctionComponent<IAboutProps> = ({
     console.log("process.env.REACT_APP_VERSION is not set");
   }
   let docs = process.env.REACT_APP_DOCS;
-  if(!docs) {
+  if (!docs) {
     console.log("process.env.REACT_APP_DOCS is not set");
   }
   let docsElement;

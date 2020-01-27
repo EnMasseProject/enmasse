@@ -187,8 +187,8 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
     onChangeHostnameData(e.target.value);
     const options: React.ReactElement[] = hostnameOptions
       ? hostnameOptions.map((option, index) => (
-          <SelectOption key={index} value={option} />
-        ))
+        <SelectOption key={index} value={option} />
+      ))
       : [];
     return options;
   };
@@ -234,8 +234,8 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
     onChangeContainerData(e.target.value);
     const options: React.ReactElement[] = containerOptions
       ? containerOptions.map((option, index) => (
-          <SelectOption key={index} value={option} />
-        ))
+        <SelectOption key={index} value={option} />
+      ))
       : [];
     return options;
   };
@@ -357,7 +357,6 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                     hostnameOptions.map((option, index) => (
                       <SelectOption key={index} value={option} />
                     ))}
-                  {/* {} */}
                 </Select>
                 <Button
                   id="cl-filter-search-btn"
@@ -402,7 +401,6 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                     containerOptions.map((option, index) => (
                       <SelectOption key={index} value={option} />
                     ))}
-                  {/* {} */}
                 </Select>
                 <Button
                   id="cl-filter-search"

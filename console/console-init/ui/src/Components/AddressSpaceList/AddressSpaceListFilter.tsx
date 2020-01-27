@@ -49,7 +49,7 @@ interface IAddressSpaceListFilterProps {
 
 interface IAddressSpaceListKebabProps {
   createAddressSpaceOnClick: () => void;
-  onDeleteAll:()=>void;
+  onDeleteAll: () => void;
 }
 export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFilterProps> = ({
   filterValue,
@@ -101,18 +101,18 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
         if (nameSelected && nameSelected.trim() !== "" && filterNames)
           if (filterNames.map(filter => filter.value).indexOf(nameSelected) < 0)
             setFilterNames([...filterNames, { value: nameSelected.trim(), isExact: true }]);
-          if (!nameSelected && nameInput && nameInput.trim() !== "")
-            if (filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0)
-              setFilterNames([...filterNames, { value: nameInput.trim(), isExact: false }]);
+        if (!nameSelected && nameInput && nameInput.trim() !== "")
+          if (filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0)
+            setFilterNames([...filterNames, { value: nameInput.trim(), isExact: false }]);
         setNameSelected(undefined);
       } else if (filterValue === "Namespace") {
         if (namespaceSelected && namespaceSelected.trim() !== "" && filterNames)
           if (filterNamespaces.map(filter => filter.value).indexOf(namespaceSelected) < 0) {
             setFilterNamespaces([...filterNamespaces, { value: namespaceSelected.trim(), isExact: true }]);
           }
-          if (!namespaceSelected && nameSpaceInput && nameSpaceInput.trim() !== "")
-            if (filterNamespaces.map(filter => filter.value).indexOf(nameSpaceInput.trim()) < 0)
-              setFilterNamespaces([...filterNamespaces, { value: nameSpaceInput.trim(), isExact: false }]);
+        if (!namespaceSelected && nameSpaceInput && nameSpaceInput.trim() !== "")
+          if (filterNamespaces.map(filter => filter.value).indexOf(nameSpaceInput.trim()) < 0)
+            setFilterNamespaces([...filterNamespaces, { value: nameSpaceInput.trim(), isExact: false }]);
         setNamespaceSelected(undefined);
       }
     }
@@ -198,8 +198,8 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
-          <SelectOption key={index} value={option} />
-        ))
+        <SelectOption key={index} value={option} />
+      ))
       : [];
     return options;
   };
@@ -246,8 +246,8 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     onChangeNamespaceData(e.target.value);
     const options: React.ReactElement[] = namespaceOptions
       ? namespaceOptions.map((option, index) => (
-          <SelectOption key={index} value={option} />
-        ))
+        <SelectOption key={index} value={option} />
+      ))
       : [];
     return options;
   };
@@ -339,7 +339,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                         nameOptions.map((option, index) => (
                           <SelectOption key={index} value={option} />
                         ))}
-                      {/* {} */}
                     </Select>
                     <Button
                       id="al-filter-search-name"
@@ -384,7 +383,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                         namespaceOptions.map((option, index) => (
                           <SelectOption key={index} value={option} />
                         ))}
-                      {/* {} */}
                     </Select>
                     <Button
                       id="al-filter-search-namespace"
@@ -480,7 +478,7 @@ export const AddressSpaceListKebab: React.FunctionComponent<IAddressSpaceListKeb
   };
 
   const onKebabSelect = async (event: any) => {
-    if(event.target.value === "deleteAll"){
+    if (event.target.value === "deleteAll") {
       await onDeleteAll();
     }
     setIsKebabOpen(!isKebabOpen);

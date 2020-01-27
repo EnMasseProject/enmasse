@@ -51,8 +51,8 @@ interface IAddressListFilterProps {
 
 interface IAddressListKebabProps {
   createAddressOnClick: () => void;
-  onDeleteAllAddress:()=>void;
-  onPurgeAllAddress:()=>void;
+  onDeleteAllAddress: () => void;
+  onPurgeAllAddress: () => void;
 }
 export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps> = ({
   filterValue,
@@ -170,8 +170,8 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
     onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
-          <SelectOption key={index} value={option} />
-        ))
+        <SelectOption key={index} value={option} />
+      ))
       : [];
     return options;
   };
@@ -281,7 +281,6 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                             value={option}
                           />
                         ))}
-                      {/* {} */}
                     </Select>
                     <Button
                       id={"al-filter-select-name-search"}
@@ -409,22 +408,16 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
     >
       Purge All
     </DropdownItem>
-    // <OverflowMenuDropdownItem key="secondary" isShared={true}>
-    //   Create Address
-    // </OverflowMenuDropdownItem>,
-    // <OverflowMenuDropdownItem key="delete-all">
-    //   Delete All
-    // </OverflowMenuDropdownItem>
   ];
   const onKebabToggle = (isOpen: boolean) => {
     setIsKebabOpen(isOpen);
   };
 
-  const onKebabSelect = async(event: any) => {
-    if(event.target.value){
-      if(event.target.value==="purgeAll"){
+  const onKebabSelect = async (event: any) => {
+    if (event.target.value) {
+      if (event.target.value === "purgeAll") {
         await onPurgeAllAddress();
-      } else if(event.target.value==="deleteAll") {
+      } else if (event.target.value === "deleteAll") {
         await onDeleteAllAddress();
       }
     }

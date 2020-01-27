@@ -131,7 +131,7 @@ export default function AddressSpaceDetailPage() {
   const handleCancelDelete = () => {
     setIsDeleteModalOpen(!isDeleteModalOpen);
   };
-  // async function to delete a address space
+  // async function to delete an address space
   const deleteAddressSpace = async (data: IObjectMeta_v1_Input) => {
     const deletedData = await client.mutate({
       mutation: DELETE_ADDRESS_SPACE,

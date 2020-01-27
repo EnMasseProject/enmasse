@@ -35,7 +35,6 @@ import {
   RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH,
   RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH
 } from "src/Queries/Queries";
-import { id } from "date-fns/esm/locale";
 import {
   ISearchAddressLinkNameResponse,
   ISearchAddressLinkContainerResponse
@@ -118,7 +117,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
           setFilterNames([...filterNames, { value: nameSelected.trim(), isExact: true }]);
           setNameSelected(undefined);
         }
-      if(!nameSelected && nameInput && nameInput.trim() !== "")
+      if (!nameSelected && nameInput && nameInput.trim() !== "")
         if (filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0)
           setFilterNames([...filterNames, { value: nameInput.trim(), isExact: false }]);
     } else if (filterValue && filterValue === "Container") {
@@ -184,11 +183,10 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   };
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNameInput(e.target.value);
-    const data = onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
-          <SelectOption key={index} value={option} />
-        ))
+        <SelectOption key={index} value={option} />
+      ))
       : [];
     return options;
   };
@@ -233,11 +231,10 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     setContainerInput(e.target.value);
-    const data = onChangeContainerData(e.target.value);
     const options: React.ReactElement[] = containerOptions
       ? containerOptions.map((option, index) => (
-          <SelectOption key={index} value={option} />
-        ))
+        <SelectOption key={index} value={option} />
+      ))
       : [];
     return options;
   };
@@ -361,7 +358,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                           value={option}
                         />
                       ))}
-                    {/* {} */}
                   </Select>
                   <Button
                     id="ad-links-filter-search-name"
@@ -410,7 +406,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                           value={option}
                         />
                       ))}
-                    {/* {} */}
                   </Select>
                   <Button
                     id="ad-links-filter-search-container"

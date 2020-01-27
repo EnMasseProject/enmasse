@@ -37,4 +37,3 @@ export const getFilteredValue = (object: IMetrics[], value: string) => {
   }
   return 0;
 };
-  

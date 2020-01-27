@@ -90,15 +90,15 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   }));
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
-    setSortValue({index:index,direction:direction});
+    setSortValue({ index: index, direction: direction });
   };
   return (
     <>
       {links && links.Total > 0 ? (
         <ClientList rows={clientRows} onSort={onSort} sortBy={sortBy} />
       ) : (
-        <EmptyLinks />
-      )}
+          <EmptyLinks />
+        )}
     </>
   );
 };

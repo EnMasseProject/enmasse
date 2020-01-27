@@ -24,7 +24,7 @@ import {
   DELETE_ADDRESS,
   PURGE_ADDRESS
 } from "src/Queries/Queries";
-import { ISortBy, IRowData } from "@patternfly/react-table";
+import { ISortBy } from "@patternfly/react-table";
 import { IAddress } from "src/Components/AddressSpace/Address/AddressList";
 
 export const GridStylesForTableHeader = StyleSheet.create({

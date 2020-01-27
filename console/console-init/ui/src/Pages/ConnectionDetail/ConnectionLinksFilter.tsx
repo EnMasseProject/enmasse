@@ -192,8 +192,8 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
     onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
-          <SelectOption key={index} value={option} />
-        ))
+        <SelectOption key={index} value={option} />
+      ))
       : [];
     return options;
   };
@@ -240,8 +240,8 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
     onChangeAddressData(e.target.value);
     const options: React.ReactElement[] = addressOptions
       ? addressOptions.map((option, index) => (
-          <SelectOption key={index} value={option} />
-        ))
+        <SelectOption key={index} value={option} />
+      ))
       : [];
     return options;
   };
@@ -360,7 +360,6 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                       nameOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
                       ))}
-                    {/* {} */}
                   </Select>
                   <Button
                     id="cl-filter-search-name"
@@ -405,7 +404,6 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                       addressOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
                       ))}
-                    {/* {} */}
                   </Select>
                   <Button
                     id="cl-filter-search-address"

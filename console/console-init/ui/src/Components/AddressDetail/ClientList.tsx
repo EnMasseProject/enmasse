@@ -53,7 +53,7 @@ export const ClientList: React.FunctionComponent<IClientListProps> = ({
                 to={`/address-spaces/${row.addressSpaceNamespace}/${row.addressSpaceName}/${row.addressSpaceType}/connections/${row.connectionName}`}
               >
                 <Tooltip position={TooltipPosition.top} content={<div>Go to the link</div>}>
-                <ExternalLinkAltIcon />
+                  <ExternalLinkAltIcon />
                 </Tooltip>
               </Link>
             </>

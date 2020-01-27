@@ -25,7 +25,7 @@ export interface IAddressDetailHeaderProps {
   name: string;
   plan: string;
   partitions: number;
-  storedMessages:number,
+  storedMessages: number,
   onEdit: (name: string) => void;
   onDelete: (name: string) => void;
 }
@@ -115,9 +115,9 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
             >
               <b>{plan}</b>
             </FlexItem>
-            { 
+            {
               type === "queue"
-                &&
+              &&
               (
                 <FlexItem id="adheader-stored-messages">
                   <b>{storedMessages}</b> stored messages

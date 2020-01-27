@@ -14,7 +14,7 @@ import {
   AddressSpaceListFilter,
   AddressSpaceListKebab
 } from "src/Components/AddressSpaceList/AddressSpaceListFilter";
-import { ISortBy, IRowData } from "@patternfly/react-table";
+import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView } from "../../Components/Common/SortForMobileView";
 import useWindowDimensions from "src/Components/Common/WindowDimension";
 
@@ -33,7 +33,7 @@ interface IAddressSpaceListFilterPageProps {
   setSortValue: (value: ISortBy) => void;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
-  onDeleteAll:()=>void;
+  onDeleteAll: () => void;
 }
 export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceListFilterPageProps> = ({
   filterValue,

@@ -97,11 +97,11 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
                   See more details <AngleDownIcon color="black" />
                 </>
               ) : (
-                <>
-                  Hide details
+                  <>
+                    Hide details
                   <AngleUpIcon color="black" />
-                </>
-              )}
+                  </>
+                )}
             </FlexItem>
           )}
         </Flex>
@@ -127,8 +127,8 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
               />
             </>
           ) : (
-            ""
-          )}
+              ""
+            )}
         </Flex>
       </CardBody>
     </Card>

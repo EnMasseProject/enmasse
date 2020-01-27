@@ -16,7 +16,7 @@ import {
 import { AddressSpaceListPage } from "./AddressSpaceListPage";
 import { AddressSpaceListFilterPage } from "./AddressSpaceListFilterPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
-import { ISortBy, IRowData } from "@patternfly/react-table";
+import { ISortBy } from "@patternfly/react-table";
 import { DELETE_ADDRESS_SPACE } from "src/Queries/Queries";
 import { useApolloClient } from "@apollo/react-hooks";
 import { IAddressSpace } from "src/Components/AddressSpaceList/AddressSpaceList";
@@ -118,7 +118,6 @@ export default function AddressSpaceListWithFilterAndPagination() {
     if (isSelected === true && selectedAddressSpaces.indexOf(data) === -1) {
       setSelectedAddressSpaces([...selectedAddressSpaces, data]);
     } else if (isSelected === false) {
-      console.log("data");
       setSelectedAddressSpaces(
         selectedAddressSpaces.filter(addressSpace =>
           !compareTwoAddress(

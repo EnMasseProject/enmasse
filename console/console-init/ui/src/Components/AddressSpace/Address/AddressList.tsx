@@ -198,7 +198,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     } else {
       rows = [...tableRows];
       rows[rowIndex].selected = isSelected;
-      onSelectAddress(rows[rowIndex].originalData, isSelected);
+      onSelectAddress(rows[rowIndex].originalData,isSelected);
     }
   };
   return (

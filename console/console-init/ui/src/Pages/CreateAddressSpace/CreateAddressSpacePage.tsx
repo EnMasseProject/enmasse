@@ -27,7 +27,6 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
   const [addressSpacePlan, setAddressSpacePlan] = React.useState(" ");
   const [namespace, setNamespace] = React.useState(" ");
   const [authenticationService, setAuthenticationService] = React.useState(" ");
-  const [message, setMessage] = React.useState("");
   const [isError, setIsError] = React.useState();
   const client = useApolloClient();
 
@@ -136,9 +135,7 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
         onClose={onClose}
         title="Create an Instance"
         steps={steps}
-        onNext={() => {
-          console.log("next");
-        }}
+        onNext={() => {}}
         onSave={handleSave}
       />
       )}

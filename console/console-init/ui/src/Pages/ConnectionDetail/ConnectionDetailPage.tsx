@@ -73,7 +73,7 @@ export default function ConnectionDetailPage() {
   useA11yRouteChange();
   const { loading, error, data } = useQuery<IConnectionDetailResponse>(
     RETURN_CONNECTION_DETAIL(name || "", namespace || "", connectionname || ""),
-    { pollInterval: 5000 } 
+    { pollInterval: 5000 }
   );
   if (loading) return <Loading />;
   if (error) {
@@ -84,13 +84,12 @@ export default function ConnectionDetailPage() {
     connections: { Total: 0, Connections: [] }
   };
   const connection = connections.Connections[0];
-  // setTotalLinks(connections.Total);
   //Change this logic
   const jvmObject =
-    connection.Spec &&connection.Spec.Properties && connection.Spec.Properties.length > 0
+    connection.Spec && connection.Spec.Properties && connection.Spec.Properties.length > 0
       ? getSplitValue(
-          getProductFilteredValue(connection.Spec.Properties, "platform")
-        )
+        getProductFilteredValue(connection.Spec.Properties, "platform")
+      )
       : { jvm: "-", os: "-" };
 
   const connectionDetail: IConnectionHeaderDetailProps = {
@@ -99,7 +98,7 @@ export default function ConnectionDetailPage() {
     version: getProductFilteredValue(connection.Spec.Properties, "version"),
     protocol: connection.Spec.Protocol.toUpperCase(),
     encrypted: connection.Spec.Encrypted || false,
-    creationTimestamp:connection.ObjectMeta.CreationTimestamp,
+    creationTimestamp: connection.ObjectMeta.CreationTimestamp,
     messageIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
     messageOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
     //Change this logic

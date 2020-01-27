@@ -10,10 +10,9 @@ import { PreviewAddress } from "./PreviewAddress";
 import { useApolloClient } from "@apollo/react-hooks";
 import { CREATE_ADDRESS } from "src/Queries/Queries";
 import {
-  IDropdown,
   IDropdownOption
 } from "src/Components/Common/FilterDropdown";
-import { type } from "os";
+
 interface ICreateAddressProps {
   name: string;
   namespace: string;
@@ -22,7 +21,7 @@ interface ICreateAddressProps {
   addressSpaceType: string;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
-  setOnCreationRefetch?:(value:boolean)=>void;
+  setOnCreationRefetch?: (value: boolean) => void;
 }
 export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = ({
   name,
@@ -54,13 +53,13 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
       addressName.trim() !== "" &&
       plan.trim() !== "" &&
       addressType.trim() !== "" &&
-        (
-          (addressType === "subscription") === 
-            (topic.trim() !== "")
-        )
+      (
+        (addressType === "subscription") ===
+        (topic.trim() !== "")
+      )
     ) {
       const getVariables = () => {
-        let variable:any = {
+        let variable: any = {
           ObjectMeta: {
             Name: addressSpace + "." + addressName,
             Namespace: namespace
@@ -119,8 +118,8 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
         plan.trim() !== "" &&
         addressType.trim() !== "" &&
         (
-          (addressType === "subscription") === 
-            (topic.trim() !== "")
+          (addressType === "subscription") ===
+          (topic.trim() !== "")
         )
       ),
       backButton: "hide"
@@ -142,8 +141,8 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
         plan.trim() !== "" &&
         addressType.trim() !== "" &&
         (
-          (addressType === "subscription") === 
-            (topic.trim() !== "")
+          (addressType === "subscription") ===
+          (topic.trim() !== "")
         )
       ),
       canJumpTo: (
@@ -151,8 +150,8 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
         plan.trim() !== "" &&
         addressType.trim() !== "" &&
         (
-          (addressType === "subscription") === 
-            (topic.trim() !== "")
+          (addressType === "subscription") ===
+          (topic.trim() !== "")
         )
       ),
       nextButtonText: "Finish"
@@ -170,9 +169,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
       }}
       title="Create new Address"
       steps={steps}
-      onNext={() => {
-        console.log("next");
-      }}
+      onNext={() => {}}
       onSave={handleSave}
     />
   );

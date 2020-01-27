@@ -791,7 +791,7 @@ export const RETURN_ALL_CONECTION_LIST = (
     `query all_connections_for_addressspace_view {
       connections(
         filter: "${filter}" first:${perPage} offset:${perPage *
-      (page - 1)} orderBy:"${orderByString}" 
+    (page - 1)} orderBy:"${orderByString}" 
       ) {
       Total
       Connections {

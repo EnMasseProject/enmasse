@@ -6,7 +6,6 @@
 import * as React from "react";
 import {
   CheckCircleIcon,
-  TimesCircleIcon,
   InProgressIcon,
   ExclamationCircleIcon
 } from "@patternfly/react-icons";
