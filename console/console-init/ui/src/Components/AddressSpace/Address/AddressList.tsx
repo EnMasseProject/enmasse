@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Table,
   TableVariant,
@@ -17,8 +17,9 @@ import {
 import { Link } from "react-router-dom";
 import { TypePlan } from "../../Common/TypePlan";
 import { Messages } from "../../Common/Messages";
-import { Error } from "../../Common/Error";
 import useWindowDimensions from "src/Components/Common/WindowDimension";
+import { AddressSpaceStatus } from "src/Components/Common/AddressSpaceListFormatter";
+import { AddressStatus } from "src/Components/Common/AddressFormatter";
 
 export interface IAddress {
   name: string;
@@ -36,7 +37,7 @@ export interface IAddress {
   isReady: boolean;
   errorMessages?: string[];
   status?: string;
-  selected?:boolean;
+  selected?: boolean;
 }
 
 interface IAddressListProps {
@@ -46,7 +47,7 @@ interface IAddressListProps {
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
   onSelectAddress: (rowData: IAddress, isSelected: boolean) => void;
-  onSelectAllAddress: (datas:IAddress[], isSelected: boolean) => void;
+  onSelectAllAddress: (datas: IAddress[], isSelected: boolean) => void;
 }
 
 export const AddressList: React.FunctionComponent<IAddressListProps> = ({
@@ -76,12 +77,20 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   const toTableCells = (row: IAddress) => {
     if (row.isReady) {
       const tableRow: IRowData = {
-        selected:row.selected,
+        selected: row.selected,
         cells: [
           {
             title: <Link to={`addresses/${row.name}`}>{row.displayName}</Link>
           },
           { title: <TypePlan type={row.type} plan={row.planLabel} /> },
+          {
+            title: (
+              <AddressSpaceStatus
+                messages={row.errorMessages || []}
+                phase={row.status || ""}
+              />
+            )
+          },
           {
             title: (
               <Messages
@@ -119,11 +128,10 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
           },
           { title: <TypePlan type={row.type} plan={row.planLabel} /> },
           {
-            title: row.errorMessages ? (
-              <Error message={row.errorMessages[0]} type={row.status} />
-            ) : (
-              ""
-            ),
+            title: <AddressStatus phase={row.status || ""} />
+          },
+          {
+            title: row.errorMessages ? row.errorMessages : "",
             props: { colSpan: 6 }
           }
         ],
@@ -136,6 +144,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   const tableColumns = [
     { title: "Address", transforms: [sortable] },
     "Type/Plan",
+    "Status",
     {
       title:
         width > 769 ? (
@@ -177,16 +186,19 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   ) => {
     let rows;
     if (rowIndex === -1) {
-      rows = tableRows.map(row=>{
-        const data =row;
-        data.selected=isSelected
+      rows = tableRows.map(row => {
+        const data = row;
+        data.selected = isSelected;
         return data;
-      })
-      onSelectAllAddress(rows.map(row=>row.originalData),isSelected)
+      });
+      onSelectAllAddress(
+        rows.map(row => row.originalData),
+        isSelected
+      );
     } else {
       rows = [...tableRows];
       rows[rowIndex].selected = isSelected;
-      onSelectAddress(rows[rowIndex].originalData,isSelected);
+      onSelectAddress(rows[rowIndex].originalData, isSelected);
     }
   };
   return (

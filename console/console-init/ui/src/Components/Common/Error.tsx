@@ -11,21 +11,6 @@ interface IErrorProps {
   type?: string;
 }
 
-export const Error: React.FunctionComponent<IErrorProps> = ({
-  message,
-  type
-}) => {
-  return type === "Pending" ? (
-    <React.Fragment>
-      <ExclamationCircleIcon color="red" />
-      &nbsp;
-      {message}
-    </React.Fragment>
-  ) : (
-    <>
-      <InProgressIcon />
-      &nbsp;
-      {message}
-    </>
-  );
+export const Error: React.FunctionComponent<IErrorProps> = ({ message }) => {
+  return <>{message}</>;
 };

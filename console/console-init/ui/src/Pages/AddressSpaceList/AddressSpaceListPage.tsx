@@ -171,6 +171,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
       displayName: addSpace.Spec.Plan.Spec.DisplayName,
       isReady: addSpace.Status.IsReady,
       phase: addSpace.Status.Phase,
+      messages:addSpace.Status.Messages,
       selected:
         selectedAddressSpaces.filter(({ name, nameSpace }) =>
           compareTwoAddress(
