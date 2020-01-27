@@ -1,9 +1,9 @@
 /*
- * Copyright 2018-2019, EnMasse authors.
+ * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package main
+package util
 
 import (
 	"bytes"
@@ -26,18 +26,16 @@ type TemplateHelper struct {
 	TemplateList []string
 }
 
-// Creates a new templates helper and populates the values for all
-// templates properties. Some of them (like the hostname) are set
-// by the user in the custom resource
+// Creates a new template helper and populates the values for all
+// template properties.
 func NewTemplateHelper(extraParams map[string]string) *TemplateHelper {
-
-	log.Info("Installing Monitoring Resources")
 
 	params := Parameters{Params: extraParams}
 
-	templatePath := "./templates/"
+	templatePath := "/templates"
 	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-		templatePath = "../templates/build/enmasse-latest/install/bundles/monitoring"
+		// ENV VAR should be set for local deployments
+		templatePath = os.Getenv("TEMPLATE_DIR")
 		if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 			panic("cannot find templates")
 		}
@@ -52,12 +50,12 @@ func NewTemplateHelper(extraParams map[string]string) *TemplateHelper {
 
 func GetTemplateList() []string {
 	templateList := []string{
-		"010-PrometheusRules-kube-metrics.yaml",
-		"010-PrometheusRules-enmasse.yaml",
-		"010-ServiceMonitor-enmasse.yaml",
-		"010-GrafanaDashboard-brokers.yaml",
-		"010-GrafanaDashboard-components.yaml",
-		"010-GrafanaDashboard-routers.yaml",
+		"PrometheusRules-kube-metrics.yaml",
+		"PrometheusRules-enmasse.yaml",
+		"ServiceMonitor-enmasse.yaml",
+		"GrafanaDashboard-brokers.yaml",
+		"GrafanaDashboard-components.yaml",
+		"GrafanaDashboard-routers.yaml",
 	}
 	return templateList
 }

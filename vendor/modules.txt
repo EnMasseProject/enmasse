@@ -39,6 +39,8 @@ github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
 # github.com/evanphx/json-patch v4.5.0+incompatible
 github.com/evanphx/json-patch
+# github.com/ghodss/yaml v1.0.0
+github.com/ghodss/yaml
 # github.com/go-logr/logr v0.1.0
 github.com/go-logr/logr
 # github.com/go-logr/zapr v0.1.1
@@ -62,8 +64,8 @@ github.com/golang/groupcache/lru
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes
-github.com/golang/protobuf/ptypes/timestamp
 github.com/golang/protobuf/ptypes/duration
+github.com/golang/protobuf/ptypes/timestamp
 github.com/golang/protobuf/ptypes/wrappers
 github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/protoc-gen-go/generator
@@ -356,9 +358,9 @@ k8s.io/api/node/v1alpha1
 k8s.io/api/node/v1beta1
 k8s.io/api/scheduling/v1
 # k8s.io/apimachinery v0.0.0 => k8s.io/apimachinery v0.0.0-20191004074956-c5d2f014d689
+k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/runtime/schema
 k8s.io/apimachinery/pkg/util/intstr
-k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/apis/meta/v1
 k8s.io/apimachinery/pkg/util/runtime
 k8s.io/apimachinery/pkg/util/wait
@@ -370,21 +372,21 @@ k8s.io/apimachinery/pkg/types
 k8s.io/apimachinery/pkg/labels
 k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
 k8s.io/apimachinery/pkg/selection
+k8s.io/apimachinery/pkg/util/validation/field
+k8s.io/apimachinery/pkg/util/sets
+k8s.io/apimachinery/pkg/version
 k8s.io/apimachinery/pkg/runtime/serializer/streaming
 k8s.io/apimachinery/pkg/util/net
-k8s.io/apimachinery/pkg/util/sets
 k8s.io/apimachinery/pkg/api/meta
-k8s.io/apimachinery/pkg/util/validation/field
-k8s.io/apimachinery/pkg/conversion
 k8s.io/apimachinery/pkg/fields
+k8s.io/apimachinery/pkg/util/json
+k8s.io/apimachinery/pkg/conversion
 k8s.io/apimachinery/pkg/util/cache
 k8s.io/apimachinery/pkg/util/clock
 k8s.io/apimachinery/pkg/util/diff
 k8s.io/apimachinery/pkg/util/naming
 k8s.io/apimachinery/pkg/conversion/queryparams
 k8s.io/apimachinery/pkg/util/errors
-k8s.io/apimachinery/pkg/util/json
-k8s.io/apimachinery/pkg/version
 k8s.io/apimachinery/pkg/runtime/serializer/json
 k8s.io/apimachinery/pkg/runtime/serializer/protobuf
 k8s.io/apimachinery/pkg/runtime/serializer/recognizer
@@ -400,13 +402,13 @@ k8s.io/apimachinery/pkg/util/framer
 k8s.io/apimachinery/pkg/util/mergepatch
 k8s.io/apimachinery/third_party/forked/golang/json
 # k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible => k8s.io/client-go v11.0.1-0.20191029005444-8e4128053008+incompatible
+k8s.io/client-go/discovery
 k8s.io/client-go/plugin/pkg/client/auth
 k8s.io/client-go/rest
 k8s.io/client-go/kubernetes
 k8s.io/client-go/kubernetes/scheme
 k8s.io/client-go/tools/cache
 k8s.io/client-go/util/workqueue
-k8s.io/client-go/discovery
 k8s.io/client-go/util/flowcontrol
 k8s.io/client-go/discovery/fake
 k8s.io/client-go/testing
@@ -529,6 +531,7 @@ k8s.io/utils/buffer
 k8s.io/utils/trace
 k8s.io/utils/integer
 # sigs.k8s.io/controller-runtime v0.2.2
+sigs.k8s.io/controller-runtime/pkg/client
 sigs.k8s.io/controller-runtime/pkg/client/config
 sigs.k8s.io/controller-runtime/pkg/log
 sigs.k8s.io/controller-runtime/pkg/manager
@@ -536,7 +539,6 @@ sigs.k8s.io/controller-runtime/pkg/manager/signals
 sigs.k8s.io/controller-runtime/pkg/runtime/log
 sigs.k8s.io/controller-runtime/pkg/runtime/signals
 sigs.k8s.io/controller-runtime/pkg/cache
-sigs.k8s.io/controller-runtime/pkg/client
 sigs.k8s.io/controller-runtime/pkg/client/apiutil
 sigs.k8s.io/controller-runtime/pkg/controller
 sigs.k8s.io/controller-runtime/pkg/controller/controllerutil

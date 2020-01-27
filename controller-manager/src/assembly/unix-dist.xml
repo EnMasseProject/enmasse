@@ -27,16 +27,8 @@
     <includeBaseDirectory>False</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>../templates/grafana-dashboards/</directory>
-            <outputDirectory>./templates</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>../templates/prometheus-rules/</directory>
-            <outputDirectory>./templates</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>../templates/service-monitors/</directory>
-            <outputDirectory>./templates</outputDirectory>
+            <directory>${project.basedir}/src/main/resources/templates</directory>
+            <outputDirectory>/templates</outputDirectory>
         </fileSet>
     </fileSets>
     <files>

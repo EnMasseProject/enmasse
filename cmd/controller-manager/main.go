@@ -9,6 +9,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/enmasseproject/enmasse/pkg/util"
 	"os"
 	"runtime"
 
@@ -94,14 +95,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Install monitoring resources
 	serverClient, err := client.New(cfg, client.Options{})
 
-	// Install monitoring resources
-	monitoring := os.Getenv("ENABLE_MONITORING")
-	if monitoring == "true" {
+	monitoringEnabled := os.Getenv("ENABLE_MONITORING")
+
+	if monitoringEnabled == "true" {
+		log.Info("Installing monitoring resources")
+
 		err = installMonitoring(ctx, serverClient)
 		if err != nil {
-			fmt.Print(err)
+			log.Error(err, "Failed to install monitoring resources")
 		}
 	}
 
@@ -283,17 +287,17 @@ func installMonitoring(ctx context.Context, client client.Client) error {
 
 	params := map[string]string{"Namespace": os.Getenv("NAMESPACE")}
 
-	templateHelper := NewTemplateHelper(params)
+	templateHelper := util.NewTemplateHelper(params)
 
 	for _, template := range templateHelper.TemplateList {
 		resource, err := templateHelper.CreateResource(template)
 		if err != nil {
-			return fmt.Errorf("createResource failed: %w", err)
+			return fmt.Errorf("createResource failed: %s", err)
 		}
 		err = client.Create(ctx, resource)
 		if err != nil {
 			if !kerrors.IsAlreadyExists(err) {
-				return fmt.Errorf("error creating resource: %w", err)
+				return fmt.Errorf("error creating resource: %s", err)
 			}
 		}
 	}
