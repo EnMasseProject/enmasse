@@ -869,8 +869,10 @@ export const RETURN_CONNECTION_DETAIL = (
 };
 
 export const RETURN_ADDRESS_TYPES = gql`
-  query addressTypes {
-    addressTypes_v2(addressSpaceType: standard) {
+  query addressTypes (
+    $a: AddressSpaceType!
+  ) {
+    addressTypes_v2(addressSpaceType: $a) {
       ObjectMeta {
         Name
       }
