@@ -79,6 +79,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
 
     @Test
     void testReplacePatchAddressSpace() throws Exception {
+        // create new address space with plan "small"
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("crd-patch-space")
@@ -99,13 +100,14 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         String currentConfig = resourcesManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
         log.info("Initial config: {}", currentConfig);
 
+        // change plan to "unlimited"
         standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_UNLIMITED).endSpec().done();
-        updateCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
+        assertTrue(updateCR(AddressSpaceUtils.addressSpaceToJson(standard).toString()).getRetCode());
         AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(standard, currentConfig);
         assertThat(resourcesManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_UNLIMITED));
         currentConfig = resourcesManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
 
-        // Patch back to small plan
+        // Patch back to "small" plan
         assertTrue(patchCR(standard.getKind().toLowerCase(), standard.getMetadata().getName(), "{\"spec\":{\"plan\":\"" + AddressSpacePlans.STANDARD_SMALL + "\"}}").getRetCode());
         standard = resourcesManager.getAddressSpace(standard.getMetadata().getName());
         resourcesManager.waitForAddressSpaceReady(standard);
