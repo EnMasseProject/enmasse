@@ -40,6 +40,8 @@ spec:
     JSONPath: .metadata.creationTimestamp
   validation:
     openAPIV3Schema:
+      type: object
+      description: AddressPlan describes the resource usage and common properties of an address. This resource is created by the service administrator.
       properties:
         status:
           properties:

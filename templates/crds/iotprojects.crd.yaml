@@ -38,3 +38,7 @@ spec:
     JSONPath: .status.phase
   subresources:
     status: {}
+  validation:
+    openAPIV3Schema:
+      type: object
+      description: IoTProject creates a new isolated space for IoT related messsaging. This resource is created by the messaging tenant and is also sometimes called an "IoT Tenant".

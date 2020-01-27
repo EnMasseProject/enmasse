@@ -40,6 +40,8 @@ spec:
     JSONPath: .metadata.creationTimestamp
   validation:
     openAPIV3Schema:
+      type: object
+      description: AddressSpacePlan describes the allowed resource usage of an address space. This resource is created by the service administrator.
       properties:
         status:
           properties:

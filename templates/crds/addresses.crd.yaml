@@ -56,6 +56,7 @@ spec:
   validation:
     openAPIV3Schema:
       type: object
+      description: Address describes a destination for sending and receiving messages. An Address has a type, which defines the semantics of sending messages to and receiving messages from that address. This resource is created by messaging tenants.
       properties:
         spec:
           type: object
@@ -79,6 +80,9 @@ spec:
             plan:
               type: string
               description: "Plan referenced by this address."
+            topic:
+              type: string
+              description: "Address of topic that this subscription refers to (only applicable to subscription types)."
             forwarders:
               type: array
               description: "Address forwarders for this address."
