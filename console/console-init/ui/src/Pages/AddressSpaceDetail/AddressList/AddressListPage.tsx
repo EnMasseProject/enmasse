@@ -131,18 +131,16 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     receivers: getFilteredValue(address.Metrics, "enmasse_receivers"),
     partitions:
       address.Status &&
-      address.Status.PlanStatus &&
-      address.Status.PlanStatus !== null
+      address.Status.PlanStatus 
         ? address.Status.PlanStatus.Partitions
         : null,
     isReady:
-      address.Status && address.Status !== null && address.Status.IsReady,
+      address.Status && address.Status.IsReady,
     status:
-      address.Status && address.Status !== null ? address.Status.Phase : "",
+      address.Status && address.Status.Phase ? address.Status.Phase : "",
     errorMessages:
       address.Status &&
-      address.Status !== null &&
-      address.Status.Messages != null
+      address.Status.Messages 
         ? address.Status.Messages
         : [],
     selected:
