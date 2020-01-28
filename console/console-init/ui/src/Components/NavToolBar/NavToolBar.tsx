@@ -20,24 +20,25 @@ const NavToolBar: React.FC = () => {
   const selectAbout = () => {
     setIsAboutModalOpen(true);
   };
-    const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);
 
-    const onUserDropdownSelect = () => {
-        setIsUserDropdownOpen(!isUserDropdownOpen);
-    };
+  const onUserDropdownSelect = () => {
+    setIsUserDropdownOpen(!isUserDropdownOpen);
+  };
   const dropdownItems = [
-    <DropdownItem
-      id="navtb-item-help"
-      key="help"
-      style={{
-        paddingRight: 100,
-        paddingLeft: 20,
-        paddingTop: 20,
-        paddingBottom: 10
-      }}
-    >
-      Help
-    </DropdownItem>,
+    <a href={process.env.REACT_APP_DOCS}>
+      <DropdownItem
+        id="navtb-item-help"
+        key="help"
+        style={{
+          paddingRight: 100,
+          paddingLeft: 20,
+          paddingTop: 20,
+          paddingBottom: 10
+        }}>
+        Help
+      </DropdownItem>
+    </a>,
     <DropdownItem
       id="navtb-item-about"
       key="About"
@@ -65,8 +66,7 @@ const NavToolBar: React.FC = () => {
           <DropdownToggle
             iconComponent={null}
             onToggle={onToggle}
-            aria-label="Applications"
-          >
+            aria-label="Applications">
             <QuestionCircleIcon />
           </DropdownToggle>
         }
@@ -88,10 +88,10 @@ const NavToolBar: React.FC = () => {
         dropdownItems={userDropdownItems}
       />
 
-        <About
-            isAboutModalOpen={isAboutModalOpen}
-            handleAboutModalToggle={() => setIsAboutModalOpen(!isAboutModalOpen)}
-        />
+      <About
+        isAboutModalOpen={isAboutModalOpen}
+        handleAboutModalToggle={() => setIsAboutModalOpen(!isAboutModalOpen)}
+      />
     </React.Fragment>
   );
 };

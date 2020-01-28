@@ -14,7 +14,7 @@ describe("Empty Page with Empty state for Addresses", () => {
     );
 
     const descriptionNode = getByText(
-      "There are currently no addresses available. Please click on the button below to create one.Learn more about this on the"
+      "There are currently no addresses available. Please click on the button below to create one.Learn more about this in the"
     );
     const buttonNode = getByText("Create Address");
     const documentLinkNode = getByText("documentation");
