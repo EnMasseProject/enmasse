@@ -156,6 +156,9 @@ export const RETURN_ALL_ADDRESS_SPACES = (
           Spec {
             Type
             Plan {
+              ObjectMeta{
+                Name
+              }
               Spec {
                 DisplayName
               }
