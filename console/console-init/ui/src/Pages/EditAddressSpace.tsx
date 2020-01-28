@@ -91,7 +91,7 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
       <FormGroup label="Address space plan" fieldId="simple-form-name" isRequired={true}>
         <FormSelect
           id="edit-addr-plan"
-          value={addressSpace.displayName}
+          value={addressSpace.planValue}
           onChange={(val) => onPlanChange(val)}
           aria-label="FormSelect Input">
           {planOptions.map((option, index) => (

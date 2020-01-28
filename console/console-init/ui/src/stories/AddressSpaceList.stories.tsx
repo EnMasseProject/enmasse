@@ -23,9 +23,10 @@ const rows: IAddressSpace[] = [
     creationTimestamp: "2019-11-10T05:08:31.489Z",
     type: "standard",
     displayName: "Small",
+    planValue: "standard-small",
     isReady: false,
-    phase:"Configuring",
-    messages:[]
+    phase: "Configuring",
+    messages: []
   },
   {
     name: "saturn-as2",
@@ -33,9 +34,10 @@ const rows: IAddressSpace[] = [
     creationTimestamp: "2019-11-10T05:10:41.297Z",
     type: "brokered",
     displayName: "Small",
+    planValue: "brokered-small",
     isReady: true,
-    phase:"Active",
-    messages:[]
+    phase: "Active",
+    messages: []
   },
   {
     name: "mars_as2",
@@ -43,9 +45,10 @@ const rows: IAddressSpace[] = [
     creationTimestamp: "2019-11-10T18:37:56.975Z",
     type: "standard",
     displayName: "Large",
+    planValue: "standard-large",
     isReady: false,
-    phase:"Failed",
-    messages:[]
+    phase: "Failed",
+    messages: []
   },
   {
     name: "earth_as3",
@@ -53,9 +56,10 @@ const rows: IAddressSpace[] = [
     creationTimestamp: "2019-11-10T15:08:32.489Z",
     type: "brokered",
     displayName: "Medium",
+    planValue: "brokered-medium",
     isReady: false,
-    phase:"Configuring",
-    messages:[]
+    phase: "Configuring",
+    messages: []
   }
 ];
 
