@@ -27,8 +27,8 @@ export interface IClient {
   role: string;
   containerId: string;
   name: string;
-  deliveryRate?: number;
-  backlog?: number;
+  deliveryRate?: number | string;
+  backlog?: number | string;
   connectionName?: string;
   addressSpaceName?: string;
   addressSpaceNamespace?: string;
@@ -50,10 +50,11 @@ export const ClientList: React.FunctionComponent<IClientListProps> = ({
             <>
               {row.name}{" "}
               <Link
-                to={`/address-spaces/${row.addressSpaceNamespace}/${row.addressSpaceName}/${row.addressSpaceType}/connections/${row.connectionName}`}
-              >
-                <Tooltip position={TooltipPosition.top} content={<div>Go to the link</div>}>
-                <ExternalLinkAltIcon />
+                to={`/address-spaces/${row.addressSpaceNamespace}/${row.addressSpaceName}/${row.addressSpaceType}/connections/${row.connectionName}`}>
+                <Tooltip
+                  position={TooltipPosition.top}
+                  content={<div>Go to the link</div>}>
+                  <ExternalLinkAltIcon />
                 </Tooltip>
               </Link>
             </>
@@ -82,8 +83,7 @@ export const ClientList: React.FunctionComponent<IClientListProps> = ({
       rows={tableRows}
       aria-label="client list"
       onSort={onSort}
-      sortBy={sortBy}
-    >
+      sortBy={sortBy}>
       <TableHeader />
       <TableBody />
     </Table>

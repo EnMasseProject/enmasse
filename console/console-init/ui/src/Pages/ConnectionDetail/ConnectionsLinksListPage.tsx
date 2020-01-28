@@ -52,7 +52,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
       namespace || "",
       connectionName || "",
       sortBy,
-      filterRole
+      filterRole 
     ),
     { pollInterval: 5000 }
   );
@@ -73,6 +73,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
       role: link.Spec.Role,
       address: link.Spec.Address,
       deliveries: getFilteredValue(link.Metrics, "enmasse_deliveries"),
+      accepted: getFilteredValue(link.Metrics, "enmasse_accepted"),
       rejected: getFilteredValue(link.Metrics, "enmasse_rejected"),
       released: getFilteredValue(link.Metrics, "enmasse_released"),
       modified: getFilteredValue(link.Metrics, "enmasse_modified"),

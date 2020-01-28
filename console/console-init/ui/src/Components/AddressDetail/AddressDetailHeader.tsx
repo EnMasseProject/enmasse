@@ -24,8 +24,8 @@ export interface IAddressDetailHeaderProps {
   type: string;
   name: string;
   plan: string;
-  partitions: number;
-  storedMessages: number;
+  partitions: number|string;
+  storedMessages:number|string,
   onEdit: (name: string) => void;
   onDelete: (name: string) => void;
 }
