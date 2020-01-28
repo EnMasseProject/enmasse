@@ -15,6 +15,13 @@ configuration.
 
 .Procedure
 
+. Label the _{ProductNamespace}_ namespace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} label namespace _{ProductNamespace}_ monitoring-key=middleware
+----
+
 . Enable monitoring on the operator
 +
 [options="nowrap",subs="+quotes,attributes"]
