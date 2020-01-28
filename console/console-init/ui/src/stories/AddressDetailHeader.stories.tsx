@@ -18,6 +18,7 @@ export const AddressDetailHead = () => (
   <MemoryRouter>
     <AddressDetailHeader
       storedMessages={number("Stored Messages", 1)}
+      topic={null}
       type={text("Type", "Queue")}
       name={text("Name", "newqueue")}
       plan={text("Plan", "Small")}

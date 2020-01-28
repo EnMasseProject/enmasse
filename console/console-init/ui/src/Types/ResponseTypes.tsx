@@ -100,6 +100,7 @@ export interface IAddressDetailResponse {
       };
       Spec: {
         Address: string;
+        Topic:string|null;
         Plan: {
           Spec: {
             DisplayName: string;
