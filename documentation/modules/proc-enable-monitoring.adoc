@@ -3,11 +3,10 @@
 // assembly-monitoring.adoc
 
 [id='deploy-monitoring-bundle-{context}']
-= Enable monitoring
+= Enabling monitoring
 
-The simplest way to deploy monitoring is to enable the monitoring environment variable on the
-`enmasse-operator` deployment. This is only needed if you are not using a default install
-configuration.
+If you are not using a default installation configuration, the simplest way to deploy monitoring is to enable the monitoring environment variable on the
+`enmasse-operator` deployment.
 
 .Prerequisites
 
@@ -22,7 +21,7 @@ configuration.
 {cmdcli} label namespace _{ProductNamespace}_ monitoring-key=middleware
 ----
 
-. Enable monitoring on the operator
+. Enable monitoring on the operator:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
