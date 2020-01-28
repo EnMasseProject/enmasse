@@ -119,6 +119,11 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
     setIsAuthenticationServiceOpen(!isAuthenticationServiceOpen);
   };
 
+  React.useEffect(() => {
+    if(type === "standard") setIsStandardChecked(true);
+    else if(type === "brokered") setIsBrokeredChecked(true);
+  }, []);
+
   const { loading, error, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
 
   const { data : authenticationServices } = useQuery<IAddressSpaceAuthServiceResponse>(RETURN_AUTHENTICATION_SERVICES) 
