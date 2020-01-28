@@ -14,6 +14,7 @@ describe("Address Detail Header", () => {
   test("it renders address space headers at top", () => {
     const props: IAddressDetailHeaderProps = {
       name: "newqueue",
+      topic: null,
       type: "queue",
       plan: "Small",
       storedMessages: 1,
