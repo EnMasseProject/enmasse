@@ -140,7 +140,11 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     status:
       address.Status && address.Status !== null ? address.Status.Phase : "",
     errorMessages:
-      address.Status && address.Status !== null ? address.Status.Messages : [],
+      address.Status &&
+      address.Status !== null &&
+      address.Status.Messages != null
+        ? address.Status.Messages
+        : [],
     selected:
       selectedAddresses.filter(({ name, namespace }) =>
         compareTwoAddress(
