@@ -91,7 +91,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           },
           jsonPatch:
             '[{"op":"replace","path":"/Plan","value":"' +
-            addressSpaceBeingEdited.displayName +
+            addressSpaceBeingEdited.planValue +
             '"}]',
           patchType: "application/json-patch+json"
         }
@@ -129,7 +129,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
 
   const handlePlanChange = (plan: string) => {
     if (addressSpaceBeingEdited) {
-      addressSpaceBeingEdited.displayName = plan;
+      addressSpaceBeingEdited.planValue = plan;
       setAddressSpaceBeingEdited({ ...addressSpaceBeingEdited });
     }
   };
@@ -168,6 +168,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
       nameSpace: addSpace.ObjectMeta.Namespace,
       creationTimestamp: addSpace.ObjectMeta.CreationTimestamp,
       type: addSpace.Spec.Type,
+      planValue: addSpace.Spec.Plan.ObjectMeta.Name,
       displayName: addSpace.Spec.Plan.Spec.DisplayName,
       isReady:
         addSpace.Status && addSpace.Status !== null && addSpace.Status.IsReady,
@@ -207,11 +208,11 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           sortBy={sortBy}
         />
       ) : (
-        <EmptyAddressSpace
-          isWizardOpen={isCreateWizardOpen}
-          setIsWizardOpen={setIsCreateWizardOpen}
-        />
-      )}
+          <EmptyAddressSpace
+            isWizardOpen={isCreateWizardOpen}
+            setIsWizardOpen={setIsCreateWizardOpen}
+          />
+        )}
       {addressSpaceBeingEdited && (
         <Modal
           isLarge
