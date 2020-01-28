@@ -29,12 +29,9 @@ MODULES=\
 	iot/examples \
 	monitoring-operator \
 	monitoring-deployment \
-	grafana-dashboards \
 	service-broker \
 	cluster-service-broker \
-	kube-state-metrics \
-	service-monitors \
-	prometheus-rules
+	kube-state-metrics
 
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
@@ -119,13 +116,6 @@ $(ENMASSE_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 
-MONITORING_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/monitoring
-$(MONITORING_BUNDLE): replace_images
-	mkdir -p $(MONITORING_BUNDLE)
-	for i in grafana-dashboards service-monitors prometheus-rules; do \
-		cp $(BUILDDIR)/replaced/$$i/*.yaml $(MONITORING_BUNDLE)/; \
-	done
-
 IOT_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/iot
 $(IOT_BUNDLE): replace_images
 	mkdir -p $(IOT_BUNDLE)
@@ -133,7 +123,7 @@ $(IOT_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(IOT_BUNDLE)/; \
 	done
 
-install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE)
+install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(IOT_BUNDLE)
 	@echo "Preparing installation bundle"
 
 package: prepare install
@@ -141,4 +131,4 @@ package: prepare install
 
 coverage:
 
-.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE)
+.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(IOT_BUNDLE)

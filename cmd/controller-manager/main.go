@@ -12,6 +12,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"os"
 	"runtime"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	"github.com/enmasseproject/enmasse/pkg/cache"
@@ -101,11 +102,20 @@ func main() {
 	monitoringEnabled := os.Getenv("ENABLE_MONITORING")
 
 	if monitoringEnabled == "true" {
-		log.Info("Installing monitoring resources")
-
+		// Attempt to install monitoring resources on operator start
 		err = installMonitoring(ctx, serverClient)
+
+		ticker := time.NewTicker(5 * time.Second)
+
+		// Attempt to install monitoring resources every 5 minutes
+		go func() {
+			for _ = range ticker.C {
+				err = installMonitoring(ctx, serverClient)
+			}
+		}()
+
 		if err != nil {
-			log.Error(err, "Failed to install monitoring resources")
+			log.Info("Failed to install monitoring resources")
 		}
 	}
 
@@ -284,7 +294,7 @@ func addMonitoringKeyLabelToOperatorService(ctx context.Context, cfg *rest.Confi
 }
 
 func installMonitoring(ctx context.Context, client client.Client) error {
-
+	log.Info("Installing monitoring resources")
 	params := map[string]string{"Namespace": os.Getenv("NAMESPACE")}
 
 	templateHelper := util.NewTemplateHelper(params)
