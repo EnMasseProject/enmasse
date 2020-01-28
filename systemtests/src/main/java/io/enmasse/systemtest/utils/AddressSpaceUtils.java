@@ -309,15 +309,17 @@ public class AddressSpaceUtils {
     public static boolean areAddressSpaceConnectorsReady(AddressSpace addressSpace) {
         return Optional.ofNullable(addressSpace)
                 .map(AddressSpace::getStatus)
-                .map(AddressSpaceStatus::getConnectors).stream()
-                .flatMap(Collection::stream)
-                .allMatch(AddressSpaceStatusConnector::isReady);
+                .map(AddressSpaceStatus::getConnectors)
+                .map(c -> c.stream()
+                        .allMatch(AddressSpaceStatusConnector::isReady))
+                .orElse(false);
     }
 
     public static String getConnectorStatuses(AddressSpace addressSpace) {
         return Optional.ofNullable(addressSpace)
                 .map(AddressSpace::getStatus)
-                .map(AddressSpaceStatus::getConnectors).stream()
+                .map(AddressSpaceStatus::getConnectors)
+                .stream()
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList())
                 .toString();
