@@ -1094,6 +1094,12 @@ function makeMockLinkMetrics(is_addr_query, link) {
           Units: "deliveries"
         },
         {
+          Name: "enmasse_accepted",
+          Type: "counter",
+          Value: Math.floor(Math.random() * 10),
+          Units: "deliveries"
+        },
+        {
           Name: "enmasse_rejected",
           Type: "counter",
           Value: Math.floor(Math.random() * 10),
