@@ -171,17 +171,15 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
       planValue: addSpace.Spec.Plan.ObjectMeta.Name,
       displayName: addSpace.Spec.Plan.Spec.DisplayName,
       isReady:
-        addSpace.Status && addSpace.Status !== null && addSpace.Status.IsReady,
+        addSpace.Status  && addSpace.Status.IsReady,
       phase:
         addSpace.Status &&
-        addSpace.Status !== null &&
-        addSpace.Status.Phase != null
+        addSpace.Status.Phase 
           ? addSpace.Status.Phase
           : "",
       messages:
         addSpace.Status &&
-        addSpace.Status !== null &&
-        addSpace.Status.Messages != null
+        addSpace.Status.Messages 
           ? addSpace.Status.Messages
           : [],
       selected:
