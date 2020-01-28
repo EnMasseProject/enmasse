@@ -39,8 +39,8 @@ export interface IConnectionHeaderDetailProps {
   version?: string;
   platform?: string;
   os?: string;
-  messageIn?: number;
-  messageOut?: number;
+  messageIn?: number | string;
+  messageOut?: number | string;
 }
 export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDetailProps> = ({
   hostname,

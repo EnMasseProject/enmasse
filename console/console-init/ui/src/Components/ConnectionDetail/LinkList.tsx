@@ -24,12 +24,13 @@ export interface ILink {
   role: string;
   name: string;
   address: string;
-  deliveries: number;
-  rejected: number;
-  released: number;
-  modified: number;
-  presettled: number;
-  undelivered: number;
+  deliveries: number | string;
+  rejected: number | string;
+  released: number | string;
+  modified: number | string;
+  presettled: number | string;
+  undelivered: number | string;
+  accepted: number | string;
   status?: "creating" | "deleting" | "running";
 }
 
@@ -45,6 +46,7 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({
         row.name,
         row.address,
         row.deliveries,
+        row.accepted,
         row.rejected,
         row.released,
         row.modified,
@@ -61,6 +63,7 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({
     { title: "Name", transforms: [sortable] },
     { title: "Address", transforms: [sortable] },
     { title: "Deliveries", transforms: [sortable] },
+    { title: "Accepted", transforms: [sortable] },
     { title: "Rejected", transforms: [sortable] },
     { title: "Released", transforms: [sortable] },
     { title: "Modified", transforms: [sortable] },
@@ -75,8 +78,7 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({
       rows={tableRows}
       aria-label="links list"
       onSort={onSort}
-      sortBy={sortBy}
-      >
+      sortBy={sortBy}>
       <TableHeader />
       <TableBody />
     </Table>
