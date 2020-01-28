@@ -22,7 +22,7 @@ describe("Connection Detail Header with all connection details", () => {
       encrypted: true,
       platform: "0.8.0_152.25.125.b16, Oracle Corporation",
       os: "Mac OS X 10.13.6,x86_64",
-      messageIn: 0,
+      messageIn: 2,
       messageOut: 1
     };
 
