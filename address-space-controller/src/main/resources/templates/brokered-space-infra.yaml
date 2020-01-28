@@ -195,6 +195,7 @@ objects:
     labels:
       monitoring-key: enmasse-tenants
       app: enmasse
+      component: broker
       infraType: brokered
       infraUuid: ${INFRA_UUID}
     name: broker-${INFRA_UUID}

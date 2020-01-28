@@ -13,8 +13,8 @@ public class PrometheusMetricsFormatter implements MetricsFormatter {
 
         for (Metric metric : metricList) {
             if (!MetricType.up.equals(metric.getType())) {
-                sb.append("# HELP ").append("enmasse_").append(metric.getName()).append(" ").append(metric.getDescription()).append("\n");
-                sb.append("# TYPE ").append("enmasse_").append(metric.getName()).append(" ").append(metric.getType().name()).append("\n");
+                sb.append("# HELP ").append(metric.getName()).append(" ").append(metric.getDescription()).append("\n");
+                sb.append("# TYPE ").append(metric.getName()).append(" ").append(metric.getType().name()).append("\n");
             }
             String suffix = metric.getType().equals(MetricType.histogram) ? "_bucket" : "";
             MetricSnapshot snapshot = metric.getSnapshot();
@@ -35,7 +35,7 @@ public class PrometheusMetricsFormatter implements MetricsFormatter {
 
     private static String formatMetricValue(String name, MetricValue metricValue, long timestamp) {
         StringBuilder sb = new StringBuilder();
-        sb.append("enmasse_").append(name);
+        sb.append(name);
         if (!metricValue.getLabels().isEmpty()) {
             sb.append("{");
             sb.append(metricValue.getLabels().stream()
