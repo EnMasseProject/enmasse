@@ -173,11 +173,15 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
       isReady:
         addSpace.Status && addSpace.Status !== null && addSpace.Status.IsReady,
       phase:
-        addSpace.Status && addSpace.Status !== null
+        addSpace.Status &&
+        addSpace.Status !== null &&
+        addSpace.Status.Phase != null
           ? addSpace.Status.Phase
           : "",
       messages:
-        addSpace.Status && addSpace.Status !== null
+        addSpace.Status &&
+        addSpace.Status !== null &&
+        addSpace.Status.Messages != null
           ? addSpace.Status.Messages
           : [],
       selected:
@@ -208,11 +212,11 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           sortBy={sortBy}
         />
       ) : (
-          <EmptyAddressSpace
-            isWizardOpen={isCreateWizardOpen}
-            setIsWizardOpen={setIsCreateWizardOpen}
-          />
-        )}
+        <EmptyAddressSpace
+          isWizardOpen={isCreateWizardOpen}
+          setIsWizardOpen={setIsCreateWizardOpen}
+        />
+      )}
       {addressSpaceBeingEdited && (
         <Modal
           isLarge
