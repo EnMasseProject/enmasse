@@ -28,11 +28,11 @@ export interface IAddress {
   type: string;
   planLabel: string;
   planValue: string;
-  messageIn: number;
-  messageOut: number;
-  storedMessages: number;
-  senders: number;
-  receivers: number;
+  messageIn: number | string;
+  messageOut: number | string;
+  storedMessages: number | string;
+  senders: number | string;
+  receivers: number | string;
   partitions: number | null;
   isReady: boolean;
   errorMessages?: string[];
