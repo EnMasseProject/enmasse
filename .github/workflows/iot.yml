@@ -51,7 +51,7 @@ jobs:
         uses: actions/upload-artifact@v1.0.0
         with:
           name: unit-test-logs
-          path: artifacts
+          path: test-logs.zip
 
       - name: IoT tests
         run: ./.github/scripts/iot_test.sh
@@ -65,4 +65,4 @@ jobs:
         uses: actions/upload-artifact@v1.0.0
         with:
           name: smoke-test-logs
-          path: artifacts
+          path: test-logs.zip
