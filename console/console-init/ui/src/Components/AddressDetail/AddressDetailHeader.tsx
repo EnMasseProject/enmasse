@@ -25,14 +25,14 @@ export interface IAddressDetailHeaderProps {
   name: string;
   plan: string;
   partitions: number;
-  storedMessages:number,
+  storedMessages: number;
   onEdit: (name: string) => void;
   onDelete: (name: string) => void;
 }
 const styles = StyleSheet.create({
-  flex_right_border: {
-    paddingRight: "1em",
-    borderRight: "0.05em solid",
+  flex_left_border: {
+    paddingLeft: "1em",
+    borderLeft: "0.05em solid",
     borderRightColor: "lightgrey"
   },
   address_space_icon_margin: {
@@ -78,24 +78,21 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
       id="adheader-dropdown-item-edit"
       key="download"
       aria-label="download"
-      onClick={() => onEdit(name)}
-    >
+      onClick={() => onEdit(name)}>
       Edit
     </DropdownItem>,
     <DropdownItem
       id="adheader-dropdown-item-delete"
       key="delete"
       aria-label="delete"
-      onClick={() => onDelete(name)}
-    >
+      onClick={() => onDelete(name)}>
       Delete
     </DropdownItem>
   ];
   return (
     <PageSection
       variant={PageSectionVariants.light}
-      className={css(styles.no_bottom_padding)}
-    >
+      className={css(styles.no_bottom_padding)}>
       <Split>
         <SplitItem className={css(styles.address_icon_align)}>
           <TypeBadge type={type} />
@@ -109,21 +106,16 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
             </SplitItem>
           </Split>
           <Flex className={css(styles.namespace_info_margin)}>
-            <FlexItem
-              className={css(styles.flex_right_border)}
-              id="adheader-plans"
-            >
+            <FlexItem id="adheader-plans">
               <b>{plan}</b>
             </FlexItem>
-            { 
-              type === "queue"
-                &&
-              (
-                <FlexItem id="adheader-stored-messages">
-                  <b>{storedMessages}</b> stored messages
-                </FlexItem>
-              )
-            }
+            {type && (type==="anycast"||type==="multicast") ? "" :(
+              <FlexItem
+                id="adheader-stored-messages"
+                className={css(styles.flex_left_border)}>
+                <b>{storedMessages}</b> stored messages
+              </FlexItem>
+            )}
           </Flex>
         </SplitItem>
         <SplitItem isFilled></SplitItem>
