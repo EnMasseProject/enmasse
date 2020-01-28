@@ -22,7 +22,7 @@ interface ICreateAddressProps {
   addressSpaceType: string;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
-  setOnCreationRefetch?:(value:boolean)=>void;
+  setOnCreationRefetch?: (value: boolean) => void;
 }
 export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = ({
   name,
@@ -44,8 +44,11 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
   const [topicsForSubscription, setTopicForSubscription] = React.useState<
     IDropdownOption[]
   >([]);
+  const [isNameValid, setIsNameValid] = React.useState(true);
   const handleAddressChange = (name: string) => {
     setAddressName(name);
+    let regexp = new RegExp("^[0-9a-z.-]+$");
+    !regexp.test(name) ? setIsNameValid(false) : setIsNameValid(true);
   };
 
   const handleSave = async () => {
@@ -54,13 +57,10 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
       addressName.trim() !== "" &&
       plan.trim() !== "" &&
       addressType.trim() !== "" &&
-        (
-          (addressType === "subscription") === 
-            (topic.trim() !== "")
-        )
+      (addressType === "subscription") === (topic.trim() !== "")
     ) {
       const getVariables = () => {
-        let variable:any = {
+        let variable: any = {
           ObjectMeta: {
             Name: addressSpace + "." + addressName,
             Namespace: namespace
@@ -100,6 +100,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           addressSpacePlan={addressSpacePlan}
           addressName={addressName}
           handleAddressChange={handleAddressChange}
+          isNameValid={isNameValid}
           type={addressType}
           setType={setAddressType}
           plan={plan}
@@ -115,15 +116,11 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           setTopicForSubscripitons={setTopicForSubscription}
         />
       ),
-      enableNext: (
+      enableNext:
         addressName.trim() !== "" &&
         plan.trim() !== "" &&
         addressType.trim() !== "" &&
-        (
-          (addressType === "subscription") === 
-            (topic.trim() !== "")
-        )
-      ),
+        (addressType === "subscription") === (topic.trim() !== ""),
       backButton: "hide"
     },
     {
@@ -138,24 +135,17 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           addressspace={addressSpace}
         />
       ),
-      enableNext: (
+      enableNext:
         addressName.trim() !== "" &&
         plan.trim() !== "" &&
         addressType.trim() !== "" &&
-        (
-          (addressType === "subscription") === 
-            (topic.trim() !== "")
-        )
-      ),
-      canJumpTo: (
+        (addressType === "subscription") === (topic.trim() !== "") &&
+        isNameValid,
+      canJumpTo:
         addressName.trim() !== "" &&
         plan.trim() !== "" &&
         addressType.trim() !== "" &&
-        (
-          (addressType === "subscription") === 
-            (topic.trim() !== "")
-        )
-      ),
+        (addressType === "subscription") === (topic.trim() !== ""),
       nextButtonText: "Finish"
     }
   ];
