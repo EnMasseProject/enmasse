@@ -48,7 +48,6 @@ spec:
   validation:
     openAPIV3Schema:
       description: MessagingUser is a user that can be used to authenticate and authorize a messaging application. This resource is created by messaging tenants.
-      type: object
       properties:
         status:
           type: object
