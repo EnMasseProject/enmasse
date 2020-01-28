@@ -52,6 +52,7 @@ export interface IAddressDefinition {
   setPlanOptions: (values: IDropdownOption[]) => void;
   topicsForSubscription: IDropdownOption[];
   setTopicForSubscripitons: (values: IDropdownOption[]) => void;
+  isValid: boolean;
 }
 interface IAddressPlans {
   addressPlans: Array<{
@@ -80,6 +81,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
   addressName,
   addressSpacePlan,
   handleAddressChange,
+  isValid,
   type,
   setType,
   plan,
@@ -97,6 +99,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
 }) => {
   const [isTypeOpen, setIsTypeOpen] = React.useState(false);
   const [isTopicOpen, setIsTopicOpen] = React.useState<boolean>(false);
+
   const client = useApolloClient();
 
   const onTypeSelect = async (event: any) => {
@@ -156,9 +159,9 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
     setIsTopicOpen(!isTopicOpen);
   };
   const { loading, error, data } = useQuery<IAddressTypes>(
-    RETURN_ADDRESS_TYPES, {
-      variables:
-      {
+    RETURN_ADDRESS_TYPES,
+    {
+      variables: {
         a: addressSpaceType
       }
     }
@@ -182,7 +185,21 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
       <Grid>
         <GridItem span={6}>
           <Form>
-            <FormGroup label="Name" isRequired={true} fieldId="address-name">
+            <FormGroup
+              label="Name"
+              isRequired={true}
+              fieldId="address-name"
+              helperText={
+                !isValid ? (
+                  <small>
+                    Only digits (0-9), lower case letters (a-z), -, and .
+                    allowed.
+                  </small>
+                ) : (
+                  ""
+                )
+              }
+            >
               <TextInput
                 isRequired={true}
                 type="text"
@@ -190,6 +207,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                 name="address-name"
                 value={addressName}
                 onChange={handleAddressChange}
+                isValid={isValid}
               />
             </FormGroup>
 

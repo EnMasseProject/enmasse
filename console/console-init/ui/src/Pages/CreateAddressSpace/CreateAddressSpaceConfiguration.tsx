@@ -14,7 +14,8 @@ import {
   DropdownToggle,
   DropdownItem,
   DropdownPosition,
-  Radio
+  Radio,
+  Title
 } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
 import { IDropdownOption } from "../../Components/Common/FilterDropdown";
@@ -42,6 +43,8 @@ export interface IAddressSpaceConfiguration {
   setNamespace: (namespace: string) => void;
   authenticationService: string;
   setAuthenticationService: (authenticationService: string) => void;
+  isValid: boolean;
+  setIsValid:(isValid:boolean)=>void
 }
 export interface IAddressSpacePlans {
   addressSpacePlans: Array<{
@@ -57,16 +60,16 @@ export interface IAddressSpacePlans {
 }
 
 export interface IAddressSpaceAuthServiceResponse {
-  addressSpaceSchema_v2: IAddressSpaceAuthService[]
+  addressSpaceSchema_v2: IAddressSpaceAuthService[];
 }
 
 export interface IAddressSpaceAuthService {
   ObjectMeta: {
     Name: string;
-  }
+  };
   Spec: {
     AuthenticationServices: string[];
-  }
+  };
 }
 
 export interface INamespaces {
@@ -90,12 +93,15 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   plan,
   setPlan,
   authenticationService,
-  setAuthenticationService
+  setAuthenticationService,
+  isValid,
+  setIsValid
 }) => {
   //TODO: Fix namespace value on the textbox
   const [isNameSpaceOpen, setIsNameSpaceOpen] = React.useState(false);
   const [isStandardChecked, setIsStandardChecked] = React.useState(false);
   const [isBrokeredChecked, setIsBrokeredChecked] = React.useState(false);
+
   const onNameSpaceSelect = (event: any) => {
     setNamespace(event.currentTarget.childNodes[0].value);
     setIsNameSpaceOpen(!isNameSpaceOpen);
@@ -117,8 +123,9 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
 
   const { loading, error, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
 
-  const { data : authenticationServices } = useQuery<IAddressSpaceAuthServiceResponse>(RETURN_AUTHENTICATION_SERVICES) 
-    || { data: {addressSpaceSchema_v2 : []}}
+  const { data: authenticationServices } = useQuery<
+    IAddressSpaceAuthServiceResponse
+  >(RETURN_AUTHENTICATION_SERVICES) || { data: { addressSpaceSchema_v2: [] } };
 
   const { addressSpacePlans } = useQuery<IAddressSpacePlans>(
     RETURN_ADDRESS_SPACE_PLANS
@@ -137,7 +144,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   let planOptions: any[] = [];
 
   let authenticationServiceOptions: any[] = [];
-  
+
   namespaceOptions = namespaces.map(namespace => {
     return {
       value: namespace.ObjectMeta.Name,
@@ -160,17 +167,18 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   }
 
   if (authenticationServices) {
-    authenticationServices.addressSpaceSchema_v2
-      .forEach(authService => {
-        if(authService.ObjectMeta.Name === type){
-          authenticationServiceOptions = authService.Spec.AuthenticationServices.map(service => {
+    authenticationServices.addressSpaceSchema_v2.forEach(authService => {
+      if (authService.ObjectMeta.Name === type) {
+        authenticationServiceOptions = authService.Spec.AuthenticationServices.map(
+          service => {
             return {
               value: service,
               label: service
             };
-          });
-        }
-      });
+          }
+        );
+      }
+    });
   }
 
   const handleBrokeredChange = () => {
@@ -190,7 +198,9 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   };
 
   const handleNameChange = (name: string) => {
+    let regexp = new RegExp("^[0-9A-Za-z.-]+$");
     setName(name);
+    !regexp.test(name) ? setIsValid(false) : setIsValid(true);
   };
 
   return (
@@ -231,9 +241,24 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                 ))}
               />
             </FormGroup>
-            <FormGroup label="Name" isRequired={true} fieldId="address-space">
+            <FormGroup
+              label="Name"
+              isRequired={true}
+              fieldId="address-space"
+              helperText={
+                !isValid ? (
+                  <small>
+                    Only digits (0-9), lower case letters (a-z), -, and .
+                    allowed.
+                  </small>
+                ) : (
+                  ""
+                )
+              }
+            >
               <TextInput
                 isRequired={true}
+                isValid={isValid}
                 type="text"
                 id="address-space"
                 name="address-space"

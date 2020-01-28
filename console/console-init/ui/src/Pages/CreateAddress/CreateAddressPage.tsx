@@ -44,8 +44,11 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
   const [topicsForSubscription, setTopicForSubscription] = React.useState<
     IDropdownOption[]
   >([]);
+  const [isValid, setIsValid] = React.useState(true);
   const handleAddressChange = (name: string) => {
     setAddressName(name);
+    let regexp = new RegExp("^[0-9A-Za-z.-]+$");
+    !regexp.test(name) ? setIsValid(false) : setIsValid(true);
   };
 
   const handleSave = async () => {
@@ -100,6 +103,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           addressSpacePlan={addressSpacePlan}
           addressName={addressName}
           handleAddressChange={handleAddressChange}
+          isValid={isValid}
           type={addressType}
           setType={setAddressType}
           plan={plan}
@@ -145,7 +149,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
         (
           (addressType === "subscription") === 
             (topic.trim() !== "")
-        )
+        ) && isValid
       ),
       canJumpTo: (
         addressName.trim() !== "" &&
