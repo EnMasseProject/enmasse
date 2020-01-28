@@ -52,6 +52,7 @@ export interface IAddressDefinition {
   setPlanOptions: (values: IDropdownOption[]) => void;
   topicsForSubscription: IDropdownOption[];
   setTopicForSubscripitons: (values: IDropdownOption[]) => void;
+  isNameValid: boolean;
 }
 interface IAddressPlans {
   addressPlans: Array<{
@@ -80,6 +81,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
   addressName,
   addressSpacePlan,
   handleAddressChange,
+  isNameValid,
   type,
   setType,
   plan,
@@ -182,7 +184,21 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
       <Grid>
         <GridItem span={6}>
           <Form>
-            <FormGroup label="Name" isRequired={true} fieldId="address-name">
+            <FormGroup
+              label="Name"
+              isRequired={true}
+              fieldId="address-name"
+              helperText={
+                !isNameValid ? (
+                  <small>
+                    Only digits (0-9), lower case letters (a-z), -, and .
+                    allowed.
+                  </small>
+                ) : (
+                  ""
+                )
+              }
+            >
               <TextInput
                 isRequired={true}
                 type="text"
@@ -190,6 +206,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                 name="address-name"
                 value={addressName}
                 onChange={handleAddressChange}
+                isValid={isNameValid}
               />
             </FormGroup>
 
