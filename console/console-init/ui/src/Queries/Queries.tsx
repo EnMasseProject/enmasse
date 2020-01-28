@@ -951,19 +951,22 @@ export const RETURN_CONNECTION_LINKS = (
       case 3:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_deliveries')].Value` ";
         break;
-      case 4:
+        case 4:
+          orderByString = "`$.Metrics[?(@.Name=='enmasse_accepted')].Value` ";
+          break;
+      case 5:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_rejected')].Value` ";
         break;
       case 5:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_released')].Value` ";
         break;
-      case 6:
+      case 7:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_modified')].Value` ";
         break;
-      case 7:
+      case 8:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_presettled')].Value` ";
         break;
-      case 8:
+      case 9:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_undelivered')].Value` ";
         break;
     }

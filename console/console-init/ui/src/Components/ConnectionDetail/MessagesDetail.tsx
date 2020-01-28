@@ -16,8 +16,8 @@ const styles = StyleSheet.create({
   }
 });
 export interface IMessagesDetail {
-  messageIn?: number;
-  messageOut?: number;
+  messageIn?: number | string;
+  messageOut?: number | string;
   isMobileView: boolean;
 }
 
@@ -31,17 +31,15 @@ export const MessagesDetail: React.FunctionComponent<IMessagesDetail> = ({
       <SplitItem
         id="message-detail-message-in"
         span={6}
-        className={css(styles.message_split)}
-      >
-        {messageIn || messageIn === 0 ? messageIn : "-"}{" "}
+        className={css(styles.message_split)}>
+        {messageIn || messageIn === "" ? messageIn : "-"}
         {isMobileView ? "" : <br />} Message in/sec
       </SplitItem>
       <SplitItem
         id="message-detail-message-out"
         span={6}
-        className={css(styles.message_split)}
-      >
-        {messageOut || messageOut === 0 ? messageOut : "-"}{" "}
+        className={css(styles.message_split)}>
+        {messageOut || messageOut === "" ? messageOut : "-"}
         {isMobileView ? "" : <br />} Message out/sec
       </SplitItem>
     </Split>

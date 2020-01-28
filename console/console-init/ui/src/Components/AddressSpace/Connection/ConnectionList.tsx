@@ -29,10 +29,10 @@ export interface IConnection {
   containerId: string;
   protocol: string;
   encrypted: boolean;
-  messageIn: number;
-  messageOut: number;
-  senders: number;
-  receivers: number;
+  messageIn: number | string;
+  messageOut: number | string;
+  senders: number | string;
+  receivers: number | string;
   status: "creating" | "deleting" | "running";
   name: string;
   creationTimestamp: string;
@@ -79,8 +79,8 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   const tableColumns = [
     { title: "Hostname", dataLabel: "host", transforms: [sortable] },
     { title: "Container ID", transforms: [sortable] },
-    { title: "Protocol", transforms: [sortable] }, 
-    { title: "Time created", transforms: [sortable] }, 
+    { title: "Protocol", transforms: [sortable] },
+    { title: "Time created", transforms: [sortable] },
     {
       title:
         width > 769 ? (
@@ -124,8 +124,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       rows={tableRows}
       aria-label="connection list"
       sortBy={sortBy}
-      onSort={onSort}
-    >
+      onSort={onSort}>
       <TableHeader id="connectionlist-table-header" />
       <TableBody />
     </Table>
