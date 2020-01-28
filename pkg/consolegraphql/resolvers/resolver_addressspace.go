@@ -200,7 +200,24 @@ func (r *addressSpaceK8sResolver) Addresses(ctx context.Context, obj *consolegra
 }
 
 func (r *queryResolver) MessagingCertificateChain(ctx context.Context, input v1.ObjectMeta) (string, error) {
-	panic("implement me")
+	requestState := server.GetRequestStateFromContext(ctx)
+	viewFilter := requestState.AccessController.ViewFilter()
+
+	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s' and `$.ObjectMeta.Namespace` = '%s'", input.Name, input.Namespace)
+
+	fltrfunc, err := BuildFilter(&filter)
+	if err != nil {
+		return "", err
+	}
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpace/", cache.And(viewFilter, fltrfunc))
+	if e != nil {
+		return "", e
+	}
+	if len(objects) != 1 {
+		return "", fmt.Errorf("Did not return one address space for %s %s.  Instead found: %d", input.Name, input.Namespace, len(objects) )
+	}
+	return string(objects[0].(*consolegraphql.AddressSpaceHolder).AddressSpace.Status.CACertificate), nil
+
 }
 
 func (r *mutationResolver) CreateAddressSpace(ctx context.Context, input v1beta1.AddressSpace) (*v1.ObjectMeta, error) {

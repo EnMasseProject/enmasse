@@ -189,6 +189,28 @@ func TestQueryAddressSpaceConnectionOrder(t *testing.T) {
 	assert.Equal(t, con2, objs.Connections[0], "Unexpected connection")
 }
 
+func TestMessagingCertificateChain(t *testing.T) {
+	r, ctx := newTestAddressSpaceResolver(t)
+	namespace := "mynamespace"
+	addressspace := "myaddressspace"
+	expectedCert := "the bytes"
+	as1 := createAddressSpace(addressspace, namespace)
+	as1.Status = v1beta1.AddressSpaceStatus {
+		CACertificate: []byte(expectedCert),
+	}
+	err := r.Cache.Add(as1)
+	assert.NoError(t, err)
+
+	input := v1.ObjectMeta{
+		Name:                       addressspace,
+		Namespace:                  namespace,
+	}
+	cert, err := r.Query().MessagingCertificateChain(ctx, input)
+	assert.NoError(t, err)
+
+	assert.Equal(t, expectedCert, cert, "Unexpected cert")
+}
+
 func TestQueryAddressSpaceAddress(t *testing.T) {
 	r, ctx := newTestAddressSpaceResolver(t)
 	namespace := "mynamespace"
@@ -233,5 +255,4 @@ func TestQueryAddressSpaceAddressFilter(t *testing.T) {
 	assert.Equal(t, 1, objs.Total, "Unexpected number of address associated with the addressspace")
 	assert.Equal(t, 1, objs.Total, "Unexpected number of filtered addresses associated with the addressspace")
 	assert.Equal(t, addr2, objs.Addresses[0], "Unexpected connection")
-
 }
