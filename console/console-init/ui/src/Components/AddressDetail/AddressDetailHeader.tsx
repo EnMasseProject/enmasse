@@ -22,10 +22,11 @@ import { TypeBadge } from "../Common/TypePlan";
 
 export interface IAddressDetailHeaderProps {
   type: string;
+  topic: string | null;
   name: string;
   plan: string;
-  partitions: number;
-  storedMessages: number;
+  partitions: number | string;
+  storedMessages: number | string;
   onEdit: (name: string) => void;
   onDelete: (name: string) => void;
 }
@@ -59,6 +60,7 @@ const styles = StyleSheet.create({
 
 export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderProps> = ({
   type,
+  topic,
   name,
   plan,
   partitions,
@@ -107,13 +109,25 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
           </Split>
           <Flex className={css(styles.namespace_info_margin)}>
             <FlexItem id="adheader-plans">
-              <b>{plan}</b>
+              Plan : <b>{plan}</b>
             </FlexItem>
-            {type && (type==="anycast"||type==="multicast") ? "" :(
+            {topic && topic != null && (
+              <FlexItem
+                id="adheader-subscription-topic"
+                className={css(styles.flex_left_border)}>
+                Topic : <b>{topic}</b>
+              </FlexItem>
+            )}
+            {type && (type === "anycast" || type === "multicast") ? (
+              ""
+            ) : (
               <FlexItem
                 id="adheader-stored-messages"
                 className={css(styles.flex_left_border)}>
-                <b>{storedMessages}</b> stored messages
+                <b>
+                  {storedMessages && storedMessages != "" ? storedMessages : 0}
+                </b>{" "}
+                stored messages
               </FlexItem>
             )}
           </Flex>
