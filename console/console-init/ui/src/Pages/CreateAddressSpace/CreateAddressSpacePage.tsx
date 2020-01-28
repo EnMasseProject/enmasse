@@ -27,8 +27,8 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
   const [addressSpacePlan, setAddressSpacePlan] = React.useState(" ");
   const [namespace, setNamespace] = React.useState(" ");
   const [authenticationService, setAuthenticationService] = React.useState(" ");
-  const [message, setMessage] = React.useState("");
   const [isError, setIsError] = React.useState();
+  const [isNameValid, setIsNameValid] = React.useState(true);
   const client = useApolloClient();
 
   const handleSave = async () => {
@@ -85,6 +85,8 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
           setPlan={setAddressSpacePlan}
           authenticationService={authenticationService}
           setAuthenticationService={setAuthenticationService}
+          isNameValid={isNameValid}
+          setIsNameValid={setIsNameValid}
         />
       ),
       enableNext:
@@ -112,7 +114,8 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
         addressSpaceType.trim() !== "" &&
         authenticationService.trim() !== "" &&
         addressSpacePlan.trim() !== "" &&
-        namespace.trim() !== "",
+        namespace.trim() !== "" &&
+        isNameValid,
       canJumpTo:
         addressSpaceName.trim() !== "" &&
         addressSpaceType.trim() !== "" &&
