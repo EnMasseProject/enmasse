@@ -42,6 +42,8 @@ export interface IAddressSpaceConfiguration {
   setNamespace: (namespace: string) => void;
   authenticationService: string;
   setAuthenticationService: (authenticationService: string) => void;
+  isNameValid: boolean;
+  setIsNameValid:(isNameValid:boolean)=>void
 }
 export interface IAddressSpacePlans {
   addressSpacePlans: Array<{
@@ -90,7 +92,9 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   plan,
   setPlan,
   authenticationService,
-  setAuthenticationService
+  setAuthenticationService,
+  isNameValid,
+  setIsNameValid
 }) => {
   //TODO: Fix namespace value on the textbox
   const [isNameSpaceOpen, setIsNameSpaceOpen] = React.useState(false);
@@ -190,7 +194,9 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   };
 
   const handleNameChange = (name: string) => {
+    let regexp = new RegExp("^[0-9a-z.-]+$");
     setName(name);
+    !regexp.test(name) ? setIsNameValid(false) : setIsNameValid(true);
   };
 
   return (
@@ -231,9 +237,24 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                 ))}
               />
             </FormGroup>
-            <FormGroup label="Name" isRequired={true} fieldId="address-space">
+            <FormGroup
+              label="Name"
+              isRequired={true}
+              fieldId="address-space"
+              helperText={
+                !isNameValid ? (
+                  <small>
+                    Only digits (0-9), lower case letters (a-z), -, and .
+                    allowed.
+                  </small>
+                ) : (
+                  ""
+                )
+              }
+            >
               <TextInput
                 isRequired={true}
+                isValid={isNameValid}
                 type="text"
                 id="address-space"
                 name="address-space"
