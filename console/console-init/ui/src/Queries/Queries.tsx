@@ -405,6 +405,7 @@ export const RETURN_ADDRESS_DETAIL = (
         }
         Spec {
           Address
+          Topic
           Plan {
             Spec {
               DisplayName
