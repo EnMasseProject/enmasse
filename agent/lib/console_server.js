@@ -62,15 +62,6 @@ function ConsoleServer (address_ctrl, env, openshift) {
     this.amqp_container = rhea.create_container({autoaccept:false});
 
     this.amqp_container.on('sender_open', function (context) {
-        log.warn("KWDEBUG sender_open source %s target %s", context.sender.source, context.sender.target);
-        if (context.sender.target) {
-            log.warn("KWDEBUG sender_open target %s", context.sender.target.address);
-
-        }
-        if (context.sender.source) {
-            log.warn("KWDEBUG sender_open source %s", context.sender.source.address);
-
-        }
         var source = context.sender.source ? context.sender.source : {};
         var sourceAddress = source.address ? source.address : "";
 
@@ -82,14 +73,6 @@ function ConsoleServer (address_ctrl, env, openshift) {
         }
     });
     this.amqp_container.on('receiver_open', function (context) {
-        log.warn("KWDEBUG receiver_open source %s target %s", context.receiver.source, context.receiver.target);
-        if (context.receiver.target) {
-            log.warn("KWDEBUG receiver_open target %s", context.receiver.target.address);
-
-        }
-        if (context.receiver.source) {
-            log.warn("KWDEBUG receiver_open source %s", context.receiver.source.address);
-        }
         var target = context.receiver.target ? context.receiver.target : {};
         var targetAddress = target.address ? target.address : "";
 
@@ -113,7 +96,6 @@ function ConsoleServer (address_ctrl, env, openshift) {
                 connection.options.username = mechanism.username;
             }
             if (mechanism.admin) {
-                log.info('KWDEBUG set admin');
                 self.authz.set_admin(connection);
             }
         }
