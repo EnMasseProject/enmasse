@@ -26,7 +26,7 @@ trap "cleanup" EXIT SIGINT
 mkdir -p "$TMPPROJ"
 cp -dR "$SCRIPTPATH/../" "$TMPPROJ"
 
-"$SCRIPTPATH/update-codegen.sh" --output-base "$TMPBASE"
+"$SCRIPTPATH/run-codegen.sh" --output-base "$TMPBASE"
 
 echo "Comparing existing generated code with temporarily generated code"
 if diff -Nur --no-dereference "$SCRIPTPATH/.." "$TMPPROJ" -x "go-bin"; then
