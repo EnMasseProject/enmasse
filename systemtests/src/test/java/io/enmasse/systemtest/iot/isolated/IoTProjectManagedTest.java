@@ -4,35 +4,6 @@
  */
 package io.enmasse.systemtest.iot.isolated;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.systemtest.TestTag;
-import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
-import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.model.addressplan.DestinationPlan;
-import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
-import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.IoTUtils;
-import io.enmasse.user.model.v1.Operation;
-import io.enmasse.user.model.v1.User;
-import io.enmasse.user.model.v1.UserAuthorization;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.OwnerReference;
-import org.hamcrest.Matcher;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.user.model.v1.Operation.recv;
 import static io.enmasse.user.model.v1.Operation.send;
@@ -46,6 +17,39 @@ import static org.hamcrest.core.AllOf.allOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.hamcrest.Matcher;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Phase;
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.systemtest.TestTag;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.IoTUtils;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthorization;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.OwnerReference;
 
 @Tag(TestTag.SMOKE)
 class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
@@ -87,7 +91,84 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
                 created.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
 
         assertManaged(created);
+    }
 
+    @Test
+    void testDeleteAddressSpace() throws Exception {
+        isolatedIoTManager.createIoTConfig(new IoTConfigBuilder()
+                .withNewMetadata()
+                .withName("default")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withEnableDefaultRoutes(false)
+                .withNewServices()
+                .withNewDeviceRegistry()
+                .withNewFile()
+                .endFile()
+                .endDeviceRegistry()
+                .endServices()
+                .endSpec()
+                .build());
+
+        final String addressSpaceName = "managed-address-space";
+        final String iotProjectName = "iot-project-managed";
+
+        IoTProject project = IoTUtils.getBasicIoTProjectObject(iotProjectName, addressSpaceName,
+                IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
+        LOGGER.warn("NAMESPACE EXISTS? {}, {}", project.getMetadata().getNamespace(), kubernetes.namespaceExists(project.getMetadata().getNamespace()));
+        isolatedIoTManager.createIoTProject(project);// waiting until ready
+        var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
+        IoTProject created = iotProjectApiClient.withName(project.getMetadata().getName()).get();
+
+        assertNotNull(created);
+        assertEquals(IOT_PROJECT_NAMESPACE, created.getMetadata().getNamespace());
+        assertEquals(project.getMetadata().getName(), created.getMetadata().getName());
+        assertEquals(
+                project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(),
+                created.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+
+        assertManaged(created);
+
+        // get the current address space
+
+        var asClient = kubernetes.getAddressSpaceClient(IOT_PROJECT_NAMESPACE);
+        var as = asClient.withName(addressSpaceName);
+        var currentAs = as.get();
+        assertNotNull(as);
+
+        // remember its ID
+
+        final String originalId = currentAs.getMetadata().getUid();
+        assertNotNull(originalId);
+
+        // delete it
+
+        asClient.withName(addressSpaceName).delete();
+
+        // now wait for it to be re-created
+
+        TestUtils.waitUntilConditionOrFail(() -> {
+
+            var current = as.get();
+            if (current == null ) {
+                log.info("Address space is still missing");
+                return false;
+            }
+            if (!originalId.equals(current.getMetadata().getUid())) {
+                log.info("Address space has still the same ID");
+                // still the same object
+                return false;
+            }
+            if (current.getStatus() == null || current.getStatus().getPhase() == null ) {
+                log.info("Address space is not ready yet: {}", current.getStatus());
+                return false;
+            }
+
+            return current.getStatus().getPhase() == Phase.Active;
+        }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "AddressSpace did not get re-created" );
+
+        assertManaged(iotProjectApiClient.withName(iotProjectName).get());
     }
 
     private static void assertAddressType (final Address address, final AddressType type, final String plan) {
@@ -101,6 +182,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
         assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(), addressSpace.getMetadata().getName());
         assertEquals(AddressSpaceType.STANDARD.toString(), addressSpace.getSpec().getType());
         assertEquals(AddressSpacePlans.STANDARD_SMALL, addressSpace.getSpec().getPlan());
+        assertEquals(Phase.Active, addressSpace.getStatus().getPhase());
 
         // addresses
         // {event/control/command/command_response/telemetry}/"project-namespace"."project-name"

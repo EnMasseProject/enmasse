@@ -312,6 +312,15 @@ func (r *ReconcileIoTProject) reconcileAddressSpace(ctx context.Context, project
 
 	rc, err := controllerutil.CreateOrUpdate(ctx, r.client, addressSpace, func() error {
 
+		if addressSpace.DeletionTimestamp != nil {
+			// address space is deconstructed
+			managedStatus.remainingReady[resourceTypeAddressSpace] = false
+			managedStatus.remainingCreated[resourceTypeAddressSpace] = false
+			// re-try later to re-create
+			retryDelay = 10 * time.Second
+			return nil
+		}
+
 		managedStatus.remainingReady[resourceTypeAddressSpace] = addressSpace.Status.IsReady
 
 		// if the address space is not ready yet
