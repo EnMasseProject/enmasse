@@ -9,10 +9,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"time"
+
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"os"
 	"runtime"
-	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	"github.com/enmasseproject/enmasse/pkg/cache"
@@ -102,21 +103,20 @@ func main() {
 	monitoringEnabled := os.Getenv("ENABLE_MONITORING")
 
 	if monitoringEnabled == "true" {
-		// Attempt to install monitoring resources on operator start
-		err = installMonitoring(ctx, serverClient)
-
-		ticker := time.NewTicker(5 * time.Second)
-
-		// Attempt to install monitoring resources every 5 minutes
+		// Attempt to install the monitoring resources when the operator starts, and every 5 minutes thereafter
 		go func() {
-			for _ = range ticker.C {
-				err = installMonitoring(ctx, serverClient)
+			ticker := time.NewTicker(5 * time.Minute)
+			for ; true; <-ticker.C {
+				err := installMonitoring(ctx, serverClient)
+
+				if err != nil {
+					log.Info(fmt.Sprintf("Failed to install monitoring resources: %s", err))
+				} else {
+					log.Info("Successfully installed monitoring resources")
+					ticker.Stop()
+				}
 			}
 		}()
-
-		if err != nil {
-			log.Info("Failed to install monitoring resources")
-		}
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
