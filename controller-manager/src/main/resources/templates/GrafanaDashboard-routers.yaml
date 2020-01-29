@@ -5,6 +5,7 @@ metadata:
     app: enmasse
     monitoring-key: middleware
   name: enmasse-routers
+  namespace: {{ index .Params "Namespace" }}
 spec:
   name: enmasse-routers.json
   json: |

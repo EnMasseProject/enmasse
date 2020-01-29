@@ -5,6 +5,7 @@ metadata:
     app: enmasse
     monitoring-key: middleware
   name: enmasse-components
+  namespace: {{ index .Params "Namespace" }}
 spec:
   name: enmasse-components.json
   json: |
@@ -633,7 +634,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "total {{exported_namespace}}:{{addressspace}}",
+              "legendFormat": "total {{ "{{" }} exported_namespace {{ "}}" }}:{{ "{{" }} addressspace {{ "}}" }}",
               "refId": "A"
             }
           ],

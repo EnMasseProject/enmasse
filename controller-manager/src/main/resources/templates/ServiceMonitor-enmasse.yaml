@@ -2,6 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: enmasse
+  namespace: {{ index .Params "Namespace" }}
   labels:
     monitoring-key: middleware
     app: enmasse

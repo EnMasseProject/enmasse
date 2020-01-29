@@ -63,7 +63,6 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 .endMetadata()
                 .done();
         KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
-        KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
 
         Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
         this.prometheusApiClient = new PrometheusApiClient(prometheusEndpoint);
@@ -119,7 +118,6 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
             collector.collectEvents(environment.getMonitoringNamespace());
         }
         KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
-        KubeCMDClient.deleteFromFile(kubernetes.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
         KubeCMDClient.switchProject(environment.getMonitoringNamespace());
         deleteMonitoringInfra();
         KubeCMDClient.deleteNamespace(environment.getMonitoringNamespace());

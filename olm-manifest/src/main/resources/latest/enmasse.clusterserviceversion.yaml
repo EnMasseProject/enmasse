@@ -614,6 +614,12 @@ spec:
           resources: [ "apiservices" ]
           resourceNames: [ "v1alpha1.enmasse.io", "v1beta1.enmasse.io", "v1alpha1.user.enmasse.io", "v1beta1.user.enmasse.io" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "monitoring.coreos.com" ]
+          resources: [ "prometheusrules", "servicemonitors" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "integreatly.org" ]
+          resources: [ "grafanadashboards", "grafanadashboards/finalizers" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
       - serviceAccountName: iot-device-registry
         rules:
         - apiGroups: [ "authentication.k8s.io" ]
@@ -751,6 +757,8 @@ spec:
                   value: "${CONSOLE_HTTPD_IMAGE}"
                 - name: "FS_GROUP_FALLBACK_MAP"
                   value: "{\"standard-authservice\": 1000}"
+                - name: ENABLE_MONITORING
+                  value: "true"
   customresourcedefinitions:
     owned:
       - group: user.enmasse.io

@@ -25,6 +25,12 @@
         <format>zip</format>
     </formats>
     <includeBaseDirectory>False</includeBaseDirectory>
+    <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/src/main/resources/templates</directory>
+            <outputDirectory>/templates</outputDirectory>
+        </fileSet>
+    </fileSets>
     <files>
         <file>
             <source>${project.basedir}/build/controller-manager</source>

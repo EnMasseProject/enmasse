@@ -20,6 +20,7 @@ replace (
 
 require (
 	github.com/Nerzal/gocloak/v3 v3.7.0
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.1.0
 	github.com/google/uuid v1.1.1
 	github.com/openshift/api v3.9.1-0.20190813152110-b5570061b31f+incompatible

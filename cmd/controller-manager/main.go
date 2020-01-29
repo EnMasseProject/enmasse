@@ -9,6 +9,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"time"
+
+	"github.com/enmasseproject/enmasse/pkg/util"
 	"os"
 	"runtime"
 
@@ -24,6 +27,7 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
 	v1 "k8s.io/api/core/v1"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
@@ -91,6 +95,31 @@ func main() {
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
+	}
+
+	// Install monitoring resources
+	monitoringEnabled := os.Getenv("ENABLE_MONITORING")
+
+	if monitoringEnabled == "true" {
+		// Attempt to install the monitoring resources when the operator starts, and every 5 minutes thereafter
+		go func() {
+			ticker := time.NewTicker(5 * time.Minute)
+			for ; true; <-ticker.C {
+				serverClient, err := client.New(cfg, client.Options{})
+				if err != nil {
+					log.Info(fmt.Sprintf("Failed to install monitoring resources: %s", err))
+				} else {
+					err = installMonitoring(ctx, serverClient)
+
+					if err != nil {
+						log.Info(fmt.Sprintf("Failed to install monitoring resources: %s", err))
+					} else {
+						log.Info("Successfully installed monitoring resources")
+						ticker.Stop()
+					}
+				}
+			}
+		}()
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
@@ -262,6 +291,28 @@ func addMonitoringKeyLabelToOperatorService(ctx context.Context, cfg *rest.Confi
 	err = kclient.Update(ctx, service)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func installMonitoring(ctx context.Context, client client.Client) error {
+	log.Info("Installing monitoring resources")
+	params := map[string]string{"Namespace": os.Getenv("NAMESPACE")}
+
+	templateHelper := util.NewTemplateHelper(params)
+
+	for _, template := range templateHelper.TemplateList {
+		resource, err := templateHelper.CreateResource(template)
+		if err != nil {
+			return fmt.Errorf("createResource failed: %s", err)
+		}
+		err = client.Create(ctx, resource)
+		if err != nil {
+			if !kerrors.IsAlreadyExists(err) {
+				return fmt.Errorf("error creating resource: %s", err)
+			}
+		}
 	}
 
 	return nil
