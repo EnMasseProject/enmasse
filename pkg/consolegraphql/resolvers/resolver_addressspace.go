@@ -240,7 +240,8 @@ func (r *mutationResolver) DeleteAddressSpace(ctx context.Context, input v1.Obje
 }
 
 func (r *queryResolver) AddressSpaceCommand(ctx context.Context, input v1beta1.AddressSpace) (string, error) {
-	return  `apiVersion: enmasse.io/v1beta1
+	return  `oc apply -f - << EOF
+apiVersion: enmasse.io/v1beta1
 kind: AddressSpace
 metadata:
   namespace: `+ input.Namespace +`
@@ -249,5 +250,6 @@ spec:
   authenticationService:
     name: `+ input.Spec.AuthenticationService.Name +`
   type: `+ input.Spec.Type +`
-  plan: `+ input.Spec.Plan, nil
+  plan: `+ input.Spec.Plan +`
+EOF`, nil
 }
