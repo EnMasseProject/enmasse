@@ -512,7 +512,7 @@ export const AddressSpaceListKebab: React.FunctionComponent<IAddressSpaceListKeb
   const [isKebabOpen, setIsKebabOpen] = React.useState(false);
 
   const dropdownItems = [
-    <DropdownItem key="delete-all" component="button" value="deleteAll">
+    <DropdownItem id="as-list-delete-all" key="delete-all" component="button" value="deleteAll">
       Delete All
     </DropdownItem>
     // <OverflowMenuDropdownItem key="secondary" isShared={true}>
@@ -552,7 +552,7 @@ export const AddressSpaceListKebab: React.FunctionComponent<IAddressSpaceListKeb
           <Dropdown
             id="al-filter-overflow-dropdown"
             onSelect={onKebabSelect}
-            toggle={<KebabToggle onToggle={onKebabToggle} />}
+            toggle={<KebabToggle id="al-filter-overflow-kebab" onToggle={onKebabToggle} />}
             isOpen={isKebabOpen}
             isPlain
             dropdownItems={dropdownItems}

@@ -138,7 +138,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
             id="adheader-dropdown"
             onSelect={onSelect}
             position={DropdownPosition.right}
-            toggle={<KebabToggle onToggle={onToggle} />}
+            toggle={<KebabToggle id="adheader-kebab" onToggle={onToggle} />}
             isOpen={isOpen}
             isPlain={true}
             dropdownItems={dropdownItems}
