@@ -172,8 +172,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       transforms: [sortable]
     },
     { title: "Stored Messages", transforms: [sortable] },
-    "Senders",
-    "Receivers",
+    { title: "Senders", transforms: [sortable] },
+    { title: "Receivers", transforms: [sortable] },
     "Partitions"
   ];
 
