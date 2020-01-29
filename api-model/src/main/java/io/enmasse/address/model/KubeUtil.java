@@ -175,6 +175,14 @@ public final class KubeUtil {
             actual.getMetadata().setLabels(labels);
         }
 
+        if (desired.getMetadata() != null && desired.getMetadata().getAnnotations() != null) {
+            Map<String, String> annotations = new HashMap<>(desired.getMetadata().getAnnotations());
+            if (actual.getMetadata().getAnnotations() != null) {
+                annotations.putAll(actual.getMetadata().getAnnotations());
+            }
+            actual.getMetadata().setAnnotations(annotations);
+        }
+
         if (desired.getSpec() != null) {
 
             PodSpec podSpec = desired.getSpec();
