@@ -37,7 +37,7 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
     @JsonProperty("isReady")
     private boolean ready = false;
@@ -61,14 +61,6 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
 
     public AddressSpaceStatus(boolean ready) {
         this.ready = ready;
-    }
-
-    public AddressSpaceStatus(AddressSpaceStatus other) {
-        this.ready = other.isReady();
-        this.endpointStatuses = new ArrayList<>(other.getEndpointStatuses());
-        this.connectors = new ArrayList<>(other.getConnectors());
-        this.messages.addAll(other.getMessages());
-        this.phase = other.getPhase();
     }
 
     public boolean isReady() {
@@ -126,6 +118,7 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
         AddressSpaceStatus status = (AddressSpaceStatus) o;
         return ready == status.ready &&
                 phase == status.phase &&
+                Objects.equals(caCert, status.caCert) &&
                 Objects.equals(endpointStatuses, status.endpointStatuses) &&
                 Objects.equals(messages, status.messages) &&
                 Objects.equals(connectors, status.connectors);
@@ -133,7 +126,7 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
 
     @Override
     public int hashCode() {
-        return Objects.hash(ready, phase, endpointStatuses, messages, connectors);
+        return Objects.hash(ready, phase, caCert, endpointStatuses, messages, connectors);
     }
 
     @Override
@@ -141,6 +134,7 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
         return new StringBuilder()
                 .append("{ready=").append(ready)
                 .append(",").append("phase=").append(phase)
+                .append(",").append("caCert=").append(caCert)
                 .append(",").append("endpointStatuses=").append(endpointStatuses)
                 .append(",").append("messages=").append(messages)
                 .append(",").append("connectors=").append(connectors)

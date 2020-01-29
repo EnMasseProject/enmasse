@@ -17,19 +17,42 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.validation.ValidationException;
 
-import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
-import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressList;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.AddressSpaceList;
+import io.enmasse.address.model.AddressSpaceSchema;
+import io.enmasse.address.model.AddressSpaceType;
+import io.enmasse.address.model.AddressType;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.address.model.Phase;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressPlanBuilder;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
+import io.enmasse.admin.model.v1.BrokeredInfraConfig;
+import io.enmasse.admin.model.v1.BrokeredInfraConfigBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
 
 // TODO: Add more tests of invalid input to deserialization
@@ -349,6 +372,31 @@ public class SerializationTest {
         assertThat(addressSpacePlan.getResourceLimits().size(), is(2));
         assertThat(addressSpacePlan.getResourceLimits().get("router"), is(1.0));
         assertThat(addressSpacePlan.getResourceLimits().get("broker"), is(0.5));
+    }
+
+    @Test
+    public void testDeserializeAddressSpaceWithMissingFields() throws IOException {
+        final ObjectMapper mapper = new ObjectMapper();
+
+        final URL url = SerializationTest.class.getResource("resources/testDeserializeAddressSpaceWithMissingFields-1.json");
+        final AddressSpace value = mapper.readValue(url, AddressSpace.class);
+
+        assertNotNull(value);
+
+        assertNotNull(value.getSpec());
+        assertNotNull(value.getSpec().getEndpoints());
+        for (EndpointSpec endpoint : value.getSpec().getEndpoints()) {
+            assertNotNull(endpoint);
+            assertNotNull(endpoint.getCert());
+            assertNotNull(endpoint.getExports());
+            assertNotNull(endpoint.getExpose());
+        }
+        assertNotNull(value.getSpec().getEndpoints());
+
+        assertNotNull(value.getStatus());
+        assertNotNull(value.getStatus().getConnectors());
+        assertNotNull(value.getStatus().getEndpointStatuses());
+        assertNotNull(value.getStatus().getMessages());
     }
 
     @Test

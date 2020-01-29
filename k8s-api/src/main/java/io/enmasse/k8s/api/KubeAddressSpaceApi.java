@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.address.model.DoneableAddressSpace;
@@ -67,6 +68,11 @@ public class KubeAddressSpaceApi implements AddressSpaceApi, ListerWatcher<Addre
         if (!exists) {
             return false;
         }
+
+        // Make a copy, so that no one else makes modifications to our instance.
+        // This is important as we do put this instance into your cache.
+        addressSpace = new AddressSpaceBuilder(addressSpace).build();
+
         try {
             AddressSpace result = client
                     .inNamespace(addressSpace.getMetadata().getNamespace())

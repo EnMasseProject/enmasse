@@ -1,0 +1,58 @@
+{
+    "apiVersion": "enmasse.io/v1beta1",
+    "kind": "AddressSpace",
+    "metadata": {
+        "annotations": {
+            "enmasse.io/applied-infra-config": "{\"apiVersion\":\"admin.enmasse.io/v1beta1\",\"kind\":\"StandardInfraConfig\",\"metadata\":{\"creationTimestamp\":\"2019-01-10T16:28:36Z\",\"generation\":1,\"labels\":{\"app\":\"enmasse\"},\"name\":\"default\",\"namespace\":\"enmasse-infra\",\"resourceVersion\":\"401732\",\"selfLink\":\"/apis/admin.enmasse.io/v1beta1/namespaces/enmasse-infra/standardinfraconfigs/default\",\"uid\":\"c7ce1650-14f4-11e9-a3b0-96000017f276\"},\"spec\":{\"version\":\"0.26-SNAPSHOT\",\"admin\":{\"resources\":{\"memory\":\"512Mi\"}},\"broker\":{\"resources\":{\"memory\":\"512Mi\",\"storage\":\"2Gi\"},\"addressFullPolicy\":\"FAIL\"},\"router\":{\"minReplicas\":2,\"resources\":{\"memory\":\"512Mi\"},\"linkCapacity\":250}}}",
+            "enmasse.io/applied-plan": "standard-unlimited",
+            "enmasse.io/created-by": "system:serviceaccount:enmasse-infra:default",
+            "enmasse.io/created-by-uid": "",
+            "enmasse.io/infra-uuid": "lqjsrlq7qt",
+            "enmasse.io/realm-name": "my-iot-1-managed"
+        },
+        "creationTimestamp": "2019-01-11T09:15:23Z",
+        "labels": {
+            "addressSpaceType": "standard",
+            "namespace": "my-iot-1",
+            "type": "address-space"
+        },
+        "name": "managed",
+        "namespace": "my-iot-1",
+        "resourceVersion": "492543",
+        "selfLink": "/apis/enmasse.io/v1beta1/namespaces/my-iot-1/addressspaces/managed",
+        "uid": "6d0bd5c7-1581-11e9-8f1b-96000017f276"
+    },
+    "spec": {
+        "authenticationService": {
+            "name": "standard-authservice"
+        },
+        "endpoints": [
+           {
+              "cert": {
+              "provider": "selfsigned",
+              "secretName": "external-certs-messaging-9812cc4"
+            },
+            "expose": {
+              "route": "",
+              "routeServicePort": "amqps",
+              "routeTlsTermination": "passthrough",
+              "annotations": {
+              },
+              "loadBalancerPorts": [
+              ],
+              "loadBalancerSourceRanges": [
+              ]
+            },
+            "name": "messaging",
+            "service": "messaging",
+            "exports": [
+            ]
+          }
+        ],
+        "plan": "standard-unlimited",
+        "type": "standard"
+    },
+    "status": {
+        "isReady": true
+    }
+}

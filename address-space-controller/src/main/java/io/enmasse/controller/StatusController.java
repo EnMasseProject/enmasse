@@ -4,7 +4,28 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.*;
+import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceResolver;
+import io.enmasse.address.model.AddressSpaceSpec;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.EndpointStatus;
+import io.enmasse.address.model.ExposeType;
+import io.enmasse.address.model.Phase;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.InfraConfig;
@@ -16,14 +37,6 @@ import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.user.api.RealmApi;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class StatusController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(StatusController.class.getName());
@@ -55,9 +68,13 @@ public class StatusController implements Controller {
         }
 
         if (addressSpace.getStatus().isReady()) {
-            AppliedConfig appliedConfig = AppliedConfig.parseCurrentAppliedConfig(addressSpace);
-            if (addressSpace.getSpec().equals(appliedConfig.getAddressSpaceSpec())) {
+            final AppliedConfig appliedConfig = AppliedConfig.parseCurrentAppliedConfig(addressSpace);
+            final AddressSpaceSpec spec = AppliedConfig.normalize(AddressSpaceSpec.class, addressSpace.getSpec());
+
+            if (spec.equals(appliedConfig.getAddressSpaceSpec())) {
                 addressSpace.getStatus().setPhase(Phase.Active);
+            } else if (log.isDebugEnabled()) {
+                log.debug("Applied config does not match requested\nApplied  : {}\nRequested: {}", appliedConfig.getAddressSpaceSpec(), spec);
             }
         } else {
             if (Phase.Active.equals(addressSpace.getStatus().getPhase())) {
@@ -69,10 +86,20 @@ public class StatusController implements Controller {
 
     private void checkExposedEndpoints(AddressSpace addressSpace) {
         Map<String, EndpointSpec> exposedEndpoints = new HashMap<>();
-        for (EndpointSpec endpointSpec : addressSpace.getSpec().getEndpoints()) {
-            if (endpointSpec.getExpose() != null && endpointSpec.getExpose().getType().equals(ExposeType.route)) {
-                exposedEndpoints.put(endpointSpec.getName(), endpointSpec);
+
+        if (addressSpace.getSpec() != null && addressSpace.getSpec().getEndpoints() != null) {
+            for (EndpointSpec endpointSpec : addressSpace.getSpec().getEndpoints()) {
+                if (endpointSpec != null
+                        && endpointSpec.getExpose() != null
+                        && endpointSpec.getExpose().getType() != null
+                        && endpointSpec.getExpose().getType().equals(ExposeType.route)) {
+                    exposedEndpoints.put(endpointSpec.getName(), endpointSpec);
+                }
             }
+        }
+
+        if (addressSpace.getStatus().getEndpointStatuses() == null) {
+            addressSpace.getStatus().setEndpointStatuses(new ArrayList<>());
         }
 
         for (EndpointStatus endpointStatus : addressSpace.getStatus().getEndpointStatuses()) {

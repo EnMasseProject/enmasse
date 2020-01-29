@@ -8,20 +8,16 @@ import static io.enmasse.systemtest.utils.AddressSpaceUtils.addressSpaceExists;
 import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
+import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
+import static org.junit.Assert.assertThat;
 
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
-import io.enmasse.systemtest.certs.CertBundle;
-import io.enmasse.systemtest.iot.CredentialsRegistryClient;
-import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
-import io.enmasse.systemtest.iot.DeviceRegistryClient;
-import io.enmasse.systemtest.utils.CertificateUtils;
+import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,10 +31,25 @@ import io.enmasse.address.model.DoneableAddress;
 import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.iot.model.v1.DoneableIoTProject;
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.iot.model.v1.IoTProjectList;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
+import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.iot.CredentialsRegistryClient;
+import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
+import io.enmasse.systemtest.iot.DeviceRegistryClient;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.Type;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
@@ -48,6 +59,8 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 
 public class ManagedTest extends TestBase implements ITestIoTIsolated {
 
+    private static final String MANAGED_TEST_ADDRESSSPACE = "managed-test-addrspace";
+
     private static final Logger log = CustomLogger.getLogger();
 
     private MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> client;
@@ -56,6 +69,9 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
     private MixedOperation<User, UserList, DoneableUser, Resource<User, DoneableUser>> userClient;
     protected DeviceRegistryClient registryClient;
     protected CredentialsRegistryClient credentialsClient;
+
+    private Endpoint httpAdapterEndpoint;
+    private UserCredentials credentials;
 
     @BeforeEach
     public void initClients () throws Exception {
@@ -85,12 +101,15 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
         isolatedIoTManager.createIoTConfig(iotConfig);
 
         final Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
-        registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
-        credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
+        this.registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
+        this.credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
         this.client = kubernetes.getIoTProjectClient(IOT_PROJECT_NAMESPACE);
         this.addressClient = kubernetes.getAddressClient(IOT_PROJECT_NAMESPACE);
         this.addressSpaceClient = kubernetes.getAddressSpaceClient(IOT_PROJECT_NAMESPACE);
         this.userClient = kubernetes.getUserClient(IOT_PROJECT_NAMESPACE);
+        this.httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
+
+        this.credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
     }
 
     @Test
@@ -139,7 +158,59 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
 
         assertManagedResources(Assertions::assertNotNull, project, "as1a");
         assertManagedResources(Assertions::assertNull, project, "as1");
+    }
 
+    @Test
+    public void testTwoManagedToTheSameAddressSpace() throws Exception {
+
+        // first create two projects for a single address space
+
+        var project1 = IoTUtils.getBasicIoTProjectObject("iot1", MANAGED_TEST_ADDRESSSPACE,
+                IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
+        var project2 = IoTUtils.getBasicIoTProjectObject("iot2", MANAGED_TEST_ADDRESSSPACE,
+                IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
+
+        var tenant1 = IoTUtils.getTenantId(project1);
+        var tenant2 = IoTUtils.getTenantId(project2);
+
+        // wait for the projects to be ready
+
+        isolatedIoTManager.createIoTProject(project1);
+        isolatedIoTManager.createIoTProject(project2);
+
+        assertManagedResources(Assertions::assertNotNull, project1, MANAGED_TEST_ADDRESSSPACE);
+        assertManagedResources(Assertions::assertNotNull, project2, MANAGED_TEST_ADDRESSSPACE);
+
+        // register two devices with the same ids, but for different tenants
+
+        this.registryClient.registerDevice(tenant1, "device1");
+        this.registryClient.registerDevice(tenant2, "device1");
+        this.credentialsClient.addPlainPasswordCredentials(tenant1, "device1", "auth1", "password1");
+        this.credentialsClient.addPlainPasswordCredentials(tenant2, "device1", "auth1", "password1");
+
+        // set up client
+
+        isolatedIoTManager.createOrUpdateUser(isolatedIoTManager.getAddressSpace(IOT_PROJECT_NAMESPACE, MANAGED_TEST_ADDRESSSPACE), this.credentials);
+        var iotAmqpClientFactory = new AmqpClientFactory(this.resourcesManager.getAddressSpace(IOT_PROJECT_NAMESPACE, MANAGED_TEST_ADDRESSSPACE), this.credentials);
+        var amqpClient = iotAmqpClientFactory.createQueueClient();
+
+        // now try to send some messages
+
+        final List<Message> otherMessages = new LinkedList<>();
+        try (
+                var httpAdapterClient = new HttpAdapterClient(this.httpAdapterEndpoint, "auth1", tenant1, "password1");
+                var otherReceiver = MessageSendTester.ConsumerFactory.of(amqpClient, tenant2).start(Type.TELEMETRY, msg -> otherMessages.add(msg)) ) {
+
+            new MessageSendTester()
+                    .type(MessageSendTester.Type.TELEMETRY)
+                    .amount(1)
+                    .consumerFactory(MessageSendTester.ConsumerFactory.of(amqpClient, tenant1))
+                    .sender(httpAdapterClient::send)
+                    .execute();
+
+        }
+
+        assertThat(otherMessages, emptyIterable());
     }
 
     private void assertManagedResources(final BiConsumer<Object,String> assertor, final IoTProject project, final String addressSpaceName) {

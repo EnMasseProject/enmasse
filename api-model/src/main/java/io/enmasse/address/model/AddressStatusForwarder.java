@@ -4,18 +4,22 @@
  */
 package io.enmasse.address.model;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+import javax.validation.constraints.NotNull;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
-
-import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -28,7 +32,7 @@ import java.util.Objects;
                 value = "done"
         )
 )
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AddressStatusForwarder extends AbstractWithAdditionalProperties {
 
     @NotNull
@@ -37,6 +41,7 @@ public class AddressStatusForwarder extends AbstractWithAdditionalProperties {
     @JsonProperty("isReady")
     private boolean ready = false;
 
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> messages = new ArrayList<>();
 
     public String getName() {

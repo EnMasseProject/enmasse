@@ -13,6 +13,8 @@ import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -34,16 +36,19 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AddressStatus extends AbstractWithAdditionalProperties {
 
     @JsonProperty("isReady")
     private boolean ready = false;
     private Phase phase = Phase.Pending;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> messages = new ArrayList<>();
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid BrokerStatus> brokerStatuses = new ArrayList<>();
     private AddressPlanStatus planStatus;
 
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid AddressStatusForwarder> forwarders;
 
     public AddressStatus() {
@@ -51,27 +56,6 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
 
     public AddressStatus(boolean ready) {
         this.ready = ready;
-    }
-
-    public AddressStatus(AddressStatus other) {
-        this.ready = other.isReady();
-        this.phase = other.getPhase();
-        this.messages = new ArrayList<>(other.getMessages());
-        this.brokerStatuses = new ArrayList<>();
-        for (BrokerStatus brokerStatus : other.getBrokerStatuses()) {
-            brokerStatuses.add(new BrokerStatus(brokerStatus.getClusterId(), brokerStatus.getContainerId(), brokerStatus.getState()));
-        }
-        if (other.getForwarders() != null) {
-            this.forwarders = new ArrayList<>();
-            for (AddressStatusForwarder forwarderStatus : other.getForwarders()) {
-                forwarders.add(new AddressStatusForwarderBuilder()
-                        .withName(forwarderStatus.getName())
-                        .withReady(forwarderStatus.isReady())
-                        .withMessages(new ArrayList<>(forwarderStatus.getMessages()))
-                        .build());
-            }
-        }
-
     }
 
     public boolean isReady() {

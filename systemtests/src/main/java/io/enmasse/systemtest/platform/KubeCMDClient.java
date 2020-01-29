@@ -4,13 +4,6 @@
  */
 package io.enmasse.systemtest.platform;
 
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.fabric8.kubernetes.api.model.Pod;
-import org.slf4j.Logger;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,6 +18,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.fabric8.kubernetes.api.model.Pod;
+
 /**
  * Class represent abstract client which keeps common features of client
  */
@@ -32,8 +33,8 @@ public class KubeCMDClient {
     protected static final int DEFAULT_SYNC_TIMEOUT = 10000;
     protected static final int ONE_MINUTE_TIMEOUT = 60000;
     protected static final int FIVE_MINUTES_TIMEOUT = 300000;
-    protected static String CMD = getCMD();
-    private static Logger log = CustomLogger.getLogger();
+    protected static final String CMD = getCMD();
+    private static final Logger log = CustomLogger.getLogger();
 
     public static String getCMD() {
         return Kubernetes.getInstance().getCluster().getKubeCmd();
@@ -75,11 +76,11 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData createCR(String definition) throws IOException {
-        return createOrUpdateCR(Environment.getInstance().namespace(), definition, false, DEFAULT_SYNC_TIMEOUT);
+        return createCR(Environment.getInstance().namespace(), definition);
     }
 
     public static ExecutionResultData createCR(String namespace, String definition) throws IOException {
-        return createOrUpdateCR(namespace, definition, false, DEFAULT_SYNC_TIMEOUT);
+        return createCR(namespace, definition, DEFAULT_SYNC_TIMEOUT);
     }
 
     public static ExecutionResultData createCR(String namespace, String definition, int timeoutMillis) throws IOException {
@@ -87,16 +88,16 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData updateCR(String definition) throws IOException {
-        return createOrUpdateCR(Environment.getInstance().namespace(), definition, true, DEFAULT_SYNC_TIMEOUT);
+        return updateCR(Environment.getInstance().namespace(), definition);
+    }
+
+    public static ExecutionResultData updateCR(String namespace, String definition) throws IOException {
+        return createOrUpdateCR(namespace, definition, true, DEFAULT_SYNC_TIMEOUT);
     }
 
     public static ExecutionResultData patchCR(String kind, String name, String patchData) {
         log.info("Patching {} {} in {}", kind, name, Environment.getInstance().namespace());
         return Exec.execute(Arrays.asList(CMD, "patch", "--type=merge", "-n", Environment.getInstance().namespace(), kind, name, "-p", patchData), DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-    public static ExecutionResultData updateCR(String namespace, String definition) throws IOException {
-        return createOrUpdateCR(namespace, definition, true, DEFAULT_SYNC_TIMEOUT);
     }
 
     public static String getOCUser() {

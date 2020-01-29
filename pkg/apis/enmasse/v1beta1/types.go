@@ -63,11 +63,12 @@ type EndpointSpec struct {
 }
 
 type CertificateSpec struct {
-	Provider string `json:"provider"`
+	Provider   string `json:"provider"`
+	SecretName string `json:"secretName,omitempty"`
 }
 
 type ExposeSpec struct {
-	Type                string `json:"route"`
+	Type                string `json:"type"`
 	RouteServicePort    string `json:"routeServicePort"`
 	RouteTlsTermination string `json:"routeTlsTermination"`
 }
@@ -127,7 +128,7 @@ type EndpointStatus struct {
 	ServiceHost  string `json:"serviceHost"`
 	ServicePorts []Port `json:"servicePorts,omitempty"`
 
-	ExternalHost  string `json:"externalHost"`
+	ExternalHost  string `json:"externalHost,omitempty"`
 	ExternalPorts []Port `json:"externalPorts,omitempty"`
 }
 

@@ -12,8 +12,11 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -32,10 +35,12 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ExposeSpec extends AbstractWithAdditionalProperties {
     @Valid
+    @NotNull
     private ExposeType type;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private Map<String, String> annotations = new HashMap<>();
 
     // For 'route' type
@@ -44,7 +49,9 @@ public class ExposeSpec extends AbstractWithAdditionalProperties {
     private TlsTermination routeTlsTermination;
 
     // For 'loadbalancer' type
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> loadBalancerPorts = new ArrayList<>();
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> loadBalancerSourceRanges = new ArrayList<>();
 
     public ExposeSpec () {

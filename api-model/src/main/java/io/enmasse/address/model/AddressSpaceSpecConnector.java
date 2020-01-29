@@ -14,6 +14,8 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.enmasse.model.validation.AddressSpaceConnectorName;
@@ -33,7 +35,7 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
         )
 )
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @AddressSpaceConnectorName
 public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties {
     @NotNull
@@ -41,11 +43,13 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
 
     @NotNull
     @NotEmpty
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid  AddressSpaceSpecConnectorEndpoint> endpointHosts = Collections.emptyList();
 
     private AddressSpaceSpecConnectorCredentials credentials;
     private AddressSpaceSpecConnectorTls tls;
 
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid AddressSpaceSpecConnectorAddressRule> addresses = Collections.emptyList();
 
     public String getName() {

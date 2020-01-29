@@ -4,6 +4,21 @@
  */
 package io.enmasse.systemtest.platform;
 
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
@@ -81,20 +96,6 @@ import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import org.slf4j.Logger;
-
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public abstract class Kubernetes {
     private static Logger log = CustomLogger.getLogger();
@@ -720,6 +721,7 @@ public abstract class Kubernetes {
      * @return list of containers
      */
     public List<Container> getContainersFromPod(String podName) {
+        Objects.requireNonNull(podName);
         return client.pods().inNamespace(infraNamespace).withName(podName).get().getSpec().getContainers();
     }
 
@@ -730,6 +732,8 @@ public abstract class Kubernetes {
      * @return log
      */
     public String getLog(String podName, String containerName) {
+        Objects.requireNonNull(podName);
+        Objects.requireNonNull(containerName);
         return client.pods().inNamespace(infraNamespace).withName(podName).inContainer(containerName).getLog();
     }
 

@@ -4,12 +4,14 @@
  */
 package io.enmasse.k8s.api;
 
-import io.enmasse.address.model.Schema;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import io.enmasse.address.model.Schema;
+import io.enmasse.address.model.SchemaBuilder;
 
 public class CachingSchemaProvider implements SchemaProvider, Watcher<Schema> {
     private static final Logger log = LoggerFactory.getLogger(CachingSchemaProvider.class);
@@ -30,7 +32,7 @@ public class CachingSchemaProvider implements SchemaProvider, Watcher<Schema> {
         if (items == null || items.isEmpty()) {
             return;
         }
-        schema = items.get(0);
+        schema = new SchemaBuilder(items.get(0)).build();
         log.info("Schema updated: {}", schema.printSchema());
         for (SchemaListener listener : listeners) {
             listener.onUpdate(schema);

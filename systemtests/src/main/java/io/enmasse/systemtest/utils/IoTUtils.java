@@ -182,7 +182,7 @@ public class IoTUtils {
         var projectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         var asClient = kubernetes.getAddressSpaceClient(project.getMetadata().getNamespace());
 
-        // get inital address spaces
+        // get initial address spaces
 
         var initialAddressSpaces = projectClient
                 .list().getItems().stream()
@@ -207,9 +207,8 @@ public class IoTUtils {
         // wait until the IoTProject is deleted
 
         var projectName = project.getMetadata().getNamespace() + "/"+ project.getMetadata().getName();
-        var client = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         TestUtils.waitUntilConditionOrFail(() -> {
-            var updated = client.withName(project.getMetadata().getName()).get();
+            var updated = projectClient.withName(project.getMetadata().getName()).get();
             if (updated != null) {
                 log.info("IoTProject {} still exists -> {}", projectName, updated.getStatus().getPhase());
             }

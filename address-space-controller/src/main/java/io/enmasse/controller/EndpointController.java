@@ -4,7 +4,26 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.CertSpec;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.EndpointStatus;
+import io.enmasse.address.model.EndpointStatusBuilder;
+import io.enmasse.address.model.ExposeSpec;
+import io.enmasse.address.model.KubeUtil;
+import io.enmasse.address.model.TlsTermination;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.auth.OpenSSLCertManager;
@@ -17,12 +36,6 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class EndpointController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(EndpointController.class.getName());
@@ -133,39 +146,43 @@ public class EndpointController implements Controller {
 
     private EndpointStatus exposeEndpoint(AddressSpace addressSpace, EndpointInfo endpointInfo, ExposeSpec exposeSpec) {
         EndpointStatusBuilder statusBuilder = new EndpointStatusBuilder(endpointInfo.endpointStatus);
-        try {
-            switch (exposeSpec.getType()) {
-                case route:
-                    Route route = ensureRouteExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
-                    if (route != null) {
-                        statusBuilder.withExternalPorts(Collections.singletonMap(exposeSpec.getRouteServicePort(), 443));
-                        statusBuilder.withExternalHost(route.getSpec().getHost());
-                        if (exposeSpec.getRouteTlsTermination().equals(TlsTermination.passthrough)) {
-                            Secret certSecret = client.secrets().inNamespace(namespace).withName(KubeUtil.getExternalCertSecretName(endpointInfo.endpointSpec.getService(), addressSpace)).get();
+        if (exposeSpec.getType() != null) {
+            try {
+                switch (exposeSpec.getType()) {
+                    case route:
+                        Route route = ensureRouteExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
+                        if (route != null) {
+                            statusBuilder.withExternalPorts(Collections.singletonMap(exposeSpec.getRouteServicePort(), 443));
+                            statusBuilder.withExternalHost(route.getSpec().getHost());
+                            if (exposeSpec.getRouteTlsTermination().equals(TlsTermination.passthrough)) {
+                                Secret certSecret = client.secrets().inNamespace(namespace)
+                                        .withName(KubeUtil.getExternalCertSecretName(endpointInfo.endpointSpec.getService(), addressSpace)).get();
+                                if (certSecret != null) {
+                                    statusBuilder.withCert(certSecret.getData().get("tls.crt"));
+                                }
+                            } else {
+                                statusBuilder.withCert(route.getSpec().getTls().getCertificate());
+                            }
+                        }
+                        break;
+                    case loadbalancer:
+                        Service service = ensureExternalServiceExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
+                        if (service != null && service.getSpec().getPorts().size() > 0) {
+                            statusBuilder.withExternalHost(service.getSpec().getLoadBalancerIP());
+                            statusBuilder.withExternalPorts(endpointInfo.endpointStatus.getServicePorts());
+                            Secret certSecret = client.secrets().inNamespace(namespace)
+                                    .withName(KubeUtil.getExternalCertSecretName(endpointInfo.endpointSpec.getService(), addressSpace)).get();
                             if (certSecret != null) {
                                 statusBuilder.withCert(certSecret.getData().get("tls.crt"));
                             }
-                        } else {
-                            statusBuilder.withCert(route.getSpec().getTls().getCertificate());
                         }
-                    }
-                    break;
-                case loadbalancer:
-                    Service service = ensureExternalServiceExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
-                    if (service != null && service.getSpec().getPorts().size() > 0) {
-                        statusBuilder.withExternalHost(service.getSpec().getLoadBalancerIP());
-                        statusBuilder.withExternalPorts(endpointInfo.endpointStatus.getServicePorts());
-                        Secret certSecret = client.secrets().inNamespace(namespace).withName(KubeUtil.getExternalCertSecretName(endpointInfo.endpointSpec.getService(), addressSpace)).get();
-                        if (certSecret != null) {
-                            statusBuilder.withCert(certSecret.getData().get("tls.crt"));
-                        }
-                    }
-                    break;
+                        break;
+                }
+            } catch (KubernetesClientException e) {
+                String error = String.format("Error exposing endpoint %s: %s", endpointInfo.endpointSpec.getName(), e.getMessage());
+                log.warn(error);
+                addressSpace.getStatus().appendMessage(error);
             }
-        } catch (KubernetesClientException e) {
-            String error = String.format("Error exposing endpoint %s: %s", endpointInfo.endpointSpec.getName(), e.getMessage());
-            log.warn(error);
-            addressSpace.getStatus().appendMessage(error);
         }
         return statusBuilder.build();
     }

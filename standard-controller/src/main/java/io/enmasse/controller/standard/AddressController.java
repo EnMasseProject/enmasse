@@ -4,8 +4,35 @@
  */
 package io.enmasse.controller.standard;
 
+import static io.enmasse.address.model.Phase.Active;
+import static io.enmasse.address.model.Phase.Configuring;
+import static io.enmasse.address.model.Phase.Failed;
+import static io.enmasse.address.model.Phase.Pending;
+import static io.enmasse.address.model.Phase.Terminating;
+import static io.enmasse.controller.standard.ControllerKind.Broker;
+import static io.enmasse.controller.standard.ControllerReason.BrokerUpgraded;
+import static io.enmasse.k8s.api.EventLogger.Type.Normal;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressResolver;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceResolver;
@@ -14,6 +41,7 @@ import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.AddressSpecForwarder;
 import io.enmasse.address.model.AddressSpecForwarderDirection;
 import io.enmasse.address.model.AddressStatus;
+import io.enmasse.address.model.AddressStatusBuilder;
 import io.enmasse.address.model.AddressStatusForwarder;
 import io.enmasse.address.model.AddressStatusForwarderBuilder;
 import io.enmasse.address.model.AddressType;
@@ -50,30 +78,6 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.vertx.core.Vertx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import static io.enmasse.address.model.Phase.Active;
-import static io.enmasse.address.model.Phase.Configuring;
-import static io.enmasse.address.model.Phase.Failed;
-import static io.enmasse.address.model.Phase.Pending;
-import static io.enmasse.address.model.Phase.Terminating;
-import static io.enmasse.controller.standard.ControllerKind.Broker;
-import static io.enmasse.controller.standard.ControllerReason.BrokerUpgraded;
-import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 
 /**
  * Controller for a single standard address space
@@ -228,6 +232,7 @@ public class AddressController implements Watcher<Address> {
     @Override
     public void onUpdate(List<Address> addressList) throws Exception {
         long start = System.nanoTime();
+
         Schema schema = schemaProvider.getSchema();
         if (schema == null) {
             log.info("No schema available");
@@ -241,7 +246,12 @@ public class AddressController implements Watcher<Address> {
         }
 
         String addressPrefix = String.format("%s.", options.getAddressSpace());
-        addressList = addressList.stream().filter(a -> a.getMetadata().getName().startsWith(addressPrefix)).collect(Collectors.toList());
+        // make a deep copy of the list first, but only for relevant items
+        addressList = addressList.stream()
+                .filter(a -> a.getMetadata().getName().startsWith(addressPrefix))
+                // copy item
+                .map(a -> new AddressBuilder(a).build())
+                .collect(Collectors.toList());
 
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
 
@@ -374,11 +384,16 @@ public class AddressController implements Watcher<Address> {
 
         int staleCount = 0;
         for (Address address : addressList) {
+            var addressName = address.getMetadata().getNamespace() + ":" + address.getMetadata().getName();
             ProvisionState previous = previousStatus.get(address.getMetadata().getName());
             ProvisionState current = new ProvisionState(address.getStatus(), address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+            log.debug("Compare current state\nPrevious: {}\nCurrent : {}", previous, current);
             if (!current.equals(previous)) {
+                log.debug("Address did change: {}", addressName);
                 try {
-                    addressApi.replaceAddress(address);
+                    if(!addressApi.replaceAddress(address)) {
+                        log.info("Failed to persist address state: {}", addressName);
+                    }
                 } catch (KubernetesClientException e) {
                     if (e.getStatus().getCode() == 409) {
                         // The address record is stale.  The address controller will be notified again by the watcher,
@@ -389,6 +404,8 @@ public class AddressController implements Watcher<Address> {
                         throw e;
                     }
                 }
+            } else {
+                log.debug("No change for address: {}", addressName);
             }
         }
 
@@ -813,7 +830,7 @@ public class AddressController implements Watcher<Address> {
         private final String plan;
 
         public ProvisionState(AddressStatus status, String plan) {
-            this.status = new AddressStatus(status);
+            this.status = new AddressStatusBuilder(status).build();
             this.plan = plan;
         }
 

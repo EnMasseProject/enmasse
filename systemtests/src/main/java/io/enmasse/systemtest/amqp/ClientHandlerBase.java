@@ -4,16 +4,17 @@
  */
 package io.enmasse.systemtest.amqp;
 
+import java.util.concurrent.CompletableFuture;
+
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.slf4j.Logger;
+
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
-import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.transport.ErrorCondition;
-import org.slf4j.Logger;
-
-import java.util.concurrent.CompletableFuture;
 
 public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
@@ -63,7 +64,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
                 conn.disconnectHandler(result -> connectionDisconnected(conn));
                 conn.open();
             } else {
-                log.info("Connection to " + endpoint.getHost() + ":" + endpoint.getPort() + " failed: " + connection.cause().getMessage());
+                log.info("Connection to {}:{} failed: {}", endpoint.getHost(), endpoint.getPort(), connection.cause().getMessage(), connection.cause());
                 resultPromise.completeExceptionally(connection.cause());
                 connectPromise.completeExceptionally(connection.cause());
             }

@@ -1,8 +1,32 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest.isolated;
+
+import static io.enmasse.systemtest.TestTag.ISOLATED;
+import static io.enmasse.systemtest.TestTag.NON_PR;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
@@ -22,28 +46,6 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static io.enmasse.systemtest.TestTag.ISOLATED;
-import static io.enmasse.systemtest.TestTag.NON_PR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(ISOLATED)
 class CommonTest extends TestBase implements ITestBaseIsolated {
@@ -94,7 +96,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             fail(String.format(" %d pod(s) still unready", unready.size()));
         }
 
-        List<Map.Entry<String, String>> podsContainersWithNoLog = new ArrayList<>();
+        Multimap<String, String> podsContainersWithNoLog = HashMultimap.create();
 
         kubernetes.listPods().forEach(pod -> kubernetes.getContainersFromPod(pod.getMetadata().getName()).forEach(container -> {
             String podName = pod.getMetadata().getName();
@@ -114,19 +116,15 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             }
 
             if (podlog.isEmpty()) {
-                podsContainersWithNoLog.add(of(podName, containerName));
+                podsContainersWithNoLog.put(podName, containerName);
             }
 
         }));
 
         if (!podsContainersWithNoLog.isEmpty()) {
-            String podContainerNames = podsContainersWithNoLog.stream().map(e -> String.format("%s-%s", e.getKey(), e.getValue())).collect(Collectors.joining(","));
+            String podContainerNames = podsContainersWithNoLog.entries().stream().map(e -> String.format("%s-%s", e.getKey(), e.getValue())).collect(Collectors.joining(","));
             fail(String.format("%d pod container(s) had unexpectedly empty logs : %s ", podsContainersWithNoLog.size(), podContainerNames));
         }
-    }
-
-    private <K, V> Map.Entry<K, V> of(K k, V v) {
-        return new AbstractMap.SimpleEntry<>(k, v);
     }
 
     @Test

@@ -4,15 +4,6 @@
  */
 package io.enmasse.k8s.api.cache;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesResourceList;
-import io.fabric8.kubernetes.api.model.ListMeta;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -20,6 +11,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.api.model.ListMeta;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.Watcher;
 
 public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList<T>> implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(Reflector.class.getName());
@@ -73,7 +74,7 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList<
     }
 
     private void resync() throws InterruptedException {
-        log.info("Resync");
+        log.info("Resync: {}", this.expectedType);
         if (watch != null) {
             log.info("Closing existing watch");
             watch.close();
