@@ -187,8 +187,8 @@ func (r *mutationResolver) PurgeAddress(ctx context.Context, input metav1.Object
 }
 
 func (r *queryResolver) AddressCommand(ctx context.Context, input v1beta1.Address) (string, error) {
-
-	return `apiVersion: enmasse.io/v1beta1
+	return  `oc apply -f - << EOF
+apiVersion: enmasse.io/v1beta1
 kind: Address
 metadata:
   namespace: `+ input.Namespace +`
@@ -197,5 +197,6 @@ spec:
   address: `+ input.Spec.Address +`
   addressSpace: `+ input.Spec.AddressSpace +`
   type: `+ input.Spec.Type +`
-  plan: `+ input.Spec.Plan, nil
+  plan: `+ input.Spec.Plan +`
+EOF`, nil
 }
