@@ -266,4 +266,3 @@ func addMonitoringKeyLabelToOperatorService(ctx context.Context, cfg *rest.Confi
 
 	return nil
 }
- 

@@ -24,6 +24,8 @@ var (
 	log       = logf.Log.WithName("util")
 )
 
+const ConnectsTo = "app.openshift.io/connects-to"
+
 func IsOpenshift() bool {
 	if openshift == nil {
 		b := detectOpenshift()

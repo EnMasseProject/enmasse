@@ -7,6 +7,7 @@ package iotconfig
 
 import (
 	"context"
+	"github.com/enmasseproject/enmasse/pkg/util"
 	"strconv"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -50,6 +51,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	service := config.Spec.ServicesConfig.Tenant
+	deployment.Annotations[util.ConnectsTo] = "iot-auth-service"
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-tenant-service"
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, nil)
 
