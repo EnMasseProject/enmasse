@@ -460,7 +460,7 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
           <Dropdown
             id="al-filter-overflow-dropdown"
             onSelect={onKebabSelect}
-            toggle={<KebabToggle onToggle={onKebabToggle} />}
+            toggle={<KebabToggle id="al-filter-overflow-kebab" onToggle={onKebabToggle} />}
             isOpen={isKebabOpen}
             isPlain
             dropdownItems={dropdownItems}
