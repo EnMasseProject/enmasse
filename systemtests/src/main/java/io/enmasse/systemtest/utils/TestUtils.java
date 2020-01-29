@@ -5,35 +5,6 @@
 
 package io.enmasse.systemtest.utils;
 
-import com.google.common.io.BaseEncoding;
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.BrokerState;
-import io.enmasse.address.model.BrokerStatus;
-import io.enmasse.config.AnnotationKeys;
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.time.SystemtestsOperation;
-import io.enmasse.systemtest.time.TimeMeasuringSystem;
-import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.time.WaitPhase;
-import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.Pod;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.function.ThrowingSupplier;
-import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.remote.RemoteWebDriver;
-import org.opentest4j.AssertionFailedError;
-import org.slf4j.Logger;
-
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
@@ -57,6 +28,37 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.function.ThrowingSupplier;
+import org.openqa.selenium.Capabilities;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.opentest4j.AssertionFailedError;
+import org.slf4j.Logger;
+
+import com.google.common.io.BaseEncoding;
+
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.BrokerState;
+import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.time.SystemtestsOperation;
+import io.enmasse.systemtest.time.TimeMeasuringSystem;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.time.WaitPhase;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Pod;
 
 public class TestUtils {
 
@@ -457,6 +459,7 @@ public class TestUtils {
      * Wait for a condition, fail otherwise.
      *
      * @param condition              The condition to check, returning {@code true} means success.
+     * @param timeout                The maximum time to wait for
      * @param delay                  The delay between checks.
      * @param timeoutMessageSupplier The supplier of a timeout message.
      * @throws AssertionFailedError In case the timeout expired
@@ -473,6 +476,7 @@ public class TestUtils {
      * Wait for a condition, throw exception otherwise.
      *
      * @param condition         The condition to check, returning {@code true} means success.
+     * @param timeout           The maximum time to wait for
      * @param delay             The delay between checks.
      * @param exceptionSupplier The supplier of the exception to throw.
      * @throws AssertionFailedError In case the timeout expired
