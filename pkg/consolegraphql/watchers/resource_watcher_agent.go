@@ -22,14 +22,14 @@ import (
 	"time"
 )
 
-type AgentCollectorCreator = func() agent.AgentCollector
+type AgentCollectorCreator = func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, developmentMode bool) agent.Delegate
 
 type AgentWatcher struct {
 	Namespace             string
 	Cache                 cache.Cache
 	ClientInterface       cp.CoreV1Interface
 	AgentCollectorCreator AgentCollectorCreator
-	collectors            map[string]agent.AgentCollector
+	collectors            map[string]agent.Delegate
 	watching              chan struct{}
 	watchingAgentsStarted bool
 	stopchan              chan struct{}
@@ -39,7 +39,7 @@ type AgentWatcher struct {
 	RouteClientInterface *routev1.RouteV1Client
 }
 
-func NewAgentWatcher(c cache.Cache, namespace string, f func() agent.AgentCollector, developmentMode bool, options ...WatcherOption) (*AgentWatcher, error) {
+func NewAgentWatcher(c cache.Cache, namespace string, creator AgentCollectorCreator, developmentMode bool, options ...WatcherOption) (*AgentWatcher, error) {
 
 	clw := &AgentWatcher{
 		Namespace:             namespace,
@@ -47,8 +47,8 @@ func NewAgentWatcher(c cache.Cache, namespace string, f func() agent.AgentCollec
 		watching:              make(chan struct{}),
 		stopchan:              make(chan struct{}),
 		stoppedchan:           make(chan struct{}),
-		AgentCollectorCreator: f,
-		collectors:            make(map[string]agent.AgentCollector),
+		AgentCollectorCreator: creator,
+		collectors:            make(map[string]agent.Delegate),
 		developmentMode:       developmentMode,
 	}
 
@@ -105,6 +105,10 @@ func AgentWatcherClient(client cp.CoreV1Interface) WatcherOption {
 	}
 }
 
+func (clw *AgentWatcher) Collector(infraUuid string) agent.Delegate {
+	return clw.collectors[infraUuid]
+}
+
 func (clw *AgentWatcher) Watch() error {
 	go func() {
 		defer close(clw.stoppedchan)
@@ -153,7 +157,7 @@ func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {
 		return err
 	}
 
-	current := make(map[string]agent.AgentCollector)
+	current := make(map[string]agent.Delegate)
 	for k, v := range clw.collectors {
 		current[k] = v
 	}
@@ -261,10 +265,10 @@ func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {
 	}
 }
 
-func (clw *AgentWatcher) createCollector(host string, port int32, infraUuid *string, addressSpace *string, addressSpaceNamespace *string) (agent.AgentCollector, error) {
+func (clw *AgentWatcher) createCollector(host string, port int32, infraUuid *string, addressSpace *string, addressSpaceNamespace *string) (agent.Delegate, error) {
 	// Create collector for this service
-	collector := clw.AgentCollectorCreator()
-	err := collector.Collect(*addressSpaceNamespace, *addressSpace, *infraUuid, host, port, clw.handleEvent, clw.developmentMode)
+	collector := clw.AgentCollectorCreator(host, port, *infraUuid, *addressSpace, *addressSpaceNamespace, clw.developmentMode)
+	err := collector.Collect(clw.handleEvent)
 	if err != nil {
 		return nil, err
 	}

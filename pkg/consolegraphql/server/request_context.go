@@ -17,6 +17,7 @@ type RequestState struct {
 	EnmasseV1beta1Client v1beta1.EnmasseV1beta1Interface
 	AccessController     accesscontroller.AccessController
 	User                 string
+	UserAccessToken      string
 }
 
 func ContextWithRequestState(requestState *RequestState, ctx context.Context) context.Context {

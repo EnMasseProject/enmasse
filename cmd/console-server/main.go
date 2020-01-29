@@ -146,6 +146,7 @@ func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 			EnmasseV1beta1Client: coreClient,
 			AccessController:     controller,
 			User:                 loggedOnUser,
+			UserAccessToken:      accessToken,
 		}
 
 		ctx := server.ContextWithRequestState(state, req.Context())
@@ -154,7 +155,7 @@ func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 	})
 }
 
-func developmentHandler(next http.Handler, sessionManager *scs.SessionManager) http.Handler {
+func developmentHandler(next http.Handler, _ *scs.SessionManager, accessToken string) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 
 		kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -189,6 +190,7 @@ func developmentHandler(next http.Handler, sessionManager *scs.SessionManager) h
 			EnmasseV1beta1Client: coreClient,
 			AccessController:     accesscontroller.NewAllowAllAccessController(),
 			User:                 "<unknown>",
+			UserAccessToken:      accessToken,
 		}
 
 		ctx := server.ContextWithRequestState(requestState, req.Context())
@@ -247,6 +249,8 @@ http://localhost:` + port + `/graphql
 	if err != nil {
 		panic(err.Error())
 	}
+
+	var getCollector func(string) agent.Delegate
 
 	creators := []func() (watchers.ResourceWatcher, error){
 		func() (watchers.ResourceWatcher, error) {
@@ -308,9 +312,12 @@ http://localhost:` + port + `/graphql
 			if *developmentMode {
 				watcherConfigs = append(watcherConfigs, watchers.AgentWatcherRouteConfig(config))
 			}
-			return watchers.NewAgentWatcher(objectCache, infraNamespace, func() agent.AgentCollector {
-				return agent.AmqpAgentCollectorCreator(config.BearerToken)
-			}, *developmentMode, watcherConfigs...)
+			watcher, err := watchers.NewAgentWatcher(objectCache, infraNamespace,
+				func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, developmentMode bool) agent.Delegate {
+					return agent.AmqpAgentDelegateCreator(config.BearerToken, host, port, addressSpaceNamespace, addressSpace, infraUuid, developmentMode)
+				}, *developmentMode, watcherConfigs...)
+			getCollector = watcher.Collector
+			return watcher, err
 		},
 	}
 
@@ -330,9 +337,10 @@ http://localhost:` + port + `/graphql
 	}
 
 	resolver := resolvers.Resolver{
-		AdminConfig: adminclient,
-		CoreConfig:  coreclient,
-		Cache:       objectCache,
+		AdminConfig:  adminclient,
+		CoreConfig:   coreclient,
+		Cache:        objectCache,
+		GetCollector: getCollector,
 	}
 
 	dumpCache, err := time.ParseDuration(dumpCachePeriod)
@@ -405,7 +413,7 @@ http://localhost:` + port + `/graphql
 	)
 
 	if *developmentMode {
-		http.Handle(queryEndpoint, developmentHandler(graphql, sessionManager))
+		http.Handle(queryEndpoint, developmentHandler(graphql, sessionManager, config.BearerToken))
 	} else {
 		http.Handle(queryEndpoint, authHandler(graphql, sessionManager))
 	}
