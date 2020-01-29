@@ -54,7 +54,9 @@ export default function AddressesList() {
   useDocumentTitle("Address List");
   useA11yRouteChange();
   const { name, namespace, type } = useParams();
-  const [filterValue, setFilterValue] = React.useState<string | null>("Address");
+  const [filterValue, setFilterValue] = React.useState<string | null>(
+    "Address"
+  );
   const [filterNames, setFilterNames] = React.useState<any[]>([]);
   const [typeValue, setTypeValue] = React.useState<string | null>(null);
   const [statusValue, setStatusValue] = React.useState<string | null>(null);
@@ -192,16 +194,17 @@ export default function AddressesList() {
 
   const onSelectAddress = (data: IAddress, isSelected: boolean) => {
     if (isSelected === true && selectedAddresses.indexOf(data) === -1) {
-      setSelectedAddresses([...selectedAddresses, data]);
+      setSelectedAddresses(prevState => [...prevState, data]);
     } else if (isSelected === false) {
-      setSelectedAddresses(
-        selectedAddresses.filter(address =>
-          !compareTwoAddress(
-            address.name,
-            data.name,
-            address.namespace,
-            data.namespace
-          )
+      setSelectedAddresses(prevState =>
+        prevState.filter(
+          address =>
+            !compareTwoAddress(
+              address.name,
+              data.name,
+              address.namespace,
+              data.namespace
+            )
         )
       );
     }

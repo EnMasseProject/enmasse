@@ -116,17 +116,17 @@ export default function AddressSpaceListWithFilterAndPagination() {
 
   const onSelectAddressSpace = (data: IAddressSpace, isSelected: boolean) => {
     if (isSelected === true && selectedAddressSpaces.indexOf(data) === -1) {
-      setSelectedAddressSpaces([...selectedAddressSpaces, data]);
+      setSelectedAddressSpaces(prevState => [...prevState, data]);
     } else if (isSelected === false) {
-      console.log("data");
-      setSelectedAddressSpaces(
-        selectedAddressSpaces.filter(addressSpace =>
-          !compareTwoAddress(
-            addressSpace.name,
-            data.name,
-            addressSpace.nameSpace,
-            data.nameSpace
-          )
+      setSelectedAddressSpaces(prevState =>
+        prevState.filter(
+          addressSpace =>
+            !compareTwoAddress(
+              addressSpace.name,
+              data.name,
+              addressSpace.nameSpace,
+              data.nameSpace
+            )
         )
       );
     }
