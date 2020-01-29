@@ -252,19 +252,21 @@ export const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
       case 2:
         break;
       case 3:
-        orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_in')].Value` ";
         break;
       case 4:
-        orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_out')].Value` ";
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_in')].Value` ";
         break;
       case 5:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_messages_out')].Value` ";
+        break;
+      case 6:
         orderByString =
           "`$.Metrics[?(@.Name=='enmasse_messages_stored')].Value` ";
         break;
-      case 6:
+      case 7:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_senders')].Value` ";
         break;
-      case 7:
+      case 8:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_receivers')].Value` ";
         break;
     }
