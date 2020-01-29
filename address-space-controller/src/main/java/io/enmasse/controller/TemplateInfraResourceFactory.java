@@ -4,26 +4,48 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
-import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
-import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.common.TemplateParameter;
-import io.enmasse.k8s.api.SchemaProvider;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
+import static io.enmasse.address.model.KubeUtil.lookupResource;
+import static io.enmasse.address.model.KubeUtil.overrideFsGroup;
+import static io.enmasse.config.Apps.setConnectsTo;
+import static io.enmasse.config.Apps.setPartOf;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-import static io.enmasse.address.model.KubeUtil.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceSettings;
+import io.enmasse.address.model.CertSpec;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.KubeUtil;
+import io.enmasse.admin.model.v1.BrokeredInfraConfig;
+import io.enmasse.admin.model.v1.ConsoleService;
+import io.enmasse.admin.model.v1.ConsoleServiceSpec;
+import io.enmasse.admin.model.v1.ConsoleServiceStatus;
+import io.enmasse.admin.model.v1.InfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.common.Kubernetes;
+import io.enmasse.controller.common.TemplateParameter;
+import io.enmasse.k8s.api.SchemaProvider;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.SecretReference;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class);
@@ -193,19 +215,22 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             }
         }
 
+        Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAdminDeploymentName(addressSpace), items);
         if (standardInfraConfig.getSpec().getAdmin() != null && standardInfraConfig.getSpec().getAdmin().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = standardInfraConfig.getSpec().getAdmin().getPodTemplate();
-            Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAdminDeploymentName(addressSpace), items);
             PodTemplateSpec actualPodTemplate = adminDeployment.getSpec().getTemplate();
             applyPodTemplate(actualPodTemplate, podTemplate);
         }
+        setPartOf(adminDeployment, addressSpace);
 
+        StatefulSet routerSet = lookupResource(StatefulSet.class, "StatefulSet", KubeUtil.getRouterSetName(addressSpace), items);
         if (standardInfraConfig.getSpec().getRouter() != null && standardInfraConfig.getSpec().getRouter().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = standardInfraConfig.getSpec().getRouter().getPodTemplate();
-            StatefulSet routerSet = lookupResource(StatefulSet.class, "StatefulSet", KubeUtil.getRouterSetName(addressSpace), items);
             PodTemplateSpec actualPodTemplate = routerSet.getSpec().getTemplate();
             applyPodTemplate(actualPodTemplate, podTemplate);
         }
+        setPartOf(routerSet, addressSpace);
+        setConnectsTo(adminDeployment, routerSet.getMetadata().getName());
 
         if (Boolean.parseBoolean(getAnnotation(infraAnnotations, AnnotationKeys.WITH_MQTT, "false"))) {
             String mqttTemplateName = getAnnotation(infraAnnotations, AnnotationKeys.MQTT_TEMPLATE_NAME, "standard-space-infra-mqtt");
@@ -267,12 +292,13 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             items = kubernetes.processTemplate(templateName, parameters).getItems();
         }
 
+        Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAgentDeploymentName(addressSpace), items);
         if (brokeredInfraConfig.getSpec().getAdmin() != null && brokeredInfraConfig.getSpec().getAdmin().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = brokeredInfraConfig.getSpec().getAdmin().getPodTemplate();
-            Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAgentDeploymentName(addressSpace), items);
             PodTemplateSpec actualPodTemplate = adminDeployment.getSpec().getTemplate();
             applyPodTemplate(actualPodTemplate, podTemplate);
         }
+        setPartOf(adminDeployment, addressSpace);
 
         Deployment brokerDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getBrokeredBrokerSetName(addressSpace), items);
         if (brokeredInfraConfig.getSpec().getBroker() != null && brokeredInfraConfig.getSpec().getBroker().getPodTemplate() != null) {
@@ -281,6 +307,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             applyPodTemplate(actualPodTemplate, podTemplate);
         }
         overrideFsGroup(brokerDeployment.getSpec().getTemplate(), "broker", kubernetes.getNamespace());
+        setPartOf(brokerDeployment, addressSpace);
 
         return items;
     }

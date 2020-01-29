@@ -25,4 +25,5 @@ public interface LabelKeys {
     String INFRA_TYPE = "infraType";
     String NAME = "name";
     String ROLE = "role";
+    String K8S_PART_OF = "app.kubernetes.io/part-of";
 }

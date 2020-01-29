@@ -66,6 +66,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 	deployment.Annotations[RegistryTypeAnnotation] = "infinispan"
+	deployment.Annotations[util.ConnectsTo] = "iot-auth-service"
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-device-registry"
 	deployment.Spec.Template.Annotations[RegistryTypeAnnotation] = "infinispan"
 

@@ -31,6 +31,7 @@ func CreateDefaultLabels(labels map[string]string, component string, name string
 	labels["component"] = component
 	labels["app"] = "enmasse"
 	labels["name"] = name
+	labels["app.kubernetes.io/part-of"] = component
 
 	return labels
 }

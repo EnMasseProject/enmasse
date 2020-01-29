@@ -5,19 +5,28 @@
 
 package io.enmasse.controller.standard;
 
+import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
+import static io.enmasse.address.model.KubeUtil.overrideFsGroup;
+import static io.enmasse.config.Apps.setPartOf;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.*;
+
+import io.enmasse.address.model.Address;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-
-import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
-import static io.enmasse.address.model.KubeUtil.overrideFsGroup;
 
 /**
  * Generates sets of brokers using Openshift templates.
@@ -146,6 +155,7 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
                     }
                 }
                 Kubernetes.addObjectAnnotation(item, AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(standardInfraConfig));
+                setPartOf(set, options.getInfraUuid());
 
                 if (standardInfraConfig.getSpec().getBroker() != null && standardInfraConfig.getSpec().getBroker().getPodTemplate() != null) {
                     PodTemplateSpec podTemplate = standardInfraConfig.getSpec().getBroker().getPodTemplate();
@@ -156,6 +166,7 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
             } else if (item instanceof Deployment) {
                 Deployment deployment = (Deployment) item;
                 deployment.getSpec().setReplicas(numReplicas);
+                setPartOf(deployment, options.getInfraUuid());
             }
         }
 
