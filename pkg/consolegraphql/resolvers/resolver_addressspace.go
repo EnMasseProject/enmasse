@@ -200,16 +200,8 @@ func (r *addressSpaceK8sResolver) Addresses(ctx context.Context, obj *consolegra
 }
 
 func (r *queryResolver) MessagingCertificateChain(ctx context.Context, input v1.ObjectMeta) (string, error) {
-	requestState := server.GetRequestStateFromContext(ctx)
-	viewFilter := requestState.AccessController.ViewFilter()
 
-	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s' and `$.ObjectMeta.Namespace` = '%s'", input.Name, input.Namespace)
-
-	fltrfunc, err := BuildFilter(&filter)
-	if err != nil {
-		return "", err
-	}
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpace/", cache.And(viewFilter, fltrfunc))
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpace/"+input.Namespace+"/"+input.Name, nil)
 	if e != nil {
 		return "", e
 	}
