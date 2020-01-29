@@ -98,8 +98,6 @@ func main() {
 	}
 
 	// Install monitoring resources
-	serverClient, err := client.New(cfg, client.Options{})
-
 	monitoringEnabled := os.Getenv("ENABLE_MONITORING")
 
 	if monitoringEnabled == "true" {
@@ -107,13 +105,18 @@ func main() {
 		go func() {
 			ticker := time.NewTicker(5 * time.Minute)
 			for ; true; <-ticker.C {
-				err := installMonitoring(ctx, serverClient)
-
+				serverClient, err := client.New(cfg, client.Options{})
 				if err != nil {
 					log.Info(fmt.Sprintf("Failed to install monitoring resources: %s", err))
 				} else {
-					log.Info("Successfully installed monitoring resources")
-					ticker.Stop()
+					err = installMonitoring(ctx, serverClient)
+
+					if err != nil {
+						log.Info(fmt.Sprintf("Failed to install monitoring resources: %s", err))
+					} else {
+						log.Info("Successfully installed monitoring resources")
+						ticker.Stop()
+					}
 				}
 			}
 		}()
