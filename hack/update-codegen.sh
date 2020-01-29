@@ -11,9 +11,20 @@ set -o pipefail
 
 SCRIPTPATH="$(cd "$(dirname "$0")" && pwd -P)"
 
-"$SCRIPTPATH/generate-groups.sh" "all" \
-    github.com/enmasseproject/enmasse/pkg/client \
-    github.com/enmasseproject/enmasse/pkg/apis \
-    "admin:v1beta1 admin:v1beta2 enmasse:v1beta1 user:v1beta1 iot:v1alpha1" \
-    --go-header-file "${SCRIPTPATH}/header.txt" \
-    "$@"
+TMPBASE="$(mktemp -d)"
+TMPPROJ="$TMPBASE/github.com/enmasseproject/enmasse"
+
+cleanup() {
+    echo "Cleaning up: $TMPBASE"
+    rm -rf "$TMPBASE"
+}
+
+echo "Using tmp base: $TMPBASE"
+
+trap "cleanup" EXIT SIGINT
+
+mkdir -p "$TMPPROJ"
+
+"$SCRIPTPATH/run-codegen.sh" --output-base "$TMPBASE"
+
+cp -av "$TMPPROJ"/. .
