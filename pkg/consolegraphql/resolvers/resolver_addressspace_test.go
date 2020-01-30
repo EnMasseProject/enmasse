@@ -244,6 +244,8 @@ func TestQueryAddressSpaceCommand(t *testing.T) {
 		AuthenticationService: &v1beta1.AuthenticationService{
 			Name: auth,
 		},
+		Plan: "standard-small-queue",
+		Type: "queue",
 	}
 	err := r.Cache.Add(as)
 	assert.NoError(t, err)
@@ -251,14 +253,20 @@ func TestQueryAddressSpaceCommand(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.NoError(t, err)
-	expected := `kind: AddressSpace
+	expectedMetaData := `kind: AddressSpace
 metadata:
-  namespace: myaddressspace
+  creationTimestamp: null
   name: mynamespace
+  namespace: myaddressspace`
+	expectedSpec := `
 spec:
   authenticationService:
+    metadata:
+      creationTimestamp: null
     name: auth
-`
-	assert.Contains(t, obj, expected, "Expect name and namespace to be set")
+  plan: standard-small-queue
+  type: queue`
+	assert.Contains(t, obj, expectedMetaData, "Expect name and namespace to be set")
+	assert.Contains(t, obj, expectedSpec, "Expect spec to be set")
 }
 
