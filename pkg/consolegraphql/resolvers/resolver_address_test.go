@@ -11,6 +11,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"github.com/google/uuid"
@@ -111,13 +112,13 @@ func TestQueryAddressPagination(t *testing.T) {
 
 	one := 1
 	two := 2
-	objs, err = r.Query().Addresses(ctx, nil, &one, nil,  nil)
+	objs, err = r.Query().Addresses(ctx, nil, &one, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of addresses")
 	assert.Equal(t, 3, len(objs.Addresses), "Unexpected number of addresses in page")
 	assert.Equal(t, addr2.ObjectMeta, objs.Addresses[0].ObjectMeta, "Unexpected addresses object meta")
 
-	objs, err = r.Query().Addresses(ctx, &one, &two, nil,  nil)
+	objs, err = r.Query().Addresses(ctx, &one, &two, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of addresses")
 	assert.Equal(t, 1, len(objs.Addresses), "Unexpected number of address in page")
@@ -176,7 +177,7 @@ func TestQueryAddressLinkFilter(t *testing.T) {
 
 	link1 := createAddressLink(namespace, addressspace, addr1, "sender")
 	link2 := createAddressLink(namespace, addressspace, addr1, "sender")
-	err := r.Cache.Add(addr, link1, link2, )
+	err := r.Cache.Add(addr, link1, link2)
 	assert.NoError(t, err)
 
 	con := &consolegraphql.AddressHolder{
@@ -215,7 +216,7 @@ func TestQueryAddressLinkOrder(t *testing.T) {
 
 	link1 := createAddressLink(namespace, addressspace, addr1, "sender")
 	link2 := createAddressLink(namespace, addressspace, addr1, "receiver")
-	err := r.Cache.Add(addr, link1, link2, )
+	err := r.Cache.Add(addr, link1, link2)
 	assert.NoError(t, err)
 
 	con := &consolegraphql.AddressHolder{
@@ -278,12 +279,12 @@ func TestQueryAddressLinkPaginated(t *testing.T) {
 
 	one := 1
 	two := 2
-	objs, err = r.Address_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, &one, nil,  nil)
+	objs, err = r.Address_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, &one, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of links")
 	assert.Equal(t, 3, len(objs.Links), "Unexpected number of links in page")
 
-	objs, err = r.Address_consoleapi_enmasse_io_v1beta1().Links(ctx, con, &one, &two, nil,  nil)
+	objs, err = r.Address_consoleapi_enmasse_io_v1beta1().Links(ctx, con, &one, &two, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of links")
 	assert.Equal(t, 1, len(objs.Links), "Unexpected number of links in page")
@@ -348,6 +349,106 @@ func TestAddressCommand(t *testing.T) {
 metadata:
   name: myaddrspace.myaddr`
 	assert.Contains(t, cmd, expected, "Expect name and namespace to be set")
+}
+
+type mockCollector struct {
+	delegates map[string]agent.CommandDelegate
+}
+
+type mockCommandDelegate struct {
+	purgeCount int
+}
+
+func (mcd *mockCommandDelegate) PurgeAddress(address metav1.ObjectMeta) error {
+	mcd.purgeCount++
+	return nil
+}
+
+func (mcd *mockCommandDelegate) Shutdown() {
+	panic("unused")
+}
+
+func (mc *mockCollector) CommandDelegate(bearerToken string) (agent.CommandDelegate, error) {
+	if delegate, present := mc.delegates[bearerToken]; present {
+		return delegate, nil
+	} else {
+		mc.delegates[bearerToken] = &mockCommandDelegate{}
+		return mc.delegates[bearerToken], nil
+	}
+}
+
+func (mc *mockCollector) Collect(handler agent.EventHandler) error {
+	panic("unused")
+}
+
+func (mc *mockCollector) Shutdown() {
+}
+
+var collectors = make(map[string]agent.Delegate, 0)
+
+func getCollector(infraUuid string) agent.Delegate {
+	if collector, present := collectors[infraUuid]; present {
+		return collector
+	} else {
+		collectors[infraUuid] = &mockCollector{
+			delegates: make(map[string]agent.CommandDelegate, 0),
+		}
+		return collectors[infraUuid]
+	}
+}
+
+func TestPurgeQueue(t *testing.T) {
+	r, ctx := newTestAddressResolver(t)
+	server.GetRequestStateFromContext(ctx).UserAccessToken = "userToken12345"
+
+	r.GetCollector = getCollector
+
+	namespace := "mynamespace"
+	addressspace := "myaddrspace"
+	infraUuid := "abcd1234"
+	as := createAddressSpace(addressspace, namespace)
+	as.Annotations = map[string]string{
+		"enmasse.io/infra-uuid": infraUuid,
+	}
+
+	addr := createAddress(namespace, addressspace+".myaddr")
+	addr.Spec.Type = "queue"
+
+	err := r.Cache.Add(as, addr)
+	assert.NoError(t, err)
+
+	_, err = r.Mutation().PurgeAddress(ctx, addr.ObjectMeta)
+	assert.NoError(t, err)
+
+	collector := r.GetCollector(infraUuid)
+	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 1, delegate.(*mockCommandDelegate).purgeCount)
+
+}
+
+func TestPurgeUnsupportedAddressType(t *testing.T) {
+	r, ctx := newTestAddressResolver(t)
+	server.GetRequestStateFromContext(ctx).UserAccessToken = "userToken12345"
+	r.GetCollector = getCollector
+
+	namespace := "mynamespace"
+	addressspace := "myaddrspace"
+	infraUuid := "abcd1234"
+	as := createAddressSpace(addressspace, namespace)
+	as.Annotations = map[string]string{
+		"enmasse.io/infra-uuid": infraUuid,
+	}
+
+	addr := createAddress(namespace, addressspace+".myaddr")
+	addr.Spec.Type = "anycast"
+
+	err := r.Cache.Add(as, addr)
+	assert.NoError(t, err)
+
+	_, err = r.Mutation().PurgeAddress(ctx, addr.ObjectMeta)
+	assert.Error(t, err)
 }
 
 func createAddressLink(namespace string, addressspace string, addr string, role string) *consolegraphql.Link {
