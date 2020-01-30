@@ -56,7 +56,7 @@ type amqpAgentDelegate struct {
 	stopchan              chan struct{}
 	stoppedchan           chan struct{}
 	commandDelegates      map[string]commandDelegatePair
-	delegateMux           sync.Mutex
+	commandDelegatesMux   sync.Mutex
 	developmentMode       bool
 }
 
@@ -273,8 +273,8 @@ func (aad *amqpAgentDelegate) doCollect() error {
 }
 
 func (aad *amqpAgentDelegate) CommandDelegate(bearerToken string) (CommandDelegate, error) {
-	aad.delegateMux.Lock()
-	defer aad.delegateMux.Unlock()
+	aad.commandDelegatesMux.Lock()
+	defer aad.commandDelegatesMux.Unlock()
 
 	key := getShaSum(bearerToken)
 
@@ -294,8 +294,8 @@ func (aad *amqpAgentDelegate) CommandDelegate(bearerToken string) (CommandDelega
 
 func (aad *amqpAgentDelegate) housekeepCommandDelegates() {
 	findExpiredCommandDelegates := func() []CommandDelegate {
-		aad.delegateMux.Lock()
-		defer aad.delegateMux.Unlock()
+		aad.commandDelegatesMux.Lock()
+		defer aad.commandDelegatesMux.Unlock()
 
 		expired := make([]CommandDelegate, 0)
 
