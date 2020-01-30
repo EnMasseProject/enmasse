@@ -671,7 +671,7 @@ export const EDIT_ADDRESS = gql`
   }
 `;
 
-export const ADDRESS_COMMAND_PRIVEW_DETAIL = gql`
+export const ADDRESS_COMMAND_PRIVIEW_DETAIL = gql`
   query cmd($a: Address_enmasse_io_v1beta1_Input!) {
     addressCommand(input: $a)
   }
