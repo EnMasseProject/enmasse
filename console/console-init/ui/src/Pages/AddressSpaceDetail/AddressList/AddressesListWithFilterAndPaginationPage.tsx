@@ -26,6 +26,7 @@ import {
 } from "src/Queries/Queries";
 import { ISortBy, IRowData } from "@patternfly/react-table";
 import { IAddress } from "src/Components/AddressSpace/Address/AddressList";
+import { DialoguePrompt } from "src/Components/Common/DialoguePrompt";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -80,6 +81,19 @@ export default function AddressesList() {
     []
   );
 
+  const [isDisplayDeleteDailogue, setIsDisplayDeleteDailogue] = React.useState<
+    boolean
+  >(false);
+  const [isDeleteAllDisabled, setIsDeleteAllDisabled] = React.useState<boolean>(
+    true
+  );
+
+  const [isDisplayPurgeDailogue, setIsDisplayPurgeDailogue] = React.useState<
+    boolean
+  >(false);
+  const [isPurgeAllDisabled, setIsPurgeAllDisabled] = React.useState<boolean>(
+    true
+  );
   const { data } = useQuery<IAddressSpacePlanResponse>(
     CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
   );
@@ -174,24 +188,65 @@ export default function AddressesList() {
     }
   };
 
+  React.useEffect(() => {
+    if (selectedAddresses.length === 0 && !isDeleteAllDisabled) {
+      setIsDeleteAllDisabled(true);
+    } else if (selectedAddresses.length > 0 && isDeleteAllDisabled) {
+      setIsDeleteAllDisabled(false);
+    }
+  }, [selectedAddresses]);
+
+  React.useEffect(() => {
+    const filteredAddresses = selectedAddresses.filter(
+      address =>
+        address.type.toLowerCase() === "queue" ||
+        address.type.toLowerCase() === "subscription"
+    );
+    if (filteredAddresses.length === 0 && !isPurgeAllDisabled) {
+      setIsPurgeAllDisabled(true);
+    } else if (filteredAddresses.length > 0 && isPurgeAllDisabled) {
+      setIsPurgeAllDisabled(false);
+    }
+  }, [selectedAddresses]);
+
   const onDeleteAll = async () => {
+    setIsDisplayDeleteDailogue(true);
+  };
+
+  const onPurgeAll = async () => {
+    setIsDisplayPurgeDailogue(true);
+  };
+
+  const handleCancelDeleteSelected = () => {
+    setIsDisplayDeleteDailogue(false);
+  };
+  const handleConfirmDeleteSelected = async () => {
     if (selectedAddresses && selectedAddresses.length > 0) {
       const data = selectedAddresses;
       await Promise.all(data.map(address => deleteAddress(address)));
       setSelectedAddresses([]);
     }
     setOnCreationRefetch(true);
+    setIsDisplayDeleteDailogue(false);
   };
 
-  const onPurgeAll = async () => {
-    if (selectedAddresses && selectedAddresses.length > 0) {
-      const data = selectedAddresses;
+  const handleConfirmPurgeSelected = async () => {
+    const filteredAddresses = selectedAddresses.filter(
+      address =>
+        address.type.toLowerCase() === "queue" ||
+        address.type.toLowerCase() === "subscription"
+    );
+    if (filteredAddresses && filteredAddresses.length > 0) {
+      const data = filteredAddresses;
       await Promise.all(data.map(address => purgeAddress(address)));
       setSelectedAddresses([]);
     }
     setOnCreationRefetch(true);
+    setIsDisplayPurgeDailogue(false);
   };
-
+  const handleCancelPurgeSelected = () => {
+    setIsDisplayPurgeDailogue(false);
+  };
   const onSelectAddress = (data: IAddress, isSelected: boolean) => {
     if (isSelected === true && selectedAddresses.indexOf(data) === -1) {
       setSelectedAddresses(prevState => [...prevState, data]);
@@ -239,6 +294,8 @@ export default function AddressesList() {
             setIsCreateWizardOpen={setIsCreateWizardOpen}
             onDeleteAllAddress={onDeleteAll}
             onPurgeAllAddress={onPurgeAll}
+            isDeleteAllDisabled={isDeleteAllDisabled}
+            isPurgeAllDisabled={isPurgeAllDisabled}
           />
         </GridItem>
         <GridItem span={5}>
@@ -268,6 +325,78 @@ export default function AddressesList() {
         onSelectAllAddress={onSelectAllAddress}
       />
       {totalAddresses > 0 && renderPagination(page, perPage)}
+      {isDisplayDeleteDailogue && selectedAddresses.length > 0 && (
+        <DialoguePrompt
+          option="Delete"
+          detail={
+            selectedAddresses.length > 1
+              ? `Are you sure you want to delete all of these addresses: ${selectedAddresses.map(
+                  as => " " + as.displayName
+                )} ?`
+              : `Are you sure you want to delete this addresss: ${selectedAddresses[0].displayName} ?`
+          }
+          names={selectedAddresses.map(as => as.name)}
+          header={
+            selectedAddresses.length > 1
+              ? "Delete these Addresses ?"
+              : "Delete this Address ?"
+          }
+          handleCancelDialogue={handleCancelDeleteSelected}
+          handleConfirmDialogue={handleConfirmDeleteSelected}
+        />
+      )}
+      {isDisplayPurgeDailogue &&
+        selectedAddresses.filter(
+          address =>
+            address.type.toLowerCase() === "queue" ||
+            address.type.toLowerCase() === "subscription"
+        ).length > 0 && (
+          <DialoguePrompt
+            option="Purge"
+            detail={
+              selectedAddresses.filter(
+                address =>
+                  address.type.toLowerCase() === "queue" ||
+                  address.type.toLowerCase() === "subscription"
+              ).length > 1
+                ? `Are you sure you want to purge all of these addresses: ${selectedAddresses
+                    .filter(
+                      address =>
+                        address.type.toLowerCase() === "queue" ||
+                        address.type.toLowerCase() === "subscription"
+                    )
+                    .map(address => " " + address.displayName)} ?`
+                : `Are you sure you want to purge this addresss: ${selectedAddresses.filter(
+                    address =>
+                      address.type.toLowerCase() === "queue" ||
+                      address.type.toLowerCase() === "subscription"
+                  ) &&
+                    selectedAddresses.filter(
+                      address =>
+                        address.type.toLowerCase() === "queue" ||
+                        address.type.toLowerCase() === "subscription"
+                    )[0].displayName} ?`
+            }
+            names={selectedAddresses
+              .filter(
+                address =>
+                  address.type.toLowerCase() === "queue" ||
+                  address.type.toLowerCase() === "subscription"
+              )
+              .map(address => address.name)}
+            header={
+              selectedAddresses.filter(
+                address =>
+                  address.type.toLowerCase() === "queue" ||
+                  address.type.toLowerCase() === "subscription"
+              ).length > 1
+                ? "Purge these Addresses ?"
+                : "Purge this Address ?"
+            }
+            handleCancelDialogue={handleCancelPurgeSelected}
+            handleConfirmDialogue={handleConfirmPurgeSelected}
+          />
+        )}
     </PageSection>
   );
 }

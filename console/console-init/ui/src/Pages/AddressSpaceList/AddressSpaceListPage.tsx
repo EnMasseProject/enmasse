@@ -12,7 +12,7 @@ import {
   IAddressSpace
 } from "src/Components/AddressSpaceList/AddressSpaceList";
 import { EmptyAddressSpace } from "src/Components/AddressSpaceList/EmptyAddressSpace";
-import { DeletePrompt } from "src/Components/Common/DeletePrompt";
+import { DialoguePrompt } from "src/Components/Common/DialoguePrompt";
 import {
   DELETE_ADDRESS_SPACE,
   RETURN_ALL_ADDRESS_SPACES,
@@ -245,12 +245,13 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
         </Modal>
       )}
       {addressSpaceBeingDeleted && (
-        <DeletePrompt
-          detail={`Are you sure you want to delete ${addressSpaceBeingDeleted.name} ?`}
-          name={addressSpaceBeingDeleted.name}
+        <DialoguePrompt
+          option="Delete"
+          detail={`Are you sure you want to delete this addressspace: ${addressSpaceBeingDeleted.name} ?`}
+          names={[addressSpaceBeingDeleted.name]}
           header="Delete this Address Space ?"
-          handleCancelDelete={handleCancelDelete}
-          handleConfirmDelete={handleDelete}
+          handleCancelDialogue={handleCancelDelete}
+          handleConfirmDialogue={handleDelete}
         />
       )}
     </>
