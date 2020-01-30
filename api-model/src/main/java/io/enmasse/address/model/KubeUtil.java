@@ -4,16 +4,6 @@
  */
 package io.enmasse.address.model;
 
-import com.google.common.hash.Hashing;
-import io.enmasse.config.AnnotationKeys;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.PodSecurityContext;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.Probe;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +14,17 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import com.google.common.hash.Hashing;
+
+import io.enmasse.config.AnnotationKeys;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.PodSecurityContext;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.Probe;
 
 /**
  * Various static utilities that don't belong in a specific place
@@ -101,15 +102,17 @@ public final class KubeUtil {
      */
     public static String sanitizeForGo(final String addressSpace, final String address) {
 
-        byte [] addressBytes = address.getBytes(StandardCharsets.UTF_8);
-        byte [] data = new byte[addressBytes.length + GO_NAMESPACE.length];
+        final byte [] addressBytes = address.getBytes(StandardCharsets.UTF_8);
+        final byte [] data = new byte[addressBytes.length + GO_NAMESPACE.length];
 
         System.arraycopy(GO_NAMESPACE, 0, data, 0, GO_NAMESPACE.length);
         System.arraycopy(addressBytes, 0, data, GO_NAMESPACE.length, addressBytes.length);
 
-        String uuid = UUID.nameUUIDFromBytes(data).toString();
+        final String uuid = UUID.nameUUIDFromBytes(data).toString();
+        final String part1 = KubeUtil.sanitizeName(addressSpace);
+        final String part2 = KubeUtil.sanitizeWithUuid(address, uuid, addressPattern);
 
-        return KubeUtil.sanitizeName(addressSpace) + "." + KubeUtil.sanitizeWithUuid(address, uuid, addressPattern);
+        return (part1 + "." + part2).replaceAll("-+", "-");
     }
 
     public static String getAddressSpaceCaSecretName(AddressSpace addressSpace) {

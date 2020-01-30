@@ -4,9 +4,14 @@
  */
 package io.enmasse.address.model.v1.address;
 
-import io.enmasse.address.model.KubeUtil;
-
-import static org.hamcrest.Matchers.*;
+import static java.util.stream.Stream.concat;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.params.provider.Arguments.of;
 
@@ -15,18 +20,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import io.fabric8.kubernetes.api.model.*;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static java.util.stream.Stream.concat;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import io.enmasse.address.model.KubeUtil;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.kubernetes.api.model.ProbeBuilder;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.QuantityBuilder;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 
 
 public class KubeUtilTest {
@@ -321,8 +332,16 @@ public class KubeUtilTest {
      * Test for encoding with Go logic.
      */
     @Test
-    public void testSanitizeForGo () {
+    public void testSanitizeForGo1 () {
         assertEquals("as1.telemetryiot-project-ns-4cf002ae-37a5-38d6-9749-b7f85b29a385", KubeUtil.sanitizeForGo("as1", "telemetry/iot-project-ns.iot1"));
+    }
+
+    /**
+     * Test for encoding with Go logic (double dash).
+     */
+    @Test
+    public void testSanitizeForGo2 () {
+        assertEquals("managed-address-space.eventiot-project-nsiot-cfb28f7f-66a9-347b-955c-de0a5eeb6cc1", KubeUtil.sanitizeForGo("managed-address-space", "event/iot-project-ns.iot-project-managed"));
     }
 
 }
