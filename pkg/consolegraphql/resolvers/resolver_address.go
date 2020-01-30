@@ -24,6 +24,8 @@ func (r *Resolver) Address_consoleapi_enmasse_io_v1beta1() Address_consoleapi_en
 
 type addressK8sResolver struct{ *Resolver }
 
+const infraUuidAnnotation = "enmasse.io/infra-uuid"
+
 func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.AddressHolder, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
 		fltrfunc, e := BuildFilter(filter)
@@ -36,7 +38,10 @@ func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.Addr
 			return nil, e
 		}
 
-		addrtoks := strings.SplitN(obj.ObjectMeta.Name, ".", 2)
+		addrtoks, e := tokenizeAddress(obj.ObjectMeta.Name)
+		if e != nil {
+			return nil, e
+		}
 		// N.B. address name not prefixed in the link index
 		links, e := ar.Cache.Get(cache.AddressLinkObjectIndex, fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1]), fltrfunc)
 		if e != nil {
@@ -72,7 +77,6 @@ func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.Addr
 func (r *Resolver) AddressSpec_enmasse_io_v1beta1() AddressSpec_enmasse_io_v1beta1Resolver {
 	return &addressSpecK8sResolver{r}
 }
-
 
 type addressSpecK8sResolver struct{ *Resolver }
 
@@ -183,7 +187,67 @@ func (r *mutationResolver) DeleteAddress(ctx context.Context, input metav1.Objec
 }
 
 func (r *mutationResolver) PurgeAddress(ctx context.Context, input metav1.ObjectMeta) (*bool, error) {
-	panic("implement me")
+	requestState := server.GetRequestStateFromContext(ctx)
+
+	f := false
+	t := true
+	addressToks, e := tokenizeAddress(input.Name)
+	if e != nil {
+		return &f, e
+	}
+
+	addressSpaces, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("AddressSpace/%s/%s", input.Namespace, addressToks[0]), nil)
+	if e != nil {
+		return nil, e
+	}
+
+	if len(addressSpaces) == 0 {
+		return &f, fmt.Errorf("address space: '%s' not found ", addressToks[0])
+	}
+
+	as := addressSpaces[0].(*consolegraphql.AddressSpaceHolder).AddressSpace
+
+	if as.ObjectMeta.Annotations == nil {
+		return &f, fmt.Errorf("address space: '%s' does not have expected '%s' annotation ", as.Name, infraUuidAnnotation)
+	}
+	infraUid := as.ObjectMeta.Annotations[infraUuidAnnotation]
+	if infraUid == "" {
+		return &f, fmt.Errorf("address space: '%s' does not have expected '%s' annotation ", as.Name, infraUuidAnnotation)
+	}
+
+	addresses, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s/%s", input.Namespace, as.Name, input.Name), nil)
+	if e != nil {
+		return nil, e
+	}
+
+	if len(addresses) == 0 {
+		return &f, fmt.Errorf("address: '%s' not found ", input.Name)
+	}
+
+	address := addresses[0].(*consolegraphql.AddressHolder).Address
+	switch address.Spec.Type {
+	case "subscription":
+	case "queue":
+	default:
+		return &f, fmt.Errorf("address: '%s' cannot be purged, it is not of a supported type '%s'", address.Name, address.Spec.Type)
+	}
+
+	collector := r.GetCollector(infraUid)
+	if collector == nil {
+		return &f, fmt.Errorf("cannot find collector for infraUuid '%s' (address space %s) at this time", infraUid, as.Name)
+	}
+
+	commandDelegate, e := collector.CommandDelegate(requestState.UserAccessToken)
+	if e != nil {
+		return nil, e
+	}
+
+	e = commandDelegate.PurgeAddress(input)
+	if e != nil {
+		return nil, e
+	}
+
+	return &t, nil
 }
 
 func (r *queryResolver) AddressCommand(ctx context.Context, input v1beta1.Address) (string, error) {
@@ -199,4 +263,12 @@ func (r *queryResolver) AddressCommand(ctx context.Context, input v1beta1.Addres
 	input.Namespace = ""
 
 	return generateApplyCommand(input, namespace)
+}
+
+func tokenizeAddress(name string) ([]string, error) {
+	addressToks := strings.SplitN(name, ".", 2)
+	if len(addressToks) != 2 {
+		return []string{}, fmt.Errorf("unexpectedly formatted address: '%s'.  expected separator not found ", name)
+	}
+	return addressToks, nil
 }

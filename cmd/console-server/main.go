@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"crypto/tls"
 	"flag"
 	"github.com/99designs/gqlgen/cmd"
 	"github.com/99designs/gqlgen/graphql"
@@ -146,6 +147,7 @@ func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 			EnmasseV1beta1Client: coreClient,
 			AccessController:     controller,
 			User:                 loggedOnUser,
+			UserAccessToken:      accessToken,
 		}
 
 		ctx := server.ContextWithRequestState(state, req.Context())
@@ -154,7 +156,7 @@ func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 	})
 }
 
-func developmentHandler(next http.Handler, sessionManager *scs.SessionManager) http.Handler {
+func developmentHandler(next http.Handler, _ *scs.SessionManager, accessToken string) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 
 		kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -189,6 +191,7 @@ func developmentHandler(next http.Handler, sessionManager *scs.SessionManager) h
 			EnmasseV1beta1Client: coreClient,
 			AccessController:     accesscontroller.NewAllowAllAccessController(),
 			User:                 "<unknown>",
+			UserAccessToken:      accessToken,
 		}
 
 		ctx := server.ContextWithRequestState(requestState, req.Context())
@@ -218,8 +221,10 @@ http://localhost:` + port + `/graphql
 			`)
 	}
 
-	dumpCachePeriod := util.GetEnvOrDefault("DUMP_CACHE_PERIOD", "0s")
-	updateMetricsPeriod := util.GetEnvOrDefault("UPDATE_METRICS_PERIOD", "5s")
+	dumpCachePeriod := util.GetDurationEnvOrDefault("DUMP_CACHE_PERIOD", time.Second * 0)
+	updateMetricsPeriod := util.GetDurationEnvOrDefault("UPDATE_METRICS_PERIOD", time.Second * 5)
+	agentCommandDelegateExpiryPeriod := util.GetDurationEnvOrDefault("AGENT_COMMAND_DELEGATE_EXPIRY_PERIOD", time.Minute * 5)
+	agentAmqpConnectTimeout := util.GetDurationEnvOrDefault("AGENT_AMQP_CONNECT_TIMEOUT", time.Second * 10)
 
 	log.Printf("Namespace: %s\n", infraNamespace)
 
@@ -247,6 +252,8 @@ http://localhost:` + port + `/graphql
 	if err != nil {
 		panic(err.Error())
 	}
+
+	var getCollector func(string) agent.Delegate
 
 	creators := []func() (watchers.ResourceWatcher, error){
 		func() (watchers.ResourceWatcher, error) {
@@ -308,9 +315,15 @@ http://localhost:` + port + `/graphql
 			if *developmentMode {
 				watcherConfigs = append(watcherConfigs, watchers.AgentWatcherRouteConfig(config))
 			}
-			return watchers.NewAgentWatcher(objectCache, infraNamespace, func() agent.AgentCollector {
-				return agent.AmqpAgentCollectorCreator(config.BearerToken)
-			}, *developmentMode, watcherConfigs...)
+			watcher, err := watchers.NewAgentWatcher(objectCache, infraNamespace,
+				func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, tlsConfig *tls.Config) agent.Delegate {
+					return agent.NewAmqpAgentDelegate(config.BearerToken,
+						host, port, tlsConfig,
+						addressSpaceNamespace, addressSpace, infraUuid,
+						agentCommandDelegateExpiryPeriod, agentAmqpConnectTimeout)
+				}, *developmentMode, watcherConfigs...)
+			getCollector = watcher.Collector
+			return watcher, err
 		},
 	}
 
@@ -330,21 +343,20 @@ http://localhost:` + port + `/graphql
 	}
 
 	resolver := resolvers.Resolver{
-		AdminConfig: adminclient,
-		CoreConfig:  coreclient,
-		Cache:       objectCache,
+		AdminConfig:  adminclient,
+		CoreConfig:   coreclient,
+		Cache:        objectCache,
+		GetCollector: getCollector,
 	}
 
-	dumpCache, err := time.ParseDuration(dumpCachePeriod)
-	if err == nil && dumpCache.Nanoseconds() > 0 {
+	if dumpCachePeriod > 0 {
 		schedule(func() {
 			_ = objectCache.Dump()
-		}, dumpCache)
+		}, dumpCachePeriod)
 
 	}
 
-	updateMetrics, err := time.ParseDuration(updateMetricsPeriod)
-	if err == nil && updateMetrics.Nanoseconds() > 0 {
+	if updateMetricsPeriod.Nanoseconds() > 0 {
 		schedule(func() {
 			err, updated := metric.UpdateAllMetrics(objectCache)
 			if err != nil {
@@ -353,7 +365,7 @@ http://localhost:` + port + `/graphql
 				log.Printf("%d object metric(s) updated", updated)
 
 			}
-		}, updateMetrics)
+		}, updateMetricsPeriod)
 
 	}
 
@@ -405,7 +417,7 @@ http://localhost:` + port + `/graphql
 	)
 
 	if *developmentMode {
-		http.Handle(queryEndpoint, developmentHandler(graphql, sessionManager))
+		http.Handle(queryEndpoint, developmentHandler(graphql, sessionManager, config.BearerToken))
 	} else {
 		http.Handle(queryEndpoint, authHandler(graphql, sessionManager))
 	}

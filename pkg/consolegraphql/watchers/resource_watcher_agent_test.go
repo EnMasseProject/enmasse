@@ -6,6 +6,8 @@
 package watchers
 
 import (
+	"crypto/tls"
+	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
@@ -21,8 +23,9 @@ import (
 	"time"
 )
 
-const addressSpace = "myaddrspace"
 const namespace = "mynamespace"
+const addressSpace = "myaddrspace"
+const infraUuid = "abcdef"
 const addressName = "myqueue"
 
 func newTestAgentWatcher(t *testing.T) (*AgentWatcher, chan agent.AgentEvent) {
@@ -32,6 +35,9 @@ func newTestAgentWatcher(t *testing.T) (*AgentWatcher, chan agent.AgentEvent) {
 	eventChan := make(chan agent.AgentEvent)
 
 	watcher, err := NewAgentWatcher(objectCache, v1.NamespaceAll, MockAgentCollectorCreator(eventChan), false, AgentWatcherClient(fake.NewSimpleClientset().CoreV1()))
+	assert.NoError(t, err)
+
+	_, err = watcher.ClientInterface.Secrets("").(*fake2.FakeSecrets).Create(createCaSecret())
 	assert.NoError(t, err)
 
 	return watcher, eventChan
@@ -145,12 +151,12 @@ func TestWatchAgent_ConnectionWithWithChangingLinks(t *testing.T) {
 			AddressSpaceType:      "standard",
 			Senders: []agent.AgentAddressLink{
 				{
-					Uuid:     sendingLinkUuid1,
-					Address:  "myaddr1",
+					Uuid:    sendingLinkUuid1,
+					Address: "myaddr1",
 				},
 				{
-					Uuid:     sendingLinkUuid2,
-					Address:  "myaddr1",
+					Uuid:    sendingLinkUuid2,
+					Address: "myaddr1",
 				},
 			},
 		},
@@ -165,14 +171,14 @@ func TestWatchAgent_ConnectionWithWithChangingLinks(t *testing.T) {
 			AddressSpaceType:      "standard",
 			Senders: []agent.AgentAddressLink{
 				{
-					Uuid:     sendingLinkUuid2,
-					Address:  "myaddr1",
+					Uuid:    sendingLinkUuid2,
+					Address: "myaddr1",
 				},
 			},
 			Receivers: []agent.AgentAddressLink{
 				{
-					Uuid:     receivingLinkUuid,
-					Address:  "myaddr1",
+					Uuid:    receivingLinkUuid,
+					Address: "myaddr1",
 				},
 			},
 		},
@@ -190,7 +196,6 @@ func TestWatchAgent_ConnectionWithWithChangingLinks(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(links), "Unexpected number of links")
-
 
 	remainingSendingLink, err := w.Cache.Get(cache.PrimaryObjectIndex, "Link", func(o interface{}) (bool, bool, error) {
 		l := o.(*consolegraphql.Link)
@@ -308,7 +313,7 @@ func TestWatchAgent_NewAgent(t *testing.T) {
 func TestWatchAgent_AddressMetricsUpdated(t *testing.T) {
 	w, eventChan := newTestAgentWatcher(t)
 
-	addr := createAddress(namespace, addressSpace + "." + addressName)
+	addr := createAddress(namespace, addressSpace+"."+addressName)
 	err := w.Cache.Add(addr)
 	assert.NoError(t, err)
 
@@ -349,10 +354,10 @@ func TestWatchAgent_AddressMetricsUpdated(t *testing.T) {
 	assert.Equal(t, float64(58), storedMetric.Value, "Unexpected released metric value")
 }
 
-func createAddress(namespace, name string, metrics... *consolegraphql.Metric) (*consolegraphql.AddressHolder) {
+func createAddress(namespace, name string, metrics ...*consolegraphql.Metric) *consolegraphql.AddressHolder {
 	return &consolegraphql.AddressHolder{
-		Address: v1beta1.Address {
-			TypeMeta: v1meta.TypeMeta {
+		Address: v1beta1.Address{
+			TypeMeta: v1meta.TypeMeta{
 				Kind: "Address",
 			},
 			ObjectMeta: v1meta.ObjectMeta{
@@ -366,20 +371,27 @@ func createAddress(namespace, name string, metrics... *consolegraphql.Metric) (*
 }
 
 type MockAgentCollector struct {
-	eventChan chan agent.AgentEvent
-	stopped   chan struct{}
+	eventChan             chan agent.AgentEvent
+	stopped               chan struct{}
+	infraUuid             string
+	addressSpace          string
+	addressSpaceNamespace string
 }
 
-func (m *MockAgentCollector) Collect(addressSpaceNamespace string, addressSpace string, infraUuid string, host string, port int32, handler agent.AgentEventHandler, developmentMode bool) error {
+func (m *MockAgentCollector) CommandDelegate(bearerToken string) (agent.CommandDelegate, error) {
+	panic("unused")
+}
+
+func (m *MockAgentCollector) Collect(handler agent.EventHandler) error {
 	go func() {
 		defer close(m.stopped)
 		for {
 			select {
 			case evt, ok := <-m.eventChan:
 				if ok {
-					evt.InfraUuid = infraUuid
-					evt.AddressSpace = addressSpace
-					evt.AddressSpaceNamespace = addressSpaceNamespace
+					evt.InfraUuid = m.infraUuid
+					evt.AddressSpace = m.addressSpace
+					evt.AddressSpaceNamespace = m.addressSpaceNamespace
 					_ = handler(evt)
 				} else {
 					return
@@ -397,10 +409,13 @@ func (m *MockAgentCollector) Shutdown() {
 }
 
 func MockAgentCollectorCreator(events chan agent.AgentEvent) AgentCollectorCreator {
-	return func() agent.AgentCollector {
+	return func(_ string, _ int32, infraUuid string, addressSpace string, addressSpaceNamespace string, _ *tls.Config) agent.Delegate {
 		return &MockAgentCollector{
-			eventChan: events,
-			stopped:   make(chan struct{}),
+			eventChan:             events,
+			stopped:               make(chan struct{}),
+			infraUuid:             infraUuid,
+			addressSpace:          addressSpace,
+			addressSpaceNamespace: addressSpaceNamespace,
 		}
 	}
 }
@@ -423,7 +438,7 @@ func createService() *v1.Service {
 				"addressSpaceNamespace": namespace,
 			},
 			Labels: map[string]string{
-				"infraUuid": "abcdef",
+				"infraUuid": infraUuid,
 				"app":       "enmasse",
 				"component": "agent"},
 		},
@@ -432,6 +447,17 @@ func createService() *v1.Service {
 				Name: "amqps",
 				Port: 5671,
 			}},
+		},
+	}
+}
+
+func createCaSecret() *v1.Secret {
+	return &v1.Secret{
+		ObjectMeta: v1meta.ObjectMeta{
+			Name: fmt.Sprintf("ca-%s%s", addressSpace, infraUuid),
+		},
+		Data: map[string][]byte {
+			"tls.crt" : []byte("abcd"),
 		},
 	}
 }
