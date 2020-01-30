@@ -17,7 +17,7 @@ import { AddressDetailHeader } from "src/Components/AddressDetail/AddressDetailH
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { IAddressDetailResponse } from "src/Types/ResponseTypes";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
-import { DeletePrompt } from "src/Components/Common/DeletePrompt";
+import { DialoguePrompt } from "src/Components/Common/DialoguePrompt";
 import {
   DELETE_ADDRESS,
   RETURN_ADDRESS_DETAIL,
@@ -188,12 +188,13 @@ export default function AddressDetailPage() {
         />
       </Modal>
       {isDeleteModalOpen && (
-        <DeletePrompt
-          detail={`Are you sure you want to delete ${addressDetail.ObjectMeta.Name} ?`}
-          name={addressDetail.ObjectMeta.Name}
+        <DialoguePrompt
+          option="Delete"
+          detail={`Are you sure you want to delete this address: ${addressDetail.Spec.Address} ?`}
+          names={[addressDetail.ObjectMeta.Name]}
           header="Delete this Address ?"
-          handleCancelDelete={handleCancelDelete}
-          handleConfirmDelete={handleDelete}
+          handleCancelDialogue={handleCancelDelete}
+          handleConfirmDialogue={handleDelete}
         />
       )}
       <AddressLinksWithFilterAndPagination

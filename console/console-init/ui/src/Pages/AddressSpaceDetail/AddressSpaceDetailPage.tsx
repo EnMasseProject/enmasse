@@ -32,7 +32,7 @@ import {
   DELETE_ADDRESS_SPACE,
   RETURN_ADDRESS_SPACE_DETAIL
 } from "src/Queries/Queries";
-import { DeletePrompt } from "src/Components/Common/DeletePrompt";
+import { DialoguePrompt } from "src/Components/Common/DialoguePrompt";
 const styles = StyleSheet.create({
   no_bottom_padding: {
     paddingBottom: 0
@@ -175,12 +175,13 @@ export default function AddressSpaceDetailPage() {
         <AddressSpaceNavigation
           activeItem={subList || "addresses"}></AddressSpaceNavigation>
         {isDeleteModalOpen && (
-          <DeletePrompt
-            detail={`Are you sure you want to delete ${addressSpaceDetails.name} ?`}
-            name={addressSpaceDetails.name}
+          <DialoguePrompt
+            option="Delete"
+            detail={`Are you sure you want to delete this addressspace: ${addressSpaceDetails.name} ?`}
+            names={[addressSpaceDetails.name]}
             header="Delete this Address Space ?"
-            handleCancelDelete={handleCancelDelete}
-            handleConfirmDelete={handleDelete}
+            handleCancelDialogue={handleCancelDelete}
+            handleConfirmDialogue={handleDelete}
           />
         )}
       </PageSection>
