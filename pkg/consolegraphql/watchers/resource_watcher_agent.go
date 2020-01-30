@@ -5,6 +5,8 @@
 package watchers
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
@@ -22,7 +24,7 @@ import (
 	"time"
 )
 
-type AgentCollectorCreator = func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, developmentMode bool) agent.Delegate
+type AgentCollectorCreator = func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, tlsConfig *tls.Config) agent.Delegate
 
 type AgentWatcher struct {
 	Namespace             string
@@ -266,13 +268,71 @@ func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {
 }
 
 func (clw *AgentWatcher) createCollector(host string, port int32, infraUuid *string, addressSpace *string, addressSpaceNamespace *string) (agent.Delegate, error) {
+	pem, err := clw.getCaSecret(*addressSpace, *infraUuid)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create collector for this service
-	collector := clw.AgentCollectorCreator(host, port, *infraUuid, *addressSpace, *addressSpaceNamespace, clw.developmentMode)
-	err := collector.Collect(clw.handleEvent)
+	collector := clw.AgentCollectorCreator(host, port, *infraUuid, *addressSpace, *addressSpaceNamespace, buildTlsConfig(pem))
+	err = collector.Collect(clw.handleEvent)
 	if err != nil {
 		return nil, err
 	}
 	return collector, nil
+}
+
+func (clw *AgentWatcher) getCaSecret(addressSpace string, infraUuid string) ([]byte, error) {
+	secretName := fmt.Sprintf("ca-%s%s", addressSpace, infraUuid)
+	secret, err := clw.ClientInterface.Secrets(clw.Namespace).Get(secretName, v1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	const key = "tls.crt"
+	pem := secret.Data[key]
+
+	if pem == nil {
+		return nil, fmt.Errorf("expected key '%s' not found in secret '%s'", key, secretName)
+	}
+
+	return pem, err
+}
+
+func buildTlsConfig(pem []byte) *tls.Config {
+
+	rootCAs := x509.NewCertPool()
+	rootCAs.AppendCertsFromPEM(pem)
+
+	verifyWithoutHostNameCheck := func(rootCAs *x509.CertPool) func(certificates [][]byte, _ [][]*x509.Certificate) error {
+		return func(certificates [][]byte, _ [][]*x509.Certificate) error {
+			certs := make([]*x509.Certificate, len(certificates))
+			for i, asn1Data := range certificates {
+				cert, err := x509.ParseCertificate(asn1Data)
+				if err != nil {
+					return fmt.Errorf("tls: failed to parse certificate from server: %s", err.Error())
+				}
+				certs[i] = cert
+			}
+
+			// VerifyOptions configure to avoid the hostname check
+			opts := x509.VerifyOptions{
+				Roots:         rootCAs,
+				Intermediates: x509.NewCertPool(),
+			}
+			for _, cert := range certs[1:] {
+				opts.Intermediates.AddCert(cert)
+			}
+			_, err := certs[0].Verify(opts)
+			return err
+		}
+	}
+
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify:    true, // Forces the use of our custom VerifyPeerCertificate instead
+		RootCAs:               rootCAs,
+		VerifyPeerCertificate: verifyWithoutHostNameCheck(rootCAs),
+	}
+	return tlsConfig
 }
 
 func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {

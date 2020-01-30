@@ -6,6 +6,8 @@
 package watchers
 
 import (
+	"crypto/tls"
+	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
@@ -21,8 +23,9 @@ import (
 	"time"
 )
 
-const addressSpace = "myaddrspace"
 const namespace = "mynamespace"
+const addressSpace = "myaddrspace"
+const infraUuid = "abcdef"
 const addressName = "myqueue"
 
 func newTestAgentWatcher(t *testing.T) (*AgentWatcher, chan agent.AgentEvent) {
@@ -32,6 +35,9 @@ func newTestAgentWatcher(t *testing.T) (*AgentWatcher, chan agent.AgentEvent) {
 	eventChan := make(chan agent.AgentEvent)
 
 	watcher, err := NewAgentWatcher(objectCache, v1.NamespaceAll, MockAgentCollectorCreator(eventChan), false, AgentWatcherClient(fake.NewSimpleClientset().CoreV1()))
+	assert.NoError(t, err)
+
+	_, err = watcher.ClientInterface.Secrets("").(*fake2.FakeSecrets).Create(createCaSecret())
 	assert.NoError(t, err)
 
 	return watcher, eventChan
@@ -403,7 +409,7 @@ func (m *MockAgentCollector) Shutdown() {
 }
 
 func MockAgentCollectorCreator(events chan agent.AgentEvent) AgentCollectorCreator {
-	return func(_ string, _ int32, infraUuid string, addressSpace string, addressSpaceNamespace string, _ bool) agent.Delegate {
+	return func(_ string, _ int32, infraUuid string, addressSpace string, addressSpaceNamespace string, _ *tls.Config) agent.Delegate {
 		return &MockAgentCollector{
 			eventChan:             events,
 			stopped:               make(chan struct{}),
@@ -432,7 +438,7 @@ func createService() *v1.Service {
 				"addressSpaceNamespace": namespace,
 			},
 			Labels: map[string]string{
-				"infraUuid": "abcdef",
+				"infraUuid": infraUuid,
 				"app":       "enmasse",
 				"component": "agent"},
 		},
@@ -441,6 +447,17 @@ func createService() *v1.Service {
 				Name: "amqps",
 				Port: 5671,
 			}},
+		},
+	}
+}
+
+func createCaSecret() *v1.Secret {
+	return &v1.Secret{
+		ObjectMeta: v1meta.ObjectMeta{
+			Name: fmt.Sprintf("ca-%s%s", addressSpace, infraUuid),
+		},
+		Data: map[string][]byte {
+			"tls.crt" : []byte("abcd"),
 		},
 	}
 }

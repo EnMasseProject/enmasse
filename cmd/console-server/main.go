@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"crypto/tls"
 	"flag"
 	"github.com/99designs/gqlgen/cmd"
 	"github.com/99designs/gqlgen/graphql"
@@ -313,8 +314,8 @@ http://localhost:` + port + `/graphql
 				watcherConfigs = append(watcherConfigs, watchers.AgentWatcherRouteConfig(config))
 			}
 			watcher, err := watchers.NewAgentWatcher(objectCache, infraNamespace,
-				func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, developmentMode bool) agent.Delegate {
-					return agent.AmqpAgentDelegateCreator(config.BearerToken, host, port, addressSpaceNamespace, addressSpace, infraUuid, developmentMode)
+				func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, tlsConfig *tls.Config) agent.Delegate {
+					return agent.AmqpAgentDelegateCreator(config.BearerToken, host, port, addressSpaceNamespace, addressSpace, infraUuid, tlsConfig)
 				}, *developmentMode, watcherConfigs...)
 			getCollector = watcher.Collector
 			return watcher, err

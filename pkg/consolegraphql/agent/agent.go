@@ -57,10 +57,10 @@ type amqpAgentDelegate struct {
 	stoppedchan           chan struct{}
 	commandDelegates      map[string]commandDelegatePair
 	commandDelegatesMux   sync.Mutex
-	developmentMode       bool
+	tlsConfig             *tls.Config
 }
 
-func AmqpAgentDelegateCreator(bearerToken, host string, port int32, addressSpaceNamespace, addressSpace, infraUuid string, developmentMode bool) Delegate {
+func AmqpAgentDelegateCreator(bearerToken, host string, port int32, addressSpaceNamespace, addressSpace, infraUuid string, tlsConfig *tls.Config) Delegate {
 	return &amqpAgentDelegate{
 		bearerToken:           bearerToken,
 		host:                  host,
@@ -70,7 +70,7 @@ func AmqpAgentDelegateCreator(bearerToken, host string, port int32, addressSpace
 		infraUuid:             infraUuid,
 		stopchan:              make(chan struct{}),
 		stoppedchan:           make(chan struct{}),
-		developmentMode:       developmentMode,
+		tlsConfig:             tlsConfig,
 		commandDelegates:      make(map[string]commandDelegatePair),
 	}
 }
@@ -130,11 +130,11 @@ func (aad *amqpAgentDelegate) doCollect() error {
 	log.Printf("Agent Collector %s - connecting %s", aad.infraUuid, addr)
 
 	client, err := amqp.Dial(addr,
-		amqp.ConnTLSConfig(buildTlsConfig(aad.developmentMode)),
+		amqp.ConnTLSConfig(aad.tlsConfig),
 		amqp.ConnSASLXOAUTH2("unused", aad.bearerToken, amqpOverrideSaslFrameSize),
 		amqp.ConnServerHostname(aad.host),
 		amqp.ConnProperty("product", "console-server"),
-		amqp.ConnConnectTimeout(time.Second * 10),
+		amqp.ConnConnectTimeout(time.Second*10),
 	)
 	if err != nil {
 		return err
@@ -422,11 +422,11 @@ func (ad *amqpAgentCommandDelegate) doProcess(addr string) error {
 	log.Printf("Agent Command Delegate %s - connecting %s", ad.aac.infraUuid, addr)
 
 	client, err := amqp.Dial(addr,
-		amqp.ConnTLSConfig(buildTlsConfig(ad.aac.developmentMode)),
+		amqp.ConnTLSConfig(ad.aac.tlsConfig),
 		amqp.ConnSASLXOAUTH2("unused", ad.bearerToken, amqpOverrideSaslFrameSize),
 		amqp.ConnServerHostname(ad.aac.host),
 		amqp.ConnProperty("product", "command-delegate; console-server"),
-		amqp.ConnConnectTimeout(time.Second * 10),
+		amqp.ConnConnectTimeout(time.Second*10),
 	)
 	if err != nil {
 		return err
@@ -517,17 +517,6 @@ func (ad *amqpAgentCommandDelegate) doProcess(addr string) error {
 			}
 		}
 	}
-}
-
-func buildTlsConfig(devMode bool) *tls.Config {
-	tlsConfig := &tls.Config{}
-	if devMode {
-		tlsConfig.InsecureSkipVerify = true
-	} else {
-		// TODO fix me - we need a CA that is the issuer of all the admin server certs.
-		tlsConfig.InsecureSkipVerify = true
-	}
-	return tlsConfig
 }
 
 func buildAmqpAddress(host string, port int32) string {
