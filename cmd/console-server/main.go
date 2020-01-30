@@ -14,7 +14,6 @@ import (
 	"github.com/99designs/gqlgen/cmd"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/handler"
-	"github.com/alexedwards/scs/v2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"

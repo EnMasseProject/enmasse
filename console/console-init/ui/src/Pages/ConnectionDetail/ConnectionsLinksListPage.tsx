@@ -65,19 +65,19 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
   };
   const connection = connections.Connections[0];
   let linkRows: ILink[] = [];
-  if (connection && connection.Links.Total > 0) {
-    setTotalLinks(connection.Links.Total);
-    linkRows = connection.Links.Links.map(link => ({
-      name: link.ObjectMeta.Name,
-      role: link.Spec.Role,
-      address: link.Spec.Address,
-      deliveries: getFilteredValue(link.Metrics, "enmasse_deliveries"),
-      accepted: getFilteredValue(link.Metrics, "enmasse_accepted"),
-      rejected: getFilteredValue(link.Metrics, "enmasse_rejected"),
-      released: getFilteredValue(link.Metrics, "enmasse_released"),
-      modified: getFilteredValue(link.Metrics, "enmasse_modified"),
-      presettled: getFilteredValue(link.Metrics, "enmasse_presettled"),
-      undelivered: getFilteredValue(link.Metrics, "enmasse_undelivered")
+  if (connection && connection.links.Total > 0) {
+    setTotalLinks(connection.links.Total);
+    linkRows = connection.links.Links.map(link => ({
+      name: link.objectMeta.name,
+      role: link.spec.role,
+      address: link.spec.address,
+      deliveries: getFilteredValue(link.metrics, "enmasse_deliveries"),
+      accepted: getFilteredValue(link.metrics, "enmasse_accepted"),
+      rejected: getFilteredValue(link.metrics, "enmasse_rejected"),
+      released: getFilteredValue(link.metrics, "enmasse_released"),
+      modified: getFilteredValue(link.metrics, "enmasse_modified"),
+      presettled: getFilteredValue(link.metrics, "enmasse_presettled"),
+      undelivered: getFilteredValue(link.metrics, "enmasse_undelivered")
     }));
   }
 

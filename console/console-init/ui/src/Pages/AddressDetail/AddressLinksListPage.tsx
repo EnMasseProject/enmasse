@@ -67,28 +67,28 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   if (
     addresses &&
     addresses.Addresses.length > 0 &&
-    addresses.Addresses[0].Links.Total > 0
+    addresses.Addresses[0].links.Total > 0
   ) {
-    setAddressLinksTotal(addresses.Addresses[0].Links.Total);
+    setAddressLinksTotal(addresses.Addresses[0].links.Total);
   }
   const links =
     addresses &&
     addresses.Addresses.length > 0 &&
-    addresses.Addresses[0].Links.Total > 0 &&
-    addresses.Addresses[0].Links;
+    addresses.Addresses[0].links.Total > 0 &&
+    addresses.Addresses[0].links;
 
-  let clientRows: IClient[] = addresses.Addresses[0].Links.Links.map(link => ({
-    role: link.Spec.Role.toString(),
-    containerId: link.Spec.Connection.Spec.ContainerId,
-    name: link.ObjectMeta.Name,
+  let clientRows: IClient[] = addresses.Addresses[0].links.Links.map(link => ({
+    role: link.spec.role.toString(),
+    containerId: link.spec.connection.spec.containerId,
+    name: link.objectMeta.name,
     deliveryRate: getFilteredValue(
-      link.Metrics,
-      link.Spec.Role === "sender"
+      link.metrics,
+      link.spec.role === "sender"
         ? "enmasse_messages_in"
         : "enmasse_messages_out"
     ),
-    backlog: getFilteredValue(link.Metrics, "enmasse_messages_backlog"),
-    connectionName: link.Spec.Connection.ObjectMeta.Name,
+    backlog: getFilteredValue(link.metrics, "enmasse_messages_backlog"),
+    connectionName: link.spec.connection.objectMeta.name,
     addressSpaceName: name,
     addressSpaceNamespace: namespace,
     addressSpaceType: type

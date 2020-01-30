@@ -196,16 +196,16 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       response.data.connections &&
       response.data.connections.Connections &&
       response.data.connections.Connections.length > 0 &&
-      response.data.connections.Connections[0].Links &&
-      response.data.connections.Connections[0].Links.Links &&
-      response.data.connections.Connections[0].Links.Links.length > 0
+      response.data.connections.Connections[0].links &&
+      response.data.connections.Connections[0].links.Links &&
+      response.data.connections.Connections[0].links.Links.length > 0
     ) {
-      if (response.data.connections.Connections[0].Links.Total > 100) {
+      if (response.data.connections.Connections[0].links.Total > 100) {
         setNameOptions([]);
       } else {
-        const obtainedList = response.data.connections.Connections[0].Links.Links.map(
+        const obtainedList = response.data.connections.Connections[0].links.Links.map(
           (link: any) => {
-            return link.ObjectMeta.Name;
+            return link.objectMeta.Name;
           }
         );
         setNameOptions(Array.from(new Set(obtainedList)));
@@ -243,16 +243,16 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       response.data.connections &&
       response.data.connections.Connections &&
       response.data.connections.Connections.length > 0 &&
-      response.data.connections.Connections[0].Links &&
-      response.data.connections.Connections[0].Links.Links &&
-      response.data.connections.Connections[0].Links.Links.length > 0
+      response.data.connections.Connections[0].links &&
+      response.data.connections.Connections[0].links.Links &&
+      response.data.connections.Connections[0].links.Links.length > 0
     ) {
-      if (response.data.connections.Connections[0].Links.Total > 100) {
+      if (response.data.connections.Connections[0].links.Total > 100) {
         setAddressOptions([]);
       } else {
-        const obtainedList = response.data.connections.Connections[0].Links.Links.map(
+        const obtainedList = response.data.connections.Connections[0].links.Links.map(
           (link: any) => {
-            return link.Spec.Address;
+            return link.spec.Address;
           }
         );
         setAddressOptions(Array.from(new Set(obtainedList)));

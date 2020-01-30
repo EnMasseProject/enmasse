@@ -121,35 +121,35 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   };
   setTotalAddress(addresses.Total);
   const addressesList: IAddress[] = addresses.Addresses.map(address => ({
-    name: address.ObjectMeta.Name,
-    displayName: address.Spec.Address,
-    namespace: address.ObjectMeta.Namespace,
-    type: address.Spec.Type,
-    planLabel: address.Spec.Plan.Spec.DisplayName,
-    planValue: address.Spec.Plan.ObjectMeta.Name,
-    messageIn: getFilteredValue(address.Metrics, "enmasse_messages_in"),
-    messageOut: getFilteredValue(address.Metrics, "enmasse_messages_out"),
+    name: address.objectMeta.name,
+    displayName: address.spec.address,
+    namespace: address.objectMeta.namespace,
+    type: address.spec.type,
+    planLabel: address.spec.plan.spec.displayName,
+    planValue: address.spec.plan.objectMeta.name,
+    messageIn: getFilteredValue(address.metrics, "enmasse_messages_in"),
+    messageOut: getFilteredValue(address.metrics, "enmasse_messages_out"),
     storedMessages: getFilteredValue(
-      address.Metrics,
+      address.metrics,
       "enmasse_messages_stored"
     ),
-    senders: getFilteredValue(address.Metrics, "enmasse_senders"),
-    receivers: getFilteredValue(address.Metrics, "enmasse_receivers"),
+    senders: getFilteredValue(address.metrics, "enmasse_senders"),
+    receivers: getFilteredValue(address.metrics, "enmasse_receivers"),
     partitions:
-      address.Status && address.Status.PlanStatus
-        ? address.Status.PlanStatus.Partitions
+      address.status && address.status.planStatus
+        ? address.status.planStatus.partitions
         : null,
-    isReady: address.Status && address.Status.IsReady,
-    status: address.Status && address.Status.Phase ? address.Status.Phase : "",
+    isReady: address.status && address.status.isReady,
+    status: address.status && address.status.phase ? address.status.phase : "",
     errorMessages:
-      address.Status && address.Status.Messages ? address.Status.Messages : [],
+      address.status && address.status.messages ? address.status.messages : [],
     selected:
       selectedAddresses.filter(({ name, namespace }) =>
         compareTwoAddress(
           name,
-          address.ObjectMeta.Name,
+          address.objectMeta.name,
           namespace,
-          address.ObjectMeta.Namespace
+          address.objectMeta.namespace
         )
       ).length == 1
   }));
@@ -172,11 +172,11 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         mutation: EDIT_ADDRESS,
         variables: {
           a: {
-            Name: addressBeingEdited.name,
-            Namespace: addressBeingEdited.namespace
+            name: addressBeingEdited.name,
+            namespace: addressBeingEdited.namespace
           },
           jsonPatch:
-            '[{"op":"replace","path":"/Plan","value":"' +
+            '[{"op":"replace","path":"/spec/plan","value":"' +
             addressBeingEdited.planValue +
             '"}]',
           patchType: "application/json-patch+json"
@@ -201,8 +201,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         mutation: DELETE_ADDRESS,
         variables: {
           a: {
-            Name: addressBeingDeleted.name,
-            Namespace: addressBeingDeleted.namespace
+            name: addressBeingDeleted.name,
+            namespace: addressBeingDeleted.namespace
           }
         }
       });

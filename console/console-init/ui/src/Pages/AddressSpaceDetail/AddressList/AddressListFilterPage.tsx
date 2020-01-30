@@ -95,8 +95,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
         addressSpace.data.addressSpaces.AddressSpaces.length > 0
       ) {
         const plan =
-          addressSpace.data.addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta
-            .Name;
+          addressSpace.data.addressSpaces.AddressSpaces[0].spec.plan.objectMeta
+            .name;
         if (plan) {
           setAddressSpacePlan(plan);
         }

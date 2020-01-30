@@ -40,10 +40,10 @@ export const GridStylesForTableHeader = StyleSheet.create({
 export interface IAddressSpacePlanResponse {
   addressSpaces: {
     AddressSpaces: Array<{
-      Spec: {
-        Plan: {
-          ObjectMeta: {
-            Name: string;
+      spec: {
+        plan: {
+          objectMeta: {
+            name: string;
           };
         };
       };
@@ -104,7 +104,7 @@ export default function AddressesList() {
 
   if (!addressSpacePlan && addressSpaces.AddressSpaces[0]) {
     setAddressSpacePlan(
-      addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta.Name
+      addressSpaces.AddressSpaces[0].spec.plan.objectMeta.name
     );
   }
 
@@ -157,8 +157,8 @@ export default function AddressesList() {
       mutation: DELETE_ADDRESS,
       variables: {
         a: {
-          Name: data.name,
-          Namespace: data.namespace
+          name: data.name,
+          namespace: data.namespace
         }
       }
     });
@@ -175,8 +175,8 @@ export default function AddressesList() {
       mutation: PURGE_ADDRESS,
       variables: {
         a: {
-          Name: data.name,
-          Namespace: data.namespace
+          name: data.name,
+          namespace: data.namespace
         }
       }
     });

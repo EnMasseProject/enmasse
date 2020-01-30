@@ -43,15 +43,15 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
         mutation: CREATE_ADDRESS_SPACE,
         variables: {
           as: {
-            ObjectMeta: {
-              Name: addressSpaceName,
-              Namespace: namespace
+            objectMeta: {
+              name: addressSpaceName,
+              namespace: namespace
             },
-            Spec: {
-              Type: addressSpaceType.toLowerCase(),
-              Plan: addressSpacePlan.toLowerCase(),
-              AuthenticationService: {
-                Name: authenticationService
+            spec: {
+              type: addressSpaceType.toLowerCase(),
+              plan: addressSpacePlan.toLowerCase(),
+              authenticationService: {
+                name: authenticationService
               }
             }
           }

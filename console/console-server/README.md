@@ -46,9 +46,9 @@ go run scripts/gqlgen.go -c console/console-graphql/src/main/resources/gqlgen.ym
 query allAddress {
   queryAddress {
     Addresess {
-      Resource {
-        ObjectMeta {
-          Name
+      resource {
+        objectMeta {
+          name
         }
       }
     }
@@ -66,44 +66,44 @@ query paginatedAddressQuery {
       queryLinks {
         Total
         Links {
-          Name
-          Role
-          Connection {
+          name
+          role
+          connection {
             containerId
             protocol
           }
-          Metrics {
-            Name
-            Type
-            Value
-            Units
+          metrics {
+            name
+            type
+            value
+            units
           }
         }
       }
-      Metrics {
-        Name
-        Type
-        Value
-        Units
+      metrics {
+        name
+        type
+        value
+        units
       }
 
-      Resource {
-        ObjectMeta {
-          Name
-          ResourceVersion
-          CreationTimestamp
-          Annotations {
-            Key
-            Value
+      resource {
+        objectMeta {
+          name
+          resourceVersion
+          creationTimestamp
+          annotations {
+            key
+            value
           }
         }
-        Spec {
-          Address
-          Type
+        spec {
+          address
+          type
         }
-        Status {
-          IsReady
-          Messages
+        status {
+          isReady
+          messages
         }
       }
     }
@@ -116,14 +116,14 @@ query paginatedAddressQuery {
 ```
 query myplans {
   addressPlans{
-    Spec
+    spec
     {
-      DisplayName
-      LongDescription
-      ShortDescription
+      displayName
+      longDescription
+      shortDescription
     }
-    ObjectMeta {
-      Name
+    objectMeta {
+      name
     }
   }
 }
@@ -136,14 +136,14 @@ query myplans {
 ```
 mutation createAddress($a:AddressK8sInput!) {
   createAddress(input:$a) {
-    ObjectMeta {
-      Name
-      ResourceVersion
+    objectMeta {
+      name
+      resourceVersion
     }
   }
 }{
-  "a": { "ObjectMeta": {"Name": "standard.kwfoo", "Namespace": "enmasse-infra" },
-    "Spec": {"Address": "kwfoo", "Type": "queue", "Plan": "standard-small-queue"}}
+  "a": { "objectMeta": {"name": "standard.kwfoo", "namespace": "enmasse-infra" },
+    "spec": {"address": "kwfoo", "type": "queue", "plan": "standard-small-queue"}}
 }
 ```
 
@@ -152,18 +152,18 @@ mutation createAddress($a:AddressK8sInput!) {
 ```
 mutation patchAddress($a:ObjectMetaK8sInput!, $patch: String!, $patchType: String!) {
   patchAddress(input:$a, jsonPatch:$patch, patchType: $patchType) {
-    ObjectMeta {
-      Name
-      ResourceVersion
-      Annotations {
-        Key
-        Value
+    objectMeta {
+      name
+      resourceVersion
+      annotations {
+        key
+        value
       }
     }
   }
 }
 {
-  "a": { "Name": "standard.kwfoo", "Namespace": "enmasse-infra" },
+  "a": { "name": "standard.kwfoo", "namespace": "enmasse-infra" },
   "patch": "{\"metadata\":{\"annotations\":{\"fish2\":\"dorado32\"}}}",
   "patchType": "application/merge-patch+json"
 }
@@ -176,7 +176,7 @@ mutation deleteAddress($a:ObjectMetaK8sInput!) {
   deleteAddress(input:$a)
 }
 {
-  "a": { "Name": "standard.kwfoo", "Namespace": "enmasse-infra" }
+  "a": { "name": "standard.kwfoo", "namespace": "enmasse-infra" }
 }
 ```
 

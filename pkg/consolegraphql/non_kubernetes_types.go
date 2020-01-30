@@ -12,18 +12,31 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"time"
 )
 
 type HasMetrics interface {
-	GetMetrics() ([]*Metric)
+	GetMetrics() []*Metric
 }
+
+type Metadata struct {
+	Name string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	SelfLink string `json:"selfLink,omitempty"`
+	UID types.UID `json:"uid,omitempty"`
+	ResourceVersion string `json:"resourceVersion,omitempty"`
+	Generation int64 `json:"generation,omitempty"`
+	CreationTimestamp metav1.Time `json:"creationTimestamp,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
 
 type Connection struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ObjectMeta
-	Spec    ConnectionSpec
-	Metrics []*Metric
+	Spec    ConnectionSpec `json:"spec"`
+	Metrics []*Metric      `json:"metrics,omitempty"`
 }
 
 func (c *Connection) GetControllingResourceAttributes() *authv1.ResourceAttributes {
@@ -40,19 +53,19 @@ func (c *Connection) GetMetrics() []*Metric {
 }
 
 type ConnectionSpec struct {
-	AddressSpace string
-	Hostname     string
-	ContainerId  string
-	Protocol     string
-	Encrypted    bool
-	Properties   map[string]string
+	AddressSpace string            `json:"addressSpace"`
+	Hostname     string            `json:"hostname"`
+	ContainerId  string            `json:"containerId"`
+	Protocol     string            `json:"protocol"`
+	Encrypted    bool              `json:"encrypted"`
+	Properties   map[string]string `json:"properties,omitempty"`
 }
 
 type Link struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ObjectMeta
-	Spec LinkSpec
-	Metrics []*Metric
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              LinkSpec  `json:"spec,omitempty"`
+	Metrics           []*Metric `json:"metrics,omitempty"`
 }
 
 func (l *Link) GetMetrics() []*Metric {
@@ -60,24 +73,24 @@ func (l *Link) GetMetrics() []*Metric {
 }
 
 type LinkSpec struct {
-	Connection   string
-	AddressSpace string
-	Address      string
-	Role         string
+	Connection   string `json:"connection"`
+	AddressSpace string `json:"addressSpace"`
+	Address      string `json:"address"`
+	Role         string `json:"role"`
 }
 
 type Metric struct {
-	Name  string
-	Type  string
-	Value float64
-	Unit  string
-	Time  time.Time
-	timeseries *ring.Ring
+	Name       string     `json:"name"`
+	Type       string     `json:"type"`
+	Value      float64    `json:"value"`
+	Unit       string     `json:"unit"`
+	Time       time.Time  `json:"time"`
+	timeseries *ring.Ring `json:"timeseries"`
 }
 
 type DataPointTimePair struct {
-	DataPoint float64
-	Timestamp time.Time
+	DataPoint float64   `json:"dataPoint"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 func (m *Metric) GetTimeSeries() *ring.Ring {
@@ -117,11 +130,10 @@ func FindOrCreateRateCalculatingMetric(existing []*Metric, n string, t string, u
 	return m, existing
 }
 
-
 func NewSimpleMetric(n string, t string) *SimpleMetric {
 	metric := SimpleMetric{
-		Name:  n,
-		Type:  t,
+		Name: n,
+		Type: t,
 	}
 	return &metric
 }
@@ -151,7 +163,7 @@ func (m *RateCalculatingMetric) Update(v float64, ts time.Time) {
 
 type AddressSpaceHolder struct {
 	v1beta1.AddressSpace
-	Metrics     []*Metric
+	Metrics []*Metric `json:"metric,omitempty"`
 }
 
 func (ash *AddressSpaceHolder) GetMetrics() []*Metric {
@@ -165,7 +177,7 @@ func (ash *AddressSpaceHolder) GetControllingResourceAttributes() *authv1.Resour
 
 type AddressHolder struct {
 	v1beta1.Address
-	Metrics     []*Metric
+	Metrics []*Metric `json:"metrics,omitempty"`
 }
 
 func (ah *AddressHolder) GetMetrics() []*Metric {
@@ -191,4 +203,3 @@ func kindToResource(gvk schema.GroupVersionKind) string {
 	resource := plural.Resource
 	return resource
 }
-
