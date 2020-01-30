@@ -221,8 +221,9 @@ http://localhost:` + port + `/graphql
 			`)
 	}
 
-	dumpCachePeriod := util.GetEnvOrDefault("DUMP_CACHE_PERIOD", "0s")
-	updateMetricsPeriod := util.GetEnvOrDefault("UPDATE_METRICS_PERIOD", "5s")
+	dumpCachePeriod := util.GetDurationEnvOrDefault("DUMP_CACHE_PERIOD", time.Second * 0)
+	updateMetricsPeriod := util.GetDurationEnvOrDefault("UPDATE_METRICS_PERIOD", time.Second * 5)
+	agentCommandDelegateExpiryPeriod := util.GetDurationEnvOrDefault("AGENT_COMMAND_DELEGATE_EXPIRY_PERIOD", time.Minute * 5)
 
 	log.Printf("Namespace: %s\n", infraNamespace)
 
@@ -315,7 +316,7 @@ http://localhost:` + port + `/graphql
 			}
 			watcher, err := watchers.NewAgentWatcher(objectCache, infraNamespace,
 				func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, tlsConfig *tls.Config) agent.Delegate {
-					return agent.AmqpAgentDelegateCreator(config.BearerToken, host, port, addressSpaceNamespace, addressSpace, infraUuid, tlsConfig)
+					return agent.NewAmqpAgentDelegate(config.BearerToken, host, port, tlsConfig, addressSpaceNamespace, addressSpace, infraUuid, agentCommandDelegateExpiryPeriod)
 				}, *developmentMode, watcherConfigs...)
 			getCollector = watcher.Collector
 			return watcher, err
@@ -344,16 +345,14 @@ http://localhost:` + port + `/graphql
 		GetCollector: getCollector,
 	}
 
-	dumpCache, err := time.ParseDuration(dumpCachePeriod)
-	if err == nil && dumpCache.Nanoseconds() > 0 {
+	if dumpCachePeriod > 0 {
 		schedule(func() {
 			_ = objectCache.Dump()
-		}, dumpCache)
+		}, dumpCachePeriod)
 
 	}
 
-	updateMetrics, err := time.ParseDuration(updateMetricsPeriod)
-	if err == nil && updateMetrics.Nanoseconds() > 0 {
+	if updateMetricsPeriod.Nanoseconds() > 0 {
 		schedule(func() {
 			err, updated := metric.UpdateAllMetrics(objectCache)
 			if err != nil {
@@ -362,7 +361,7 @@ http://localhost:` + port + `/graphql
 				log.Printf("%d object metric(s) updated", updated)
 
 			}
-		}, updateMetrics)
+		}, updateMetricsPeriod)
 
 	}
 

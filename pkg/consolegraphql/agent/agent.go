@@ -20,14 +20,8 @@ import (
 	"time"
 )
 
-const amqpOverrideSaslFrameSize = 4096
-const agentDataAddress = "agent_data"
-const agentCommandAddress = "agent_command"
-const agentCommandResponseAddress = "agent_command_response"
-
-type EventHandler = func(event AgentEvent) error
-
-type DelegateCreator = func(bearerToken, host string, port int32) Delegate
+// The agent delegate is the facade to the address space's agent component.  It allows events broadcast by the
+// agent to be received.  It also allows commands to be sent to the agent.
 
 type Delegate interface {
 	Collect(handler EventHandler) error
@@ -40,38 +34,49 @@ type CommandDelegate interface {
 	Shutdown()
 }
 
+const amqpOverrideSaslFrameSize = 4096
+const agentDataAddress = "agent_data"
+const agentCommandAddress = "agent_command"
+const agentCommandResponseAddress = "agent_command_response"
+
+type EventHandler = func(event AgentEvent) error
+
+type DelegateCreator = func(bearerToken, host string, port int32) Delegate
+
 type commandDelegatePair struct {
 	delegate CommandDelegate
 	lastUsed time.Time
 }
 
 type amqpAgentDelegate struct {
-	bearerToken           string
-	host                  string
-	port                  int32
-	addressSpaceNamespace string
-	addressSpace          string
-	infraUuid             string
-	handler               EventHandler
-	stopchan              chan struct{}
-	stoppedchan           chan struct{}
-	commandDelegates      map[string]commandDelegatePair
-	commandDelegatesMux   sync.Mutex
-	tlsConfig             *tls.Config
+	bearerToken                 string
+	host                        string
+	port                        int32
+	tlsConfig                   *tls.Config
+	addressSpaceNamespace       string
+	addressSpace                string
+	infraUuid                   string
+	handler                     EventHandler
+	stopchan                    chan struct{}
+	stoppedchan                 chan struct{}
+	commandDelegates            map[string]commandDelegatePair
+	commandDelegatesMux         sync.Mutex
+	commandDelegateExpiryPeriod time.Duration
 }
 
-func AmqpAgentDelegateCreator(bearerToken, host string, port int32, addressSpaceNamespace, addressSpace, infraUuid string, tlsConfig *tls.Config) Delegate {
+func NewAmqpAgentDelegate(bearerToken, host string, port int32, tlsConfig *tls.Config, addressSpaceNamespace, addressSpace, infraUuid string, expirePeriod time.Duration) Delegate {
 	return &amqpAgentDelegate{
-		bearerToken:           bearerToken,
-		host:                  host,
-		port:                  port,
-		addressSpaceNamespace: addressSpaceNamespace,
-		addressSpace:          addressSpace,
-		infraUuid:             infraUuid,
-		stopchan:              make(chan struct{}),
-		stoppedchan:           make(chan struct{}),
-		tlsConfig:             tlsConfig,
-		commandDelegates:      make(map[string]commandDelegatePair),
+		bearerToken:                 bearerToken,
+		host:                        host,
+		port:                        port,
+		tlsConfig:                   tlsConfig,
+		addressSpaceNamespace:       addressSpaceNamespace,
+		addressSpace:                addressSpace,
+		infraUuid:                   infraUuid,
+		stopchan:                    make(chan struct{}),
+		stoppedchan:                 make(chan struct{}),
+		commandDelegates:            make(map[string]commandDelegatePair),
+		commandDelegateExpiryPeriod: expirePeriod,
 	}
 }
 
@@ -178,8 +183,7 @@ func (aad *amqpAgentDelegate) doCollect() error {
 		return err
 	}
 
-	housekeepInterval := 1 * time.Minute // TODO Make configurable
-	next := time.Now().Add(housekeepInterval)
+	next := time.Now().Add(aad.commandDelegateExpiryPeriod)
 	for {
 
 		select {
@@ -188,8 +192,8 @@ func (aad *amqpAgentDelegate) doCollect() error {
 		default:
 			now := time.Now()
 			if next.Before(now) {
-				go aad.housekeepCommandDelegates()
-				next = now.Add(housekeepInterval)
+				go aad.expireCommandDelegates(now)
+				next = now.Add(aad.commandDelegateExpiryPeriod)
 			}
 
 			// Receive next message
@@ -293,14 +297,14 @@ func (aad *amqpAgentDelegate) CommandDelegate(bearerToken string) (CommandDelega
 	}
 }
 
-func (aad *amqpAgentDelegate) housekeepCommandDelegates() {
+func (aad *amqpAgentDelegate) expireCommandDelegates(now time.Time) {
 	findExpiredCommandDelegates := func() []CommandDelegate {
 		aad.commandDelegatesMux.Lock()
 		defer aad.commandDelegatesMux.Unlock()
 
 		expired := make([]CommandDelegate, 0)
 
-		horizon := time.Now().Add(time.Minute * -5)
+		horizon := now.Add(aad.commandDelegateExpiryPeriod)
 		for key, commandDelegate := range aad.commandDelegates {
 			if commandDelegate.lastUsed.Before(horizon) {
 				expired = append(expired, commandDelegate.delegate)
@@ -315,7 +319,9 @@ func (aad *amqpAgentDelegate) housekeepCommandDelegates() {
 	for _, d := range expired {
 		d.Shutdown()
 	}
-	log.Printf("Shutdown %d expired command delegate(s)", len(expired))
+	if len(expired) > 0 {
+		log.Printf("Shutdown %d expired command delegate(s)", len(expired))
+	}
 }
 
 func receiveWithTimeout(ctx context.Context, receiver *amqp.Receiver, timeout time.Duration) (*amqp.Message, error) {
