@@ -18,12 +18,10 @@
 var v8 = require('v8');
 var log = require("../lib/log.js").logger();
 var AddressSource = require('../lib/internal_address_source.js');
-var BrokerAddressSettings = require('../lib/broker_address_settings.js');
 var ConsoleServer = require('../lib/console_server.js');
 var kubernetes = require('../lib/kubernetes.js');
 var Ragent = require('../lib/ragent.js');
 var tls_options = require('../lib/tls_options.js');
-var myutils = require('../lib/utils.js');
 
 function bind_event(source, event, target, method) {
     source.on(event, target[method || event].bind(target));

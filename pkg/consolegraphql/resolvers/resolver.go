@@ -10,16 +10,17 @@ package resolvers
 import (
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/filter"
 )
 
 type Resolver struct {
-	AdminConfig *v1beta2.AdminV1beta2Client
-	CoreConfig  *v1beta1.EnmasseV1beta1Client
-	Cache       *cache.MemdbCache
+	AdminConfig  *v1beta2.AdminV1beta2Client
+	CoreConfig   *v1beta1.EnmasseV1beta1Client
+	Cache        *cache.MemdbCache
+	GetCollector func(string) agent.Delegate
 }
-
 
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
@@ -69,7 +70,7 @@ func BuildFilter(f *string) (cache.ObjectFilter, error) {
 	return nil, nil
 }
 
-func BuildOrderer(o *string) (func (interface{}) error, error) {
+func BuildOrderer(o *string) (func(interface{}) error, error) {
 	if o != nil && *o != "" {
 		orderby, err := filter.ParseOrderByExpression(*o)
 		if err != nil {
@@ -78,5 +79,5 @@ func BuildOrderer(o *string) (func (interface{}) error, error) {
 
 		return orderby.Sort, err
 	}
-	return func(interface{}) error { return nil}, nil
+	return func(interface{}) error { return nil }, nil
 }

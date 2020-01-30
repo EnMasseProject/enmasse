@@ -31,17 +31,11 @@ TrustAllPolicy.prototype.is_admin = function (connection) {
     return connection.options && connection.options.admin;
 };
 
-TrustAllPolicy.prototype.set_authz_props = function (request, credentials, properties) {
-    request.authz_props = {
-        admin: properties.admin,
-        console: properties.console,
-        token: credentials.token,
-        username: credentials.username,
-    };
-};
-
-TrustAllPolicy.prototype.get_authz_props = function (request) {
-    return request.authz_props;
+TrustAllPolicy.prototype.set_admin = function (connection) {
+    if (!connection.options) {
+        connection.options = {};
+    }
+    connection.options.admin = true;
 };
 
 TrustAllPolicy.prototype.address_filter = function (connection) {
