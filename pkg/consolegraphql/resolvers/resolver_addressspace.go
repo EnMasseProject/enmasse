@@ -7,12 +7,14 @@ package resolvers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
+	yaml "gopkg.in/yaml.v2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -249,16 +251,31 @@ func (r *mutationResolver) DeleteAddressSpace(ctx context.Context, input v1.Obje
 }
 
 func (r *queryResolver) AddressSpaceCommand(ctx context.Context, input v1beta1.AddressSpace) (string, error) {
-	return  `oc apply -f - << EOF
-apiVersion: enmasse.io/v1beta1
-kind: AddressSpace
-metadata:
-  namespace: `+ input.Namespace +`
-  name: `+ input.Name +`
-spec:
-  authenticationService:
-    name: `+ input.Spec.AuthenticationService.Name +`
-  type: `+ input.Spec.Type +`
-  plan: `+ input.Spec.Plan +`
-EOF`, nil
+
+	if input.TypeMeta.APIVersion == "" {
+		input.TypeMeta.APIVersion = "enmasse.io/v1beta1"
+	}
+	if input.TypeMeta.Kind == "" {
+		input.TypeMeta.Kind = "AddressSpace"
+	}
+
+	bytes, err := json.Marshal(input)
+	if err != nil {
+		return "", err
+	}
+
+	jsonMap := make(map[string]interface{})
+	err = json.Unmarshal(bytes, &jsonMap)
+
+	if err != nil {
+		return "", err
+	}
+
+	bytes, err = yaml.Marshal(jsonMap)
+
+	if err == nil {
+		return  "oc apply -f - << EOF \n" +string(bytes)+ "\nEOF", nil
+	} else {
+		return "", err
+	}
 }

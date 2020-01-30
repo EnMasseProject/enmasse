@@ -346,10 +346,11 @@ func TestAddressCommand(t *testing.T) {
 	cmd, err := r.Query().AddressCommand(ctx, addr.Address)
 
 	assert.NoError(t, err)
-	expected := `metadata:
-  namespace: mynamespace
+	expected := `kind: Address
+metadata:
+  creationTimestamp: null
   name: myaddrspace.myaddr
-`
+  namespace: mynamespace`
 	assert.Contains(t, cmd, expected, "Expect name and namespace to be set")
 }
 
