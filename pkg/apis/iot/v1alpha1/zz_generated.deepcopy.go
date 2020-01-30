@@ -705,7 +705,7 @@ func (in *IoTConfig) DeepCopyObject() runtime.Object {
 func (in *IoTConfigList) DeepCopyInto(out *IoTConfigList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]IoTConfig, len(*in))
@@ -844,7 +844,7 @@ func (in *IoTProject) DeepCopyObject() runtime.Object {
 func (in *IoTProjectList) DeepCopyInto(out *IoTProjectList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]IoTProject, len(*in))

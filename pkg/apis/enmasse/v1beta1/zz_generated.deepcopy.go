@@ -46,7 +46,7 @@ func (in *Address) DeepCopyObject() runtime.Object {
 func (in *AddressList) DeepCopyInto(out *AddressList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Address, len(*in))
@@ -130,7 +130,7 @@ func (in *AddressSpace) DeepCopyObject() runtime.Object {
 func (in *AddressSpaceList) DeepCopyInto(out *AddressSpaceList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]AddressSpace, len(*in))
