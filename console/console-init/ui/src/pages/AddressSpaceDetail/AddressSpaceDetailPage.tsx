@@ -47,22 +47,22 @@ const getAddressesList = () =>
 interface IAddressSpaceDetailResponse {
   addressSpaces: {
     AddressSpaces: Array<{
-      ObjectMeta: {
-        Namespace: string;
-        Name: string;
-        CreationTimestamp: string;
+      objectMeta: {
+        namespace: string;
+        name: string;
+        creationTimestamp: string;
       };
-      Spec: {
-        Type: string;
-        Plan: {
-          Spec: {
-            DisplayName: string;
+      spec: {
+        type: string;
+        plan: {
+          spec: {
+            displayName: string;
           };
         };
       };
-      Status: {
-        IsReady: boolean;
-        Messages: Array<string>;
+      status: {
+        isReady: boolean;
+        messages: Array<string>;
       };
     }>;
   };
@@ -111,8 +111,8 @@ export default function AddressSpaceDetailPage() {
       query: DOWNLOAD_CERTIFICATE,
       variables: {
         as: {
-          Name: data.name,
-          Namespace: data.namespace
+          name: data.name,
+          namespace: data.namespace
         }
       }
     });
@@ -138,8 +138,8 @@ export default function AddressSpaceDetailPage() {
       mutation: DELETE_ADDRESS_SPACE,
       variables: {
         a: {
-          Name: data.name,
-          Namespace: data.namespace
+          name: data.name,
+          namespace: data.namespace
         }
       }
     });
@@ -155,10 +155,10 @@ export default function AddressSpaceDetailPage() {
     });
   };
   const addressSpaceDetails: IAddressSpaceHeaderProps = {
-    name: addressSpaces.AddressSpaces[0].ObjectMeta.Name,
-    namespace: addressSpaces.AddressSpaces[0].ObjectMeta.Namespace,
-    createdOn: addressSpaces.AddressSpaces[0].ObjectMeta.CreationTimestamp,
-    type: addressSpaces.AddressSpaces[0].Spec.Type,
+    name: addressSpaces.AddressSpaces[0].objectMeta.name,
+    namespace: addressSpaces.AddressSpaces[0].objectMeta.namespace,
+    createdOn: addressSpaces.AddressSpaces[0].objectMeta.creationTimestamp,
+    type: addressSpaces.AddressSpaces[0].spec.type,
     onDownload: data => {
       downloadCertificate(data);
     },

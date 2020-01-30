@@ -4,8 +4,8 @@ const typeDefs = gql`
     scalar Date
 
     type KeyValue {
-        Key: String!
-        Value: String!
+        key: String!
+        value: String!
     }
 
     enum AddressSpaceType {
@@ -42,87 +42,87 @@ const typeDefs = gql`
     }
 
     type Metric_consoleapi_enmasse_io_v1beta1 {
-        Name: String!
-        Type: MetricType!
-        Value: Float!
-        Units: String!
+        name: String!
+        type: MetricType!
+        value: Float!
+        units: String!
     }
 
     type AddressSpaceType_consoleapi_enmasse_io_v1beta1 {
-        ObjectMeta: ObjectMeta_v1!
-        Spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
+        objectMeta: ObjectMeta_v1!
+        spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
     }
 
     type AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1 {
-        AddressSpaceType: AddressSpaceType!
-        DisplayName: String!
-        LongDescription: String!
-        ShortDescription: String!
-        DisplayOrder: Int!
+        addressSpaceType: AddressSpaceType!
+        displayName: String!
+        longDescription: String!
+        shortDescription: String!
+        displayOrder: Int!
     }
 
     type AddressType_consoleapi_enmasse_io_v1beta1 {
-        ObjectMeta: ObjectMeta_v1!
-        Spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
+        objectMeta: ObjectMeta_v1!
+        spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
     }
 
     type AddressTypeSpec_consoleapi_enmasse_io_v1beta1 {
-        AddressSpaceType: AddressSpaceType!
-        DisplayName: String!
-        LongDescription: String!
-        ShortDescription: String!
-        DisplayOrder: Int!
+        addressSpaceType: AddressSpaceType!
+        displayName: String!
+        longDescription: String!
+        shortDescription: String!
+        displayOrder: Int!
     }
 
     type AuthenticationService_admin_enmasse_io_v1beta1 {
-        ObjectMeta: ObjectMeta_v1!
-        Spec: AuthenticationServiceSpec_admin_enmasse_io_v1beta1!
-        Status: AuthenticationServiceStatus_admin_enmasse_io_v1beta1!
+        objectMeta: ObjectMeta_v1!
+        spec: AuthenticationServiceSpec_admin_enmasse_io_v1beta1!
+        status: AuthenticationServiceStatus_admin_enmasse_io_v1beta1!
     }
     type AuthenticationServiceStatus_admin_enmasse_io_v1beta1 {
         host: String!
         port: Int!
     }
     type AuthenticationServiceSpec_admin_enmasse_io_v1beta1 {
-        Type: AuthenticationServiceType!
+        type: AuthenticationServiceType!
     }
     type AddressSpaceSchema_enmasse_io_v1beta1 {
-        ObjectMeta: ObjectMeta_v1!
-        Spec: AddressSpaceSchemaSpec_enmasse_io_v1beta1!
+        objectMeta: ObjectMeta_v1!
+        spec: AddressSpaceSchemaSpec_enmasse_io_v1beta1!
     }
     type AddressSpaceSchemaSpec_enmasse_io_v1beta1 {
-        AuthenticationServices: [String!]
-        Description: String
+        authenticationServices: [String!]
+        description: String
     }
 
     type Connection_consoleapi_enmasse_io_v1beta1 {
-        ObjectMeta: ObjectMeta_v1!
-        Spec: ConnectionSpec_consoleapi_enmasse_io_v1beta1!
+        objectMeta: ObjectMeta_v1!
+        spec: ConnectionSpec_consoleapi_enmasse_io_v1beta1!
 
-        Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
-        Links(first: Int, offset: Int, filter: String, orderBy: String): LinkQueryResult_consoleapi_enmasse_io_v1beta1!
+        metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
+        links(first: Int, offset: Int, filter: String, orderBy: String): LinkQueryResult_consoleapi_enmasse_io_v1beta1!
     }
 
     type ConnectionSpec_consoleapi_enmasse_io_v1beta1 {
-        AddressSpace: AddressSpace_consoleapi_enmasse_io_v1beta1!
-        Hostname: String!
-        ContainerId: String!
-        Protocol: Protocol!
-        Encrypted: Boolean!
-        Properties: [KeyValue!]!
+        addressSpace: AddressSpace_consoleapi_enmasse_io_v1beta1!
+        hostname: String!
+        containerId: String!
+        protocol: Protocol!
+        encrypted: Boolean!
+        properties: [KeyValue!]!
     }
 
     type Link_consoleapi_enmasse_io_v1beta1 {
-        ObjectMeta: ObjectMeta_v1!
-        Spec: LinkSpec_consoleapi_enmasse_io_v1beta1!
-        Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
+        objectMeta: ObjectMeta_v1!
+        spec: LinkSpec_consoleapi_enmasse_io_v1beta1!
+        metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
     }
 
     type LinkSpec_consoleapi_enmasse_io_v1beta1 {
-        Connection: Connection_consoleapi_enmasse_io_v1beta1!
-        Address: String!
-        Role: LinkRole!
-        Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!
+        connection: Connection_consoleapi_enmasse_io_v1beta1!
+        address: String!
+        role: LinkRole!
+        metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!
     }
 
     #
@@ -159,19 +159,19 @@ const typeDefs = gql`
     #
 
     type AddressSpace_consoleapi_enmasse_io_v1beta1 {
-        ObjectMeta: ObjectMeta_v1!
-        Spec: AddressSpaceSpec_enmasse_io_v1beta1!
-        Status: AddressSpaceStatus_enmasse_io_v1beta1
-        Connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1beta1!
-        Addresses(first: Int, offset: Int, filter: String, orderBy: String): AddressQueryResult_consoleapi_enmasse_io_v1beta1!
-        Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
+        objectMeta: ObjectMeta_v1!
+        spec: AddressSpaceSpec_enmasse_io_v1beta1!
+        status: AddressSpaceStatus_enmasse_io_v1beta1
+        connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1beta1!
+        addresses(first: Int, offset: Int, filter: String, orderBy: String): AddressQueryResult_consoleapi_enmasse_io_v1beta1!
+        metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
     }
 
     type AddressSpaceSpec_enmasse_io_v1beta1 {
-        Plan:      AddressSpacePlan_admin_enmasse_io_v1beta2!
-        Type:      AddressSpaceType!
+        plan:      AddressSpacePlan_admin_enmasse_io_v1beta2!
+        type:      AddressSpaceType!
   
-        AuthenticationService:  AuthenticationService_enmasse_io_v1beta1
+        authenticationService:  AuthenticationService_enmasse_io_v1beta1
     }
     
     type AuthenticationService_enmasse_io_v1beta1 {
@@ -179,91 +179,91 @@ const typeDefs = gql`
     }    
 
     type AddressSpaceStatus_enmasse_io_v1beta1 {
-        IsReady: Boolean!
-        Messages: [String!]
-        Phase: String!
+        isReady: Boolean!
+        messages: [String!]
+        phase: String!
     }
 
     type AddressSpec_enmasse_io_v1beta1 {
-        Address:      String!
-        AddressSpace: String!
-        Type:         AddressType!
-        Plan:         AddressPlan_admin_enmasse_io_v1beta2!
-        Topic:        String
+        address:      String!
+        addressSpace: String!
+        type:         AddressType!
+        plan:         AddressPlan_admin_enmasse_io_v1beta2!
+        topic:        String
     }
 
     type AddressStatus_enmasse_io_v1beta1 {
-        IsReady: Boolean!
-        Messages: [String!]
-        Phase: String!
-        PlanStatus: AddressPlanStatus_enmasse_io_v1beta1
+        isReady: Boolean!
+        messages: [String!]
+        phase: String!
+        planStatus: AddressPlanStatus_enmasse_io_v1beta1
     }
 
     type AddressPlanStatus_enmasse_io_v1beta1 {
-        Name: String!
-        Partitions: Int!
+        name: String!
+        partitions: Int!
     }
 
     type Address_consoleapi_enmasse_io_v1beta1 {
-        ObjectMeta: ObjectMeta_v1!
-        Spec: AddressSpec_enmasse_io_v1beta1!
-        Status: AddressStatus_enmasse_io_v1beta1
+        objectMeta: ObjectMeta_v1!
+        spec: AddressSpec_enmasse_io_v1beta1!
+        status: AddressStatus_enmasse_io_v1beta1
 
-        Links(first: Int, offset: Int, filter: String, orderBy: String ): LinkQueryResult_consoleapi_enmasse_io_v1beta1!
-        Metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
+        links(first: Int, offset: Int, filter: String, orderBy: String ): LinkQueryResult_consoleapi_enmasse_io_v1beta1!
+        metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
     }
 
     type AddressPlan_admin_enmasse_io_v1beta2 {
-        ObjectMeta: ObjectMeta_v1!
-        Spec: AddressPlanSpec_admin_enmasse_io_v1beta2!
+        objectMeta: ObjectMeta_v1!
+        spec: AddressPlanSpec_admin_enmasse_io_v1beta2!
     }
 
     type AddressPlanSpec_admin_enmasse_io_v1beta2 {
-        AddressType: AddressType!
-        DisplayName: String!
-        LongDescription: String!
-        ShortDescription: String!
-        DisplayOrder: Int!
+        addressType: AddressType!
+        displayName: String!
+        longDescription: String!
+        shortDescription: String!
+        displayOrder: Int!
     }
 
     type AddressSpacePlan_admin_enmasse_io_v1beta2 {
-        ObjectMeta: ObjectMeta_v1!
-        Spec: AddressSpacePlanSpec_admin_enmasse_io_v1beta2!
+        objectMeta: ObjectMeta_v1!
+        spec: AddressSpacePlanSpec_admin_enmasse_io_v1beta2!
     }
 
     type AddressSpacePlanSpec_admin_enmasse_io_v1beta2 {
-        AddressPlans: [AddressPlan_admin_enmasse_io_v1beta2!]!
-        AddressSpaceType: AddressSpaceType,
-        DisplayName: String!
-        LongDescription: String!
-        ShortDescription: String!
-        DisplayOrder: Int!
+        addressPlans: [AddressPlan_admin_enmasse_io_v1beta2!]!
+        addressSpaceType: AddressSpaceType,
+        displayName: String!
+        longDescription: String!
+        shortDescription: String!
+        displayOrder: Int!
     }
 
 
     type ObjectMeta_v1 {
-        Annotations: [KeyValue!]!
-        Name: String!
-        Namespace: String!
-        ResourceVersion: String!
-        CreationTimestamp: Date!
-        Uid: ID!
+        annotations: [KeyValue!]!
+        name: String!
+        namespace: String!
+        resourceVersion: String!
+        creationTimestamp: Date!
+        uid: ID!
     }
 
     type User_v1 {
-        ObjectMeta: ObjectMeta_v1!
-        Identities: [String!]!
-        Groups: [String!]!
-        FullName: String!
+        objectMeta: ObjectMeta_v1!
+        identities: [String!]!
+        groups: [String!]!
+        fullName: String!
     }
 
     type Namespace_v1 {
-        ObjectMeta: ObjectMeta_v1!
-        Status: NamespaceStatus_v1!
+        objectMeta: ObjectMeta_v1!
+        status: NamespaceStatus_v1!
     }
 
     type NamespaceStatus_v1 {
-        Phase: String!
+        phase: String!
     }
 
     type Query {
@@ -323,38 +323,38 @@ const typeDefs = gql`
     #
 
     input ObjectMeta_v1_Input {
-        Name: String
-        Namespace: String!
-        ResourceVersion: String
+        name: String
+        namespace: String!
+        resourceVersion: String
     }
 
     input AddressSpaceSpec_enmasse_io_v1beta1_Input {
-        Type:         String!
-        Plan:         String!
+        type:         String!
+        plan:         String!
         
-        AuthenticationService:  AuthenticationService_enmasse_io_v1beta1_Input
+        authenticationService:  AuthenticationService_enmasse_io_v1beta1_Input
     }
     
     input AuthenticationService_enmasse_io_v1beta1_Input {
-        Name:  String!
+        name:  String!
     }
 
     input AddressSpace_enmasse_io_v1beta1_Input {
-        ObjectMeta: ObjectMeta_v1_Input
-        Spec: AddressSpaceSpec_enmasse_io_v1beta1_Input
+        objectMeta: ObjectMeta_v1_Input
+        spec: AddressSpaceSpec_enmasse_io_v1beta1_Input
     }
 
     input AddressSpec_enmasse_io_v1beta1_Input {
-        Address:      String!
-        AddressSpace: String
-        Type:         String!
-        Plan:         String!
-        Topic:        String
+        address:      String!
+        addressSpace: String
+        type:         String!
+        plan:         String!
+        topic:        String
     }
 
     input Address_enmasse_io_v1beta1_Input {
-        ObjectMeta: ObjectMeta_v1_Input
-        Spec: AddressSpec_enmasse_io_v1beta1_Input
+        objectMeta: ObjectMeta_v1_Input
+        spec: AddressSpec_enmasse_io_v1beta1_Input
     }
 
     type Mutation {

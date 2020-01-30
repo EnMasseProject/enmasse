@@ -48,13 +48,13 @@ export interface IAddressSpaceConfiguration {
 }
 export interface IAddressSpacePlans {
   addressSpacePlans: Array<{
-    ObjectMeta: {
-      Name: string;
-      Uid: string;
-      CreationTimestamp: Date;
+    objectMeta: {
+      name: string;
+      uid: string;
+      creationTimestamp: Date;
     };
-    Spec: {
-      AddressSpaceType: string;
+    spec: {
+      addressSpaceType: string;
     };
   }>;
 }
@@ -64,21 +64,21 @@ export interface IAddressSpaceAuthServiceResponse {
 }
 
 export interface IAddressSpaceAuthService {
-  ObjectMeta: {
-    Name: string;
+  objectMeta: {
+    name: string;
   };
-  Spec: {
-    AuthenticationServices: string[];
+  spec: {
+    authenticationServices: string[];
   };
 }
 
 export interface INamespaces {
   namespaces: Array<{
-    ObjectMeta: {
-      Name: string;
+    objectMeta: {
+      name: string;
     };
-    Status: {
-      Phase: string;
+    status: {
+      phase: string;
     };
   }>;
 }
@@ -154,18 +154,18 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
 
   namespaceOptions = namespaces.map(namespace => {
     return {
-      value: namespace.ObjectMeta.Name,
-      label: namespace.ObjectMeta.Name
+      value: namespace.objectMeta.name,
+      label: namespace.objectMeta.name
     };
   });
   if (type) {
     planOptions =
       addressSpacePlans
         .map(plan => {
-          if (plan.Spec.AddressSpaceType === type) {
+          if (plan.spec.addressSpaceType === type) {
             return {
-              value: plan.ObjectMeta.Name,
-              label: plan.ObjectMeta.Name
+              value: plan.objectMeta.name,
+              label: plan.objectMeta.name
             };
           }
         })
@@ -174,8 +174,8 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
 
   if (authenticationServices) {
     authenticationServices.addressSpaceSchema_v2.forEach(authService => {
-      if (authService.ObjectMeta.Name === type) {
-        authenticationServiceOptions = authService.Spec.AuthenticationServices.map(
+      if (authService.objectMeta.name === type) {
+        authenticationServiceOptions = authService.spec.authenticationServices.map(
           service => {
             return {
               value: service,

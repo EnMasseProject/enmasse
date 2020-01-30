@@ -57,19 +57,19 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
     ) {
       const getVariables = () => {
         let variable: any = {
-          ObjectMeta: {
-            Name: addressSpace + "." + addressName,
-            Namespace: namespace
+          objectMeta: {
+            name: addressSpace + "." + addressName,
+            namespace: namespace
           },
-          Spec: {
-            Type: addressType.toLowerCase(),
-            Plan: plan,
-            Address: addressName,
-            AddressSpace: addressSpace
+          spec: {
+            type: addressType.toLowerCase(),
+            plan: plan,
+            address: addressName,
+            addressSpace: addressSpace
           }
         };
         if (addressType && addressType.trim().toLowerCase() === "subscription")
-          variable.Spec.Topic = topic;
+          variable.spec.topic = topic;
         return variable;
       };
       const data = await client.mutate({

@@ -56,22 +56,22 @@ export interface IAddressDefinition {
 }
 interface IAddressPlans {
   addressPlans: Array<{
-    ObjectMeta: {
-      Name: string;
+    objectMeta: {
+      name: string;
     };
-    Spec: {
-      AddressType: string;
-      DisplayName: string;
-      ShortDescription: string;
+    spec: {
+      addressType: string;
+      displayName: string;
+      shortDescription: string;
     };
   }>;
 }
 interface IAddressTypes {
   addressTypes_v2: Array<{
-    Spec: {
-      DisplayName: string;
-      LongDescription: string;
-      ShortDescription: string;
+    spec: {
+      displayName: string;
+      longDescription: string;
+      shortDescription: string;
     };
   }>;
 }
@@ -114,9 +114,9 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
       if (addressPlans.data && addressPlans.data.addressPlans.length > 0) {
         const planOptions = addressPlans.data.addressPlans.map(plan => {
           return {
-            value: plan.ObjectMeta.Name,
-            label: plan.Spec.DisplayName,
-            description: plan.Spec.ShortDescription
+            value: plan.objectMeta.name,
+            label: plan.spec.displayName,
+            description: plan.spec.shortDescription
           };
         });
         setPlan(" ");
@@ -139,8 +139,8 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
           const topics = topics_addresses.data.addresses.Addresses.map(
             address => {
               return {
-                value: address.Spec.Address,
-                label: address.ObjectMeta.Name
+                value: address.spec.address,
+                label: address.objectMeta.name
               };
             }
           );
@@ -177,9 +177,9 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
   };
   const types: IDropdownOption[] = addressTypes_v2.map(type => {
     return {
-      value: type.Spec.DisplayName,
-      label: type.Spec.DisplayName,
-      description: type.Spec.ShortDescription
+      value: type.spec.displayName,
+      label: type.spec.displayName,
+      description: type.spec.shortDescription
     };
   });
   if (typeOptions.length === 0) setTypeOptions(types);

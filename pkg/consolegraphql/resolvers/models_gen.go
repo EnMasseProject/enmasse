@@ -22,30 +22,30 @@ type AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1 struct {
 }
 
 type AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1 struct {
-	AddressSpaceType AddressSpaceType `json:"AddressSpaceType"`
-	DisplayName      string           `json:"DisplayName"`
-	LongDescription  string           `json:"LongDescription"`
-	ShortDescription string           `json:"ShortDescription"`
-	DisplayOrder     int              `json:"DisplayOrder"`
+	AddressSpaceType AddressSpaceType `json:"addressSpaceType"`
+	DisplayName      string           `json:"displayName"`
+	LongDescription  string           `json:"longDescription"`
+	ShortDescription string           `json:"shortDescription"`
+	DisplayOrder     int              `json:"displayOrder"`
 }
 
 type AddressSpaceTypeConsoleapiEnmasseIoV1beta1 struct {
-	ObjectMeta *v1.ObjectMeta                             `json:"ObjectMeta"`
-	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"Spec"`
+	ObjectMeta *v1.ObjectMeta                             `json:"objectMeta"`
+	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"spec"`
 }
 
 type AddressTypeSpecConsoleapiEnmasseIoV1beta1 struct {
-	AddressType      AddressType      `json:"AddressType"`
-	AddressSpaceType AddressSpaceType `json:"AddressSpaceType"`
-	DisplayName      string           `json:"DisplayName"`
-	LongDescription  string           `json:"LongDescription"`
-	ShortDescription string           `json:"ShortDescription"`
-	DisplayOrder     int              `json:"DisplayOrder"`
+	AddressType      AddressType      `json:"addressType"`
+	AddressSpaceType AddressSpaceType `json:"addressSpaceType"`
+	DisplayName      string           `json:"displayName"`
+	LongDescription  string           `json:"longDescription"`
+	ShortDescription string           `json:"shortDescription"`
+	DisplayOrder     int              `json:"displayOrder"`
 }
 
 type AddressTypeConsoleapiEnmasseIoV1beta1 struct {
-	ObjectMeta *v1.ObjectMeta                             `json:"ObjectMeta"`
-	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"Spec"`
+	ObjectMeta *v1.ObjectMeta                             `json:"objectMeta"`
+	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"spec"`
 }
 
 type ConnectionQueryResultConsoleapiEnmasseIoV1beta1 struct {
@@ -54,8 +54,8 @@ type ConnectionQueryResultConsoleapiEnmasseIoV1beta1 struct {
 }
 
 type KeyValue struct {
-	Key   string `json:"Key"`
-	Value string `json:"Value"`
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 type LinkQueryResultConsoleapiEnmasseIoV1beta1 struct {

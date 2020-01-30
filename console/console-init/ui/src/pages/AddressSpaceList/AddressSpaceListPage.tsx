@@ -87,11 +87,11 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
         mutation: EDIT_ADDRESS_SPACE,
         variables: {
           a: {
-            Name: addressSpaceBeingEdited.name,
-            Namespace: addressSpaceBeingEdited.nameSpace
+            name: addressSpaceBeingEdited.name,
+            namespace: addressSpaceBeingEdited.nameSpace
           },
           jsonPatch:
-            '[{"op":"replace","path":"/Plan","value":"' +
+            '[{"op":"replace","path":"/spec/plan","value":"' +
             addressSpaceBeingEdited.planValue +
             '"},' +
             '{"op":"replace","path":"/AuthenticationService/Name","value":"' +
@@ -178,18 +178,18 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   console.log(addressSpaces);
   const addressSpacesList: IAddressSpace[] = addressSpaces.AddressSpaces.map(
     addSpace => ({
-      name: addSpace.ObjectMeta.Name,
-      nameSpace: addSpace.ObjectMeta.Namespace,
-      creationTimestamp: addSpace.ObjectMeta.CreationTimestamp,
-      type: addSpace.Spec.Type,
-      planValue: addSpace.Spec.Plan.ObjectMeta.Name,
-      displayName: addSpace.Spec.Plan.Spec.DisplayName,
-      isReady: addSpace.Status && addSpace.Status.IsReady,
+      name: addSpace.objectMeta.name,
+      nameSpace: addSpace.objectMeta.namespace,
+      creationTimestamp: addSpace.objectMeta.creationTimestamp,
+      type: addSpace.spec.type,
+      planValue: addSpace.spec.plan.objectMeta.name,
+      displayName: addSpace.Spec.plan.spec.displayName,
+      isReady: addSpace.status && addSpace.status.isReady,
       phase:
-        addSpace.Status && addSpace.Status.Phase ? addSpace.Status.Phase : "",
+        addSpace.status && addSpace.status.phase ? addSpace.status.phase : "",
       messages:
-        addSpace.Status && addSpace.Status.Messages
-          ? addSpace.Status.Messages
+        addSpace.status && addSpace.status.messages
+          ? addSpace.status.messages
           : [],
       authenticationService:
         addSpace.Spec &&
@@ -199,9 +199,9 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
         selectedAddressSpaces.filter(({ name, nameSpace }) =>
           compareTwoAddress(
             name,
-            addSpace.ObjectMeta.Name,
+            addSpace.objectMeta.name,
             nameSpace,
-            addSpace.ObjectMeta.Namespace
+            addSpace.objectMeta.namespace
           )
         ).length == 1
     })

@@ -66,10 +66,10 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
     planOptions =
       addressSpacePlans
         .map(plan => {
-          if (plan.Spec.AddressSpaceType === addressSpace.type) {
+          if (plan.spec.addressSpaceType === addressSpace.type) {
             return {
-              value: plan.ObjectMeta.Name,
-              label: plan.ObjectMeta.Name
+              value: plan.objectMeta.name,
+              label: plan.objectMeta.name
             };
           }
         })

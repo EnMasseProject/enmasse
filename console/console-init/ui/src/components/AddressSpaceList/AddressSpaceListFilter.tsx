@@ -171,7 +171,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
         }
         setFilterNamespaces([...filterNamespaces]);
         break;
-      case "Type":
+      case "type":
         setFilterType(null);
         break;
     }
@@ -217,7 +217,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       } else {
         const obtainedList = response.data.addressSpaces.AddressSpaces.map(
           (link: any) => {
-            return link.ObjectMeta.Name;
+            return link.objectMeta.Name;
           }
         );
         setNameOptions(Array.from(new Set(obtainedList)));
@@ -263,7 +263,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       } else {
         const obtainedList = response.data.addressSpaces.AddressSpaces.map(
           (link: any) => {
-            return link.ObjectMeta.Namespace;
+            return link.objectMeta.Namespace;
           }
         );
         setNamespaceOptions(Array.from(new Set(obtainedList)));

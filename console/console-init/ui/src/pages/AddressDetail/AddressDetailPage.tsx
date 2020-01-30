@@ -76,7 +76,7 @@ export default function AddressDetailPage() {
 
   if (!addressSpacePlan && addressSpaces.addressSpaces.AddressSpaces[0]) {
     setAddressSpacePlan(
-      addressSpaces.addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta.Name
+      addressSpaces.addressSpaces.AddressSpaces[0].spec.plan.objectMeta.name
     );
   }
 
@@ -88,7 +88,7 @@ export default function AddressDetailPage() {
 
   const addressDetail = addresses && addresses.Addresses[0];
   if (addressPlan === null) {
-    setAddressPlan(addressDetail.Spec.Plan.Spec.DisplayName);
+    setAddressPlan(addressDetail.spec.plan.spec.displayName);
   }
 
   const handleCancelDelete = () => {
@@ -100,8 +100,8 @@ export default function AddressDetailPage() {
       mutation: DELETE_ADDRESS,
       variables: {
         a: {
-          Name: data.name,
-          Namespace: data.namespace
+          name: data.name,
+          namespace: data.namespace
         }
       }
     });
@@ -112,8 +112,8 @@ export default function AddressDetailPage() {
   };
   const handleDelete = () => {
     deleteAddress({
-      name: addressDetail.ObjectMeta.Name,
-      namespace: addressDetail.ObjectMeta.Namespace.toString()
+      name: addressDetail.objectMeta.name,
+      namespace: addressDetail.objectMeta.namespace.toString()
     });
   };
 
@@ -123,8 +123,8 @@ export default function AddressDetailPage() {
         mutation: EDIT_ADDRESS,
         variables: {
           a: {
-            Name: addressDetail.ObjectMeta.Name,
-            Namespace: addressDetail.ObjectMeta.Namespace.toString()
+            name: addressDetail.objectMeta.name,
+            namespace: addressDetail.objectMeta.namespace.toString()
           },
           jsonPatch:
             '[{"op":"replace","path":"/Plan","value":"' + addressPlan + '"}]',
@@ -140,17 +140,17 @@ export default function AddressDetailPage() {
     <>
       {addressDetail && (
         <AddressDetailHeader
-          type={addressDetail.Spec.Plan.Spec.AddressType}
-          name={addressDetail.Spec.Address}
-          plan={addressDetail.Spec.Plan.Spec.DisplayName}
-          topic={addressDetail.Spec.Topic}
+          type={addressDetail.spec.plan.spec.addressType}
+          name={addressDetail.spec.address}
+          plan={addressDetail.spec.plan.spec.displayName}
+          topic={addressDetail.spec.topic}
           storedMessages={getFilteredValue(
-            addressDetail.Metrics,
+            addressDetail.metrics,
             "enmasse_messages_stored"
           )}
           partitions={
-            addressDetail.Status && addressDetail.Status.PlanStatus
-              ? addressDetail.Status.PlanStatus.Partitions
+            addressDetail.status && addressDetail.status.planStatus
+              ? addressDetail.status.planStatus.partitions
               : 0
           }
           onEdit={() => setIsEditModalOpen(!isEditModalOpen)}
@@ -185,8 +185,8 @@ export default function AddressDetailPage() {
         isFooterLeftAligned
       >
         <EditAddress
-          name={addressDetail.ObjectMeta.Name}
-          type={addressDetail.Spec.Plan.Spec.AddressType}
+          name={addressDetail.objectMeta.name}
+          type={addressDetail.spec.plan.spec.addressType}
           plan={addressPlan || ""}
           addressSpacePlan={addressSpacePlan}
           onChange={setAddressPlan}
@@ -195,8 +195,8 @@ export default function AddressDetailPage() {
       {isDeleteModalOpen && (
         <DialoguePrompt
           option="Delete"
-          detail={`Are you sure you want to delete this address: ${addressDetail.Spec.Address} ?`}
-          names={[addressDetail.ObjectMeta.Name]}
+          detail={`Are you sure you want to delete this address: ${addressDetail.spec.address} ?`}
+          names={[addressDetail.objectMeta.name]}
           header="Delete this Address ?"
           handleCancelDialogue={handleCancelDelete}
           handleConfirmDialogue={handleDelete}

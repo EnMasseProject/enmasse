@@ -53,15 +53,15 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
     {
       variables: {
         as: {
-          ObjectMeta: {
-            Name: name,
-            Namespace: namespace
+          objectMeta: {
+            name: name,
+            namespace: namespace
           },
-          Spec: {
-            Plan: plan ? plan.toLowerCase() : "",
-            Type: type ? type.toLowerCase() : "",
-            AuthenticationService: {
-              Name: authenticationService
+          spec: {
+            plan: plan ? plan.toLowerCase() : "",
+            type: type ? type.toLowerCase() : "",
+            authenticationService: {
+              name: authenticationService
             }
           }
         }

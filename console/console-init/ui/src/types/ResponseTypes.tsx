@@ -4,32 +4,32 @@
  */
 
 export interface IMetrics {
-  Name: string;
-  Type: string;
-  Value: number;
-  Units: string;
+  name: string;
+  type: string;
+  value: number;
+  units: string;
 }
 
 export interface IConnectionDetailResponse {
   connections: {
     Total: number;
     Connections: Array<{
-      ObjectMeta: {
-        Name: string;
-        Namespace: string;
-        CreationTimestamp: string;
+      objectMeta: {
+        name: string;
+        namespace: string;
+        creationTimestamp: string;
       };
-      Spec: {
-        Hostname: string;
-        ContainerId: string;
-        Protocol: string;
-        Encrypted: boolean;
-        Properties: Array<{
-          Key: string;
-          Value: string;
+      spec: {
+        hostname: string;
+        containerId: string;
+        protocol: string;
+        encrypted: boolean;
+        properties: Array<{
+          key: string;
+          value: string;
         }>;
       };
-      Metrics: Array<IMetrics>;
+      metrics: Array<IMetrics>;
     }>;
   };
 }
@@ -38,31 +38,31 @@ export interface IAddressResponse {
   addresses: {
     Total: number;
     Addresses: Array<{
-      ObjectMeta: {
-        Namespace: string;
-        Name: string;
+      objectMeta: {
+        namespace: string;
+        name: string;
       };
-      Spec: {
-        Address: string;
-        Type: string;
-        Plan: {
-          Spec: {
-            DisplayName: string;
+      spec: {
+        address: string;
+        type: string;
+        plan: {
+          spec: {
+            displayName: string;
           };
-          ObjectMeta: {
-            Name: string;
+          objectMeta: {
+            name: string;
           };
         };
       };
-      Status: {
-        PlanStatus: {
-          Partitions: number;
+      status: {
+        planStatus: {
+          partitions: number;
         };
-        IsReady: boolean;
-        Messages: Array<string>;
-        Phase: string;
+        isReady: boolean;
+        messages: Array<string>;
+        phase: string;
       };
-      Metrics: Array<IMetrics>;
+      metrics: Array<IMetrics>;
     }>;
   };
 }
@@ -70,17 +70,17 @@ export interface IConnectionListResponse {
   connections: {
     Total: number;
     Connections: Array<{
-      ObjectMeta: {
-        Name: string;
-        CreationTimestamp: string;
+      objectMeta: {
+        name: string;
+        creationTimestamp: string;
       };
-      Spec: {
-        Hostname: string;
-        ContainerId: string;
-        Protocol: string;
-        Encrypted: boolean;
+      spec: {
+        hostname: string;
+        containerId: string;
+        protocol: string;
+        encrypted: boolean;
       };
-      Metrics: Array<IMetrics>;
+      metrics: Array<IMetrics>;
     }>;
   };
 }
@@ -93,30 +93,30 @@ export interface IAddressDetailResponse {
   addresses: {
     Total: number;
     Addresses: Array<{
-      ObjectMeta: {
-        Name: string;
-        Namespace: String;
-        CreationTimestamp: string;
+      objectMeta: {
+        name: string;
+        namespace: String;
+        creationTimestamp: string;
       };
-      Spec: {
-        Address: string;
-        Topic: string | null;
-        Plan: {
-          Spec: {
-            DisplayName: string;
-            AddressType: string;
+      spec: {
+        address: string;
+        topic: string | null;
+        plan: {
+          spec: {
+            displayName: string;
+            addressType: string;
           };
         };
       };
-      Status: {
-        IsReady: string;
-        Messages: string;
-        Phase: string;
-        PlanStatus: {
-          Partitions: number;
+      status: {
+        isReady: string;
+        messages: string;
+        phase: string;
+        planStatus: {
+          partitions: number;
         };
       };
-      Metrics: Array<IMetrics>;
+      metrics: Array<IMetrics>;
     }>;
   };
 }
@@ -124,31 +124,31 @@ export interface IAddressLinksResponse {
   addresses: {
     Total: number;
     Addresses: Array<{
-      ObjectMeta: {
-        Name: string;
+      objectMeta: {
+        name: string;
       };
-      Spec: {
-        AddressSpace: string;
+      spec: {
+        addressSpace: string;
       };
-      Links: {
+      links: {
         Total: number;
         Links: Array<{
-          ObjectMeta: {
-            Name: string;
+          objectMeta: {
+            name: string;
           };
-          Spec: {
-            Role: string;
-            Connection: {
-              ObjectMeta: {
-                Name: string;
-                Namespace: string;
+          spec: {
+            role: string;
+            connection: {
+              objectMeta: {
+                name: string;
+                namespace: string;
               };
-              Spec: {
-                ContainerId: string;
+              spec: {
+                containerId: string;
               };
             };
           };
-          Metrics: IMetrics[];
+          metrics: IMetrics[];
         }>;
       };
     }>;
@@ -159,19 +159,19 @@ export interface IAddressSpacesResponse {
   addressSpaces: {
     Total: number;
     AddressSpaces: Array<{
-      ObjectMeta: {
-        Name: string;
-        Namespace: string;
-        CreationTimestamp: string;
+      objectMeta: {
+        name: string;
+        namespace: string;
+        creationTimestamp: string;
       };
-      Spec: {
-        Type: string;
-        Plan: {
-          ObjectMeta: {
-            Name: string;
+      spec: {
+        type: string;
+        plan: {
+          objectMeta: {
+            name: string;
           };
-          Spec: {
-            DisplayName: string;
+          spec: {
+            displayName: string;
           };
         };
         AuthenticationService: {
@@ -179,9 +179,9 @@ export interface IAddressSpacesResponse {
         };
       };
       Status: {
-        IsReady: boolean;
-        Phase: string;
-        Messages: Array<string>;
+        isReady: boolean;
+        phase: string;
+        messages: Array<string>;
       };
     }>;
   };
@@ -191,21 +191,21 @@ export interface IConnectionLinksResponse {
   connections: {
     Total: number;
     Connections: Array<{
-      ObjectMeta: {
-        Name: string;
-        Namespace: string;
+      objectMeta: {
+        name: string;
+        namespace: string;
       };
-      Links: {
+      links: {
         Total: number;
         Links: Array<{
-          ObjectMeta: {
-            Name: string;
+          objectMeta: {
+            name: string;
           };
-          Spec: {
-            Role: string;
-            Address: string;
+          spec: {
+            role: string;
+            address: string;
           };
-          Metrics: Array<IMetrics>;
+          metrics: Array<IMetrics>;
         }>;
       };
     }>;
@@ -216,11 +216,11 @@ export interface IConnectionLinksNameSearchResponse {
   connections: {
     Total: number;
     Connections: Array<{
-      Links: {
+      links: {
         Total: number;
         Links: Array<{
-          ObjectMeta: {
-            Name: string;
+          objectMeta: {
+            name: string;
           };
         }>;
       };
@@ -231,11 +231,11 @@ export interface IConnectionLinksAddressSearchResponse {
   connections: {
     Total: number;
     Connections: Array<{
-      Links: {
+      links: {
         Total: number;
         Links: Array<{
-          Spec: {
-            Address: string;
+          spec: {
+            address: string;
           };
         }>;
       };
@@ -247,11 +247,11 @@ export interface ISearchAddressLinkNameResponse {
   addresses: {
     Total: number;
     Addresses: Array<{
-      Links: {
+      links: {
         Total: number;
         Links: Array<{
-          ObjectMeta: {
-            Name: string;
+          objectMeta: {
+            name: string;
           };
         }>;
       };
@@ -263,13 +263,13 @@ export interface ISearchAddressLinkContainerResponse {
   addresses: {
     Total: number;
     Addresses: Array<{
-      Links: {
+      links: {
         Total: number;
         Links: Array<{
-          Spec: {
-            Connection: {
-              Spec: {
-                ContainerId: string;
+          spec: {
+            connection: {
+              spec: {
+                containerId: string;
               };
             };
           };
@@ -283,9 +283,9 @@ export interface ISearchNameOrNameSpaceAddressSpaceListResponse {
   addressSpaces: {
     Total: number;
     AddressSpaces: Array<{
-      ObjectMeta: {
-        Name: string;
-        Namespace: string;
+      objectMeta: {
+        name: string;
+        namespace: string;
       };
     }>;
   };
@@ -295,8 +295,8 @@ export interface IAddressListNameSearchResponse {
   addresses: {
     Total: number;
     Addresses: Array<{
-      Spec: {
-        Address: string;
+      spec: {
+        address: string;
       };
     }>;
   };
@@ -306,9 +306,9 @@ export interface IConnectionListNameSearchResponse {
   connections: {
     Total: number;
     Connections: Array<{
-      Spec: {
-        Hostname: string;
-        ContainerId: string;
+      spec: {
+        hostname: string;
+        containerId: string;
       };
     }>;
   };
@@ -316,9 +316,9 @@ export interface IConnectionListNameSearchResponse {
 
 export interface IUserDetail {
   whoami: {
-    ObjectMeta: {
-      Name: string;
+    objectMeta: {
+      name: string;
     };
-    FullName: string;
+    fullName: string;
   };
 }

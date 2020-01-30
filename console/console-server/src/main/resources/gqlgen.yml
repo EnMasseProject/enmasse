@@ -25,6 +25,8 @@ autobind:
 models:
   ObjectMeta_v1:
     model: v1.ObjectMeta
+  Metadata_consoleapi_enmasse_io_v1beta1:
+    model: consolegraphql.Metadata
   Namespace_v1:
     model: k8s.io/api/core/v1.Namespace
   NamespaceStatus_v1:

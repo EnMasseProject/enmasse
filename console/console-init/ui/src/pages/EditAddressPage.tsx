@@ -25,12 +25,12 @@ interface IEditAddressProps {
 
 interface IAddressPlans {
   addressPlans: Array<{
-    ObjectMeta: {
-      Name: String;
+    objectMeta: {
+      name: String;
     };
-    Spec: {
-      AddressType: string;
-      DisplayName: string;
+    spec: {
+      addressType: string;
+      displayName: string;
     };
   }>;
 }
@@ -55,8 +55,8 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
   let optionsPlan: any[] = addressPlans
     .map(plan => {
       return {
-        value: plan.ObjectMeta.Name,
-        label: plan.Spec.DisplayName,
+        value: plan.objectMeta.name,
+        label: plan.spec.displayName,
         disabled: false
       };
     })

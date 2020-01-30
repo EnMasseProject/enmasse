@@ -194,7 +194,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       } else {
         const obtainedList = response.data.connections.Connections.map(
           (connection: any) => {
-            return connection.Spec.Hostname;
+            return connection.spec.hostname;
           }
         );
         setHostnameOptions(Array.from(new Set(obtainedList)));
@@ -242,7 +242,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       } else {
         const obtainedList = response.data.connections.Connections.map(
           (connection: any) => {
-            return connection.Spec.ContainerId;
+            return connection.spec.containerId;
           }
         );
         setContainerOptions(Array.from(new Set(obtainedList)));
