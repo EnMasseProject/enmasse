@@ -123,7 +123,8 @@ Queue.prototype.purge = function () {
     if (process.env.ADDRESS_SPACE_TYPE === 'brokered') {
         return purge_brokered_queue(queueName);
     } else {
-        var brokerNames = addr.status.brokerStatuses.map(function (brokerStatus) {
+        var brokerStatuses = 'status' in addr && 'brokerStatuses' in addr.status ? addr.status.brokerStatuses : [];
+        var brokerNames = brokerStatuses.map(function (brokerStatus) {
             return brokerStatus.clusterId;
         });
        return get_pods(brokerNames).then(
