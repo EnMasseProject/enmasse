@@ -22,7 +22,7 @@ import { StyleSheet, css } from "@patternfly/react-styles";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
-import { ADDRESS_COMMAND_PRIVEW_DETAIL } from "src/Queries/Queries";
+import { ADDRESS_COMMAND_PRIVIEW_DETAIL } from "src/Queries/Queries";
 
 export interface IAddressPreview {
   name?: string;
@@ -52,7 +52,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   const [keepInViewChecked, setKeepInViewChecked] = React.useState<boolean>(
     false
   );
-  const { data, loading, error } = useQuery(ADDRESS_COMMAND_PRIVEW_DETAIL, {
+  const { data, loading, error } = useQuery(ADDRESS_COMMAND_PRIVIEW_DETAIL, {
     variables: {
       a: {
         ObjectMeta: {
@@ -62,7 +62,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
         Spec: {
           Plan: plan ? plan.toLowerCase() : "",
           Type: type ? type.toLowerCase() : "",
-          Topic: topic,
+          ...(topic && topic.trim() != "" && { Topic: topic }),
           AddressSpace: addressspace,
           Address: name
         }
