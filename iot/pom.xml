@@ -13,7 +13,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <hono.version>1.0.2</hono.version>
+    <hono.version>1.0.3</hono.version>
     <infinispan.version>9.4.16.Final</infinispan.version>
 
     <!-- align with Hono compatible versions -->
