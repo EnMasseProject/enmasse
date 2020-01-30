@@ -471,8 +471,8 @@ spec:
       image: ${env.CONSOLE_PROXY_OPENSHIFT_IMAGE}
     - name: console-proxy-kubernetes
       image: ${env.CONSOLE_PROXY_KUBERNETES_IMAGE}
-    - name: console-httpd
-      image: ${env.CONSOLE_HTTPD_IMAGE}
+    - name: console-server
+      image: ${env.CONSOLE_SERVER_IMAGE}
     - name: controller-manager
       image: ${env.CONTROLLER_MANAGER_IMAGE}
     - name: iot-proxy-configurator
@@ -525,6 +525,17 @@ spec:
         - apiGroups: [ "batch" ]
           resources: [ "jobs" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+      - serviceAccountName: console-server
+        rules:
+        - apiGroups: [ "admin.enmasse.io" ]
+          resources: [ "authenticationservices", "addressplans", "addressspaceplans" ]
+          verbs: [ "get", "list", "watch" ]
+        - apiGroups: [ "" ]
+          resources: [ "services" ]
+          verbs: [ "get", "list", "watch" ]
+        - apiGroups: [ "" ]
+          resources: [ "secrets" ]
+          verbs: [ "get" ]
       - serviceAccountName: address-space-controller
         rules:
         - apiGroups: [ "admin.enmasse.io" ]
@@ -614,6 +625,14 @@ spec:
           resources: [ "apiservices" ]
           resourceNames: [ "v1alpha1.enmasse.io", "v1beta1.enmasse.io", "v1alpha1.user.enmasse.io", "v1beta1.user.enmasse.io" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+      - serviceAccountName: console-server
+        rules:
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "addressspaces", "addresses", "addressspaceschemas" ]
+          verbs: [ "get", "list", "watch" ]
+        - apiGroups: [ "" ]
+          resources: [ "namespaces" ]
+          verbs: [ "get", "list", "watch" ]
       - serviceAccountName: iot-device-registry
         rules:
         - apiGroups: [ "authentication.k8s.io" ]
@@ -745,12 +764,12 @@ spec:
                   value: "true"
                 - name: CONSOLE_INIT_IMAGE
                   value: "${env.CONSOLE_INIT_IMAGE}"
+                - name: CONSOLE_SERVER_IMAGE
+                  value: "${env.CONSOLE_SERVER_IMAGE}"
                 - name: CONSOLE_PROXY_OPENSHIFT_IMAGE
                   value: "${env.CONSOLE_PROXY_OPENSHIFT_IMAGE}"
                 - name: CONSOLE_PROXY_KUBERNETES_IMAGE
                   value: "${env.CONSOLE_PROXY_KUBERNETES_IMAGE}"
-                - name: CONSOLE_HTTPD_IMAGE
-                  value: "${env.CONSOLE_HTTPD_IMAGE}"
                 - name: "FS_GROUP_FALLBACK_MAP"
                   value: "{\"standard-authservice\": 1000}"
   customresourcedefinitions:
