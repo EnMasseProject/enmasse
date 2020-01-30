@@ -192,7 +192,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                 !isNameValid ? (
                   <small>
                     Only digits (0-9), lower case letters (a-z), -, and .
-                    allowed.
+                    allowed, and should start with alpha-numeric characters. 
                   </small>
                 ) : (
                   ""
