@@ -13,7 +13,7 @@ import {
   IDropdown,
   IDropdownOption
 } from "src/Components/Common/FilterDropdown";
-import { type } from "os";
+import { regexp } from "../../Types/Configs";
 interface ICreateAddressProps {
   name: string;
   namespace: string;
@@ -47,7 +47,6 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
   const [isNameValid, setIsNameValid] = React.useState(true);
   const handleAddressChange = (name: string) => {
     setAddressName(name);
-    let regexp = new RegExp("^[0-9a-z.-]+$");
     !regexp.test(name) ? setIsNameValid(false) : setIsNameValid(true);
   };
 
