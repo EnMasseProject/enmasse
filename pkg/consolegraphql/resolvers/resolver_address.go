@@ -7,14 +7,12 @@ package resolvers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
-	yaml "gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"strings"
@@ -197,23 +195,8 @@ func (r *queryResolver) AddressCommand(ctx context.Context, input v1beta1.Addres
 		input.TypeMeta.Kind = "Address"
 	}
 
-	bytes, err := json.Marshal(input)
-	if err != nil {
-		return "", err
-	}
+	namespace := input.Namespace
+	input.Namespace = ""
 
-	jsonMap := make(map[string]interface{})
-	err = json.Unmarshal(bytes, &jsonMap)
-
-	if err != nil {
-		return "", err
-	}
-
-	bytes, err = yaml.Marshal(jsonMap)
-
-	if err == nil {
-		return  "oc apply -f - << EOF \n" +string(bytes)+ "\nEOF", nil
-	} else {
-		return "", err
-	}
+	return generateApplyCommand(input, namespace)
 }
