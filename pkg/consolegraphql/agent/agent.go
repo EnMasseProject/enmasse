@@ -134,6 +134,7 @@ func (aad *amqpAgentDelegate) doCollect() error {
 		amqp.ConnSASLXOAUTH2("unused", aad.bearerToken, amqpOverrideSaslFrameSize),
 		amqp.ConnServerHostname(aad.host),
 		amqp.ConnProperty("product", "console-server"),
+		amqp.ConnConnectTimeout(time.Second * 10),
 	)
 	if err != nil {
 		return err
@@ -425,6 +426,7 @@ func (ad *amqpAgentCommandDelegate) doProcess(addr string) error {
 		amqp.ConnSASLXOAUTH2("unused", ad.bearerToken, amqpOverrideSaslFrameSize),
 		amqp.ConnServerHostname(ad.aac.host),
 		amqp.ConnProperty("product", "command-delegate; console-server"),
+		amqp.ConnConnectTimeout(time.Second * 10),
 	)
 	if err != nil {
 		return err

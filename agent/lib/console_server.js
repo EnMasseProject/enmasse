@@ -99,8 +99,13 @@ function ConsoleServer (address_ctrl, env, openshift) {
                 self.authz.set_admin(connection);
             }
         }
+        log.info("[%s] Console connection open [%j]", connection.options.username, connection.properties);
     });
-    this.amqp_container.on('connection_close', unsubscribe);
+    this.amqp_container.on('connection_close', function(context) {
+        var connection = context.connection;
+        log.info("[%s] Console connection closed [%j]", connection.options.username, connection.properties);
+        unsubscribe(context);
+    });
     this.amqp_container.on('disconnected', unsubscribe);
     this.amqp_container.on('message', function (context) {
         var accept = function () {
