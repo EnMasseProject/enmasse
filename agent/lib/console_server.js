@@ -104,11 +104,9 @@ function ConsoleServer (address_ctrl, env, openshift) {
     this.amqp_container.on('disconnected', unsubscribe);
     this.amqp_container.on('message', function (context) {
         var accept = function () {
-            log.info('%s request succeeded', context.message.subject);
             context.delivery.accept();
         };
         var reject = function (e, code) {
-            log.info('%s request failed: %s', context.message.subject, e);
             context.delivery.reject({condition: code || 'amqp:internal-error', description: '' + e});
         };
         var sendResponse = function (sender, message, outcome, error) {
@@ -152,14 +150,25 @@ function ConsoleServer (address_ctrl, env, openshift) {
             reject(context, 'amqp:unauthorized-access', 'not authorized');
         } else if (context.message.subject === 'purge_address') {
             accept();
-            log.info('[%s] purging address %s', user, context.message.body.address);
-            queue(context.message.body).purge().then(purged => {
-                log.info("[%s] Purged %d message(s) from address %s", user, purged, context.message.body.address);
-                sendResponse(responseSender, context.message, true);
-            }).catch((e) => {
-                var error = extractServerResponse(e);
-                sendResponse(responseSender, context.message, false, error);
-            });
+            var name = context.message.body.address;
+            log.info('[%s] purging address %s', user, name);
+
+            var a = name.split(".", 2);
+            if (a.length !== 2) {
+                sendResponse(responseSender, context.message, false, "unexpected address name : " + name);
+            } else {
+                var addr = self.addresses.get(a[1]);
+                if (addr) {
+                    queue(addr).purge().then(purged => {
+                        log.info("[%s] Purged %d message(s) from address %s", user, purged, context.message.body.address);
+                        sendResponse(responseSender, context.message, true);
+                    }).catch((e) => {
+                        sendResponse(responseSender, context.message, false, extractServerResponse(e));
+                    });
+                } else {
+                    sendResponse(responseSender, context.message, false, "could not find address with name : " + name);
+                }
+            }
         } else {
             reject('ignoring message: ' + context.message);
         }
