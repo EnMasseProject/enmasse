@@ -6,7 +6,7 @@
 import React, { createElement } from "react";
 import { MemoryRouter } from "react-router";
 import { Button } from "@patternfly/react-core";
-import { DeletePrompt } from "../Components/Common/DeletePrompt";
+import { DialoguePrompt } from "../Components/Common/DialoguePrompt";
 import { text } from "@storybook/addon-knobs";
 
 export default {
@@ -23,19 +23,19 @@ export const deleteAddressPrompt = () => {
         <Button
           onClick={() => {
             setIsOpen(!isOpen);
-          }}
-        >
+          }}>
           Open Modal On Delete
         </Button>
-        <DeletePrompt
+        <DialoguePrompt
+          option="Delete"
           header={text("Header", "Delete the Address ?")}
-          name={text("Name at top of detials", "leo_b")}
+          names={[text("Name at top of detials", "leo_b")]}
           detail={text(
             "Details",
             "There are some description that telling users what would happenafter deleting this address."
           )}
-          handleConfirmDelete={handleDelete}
-          handleCancelDelete={handleCancel}
+          handleConfirmDialogue={handleDelete}
+          handleCancelDialogue={handleCancel}
         />
       </MemoryRouter>
     );

@@ -51,8 +51,10 @@ interface IAddressListFilterProps {
 
 interface IAddressListKebabProps {
   createAddressOnClick: () => void;
-  onDeleteAllAddress:()=>void;
-  onPurgeAllAddress:()=>void;
+  onDeleteAllAddress: () => void;
+  onPurgeAllAddress: () => void;
+  isDeleteAllDisabled: boolean;
+  isPurgeAllDisabled: boolean;
 }
 export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps> = ({
   filterValue,
@@ -101,17 +103,22 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
     if (filterValue && filterValue === "Address") {
       if (nameSelected && nameSelected.trim() !== "")
         if (
-          filterNames.map(filter => filter.value).indexOf(nameSelected.trim()) < 0
+          filterNames.map(filter => filter.value).indexOf(nameSelected.trim()) <
+          0
         ) {
-          setFilterNames([...filterNames, { value: nameSelected.trim(), isExact: true }]);
+          setFilterNames([
+            ...filterNames,
+            { value: nameSelected.trim(), isExact: true }
+          ]);
           setNameSelected(undefined);
         }
     }
     if (!nameSelected && nameInput && nameInput.trim() !== "")
-      if (
-        filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0
-      )
-        setFilterNames([...filterNames, { value: nameInput.trim(), isExact: false }]);
+      if (filterNames.map(filter => filter.value).indexOf(nameInput.trim()) < 0)
+        setFilterNames([
+          ...filterNames,
+          { value: nameInput.trim(), isExact: false }
+        ]);
   };
 
   const onFilterSelect = (event: any) => {
@@ -189,7 +196,9 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
       case "Address":
         let index;
         if (filterNames && id) {
-          index = filterNames.map(filter => filter.value).indexOf(id.toString());
+          index = filterNames
+            .map(filter => filter.value)
+            .indexOf(id.toString());
           if (index >= 0) filterNames.splice(index, 1);
           setFilterNames([...filterNames]);
         }
@@ -237,8 +246,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                 key={option.key}
                 value={option.value}
                 itemID={option.key}
-                component={"button"}
-              >
+                component={"button"}>
                 {option.value}
               </DropdownItem>
             ))}
@@ -250,8 +258,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
               <DataToolbarFilter
                 chips={filterNames.map(filter => filter.value)}
                 deleteChip={onDelete}
-                categoryName="Address"
-              >
+                categoryName="Address">
                 {filterValue && filterValue === "Address" && (
                   <InputGroup>
                     <Select
@@ -271,8 +278,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                       ariaLabelledBy={"typeahead-select-id"}
                       placeholderText="Select Address"
                       isDisabled={false}
-                      isCreatable={false}
-                    >
+                      isCreatable={false}>
                       {nameOptions && nameOptions.length > 0 ? (
                         nameOptions.map((option, index) => (
                           <SelectOption key={index} value={option} />
@@ -296,8 +302,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                       id={"al-filter-select-name-search"}
                       variant={ButtonVariant.control}
                       aria-label="search button for search input"
-                      onClick={onClickSearchIcon}
-                    >
+                      onClick={onClickSearchIcon}>
                       <SearchIcon />
                     </Button>
                   </InputGroup>
@@ -308,8 +313,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
               <DataToolbarFilter
                 chips={typeValue ? [typeValue] : []}
                 deleteChip={onDelete}
-                categoryName="Type"
-              >
+                categoryName="Type">
                 {filterValue === "Type" && (
                   <Dropdown
                     id={"al-filter-select-type-dropdown"}
@@ -327,8 +331,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                         key={option.key}
                         value={option.value}
                         itemID={option.key}
-                        component={"button"}
-                      >
+                        component={"button"}>
                         {option.value}
                       </DropdownItem>
                     ))}
@@ -340,8 +343,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
               <DataToolbarFilter
                 chips={statusValue ? [statusValue] : []}
                 deleteChip={onDelete}
-                categoryName="Status"
-              >
+                categoryName="Status">
                 {filterValue === "Status" && (
                   <Dropdown
                     id={"al-filter-select-status-dropdown"}
@@ -359,8 +361,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                         key={option.key}
                         value={option.value}
                         itemID={option.key}
-                        component={"button"}
-                      >
+                        component={"button"}>
                         {option.value}
                       </DropdownItem>
                     ))}
@@ -387,8 +388,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
             )}
           </>
         }
-        breakpoint="xl"
-      >
+        breakpoint="xl">
         {toggleGroupItems}
       </DataToolbarToggleGroup>
     </>
@@ -398,7 +398,9 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
 export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> = ({
   createAddressOnClick,
   onDeleteAllAddress,
-  onPurgeAllAddress
+  onPurgeAllAddress,
+  isDeleteAllDisabled,
+  isPurgeAllDisabled
 }) => {
   const [isKebabOpen, setIsKebabOpen] = React.useState(false);
   const dropdownItems = [
@@ -407,33 +409,27 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
       key="delete-all"
       value="deleteAll"
       component="button"
-    >
-      Delete All
+      isDisabled={isDeleteAllDisabled}>
+      Delete Selected
     </DropdownItem>,
     <DropdownItem
       id="al-filter-dropdown-item-purgeall"
       key="purge-all"
       value="purgeAll"
       component="button"
-    >
-      Purge All
+      isDisabled={isPurgeAllDisabled}>
+      Purge Selected
     </DropdownItem>
-    // <OverflowMenuDropdownItem key="secondary" isShared={true}>
-    //   Create Address
-    // </OverflowMenuDropdownItem>,
-    // <OverflowMenuDropdownItem key="delete-all">
-    //   Delete All
-    // </OverflowMenuDropdownItem>
   ];
   const onKebabToggle = (isOpen: boolean) => {
     setIsKebabOpen(isOpen);
   };
 
-  const onKebabSelect = async(event: any) => {
-    if(event.target.value){
-      if(event.target.value==="purgeAll"){
+  const onKebabSelect = async (event: any) => {
+    if (event.target.value) {
+      if (event.target.value === "purgeAll") {
         await onPurgeAllAddress();
-      } else if(event.target.value==="deleteAll") {
+      } else if (event.target.value === "deleteAll") {
         await onDeleteAllAddress();
       }
     }
@@ -449,8 +445,7 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
               <Button
                 id="al-filter-overflow-button"
                 variant={ButtonVariant.primary}
-                onClick={createAddressOnClick}
-              >
+                onClick={createAddressOnClick}>
                 Create Address
               </Button>
             </OverflowMenuItem>
@@ -460,7 +455,12 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
           <Dropdown
             id="al-filter-overflow-dropdown"
             onSelect={onKebabSelect}
-            toggle={<KebabToggle id="al-filter-overflow-kebab" onToggle={onKebabToggle} />}
+            toggle={
+              <KebabToggle
+                id="al-filter-overflow-kebab"
+                onToggle={onKebabToggle}
+              />
+            }
             isOpen={isKebabOpen}
             isPlain
             dropdownItems={dropdownItems}

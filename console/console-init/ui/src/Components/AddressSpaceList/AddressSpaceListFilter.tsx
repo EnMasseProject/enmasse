@@ -49,6 +49,7 @@ interface IAddressSpaceListFilterProps {
 
 interface IAddressSpaceListKebabProps {
   createAddressSpaceOnClick: () => void;
+  isDeleteAllDisabled:boolean;
   onDeleteAll: () => void;
 }
 export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFilterProps> = ({
@@ -507,13 +508,14 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
 
 export const AddressSpaceListKebab: React.FunctionComponent<IAddressSpaceListKebabProps> = ({
   createAddressSpaceOnClick,
-  onDeleteAll
+  onDeleteAll,
+  isDeleteAllDisabled
 }) => {
   const [isKebabOpen, setIsKebabOpen] = React.useState(false);
 
   const dropdownItems = [
-    <DropdownItem id="as-list-delete-all" key="delete-all" component="button" value="deleteAll">
-      Delete All
+    <DropdownItem id="as-list-delete-all" key="delete-all" component="button" value="deleteAll" isDisabled={isDeleteAllDisabled}>
+      Delete Selected
     </DropdownItem>
     // <OverflowMenuDropdownItem key="secondary" isShared={true}>
     //   Create Address

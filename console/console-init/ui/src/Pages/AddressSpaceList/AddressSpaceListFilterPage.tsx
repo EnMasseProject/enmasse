@@ -34,6 +34,7 @@ interface IAddressSpaceListFilterPageProps {
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
   onDeleteAll:()=>void;
+  isDeleteAllDisabled:boolean;
 }
 export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceListFilterPageProps> = ({
   filterValue,
@@ -50,7 +51,8 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
   setSortValue,
   isCreateWizardOpen,
   setIsCreateWizardOpen,
-  onDeleteAll
+  onDeleteAll,
+  isDeleteAllDisabled
 }) => {
   const { width } = useWindowDimensions();
   const onClearAllFilters = () => {
@@ -96,6 +98,7 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
         <AddressSpaceListKebab
           createAddressSpaceOnClick={createAddressSpaceOnClick}
           onDeleteAll={onDeleteAll}
+          isDeleteAllDisabled={isDeleteAllDisabled}
         />
       </DataToolbarItem>
     </>
