@@ -62,9 +62,10 @@ type amqpAgentDelegate struct {
 	commandDelegates            map[string]commandDelegatePair
 	commandDelegatesMux         sync.Mutex
 	commandDelegateExpiryPeriod time.Duration
+	connectTimeout              time.Duration
 }
 
-func NewAmqpAgentDelegate(bearerToken, host string, port int32, tlsConfig *tls.Config, addressSpaceNamespace, addressSpace, infraUuid string, expirePeriod time.Duration) Delegate {
+func NewAmqpAgentDelegate(bearerToken, host string, port int32, tlsConfig *tls.Config, addressSpaceNamespace, addressSpace, infraUuid string, expirePeriod, connectTimeout time.Duration) Delegate {
 	return &amqpAgentDelegate{
 		bearerToken:                 bearerToken,
 		host:                        host,
@@ -77,6 +78,7 @@ func NewAmqpAgentDelegate(bearerToken, host string, port int32, tlsConfig *tls.C
 		stoppedchan:                 make(chan struct{}),
 		commandDelegates:            make(map[string]commandDelegatePair),
 		commandDelegateExpiryPeriod: expirePeriod,
+		connectTimeout:              connectTimeout,
 	}
 }
 
@@ -139,7 +141,7 @@ func (aad *amqpAgentDelegate) doCollect() error {
 		amqp.ConnSASLXOAUTH2("unused", aad.bearerToken, amqpOverrideSaslFrameSize),
 		amqp.ConnServerHostname(aad.host),
 		amqp.ConnProperty("product", "console-server"),
-		amqp.ConnConnectTimeout(time.Second*10),
+		amqp.ConnConnectTimeout(aad.connectTimeout),
 	)
 	if err != nil {
 		return err
@@ -432,7 +434,7 @@ func (ad *amqpAgentCommandDelegate) doProcess(addr string) error {
 		amqp.ConnSASLXOAUTH2("unused", ad.bearerToken, amqpOverrideSaslFrameSize),
 		amqp.ConnServerHostname(ad.aac.host),
 		amqp.ConnProperty("product", "command-delegate; console-server"),
-		amqp.ConnConnectTimeout(time.Second*10),
+		amqp.ConnConnectTimeout(ad.aac.connectTimeout),
 	)
 	if err != nil {
 		return err

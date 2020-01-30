@@ -224,6 +224,7 @@ http://localhost:` + port + `/graphql
 	dumpCachePeriod := util.GetDurationEnvOrDefault("DUMP_CACHE_PERIOD", time.Second * 0)
 	updateMetricsPeriod := util.GetDurationEnvOrDefault("UPDATE_METRICS_PERIOD", time.Second * 5)
 	agentCommandDelegateExpiryPeriod := util.GetDurationEnvOrDefault("AGENT_COMMAND_DELEGATE_EXPIRY_PERIOD", time.Minute * 5)
+	agentAmqpConnectTimeout := util.GetDurationEnvOrDefault("AGENT_AMQP_CONNECT_TIMEOUT", time.Second * 10)
 
 	log.Printf("Namespace: %s\n", infraNamespace)
 
@@ -316,7 +317,10 @@ http://localhost:` + port + `/graphql
 			}
 			watcher, err := watchers.NewAgentWatcher(objectCache, infraNamespace,
 				func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, tlsConfig *tls.Config) agent.Delegate {
-					return agent.NewAmqpAgentDelegate(config.BearerToken, host, port, tlsConfig, addressSpaceNamespace, addressSpace, infraUuid, agentCommandDelegateExpiryPeriod)
+					return agent.NewAmqpAgentDelegate(config.BearerToken,
+						host, port, tlsConfig,
+						addressSpaceNamespace, addressSpace, infraUuid,
+						agentCommandDelegateExpiryPeriod, agentAmqpConnectTimeout)
 				}, *developmentMode, watcherConfigs...)
 			getCollector = watcher.Collector
 			return watcher, err
