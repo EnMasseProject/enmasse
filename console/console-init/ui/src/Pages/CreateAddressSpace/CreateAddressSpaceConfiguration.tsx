@@ -25,6 +25,7 @@ import {
 } from "src/Queries/Queries";
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
+import { regexp } from "../../Types/Configs";
 const styles = StyleSheet.create({
   capitalize_labels: {
     "text-transform": "capitalize"
@@ -43,7 +44,7 @@ export interface IAddressSpaceConfiguration {
   authenticationService: string;
   setAuthenticationService: (authenticationService: string) => void;
   isNameValid: boolean;
-  setIsNameValid:(isNameValid:boolean)=>void
+  setIsNameValid: (isNameValid: boolean) => void;
 }
 export interface IAddressSpacePlans {
   addressSpacePlans: Array<{
@@ -59,16 +60,16 @@ export interface IAddressSpacePlans {
 }
 
 export interface IAddressSpaceAuthServiceResponse {
-  addressSpaceSchema_v2: IAddressSpaceAuthService[]
+  addressSpaceSchema_v2: IAddressSpaceAuthService[];
 }
 
 export interface IAddressSpaceAuthService {
   ObjectMeta: {
     Name: string;
-  }
+  };
   Spec: {
     AuthenticationServices: string[];
-  }
+  };
 }
 
 export interface INamespaces {
@@ -120,14 +121,15 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   };
 
   React.useEffect(() => {
-    if(type === "standard") setIsStandardChecked(true);
-    else if(type === "brokered") setIsBrokeredChecked(true);
+    if (type === "standard") setIsStandardChecked(true);
+    else if (type === "brokered") setIsBrokeredChecked(true);
   }, []);
 
   const { loading, error, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
 
-  const { data : authenticationServices } = useQuery<IAddressSpaceAuthServiceResponse>(RETURN_AUTHENTICATION_SERVICES) 
-    || { data: {addressSpaceSchema_v2 : []}}
+  const { data: authenticationServices } = useQuery<
+    IAddressSpaceAuthServiceResponse
+  >(RETURN_AUTHENTICATION_SERVICES) || { data: { addressSpaceSchema_v2: [] } };
 
   const { addressSpacePlans } = useQuery<IAddressSpacePlans>(
     RETURN_ADDRESS_SPACE_PLANS
@@ -146,7 +148,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   let planOptions: any[] = [];
 
   let authenticationServiceOptions: any[] = [];
-  
+
   namespaceOptions = namespaces.map(namespace => {
     return {
       value: namespace.ObjectMeta.Name,
@@ -169,17 +171,18 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   }
 
   if (authenticationServices) {
-    authenticationServices.addressSpaceSchema_v2
-      .forEach(authService => {
-        if(authService.ObjectMeta.Name === type){
-          authenticationServiceOptions = authService.Spec.AuthenticationServices.map(service => {
+    authenticationServices.addressSpaceSchema_v2.forEach(authService => {
+      if (authService.ObjectMeta.Name === type) {
+        authenticationServiceOptions = authService.Spec.AuthenticationServices.map(
+          service => {
             return {
               value: service,
               label: service
             };
-          });
-        }
-      });
+          }
+        );
+      }
+    });
   }
 
   const handleBrokeredChange = () => {
@@ -199,7 +202,6 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   };
 
   const handleNameChange = (name: string) => {
-    let regexp = new RegExp("^[0-9a-z.-]+$");
     setName(name);
     !regexp.test(name) ? setIsNameValid(false) : setIsNameValid(true);
   };
@@ -250,7 +252,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                 !isNameValid ? (
                   <small>
                     Only digits (0-9), lower case letters (a-z), -, and .
-                    allowed.
+                    allowed, and should start with alpha-numeric characters.
                   </small>
                 ) : (
                   ""
