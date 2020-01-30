@@ -268,17 +268,13 @@ func TestQueryAddressSpaceCommand(t *testing.T) {
 		Plan: "standard-small-queue",
 		Type: "queue",
 	}
-	err := r.Cache.Add(as)
-	assert.NoError(t, err)
 	obj, err := r.Query().AddressSpaceCommand(ctx, as.AddressSpace)
 	assert.NoError(t, err)
 
 	assert.NoError(t, err)
 	expectedMetaData := `kind: AddressSpace
 metadata:
-  creationTimestamp: null
-  name: mynamespace
-  namespace: myaddressspace`
+  name: mynamespace`
 	expectedSpec := `
 spec:
   authenticationService:
