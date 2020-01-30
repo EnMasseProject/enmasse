@@ -20,7 +20,7 @@ import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter"
 import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "src/Components/AddressSpace/Address/EmptyAddress";
 import { EditAddress } from "../../EditAddressPage";
-import { DeletePrompt } from "src/Components/Common/DeletePrompt";
+import { DialoguePrompt } from "src/Components/Common/DialoguePrompt";
 import { ISortBy, IRowData } from "@patternfly/react-table";
 export interface IAddressListPageProps {
   name?: string;
@@ -130,19 +130,13 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     senders: getFilteredValue(address.Metrics, "enmasse_senders"),
     receivers: getFilteredValue(address.Metrics, "enmasse_receivers"),
     partitions:
-      address.Status &&
-      address.Status.PlanStatus 
+      address.Status && address.Status.PlanStatus
         ? address.Status.PlanStatus.Partitions
         : null,
-    isReady:
-      address.Status && address.Status.IsReady,
-    status:
-      address.Status && address.Status.Phase ? address.Status.Phase : "",
+    isReady: address.Status && address.Status.IsReady,
+    status: address.Status && address.Status.Phase ? address.Status.Phase : "",
     errorMessages:
-      address.Status &&
-      address.Status.Messages 
-        ? address.Status.Messages
-        : [],
+      address.Status && address.Status.Messages ? address.Status.Messages : [],
     selected:
       selectedAddresses.filter(({ name, namespace }) =>
         compareTwoAddress(
@@ -265,12 +259,13 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         </Modal>
       )}
       {addressBeingDeleted && (
-        <DeletePrompt
-          detail={`Are you sure you want to delete ${addressBeingDeleted.displayName} ?`}
-          name={addressBeingDeleted.name}
+        <DialoguePrompt
+          option="Delete"
+          detail={`Are you sure you want to delete this address: ${addressBeingDeleted.displayName} ?`}
+          names={[addressBeingDeleted.name]}
           header="Delete this Address  ?"
-          handleCancelDelete={handleCancelDelete}
-          handleConfirmDelete={handleDelete}
+          handleCancelDialogue={handleCancelDelete}
+          handleConfirmDialogue={handleDelete}
         />
       )}
     </>

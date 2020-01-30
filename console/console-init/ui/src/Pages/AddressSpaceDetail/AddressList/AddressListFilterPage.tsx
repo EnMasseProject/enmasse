@@ -38,8 +38,10 @@ interface AddressListFilterProps {
   totalAddresses: number;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
-  onDeleteAllAddress:()=>void;
-  onPurgeAllAddress:()=>void;
+  onDeleteAllAddress: () => void;
+  onPurgeAllAddress: () => void;
+  isDeleteAllDisabled: boolean;
+  isPurgeAllDisabled: boolean;
 }
 export const AddressListFilterPage: React.FunctionComponent<AddressListFilterProps> = ({
   filterValue,
@@ -57,7 +59,9 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
   isCreateWizardOpen,
   setIsCreateWizardOpen,
   onDeleteAllAddress,
-  onPurgeAllAddress
+  onPurgeAllAddress,
+  isDeleteAllDisabled,
+  isPurgeAllDisabled
 }) => {
   const { name, namespace, type } = useParams();
   const [addressSpacePlan, setAddressSpacePlan] = React.useState();
@@ -137,7 +141,13 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
         )}
       </DataToolbarItem>
       <DataToolbarItem>
-        <AddressListKebab createAddressOnClick={createAddressOnClick} onDeleteAllAddress={onDeleteAllAddress} onPurgeAllAddress={onPurgeAllAddress}/>
+        <AddressListKebab
+          createAddressOnClick={createAddressOnClick}
+          onDeleteAllAddress={onDeleteAllAddress}
+          onPurgeAllAddress={onPurgeAllAddress}
+          isDeleteAllDisabled={isDeleteAllDisabled}
+          isPurgeAllDisabled={isPurgeAllDisabled}
+        />
       </DataToolbarItem>
     </>
   );
