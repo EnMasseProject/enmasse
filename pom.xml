@@ -70,7 +70,7 @@
         <artemis.version>2.10.1</artemis.version>
         <ngwebdriver.version>1.1.4</ngwebdriver.version>
         <paho.version>1.2.1</paho.version>
-        <netty.version>4.1.34.Final</netty.version>
+        <netty.version>4.1.44.Final</netty.version>
         <keycloak.version>4.8.3.Final</keycloak.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
         <jboss.logging.processor.version>2.1.0.Final</jboss.logging.processor.version>
