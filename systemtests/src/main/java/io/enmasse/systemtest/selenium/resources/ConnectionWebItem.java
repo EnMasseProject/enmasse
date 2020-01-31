@@ -7,9 +7,6 @@ package io.enmasse.systemtest.selenium.resources;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import java.util.Optional;
-import java.util.function.Predicate;
-
 public class ConnectionWebItem extends WebItem implements Comparable<ConnectionWebItem> {
     private String host;
     private String containerId;
@@ -28,16 +25,8 @@ public class ConnectionWebItem extends WebItem implements Comparable<ConnectionW
         this.timeCreated = webItem.findElement(By.xpath("./td[@data-label='Time created']")).getText();
         this.messagesIn = defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-4']")).getText());
         this.messagesOut = defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-5']")).getText());
-        try {
-            this.senders = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Senders']")).getText());
-        } catch (Exception e) {
-            this.senders = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Senders']")).getText());
-        }
-        try {
-            this.receivers = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Receivers']")).getText());
-        } catch (Exception e) {
-            this.receivers = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Receivers']")).getText());
-        }
+        this.senders = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Senders']")).getText());
+        this.receivers = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Receivers']")).getText());
     }
 
     public String getHost() {

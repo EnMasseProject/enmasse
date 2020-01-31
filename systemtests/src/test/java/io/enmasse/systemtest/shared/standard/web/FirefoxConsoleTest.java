@@ -224,12 +224,24 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
         doTestSortAddressesByName(getSharedAddressSpace());
     }
 
-//    @Test
-//    @ExternalClients
-//    void testSortAddressesByClients() throws Exception {
-//        doTestSortAddressesByClients();
-//    }
-//
+    @Test
+    @ExternalClients
+    void testSortAddressesByClients() throws Exception {
+        doTestSortAddressesByClients(getSharedAddressSpace());
+    }
+
+    @Test
+    @ExternalClients
+    void testSortAddressesBySenders() throws Exception {
+        doTestSortAddressesBySenders(getSharedAddressSpace());
+    }
+
+    @Test
+    @ExternalClients
+    void testSortAddressesByReceivers() throws Exception {
+        doTestSortAddressesByReceivers(getSharedAddressSpace());
+    }
+
     @Test
     @ExternalClients
     void testSortConnectionsBySenders() throws Exception {
@@ -255,17 +267,18 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 //        doTestFilterConnectionsByUser();
 //    }
 
-    @Test
-    @ExternalClients
-    void testFilterConnectionsByHostname() throws Exception {
-        doTestFilterConnectionsByHostname(getSharedAddressSpace());
-    }
-
-    @Test
-    @ExternalClients
-    void testSortConnectionsByHostname() throws Exception {
-        doTestSortConnectionsByHostname(getSharedAddressSpace());
-    }
+    //hostname tests doesn't make much sense
+//    @Test
+//    @ExternalClients
+//    void testFilterConnectionsByHostname() throws Exception {
+//        doTestFilterConnectionsByHostname(getSharedAddressSpace());
+//    }
+//
+//    @Test
+//    @ExternalClients
+//    void testSortConnectionsByHostname() throws Exception {
+//        doTestSortConnectionsByHostname(getSharedAddressSpace());
+//    }
 
     @Test
     @ExternalClients
@@ -280,6 +293,7 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     }
 
     @Test
+    @ExternalClients
     void testMessagesMetrics() throws Exception {
         doTestMessagesMetrics(getSharedAddressSpace());
     }

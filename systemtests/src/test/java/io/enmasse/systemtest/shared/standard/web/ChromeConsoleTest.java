@@ -233,11 +233,11 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
         doTestSortAddressesByName(getSharedAddressSpace());
     }
 
-//     @Test
-//     @ExternalClients
-//     void testSortAddressesByClients() throws Exception {
-//     doTestSortAddressesByClients();
-//     }
+    @Test
+    @ExternalClients
+    void testSortAddressesByClients() throws Exception {
+        doTestSortAddressesByClients(getSharedAddressSpace());
+    }
 
     @Test
     @ExternalClients
@@ -264,17 +264,18 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
 //     doTestFilterConnectionsByUser();
 //     }
 
-    @Test
-    @ExternalClients
-    void testFilterConnectionsByHostname() throws Exception {
-        doTestFilterConnectionsByHostname(getSharedAddressSpace());
-    }
-
-    @Test
-    @ExternalClients
-    void testSortConnectionsByHostname() throws Exception {
-        doTestSortConnectionsByHostname(getSharedAddressSpace());
-    }
+    //hostname tests doesn't make much sense
+//    @Test
+//    @ExternalClients
+//    void testFilterConnectionsByHostname() throws Exception {
+//        doTestFilterConnectionsByHostname(getSharedAddressSpace());
+//    }
+//
+//    @Test
+//    @ExternalClients
+//    void testSortConnectionsByHostname() throws Exception {
+//        doTestSortConnectionsByHostname(getSharedAddressSpace());
+//    }
 
     @Test
     @ExternalClients
@@ -289,6 +290,7 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
     }
 
     @Test
+    @ExternalClients
     void testMessagesMetrics() throws Exception {
         doTestMessagesMetrics(getSharedAddressSpace());
     }

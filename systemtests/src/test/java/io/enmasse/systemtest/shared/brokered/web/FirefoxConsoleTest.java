@@ -15,7 +15,6 @@ import io.enmasse.systemtest.utils.AddressUtils;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 @SeleniumFirefox
@@ -88,23 +87,23 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
         doTestSortAddressesByName(getSharedAddressSpace());
     }
 
-//    @Test
-//    @ExternalClients
-//    void testSortAddressesByClients() throws Exception {
-//        doTestSortAddressesByClients();
-//    }
-//
-//    @Test
-//    @ExternalClients
-//    void testSortConnectionsBySenders() throws Exception {
-//        doTestSortConnectionsBySenders();
-//    }
-//
-//    @Test
-//    @ExternalClients
-//    void testSortConnectionsByReceivers() throws Exception {
-//        doTestSortConnectionsByReceivers();
-//    }
+    @Test
+    @ExternalClients
+    void testSortAddressesByClients() throws Exception {
+        doTestSortAddressesByClients(getSharedAddressSpace());
+    }
+
+    @Test
+    @ExternalClients
+    void testSortConnectionsBySenders() throws Exception {
+        doTestSortConnectionsBySenders(getSharedAddressSpace());
+    }
+
+    @Test
+    @ExternalClients
+    void testSortConnectionsByReceivers() throws Exception {
+        doTestSortConnectionsByReceivers(getSharedAddressSpace());
+    }
 
 //    @Test
 //    @ExternalClients
@@ -119,6 +118,7 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
 //        doTestFilterConnectionsByUser();
 //    }
 //
+    //hostname tests don't make much sense
 //    @Test
 //    @ExternalClients
 //    void testFilterConnectionsByHostname() throws Exception {
@@ -130,29 +130,27 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
 //    void testSortConnectionsByHostname() throws Exception {
 //        doTestSortConnectionsByHostname();
 //    }
-//
-//    @Test
-//    @ExternalClients
-//    @Disabled("disabled due to https://github.com/EnMasseProject/enmasse/issues/634")
-//    void testFilterConnectionsByContainerId() throws Exception {
-//        doTestFilterConnectionsByContainerId();
-//    }
-//
-//    @Test
-//    @ExternalClients
-//    @Disabled("disabled due to https://github.com/EnMasseProject/enmasse/issues/634")
-//    void testSortConnectionsByContainerId() throws Exception {
-//        doTestSortConnectionsByContainerId();
-//    }
 
     @Test
+    @ExternalClients
+    void testFilterConnectionsByContainerId() throws Exception {
+        doTestFilterConnectionsByContainerId(getSharedAddressSpace());
+    }
+
+    @Test
+    @ExternalClients
+    void testSortConnectionsByContainerId() throws Exception {
+        doTestSortConnectionsByContainerId(getSharedAddressSpace());
+    }
+
+    @Test
+    @ExternalClients
     void testMessagesMetrics() throws Exception {
         doTestMessagesMetrics(getSharedAddressSpace());
     }
 
     @Test
     @ExternalClients
-    @Disabled("disabled due to #649")
     void testClientsMetrics() throws Exception {
         doTestClientsMetrics(getSharedAddressSpace());
     }

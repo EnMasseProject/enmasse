@@ -6,7 +6,7 @@ package io.enmasse.systemtest.selenium.resources;
 
 import io.enmasse.systemtest.model.address.AddressStatus;
 import io.enmasse.systemtest.model.address.AddressType;
-import org.eclipse.hono.util.Strings;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
@@ -15,8 +15,8 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
     private String address;
     private String plan;
     private WebElement clientsRoute;
-    private int messagesIn;
-    private int messagesOut;
+    private double messagesIn;
+    private double messagesOut;
     private int messagesStored;
     private int senders;
     private int receivers;
@@ -65,11 +65,11 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         return plan;
     }
 
-    public int getMessagesIn() {
+    public double getMessagesIn() {
         return messagesIn;
     }
 
-    public int getMessagesOut() {
+    public double getMessagesOut() {
         return messagesOut;
     }
 
@@ -151,7 +151,7 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
 
     @Override
     public String toString() {
-        return String.format("name: %s, type: %s, plan: %s, messagesIn: %d, messagesOut: %d, stored: %d, senders: %d, receivers: %d, partitions: %d, status: %s, statusMessage: %s",
+        return String.format("name: %s, type: %s, plan: %s, messagesIn: %f, messagesOut: %f, stored: %d, senders: %d, receivers: %d, partitions: %d, status: %s, statusMessage: %s",
                 this.address,
                 getType(),
                 this.plan,

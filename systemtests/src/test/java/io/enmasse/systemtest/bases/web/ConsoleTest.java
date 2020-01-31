@@ -11,7 +11,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.clients.ClientUtils.ClientAttacher;
 import io.enmasse.systemtest.isolated.Credentials;
@@ -56,9 +55,9 @@ import java.util.stream.IntStream;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.either;
-import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -378,7 +377,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.openAddressList(addressSpace);
-        consolePage.createAddresses(addresses.toArray(new Address[0]));
+        getResourceManager().appendAddresses(false, addresses.toArray(new Address[0]));
 
         consolePage.addFilter(FilterType.STATUS, "Configuring");
 
@@ -589,54 +588,131 @@ public abstract class ConsoleTest extends TestBase {
         assertSorted("Console failed, items are not sorted by name desc", consolePage.getAddressItems(), true);
     }
 
-    //addresses cannot be sorted by senders or receivers
-//    protected void doTestSortAddressesByClients(AddressSpace addressSpace) throws Exception {
-//        int addressCount = 4;
-//        List<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
-//
-//        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
-//
-//        consolePage.openConsolePage();
-//        consolePage.openAddressList(addressSpace);
-//        consolePage.createAddresses(addresses.toArray(new Address[0]));
-//
-//        List<ExternalMessagingClient> receivers = getClientUtils().attachReceivers(addressSpace, addresses, -1, defaultCredentials);
-//        try {
-//            Thread.sleep(15000);
-//
-//            consolePage.sortItems(SortType.RECEIVERS, true);
-//            assertSorted("Console failed, items are not sorted by count of receivers asc",
-//                    consolePage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getReceiversCount));
-//
-//            consolePage.sortItems(SortType.RECEIVERS, false);
-//            assertSorted("Console failed, items are not sorted by count of receivers desc",
-//                    consolePage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getReceiversCount));
-//        } finally {
-//            getClientUtils().stopClients(receivers);
-//        }
-//
-//        List<ExternalMessagingClient> senders = getClientUtils().attachSenders(addressSpace, addresses, 360, defaultCredentials);
-//        try {
-//
-//            Thread.sleep(15000);
-//            consolePage.sortItems(SortType.SENDERS, true);
-//            assertSorted("Console failed, items are not sorted by count of senders asc",
-//                    consolePage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getSendersCount));
-//
-//            consolePage.sortItems(SortType.SENDERS, false);
-//            assertSorted("Console failed, items are not sorted by count of senders desc",
-//                    consolePage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getSendersCount));
-//        } finally {
-//            getClientUtils().stopClients(senders);
-//        }
-//
-//    }
+    protected void doTestSortAddressesByClients(AddressSpace addressSpace) throws Exception {
+        int addressCount = 4;
+        List<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
 
+        getResourceManager().setAddresses(addresses.toArray(new Address[0]));
+
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
+
+        assertEquals(addressCount, consolePage.getAddressItems().size(), "Unexpected number of addresses present before attaching clients");
+
+        List<ExternalMessagingClient> receivers = getClientUtils().attachReceivers(addressSpace, addresses, -1, defaultCredentials);
+        try {
+
+            TestUtils.waitUntilConditionOrFail(() -> consolePage.getAddressItems().stream()
+                                                   .allMatch(a -> a.getReceiversCount()>0),
+                                           Duration.ofSeconds(60),
+                                           Duration.ofSeconds(1),
+                                           ()->"Failed to wait for addresses count");
+
+            consolePage.sortAddresses(SortType.RECEIVERS, true);
+            assertSorted("Console failed, items are not sorted by count of receivers asc",
+                    consolePage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getReceiversCount));
+
+            consolePage.sortAddresses(SortType.RECEIVERS, false);
+            assertSorted("Console failed, items are not sorted by count of receivers desc",
+                    consolePage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getReceiversCount));
+        } finally {
+            getClientUtils().stopClients(receivers);
+        }
+
+        List<ExternalMessagingClient> senders = getClientUtils().attachSenders(addressSpace, addresses, 360, defaultCredentials);
+        try {
+
+            TestUtils.waitUntilConditionOrFail(() -> consolePage.getAddressItems().stream()
+                                                    .allMatch(a -> a.getSendersCount()>0),
+                                            Duration.ofSeconds(60),
+                                            Duration.ofSeconds(1),
+                                            ()->"Failed to wait for addresses count");
+
+            consolePage.sortAddresses(SortType.SENDERS, true);
+            assertSorted("Console failed, items are not sorted by count of senders asc",
+                    consolePage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getSendersCount));
+
+            consolePage.sortAddresses(SortType.SENDERS, false);
+            assertSorted("Console failed, items are not sorted by count of senders desc",
+                    consolePage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getSendersCount));
+        } finally {
+            getClientUtils().stopClients(senders);
+        }
+
+    }
+
+    protected void doTestSortAddressesBySenders(AddressSpace addressSpace) throws Exception {
+        doTestSortAddresses(addressSpace,
+                SortType.SENDERS,
+//                this::attachClients,
+                getClientUtils()::attachSenders,
+                a -> a.getSendersCount()>0,
+                Comparator.comparingInt(AddressWebItem::getSendersCount));
+    }
+
+    protected void doTestSortAddressesByReceivers(AddressSpace addressSpace) throws Exception {
+        doTestSortAddresses(addressSpace,
+                SortType.RECEIVERS,
+//                this::attachClients,
+                getClientUtils()::attachReceivers,
+                a -> a.getReceiversCount()>0,
+                Comparator.comparingInt(AddressWebItem::getReceiversCount));
+    }
+
+    private void doTestSortAddresses(AddressSpace addressSpace, SortType sortType, ClientAttacher attacher, Predicate<AddressWebItem> readyCondition, Comparator<AddressWebItem> sortingComparator) throws Exception {
+        int addressCount = 4;
+        List<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
+
+        getResourceManager().setAddresses(addresses.toArray(new Address[0]));
+
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
+
+        assertEquals(addressCount, consolePage.getAddressItems().size(), "Unexpected number of addresses present before attaching clients");
+
+        clientsList = attacher.attach(addressSpace, addresses, defaultCredentials);
+
+        boolean pass = false;
+        try {
+
+            TestUtils.waitUntilConditionOrFail(() -> consolePage.getAddressItems().stream()
+                                                    .allMatch(readyCondition),
+                                            Duration.ofSeconds(60),
+                                            Duration.ofSeconds(1),
+                                            ()->"Failed to wait for addresses count");
+
+            consolePage.sortAddresses(sortType, true);
+            assertSorted("Console failed, items are not sorted by count of senders asc",
+                    consolePage.getAddressItems(),
+                    sortingComparator);
+
+            consolePage.sortAddresses(sortType, false);
+            assertSorted("Console failed, items are not sorted by count of senders desc",
+                    consolePage.getAddressItems(),
+                    true,
+                    sortingComparator);
+            pass = true;
+        } finally {
+            if ( !pass ) {
+                clientsList.forEach(c -> {
+                    c.stop();
+                    log.info("=======================================");
+                    log.info("stderr {}", c.getStdError());
+                    log.info("stdout {}", c.getStdOutput());
+                });
+                clientsList.clear();
+            }
+
+        }
+    }
 
     protected void doTestSortConnectionsBySenders(AddressSpace addressSpace) throws Exception {
         doTestSortConnections(addressSpace,
                 SortType.SENDERS,
-                this::attachClients,
+//                this::attachClients,
+                getClientUtils()::attachSenders,
                 c -> c.getSenders()>0,
                 Comparator.comparingInt(ConnectionWebItem::getSenders));
     }
@@ -644,7 +720,8 @@ public abstract class ConsoleTest extends TestBase {
     protected void doTestSortConnectionsByReceivers(AddressSpace addressSpace) throws Exception {
         doTestSortConnections(addressSpace,
                 SortType.RECEIVERS,
-                this::attachClients,
+//                this::attachClients,
+                getClientUtils()::attachReceivers,
                 c -> c.getReceivers()>0,
                 Comparator.comparingInt(ConnectionWebItem::getReceivers));
     }
@@ -669,9 +746,9 @@ public abstract class ConsoleTest extends TestBase {
 
             TestUtils.waitUntilConditionOrFail(() -> consolePage.getConnectionItems().stream()
                                                    .allMatch(readyCondition),
-                                           Duration.ofSeconds(30),
+                                           Duration.ofSeconds(60),
                                            Duration.ofSeconds(1),
-                                           ()->"Failed to wait for senders count");
+                                           ()->"Failed to wait for connections count");
 
             consolePage.sortConnections(sortType, true);
             assertSorted("Console failed, items are not sorted by count of senders asc",
@@ -798,40 +875,39 @@ public abstract class ConsoleTest extends TestBase {
 //
 //      }
 //
-    //TODO tune up this test when doTestSortConnections work
-    protected void doTestFilterConnectionsByHostname(AddressSpace addressSpace) throws Exception {
-        int addressCount = 2;
-        List<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
+//    //TODO tune up this test when doTestSortConnections work
+//    protected void doTestFilterConnectionsByHostname(AddressSpace addressSpace) throws Exception {
+//        int addressCount = 2;
+//        List<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
+//
+//        getResourceManager().setAddresses(addresses.toArray(new Address[0]));
+//
+//        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+//        consolePage.openConsolePage();
+//        consolePage.openConnectionList(addressSpace);
+//
+//        clientsList = attachClients(addressSpace, addresses);
+//
+//        List<ConnectionWebItem> connectionItems = consolePage.getConnectionItems();
+//        String hostname = connectionItems.get(0).getHost();
+//
+//        consolePage.addConnectionsFilter(FilterType.HOSTNAME, hostname);
+//        assertThat(String.format("Console failed, does not contain %d connections", 1),
+//                consolePage.getConnectionItems().size(), is(1));
+//
+//        consolePage.removeAllFilters();
+//        assertThat(String.format("Console failed, does not contain %d connections", 6),
+//                consolePage.getConnectionItems().size(), is(6));
+//    }
+//
+//    protected void doTestSortConnectionsByHostname(AddressSpace addressSpace) throws Exception {
+//        doTestSortConnections(addressSpace,
+//                SortType.HOSTNAME,
+//                this::attachClients,
+//                c -> c.getHost()!=null,
+//                Comparator.comparing(ConnectionWebItem::getHost));
+//    }
 
-        getResourceManager().setAddresses(addresses.toArray(new Address[0]));
-
-        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
-        consolePage.openConsolePage();
-        consolePage.openConnectionList(addressSpace);
-
-        clientsList = attachClients(addressSpace, addresses);
-
-        List<ConnectionWebItem> connectionItems = consolePage.getConnectionItems();
-        String hostname = connectionItems.get(0).getHost();
-
-        consolePage.addConnectionsFilter(FilterType.HOSTNAME, hostname);
-        assertThat(String.format("Console failed, does not contain %d connections", 1),
-                consolePage.getConnectionItems().size(), is(1));
-
-        consolePage.removeAllFilters();
-        assertThat(String.format("Console failed, does not contain %d connections", 6),
-                consolePage.getConnectionItems().size(), is(6));
-    }
-
-    protected void doTestSortConnectionsByHostname(AddressSpace addressSpace) throws Exception {
-        doTestSortConnections(addressSpace,
-                SortType.HOSTNAME,
-                this::attachClients,
-                c -> c.getHost()!=null,
-                Comparator.comparing(ConnectionWebItem::getHost));
-    }
-
-    //TODO tune up this test when doTestSortConnections work
     protected void doTestFilterConnectionsByContainerId(AddressSpace addressSpace) throws Exception {
 
         Address dest = new AddressBuilder()
@@ -876,11 +952,6 @@ public abstract class ConsoleTest extends TestBase {
     }
 
     protected void doTestMessagesMetrics(AddressSpace addressSpace) throws Exception {
-        int msgCount = 19;
-        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
-
-        consolePage.openConsolePage();
-        consolePage.openAddressList(addressSpace);
         Address dest = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(addressSpace.getMetadata().getNamespace())
@@ -892,24 +963,33 @@ public abstract class ConsoleTest extends TestBase {
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        consolePage.createAddress(dest);
 
-        AmqpClient client = resourcesManager.getAmqpClientFactory().createQueueClient();
-        List<String> msgBatch = TestUtils.generateMessages(msgCount);
+        getResourceManager().setAddresses(dest);
 
-        int sent = client.sendMessages(dest.getSpec().getAddress(), msgBatch).get(2, TimeUnit.MINUTES);
-        selenium.waitUntilPropertyPresent(60, msgCount, () -> consolePage.getAddressItem(dest).getMessagesIn());
-        assertEquals(sent, consolePage.getAddressItem(dest).getMessagesIn(),
-                String.format("Console failed, does not contain %d messagesIN", sent));
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
 
-        selenium.waitUntilPropertyPresent(60, msgCount, () -> consolePage.getAddressItem(dest).getMessagesStored());
-        assertEquals(msgCount, consolePage.getAddressItem(dest).getMessagesStored(),
-                String.format("Console failed, does not contain %d messagesStored", msgCount));
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
 
-        int received = client.recvMessages(dest.getSpec().getAddress(), msgCount).get(1, TimeUnit.MINUTES).size();
-        selenium.waitUntilPropertyPresent(60, msgCount, () -> consolePage.getAddressItem(dest).getMessagesOut());
-        assertEquals(received, consolePage.getAddressItem(dest).getMessagesOut(),
-                String.format("Console failed, does not contain %d messagesOUT", received));
+        assertEquals(1, consolePage.getAddressItems().size(), "Unexpected number of addresses present before attaching clients");
+
+        int count = 5 * 60; //5 minutes to seconds
+        int duration = count * 1000; // so we send 1 message per second
+
+        clientsList = new ArrayList<>();
+        //don't know why but if you try to send 300 messages rhea seems to send 1 more
+        clientsList.add(getClientUtils().attachSender(addressSpace, dest, defaultCredentials, count - 1, duration));
+
+        TestUtils.waitUntilConditionOrFail(() -> consolePage.getAddressItem(dest).getMessagesIn() == 1,
+                Duration.ofSeconds(120),
+                Duration.ofSeconds(3),
+                ()->"Failed to wait for messagesIn/sec to reach 1");
+
+        selenium.waitUntilPropertyPresent(15, count, () -> consolePage.getAddressItem(dest).getMessagesStored());
+
+        clientsList.add(getClientUtils().attachReceiver(addressSpace, dest, defaultCredentials, count));
+
+        selenium.waitUntilPropertyPresent(30, 0, () -> consolePage.getAddressItem(dest).getMessagesStored());
 
     }
 
@@ -940,9 +1020,9 @@ public abstract class ConsoleTest extends TestBase {
             selenium.waitUntilPropertyPresent(60, senderCount, () -> consolePage.getAddressItem(dest).getSendersCount());
 
             assertAll(
-                    () -> assertEquals(10, consolePage.getAddressItem(dest).getReceiversCount(),
+                    () -> assertEquals(receiverCount, consolePage.getAddressItem(dest).getReceiversCount(),
                             String.format("Console failed, does not contain %d receivers", 10)),
-                    () -> assertEquals(5, consolePage.getAddressItem(dest).getSendersCount(),
+                    () -> assertEquals(senderCount, consolePage.getAddressItem(dest).getSendersCount(),
                             String.format("Console failed, does not contain %d senders", 5)));
         } finally {
             client.stop();
@@ -1040,21 +1120,46 @@ public abstract class ConsoleTest extends TestBase {
     }
 
     protected void doTestCreateAddressWithSpecialCharsShowsErrorMessage(AddressSpace addressSpace) throws Exception {
-        String testString = "addressname";
 
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.openAddressList(addressSpace);
         consolePage.openAddressCreationDialog();
 
-        for ( char special_char : "#:$".toCharArray() ) {
-            // fill with valid name first
-            consolePage.fillAddressName(AddressUtils.generateAddressMetadataName(addressSpace, testString));
+        String validName = AddressUtils.generateAddressMetadataName(addressSpace, "dummy");
+        String[] invalidNames = {
+                        "#dummy",
+                        "du#mmy",
+                        ":dummy",
+                        "du:mmy",
+                        "$dummy",
+                        ".dummy",
+                        "dummy.",
+                        "dummy-",
+                        "-dummy",
+                        "duMmy",
+                        "DUM-MY"
+        };
+
+        for ( var name : invalidNames) {
+            consolePage.fillAddressName(validName);
             assertFalse(consolePage.isAddressNameInvalid());
 
-            // fill with invalid name (including spec_char)
-            consolePage.fillAddressName(testString + special_char);
-            assertTrue(consolePage.isAddressNameInvalid());
+            consolePage.fillAddressName(name);
+            assertTrue(consolePage.isAddressNameInvalid(), String.format("Address name %s is not marked as invalid", name));
+        }
+
+        String[] validNames = {
+                        "du.mmy",
+                        "du-mmy"
+        };
+
+        for (String name : validNames) {
+            consolePage.fillAddressName(validName);
+            assertFalse(consolePage.isAddressNameInvalid());
+
+            consolePage.fillAddressName(name);
+            assertFalse(consolePage.isAddressNameInvalid(), String.format("Address name %s is not marked as valid", name));
         }
     }
 

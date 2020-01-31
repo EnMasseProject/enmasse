@@ -725,14 +725,15 @@ public class ConsoleWebPage implements IWebPage {
 
     private boolean isAddressSortType(String dataLabel, SortType sortType) {
         switch ( sortType ) {
-            case ADDRESS:
-                return dataLabel.toUpperCase().equals(SortType.ADDRESS.name());
             case MESSAGES_IN:
                 return dataLabel.equals("column-4");
             case MESSAGES_OUT:
                 return dataLabel.equals("column-5");
             case STORED_MESSAGES:
-                return dataLabel.toUpperCase().equals(SortType.STORED_MESSAGES.toString());
+            case ADDRESS:
+            case SENDERS:
+            case RECEIVERS:
+                return dataLabel.toUpperCase().equals(sortType.toString());
             default:
                 return false;
         }

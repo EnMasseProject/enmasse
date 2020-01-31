@@ -4,25 +4,18 @@
  */
 package io.enmasse.systemtest.selenium.resources;
 
+import org.eclipse.hono.util.Strings;
 import org.openqa.selenium.WebElement;
-
-import java.util.Optional;
-import java.util.function.Predicate;
 
 public class WebItem {
     protected WebElement webItem;
 
     protected int defaultInt(String value) {
-        return Optional.ofNullable(value)
-                .filter(Predicate.not(String::isEmpty))
-                .map(Integer::parseInt)
-                .orElse(0);
+        return Strings.isNullOrEmpty(value) ? 0 : Integer.parseInt(value);
+
     }
 
     protected double defaultDouble(String value) {
-        return Optional.ofNullable(value)
-                .filter(Predicate.not(String::isEmpty))
-                .map(Double::parseDouble)
-                .orElse(0.0);
+        return Strings.isNullOrEmpty(value) ? 0.0 : Double.parseDouble(value);
     }
 }

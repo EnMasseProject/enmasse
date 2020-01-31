@@ -199,6 +199,10 @@ public class ClientUtils {
         return receivers;
     }
 
+    public List<ExternalMessagingClient> attachSenders(AddressSpace addressSpace, List<Address> destinations, UserCredentials userCredentials) throws Exception {
+        return attachSenders(addressSpace, destinations, 360, userCredentials);
+    }
+
     /**
      * attach senders to destinations (for N-th destination is attached N+1 senders)
      */
@@ -224,6 +228,36 @@ public class ClientUtils {
         }
 
         return senders;
+    }
+
+    public ExternalMessagingClient attachReceiver(AddressSpace addressSpace, Address destination, UserCredentials userCredentials, int count) throws Exception {
+        ExternalMessagingClient receiverClient = new ExternalMessagingClient()
+                .withClientEngine(new RheaClientReceiver())
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                .withAddress(destination)
+                .withCredentials(userCredentials)
+                .withTimeout(360)
+                .withCount(count);
+        receiverClient.runAsync(false);
+        return receiverClient;
+    }
+
+    public ExternalMessagingClient attachSender(AddressSpace addressSpace, Address destination, UserCredentials userCredentials, int count, int durationMillis) throws Exception {
+        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+                .withClientEngine(new RheaClientSender())
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                .withAddress(destination)
+                .withCredentials(userCredentials)
+                .withMessageBody("msg no.%d")
+                .withTimeout(360)
+                .withCount(count)
+                .withAdditionalArgument(ClientArgument.DURATION, durationMillis);
+        senderClient.runAsync(false);
+        return senderClient;
+    }
+
+    public List<ExternalMessagingClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations, UserCredentials userCredentials) throws Exception {
+        return attachReceivers(addressSpace, destinations, 360, userCredentials);
     }
 
     /**
