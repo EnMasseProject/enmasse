@@ -21,7 +21,7 @@ export default {
 const rows: IAddress[] = [
   {
     name: "foo.juu",
-    displayName:"juu",
+    displayName: "juu",
     namespace: "foo",
     type: "Queue",
     planLabel: "small",
@@ -37,7 +37,7 @@ const rows: IAddress[] = [
   },
   {
     name: "foo.hui",
-    displayName:"hui",
+    displayName: "hui",
     namespace: "foo",
     type: "Queue",
     planLabel: "small",
@@ -53,7 +53,7 @@ const rows: IAddress[] = [
   },
   {
     name: "foo.ganymede",
-    displayName:"ganymede",
+    displayName: "ganymede",
     namespace: "foo",
     type: "Queue",
     planLabel: "small",
@@ -75,6 +75,7 @@ export const addressList = () => (
       rowsData={rows}
       onEdit={action("onEdit")}
       onDelete={action("onDelete")}
+      onPurge={action("onPurge")}
       onSelectAddress={action("select address")}
       onSelectAllAddress={action("SelectAllAddress")}
       // setSelectedAddresses={action("onSelect")}

@@ -333,7 +333,7 @@ export default function AddressesList() {
               ? `Are you sure you want to delete all of these addresses: ${selectedAddresses.map(
                   as => " " + as.displayName
                 )} ?`
-              : `Are you sure you want to delete this addresss: ${selectedAddresses[0].displayName} ?`
+              : `Are you sure you want to delete this address: ${selectedAddresses[0].displayName} ?`
           }
           names={selectedAddresses.map(as => as.name)}
           header={
@@ -366,7 +366,7 @@ export default function AddressesList() {
                         address.type.toLowerCase() === "subscription"
                     )
                     .map(address => " " + address.displayName)} ?`
-                : `Are you sure you want to purge this addresss: ${selectedAddresses.filter(
+                : `Are you sure you want to purge this address: ${selectedAddresses.filter(
                     address =>
                       address.type.toLowerCase() === "queue" ||
                       address.type.toLowerCase() === "subscription"
