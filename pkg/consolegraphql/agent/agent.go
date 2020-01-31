@@ -63,9 +63,10 @@ type amqpAgentDelegate struct {
 	commandDelegatesMux         sync.Mutex
 	commandDelegateExpiryPeriod time.Duration
 	connectTimeout              time.Duration
+	maxFrameSize                uint32
 }
 
-func NewAmqpAgentDelegate(bearerToken, host string, port int32, tlsConfig *tls.Config, addressSpaceNamespace, addressSpace, infraUuid string, expirePeriod, connectTimeout time.Duration) Delegate {
+func NewAmqpAgentDelegate(bearerToken, host string, port int32, tlsConfig *tls.Config, addressSpaceNamespace, addressSpace, infraUuid string, expirePeriod, connectTimeout time.Duration, maxFrameSize uint32) Delegate {
 	return &amqpAgentDelegate{
 		bearerToken:                 bearerToken,
 		host:                        host,
@@ -79,6 +80,7 @@ func NewAmqpAgentDelegate(bearerToken, host string, port int32, tlsConfig *tls.C
 		commandDelegates:            make(map[string]commandDelegatePair),
 		commandDelegateExpiryPeriod: expirePeriod,
 		connectTimeout:              connectTimeout,
+		maxFrameSize:                maxFrameSize,
 	}
 }
 
@@ -142,6 +144,7 @@ func (aad *amqpAgentDelegate) doCollect() error {
 		amqp.ConnServerHostname(aad.host),
 		amqp.ConnProperty("product", "console-server"),
 		amqp.ConnConnectTimeout(aad.connectTimeout),
+		amqp.ConnMaxFrameSize(aad.maxFrameSize),
 	)
 	if err != nil {
 		return err
@@ -435,6 +438,7 @@ func (ad *amqpAgentCommandDelegate) doProcess(addr string) error {
 		amqp.ConnServerHostname(ad.aac.host),
 		amqp.ConnProperty("product", "command-delegate; console-server"),
 		amqp.ConnConnectTimeout(ad.aac.connectTimeout),
+		amqp.ConnMaxFrameSize(ad.aac.maxFrameSize),
 	)
 	if err != nil {
 		return err
