@@ -221,10 +221,11 @@ http://localhost:` + port + `/graphql
 			`)
 	}
 
-	dumpCachePeriod := util.GetDurationEnvOrDefault("DUMP_CACHE_PERIOD", time.Second * 0)
-	updateMetricsPeriod := util.GetDurationEnvOrDefault("UPDATE_METRICS_PERIOD", time.Second * 5)
-	agentCommandDelegateExpiryPeriod := util.GetDurationEnvOrDefault("AGENT_COMMAND_DELEGATE_EXPIRY_PERIOD", time.Minute * 5)
-	agentAmqpConnectTimeout := util.GetDurationEnvOrDefault("AGENT_AMQP_CONNECT_TIMEOUT", time.Second * 10)
+	dumpCachePeriod := util.GetDurationEnvOrDefault("DUMP_CACHE_PERIOD", time.Second*0)
+	updateMetricsPeriod := util.GetDurationEnvOrDefault("UPDATE_METRICS_PERIOD", time.Second*5)
+	agentCommandDelegateExpiryPeriod := util.GetDurationEnvOrDefault("AGENT_COMMAND_DELEGATE_EXPIRY_PERIOD", time.Minute*5)
+	agentAmqpConnectTimeout := util.GetDurationEnvOrDefault("AGENT_AMQP_CONNECT_TIMEOUT", time.Second*10)
+	agentAmqpMaxFrameSize := uint32(util.GetUintEnvOrDefault("AGENT_AMQP_MAX_FRAME_SIZE", 0, 32, 4294967295)) // Matches Rhea default
 
 	log.Printf("Namespace: %s\n", infraNamespace)
 
@@ -320,7 +321,7 @@ http://localhost:` + port + `/graphql
 					return agent.NewAmqpAgentDelegate(config.BearerToken,
 						host, port, tlsConfig,
 						addressSpaceNamespace, addressSpace, infraUuid,
-						agentCommandDelegateExpiryPeriod, agentAmqpConnectTimeout)
+						agentCommandDelegateExpiryPeriod, agentAmqpConnectTimeout, agentAmqpMaxFrameSize)
 				}, *developmentMode, watcherConfigs...)
 			getCollector = watcher.Collector
 			return watcher, err
