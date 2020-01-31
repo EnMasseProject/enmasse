@@ -486,7 +486,10 @@ function createAddressSpace(as) {
     },
     Spec: {
       Plan: spacePlan,
-      Type: as.Spec.Type
+      Type: as.Spec.Type,
+      AuthenticationService: {
+        Name: as.Spec.AuthenticationService.Name
+      }
     },
     Status: null
   };
@@ -554,7 +557,10 @@ createAddressSpace(
       },
       Spec: {
         Plan: "standard-small",
-        Type: "standard"
+        Type: "standard",
+        AuthenticationService: {
+          Name: "none-authservice"
+        }
       }
     });
 
@@ -566,7 +572,10 @@ createAddressSpace(
       },
       Spec: {
         Plan: "standard-medium",
-        Type: "standard"
+        Type: "standard",
+        AuthenticationService: {
+          Name: "none-authservice"
+        }
       },
       Status: {
         Phase: "Configuring"
@@ -581,7 +590,10 @@ createAddressSpace(
       },
       Spec: {
         Plan: "brokered-single-broker",
-        Type: "brokered"
+        Type: "brokered",
+        AuthenticationService: {
+          Name: "none-authservice"
+        }
       }
     });
 

@@ -170,7 +170,13 @@ const typeDefs = gql`
     type AddressSpaceSpec_enmasse_io_v1beta1 {
         Plan:      AddressSpacePlan_admin_enmasse_io_v1beta2!
         Type:      AddressSpaceType!
+  
+        AuthenticationService:  AuthenticationService_enmasse_io_v1beta1
     }
+    
+    type AuthenticationService_enmasse_io_v1beta1 {
+        Name: String!
+    }    
 
     type AddressSpaceStatus_enmasse_io_v1beta1 {
         IsReady: Boolean!
@@ -325,6 +331,12 @@ const typeDefs = gql`
     input AddressSpaceSpec_enmasse_io_v1beta1_Input {
         Type:         String!
         Plan:         String!
+        
+        AuthenticationService:  AuthenticationService_enmasse_io_v1beta1_Input
+    }
+    
+    input AuthenticationService_enmasse_io_v1beta1_Input {
+        Name:  String!
     }
 
     input AddressSpace_enmasse_io_v1beta1_Input {
