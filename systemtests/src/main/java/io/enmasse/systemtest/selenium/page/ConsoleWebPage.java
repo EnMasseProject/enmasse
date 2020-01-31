@@ -781,7 +781,6 @@ public class ConsoleWebPage implements IWebPage {
             selenium.clickOnItem(selenium.getDriver().findElement(By.tagName("button")));
             return true;
         } catch (Exception ex) {
-            log.info("Error waitUntilLoginPage", ex);
             selenium.takeScreenShot();
             return false;
         }
