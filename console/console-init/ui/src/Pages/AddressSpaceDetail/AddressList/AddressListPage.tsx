@@ -9,7 +9,8 @@ import { IAddressResponse } from "src/Types/ResponseTypes";
 import {
   RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE,
   DELETE_ADDRESS,
-  EDIT_ADDRESS
+  EDIT_ADDRESS,
+  PURGE_ADDRESS
 } from "src/Queries/Queries";
 import {
   IAddress,
@@ -83,6 +84,11 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     setAddressBeingDeleted
   ] = React.useState<IAddress | null>();
 
+  const [
+    addressBeingPurged,
+    setAddressBeingPurged
+  ] = React.useState<IAddress | null>();
+
   const client = useApolloClient();
   const [sortBy, setSortBy] = React.useState<ISortBy>();
 
@@ -153,6 +159,11 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       setAddressBeingEdited(data);
     }
   };
+  const handlePurge = (data: IAddress) => {
+    if (!addressBeingPurged) {
+      setAddressBeingPurged(data);
+    }
+  };
   const handleCancelEdit = () => setAddressBeingEdited(null);
 
   const handleSaving = async () => {
@@ -183,6 +194,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     }
   };
   const handleCancelDelete = () => setAddressBeingDeleted(null);
+  const handleCancelPurge = () => setAddressBeingPurged(null);
   const handleDelete = async () => {
     if (addressBeingDeleted) {
       const deletedData = await client.mutate({
@@ -196,6 +208,22 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       });
       refetch();
       setAddressBeingDeleted(null);
+    }
+  };
+
+  const handlePurgeChange = async () => {
+    if (addressBeingPurged) {
+      const purgeData = await client.mutate({
+        mutation: PURGE_ADDRESS,
+        variables: {
+          a: {
+            Name: addressBeingPurged.name,
+            Namespace: addressBeingPurged.namespace
+          }
+        }
+      });
+      refetch();
+      setAddressBeingPurged(null);
     }
   };
   const handleDeleteChange = (address: IAddress) => {
@@ -212,6 +240,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         rowsData={addressesList ? addressesList : []}
         onEdit={handleEdit}
         onDelete={handleDeleteChange}
+        onPurge={handlePurge}
         sortBy={sortBy}
         onSort={onSort}
         onSelectAddress={onSelectAddress}
@@ -237,18 +266,21 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
               key="confirm"
               id="al-edit-confirm"
               variant="primary"
-              onClick={handleSaving}>
+              onClick={handleSaving}
+            >
               Confirm
             </Button>,
             <Button
               key="cancel"
               id="al-edit-cancel"
               variant="link"
-              onClick={handleCancelEdit}>
+              onClick={handleCancelEdit}
+            >
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned>
+          isFooterLeftAligned
+        >
           <EditAddress
             name={addressBeingEdited.name}
             type={addressBeingEdited.type}
@@ -266,6 +298,16 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           header="Delete this Address  ?"
           handleCancelDialogue={handleCancelDelete}
           handleConfirmDialogue={handleDelete}
+        />
+      )}
+      {addressBeingPurged && (
+        <DialoguePrompt
+          option="Purge"
+          detail={`Are you sure you want to purge this address: ${addressBeingPurged.displayName} ?`}
+          names={[addressBeingPurged.name]}
+          header="Purge this Address  ?"
+          handleCancelDialogue={handleCancelPurge}
+          handleConfirmDialogue={handlePurgeChange}
         />
       )}
     </>

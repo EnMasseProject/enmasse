@@ -44,6 +44,7 @@ interface IAddressListProps {
   rowsData: IAddress[];
   onEdit: (rowData: IAddress) => void;
   onDelete: (rowData: IAddress) => void;
+  onPurge: (rowData: IAddress) => void;
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
   onSelectAddress: (rowData: IAddress, isSelected: boolean) => void;
@@ -54,6 +55,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   rowsData,
   onEdit,
   onDelete,
+  onPurge,
   sortBy,
   onSort,
   onSelectAddress,
@@ -62,16 +64,36 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   const { width } = useWindowDimensions();
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;
-    return [
-      {
-        title: "Edit",
-        onClick: () => onEdit(originalData)
-      },
-      {
-        title: "Delete",
-        onClick: () => onDelete(originalData)
-      }
-    ];
+    if (
+      originalData.type.trim() === "queue" ||
+      originalData.type.trim() === "subscription"
+    ) {
+      return [
+        {
+          title: "Edit",
+          onClick: () => onEdit(originalData)
+        },
+        {
+          title: "Delete",
+          onClick: () => onDelete(originalData)
+        },
+        {
+          title: "Purge",
+          onClick: () => onPurge(originalData)
+        }
+      ];
+    } else {
+      return [
+        {
+          title: "Edit",
+          onClick: () => onEdit(originalData)
+        },
+        {
+          title: "Delete",
+          onClick: () => onDelete(originalData)
+        }
+      ];
+    }
   };
   //TODO: Display error after the phase variable is exposed from backend.
   const toTableCells = (row: IAddress) => {
@@ -211,7 +233,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
       aria-label="Address List"
       canSelectAll={true}
       sortBy={sortBy}
-      onSort={onSort}>
+      onSort={onSort}
+    >
       <TableHeader id="address-list-table-bodheader" />
       <TableBody />
     </Table>
