@@ -23,7 +23,7 @@ public class PrometheusMetricsFormatterTest {
 
         String value = formatter.format(Collections.singletonList(metric), 3);
         System.out.println(value);
-        String expected = "# HELP enmasse_m1 mdesc\n# TYPE enmasse_m1 gauge\nenmasse_m1{key1=\"value1\",key2=\"\\\\this\\\"is\\nescaped\\\\\"} 2 3\n";
+        String expected = "# HELP m1 mdesc\n# TYPE m1 gauge\nm1{key1=\"value1\",key2=\"\\\\this\\\"is\\nescaped\\\\\"} 2 3\n";
         assertEquals(expected, value);
     }
 

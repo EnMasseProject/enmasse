@@ -1,7 +1,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: enmasse
+  name: enmasse-broker
   namespace: {{ index .Params "Namespace" }}
   labels:
     monitoring-key: middleware
@@ -10,14 +10,16 @@ spec:
   selector:
     matchLabels:
       app: enmasse
+      component: broker
   endpoints:
-  - port: health
   - port: health-tls
     scheme: https
     tlsConfig:
       insecureSkipVerify: true
-  - port: prometheus
-    path: /prometheus
+    metricRelabelings:
+      - sourceLabels: [__name__]
+        targetLabel: __name__
+        replacement: "enmasse_${1}"
   namespaceSelector:
     matchLabels:
       monitoring-key: middleware

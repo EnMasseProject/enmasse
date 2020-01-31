@@ -52,7 +52,11 @@ func GetTemplateList() []string {
 	templateList := []string{
 		"PrometheusRules-kube-metrics.yaml",
 		"PrometheusRules-enmasse.yaml",
-		"ServiceMonitor-enmasse.yaml",
+		"ServiceMonitor-address-space-controller.yaml",
+		"ServiceMonitor-admin.yaml",
+		"ServiceMonitor-router.yaml",
+		"ServiceMonitor-broker.yaml",
+		"ServiceMonitor-iot.yaml",
 		"GrafanaDashboard-brokers.yaml",
 		"GrafanaDashboard-components.yaml",
 		"GrafanaDashboard-routers.yaml",

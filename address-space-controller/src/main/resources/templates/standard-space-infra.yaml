@@ -444,6 +444,7 @@ objects:
       app: enmasse
       infraType: standard
       infraUuid: ${INFRA_UUID}
+      component: router
     name: qdrouterd-headless-${INFRA_UUID}
   spec:
     clusterIP: None
@@ -483,6 +484,7 @@ objects:
       addressSpace: ${ADDRESS_SPACE}
     labels:
       app: enmasse
+      component: admin
       infraType: standard
       infraUuid: ${INFRA_UUID}
     name: standard-controller-${INFRA_UUID}

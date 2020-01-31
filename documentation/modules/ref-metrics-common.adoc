@@ -7,8 +7,8 @@
 
 The following components export these common metrics:
 
+* `enmasse-operator`
 * `address-space-controller`
-* `api-server`
 * `standard-controller`
 
 
@@ -19,7 +19,7 @@ Example:::
 [source,options="nowrap"]
 ----
 enmasse_version{job="address-space-controller",version="1.0.1"} 1
-enmasse_version{job="api-server",version="1.0.1"} 1
+enmasse_version{job="enmsse-operator",version="1.0.1"} 1
 enmasse_version{job="standard-controller",version="1.0.1"} 1
 ----
 
