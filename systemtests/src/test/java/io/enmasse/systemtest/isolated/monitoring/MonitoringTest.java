@@ -105,7 +105,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 }
             }
             return false;
-        }, new TimeoutBudget(3, TimeUnit.MINUTES));
+        }, new TimeoutBudget(10, TimeUnit.MINUTES));
 
     }
 
