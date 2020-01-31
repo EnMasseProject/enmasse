@@ -430,13 +430,21 @@ mutation patch_as(
 
 args:
 
+(patching a plan)
 ```
 {
-  "a": {"Name": "wibx", "Namespace": "app1_ns" },
-"jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium\"}]",
+  "a": {"Name": "jupiter_as1", "Namespace": "app1_ns" },
+  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium\"}]",
   "patchType": "application/json-patch+json"
+}
+```
 
-
+(patching a authentication service name)
+```
+{
+  "a": {"Name": "jupiter_as1", "Namespace": "app1_ns" },
+  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/AuthenticationService/Name\",\"value\":\"foo\"}]",
+  "patchType": "application/json-patch+json"
 }
 ```
 
@@ -500,8 +508,8 @@ args:
 
 ```
 {
-  "a": {"Name": "jupiter_as1.wiby1", "Namespace": "app1_ns" },
-"jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium-queue\"}]",
+  "a": {"Name": "jupiter_as1.ganymede", "Namespace": "app1_ns" },
+  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium-queue\"}]",
   "patchType": "application/json-patch+json"
 }
 ```
