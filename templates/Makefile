@@ -95,11 +95,8 @@ replace_images: prepare
 					  -e 's,\$${CONSOLE_SERVER_IMAGE},$(CONSOLE_SERVER_IMAGE),g' \
 					  -e 's,\$${CONSOLE_INIT_IMAGE},$(CONSOLE_INIT_IMAGE),g' \
 					  -e 's,\$${CONSOLE_PROXY_OPENSHIFT_IMAGE},$(CONSOLE_PROXY_OPENSHIFT_IMAGE),g' \
-					  -e 's,\$${OAUTH_PROXY_IMAGE},$(OAUTH_PROXY_IMAGE),g' \
 					  -e 's,\$${CONSOLE_PROXY_KUBERNETES_IMAGE},$(CONSOLE_PROXY_KUBERNETES_IMAGE),g' \
-					  -e 's,\$${CONSOLE_HTTPD_IMAGE},$(CONSOLE_HTTPD_IMAGE),g' \
 					  -e 's,\$${APP_PREFIX},$(PROJECT_PREFIX),g' \
-					  -e 's,\$${CONSOLE_HTTPD_IMAGE},$(CONSOLE_HTTPD_IMAGE),g' \
 					> $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done

@@ -119,5 +119,3 @@ spec:
           value: "${CONSOLE_PROXY_OPENSHIFT_IMAGE}"
         - name: CONSOLE_PROXY_KUBERNETES_IMAGE
           value: "${CONSOLE_PROXY_KUBERNETES_IMAGE}"
-        - name: CONSOLE_HTTPD_IMAGE
-          value: "${CONSOLE_HTTPD_IMAGE}"
