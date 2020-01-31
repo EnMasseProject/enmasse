@@ -498,8 +498,8 @@ function createAddressSpace(as) {
 
   addressSpaces.push(addressSpace);
   return addressSpace.ObjectMeta;
-}
 
+}
 function patchAddressSpace(objectMeta, jsonPatch, patchType) {
   var index = addressSpaces.findIndex(existing => objectMeta.Name === existing.ObjectMeta.Name && objectMeta.Namespace === existing.ObjectMeta.Namespace);
   if (index < 0) {
@@ -514,16 +514,16 @@ function patchAddressSpace(objectMeta, jsonPatch, patchType) {
   }
 
   var patch = JSON.parse(jsonPatch);
-  var current = addressSpaces[index].Spec;
+  var current = JSON.parse(JSON.stringify(addressSpaces[index].Spec));
   var patched = applyPatch(JSON.parse(JSON.stringify(current)) , patch);
   if (patched.newDocument) {
     var replacement = patched.newDocument;
-    if (replacement.Plan !== current.Plan) {
+    if (!_.isEqual(replacement.Plan, current.Plan)) {
       var replacementPlan = typeof(replacement.Plan) === "string" ? replacement.Plan : replacement.ObjectMeta.Name;
       var spacePlan = availableAddressSpacePlans.find(o => o.ObjectMeta.Name === replacementPlan);
       if (spacePlan === undefined) {
         var knownPlansNames = availableAddressSpacePlans.map(p => p.ObjectMeta.Name);
-        throw `Unrecognised address space plan '${replacement.Spec.Plan}', known ones are : ${knownPlansNames}`;
+        throw `Unrecognised address space plan '${replacementPlan}', known ones are : ${knownPlansNames}`;
       }
       replacement.Plan = spacePlan;
     }
@@ -814,16 +814,16 @@ function patchAddress(objectmeta, jsonPatch, patchType) {
   }
 
   var patch = JSON.parse(jsonPatch);
-  var current = addresses[index].Spec;
+  var current = JSON.parse(JSON.stringify(addresses[index].Spec));
   var patched = applyPatch(JSON.parse(JSON.stringify(current)) , patch);
   if (patched.newDocument) {
     var replacement = patched.newDocument;
-    if (replacement.Plan !== current.Plan) {
+    if (!_.isEqual(replacement.Plan,current.Plan)) {
       var replacementPlan = typeof(replacement.Plan) === "string" ? replacement.Plan : replacement.Plan.ObjectMeta.Name;
       var spacePlan = availableAddressPlans.find(o => o.ObjectMeta.Name === replacementPlan);
       if (spacePlan === undefined) {
         var knownPlansNames = availableAddressPlans.map(p => p.ObjectMeta.Name);
-        throw `Unrecognised address plan '${replacement.Spec.Plan}', known ones are : ${knownPlansNames}`;
+        throw `Unrecognised address plan '${replacementPlan}', known ones are : ${knownPlansNames}`;
       }
       replacement.Plan = spacePlan;
     }
