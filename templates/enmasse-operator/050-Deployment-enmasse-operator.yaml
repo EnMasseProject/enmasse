@@ -117,13 +117,11 @@ spec:
           value: "${CONSOLE_PROXY_OPENSHIFT_IMAGE}"
         - name: CONSOLE_PROXY_KUBERNETES_IMAGE
           value: "${CONSOLE_PROXY_KUBERNETES_IMAGE}"
-        - name: CONSOLE_HTTPD_IMAGE
-          value: "${CONSOLE_HTTPD_IMAGE}"
-        - name: ENABLE_MONITORING
-          value: "true"
         - name: CONSOLE_LINK_SECTION_NAME
           value: "${CONSOLE_LINK_SECTION_NAME}"
         - name: CONSOLE_LINK_NAME
           value: "${CONSOLE_LINK_NAME}"
         - name: CONSOLE_LINK_IMAGE_URL
           value: "${CONSOLE_LINK_IMAGE_URL}"
+        - name: ENABLE_MONITORING
+          value: "true"
