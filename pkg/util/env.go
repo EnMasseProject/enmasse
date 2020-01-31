@@ -8,6 +8,7 @@ package util
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -40,6 +41,26 @@ func GetDurationEnvOrDefault(key string, defaultValue time.Duration) time.Durati
 			return defaultValue
 		} else {
 			return duration
+		}
+	}
+}
+
+func GetUintEnvOrDefault(key string, base int, bitSize int, defaultValue uint64) uint64 {
+	// Validate default value agrees with bitSize
+	_, err := strconv.ParseUint(strconv.FormatUint(defaultValue, 10), base, bitSize)
+	if err != nil {
+		panic(fmt.Errorf("defaultValue %d would overflow %d bits", defaultValue, bitSize))
+	}
+
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	} else {
+		uintValue, err := strconv.ParseUint(value, base, bitSize)
+		if err != nil {
+			return defaultValue
+		} else {
+			return uintValue
 		}
 	}
 }
