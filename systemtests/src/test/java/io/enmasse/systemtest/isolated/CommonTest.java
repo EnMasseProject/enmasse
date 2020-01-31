@@ -98,7 +98,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
         Multimap<String, String> podsContainersWithNoLog = HashMultimap.create();
 
-        kubernetes.listPods().forEach(pod -> kubernetes.getContainersFromPod(pod.getMetadata().getName()).forEach(container -> {
+        kubernetes.listPods().stream().filter(pod -> !pod.getMetadata().getName().contains("none-authservice")).forEach(pod -> kubernetes.getContainersFromPod(pod.getMetadata().getName()).forEach(container -> {
             String podName = pod.getMetadata().getName();
             String containerName = container.getName();
             log.info("Getting log from pod: {}, for container: {}", podName, containerName);
