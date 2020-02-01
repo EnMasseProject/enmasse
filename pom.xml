@@ -92,7 +92,7 @@
         <frontend-maven-plugin.version>1.6</frontend-maven-plugin.version>
         <properties-maven-plugin.version>1.0.0</properties-maven-plugin.version>
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
-        <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
+        <maven-checkstyle-plugin.version>3.1.0</maven-checkstyle-plugin.version>
         <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
         <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
         <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
@@ -103,7 +103,7 @@
         <security-versions-plugin.version>1.0.6</security-versions-plugin.version>
         <dependency-check-maven-plugin.version>4.0.2</dependency-check-maven-plugin.version>
         <maven-xml-plugin.version>1.0.2</maven-xml-plugin.version>
-
+        <checkstyle.version>8.29</checkstyle.version>
         <license-report-stylesheet>${maven.multiModuleProjectDirectory}/licenses.xsl</license-report-stylesheet>
     </properties>
 
@@ -821,7 +821,7 @@
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>8.29</version>
+                        <version>${checkstyle.version}</version>
                     </dependency>
                 </dependencies>
                 <executions>
