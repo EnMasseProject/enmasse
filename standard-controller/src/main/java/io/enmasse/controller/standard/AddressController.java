@@ -22,6 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -309,9 +310,48 @@ public class AddressController implements Watcher<Address> {
                     address.getStatus().setPhase(Pending);
                     address.getStatus().appendMessage(errorMessage);
                 }
-            } else {
-                validAddresses.put(address.getSpec().getAddress(), address);
+                continue;
             }
+
+            if ("subscription".equals(address.getSpec().getType())) {
+                String topic = address.getSpec().getTopic();
+                if (topic == null) {
+                    String errorMessage = String.format("Subscription address '%s' (resource name '%s') must reference a known topic address.",
+                            address.getSpec().getAddress(),
+                            address.getMetadata().getName());
+                    address.getStatus().setPhase(Pending);
+                    address.getStatus().appendMessage(errorMessage);
+                    continue;
+                } else {
+                    Optional<Address> refTopic = addressList.stream().filter(a -> topic.equals(a.getSpec().getAddress())).findFirst();
+                    if (refTopic.isEmpty()) {
+                        String errorMessage = String.format(
+                                "Subscription address '%s' (resource name '%s') references a topic address '%s' that does not exist.",
+                                address.getSpec().getAddress(),
+                                address.getMetadata().getName(),
+                                topic);
+                        address.getStatus().setPhase(Pending);
+                        address.getStatus().appendMessage(errorMessage);
+                        continue;
+                    } else {
+                        Address target = refTopic.get();
+                        if (!"topic".equals(target.getSpec().getType())) {
+                            String errorMessage = String.format(
+                                    "Subscription address '%s' (resource name '%s') references a topic address '%s'" +
+                                            " (resource name '%s') that is not of expected type 'topic' (found type '%s' instead).",
+                                    address.getSpec().getAddress(),
+                                    address.getMetadata().getName(),
+                                    topic,
+                                    target.getMetadata().getName(),
+                                    target.getSpec().getType());
+                            address.getStatus().setPhase(Pending);
+                            address.getStatus().appendMessage(errorMessage);
+                            continue;
+                        }
+                    }
+                }
+            }
+            validAddresses.put(address.getSpec().getAddress(), address);
         }
 
         Set<Address> addressSet = new LinkedHashSet<>(validAddresses.values());
