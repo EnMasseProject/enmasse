@@ -13,4 +13,5 @@ include::../common/address-example1.yaml[]
 <2> The address is the messaging address this address resource represents.
 <3> The address type dictates the semantics of this address.
 <4> The address plan describes the resource usage for the address. For more information about how to view the available plans see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-list-available-address-plans-messaging[Listing available address plans].
+<5> The address of topic that this subscription refers to (only applicable to subscription types).
 
