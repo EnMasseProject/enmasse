@@ -669,6 +669,7 @@ public class ConsoleWebPage implements IWebPage {
         selectAddressSpaces(addressSpaces);
         selenium.clickOnItem(getTableDropDown(), "Main dropdown");
         selenium.clickOnItem(getDeleteAllButton());
+        selenium.clickOnItem(getConfirmButton());
         for (AddressSpace space : addressSpaces) {
             selenium.waitUntilItemNotPresent(30, () -> getAddressSpaceItem(space));
         }
