@@ -102,7 +102,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
   const client = useApolloClient();
 
   const onTypeSelect = async (event: any) => {
-    if (event.currentTarget.childNodes[0].value) {
+    if (event.currentTarget.childNodes[0] && event.currentTarget.childNodes[0].value) {
       const type = event.currentTarget.childNodes[0].value;
       setType(type);
       const addressPlans = await client.query<IAddressPlans>({
@@ -150,11 +150,11 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
 
   const [isPlanOpen, setIsPlanOpen] = React.useState(false);
   const onPlanSelect = (event: any) => {
-    setPlan(event.currentTarget.childNodes[0].value);
+    event.currentTarget.childNodes[0] && setPlan(event.currentTarget.childNodes[0].value);
     setIsPlanOpen(!isPlanOpen);
   };
   const onTopicSelect = (event: any) => {
-    setTopic(event.currentTarget.childNodes[0].value);
+    event.currentTarget.childNodes[0] && setTopic(event.currentTarget.childNodes[0].value);
     setIsTopicOpen(!isTopicOpen);
   };
   const { loading, error, data } = useQuery<IAddressTypes>(
@@ -192,11 +192,11 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                 !isNameValid ? (
                   <small>
                     Only digits (0-9), lower case letters (a-z), -, and .
-                    allowed, and should start with alpha-numeric characters. 
+                    allowed, and should start with alpha-numeric characters.
                   </small>
                 ) : (
-                  ""
-                )
+                    ""
+                  )
               }
             >
               <TextInput
