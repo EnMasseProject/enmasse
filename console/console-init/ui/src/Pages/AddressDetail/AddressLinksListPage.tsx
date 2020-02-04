@@ -81,7 +81,12 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
     role: link.Spec.Role.toString(),
     containerId: link.Spec.Connection.Spec.ContainerId,
     name: link.ObjectMeta.Name,
-    deliveryRate: getFilteredValue(link.Metrics, link.Spec.Role === "sender" ? "enmasse_messages_in" : "enmasse_messages_out"),
+    deliveryRate: getFilteredValue(
+      link.Metrics,
+      link.Spec.Role === "sender"
+        ? "enmasse_messages_in"
+        : "enmasse_messages_out"
+    ),
     backlog: getFilteredValue(link.Metrics, "enmasse_messages_backlog"),
     connectionName: link.Spec.Connection.ObjectMeta.Name,
     addressSpaceName: name,
@@ -90,7 +95,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   }));
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
-    setSortValue({index:index,direction:direction});
+    setSortValue({ index: index, direction: direction });
   };
   return (
     <>

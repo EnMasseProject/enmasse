@@ -52,7 +52,7 @@ export const About: React.FunctionComponent<IAboutProps> = ({
     console.log("process.env.REACT_APP_VERSION is not set");
   }
   let docs = process.env.REACT_APP_DOCS;
-  if(!docs) {
+  if (!docs) {
     console.log("process.env.REACT_APP_DOCS is not set");
   }
   let docsElement;
@@ -73,7 +73,8 @@ export const About: React.FunctionComponent<IAboutProps> = ({
       isOpen={isAboutModalOpen}
       onClose={handleAboutModalToggle}
       productName={productName}
-      {...modalImgProps}>
+      {...modalImgProps}
+    >
       <TextContent>
         <TextList component="dl">
           <TextListItem component="dt">EnMasse Version</TextListItem>

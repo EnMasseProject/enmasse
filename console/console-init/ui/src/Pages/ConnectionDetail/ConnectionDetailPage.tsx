@@ -15,7 +15,12 @@ import {
 } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
 import { useParams } from "react-router";
-import { Loading, useA11yRouteChange, useBreadcrumb, useDocumentTitle } from "use-patternfly";
+import {
+  Loading,
+  useA11yRouteChange,
+  useBreadcrumb,
+  useDocumentTitle
+} from "use-patternfly";
 import { getFilteredValue } from "src/Components/Common/ConnectionListFormatter";
 import { IConnectionDetailResponse } from "src/Types/ResponseTypes";
 import { Link } from "react-router-dom";
@@ -59,7 +64,8 @@ export default function ConnectionDetailPage() {
         <BreadcrumbItem>
           <Link
             id="cdetail-link-connections"
-            to={`/address-spaces/${namespace}/${name}/${type}/connections`}>
+            to={`/address-spaces/${namespace}/${name}/${type}/connections`}
+          >
             {name}
           </Link>
         </BreadcrumbItem>
@@ -73,7 +79,7 @@ export default function ConnectionDetailPage() {
   useA11yRouteChange();
   const { loading, error, data } = useQuery<IConnectionDetailResponse>(
     RETURN_CONNECTION_DETAIL(name || "", namespace || "", connectionname || ""),
-    { pollInterval: 5000 } 
+    { pollInterval: 5000 }
   );
   if (loading) return <Loading />;
   if (error) {
@@ -87,7 +93,9 @@ export default function ConnectionDetailPage() {
   // setTotalLinks(connections.Total);
   //Change this logic
   const jvmObject =
-    connection.Spec &&connection.Spec.Properties && connection.Spec.Properties.length > 0
+    connection.Spec &&
+    connection.Spec.Properties &&
+    connection.Spec.Properties.length > 0
       ? getSplitValue(
           getProductFilteredValue(connection.Spec.Properties, "platform")
         )
@@ -99,7 +107,7 @@ export default function ConnectionDetailPage() {
     version: getProductFilteredValue(connection.Spec.Properties, "version"),
     protocol: connection.Spec.Protocol.toUpperCase(),
     encrypted: connection.Spec.Encrypted || false,
-    creationTimestamp:connection.ObjectMeta.CreationTimestamp,
+    creationTimestamp: connection.ObjectMeta.CreationTimestamp,
     messageIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
     messageOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
     //Change this logic

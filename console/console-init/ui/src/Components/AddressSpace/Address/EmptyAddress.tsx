@@ -40,7 +40,8 @@ export const EmptyAddress: React.FunctionComponent<IEmptyAddressProps> = ({
       <Button
         id="empty-address-create-button"
         variant={ButtonVariant.primary}
-        onClick={createAddressOnClick}>
+        onClick={createAddressOnClick}
+      >
         Create Address
       </Button>
     </EmptyState>

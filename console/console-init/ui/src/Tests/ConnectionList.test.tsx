@@ -16,7 +16,7 @@ describe("Connection List", () => {
     const connections: IConnection[] = [
       {
         name: "foo3",
-        creationTimestamp:"2020-01-20T11:44:28.607Z",
+        creationTimestamp: "2020-01-20T11:44:28.607Z",
         hostname: "foo1",
         containerId: "123",
         protocol: "AMQP",
@@ -29,7 +29,7 @@ describe("Connection List", () => {
       },
       {
         name: "foo4",
-        creationTimestamp:"2020-01-20T11:44:28.607Z",
+        creationTimestamp: "2020-01-20T11:44:28.607Z",
         hostname: "foo2",
         containerId: "1234",
         protocol: "AMQ",

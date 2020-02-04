@@ -6,7 +6,17 @@
 import React from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { RETURN_ADDRESS_SPACE_PLANS } from "src/Queries/Queries";
-import { Form, TextContent, Text, TextVariants, FormGroup, FormSelect, FormSelectOption, TextInput, Radio } from "@patternfly/react-core";
+import {
+  Form,
+  TextContent,
+  Text,
+  TextVariants,
+  FormGroup,
+  FormSelect,
+  FormSelectOption,
+  TextInput,
+  Radio
+} from "@patternfly/react-core";
 import { IAddressSpace } from "src/Components/AddressSpaceList/AddressSpaceList";
 import { IAddressSpacePlans } from "../Pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
 import { Loading } from "use-patternfly";
@@ -17,10 +27,12 @@ interface IEditAddressSpaceProps {
 }
 
 export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> = ({
-  addressSpace, onPlanChange
+  addressSpace,
+  onPlanChange
 }) => {
-
-  const { loading, error, data } = useQuery<IAddressSpacePlans>(RETURN_ADDRESS_SPACE_PLANS);
+  const { loading, error, data } = useQuery<IAddressSpacePlans>(
+    RETURN_ADDRESS_SPACE_PLANS
+  );
 
   if (loading) return <Loading />;
   if (error) return <Loading />;
@@ -55,7 +67,8 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
           id="edit-addr-plan"
           isDisabled
           value={addressSpace.nameSpace}
-          aria-label="FormSelect Input">
+          aria-label="FormSelect Input"
+        >
           <FormSelectOption
             value={addressSpace.nameSpace}
             label={addressSpace.nameSpace}
@@ -70,7 +83,12 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
           value={addressSpace.name}
         />
       </FormGroup>
-      <FormGroup label="Type" fieldId="address-space-type" isInline isRequired={true}>
+      <FormGroup
+        label="Type"
+        fieldId="address-space-type"
+        isInline
+        isRequired={true}
+      >
         <Radio
           name="radio-1"
           isDisabled
@@ -88,12 +106,17 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
           isChecked={addressSpace.type === "brokered"}
         />
       </FormGroup>
-      <FormGroup label="Address space plan" fieldId="simple-form-name" isRequired={true}>
+      <FormGroup
+        label="Address space plan"
+        fieldId="simple-form-name"
+        isRequired={true}
+      >
         <FormSelect
           id="edit-addr-plan"
           value={addressSpace.planValue}
-          onChange={(val) => onPlanChange(val)}
-          aria-label="FormSelect Input">
+          onChange={val => onPlanChange(val)}
+          aria-label="FormSelect Input"
+        >
           {planOptions.map((option, index) => (
             <FormSelectOption
               isDisabled={option.disabled}
@@ -104,18 +127,20 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
           ))}
         </FormSelect>
       </FormGroup>
-      <FormGroup label="Authentication Service" fieldId="simple-form-name" isRequired={true}>
+      <FormGroup
+        label="Authentication Service"
+        fieldId="simple-form-name"
+        isRequired={true}
+      >
         <FormSelect
           id="edit-addr-auth"
           value={"sample"}
           isDisabled
-          aria-label="FormSelect Input">
-          <FormSelectOption
-            value={"sample"}
-            label={"Sample"}
-          />
+          aria-label="FormSelect Input"
+        >
+          <FormSelectOption value={"sample"} label={"Sample"} />
         </FormSelect>
       </FormGroup>
     </Form>
   );
-}
+};

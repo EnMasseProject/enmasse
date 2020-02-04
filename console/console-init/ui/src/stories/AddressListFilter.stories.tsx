@@ -10,9 +10,9 @@ import { AddressListFilter } from "src/Pages/AddressSpaceDetail/AddressList/Addr
 import { text, number } from "@storybook/addon-knobs";
 
 export default {
-    title: "Address List Filter"
-  };
-  
+  title: "Address List Filter"
+};
+
 export const addressListFilter = () => (
   <MemoryRouter>
     <AddressListFilter
