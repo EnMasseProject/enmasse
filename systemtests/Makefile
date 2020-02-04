@@ -33,4 +33,4 @@ all: systemtests
 systemtests:
 		KUBERNETES_API_TOKEN=$(KUBERNETES_API_TOKEN) \
 		KUBERNETES_API_URL=$(KUBERNETES_API_URL) \
-		./scripts/run_tests.sh '$(SYSTEMTEST_PROFILE)' '$(SYSTEMTEST_ARGS)'
+		./scripts/run_tests.sh '$(PROFILE)' '$(TEST)'
