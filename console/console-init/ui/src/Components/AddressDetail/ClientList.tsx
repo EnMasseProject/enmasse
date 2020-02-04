@@ -50,10 +50,12 @@ export const ClientList: React.FunctionComponent<IClientListProps> = ({
             <>
               {row.name}{" "}
               <Link
-                to={`/address-spaces/${row.addressSpaceNamespace}/${row.addressSpaceName}/${row.addressSpaceType}/connections/${row.connectionName}`}>
+                to={`/address-spaces/${row.addressSpaceNamespace}/${row.addressSpaceName}/${row.addressSpaceType}/connections/${row.connectionName}`}
+              >
                 <Tooltip
                   position={TooltipPosition.top}
-                  content={<div>Go to the link</div>}>
+                  content={<div>Go to the link</div>}
+                >
                   <ExternalLinkAltIcon />
                 </Tooltip>
               </Link>
@@ -83,7 +85,8 @@ export const ClientList: React.FunctionComponent<IClientListProps> = ({
       rows={tableRows}
       aria-label="client list"
       onSort={onSort}
-      sortBy={sortBy}>
+      sortBy={sortBy}
+    >
       <TableHeader />
       <TableBody />
     </Table>

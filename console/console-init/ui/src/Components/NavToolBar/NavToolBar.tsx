@@ -35,7 +35,8 @@ const NavToolBar: React.FC = () => {
           paddingLeft: 20,
           paddingTop: 20,
           paddingBottom: 10
-        }}>
+        }}
+      >
         Help
       </DropdownItem>
     </a>,
@@ -48,7 +49,8 @@ const NavToolBar: React.FC = () => {
         paddingTop: 10,
         paddingBottom: 20
       }}
-      onClick={selectAbout}>
+      onClick={selectAbout}
+    >
       About
     </DropdownItem>
   ];
@@ -66,7 +68,8 @@ const NavToolBar: React.FC = () => {
           <DropdownToggle
             iconComponent={null}
             onToggle={onToggle}
-            aria-label="Applications">
+            aria-label="Applications"
+          >
             <QuestionCircleIcon />
           </DropdownToggle>
         }

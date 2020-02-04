@@ -42,7 +42,8 @@ export const DialoguePrompt: React.FunctionComponent<IDialogueProps> = ({
           Cancel
         </Button>
       ]}
-      isFooterLeftAligned={true}>
+      isFooterLeftAligned={true}
+    >
       <b>{nameString}</b>
       <br />
       {detail}

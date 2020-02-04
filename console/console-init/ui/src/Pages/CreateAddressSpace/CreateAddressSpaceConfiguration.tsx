@@ -102,12 +102,14 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   const [isStandardChecked, setIsStandardChecked] = React.useState(false);
   const [isBrokeredChecked, setIsBrokeredChecked] = React.useState(false);
   const onNameSpaceSelect = (event: any) => {
-    event.currentTarget.childNodes[0] && setNamespace(event.currentTarget.childNodes[0].value);
+    event.currentTarget.childNodes[0] &&
+      setNamespace(event.currentTarget.childNodes[0].value);
     setIsNameSpaceOpen(!isNameSpaceOpen);
   };
   const [isPlanOpen, setIsPlanOpen] = React.useState(false);
   const onPlanSelect = (event: any) => {
-    event.currentTarget.childNodes[0] && setPlan(event.currentTarget.childNodes[0].value);
+    event.currentTarget.childNodes[0] &&
+      setPlan(event.currentTarget.childNodes[0].value);
     setIsPlanOpen(!isPlanOpen);
   };
 
@@ -116,7 +118,8 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
     setIsAuthenticationServiceOpen
   ] = React.useState(false);
   const onAuthenticationServiceSelect = (event: any) => {
-    event.currentTarget.childNodes[0] && setAuthenticationService(event.currentTarget.childNodes[0].value);
+    event.currentTarget.childNodes[0] &&
+      setAuthenticationService(event.currentTarget.childNodes[0].value);
     setIsAuthenticationServiceOpen(!isAuthenticationServiceOpen);
   };
 

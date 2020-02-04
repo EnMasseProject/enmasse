@@ -14,7 +14,7 @@ describe("Connection Detail Header with all connection details", () => {
   test("it renders ConnectionDetailHeader component with all props details at top of the page", () => {
     const props: IConnectionHeaderDetailProps = {
       hostname: "myapp1",
-      creationTimestamp:"2020-01-20T11:44:28.607Z",
+      creationTimestamp: "2020-01-20T11:44:28.607Z",
       containerId: "1.219.2.1.33904",
       protocol: "AMQP",
       product: "QpidJMS",

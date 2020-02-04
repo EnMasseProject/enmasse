@@ -41,7 +41,8 @@ export const EmptyAddressSpace: React.FunctionComponent<IEmptyAddressSpaceProps>
       <Button
         id="empty-ad-space-create-button"
         variant={ButtonVariant.primary}
-        onClick={createAddressSpaceOnClick}>
+        onClick={createAddressSpaceOnClick}
+      >
         Create Address Space
       </Button>
     </EmptyState>

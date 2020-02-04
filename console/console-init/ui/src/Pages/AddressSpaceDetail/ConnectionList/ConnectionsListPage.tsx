@@ -75,7 +75,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
       receivers: getFilteredValue(connection.Metrics, "enmasse_receivers"),
       status: "running",
       name: connection.ObjectMeta.Name,
-      creationTimestamp:connection.ObjectMeta.CreationTimestamp
+      creationTimestamp: connection.ObjectMeta.CreationTimestamp
     })
   );
 

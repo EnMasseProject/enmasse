@@ -53,7 +53,8 @@ export const TypeBadge: React.FunctionComponent<ITypeString> = ({ type }) => {
         paddingRight: 15,
         paddingTop: 5,
         paddingBottom: 5
-      }}>
+      }}
+    >
       {type[0].toUpperCase()}
     </Badge>
   );
@@ -64,7 +65,8 @@ export const TypePlan: React.FunctionComponent<ITypePlanProps> = address => {
   const labelItem = (
     <Badge
       id="type-plan-badge"
-      style={{ backgroundColor: iconColor, fontSize: 12, padding: 5 }}>
+      style={{ backgroundColor: iconColor, fontSize: 12, padding: 5 }}
+    >
       {address.type[0].toUpperCase() + " "}
     </Badge>
   );
@@ -73,7 +75,8 @@ export const TypePlan: React.FunctionComponent<ITypePlanProps> = address => {
       <Tooltip
         id="type-tooltip"
         position={TooltipPosition.top}
-        content={<div>{address.type}</div>}>
+        content={<div>{address.type}</div>}
+      >
         {labelItem}
       </Tooltip>
       {" " + address.plan}
