@@ -347,7 +347,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                 key={option.key}
                 value={option.value}
                 itemID={option.key}
-                component={"button"}>
+                component={"button"}
+              >
                 {option.value}
               </DropdownItem>
             ))}
@@ -358,7 +359,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
             <DataToolbarFilter
               chips={filterNames.map(filter => filter.value)}
               deleteChip={onDelete}
-              categoryName="Name">
+              categoryName="Name"
+            >
               {filterValue && filterValue === "Name" && (
                 <InputGroup>
                   <Select
@@ -378,7 +380,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                     ariaLabelledBy={"typeahead-select-id"}
                     placeholderText="Select name"
                     isDisabled={false}
-                    isCreatable={false}>
+                    isCreatable={false}
+                  >
                     {nameOptions && nameOptions.length > 0 ? (
                       nameOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
@@ -402,7 +405,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                     id="ad-links-filter-search-name"
                     variant={ButtonVariant.control}
                     aria-label="search button for search name"
-                    onClick={onAddInput}>
+                    onClick={onAddInput}
+                  >
                     <SearchIcon />
                   </Button>
                 </InputGroup>
@@ -413,7 +417,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
             <DataToolbarFilter
               chips={filterContainers.map(filter => filter.value)}
               deleteChip={onDelete}
-              categoryName="Container">
+              categoryName="Container"
+            >
               {filterValue && filterValue === "Container" && (
                 <InputGroup>
                   <Select
@@ -433,31 +438,33 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                     ariaLabelledBy={"typeahead-select-id"}
                     placeholderText="Select container"
                     isDisabled={false}
-                    isCreatable={false}>
-                   {containerOptions && containerOptions.length > 0 ? (
-                        containerOptions.map((option, index) => (
-                          <SelectOption key={index} value={option} />
-                        ))
-                      ) : containerInput.trim().length < 5 ? (
-                        <SelectOption
-                          key={"invalid-input-length"}
-                          value={"Enter more characters"}
-                          disabled={true}
-                        />
-                      ) : (
-                        <SelectOption
-                          key={"no-results-found"}
-                          value={"No results found"}
-                          disabled={true}
-                        />
-                      )}
+                    isCreatable={false}
+                  >
+                    {containerOptions && containerOptions.length > 0 ? (
+                      containerOptions.map((option, index) => (
+                        <SelectOption key={index} value={option} />
+                      ))
+                    ) : containerInput.trim().length < 5 ? (
+                      <SelectOption
+                        key={"invalid-input-length"}
+                        value={"Enter more characters"}
+                        disabled={true}
+                      />
+                    ) : (
+                      <SelectOption
+                        key={"no-results-found"}
+                        value={"No results found"}
+                        disabled={true}
+                      />
+                    )}
                     {/* {} */}
                   </Select>
                   <Button
                     id="ad-links-filter-search-container"
                     variant={ButtonVariant.control}
                     aria-label="search button for search containers"
-                    onClick={onAddInput}>
+                    onClick={onAddInput}
+                  >
                     <SearchIcon />
                   </Button>
                 </InputGroup>
@@ -469,7 +476,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
             <DataToolbarFilter
               chips={filterRole ? [filterRole] : []}
               deleteChip={onDelete}
-              categoryName="Role">
+              categoryName="Role"
+            >
               {filterValue === "Role" && (
                 <Dropdown
                   id="ad-links-filter-select-role"
@@ -487,7 +495,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                       key={option.key}
                       value={option.value}
                       itemID={option.key}
-                      component={"button"}>
+                      component={"button"}
+                    >
                       {option.value}
                     </DropdownItem>
                   ))}
@@ -505,7 +514,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onDeleteAll}>
+      clearAllFilters={onDeleteAll}
+    >
       <DataToolbarContent>
         <>
           <DataToolbarToggleGroup
@@ -519,7 +529,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                 )}
               </>
             }
-            breakpoint="xl">
+            breakpoint="xl"
+          >
             {toggleGroupItems}
           </DataToolbarToggleGroup>
           {width < 769 && (

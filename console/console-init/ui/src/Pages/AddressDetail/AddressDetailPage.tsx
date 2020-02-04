@@ -42,7 +42,8 @@ export default function AddressDetailPage() {
         <BreadcrumbItem>
           <Link
             id="ad-page-link-addresses"
-            to={`/address-spaces/${namespace}/${name}/${type}/addresses`}>
+            to={`/address-spaces/${namespace}/${name}/${type}/addresses`}
+          >
             {name}
           </Link>
         </BreadcrumbItem>
@@ -167,18 +168,21 @@ export default function AddressDetailPage() {
             key="confirm"
             id="addr-detail-edit-confirm"
             variant="primary"
-            onClick={handleSaving}>
+            onClick={handleSaving}
+          >
             Confirm
           </Button>,
           <Button
             key="cancel"
             id="addr-detail-edit-cancel"
             variant="link"
-            onClick={() => setIsEditModalOpen(!isEditModalOpen)}>
+            onClick={() => setIsEditModalOpen(!isEditModalOpen)}
+          >
             Cancel
           </Button>
         ]}
-        isFooterLeftAligned>
+        isFooterLeftAligned
+      >
         <EditAddress
           name={addressDetail.ObjectMeta.Name}
           type={addressDetail.Spec.Plan.Spec.AddressType}

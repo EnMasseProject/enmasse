@@ -68,12 +68,14 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
         <Flex>
           <FlexItem
             id="cd-header-container-id"
-            className={css(styles.flex_right_border)}>
+            className={css(styles.flex_right_border)}
+          >
             in container <b>{containerId}</b>
           </FlexItem>
           <FlexItem
             id="cd-header-protocol"
-            className={css(styles.flex_right_border)}>
+            className={css(styles.flex_right_border)}
+          >
             <ConnectionProtocolFormat
               protocol={protocol}
               encrypted={encrypted}
@@ -91,7 +93,8 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
               onClick={() => {
                 setIsHidden(!isHidden);
               }}
-              className={css(styles.expandable)}>
+              className={css(styles.expandable)}
+            >
               {isHidden ? (
                 <>
                   See more details <AngleDownIcon color="black" />
@@ -110,7 +113,8 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
           breakpointMods={[
             { modifier: "column", breakpoint: "sm" },
             { modifier: "row", breakpoint: "lg" }
-          ]}>
+          ]}
+        >
           {width < 992 || !isHidden ? (
             <>
               <ConnectionDetail

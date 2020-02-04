@@ -78,7 +78,8 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({
       rows={tableRows}
       aria-label="links list"
       onSort={onSort}
-      sortBy={sortBy}>
+      sortBy={sortBy}
+    >
       <TableHeader />
       <TableBody />
     </Table>

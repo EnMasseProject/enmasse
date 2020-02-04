@@ -42,15 +42,15 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
   addressSpacePlan,
   onChange
 }) => {
-
-  let { loading, error, data } = useQuery<IAddressPlans>(RETURN_ADDRESS_PLANS(addressSpacePlan || "", type));
+  let { loading, error, data } = useQuery<IAddressPlans>(
+    RETURN_ADDRESS_PLANS(addressSpacePlan || "", type)
+  );
 
   if (loading) return <Loading />;
   if (error) return <Loading />;
   const { addressPlans } = data || {
     addressPlans: []
   };
-
 
   let optionsPlan: any[] = addressPlans
     .map(plan => {
@@ -79,11 +79,12 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
         />
       </FormGroup>
       <FormGroup label="Type" fieldId="simple-form-name">
-        <FormSelect isDisabled aria-label="FormSelect Input" id="edit-addr-type">
-          <FormSelectOption
-            value={type}
-            label={type}
-          />
+        <FormSelect
+          isDisabled
+          aria-label="FormSelect Input"
+          id="edit-addr-type"
+        >
+          <FormSelectOption value={type} label={type} />
         </FormSelect>
       </FormGroup>
       <FormGroup label="Plan" fieldId="simple-form-name">
@@ -91,7 +92,8 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
           id="edit-addr-plan"
           value={plan}
           onChange={value => onPlanChanged(value)}
-          aria-label="FormSelect Input">
+          aria-label="FormSelect Input"
+        >
           {optionsPlan.map((option, index) => (
             <FormSelectOption
               isDisabled={option.disabled}
