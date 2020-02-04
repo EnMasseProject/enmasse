@@ -33,7 +33,8 @@ export const AddressSpaceIcon = () => {
       style={{
         backgroundColor: "#EC7A08",
         fontSize: "var(--pf-c-table-cell--FontSize)"
-      }}>
+      }}
+    >
       AS
     </Badge>
   );
@@ -51,12 +52,12 @@ export const statusToDisplay = (phase: string) => {
       icon = <ExclamationCircleIcon color="red" />;
       break;
     case "":
-      icon=<InProgressIcon />;
+      icon = <InProgressIcon />;
       break;
   }
   return (
     <>
-      {icon}&nbsp;{phase.trim()!=""?phase:"Configuring"}
+      {icon}&nbsp;{phase.trim() != "" ? phase : "Configuring"}
     </>
   );
 };

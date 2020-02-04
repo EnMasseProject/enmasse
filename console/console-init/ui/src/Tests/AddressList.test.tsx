@@ -17,7 +17,7 @@ describe("Address List", () => {
     const addresses: IAddress[] = [
       {
         name: "leo_b",
-        displayName:"leo_b",
+        displayName: "leo_b",
         namespace: "leo_b",
         type: "queue",
         planLabel: "small",
@@ -33,7 +33,7 @@ describe("Address List", () => {
       },
       {
         name: "newqueue",
-        displayName:"newqueue",
+        displayName: "newqueue",
         namespace: "newqueue",
         type: "queue",
         planLabel: "large",
@@ -57,8 +57,9 @@ describe("Address List", () => {
           rowsData={addresses}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onSelectAddress={()=>{}}
-          onSelectAllAddress={()=>{}}
+          onSelectAddress={() => {}}
+          onSelectAllAddress={() => {}}
+          onPurge={() => {}}
         />
       </MemoryRouter>
     );
@@ -66,7 +67,7 @@ describe("Address List", () => {
     //Testing elements of first row
     getByText(addresses[0].name);
     // getByText(addresses[0].type);
-    getByText(addresses[0].planLabel); 
+    getByText(addresses[0].planLabel);
     getByText(addresses[0].messageIn.toString());
     getByText(addresses[0].messageOut.toString());
     getByText(addresses[0].storedMessages.toString());

@@ -124,7 +124,8 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       rows={tableRows}
       aria-label="connection list"
       sortBy={sortBy}
-      onSort={onSort}>
+      onSort={onSort}
+    >
       <TableHeader id="connectionlist-table-header" />
       <TableBody />
     </Table>

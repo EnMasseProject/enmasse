@@ -170,16 +170,11 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
       type: addSpace.Spec.Type,
       planValue: addSpace.Spec.Plan.ObjectMeta.Name,
       displayName: addSpace.Spec.Plan.Spec.DisplayName,
-      isReady:
-        addSpace.Status  && addSpace.Status.IsReady,
+      isReady: addSpace.Status && addSpace.Status.IsReady,
       phase:
-        addSpace.Status &&
-        addSpace.Status.Phase 
-          ? addSpace.Status.Phase
-          : "",
+        addSpace.Status && addSpace.Status.Phase ? addSpace.Status.Phase : "",
       messages:
-        addSpace.Status &&
-        addSpace.Status.Messages 
+        addSpace.Status && addSpace.Status.Messages
           ? addSpace.Status.Messages
           : [],
       selected:
@@ -227,21 +222,25 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
               key="confirm"
               id="as-list-edit-confirm"
               variant="primary"
-              onClick={handleSaving}>
+              onClick={handleSaving}
+            >
               Confirm
             </Button>,
             <Button
               key="cancel"
               id="as-list-edit-cancel"
               variant="link"
-              onClick={handleCancelEdit}>
+              onClick={handleCancelEdit}
+            >
               Cancel
             </Button>
           ]}
-          isFooterLeftAligned={true}>
+          isFooterLeftAligned={true}
+        >
           <EditAddressSpace
             addressSpace={addressSpaceBeingEdited}
-            onPlanChange={handlePlanChange}></EditAddressSpace>
+            onPlanChange={handlePlanChange}
+          ></EditAddressSpace>
         </Modal>
       )}
       {addressSpaceBeingDeleted && (

@@ -90,7 +90,8 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
       <PageSection variant={PageSectionVariants.light}>
         <Title
           size={"lg"}
-          className={css(GridStylesForTableHeader.filter_left_margin)}>
+          className={css(GridStylesForTableHeader.filter_left_margin)}
+        >
           Clients
         </Title>
         <Grid>

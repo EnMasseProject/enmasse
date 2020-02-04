@@ -156,7 +156,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onDeleteAll}>
+      clearAllFilters={onDeleteAll}
+    >
       <DataToolbarContent>{toolbarItems}</DataToolbarContent>
     </DataToolbar>
   );

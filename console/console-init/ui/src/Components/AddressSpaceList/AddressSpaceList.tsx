@@ -33,7 +33,7 @@ export interface IAddressSpace {
   phase: string;
   status?: "creating" | "deleting" | "running";
   selected?: boolean;
-  messages: Array<string>
+  messages: Array<string>;
 }
 
 interface IAddressListProps {
@@ -90,7 +90,8 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
           title: (
             <>
               <Link
-                to={`address-spaces/${row.nameSpace}/${row.name}/${row.type}/addresses`}>
+                to={`address-spaces/${row.nameSpace}/${row.name}/${row.type}/addresses`}
+              >
                 {row.name}
               </Link>
               <br />
@@ -107,7 +108,11 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
             </>
           )
         },
-        { title: <AddressSpaceStatus phase={row.phase} messages={row.messages} /> },
+        {
+          title: (
+            <AddressSpaceStatus phase={row.phase} messages={row.messages} />
+          )
+        },
         {
           title: (
             <>
@@ -172,7 +177,8 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
       actionResolver={actionResolver}
       aria-label="address space list"
       onSort={onSort}
-      sortBy={sortBy}>
+      sortBy={sortBy}
+    >
       <TableHeader id="aslist-table-header" />
       <TableBody />
     </Table>

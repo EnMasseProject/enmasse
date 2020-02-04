@@ -16,7 +16,9 @@ import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
 import avatarImg from "./img_avatar.svg";
 
-const graphqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT ? process.env.REACT_APP_GRAPHQL_ENDPOINT : "http://localhost:4000";
+const graphqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT
+  ? process.env.REACT_APP_GRAPHQL_ENDPOINT
+  : "http://localhost:4000";
 const client = new ApolloClient({
   uri: graphqlEndpoint
 });

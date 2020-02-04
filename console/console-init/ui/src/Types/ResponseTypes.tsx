@@ -100,7 +100,7 @@ export interface IAddressDetailResponse {
       };
       Spec: {
         Address: string;
-        Topic:string|null;
+        Topic: string | null;
         Plan: {
           Spec: {
             DisplayName: string;
@@ -177,8 +177,8 @@ export interface IAddressSpacesResponse {
       };
       Status: {
         IsReady: boolean;
-        Phase:string;
-        Messages:Array<string>
+        Phase: string;
+        Messages: Array<string>;
       };
     }>;
   };
@@ -214,7 +214,7 @@ export interface IConnectionLinksNameSearchResponse {
     Total: number;
     Connections: Array<{
       Links: {
-        Total:number;
+        Total: number;
         Links: Array<{
           ObjectMeta: {
             Name: string;
@@ -229,7 +229,7 @@ export interface IConnectionLinksAddressSearchResponse {
     Total: number;
     Connections: Array<{
       Links: {
-        Total:number;
+        Total: number;
         Links: Array<{
           Spec: {
             Address: string;
@@ -245,7 +245,7 @@ export interface ISearchAddressLinkNameResponse {
     Total: number;
     Addresses: Array<{
       Links: {
-        Total:number;
+        Total: number;
         Links: Array<{
           ObjectMeta: {
             Name: string;
@@ -261,7 +261,7 @@ export interface ISearchAddressLinkContainerResponse {
     Total: number;
     Addresses: Array<{
       Links: {
-        Total:number;
+        Total: number;
         Links: Array<{
           Spec: {
             Connection: {
@@ -278,7 +278,7 @@ export interface ISearchAddressLinkContainerResponse {
 
 export interface ISearchNameOrNameSpaceAddressSpaceListResponse {
   addressSpaces: {
-    Total:number;
+    Total: number;
     AddressSpaces: Array<{
       ObjectMeta: {
         Name: string;
@@ -313,9 +313,9 @@ export interface IConnectionListNameSearchResponse {
 
 export interface IUserDetail {
   whoami: {
-    ObjectMeta:{
-      Name:string;
-    }
-    FullName:string;
-  }
+    ObjectMeta: {
+      Name: string;
+    };
+    FullName: string;
+  };
 }

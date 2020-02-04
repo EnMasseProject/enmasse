@@ -40,7 +40,7 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
     []
   );
   const [filterRole, setFilterRole] = React.useState<string>();
-  const [sortDropDownValue,setSortDropdownValue] = React.useState<ISortBy>();
+  const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
 
   const setSearchParam = React.useCallback(
     (name: string, value: string) => {
@@ -87,7 +87,8 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
     <PageSection variant={PageSectionVariants.light}>
       <Title
         size={"lg"}
-        className={css(GridStylesForTableHeader.filter_left_margin)}>
+        className={css(GridStylesForTableHeader.filter_left_margin)}
+      >
         Links
       </Title>
       <br />
@@ -105,9 +106,9 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
             totalLinks={totalLinks}
             sortValue={sortDropDownValue}
             setSortValue={setSortDropdownValue}
-            addressSpaceName={name||""}
-            namespace={namespace||""}
-            connectionName={connectionname||""}
+            addressSpaceName={name || ""}
+            namespace={namespace || ""}
+            connectionName={connectionname || ""}
           />
         </GridItem>
         <GridItem span={6}>{renderPagination(page, perPage)}</GridItem>
