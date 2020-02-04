@@ -170,10 +170,12 @@ export default function AddressSpaceDetailPage() {
     <>
       <PageSection
         variant={PageSectionVariants.light}
-        className={css(styles.no_bottom_padding)}>
+        className={css(styles.no_bottom_padding)}
+      >
         <AddressSpaceHeader {...addressSpaceDetails} />
         <AddressSpaceNavigation
-          activeItem={subList || "addresses"}></AddressSpaceNavigation>
+          activeItem={subList || "addresses"}
+        ></AddressSpaceNavigation>
         {isDeleteModalOpen && (
           <DialoguePrompt
             option="Delete"

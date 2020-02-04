@@ -52,7 +52,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
       namespace || "",
       connectionName || "",
       sortBy,
-      filterRole 
+      filterRole
     ),
     { pollInterval: 5000 }
   );

@@ -7,12 +7,16 @@ import * as React from "react";
 import { SwitchWith404, LazyRoute } from "use-patternfly";
 import { Redirect } from "react-router";
 
-const getAddressSpaceListPage = () => import("./Pages/AddressSpaceList/AddressSpaceListWithFilterAndPaginationPage");
+const getAddressSpaceListPage = () =>
+  import(
+    "./Pages/AddressSpaceList/AddressSpaceListWithFilterAndPaginationPage"
+  );
 const getAddressSpaceDetail = () =>
   import("./Pages/AddressSpaceDetail/AddressSpaceDetailPage");
 const getAddressDetail = () =>
   import("./Pages/AddressDetail/AddressDetailPage");
-const getConnectionDetail = () => import("./Pages/ConnectionDetail/ConnectionDetailPage");
+const getConnectionDetail = () =>
+  import("./Pages/ConnectionDetail/ConnectionDetailPage");
 
 export const AppRoutes = () => (
   <SwitchWith404>

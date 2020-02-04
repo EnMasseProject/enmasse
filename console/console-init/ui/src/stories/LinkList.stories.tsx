@@ -11,7 +11,7 @@ import { action } from "@storybook/addon-actions";
 import { ConnectionLinksFilter } from "src/Pages/ConnectionDetail/ConnectionLinksFilter";
 
 export default {
-  title: "Connection Details" 
+  title: "Connection Details"
 };
 
 const rows: ILink[] = [
@@ -20,7 +20,7 @@ const rows: ILink[] = [
     name: "foo",
     address: "queue1",
     deliveries: 123,
-    accepted:1,
+    accepted: 1,
     rejected: 123,
     released: 123,
     modified: 123,
@@ -33,7 +33,7 @@ const rows: ILink[] = [
     name: "foo",
     address: "queue1",
     deliveries: 123,
-    accepted:2,
+    accepted: 2,
     rejected: 123,
     released: 123,
     modified: 123,
@@ -46,7 +46,7 @@ const rows: ILink[] = [
     name: "foo",
     address: "queue1",
     deliveries: 123,
-    accepted:3,
+    accepted: 3,
     rejected: 123,
     released: 123,
     modified: 123,

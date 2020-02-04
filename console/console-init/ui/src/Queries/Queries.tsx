@@ -875,9 +875,7 @@ export const RETURN_CONNECTION_DETAIL = (
 };
 
 export const RETURN_ADDRESS_TYPES = gql`
-  query addressTypes (
-    $a: AddressSpaceType!
-  ) {
+  query addressTypes($a: AddressSpaceType!) {
     addressTypes_v2(addressSpaceType: $a) {
       ObjectMeta {
         Name
@@ -954,9 +952,9 @@ export const RETURN_CONNECTION_LINKS = (
       case 3:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_deliveries')].Value` ";
         break;
-        case 4:
-          orderByString = "`$.Metrics[?(@.Name=='enmasse_accepted')].Value` ";
-          break;
+      case 4:
+        orderByString = "`$.Metrics[?(@.Name=='enmasse_accepted')].Value` ";
+        break;
       case 5:
         orderByString = "`$.Metrics[?(@.Name=='enmasse_rejected')].Value` ";
         break;

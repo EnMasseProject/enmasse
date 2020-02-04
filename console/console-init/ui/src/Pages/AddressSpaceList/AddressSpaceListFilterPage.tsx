@@ -33,8 +33,8 @@ interface IAddressSpaceListFilterPageProps {
   setSortValue: (value: ISortBy) => void;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
-  onDeleteAll:()=>void;
-  isDeleteAllDisabled:boolean;
+  onDeleteAll: () => void;
+  isDeleteAllDisabled: boolean;
 }
 export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceListFilterPageProps> = ({
   filterValue,
@@ -108,7 +108,8 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onClearAllFilters}>
+      clearAllFilters={onClearAllFilters}
+    >
       <DataToolbarContent>{toolbarItems}</DataToolbarContent>
     </DataToolbar>
   );

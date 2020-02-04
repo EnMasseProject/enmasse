@@ -80,21 +80,24 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
       id="adheader-dropdown-item-edit"
       key="download"
       aria-label="download"
-      onClick={() => onEdit(name)}>
+      onClick={() => onEdit(name)}
+    >
       Edit
     </DropdownItem>,
     <DropdownItem
       id="adheader-dropdown-item-delete"
       key="delete"
       aria-label="delete"
-      onClick={() => onDelete(name)}>
+      onClick={() => onDelete(name)}
+    >
       Delete
     </DropdownItem>
   ];
   return (
     <PageSection
       variant={PageSectionVariants.light}
-      className={css(styles.no_bottom_padding)}>
+      className={css(styles.no_bottom_padding)}
+    >
       <Split>
         <SplitItem className={css(styles.address_icon_align)}>
           <TypeBadge type={type} />
@@ -114,7 +117,8 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
             {topic && topic != null && (
               <FlexItem
                 id="adheader-subscription-topic"
-                className={css(styles.flex_left_border)}>
+                className={css(styles.flex_left_border)}
+              >
                 Topic : <b>{topic}</b>
               </FlexItem>
             )}
@@ -123,7 +127,8 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
             ) : (
               <FlexItem
                 id="adheader-stored-messages"
-                className={css(styles.flex_left_border)}>
+                className={css(styles.flex_left_border)}
+              >
                 <b>
                   {storedMessages && storedMessages != "" ? storedMessages : 0}
                 </b>{" "}

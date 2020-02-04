@@ -21,7 +21,7 @@ export const connectionHeader = () => (
       product={text("product", "QpidJMS")}
       version={text("version", "0.31.0 SNAPSHOT")}
       encrypted={boolean("Encrypted", false)}
-      creationTimestamp={text("creation time","2020-01-20T11:44:28.607Z")}
+      creationTimestamp={text("creation time", "2020-01-20T11:44:28.607Z")}
       platform={text("platform", "0.8.0_152.25.125.b16, Oracle Corporation")}
       os={text("os", "Mac OS X 10.13.6,x86_64")}
       messageIn={number("messageIn", 0)}

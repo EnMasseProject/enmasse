@@ -31,14 +31,16 @@ export const MessagesDetail: React.FunctionComponent<IMessagesDetail> = ({
       <SplitItem
         id="message-detail-message-in"
         span={6}
-        className={css(styles.message_split)}>
+        className={css(styles.message_split)}
+      >
         {messageIn || messageIn === "" ? messageIn : "-"}
         {isMobileView ? "" : <br />} Message in/sec
       </SplitItem>
       <SplitItem
         id="message-detail-message-out"
         span={6}
-        className={css(styles.message_split)}>
+        className={css(styles.message_split)}
+      >
         {messageOut || messageOut === "" ? messageOut : "-"}
         {isMobileView ? "" : <br />} Message out/sec
       </SplitItem>

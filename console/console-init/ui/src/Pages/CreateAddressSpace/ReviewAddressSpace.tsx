@@ -78,8 +78,8 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
       </Title>
       <Title size="xl" style={{ marginBottom: 32 }}>
         {" "}
-        Review the information below and Click Finish to create the new address space.
-        Use the Back button to make changes.
+        Review the information below and Click Finish to create the new address
+        space. Use the Back button to make changes.
       </Title>
       <Grid>
         <GridItem
@@ -146,7 +146,7 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
           <Title size={"lg"} className={css(Style.bottom_padding)}>
             {`Configuration details  `}
             <Tooltip
-            id="preview-addr-copy-tooltip"
+              id="preview-addr-copy-tooltip"
               position={TooltipPosition.top}
               enableFlip={keepInViewChecked}
               content={<div>Copy the configuration details on clipboard</div>}

@@ -17,8 +17,12 @@ export const EmptyLinks = () => {
   return (
     <EmptyState variant={EmptyStateVariant.full}>
       <EmptyStateIcon icon={GlobeRouteIcon} />
-      <Title id="empty-ad-space-title" size="lg">No Links</Title>
-      <EmptyStateBody id="empty-ad-space-body">You currently don't have any links</EmptyStateBody>
+      <Title id="empty-ad-space-title" size="lg">
+        No Links
+      </Title>
+      <EmptyStateBody id="empty-ad-space-body">
+        You currently don't have any links
+      </EmptyStateBody>
     </EmptyState>
   );
 };
