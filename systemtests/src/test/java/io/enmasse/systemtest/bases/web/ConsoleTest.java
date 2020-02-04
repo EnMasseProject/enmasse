@@ -1040,7 +1040,7 @@ public abstract class ConsoleTest extends TestBase {
             try {
                 consolePage.openAddressList(addressSpace);
                 fail("Exception not thrown");
-            } catch ( WebDriverException ex ) {
+            } catch ( NullPointerException ex ) {
                 // PASS
             }
 
