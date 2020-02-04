@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 echo "Collecting test reports"
 mkdir -p artifacts/test-reports
 cp -r /tmp/testlogs artifacts
