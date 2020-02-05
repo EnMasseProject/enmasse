@@ -157,7 +157,7 @@ public class SharedIoTManager extends ResourceManager {
                 .withNewAuthentication()
                     .withNewContainer()
                         .withNewResources()
-                            .withLimits(Collections.singletonMap("memory", new Quantity("1Gi")))
+                            .withLimits(Collections.singletonMap("memory", new Quantity("1G")))
                         .endResources()
                     .endContainer()
                 .endAuthentication()
