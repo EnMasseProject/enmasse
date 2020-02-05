@@ -15,8 +15,10 @@ spec:
       memory: 512Mi
       storage: 2Gi
     addressFullPolicy: FAIL
+    maxUnavailable: 1
   router:
     minReplicas: 2
     resources:
       memory: 512Mi
     linkCapacity: 250
+    maxUnavailable: 1
