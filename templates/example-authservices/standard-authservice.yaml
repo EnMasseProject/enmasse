@@ -8,5 +8,5 @@ spec:
     storage:
       claimName: standard-authservice
       deleteClaim: true
-      size: 1Gi
+      size: 1G
       type: persistent-claim
