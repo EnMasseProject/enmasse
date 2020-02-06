@@ -21,6 +21,7 @@ import (
 	enmasse_v1beta1_client "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
+	consolev1 "github.com/openshift/api/console/v1"
 	oauthv1 "github.com/openshift/api/oauth/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -226,6 +227,13 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 
 	// oauthclient
 	result, redirects, err := r.reconcileOauthClient(ctx, consoleservice)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	requeue = requeue || result.Requeue
+
+	// consoleLink
+	result, redirects, err := r.reconcileConsoleLink(ctx, consoleservice)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -813,6 +821,32 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 		return reconcile.Result{}, redirects, nil
 	}
 	return reconcile.Result{}, nil, nil
+}
+
+func (r *ReconcileConsoleService) reconcileConsoleLink(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
+	if util.IsOpenshift() {
+		if consoleservice.Status.Host != nil {
+			consoleLink := &consolev1.ConsoleLink{
+				ObjectMeta: metav1.ObjectMeta{Name: "enmasse-" + consoleservice.Name},
+			}
+
+			_, err = controllerutil.CreateOrUpdate(ctx, r.client, consoleLink, func() error {
+				consoleLink.Spec.Link = fmt.Sprintf("https://%s", consoleservice.Status.Host)
+				consoleLink.Spec.Location = consolev1.ApplicationMenu
+				consoleLink.Spec.ApplicationMenu = &consolev1.ApplicationMenuSpec{
+					Section:  util.GetEnvOrDefault("MENU_CATEGORY", ""),
+					ImageURL: util.GetEnvOrDefault("MENU_ICON", ""),
+				}
+				return nil
+			})
+
+			if err != nil {
+				log.Error(err, "Failed reconciling ConsoleLink. Ignoring...")
+				return reconcile.Result{}, nil
+			}
+		}
+	}
+	return reconcile.Result{}, nil
 }
 
 func buildRedirectsForRoute(route routev1.Route, redirect []url.URL) ([]url.URL, error) {
