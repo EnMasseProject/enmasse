@@ -18,7 +18,6 @@ export interface IDropdown {
   options: IDropdownOption[];
   value: string;
   setValue: (value: any) => void;
-  // onSelect: (item: any) => void;
 }
 
 export const FilterDropdown: React.FunctionComponent<IDropdown> = ({

@@ -9,10 +9,7 @@ import { AddressDefinitaion } from "src/Pages/CreateAddress/CreateAddressDefinit
 import { PreviewAddress } from "./PreviewAddress";
 import { useApolloClient } from "@apollo/react-hooks";
 import { CREATE_ADDRESS } from "src/Queries/Queries";
-import {
-  IDropdown,
-  IDropdownOption
-} from "src/Components/Common/FilterDropdown";
+import { IDropdownOption } from "src/Components/Common/FilterDropdown";
 import { regexp } from "../../Types/Configs";
 interface ICreateAddressProps {
   name: string;
@@ -160,9 +157,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
       }}
       title="Create new Address"
       steps={steps}
-      onNext={() => {
-        console.log("next");
-      }}
+      onNext={() => {}}
       onSave={handleSave}
     />
   );

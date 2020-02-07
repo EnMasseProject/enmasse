@@ -142,9 +142,7 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
         onClose={onClose}
         title="Create an Instance"
         steps={steps}
-        onNext={() => {
-          console.log("next");
-        }}
+        onNext={() => {}}
         onSave={handleSave}
       />
       )}

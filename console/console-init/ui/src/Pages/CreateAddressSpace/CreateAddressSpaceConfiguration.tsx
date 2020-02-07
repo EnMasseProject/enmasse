@@ -166,7 +166,6 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
             return {
               value: plan.ObjectMeta.Name,
               label: plan.ObjectMeta.Name
-              // description: plan.Spec.ShortDescription
             };
           }
         })
