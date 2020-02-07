@@ -105,6 +105,12 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
       scheduledExecutorService.submit(() -> {
          ActiveMQAMQPLogger.LOGGER.infov("Starting connector {0}", name);
          ProtonClientProtocolManager protocolManager = new ProtonClientProtocolManager(new ProtonProtocolManagerFactory(), server);
+
+         // These settings have the desired semantics when working in a cloud environment and for the built-in message
+         // forwarding.
+         protocolManager.setAmqpTreatRejectAsUnmodifiedDeliveryFailed(true);
+         protocolManager.setAmqpUseModifiedForTransientDeliveryErrors(true);
+
          NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, AMQPConnectorService.this, closeExecutor, nettyThreadPool, server.getScheduledPool(), protocolManager);
          connector.start();
          Connection connection = connector.createConnection();
