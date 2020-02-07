@@ -1,5 +1,5 @@
 FROM quay.io/enmasse/fedora-minimal:31
-RUN microdnf install gettext && microdnf clean all
+RUN microdnf install gettext python findutils coreutils tar && microdnf clean all
 
 ARG version
 ARG maven_version
