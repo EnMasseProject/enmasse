@@ -15,4 +15,3 @@ spec:
         memory: 1G
       limits:
         memory: 1G
-
