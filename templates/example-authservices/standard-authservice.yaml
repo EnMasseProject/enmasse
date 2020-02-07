@@ -10,3 +10,9 @@ spec:
       deleteClaim: true
       size: 1G
       type: persistent-claim
+    resources:
+      requests:
+        memory: 512Mi
+      limits:
+        memory: 512Mi
+
