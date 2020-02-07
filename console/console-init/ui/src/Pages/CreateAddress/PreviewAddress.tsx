@@ -69,10 +69,9 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
       }
     }
   });
-  console.log(data);
   if (loading) return <Loading />;
   if (error) console.log("Address Priview Query Error", error);
-  console.log(data);
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Title size="3xl" style={{ marginBottom: 32 }}>

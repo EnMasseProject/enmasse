@@ -10,8 +10,6 @@ import {
   IAddress
 } from "../Components/AddressSpace/Address/AddressList";
 import { action } from "@storybook/addon-actions";
-import { select } from "@storybook/addon-knobs";
-// import { AddressListFilter } from "..//Components/AddressSpace/AddressListFilter";
 import { EmptyAddress } from "../Components/AddressSpace/Address/EmptyAddress";
 
 export default {
@@ -78,10 +76,6 @@ export const addressList = () => (
       onPurge={action("onPurge")}
       onSelectAddress={action("select address")}
       onSelectAllAddress={action("SelectAllAddress")}
-      // setSelectedAddresses={action("onSelect")}
-      // setSelectedAddress={action("on select")}
-      // onCheckboxEdit={action("onCheckBoxEdit")}
-      // rows={[]}
     />
   </MemoryRouter>
 );

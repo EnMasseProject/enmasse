@@ -70,7 +70,6 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
   );
   if (loading) return <Loading />;
   if (error) console.log("Address Space Review Query Error", error);
-  console.log(data);
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Title size="3xl" style={{ marginBottom: 32 }}>
@@ -157,7 +156,6 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
                 color="blue"
                 onClick={() => {
                   navigator.clipboard.writeText(data.addressSpaceCommand);
-                  // alert("coopied successfully");
                 }}
               />
             </Tooltip>
