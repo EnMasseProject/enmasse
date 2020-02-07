@@ -552,4 +552,94 @@ public class AddressControllerTest {
         assertEquals(captured.getStatus().getForwarders().size(), a.getSpec().getForwarders().size());
         assertFalse(captured.getStatus().getForwarders().get(0).isReady());
     }
+
+    @Test
+    public void testSubscriptionWithoutTopicAddress() throws Exception {
+        Address sub = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("a1")
+                .withType("subscription")
+                .withPlan("small-subscription")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(singletonList(sub));
+
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi, times(1)).replaceAddress(captor.capture());
+        List<Address> captured = captor.getAllValues();
+        assertThat(captured, hasSize(1));
+
+        sub = captured.get(0);
+        assertEquals(Phase.Pending, sub.getStatus().getPhase());
+        assertThat(sub.getStatus().getMessages(), is(singletonList("Subscription address 'a1' (resource name 'myspace.a1') must reference a known topic address.")));
+    }
+
+    @Test
+    public void testSubscriptionRefersToUnknownTopicAddress() throws Exception {
+        Address sub = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("a1")
+                .withTopic("unknown")
+                .withType("subscription")
+                .withPlan("small-subscription")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(singletonList(sub));
+
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi, times(1)).replaceAddress(captor.capture());
+        List<Address> captured = captor.getAllValues();
+        assertThat(captured, hasSize(1));
+
+        sub = captured.get(0);
+        assertEquals(Phase.Pending, sub.getStatus().getPhase());
+        assertThat(sub.getStatus().getMessages(), is(singletonList("Subscription address 'a1' (resource name 'myspace.a1') references a topic address 'unknown' that does not exist.")));
+    }
+    @Test
+    public void testSubscriptionRefersToAddressWithWrongType() throws Exception {
+        Address nonTopic = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.myanycast")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("myanycast")
+                .withType("anycast")
+                .withPlan("small-anycast")
+                .endSpec()
+                .editOrNewStatus()
+                .withPhase(Phase.Active)
+                .endStatus()
+                .build();
+
+        Address sub = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("a1")
+                .withTopic(nonTopic.getSpec().getAddress())
+                .withType("subscription")
+                .withPlan("small-subscription")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(Arrays.asList(sub, nonTopic));
+
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi, times(2)).replaceAddress(captor.capture());
+        List<Address> captured = captor.getAllValues();
+        assertThat(captured, hasSize(2));
+
+        sub = captured.get(0);
+        assertEquals(Phase.Pending, sub.getStatus().getPhase());
+        assertThat(sub.getStatus().getMessages(), is(singletonList("Subscription address 'a1' (resource name 'myspace.a1') references a topic address 'myanycast' (resource name 'myspace.myanycast') that is not of expected type 'topic' (found type 'anycast' instead).")));
+    }
 }
