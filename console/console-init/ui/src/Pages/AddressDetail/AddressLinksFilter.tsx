@@ -35,7 +35,6 @@ import {
   RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH,
   RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH
 } from "src/Queries/Queries";
-import { id } from "date-fns/esm/locale";
 import {
   ISearchAddressLinkNameResponse,
   ISearchAddressLinkContainerResponse

@@ -10,7 +10,6 @@ import {
   IAddress
 } from "../Components/AddressSpace/Address/AddressList";
 import { MemoryRouter } from "react-router";
-// import { AddressListFilter } from "src/Components/AddressSpace/AddressList/AddressListFilter";
 
 describe("Address List", () => {
   test("it renders a list of addresses", () => {
@@ -87,32 +86,3 @@ describe("Address List", () => {
     // getByText(addresses[1].partitions.toString());
   });
 });
-
-// describe("Address List Filter", () => {
-//
-//   test("Test Filter options are displayed well", () => {
-//     let filterValue= "Name",
-//       typeValue: string | null = null,
-//       filterNames: string[] = [],
-//       statusValue: string | null = null;
-//     const setFilterValue = (value: string | null) => {console.log(value)};
-//     const setFilterNames = (value: Array<string>) => {console.log(value)};
-//     const setTypeValue = (value: string | null) => {console.log(value)};
-//     const setStatusValue = (value: string | null) => {console.log(value)};
-//
-//     const { getByText } = render(
-//       <MemoryRouter>
-//         <AddressListFilter
-//           filterValue={filterValue}
-//           setFilterValue={setFilterValue}
-//           filterNames={filterNames}
-//           setFilterNames={setFilterNames}
-//           typeValue={typeValue}
-//           setTypeValue={setTypeValue}
-//           statusValue={statusValue}
-//           setStatusValue={setStatusValue}
-//         />
-//       </MemoryRouter>
-//     );
-//   });
-// });

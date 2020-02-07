@@ -69,7 +69,6 @@ export const About: React.FunctionComponent<IAboutProps> = ({
   var modalImgProps = createPropsWithLogoAndBgImages(productName);
   return (
     <AboutModal
-      //   id="modal-about"
       isOpen={isAboutModalOpen}
       onClose={handleAboutModalToggle}
       productName={productName}

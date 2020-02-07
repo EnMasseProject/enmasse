@@ -59,7 +59,6 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
   if (loading) return <Loading />;
   if (error) {
     console.log(error);
-    // return <Loading />;
   }
   const { connections } = data || {
     connections: { Total: 0, Connections: [] }

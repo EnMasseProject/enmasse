@@ -4,7 +4,6 @@
  */
 
 import * as React from "react";
-import { ExclamationCircleIcon, InProgressIcon } from "@patternfly/react-icons";
 
 interface IErrorProps {
   message: string;
