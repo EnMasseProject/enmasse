@@ -8,11 +8,11 @@ spec:
     storage:
       claimName: standard-authservice
       deleteClaim: true
-      size: 1G
+      size: 2G
       type: persistent-claim
     resources:
       requests:
-        memory: 512Mi
+        memory: 1G
       limits:
-        memory: 512Mi
+        memory: 1G
 
