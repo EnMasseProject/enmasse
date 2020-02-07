@@ -1,4 +1,4 @@
-FROM registry.fedoraproject.org/fedora-minimal:31
+FROM quay.io/enmasse/fedora-minimal:31
 RUN microdnf install gettext && microdnf clean all
 
 ARG version
