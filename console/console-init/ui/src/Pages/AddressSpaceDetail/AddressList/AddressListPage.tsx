@@ -22,7 +22,7 @@ import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "src/Components/AddressSpace/Address/EmptyAddress";
 import { EditAddress } from "../../EditAddressPage";
 import { DialoguePrompt } from "src/Components/Common/DialoguePrompt";
-import { ISortBy, IRowData } from "@patternfly/react-table";
+import { ISortBy } from "@patternfly/react-table";
 export interface IAddressListPageProps {
   name?: string;
   namespace?: string;

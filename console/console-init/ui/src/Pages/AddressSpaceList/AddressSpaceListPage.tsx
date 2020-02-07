@@ -20,7 +20,7 @@ import {
 } from "src/Queries/Queries";
 import { IAddressSpacesResponse } from "src/Types/ResponseTypes";
 import { EditAddressSpace } from "../EditAddressSpace";
-import { ISortBy, IRowData } from "@patternfly/react-table";
+import { ISortBy } from "@patternfly/react-table";
 import { compareTwoAddress } from "../AddressSpaceDetail/AddressList/AddressListPage";
 
 interface AddressSpaceListPageProps {

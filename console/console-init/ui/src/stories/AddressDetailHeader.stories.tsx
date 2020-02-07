@@ -28,27 +28,3 @@ export const AddressDetailHead = () => (
     />
   </MemoryRouter>
 );
-
-// export const AddressLinksFilterStory = () => {
-//   const options=["","Sender","Receiver"];
-//   return(
-//   <MemoryRouter>
-//     <AddressLinksFilter
-//       filterValue={text("FilterValue", "Name")}
-//       setFilterValue={action("set filter value")}
-//       filterNames={
-//         text("filter name", "") != "" ? [text("filter name", "")] : []
-//       }
-//       setFilterNames={action("setFilterNames")}
-//       filterContainers={
-//         text("filter address", "") != "" ? [text("filter address", "")] : []
-//       }
-//       setFilterContainers={action("setFilterAddress")}
-//       filterRole={select("Role ", options, "")}
-//       setFilterRole={action("setFilterRole")}
-//       totalLinks={number("total links", 1)}
-//       setSortValue={()=>{}}
-//     />
-//   </MemoryRouter>
-//   );
-// };

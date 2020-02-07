@@ -84,13 +84,11 @@ export default function ConnectionDetailPage() {
   if (loading) return <Loading />;
   if (error) {
     console.log(error);
-    // return <Loading />;
   }
   const { connections } = data || {
     connections: { Total: 0, Connections: [] }
   };
   const connection = connections.Connections[0];
-  // setTotalLinks(connections.Total);
   //Change this logic
   const jvmObject =
     connection.Spec &&
