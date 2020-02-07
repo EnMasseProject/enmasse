@@ -27,3 +27,6 @@ rules:
   - apiGroups: [ "integreatly.org" ]
     resources: [ "grafanadashboards", "grafanadashboards/finalizers" ]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "console.openshift.io" ]
+    resources: [ "consolelinks" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]

@@ -620,6 +620,9 @@ spec:
         - apiGroups: [ "integreatly.org" ]
           resources: [ "grafanadashboards", "grafanadashboards/finalizers" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "console.openshift.io" ]
+          resources: [ "consolelinks" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
       - serviceAccountName: iot-device-registry
         rules:
         - apiGroups: [ "authentication.k8s.io" ]
@@ -759,6 +762,12 @@ spec:
                   value: "{\"standard-authservice\": 1000}"
                 - name: ENABLE_MONITORING
                   value: "true"
+                - name: CONSOLE_LINK_SECTION_NAME
+                  value: "${application.globalconsole.section.name}"
+                - name: CONSOLE_LINK_NAME
+                  value: "${application.globalconsole.display.name}"
+                - name: CONSOLE_LINK_IMAGE_URL
+                  value: "data:${olm.csv.logo.mediatype};base64,${olm.csv.logo.base64}"
   customresourcedefinitions:
     owned:
       - group: user.enmasse.io
