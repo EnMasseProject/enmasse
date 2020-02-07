@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -10,6 +10,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"strconv"
 	"time"
 
@@ -44,6 +46,11 @@ import (
 const CONSOLE_NAME = "console"
 
 var log = logf.Log.WithName("controller_consoleservice")
+
+// information for console link
+var ConsoleLinkSectionName = util.GetEnvOrDefault("CONSOLE_LINK_SECTION_NAME", "Messaging")
+var ConsoleLinkName = util.GetEnvOrDefault("CONSOLE_LINK_NAME", "Messaging Console")
+var ConsoleLinkImageUrl = util.GetEnvOrDefault("CONSOLE_LINK_IMAGE_URL", "")
 
 // Gets called by parent "init", adding as to the manager
 func Add(mgr manager.Manager) error {
@@ -212,6 +219,13 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 
 	// route
 	result, route, err := r.reconcileRoute(ctx, consoleservice)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	requeue = requeue || result.Requeue
+
+	// console link
+	result, err = r.reconcileConsoleLink(ctx, consoleservice, route)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -451,35 +465,38 @@ func applyService(consoleService *v1beta1.ConsoleService, service *corev1.Servic
 }
 
 func (r *ReconcileConsoleService) reconcileRoute(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, *routev1.Route, error) {
-	if util.IsOpenshift() {
-		route := &routev1.Route{
-			ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: consoleservice.Name},
-		}
-		_, err := controllerutil.CreateOrUpdate(ctx, r.client, route, func() error {
-			secretName := types.NamespacedName{
-				Name:      consoleservice.Spec.CertificateSecret.Name,
-				Namespace: consoleservice.Namespace,
-			}
-			certsecret := &corev1.Secret{}
-			err := r.client.Get(ctx, secretName, certsecret)
-			if err != nil {
-				return err
-			}
-			cert := certsecret.Data["tls.crt"]
-			if err := controllerutil.SetControllerReference(consoleservice, route, r.scheme); err != nil {
-				return err
-			}
-			return applyRoute(consoleservice, route, string(cert[:]))
-		})
 
-		if err != nil {
-			log.Error(err, "Failed reconciling Route")
-			return reconcile.Result{}, nil, err
-		}
-		return reconcile.Result{}, route, nil
-	} else {
+	if !util.IsOpenshift() {
+		// we have routes only in OpenShift
 		return reconcile.Result{}, nil, nil
 	}
+
+	route := &routev1.Route{
+		ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: consoleservice.Name},
+	}
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, route, func() error {
+		secretName := types.NamespacedName{
+			Name:      consoleservice.Spec.CertificateSecret.Name,
+			Namespace: consoleservice.Namespace,
+		}
+		certsecret := &corev1.Secret{}
+		err := r.client.Get(ctx, secretName, certsecret)
+		if err != nil {
+			return err
+		}
+		cert := certsecret.Data["tls.crt"]
+		if err := controllerutil.SetControllerReference(consoleservice, route, r.scheme); err != nil {
+			return err
+		}
+		return applyRoute(consoleservice, route, string(cert[:]))
+	})
+
+	if err != nil {
+		log.Error(err, "Failed reconciling Route")
+		return reconcile.Result{}, nil, err
+	}
+
+	return reconcile.Result{}, route, nil
 }
 
 func applyRoute(consoleservice *v1beta1.ConsoleService, route *routev1.Route, caCertificate string) error {
@@ -504,6 +521,76 @@ func applyRoute(consoleservice *v1beta1.ConsoleService, route *routev1.Route, ca
 		route.Spec.Host = *consoleservice.Spec.Host
 	}
 	return nil
+}
+
+func (r *ReconcileConsoleService) reconcileConsoleLink(ctx context.Context, consoleservice *v1beta1.ConsoleService, route *routev1.Route) (reconcile.Result, error) {
+
+	// eval the host name, there should only be one
+
+	host := ""
+	if route != nil {
+		for _, r := range route.Status.Ingress {
+			if r.Host != "" {
+				if route.Spec.TLS != nil {
+					host = "https://" + r.Host
+				} else {
+					host = "http://" + r.Host
+				}
+				// we take the first one, and stop here
+				break
+			}
+		}
+	}
+
+	// we could also use the structured type here, but we do use the
+	// unstructed type in this simple case, as a reference if we should
+	// need it in the future
+
+	consoleLink := unstructured.Unstructured{}
+	consoleLink.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "console.openshift.io",
+		Version: "v1",
+		Kind:    "ConsoleLink",
+	})
+	consoleLink.SetName("enmasse-consoleservice")
+
+	if host != "" {
+
+		// we have a URL, so use it
+
+		_, err := controllerutil.CreateOrUpdate(ctx, r.client, &consoleLink, func() error {
+			applyConsoleLink(&consoleLink, host)
+			if err := controllerutil.SetControllerReference(consoleservice, route, r.scheme); err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		return reconcile.Result{}, err
+
+	} else {
+
+		// we have no url, so delete the console link
+
+		err := install.DeleteIgnoreNotFound(ctx, r.client, &consoleLink)
+		return reconcile.Result{}, err
+
+	}
+}
+
+func applyConsoleLink(consoleLink *unstructured.Unstructured, host string) {
+
+	consoleLink.Object["spec"] = map[string]interface{}{
+		"text":     ConsoleLinkName,
+		"location": "ApplicationMenu",
+		"applicationMenu": map[string]interface{}{
+			"section":  ConsoleLinkSectionName,
+			"imageURL": ConsoleLinkImageUrl,
+		},
+		"href": host,
+	}
+
 }
 
 func (r *ReconcileConsoleService) reconcileSsoCookieSecret(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {

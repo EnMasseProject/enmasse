@@ -55,6 +55,9 @@ replace_images: prepare
 					  -e 's,\$${MAVEN_VERSION},$(MAVEN_VERSION),g' \
 					  -e 's,\$${NAMESPACE},$(DEFAULT_PROJECT),g' \
 					  -e 's,\$${VERSION},$(VERSION),g' \
+					  -e 's,\$${CONSOLE_LINK_SECTION_NAME},$(CONSOLE_LINK_SECTION_NAME),g' \
+					  -e 's,\$${CONSOLE_LINK_NAME},$(CONSOLE_LINK_NAME),g' \
+					  -e $$'s,\$${CONSOLE_LINK_IMAGE_URL},$(CONSOLE_LINK_IMAGE_URL),g' \
 					  -e 's,\$${OLM_VERSION},$(OLM_VERSION),g' \
 					  -e 's,\$${OLM_PACKAGE_CHANNEL},$(OLM_PACKAGE_CHANNEL),g' \
 					  -e 's,\$${APP_BUNDLE_PREFIX},$(APP_BUNDLE_PREFIX),g' \

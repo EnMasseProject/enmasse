@@ -119,3 +119,9 @@ spec:
           value: "${CONSOLE_HTTPD_IMAGE}"
         - name: ENABLE_MONITORING
           value: "true"
+        - name: CONSOLE_LINK_SECTION_NAME
+          value: "${CONSOLE_LINK_SECTION_NAME}"
+        - name: CONSOLE_LINK_NAME
+          value: "${CONSOLE_LINK_NAME}"
+        - name: CONSOLE_LINK_IMAGE_URL
+          value: "${CONSOLE_LINK_IMAGE_URL}"

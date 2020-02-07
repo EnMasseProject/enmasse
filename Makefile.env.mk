@@ -12,6 +12,11 @@ APP_BUNDLE_PREFIX   ?= $(shell grep "application.bundle.prefix" $(TOPDIR)/pom.pr
 OLM_PACKAGE_CHANNEL ?= $(shell grep "olm.package.channel" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 TAG                 ?= latest
 
+CONSOLE_LINK_NAME         ?= $(shell grep "application.globalconsole.display.name" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+CONSOLE_LINK_SECTION_NAME ?= $(shell grep "application.globalconsole.section.name" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+CONSOLE_LINK_IMAGE_URL    ?= data:$(shell grep "olm.csv.logo.mediatype" $(TOPDIR)/pom.properties| cut -d'=' -f2);base64\\,$(shell grep "olm.csv.logo.base64" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+
+
 # Image settings
 DOCKER_REGISTRY_PREFIX ?= $(DOCKER_REGISTRY)/
 IMAGE_VERSION          ?= $(TAG)
@@ -99,6 +104,7 @@ IMAGE_ENV=ADDRESS_SPACE_CONTROLLER_IMAGE=$(ADDRESS_SPACE_CONTROLLER_IMAGE) \
 			MAVEN_VERSION=$(MAVEN_VERSION) \
 			IMAGE_VERSION=$(IMAGE_VERSION) \
 			PROJECT_PREFIX=$(PROJECT_PREFIX)
+
 
 IMAGE_LIST=\
 		   $(ADDRESS_SPACE_CONTROLLER_IMAGE) \
