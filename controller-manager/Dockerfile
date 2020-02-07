@@ -3,7 +3,7 @@
 # License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
 #
 
-FROM centos:7
+FROM registry.fedoraproject.org/fedora-minimal:31
 
 ARG version
 ARG commit

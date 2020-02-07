@@ -1,6 +1,4 @@
-FROM quay.io/enmasse/java-base:11-1
-
-RUN yum -y install openssl && yum -y clean all
+FROM quay.io/enmasse/java-base:11-3
 
 ARG version
 ARG maven_version

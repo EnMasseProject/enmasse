@@ -1,5 +1,5 @@
-FROM centos:7
-RUN yum -y install gettext && yum -y clean all
+FROM registry.fedoraproject.org/fedora-minimal:31
+RUN microdnf install gettext && microdnf clean all
 
 ARG version
 ARG maven_version

@@ -1,6 +1,6 @@
-FROM quay.io/enmasse/java-base:11-1
+FROM quay.io/enmasse/java-base:11-3
 
-RUN yum -y install which python gettext hostname iputils apr openssl && yum clean all -y && mkdir -p /var/run/artemis/
+RUN microdnf install which python gettext hostname iputils && microdnf clean all && mkdir -p /var/run/artemis/
 
 ARG version
 ARG maven_version
