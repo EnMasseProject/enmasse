@@ -188,9 +188,7 @@ public class ClientUtils {
                     .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
                     .withAddress(destination)
                     .withCredentials(userCredentials)
-                    .withTimeout(timeout)
-                    .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                    .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                    .withTimeout(timeout);
             receiverClient.runAsync(false);
             receivers.add(receiverClient);
         }
@@ -218,10 +216,8 @@ public class ClientUtils {
                         .withCredentials(userCredentials)
                         .withMessageBody("msg no.%d")
                         .withTimeout(timeout)
-                        .withCount(90)
-                        .withAdditionalArgument(ClientArgument.DURATION, 180 * 1000)
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                        .withCount(timeout)
+                        .withAdditionalArgument(ClientArgument.DURATION, timeout * 1000);
                 senderClient.runAsync(false);
                 senders.add(senderClient);
             }
@@ -236,7 +232,7 @@ public class ClientUtils {
                 .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
                 .withAddress(destination)
                 .withCredentials(userCredentials)
-                .withTimeout(360)
+                .withTimeout(500)
                 .withCount(count);
         receiverClient.runAsync(false);
         return receiverClient;
@@ -249,7 +245,7 @@ public class ClientUtils {
                 .withAddress(destination)
                 .withCredentials(userCredentials)
                 .withMessageBody("msg no.%d")
-                .withTimeout(360)
+                .withTimeout(500)
                 .withCount(count)
                 .withAdditionalArgument(ClientArgument.DURATION, durationMillis);
         senderClient.runAsync(false);
@@ -273,9 +269,7 @@ public class ClientUtils {
                         .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
                         .withAddress(destinations.get(i))
                         .withCredentials(userCredentials)
-                        .withTimeout(timeout)
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                        .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                        .withTimeout(timeout);
                 receiverClient.runAsync(false);
                 receivers.add(receiverClient);
             }
@@ -299,9 +293,7 @@ public class ClientUtils {
                 .withCount(connectionCount)
                 .withTimeout(timeout)
                 .withAdditionalArgument(ClientArgument.SENDER_COUNT, Integer.toString(senderCount))
-                .withAdditionalArgument(ClientArgument.RECEIVER_COUNT, Integer.toString(receiverCount))
-                .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property1~50")
-                .withAdditionalArgument(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
+                .withAdditionalArgument(ClientArgument.RECEIVER_COUNT, Integer.toString(receiverCount));
         connectorClient.runAsync(false);
 
         return connectorClient;
