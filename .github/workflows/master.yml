@@ -66,9 +66,10 @@ jobs:
         run: |
           echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
           echo "::set-output name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+          echo "::set-env name=DOCKER::podman"
 
-      - name: setup-docker
-        run: ./.github/scripts/setup_docker.sh
+      - name: Setup podman
+        run: ./.github/scripts/setup_podman.sh
 
       - name: Minikube setup with registry
         uses: EnMasseProject/minikube-setup@V1.0.0
