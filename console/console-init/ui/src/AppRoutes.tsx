@@ -8,15 +8,12 @@ import { SwitchWith404, LazyRoute } from "use-patternfly";
 import { Redirect } from "react-router";
 
 const getAddressSpaceListPage = () =>
-  import(
-    "./Pages/AddressSpaceList/AddressSpaceListWithFilterAndPaginationPage"
-  );
+  import("pages/AddressSpaceList/AddressSpaceListWithFilterAndPaginationPage");
 const getAddressSpaceDetail = () =>
-  import("./Pages/AddressSpaceDetail/AddressSpaceDetailPage");
-const getAddressDetail = () =>
-  import("./Pages/AddressDetail/AddressDetailPage");
+  import("pages/AddressSpaceDetail/AddressSpaceDetailPage");
+const getAddressDetail = () => import("pages/AddressDetail/AddressDetailPage");
 const getConnectionDetail = () =>
-  import("./Pages/ConnectionDetail/ConnectionDetailPage");
+  import("pages/ConnectionDetail/ConnectionDetailPage");
 
 export const AppRoutes = () => (
   <SwitchWith404>

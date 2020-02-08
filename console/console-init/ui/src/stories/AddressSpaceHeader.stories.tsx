@@ -6,9 +6,9 @@
 import React from "react";
 import { text, select } from "@storybook/addon-knobs";
 import { MemoryRouter } from "react-router";
-import { AddressSpaceHeader } from "../Components/AddressSpace/AddressSpaceHeader";
+import { AddressSpaceHeader } from "components/AddressSpace/AddressSpaceHeader";
 import { action } from "@storybook/addon-actions";
-import { AddressSpaceNavigation } from "../Components/AddressSpace/AddressSpaceNavigation";
+import { AddressSpaceNavigation } from "components/AddressSpace/AddressSpaceNavigation";
 
 export default {
   title: "Address Space"
