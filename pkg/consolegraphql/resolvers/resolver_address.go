@@ -13,10 +13,21 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
+	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"regexp"
 	"strings"
 )
+
+// From https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+var validNameRegexp = regexp.MustCompile("^[a-z0-9][-a-z0-9_.]*[a-z0-9]$")
+var legalNameCharRegexp = regexp.MustCompile("[^-a-z0-9_.]")
+var separators = []string{"_", ".", "-"}
+
+const maxKubeName = 253
+
+const addressSpaceNameAnnotationKey = "addressSpace"
 
 func (r *Resolver) Address_consoleapi_enmasse_io_v1beta1() Address_consoleapi_enmasse_io_v1beta1Resolver {
 	return &addressK8sResolver{r}
@@ -162,6 +173,13 @@ func (r *addressSpecK8sResolver) Type(ctx context.Context, obj *v1beta1.AddressS
 func (r *mutationResolver) CreateAddress(ctx context.Context, input v1beta1.Address) (*metav1.ObjectMeta, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 
+	if input.ObjectMeta.Name == "" {
+		err := defaultResourceNameFromAddress(&input)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	nw, e := requestState.EnmasseV1beta1Client.Addresses(input.Namespace).Create(&input)
 	if e != nil {
 		return nil, e
@@ -262,6 +280,13 @@ func (r *queryResolver) AddressCommand(ctx context.Context, input v1beta1.Addres
 	namespace := input.Namespace
 	input.Namespace = ""
 
+	if input.ObjectMeta.Name == "" {
+		err := defaultResourceNameFromAddress(&input)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	return generateApplyCommand(input, namespace)
 }
 
@@ -271,4 +296,48 @@ func tokenizeAddress(name string) ([]string, error) {
 		return []string{}, fmt.Errorf("unexpectedly formatted address: '%s'.  expected separator not found ", name)
 	}
 	return addressToks, nil
+}
+
+func defaultResourceNameFromAddress(input *v1beta1.Address) error {
+	if input.Spec.Address == "" {
+		return fmt.Errorf("address is undefined, cannot default resource name from address '%s'",
+			input.Spec.Address)
+	}
+	if input.Annotations != nil {
+		if as, present := input.Annotations[addressSpaceNameAnnotationKey]; present {
+			addr := strings.ToLower(input.Spec.Address)
+			if !isValidName(addr, maxKubeName-len(as)-1) {
+				qualifier := uuid.New().String()
+				addr = cleanName(addr, qualifier, maxKubeName-len(as)-len(qualifier)-2)
+			}
+			input.ObjectMeta.Name = fmt.Sprintf("%s.%s", as, addr)
+			delete(input.Annotations, addressSpaceNameAnnotationKey)
+			return nil
+		}
+	}
+	return fmt.Errorf("annotation '%s' is undefined, cannot default resource name from address '%s'",
+		addressSpaceNameAnnotationKey,
+		input.Spec.Address)
+}
+
+func isValidName(name string, maxLength int) bool {
+	return validNameRegexp.MatchString(name) && maxLength >= len(name)
+}
+
+func cleanName(name string, qualifier string, maxLength int) string {
+	name = legalNameCharRegexp.ReplaceAllString(name, "")
+
+	for _, s := range separators {
+		name = strings.TrimPrefix(name, s)
+		name = strings.TrimSuffix(name, s)
+	}
+
+	if len(name) > maxLength {
+		name = name[:maxLength]
+	}
+	if name == "" {
+		return qualifier
+	} else {
+		return name + "." + qualifier
+	}
 }

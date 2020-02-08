@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/fake"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
@@ -18,6 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"strings"
 	"testing"
 	"time"
 )
@@ -26,11 +28,14 @@ func newTestAddressResolver(t *testing.T) (*Resolver, context.Context) {
 	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
+	clientset := fake.NewSimpleClientset(&v1beta1.Address{})
+
 	resolver := Resolver{}
 	resolver.Cache = objectCache
 
 	requestState := &server.RequestState{
-		AccessController: accesscontroller.NewAllowAllAccessController(),
+		AccessController:     accesscontroller.NewAllowAllAccessController(),
+		EnmasseV1beta1Client: clientset.EnmasseV1beta1(),
 	}
 
 	ctx := server.ContextWithRequestState(requestState, context.TODO())
@@ -303,11 +308,13 @@ func TestQueryAddressMetrics(t *testing.T) {
 	}
 
 	addr := createAddress(namespace, addressName,
-		createMetric(namespace, "enmasse_messages_stored", float64(100)),
-		createMetric(namespace, "enmasse_messages_in", float64(10)),
-		createMetric(namespace, "enmasse_messages_out", float64(20)),
-		createMetric(namespace, "enmasse_senders", float64(2)),
-		createMetric(namespace, "enmasse_receivers", float64(1)),
+		withAddressMetrics(
+			createMetric(namespace, "enmasse_messages_stored", float64(100)),
+			createMetric(namespace, "enmasse_messages_in", float64(10)),
+			createMetric(namespace, "enmasse_messages_out", float64(20)),
+			createMetric(namespace, "enmasse_senders", float64(2)),
+			createMetric(namespace, "enmasse_receivers", float64(1)),
+		),
 	)
 
 	err := r.Cache.Add(addr)
@@ -343,6 +350,22 @@ func TestAddressCommand(t *testing.T) {
 	addr := createAddress(namespace, "myaddrspace.myaddr")
 
 	cmd, err := r.Query().AddressCommand(ctx, addr.Address)
+
+	assert.NoError(t, err)
+	expected := `kind: Address
+metadata:
+  name: myaddrspace.myaddr`
+	assert.Contains(t, cmd, expected, "Expect name and namespace to be set")
+}
+
+func TestAddressCommandUsingAddressToFormResourceName(t *testing.T) {
+	r,ctx := newTestAddressResolver(t)
+	namespace := "mynamespace"
+	ah := createAddress(namespace, "",
+		withAddress("myaddr"),
+		withAddressAnnotation(addressSpaceNameAnnotationKey, "myaddrspace"))
+
+	cmd, err := r.Query().AddressCommand(ctx, ah.Address)
 
 	assert.NoError(t, err)
 	expected := `kind: Address
@@ -468,4 +491,114 @@ func createAddressLink(namespace string, addressspace string, addr string, role 
 			Role:         role,
 		},
 	}
+}
+
+func TestCreateAddress(t *testing.T) {
+	r, ctx := newTestAddressResolver(t)
+	namespace := "mynamespace"
+	addressspace := "myaddrspace"
+	addrname := addressspace + ".myaddr"
+	addr := createAddress(namespace, addrname)
+	addr.Spec.Address = "myaddr"
+
+	meta, err := r.Mutation().CreateAddress(ctx, addr.Address)
+	assert.NoError(t, err)
+
+	retrieved, err := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.Addresses(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
+	assert.NoError(t, err)
+
+	assert.Equal(t, addrname, retrieved.Name, "unexpected address resource name")
+}
+
+func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
+	namespace := "mynamespace"
+	addressspace := "myaddressspace"
+
+	testCases := []struct {
+		name               string
+		addressSpace       string
+		address            string
+		assertExpectedName func (name string)
+	}{
+		{
+			"no change",
+			addressspace,
+			"myaddr",
+			func (name string) {
+				assert.Equal(t, "myaddressspace.myaddr", name)
+			},
+		},
+		{
+			"lower cased",
+			addressspace,
+			"MYADDR",
+			func (name string) {
+				assert.Equal(t, "myaddressspace.myaddr", name)
+			},
+		},
+		{
+			"cleaned prefix",
+			addressspace,
+			"-myaddr",
+			func (name string) {
+				assert.Regexp(t, "^myaddressspace\\.myaddr\\.[-a-z0-9]{36}$", name)
+			},
+		},
+		{
+			"cleaned suffix",
+			addressspace,
+			"myaddr.",
+			func (name string) {
+				assert.Regexp(t, "^myaddressspace\\.myaddr\\.[-a-z0-9]{36}$", name)
+			},
+		},
+		{
+			"illegals cleaned",
+			addressspace,
+			"€my$.addr12#",
+			func (name string) {
+				assert.Regexp(t, "^myaddressspace\\.my\\.addr12\\.[-a-z0-9]{36}$", name)
+			},
+		},
+		{
+			"only illegals",
+			addressspace,
+			"€$#",
+			func (name string) {
+				assert.Regexp(t, "^myaddressspace\\.[-a-z0-9]{36}$", name)
+			},
+		},
+		{
+			"too long",
+			addressspace,
+			strings.Repeat("a", 253 - len(addressspace)),
+			func (name string) {
+				assert.Regexp(t, "^myaddressspace\\.a{201}\\.[-a-z0-9]{36}$", name)
+				assert.Equal(t, 253, len(name))
+			},
+		},
+	}
+	for _, testCase := range testCases {
+		r, ctx := newTestAddressResolver(t)
+		ah := createAddress(namespace, "",
+			withAddress(testCase.address),
+			withAddressAnnotation("addressSpace", testCase.addressSpace))
+
+		meta, err := r.Mutation().CreateAddress(ctx, ah.Address)
+		assert.NoError(t, err)
+
+		retrieved, err := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.Addresses(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
+		assert.NoError(t, err)
+
+		testCase.assertExpectedName(retrieved.Name)
+	}
+}
+
+func TestCreateAddressUnableToDefaultResourceName(t *testing.T) {
+	r, ctx := newTestAddressResolver(t)
+	namespace := "mynamespace"
+	addr := createAddress(namespace, "")
+
+	_, err := r.Mutation().CreateAddress(ctx, addr.Address)
+	assert.Error(t, err)
 }
