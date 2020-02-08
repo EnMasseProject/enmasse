@@ -9,7 +9,7 @@ import { MemoryRouter } from "react-router";
 import {
   IConnection,
   ConnectionList
-} from "../Components/AddressSpace/Connection/ConnectionList";
+} from "components/AddressSpace/Connection/ConnectionList";
 
 describe("Connection List", () => {
   test("it renders a list of connections", () => {

@@ -8,7 +8,7 @@ import { render } from "@testing-library/react";
 import {
   AddressList,
   IAddress
-} from "../Components/AddressSpace/Address/AddressList";
+} from "components/AddressSpace/Address/AddressList";
 import { MemoryRouter } from "react-router";
 
 describe("Address List", () => {

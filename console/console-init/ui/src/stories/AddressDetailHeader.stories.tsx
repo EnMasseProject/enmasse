@@ -7,8 +7,8 @@ import React from "react";
 import { MemoryRouter } from "react-router";
 import { text, number, select } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import { AddressDetailHeader } from "../Components/AddressDetail/AddressDetailHeader";
-import { AddressLinksFilter } from "src/Pages/AddressDetail/AddressLinksFilter";
+import { AddressDetailHeader } from "components/AddressDetail/AddressDetailHeader";
+import { AddressLinksFilter } from "pages/AddressDetail/AddressLinksFilter";
 
 export default {
   title: "Address Detail"
