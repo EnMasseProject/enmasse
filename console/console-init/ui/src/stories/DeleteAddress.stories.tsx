@@ -6,7 +6,7 @@
 import React, { createElement } from "react";
 import { MemoryRouter } from "react-router";
 import { Button } from "@patternfly/react-core";
-import { DialoguePrompt } from "../Components/Common/DialoguePrompt";
+import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { text } from "@storybook/addon-knobs";
 
 export default {

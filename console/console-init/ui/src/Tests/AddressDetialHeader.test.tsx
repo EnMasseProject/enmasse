@@ -8,7 +8,7 @@ import { render } from "@testing-library/react";
 import {
   IAddressDetailHeaderProps,
   AddressDetailHeader
-} from "src/Components/AddressDetail/AddressDetailHeader";
+} from "components/AddressDetail/AddressDetailHeader";
 
 describe("Address Detail Header", () => {
   test("it renders address space headers at top", () => {

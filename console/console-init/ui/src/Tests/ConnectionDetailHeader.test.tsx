@@ -7,7 +7,7 @@ import * as React from "react";
 import {
   IConnectionHeaderDetailProps,
   ConnectionDetailHeader
-} from "src/Components/ConnectionDetail/ConnectionDetailHeader";
+} from "components/ConnectionDetail/ConnectionDetailHeader";
 import { render, fireEvent } from "@testing-library/react";
 
 describe("Connection Detail Header with all connection details", () => {
