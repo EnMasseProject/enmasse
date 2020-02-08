@@ -1,5 +1,5 @@
-FROM centos:7
-RUN yum -y install gettext && yum -y clean all
+FROM quay.io/enmasse/fedora-minimal:31
+RUN microdnf install gettext python findutils coreutils tar && microdnf clean all
 
 ARG version
 ARG maven_version
