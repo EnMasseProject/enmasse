@@ -141,6 +141,9 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList<
                 } else {
                     log.info("Watch closed");
                 }
+                if (e != null) {
+                    log.warn("Unexpected watch close", e);
+                }
             }
         }, watchOptions);
     }
