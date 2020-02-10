@@ -31,7 +31,7 @@ ARTEMIS_INSTANCE_ETC_URI='$ARTEMIS_INSTANCE_ETC_URI'
 
 # Java Opts
 # @JAVA_OPTS is replace by launch-broker.sh
-JAVA_ARGS="@JAVA_OPTS@ -XX:+PrintClassHistogram -XX:+UseG1GC -XX:+AggressiveOpts -Dhawtio.realm=activemq -Dhawtio.offline="true" -Dhawtio.role=${HAWTIO_ROLE} -Dhawtio.rolePrincipalClasses=org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal -Djolokia.policyLocation=${ARTEMIS_INSTANCE_URI}/etc/jolokia-access.xml"
+JAVA_ARGS="@JAVA_OPTS@ -XX:+PrintClassHistogram -XX:+UseG1GC -XX:+AggressiveOpts -Dhawtio.realm=activemq -Dhawtio.offline="true" -Dhawtio.role=${HAWTIO_ROLE} -Dhawtio.rolePrincipalClasses=org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal -Djolokia.policyLocation=${ARTEMIS_INSTANCE_URI}/etc/jolokia-access.xml -verbose:gc"
 
 #
 # There might be options that you only want to enable on specifc commands, like setting a JMX port
