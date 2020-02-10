@@ -20,3 +20,5 @@ sudo apt-get install golang-1.12
 
 echo "Install asciidoctor"
 gem install asciidoctor
+
+sudo apt-get clean
