@@ -45,27 +45,6 @@ objects:
       infraUuid: ${INFRA_UUID}
     name: ${NAME}
   spec:
-    affinity:
-      podAntiAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            podAffinityTerm:
-              labelSelector:
-                matchLabels:
-                  app: enmasse
-                  role: broker
-                  infraType: standard
-                  infraUuid: ${INFRA_UUID}
-              topologyKey: kubernetes.io/hostname
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
-                - key: node-role.enmasse.io/messaging-infra
-                  operator: In
-                  values:
-                    - "true"
     replicas: 1
     serviceName: ${NAME}
     selector:
@@ -90,6 +69,27 @@ objects:
           infraType: standard
           infraUuid: ${INFRA_UUID}
       spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                podAffinityTerm:
+                  labelSelector:
+                    matchLabels:
+                      app: enmasse
+                      role: broker
+                      infraType: standard
+                      infraUuid: ${INFRA_UUID}
+                  topologyKey: kubernetes.io/hostname
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExpressions:
+                    - key: node-role.enmasse.io/messaging-infra
+                      operator: In
+                      values:
+                        - "true"
         containers:
         - env:
           - name: MESSAGING_SERVICE_HOST

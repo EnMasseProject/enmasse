@@ -45,16 +45,6 @@ objects:
       infraUuid: ${INFRA_UUID}
     name: ${NAME}
   spec:
-    affinity:
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
-                - key: node-role.enmasse.io/messaging-infra
-                  operator: In
-                  values:
-                    - "true"
     replicas: 1
     serviceName: ${NAME}
     selector:
@@ -79,6 +69,16 @@ objects:
           infraType: standard
           infraUuid: ${INFRA_UUID}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExpressions:
+                    - key: node-role.enmasse.io/messaging-infra
+                      operator: In
+                      values:
+                        - "true"
         serviceAccountName: address-space-admin
         containers:
         - env:
