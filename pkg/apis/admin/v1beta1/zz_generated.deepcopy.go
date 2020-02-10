@@ -48,7 +48,7 @@ func (in *AuthenticationService) DeepCopyObject() runtime.Object {
 func (in *AuthenticationServiceList) DeepCopyInto(out *AuthenticationServiceList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]AuthenticationService, len(*in))
@@ -363,7 +363,7 @@ func (in *ConsoleService) DeepCopyObject() runtime.Object {
 func (in *ConsoleServiceList) DeepCopyInto(out *ConsoleServiceList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]ConsoleService, len(*in))

@@ -59,7 +59,7 @@ func Add(mgr manager.Manager) error {
 }
 
 func newReconciler(mgr manager.Manager) *ReconcileConsoleService {
-	return &ReconcileConsoleService{config: mgr.GetConfig(), client: mgr.GetClient(), scheme: mgr.GetScheme(), namespace: util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")}
+	return &ReconcileConsoleService{config: mgr.GetConfig(), client: mgr.GetClient(), reader: mgr.GetAPIReader(), scheme: mgr.GetScheme(), namespace: util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")}
 }
 
 func add(mgr manager.Manager, r *ReconcileConsoleService) error {
@@ -132,7 +132,7 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 	}
 
 	// Currently we need a single instance of console called "console", ensure that it exists.
-	err = ensureSingletonConsoleService(context.TODO(), metav1.ObjectMeta{Namespace: r.namespace, Name: CONSOLE_NAME}, r.client)
+	err = ensureSingletonConsoleService(context.TODO(), metav1.ObjectMeta{Namespace: r.namespace, Name: CONSOLE_NAME}, r.client, r.reader)
 	if err != nil {
 		log.Error(err, "Failed create singleton ConsoleService instance")
 	}
@@ -146,6 +146,7 @@ type ReconcileConsoleService struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	config    *rest.Config
+	reader    client.Reader
 	client    client.Client
 	scheme    *runtime.Scheme
 	namespace string
@@ -160,12 +161,12 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 
 	ctx := context.TODO()
 	consoleservice := &v1beta1.ConsoleService{}
-	err := r.client.Get(ctx, request.NamespacedName, consoleservice)
+	err := r.reader.Get(ctx, request.NamespacedName, consoleservice)
 	if err != nil {
 		if k8errors.IsNotFound(err) {
 			if CONSOLE_NAME == request.NamespacedName.Name {
 				err = ensureSingletonConsoleService(ctx, metav1.ObjectMeta{Namespace: request.NamespacedName.Namespace,
-					Name: request.NamespacedName.Name}, r.client)
+					Name: request.NamespacedName.Name}, r.client, r.reader)
 				return reconcile.Result{}, err
 			} else {
 				reqLogger.Info("ConsoleService resource not found. Ignoring since object must be deleted")
@@ -980,28 +981,20 @@ func applySsoCookieSecret(secret *corev1.Secret) error {
 	return nil
 }
 
-func ensureSingletonConsoleService(ctx context.Context, objectMeta metav1.ObjectMeta, c client.Client) error {
+func ensureSingletonConsoleService(ctx context.Context, objectMeta metav1.ObjectMeta, c client.Client, r client.Reader) error {
 
 	consoleservice := &v1beta1.ConsoleService{
 		ObjectMeta: objectMeta,
 	}
-	_, err := controllerutil.CreateOrUpdate(ctx, c, consoleservice, func() error {
-		return nil
-	})
 
-	list := &v1beta1.ConsoleServiceList{}
-	err = c.List(ctx, list)
-	if err != nil {
-		return err
+	err := r.Get(ctx,
+		types.NamespacedName{
+			Name:      objectMeta.Name,
+			Namespace: objectMeta.Namespace,
+		}, consoleservice)
+	if err != nil && k8errors.IsNotFound(err) {
+		return c.Create(ctx, consoleservice)
 	}
-
-	for _, item := range list.Items {
-		if "console" != item.Name {
-			err = c.Delete(ctx, &item, nil)
-			break
-		}
-	}
-
 	return err
 }
 

@@ -33,7 +33,6 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	controllertypes "k8s.io/apimachinery/pkg/types"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
-	kubernetes "k8s.io/client-go/kubernetes"
 )
 
 var log = logf.Log.WithName("controller_address_space_controller")
@@ -45,10 +44,10 @@ const ENV_VERSION = "VERSION"
 var _ reconcile.Reconciler = &ReconcileAddressSpaceController{}
 
 type ReconcileAddressSpaceController struct {
-	client     client.Client
-	kubeClient *kubernetes.Clientset
-	scheme     *runtime.Scheme
-	namespace  string
+	client    client.Client
+	reader    client.Reader
+	scheme    *runtime.Scheme
+	namespace string
 }
 
 // Gets called by parent "init", adding as to the manager
@@ -61,32 +60,53 @@ func Add(mgr manager.Manager) error {
 }
 
 func newReconciler(mgr manager.Manager) (*ReconcileAddressSpaceController, error) {
-	// Create initial deployment if it does not exist
-	client, err := kubernetes.NewForConfig(mgr.GetConfig())
-	if err != nil {
-		log.Error(err, "Error creating kubernetes client")
-		return nil, err
-	}
 	return &ReconcileAddressSpaceController{
-		client:     mgr.GetClient(),
-		kubeClient: client,
-		scheme:     mgr.GetScheme(),
-		namespace:  util.GetEnvOrDefault("NAMESPACE", "enmasse-infra"),
+		client:    mgr.GetClient(),
+		reader:    mgr.GetAPIReader(),
+		scheme:    mgr.GetScheme(),
+		namespace: util.GetEnvOrDefault("NAMESPACE", "enmasse-infra"),
 	}, nil
 }
 
 func add(mgr manager.Manager, r *ReconcileAddressSpaceController) error {
 
 	// Create initial deployment if it does not exist. We cannot yet rely on
-	// the controller-runtime client, as the runtime has not yet started.
-	deploymentClient := r.kubeClient.AppsV1().Deployments(r.namespace)
-	_, err := deploymentClient.Get(ADDRESS_SPACE_CONTROLLER_NAME, metav1.GetOptions{})
+	// the controller-runtime client cache (CreateOrUpdate), as the runtime has not yet started.
+	deployment := &appsv1.Deployment{}
+	err := r.reader.Get(context.TODO(), controllertypes.NamespacedName{Namespace: r.namespace, Name: ADDRESS_SPACE_CONTROLLER_NAME}, deployment)
 	if err != nil {
 		if k8errors.IsNotFound(err) {
-			_, err = r.Reconcile(reconcile.Request{NamespacedName: controllertypes.NamespacedName{
-				Namespace: r.namespace,
-				Name:      ADDRESS_SPACE_CONTROLLER_NAME,
-			}})
+			deployment = &appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: r.namespace,
+					Name:      ADDRESS_SPACE_CONTROLLER_NAME,
+				},
+			}
+			err = ApplyDeployment(deployment)
+			if err != nil {
+				return err
+			}
+			return r.client.Create(context.TODO(), deployment)
+		} else {
+			return err
+		}
+	}
+
+	service := &corev1.Service{}
+	err = r.reader.Get(context.TODO(), controllertypes.NamespacedName{Namespace: r.namespace, Name: ADDRESS_SPACE_CONTROLLER_NAME}, service)
+	if err != nil {
+		if k8errors.IsNotFound(err) {
+			service = &corev1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: r.namespace,
+					Name:      ADDRESS_SPACE_CONTROLLER_NAME,
+				},
+			}
+			err = applyService(service)
+			if err != nil {
+				return err
+			}
+			return r.client.Create(context.TODO(), service)
 		} else {
 			return err
 		}
