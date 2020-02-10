@@ -17,13 +17,13 @@ import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PodDistruptionBudgetController implements Controller {
-    private static final Logger log = LoggerFactory.getLogger(PodDistruptionBudgetController.class);
+public class PodDisruptionBudgetController implements Controller {
+    private static final Logger log = LoggerFactory.getLogger(PodDisruptionBudgetController.class);
 
     private final NamespacedKubernetesClient client;
     private final String namespace;
 
-    public PodDistruptionBudgetController(NamespacedKubernetesClient client, String namespace) {
+    public PodDisruptionBudgetController(NamespacedKubernetesClient client, String namespace) {
         this.client = client;
         this.namespace = namespace;
     }
@@ -88,7 +88,7 @@ public class PodDistruptionBudgetController implements Controller {
                     client.inNamespace(namespace).policy().podDisruptionBudget().createOrReplace(podDisruptionBudget);
                 }
             } catch (KubernetesClientException e) {
-                log.warn("Error creating pod distruption budget for router", e);
+                log.warn("Error creating pod disruption budget for router", e);
             }
         } else {
             deleteIfExists(name);
@@ -153,10 +153,15 @@ public class PodDistruptionBudgetController implements Controller {
                     client.inNamespace(namespace).policy().podDisruptionBudget().createOrReplace(podDisruptionBudget);
                 }
             } catch (KubernetesClientException e) {
-                log.warn("Error creating pod distruption budget for broker", e);
+                log.warn("Error creating pod disruption budget for broker", e);
             }
         } else {
             deleteIfExists(name);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "PodDisruptionBudgetController";
     }
 }
