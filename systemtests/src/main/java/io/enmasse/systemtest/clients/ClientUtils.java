@@ -302,10 +302,17 @@ public class ClientUtils {
     /**
      * stop all clients from list of Abstract clients
      */
-    public void stopClients(List<ExternalMessagingClient> clients) {
+    public void stopClients(List<ExternalMessagingClient> clients, boolean testFailed) {
         if (clients != null) {
             LOGGER.info("Stopping clients...");
-            clients.forEach(ExternalMessagingClient::stop);
+            clients.forEach(c -> {
+                c.stop();
+                if (testFailed) {
+                    LOGGER.info("=======================================");
+                    LOGGER.info("stderr {}", c.getStdError());
+                    LOGGER.info("stdout {}", c.getStdOutput());
+                }
+            });
         }
     }
 
