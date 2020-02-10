@@ -731,6 +731,10 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			Name:          "http",
 		}}
 
+		if consoleservice.Spec.ConsoleServer != nil && consoleservice.Spec.ConsoleServer.Resources != nil {
+			container.Resources = *consoleservice.Spec.ConsoleServer.Resources
+		}
+
 		return nil
 	}); err != nil {
 		return err
@@ -772,6 +776,9 @@ func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1bet
 				Scheme: "HTTPS",
 			},
 		},
+	}
+	if consoleservice.Spec.OauthProxy != nil && consoleservice.Spec.OauthProxy.Resources != nil {
+		container.Resources = *consoleservice.Spec.OauthProxy.Resources
 	}
 }
 
