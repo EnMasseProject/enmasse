@@ -197,6 +197,12 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 		applyImageEnv(container, "MQTT_GATEWAY_IMAGE", "mqtt-gateway")
 		applyImageEnv(container, "MQTT_LWT_IMAGE", "mqtt-lwt")
 
+		if value, ok := os.LookupEnv("ENABLE_MONITORING_ANNOTATIONS"); ok && value == "true" {
+			deployment.ObjectMeta.Annotations["prometheus.io/scrape"] = "true"
+			deployment.ObjectMeta.Annotations["prometheus.io/path"] = "/metrics"
+			deployment.ObjectMeta.Annotations["prometheus.io/port"] = "8080"
+		}
+
 		memoryEnv := util.GetEnvOrDefault("ADDRESS_SPACE_CONTROLLER_MEMORY_LIMIT", "512Mi")
 		memoryLimit, err := resource.ParseQuantity(memoryEnv)
 		if err != nil {
