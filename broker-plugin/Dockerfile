@@ -1,4 +1,4 @@
-FROM quay.io/enmasse/java-base:11-3
+FROM quay.io/enmasse/java-base:11-4
 
 RUN microdnf install which python gettext hostname iputils && microdnf clean all && mkdir -p /var/run/artemis/
 
