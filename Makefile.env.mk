@@ -14,7 +14,7 @@ TAG                 ?= latest
 
 CONSOLE_LINK_NAME         ?= $(shell grep "application.globalconsole.display.name" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 CONSOLE_LINK_SECTION_NAME ?= $(shell grep "application.globalconsole.section.name" $(TOPDIR)/pom.properties| cut -d'=' -f2)
-CONSOLE_LINK_IMAGE_URL    ?= data:$(shell grep "olm.csv.logo.mediatype" $(TOPDIR)/pom.properties| cut -d'=' -f2);base64\\,$(shell grep "olm.csv.logo.base64" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+CONSOLE_LINK_IMAGE_URL    ?= data:$(shell grep "olm.csv.logo.mediatype" $(TOPDIR)/pom.properties| cut -d'=' -f2);base64\,$(shell grep "olm.csv.logo.base64" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 
 
 # Image settings
