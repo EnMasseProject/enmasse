@@ -267,7 +267,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    void testCreateDeletePodDistruptionBudget() throws Exception {
+    void testCreateDeletePodDisruptionBudget() throws Exception {
 
         testCreatePdb();
 
@@ -296,7 +296,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    void testAddRemovePodDistruptionBudget() throws Exception {
+    void testAddRemovePodDisruptionBudget() throws Exception {
 
         testCreatePdb();
 

@@ -82,7 +82,7 @@ spec:
     replicas:
       min: 2 # Min replicas will be deployed when infra is created
       max: 3 # Max replicas that maybe scaled to
-      minReady: 1 # Allows 1 router to not be ready before alerting. Ends up creating PodDistruptionBudget
+      minReady: 1 # Allows 1 router to not be ready before alerting. Ends up creating PodDisruptionBudget
 
     podTemplate: # Same as in standard infra config today. Based on Kubernetes spec
       spec:
