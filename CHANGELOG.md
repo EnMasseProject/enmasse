@@ -16,6 +16,9 @@
 *  Upgrade to Infinispan 9.4.16
 * #3729: Add relatedImages to operator manifest for disconnected install
 * #3824: Bump netty to 4.1.45.Final
+* Change default behavior of handling REJECT outcome in broker from putting on DLQ to retrying
+  indefinitely.
+* Change default behavior of responding with MODIFIED outcome for transient delivery errors.
 
 
 * #3673: Add support for pod disruption budgets

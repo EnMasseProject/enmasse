@@ -177,6 +177,7 @@ class ForwardersTest extends BridgingBase {
         boolean full = false;
         byte[] bytes = new byte[1024];
         Random random = new Random();
+        int messagesSent = 0;
         TimeoutBudget timeout = new TimeoutBudget(30, TimeUnit.SECONDS);
         do {
             Message message = Message.Factory.create();
@@ -185,6 +186,7 @@ class ForwardersTest extends BridgingBase {
             message.setAddress(REMOTE_QUEUE1);
             try {
                 clientToRemote.sendMessage(REMOTE_QUEUE1, message).get(5, TimeUnit.SECONDS);
+                messagesSent++;
                 if (timeout.timeoutExpired()) {
                    Assertions.fail("Timeout waiting for remote broker to become full, probably error in test env configuration");
                 }
@@ -198,12 +200,12 @@ class ForwardersTest extends BridgingBase {
 
         AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
-        //send to address with forwarder wich will forward to special local global_dlq address because of full remote broker
+        //send to address with forwarder wich will retry forwarding indefinetly until remote broker is available
         localClient.sendMessages(forwarder.getSpec().getAddress(), TestUtils.generateMessages(messagesBatch));
 
-        //receive in special global_dlq address in local broker
-        var receivedInDLQ = localClient.recvMessages("!!GLOBAL_DLQ", messagesBatch);
-        assertThat("Wrong count of messages received !!GLOBAL_DLQ address after address is full in remote broker", receivedInDLQ.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        //receive messages that was causing remote broker to block, and check that we also get the forwarded messages
+        var receivedInDLQ = clientToRemote.recvMessages(REMOTE_QUEUE1, messagesSent + messagesBatch);
+        assertThat("Wrong count of messages received on remote address after queue is full in remote broker", receivedInDLQ.get(5, TimeUnit.MINUTES).size(), is(messagesSent + messagesBatch));
 
     }
 
