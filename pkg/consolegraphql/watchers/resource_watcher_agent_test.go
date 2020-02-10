@@ -378,7 +378,7 @@ type MockAgentCollector struct {
 	addressSpaceNamespace string
 }
 
-func (m *MockAgentCollector) CommandDelegate(bearerToken string) (agent.CommandDelegate, error) {
+func (m *MockAgentCollector) CommandDelegate(_ string) (agent.CommandDelegate, error) {
 	panic("unused")
 }
 
