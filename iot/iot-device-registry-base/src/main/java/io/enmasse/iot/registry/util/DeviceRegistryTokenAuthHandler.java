@@ -4,8 +4,14 @@
  */
 package io.enmasse.iot.registry.util;
 
+import static io.enmasse.iot.utils.MoreFutures.completeHandler;
+
+import java.util.concurrent.CompletableFuture;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
@@ -14,9 +20,6 @@ import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.impl.AuthHandlerImpl;
 import io.vertx.ext.web.handler.impl.HttpStatusException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DeviceRegistryTokenAuthHandler extends AuthHandlerImpl {
 
@@ -36,28 +39,29 @@ public class DeviceRegistryTokenAuthHandler extends AuthHandlerImpl {
     }
 
     @Override
-    public void parseCredentials(RoutingContext context, Handler<AsyncResult<JsonObject>> handler) {
+    public void parseCredentials(final RoutingContext context, final Handler<AsyncResult<JsonObject>> handler) {
+        completeHandler(() -> processParseCredentials(context), handler);
+    }
+
+    protected CompletableFuture<JsonObject> processParseCredentials(final RoutingContext context) {
         final HttpServerRequest request = context.request();
         final String authorization = request.headers().get(HttpHeaders.AUTHORIZATION);
 
         if (authorization == null) {
-            handler.handle(Future.failedFuture(UNAUTHORIZED));
-            return;
+            return CompletableFuture.failedFuture(UNAUTHORIZED);
         }
 
         try {
             int idx = authorization.indexOf(' ');
 
             if (idx <= 0) {
-                handler.handle(Future.failedFuture(BAD_REQUEST));
-                return;
+                return CompletableFuture.failedFuture(BAD_REQUEST);
             }
 
             final String type = authorization.substring(0, idx);
 
             if (!BEARER.equals(type)) {
-                handler.handle(Future.failedFuture(UNAUTHORIZED));
-                return;
+                return CompletableFuture.failedFuture(UNAUTHORIZED);
             }
 
             final String[] pathElements = request.path().split("/");
@@ -70,9 +74,9 @@ public class DeviceRegistryTokenAuthHandler extends AuthHandlerImpl {
                     .put(TENANT, tenant)
                     .put(METHOD, request.method().toString());
 
-            handler.handle(Future.succeededFuture(authInfo));
-        } catch (RuntimeException e) {
-            handler.handle(Future.failedFuture(e));
+            return CompletableFuture.completedFuture(authInfo);
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
         }
     }
 
