@@ -4,4 +4,4 @@ sudo sh -c "echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/li
 wget -nv https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${VERSION_ID}/Release.key -O- | sudo apt-key add -
 sudo apt-get update -qq
 sudo apt-get -qq -y install podman
-sudo mv ../configs/registries.conf /etc/containers/registries.conf
+sudo mv ./.github/configs/registries.conf /etc/containers/registries.conf
