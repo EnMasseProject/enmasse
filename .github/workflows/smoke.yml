@@ -42,9 +42,6 @@ jobs:
       - name: Setup OLM
         run: ./.github/scripts/setup-olm.sh
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v1
-
       - name: Build
         run: ./.github/scripts/build.sh
 
