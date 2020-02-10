@@ -62,11 +62,11 @@ public class AddressSpaceWebItem extends WebItem implements Comparable<AddressSp
     }
 
     public WebElement getEditMenuItem() {
-        return getActionDropDown().findElement(By.xpath("//a[contains(text(), 'Edit')]"));
+        return webItem.findElement(By.xpath("//div[contains(text(), 'Edit')]"));
     }
 
     public WebElement getDeleteMenuItem() {
-        return getActionDropDown().findElement(By.xpath("//a[contains(text(), 'Delete')]"));
+        return webItem.findElement(By.xpath("//div[contains(text(), 'Delete')]"));
     }
 
     private String parseName(WebElement elem) {
