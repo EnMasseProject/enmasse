@@ -64,28 +64,6 @@ objects:
       infraUuid: ${INFRA_UUID}
     name: qdrouterd-${INFRA_UUID}
   spec:
-    affinity:
-      podAntiAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            podAffinityTerm:
-              labelSelector:
-                matchLabels:
-                  app: enmasse
-                  capability: router
-                  name: qdrouterd
-                  infraType: standard
-                  infraUuid: ${INFRA_UUID}
-              topologyKey: kubernetes.io/hostname
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
-                - key: node-role.enmasse.io/operator-infra
-                  operator: In
-                  values:
-                    - "true"
     serviceName: qdrouterd-headless-${INFRA_UUID}
     replicas: 1
     selector:
@@ -106,6 +84,28 @@ objects:
           infraType: standard
           infraUuid: ${INFRA_UUID}
       spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                podAffinityTerm:
+                  labelSelector:
+                    matchLabels:
+                      app: enmasse
+                      capability: router
+                      name: qdrouterd
+                      infraType: standard
+                      infraUuid: ${INFRA_UUID}
+                  topologyKey: kubernetes.io/hostname
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExpressions:
+                    - key: node-role.enmasse.io/operator-infra
+                      operator: In
+                      values:
+                        - "true"
         containers:
         - env:
           - name: QDROUTERD_CONF_TYPE
@@ -209,16 +209,6 @@ objects:
       infraUuid: ${INFRA_UUID}
     name: admin.${INFRA_UUID}
   spec:
-    affinity:
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
-                - key: node-role.enmasse.io/operator-infra
-                  operator: In
-                  values:
-                    - "true"
     replicas: 1
     strategy:
       type: Recreate
@@ -238,6 +228,16 @@ objects:
           infraType: standard
           infraUuid: ${INFRA_UUID}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExpressions:
+                    - key: node-role.enmasse.io/operator-infra
+                      operator: In
+                      values:
+                        - "true"
         containers:
         - env:
           - name: MESSAGING_SERVICE_HOST

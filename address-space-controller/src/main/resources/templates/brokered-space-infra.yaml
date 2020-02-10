@@ -44,16 +44,6 @@ objects:
       infraUuid: ${INFRA_UUID}
     name: broker.${INFRA_UUID}
   spec:
-    affinity:
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
-                - key: node-role.enmasse.io/messaging-infra
-                  operator: In
-                  values:
-                    - "true"
     replicas: 1
     strategy:
       type: Recreate
@@ -73,6 +63,16 @@ objects:
           role: broker
           infraUuid: ${INFRA_UUID}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExpressions:
+                    - key: node-role.enmasse.io/messaging-infra
+                      operator: In
+                      values:
+                        - "true"
         containers:
         - env:
           - name: INFRA_UUID
@@ -247,16 +247,6 @@ objects:
       infraUuid: ${INFRA_UUID}
     name: agent.${INFRA_UUID}
   spec:
-    affinity:
-      nodeAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
-                - key: node-role.enmasse.io/operator-infra
-                  operator: In
-                  values:
-                    - "true"
     replicas: 1
     strategy:
       type: Recreate
@@ -277,6 +267,16 @@ objects:
           role: agent
           infraUuid: ${INFRA_UUID}
       spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExpressions:
+                    - key: node-role.enmasse.io/operator-infra
+                      operator: In
+                      values:
+                        - "true"
         containers:
         - env:
           - name: BROKER_SERVICE_HOST
