@@ -30,6 +30,7 @@ clean: clean_node
 
 buildpush:
 	$(MAKE)
+	$(MAKE) docker_build
 	$(MAKE) docker_tag
 	$(MAKE) docker_push
 
@@ -46,6 +47,6 @@ docker_push:
 	then \
 		bash $(TOPDIR)/scripts/docker_push.sh "$(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG)" 10 10 ; \
 	fi
-	
+
 
 .PHONY: all init build test package clean docker_build docker_tag docker_push
