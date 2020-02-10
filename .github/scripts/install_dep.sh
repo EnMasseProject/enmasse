@@ -1,4 +1,10 @@
 #!/bin/bash
+
+echo "Update archives"
+
+sudo add-apt-repository ppa:longsleep/golang-backports
+sudo apt-get update
+
 echo "Install maven"
 
 sudo apt install maven
@@ -10,13 +16,11 @@ curl -sL https://deb.nodesource.com/setup_13.x
 sudo -E bash -
 sudo apt-get install nodejs
 
-
 echo "Install golang"
-    
-sudo add-apt-repository ppa:longsleep/golang-backports
-sudo apt-get update
-sudo apt-get install golang-1.12
-
+sudo apt-get install golang-1.13
 
 echo "Install asciidoctor"
 gem install asciidoctor
+
+echo "Clean cache"
+sudo apt-get clean
