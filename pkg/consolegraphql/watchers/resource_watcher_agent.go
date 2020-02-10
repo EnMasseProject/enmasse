@@ -396,29 +396,18 @@ func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {
 				}
 			}
 
-			pending := make([]interface{}, 0)
+			agentSendingLinks, agentReceivingLinks := buildLinkMaps(target)
 
-			for _, updatingLink := range updatingLinks {
-				metrics := updatingLink.Metrics
-				metrics, err = updateLinkMetrics(target, metrics, now, updatingLink)
-				if err != nil {
-					return err
-				}
-
-				updatingLink.Metrics = metrics
-				pending = append(pending, updatingLink)
+			pending, err := updateAllLinks(target.AddressSpaceType, updatingLinks, agentSendingLinks, agentReceivingLinks, now)
+			if err != nil {
+				return err
 			}
 
-			for _, newLink := range newLinks {
-				metrics := newLink.Metrics
-				metrics, err = updateLinkMetrics(target, metrics, now, newLink)
-				if err != nil {
-					return err
-				}
-
-				newLink.Metrics = metrics
-				pending = append(pending, newLink)
+			more, err := updateAllLinks(target.AddressSpaceType, newLinks, agentSendingLinks, agentReceivingLinks, now)
+			if err != nil {
+				return err
 			}
+			pending = append(pending, more...)
 
 			err = clw.Cache.Add(pending...)
 			if err != nil {
@@ -687,61 +676,88 @@ func toLinkObject(l agent.AgentAddressLink, role string, connection *agent.Agent
 	return link
 }
 
-func updateLinkMetrics(agentCon *agent.AgentConnection, metrics []*consolegraphql.Metric, now time.Time, link *consolegraphql.Link) ([]*consolegraphql.Metric, error) {
-
-	var agentLinks []agent.AgentAddressLink
-	var rateMetricName string
-	if link.Spec.Role == "sender" {
-		agentLinks = agentCon.Senders
-		rateMetricName = "enmasse_messages_in"
-	} else {
-		agentLinks = agentCon.Receivers
-		rateMetricName = "enmasse_messages_out"
+func buildLinkMaps(agentCon *agent.AgentConnection) (map[string]agent.AgentAddressLink, map[string]agent.AgentAddressLink) {
+	sendingLinks := make(map[string]agent.AgentAddressLink)
+	receivingLinks := make(map[string]agent.AgentAddressLink)
+	for _, l := range agentCon.Senders {
+		sendingLinks[l.Uuid] = l
+	}
+	for _, l := range agentCon.Receivers {
+		receivingLinks[l.Uuid] = l
 	}
 
-	for _, l := range agentLinks {
-		if l.Uuid == link.Name {
-			var sm *consolegraphql.SimpleMetric
-			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_deliveries", "counter")
-			sm.Update(float64(l.Deliveries), now)
+	return sendingLinks, receivingLinks
+}
 
-			var rm *consolegraphql.RateCalculatingMetric
-			rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, rateMetricName, "gauge", "messages/sec")
-			rm.Update(float64(l.Deliveries), now)
+func updateAllLinks(addressSpaceType string, targetLinks []*consolegraphql.Link, agentSendingLinks map[string]agent.AgentAddressLink, agentReceivingLinks map[string]agent.AgentAddressLink, now time.Time) ([]interface{}, error) {
+	pending := make([]interface{}, 0)
 
-			switch agentCon.AddressSpaceType {
-			case "standard":
-				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_accepted", "counter")
-				sm.Update(float64(l.Accepted), now)
-				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_modified", "counter")
-				sm.Update(float64(l.Modified), now)
-				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_presettled", "counter")
-				sm.Update(float64(l.Presettled), now)
-				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_unsettled", "counter")
-				sm.Update(float64(l.Unsettled), now)
-				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_undelivered", "counter")
-				sm.Update(float64(l.Undelivered), now)
-				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_rejected", "counter")
-				sm.Update(float64(l.Rejected), now)
-				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_released", "counter")
-				sm.Update(float64(l.Released), now)
-
-				// backlog - agent calculates this field to be the sum of undelivered/unsettled metrics
-				backlog := 0
-				for _, ld := range l.Links {
-					backlog += ld.Backlog
-				}
-				sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_messages_backlog", "counter")
-				sm.Update(float64(backlog), now)
-
-			case "brokered":
-				// No address space specific metrics
-			default:
-				panic(fmt.Sprintf("unexpected address space type : %s", agentCon.AddressSpaceType))
-			}
-			return metrics, nil
+	for _, targetLink := range targetLinks {
+		var agentLinks map[string]agent.AgentAddressLink
+		var rateMetricName string
+		if targetLink.Spec.Role == "sender" {
+			agentLinks = agentSendingLinks
+			rateMetricName = "enmasse_messages_in"
+		} else {
+			agentLinks = agentReceivingLinks
+			rateMetricName = "enmasse_messages_out"
 		}
+
+		err := updateLinkMetrics(addressSpaceType, agentLinks, targetLink, rateMetricName, now)
+		if err != nil {
+			return nil, err
+		}
+
+		pending = append(pending, targetLink)
+	}
+	return pending, nil
+}
+
+func updateLinkMetrics(addressSpaceType string, agentLinks map[string]agent.AgentAddressLink, targetModelLink *consolegraphql.Link, rateMetricName string, now time.Time) error {
+
+	if l, present := agentLinks[targetModelLink.Name]; present {
+		metrics := targetModelLink.Metrics
+
+		var sm *consolegraphql.SimpleMetric
+		sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_deliveries", "counter")
+		sm.Update(float64(l.Deliveries), now)
+
+		var rm *consolegraphql.RateCalculatingMetric
+		rm, metrics = consolegraphql.FindOrCreateRateCalculatingMetric(metrics, rateMetricName, "gauge", "messages/sec")
+		rm.Update(float64(l.Deliveries), now)
+
+		switch addressSpaceType {
+		case "standard":
+			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_accepted", "counter")
+			sm.Update(float64(l.Accepted), now)
+			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_modified", "counter")
+			sm.Update(float64(l.Modified), now)
+			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_presettled", "counter")
+			sm.Update(float64(l.Presettled), now)
+			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_unsettled", "counter")
+			sm.Update(float64(l.Unsettled), now)
+			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_undelivered", "counter")
+			sm.Update(float64(l.Undelivered), now)
+			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_rejected", "counter")
+			sm.Update(float64(l.Rejected), now)
+			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_released", "counter")
+			sm.Update(float64(l.Released), now)
+
+			// backlog - agent calculates this field to be the sum of undelivered/unsettled metrics
+			backlog := 0
+			for _, ld := range l.Links {
+				backlog += ld.Backlog
+			}
+			sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_messages_backlog", "counter")
+			sm.Update(float64(backlog), now)
+
+		case "brokered":
+			// No address space specific metrics
+		default:
+			panic(fmt.Sprintf("unexpected address space type : %s", addressSpaceType))
+		}
+		targetModelLink.Metrics = metrics
 	}
 
-	return metrics, nil
+	return nil
 }
