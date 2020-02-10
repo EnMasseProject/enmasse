@@ -14,6 +14,8 @@ spec:
     listKind: MessagingUserList
     singular: messaginguser
     plural: messagingusers
+    categories:
+    - enmasse
   versions:
     - name: v1beta1
       served: true

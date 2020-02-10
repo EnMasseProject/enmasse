@@ -13,6 +13,8 @@ spec:
     listKind: AddressSpacePlanList
     singular: addressspaceplan
     plural: addressspaceplans
+    categories:
+    - enmasse
   versions:
     - name: v1beta2
       served: true

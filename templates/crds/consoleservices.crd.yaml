@@ -13,6 +13,8 @@ spec:
     listKind: ConsoleServiceList
     singular: consoleservice
     plural: consoleservices
+    categories:
+    - enmasse
   validation:
     openAPIV3Schema:
       type: object

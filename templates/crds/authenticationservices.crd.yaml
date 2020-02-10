@@ -13,6 +13,8 @@ spec:
     listKind: AuthenticationServiceList
     singular: authenticationservice
     plural: authenticationservices
+    categories:
+    - enmasse
   additionalPrinterColumns:
   - name: Phase
     type: string

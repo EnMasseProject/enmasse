@@ -13,6 +13,8 @@ spec:
     listKind: BrokeredInfraConfigList
     singular: brokeredinfraconfig
     plural: brokeredinfraconfigs
+    categories:
+    - enmasse
   versions:
     - name: v1beta1
       served: true

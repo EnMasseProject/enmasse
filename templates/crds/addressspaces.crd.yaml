@@ -14,6 +14,8 @@ spec:
     listKind: AddressSpaceList
     singular: addressspace
     plural: addressspaces
+    categories:
+    - enmasse
   versions:
     - name: v1beta1
       served: true

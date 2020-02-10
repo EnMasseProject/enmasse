@@ -60,6 +60,7 @@ public final class CustomResources {
                         .withListKind(listKind)
                         .withPlural(plural)
                         .withSingular(singular)
+                        .withCategories("enmasse")
                         .endNames()
                         .endSpec()
                         .build();
