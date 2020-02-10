@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/openshift/api"
 
 	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
@@ -235,7 +236,20 @@ func addMetrics(ctx context.Context, cfg *rest.Config, namespace string) {
 	// CreateServiceMonitors will automatically create the prometheus-operator ServiceMonitor resources
 	// necessary to configure Prometheus to scrape metrics from this operator.
 	services := []*v1.Service{service}
-	_, err = metrics.CreateServiceMonitors(cfg, namespace, services)
+	_, err = metrics.CreateServiceMonitors(cfg, namespace, services, func(monitor *monitoringv1.ServiceMonitor) error {
+		for i, _ := range monitor.Spec.Endpoints {
+			monitor.Spec.Endpoints[i].MetricRelabelConfigs = []*monitoringv1.RelabelConfig{
+				&monitoringv1.RelabelConfig{
+					SourceLabels: []string{
+						"__name__",
+					},
+					TargetLabel: "__name__",
+					Replacement: "enmasse_${1}",
+				},
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		log.Info("Could not create ServiceMonitor object", "error", err.Error())
 		// If this operator is deployed to a cluster without the prometheus-operator running, it will return
