@@ -349,7 +349,7 @@ func TestAddressCommand(t *testing.T) {
 	namespace := "mynamespace"
 	addr := createAddress(namespace, "myaddrspace.myaddr")
 
-	cmd, err := r.Query().AddressCommand(ctx, addr.Address)
+	cmd, err := r.Query().AddressCommand(ctx, addr.Address, nil)
 
 	assert.NoError(t, err)
 	expected := `kind: Address
@@ -358,14 +358,14 @@ metadata:
 	assert.Contains(t, cmd, expected, "Expect name and namespace to be set")
 }
 
-func TestAddressCommandUsingAddressToFormResourceName(t *testing.T) {
+func TestAddressCommandUsingAddressToFromResourceName(t *testing.T) {
 	r,ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
+	addressSpace := "myaddrspace"
 	ah := createAddress(namespace, "",
-		withAddress("myaddr"),
-		withAddressAnnotation(addressSpaceNameAnnotationKey, "myaddrspace"))
+		withAddress("myaddr"))
 
-	cmd, err := r.Query().AddressCommand(ctx, ah.Address)
+	cmd, err := r.Query().AddressCommand(ctx, ah.Address, &addressSpace)
 
 	assert.NoError(t, err)
 	expected := `kind: Address
@@ -501,7 +501,7 @@ func TestCreateAddress(t *testing.T) {
 	addr := createAddress(namespace, addrname)
 	addr.Spec.Address = "myaddr"
 
-	meta, err := r.Mutation().CreateAddress(ctx, addr.Address)
+	meta, err := r.Mutation().CreateAddress(ctx, addr.Address, nil)
 	assert.NoError(t, err)
 
 	retrieved, err := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.Addresses(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
@@ -581,10 +581,9 @@ func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 	for _, testCase := range testCases {
 		r, ctx := newTestAddressResolver(t)
 		ah := createAddress(namespace, "",
-			withAddress(testCase.address),
-			withAddressAnnotation("addressSpace", testCase.addressSpace))
+			withAddress(testCase.address))
 
-		meta, err := r.Mutation().CreateAddress(ctx, ah.Address)
+		meta, err := r.Mutation().CreateAddress(ctx, ah.Address, &testCase.addressSpace)
 		assert.NoError(t, err)
 
 		retrieved, err := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.Addresses(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
@@ -599,6 +598,6 @@ func TestCreateAddressUnableToDefaultResourceName(t *testing.T) {
 	namespace := "mynamespace"
 	addr := createAddress(namespace, "")
 
-	_, err := r.Mutation().CreateAddress(ctx, addr.Address)
+	_, err := r.Mutation().CreateAddress(ctx, addr.Address, nil)
 	assert.Error(t, err)
 }

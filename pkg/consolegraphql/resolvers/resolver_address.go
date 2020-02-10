@@ -27,8 +27,6 @@ var separators = []string{"_", ".", "-"}
 
 const maxKubeName = 253
 
-const addressSpaceNameAnnotationKey = "addressSpace"
-
 func (r *Resolver) Address_consoleapi_enmasse_io_v1beta1() Address_consoleapi_enmasse_io_v1beta1Resolver {
 	return &addressK8sResolver{r}
 }
@@ -170,11 +168,11 @@ func (r *addressSpecK8sResolver) Type(ctx context.Context, obj *v1beta1.AddressS
 	return AddressType(obj.Type), nil
 }
 
-func (r *mutationResolver) CreateAddress(ctx context.Context, input v1beta1.Address) (*metav1.ObjectMeta, error) {
+func (r *mutationResolver) CreateAddress(ctx context.Context, input v1beta1.Address, addressSpace *string) (*metav1.ObjectMeta, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 
 	if input.ObjectMeta.Name == "" {
-		err := defaultResourceNameFromAddress(&input)
+		err := defaultResourceNameFromAddress(&input, addressSpace)
 		if err != nil {
 			return nil, err
 		}
@@ -268,7 +266,7 @@ func (r *mutationResolver) PurgeAddress(ctx context.Context, input metav1.Object
 	return &t, nil
 }
 
-func (r *queryResolver) AddressCommand(ctx context.Context, input v1beta1.Address) (string, error) {
+func (r *queryResolver) AddressCommand(ctx context.Context, input v1beta1.Address, addressSpace *string) (string, error) {
 
 	if input.TypeMeta.APIVersion == "" {
 		input.TypeMeta.APIVersion = "enmasse.io/v1beta1"
@@ -281,7 +279,7 @@ func (r *queryResolver) AddressCommand(ctx context.Context, input v1beta1.Addres
 	input.Namespace = ""
 
 	if input.ObjectMeta.Name == "" {
-		err := defaultResourceNameFromAddress(&input)
+		err := defaultResourceNameFromAddress(&input, addressSpace)
 		if err != nil {
 			return "", err
 		}
@@ -298,26 +296,21 @@ func tokenizeAddress(name string) ([]string, error) {
 	return addressToks, nil
 }
 
-func defaultResourceNameFromAddress(input *v1beta1.Address) error {
+func defaultResourceNameFromAddress(input *v1beta1.Address, addressSpace *string) error {
 	if input.Spec.Address == "" {
-		return fmt.Errorf("address is undefined, cannot default resource name from address '%s'",
+		return fmt.Errorf("address is undefined, cannot default resource name")
+	}
+	if addressSpace == nil {
+		return fmt.Errorf("addressSpace is not provided, cannot default resource name from address '%s'",
 			input.Spec.Address)
 	}
-	if input.Annotations != nil {
-		if as, present := input.Annotations[addressSpaceNameAnnotationKey]; present {
-			addr := strings.ToLower(input.Spec.Address)
-			if !isValidName(addr, maxKubeName-len(as)-1) {
-				qualifier := uuid.New().String()
-				addr = cleanName(addr, qualifier, maxKubeName-len(as)-len(qualifier)-2)
-			}
-			input.ObjectMeta.Name = fmt.Sprintf("%s.%s", as, addr)
-			delete(input.Annotations, addressSpaceNameAnnotationKey)
-			return nil
-		}
+	addr := strings.ToLower(input.Spec.Address)
+	if !isValidName(addr, maxKubeName-len(*addressSpace)-1) {
+		qualifier := uuid.New().String()
+		addr = cleanName(addr, qualifier, maxKubeName-len(*addressSpace)-len(qualifier)-2)
 	}
-	return fmt.Errorf("annotation '%s' is undefined, cannot default resource name from address '%s'",
-		addressSpaceNameAnnotationKey,
-		input.Spec.Address)
+	input.ObjectMeta.Name = fmt.Sprintf("%s.%s", *addressSpace, addr)
+	return nil
 }
 
 func isValidName(name string, maxLength int) bool {
