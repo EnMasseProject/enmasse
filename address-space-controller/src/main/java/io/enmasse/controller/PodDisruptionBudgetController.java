@@ -88,7 +88,7 @@ public class PodDisruptionBudgetController implements Controller {
                     client.inNamespace(namespace).policy().podDisruptionBudget().createOrReplace(podDisruptionBudget);
                 }
             } catch (KubernetesClientException e) {
-                log.warn("Error creating pod distruption budget for router", e);
+                log.warn("Error creating pod disruption budget for router", e);
             }
         } else {
             deleteIfExists(name);
@@ -153,7 +153,7 @@ public class PodDisruptionBudgetController implements Controller {
                     client.inNamespace(namespace).policy().podDisruptionBudget().createOrReplace(podDisruptionBudget);
                 }
             } catch (KubernetesClientException e) {
-                log.warn("Error creating pod distruption budget for broker", e);
+                log.warn("Error creating pod disruption budget for broker", e);
             }
         } else {
             deleteIfExists(name);
