@@ -17,13 +17,13 @@ import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PodDistruptionBudgetController implements Controller {
-    private static final Logger log = LoggerFactory.getLogger(PodDistruptionBudgetController.class);
+public class PodDisruptionBudgetController implements Controller {
+    private static final Logger log = LoggerFactory.getLogger(PodDisruptionBudgetController.class);
 
     private final NamespacedKubernetesClient client;
     private final String namespace;
 
-    public PodDistruptionBudgetController(NamespacedKubernetesClient client, String namespace) {
+    public PodDisruptionBudgetController(NamespacedKubernetesClient client, String namespace) {
         this.client = client;
         this.namespace = namespace;
     }
@@ -158,5 +158,10 @@ public class PodDistruptionBudgetController implements Controller {
         } else {
             deleteIfExists(name);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "PodDisruptionBudgetController";
     }
 }
