@@ -325,7 +325,7 @@ type Query {
 #
 
 input ObjectMeta_v1_Input {
-  Name: String!
+  Name: String
   Namespace: String!
   ResourceVersion: String
 }

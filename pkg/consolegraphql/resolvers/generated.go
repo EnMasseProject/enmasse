@@ -1868,7 +1868,7 @@ type Query {
 #
 
 input ObjectMeta_v1_Input {
-  Name: String!
+  Name: String
   Namespace: String!
   ResourceVersion: String
 }
@@ -9035,7 +9035,7 @@ func (ec *executionContext) unmarshalInputObjectMeta_v1_Input(ctx context.Contex
 		switch k {
 		case "Name":
 			var err error
-			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			it.Name, err = ec.unmarshalOString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
