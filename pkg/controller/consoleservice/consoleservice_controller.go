@@ -47,10 +47,16 @@ const CONSOLE_NAME = "console"
 
 var log = logf.Log.WithName("controller_consoleservice")
 
+var consoleLinkGVK = schema.GroupVersionKind{
+	Group:   "console.openshift.io",
+	Version: "v1",
+	Kind:    "ConsoleLink",
+}
+
 // information for console link
-var ConsoleLinkSectionName = util.GetEnvOrDefault("CONSOLE_LINK_SECTION_NAME", "Messaging")
-var ConsoleLinkName = util.GetEnvOrDefault("CONSOLE_LINK_NAME", "Messaging Console")
-var ConsoleLinkImageUrl = util.GetEnvOrDefault("CONSOLE_LINK_IMAGE_URL", "")
+var consoleLinkSectionName = util.GetEnvOrDefault("CONSOLE_LINK_SECTION_NAME", "Messaging")
+var consoleLinkName = util.GetEnvOrDefault("CONSOLE_LINK_NAME", "Messaging Console")
+var consoleLinkImageUrl = util.GetEnvOrDefault("CONSOLE_LINK_IMAGE_URL", "")
 
 // Gets called by parent "init", adding as to the manager
 func Add(mgr manager.Manager) error {
@@ -526,6 +532,10 @@ func applyRoute(consoleservice *v1beta1.ConsoleService, route *routev1.Route, ca
 
 func (r *ReconcileConsoleService) reconcileConsoleLink(ctx context.Context, consoleservice *v1beta1.ConsoleService, route *routev1.Route) (reconcile.Result, error) {
 
+	if !util.HasApi(consoleLinkGVK) {
+		return reconcile.Result{}, nil
+	}
+
 	// eval the host name, there should only be one
 
 	host := ""
@@ -548,11 +558,7 @@ func (r *ReconcileConsoleService) reconcileConsoleLink(ctx context.Context, cons
 	// need it in the future
 
 	consoleLink := unstructured.Unstructured{}
-	consoleLink.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "console.openshift.io",
-		Version: "v1",
-		Kind:    "ConsoleLink",
-	})
+	consoleLink.SetGroupVersionKind(consoleLinkGVK)
 	consoleLink.SetName("enmasse-consoleservice")
 
 	if host != "" {
@@ -583,11 +589,11 @@ func (r *ReconcileConsoleService) reconcileConsoleLink(ctx context.Context, cons
 func applyConsoleLink(consoleLink *unstructured.Unstructured, host string) {
 
 	consoleLink.Object["spec"] = map[string]interface{}{
-		"text":     ConsoleLinkName,
+		"text":     consoleLinkName,
 		"location": "ApplicationMenu",
 		"applicationMenu": map[string]interface{}{
-			"section":  ConsoleLinkSectionName,
-			"imageURL": ConsoleLinkImageUrl,
+			"section":  consoleLinkSectionName,
+			"imageURL": consoleLinkImageUrl,
 		},
 		"href": host,
 	}
