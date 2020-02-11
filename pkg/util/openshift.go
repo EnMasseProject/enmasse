@@ -1,68 +1,95 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package util
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"net/url"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 	"time"
 
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
+	routeapiv1 "github.com/openshift/api/route/v1"
 	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 var (
 	openshift *bool
+	apis      = make(map[string]bool, 0)
 	log       = logf.Log.WithName("util")
 )
 
 const ConnectsTo = "app.openshift.io/connects-to"
 
 func IsOpenshift() bool {
+
 	if openshift == nil {
 		b := detectOpenshift()
 		openshift = &b
 	}
+
 	return *openshift
+
 }
 
-func detectOpenshift() bool {
+func HasApi(gvk schema.GroupVersionKind) bool {
+	if has, ok := apis[gvk.String()]; ok {
+		return has
+	}
 
-	log.Info("Detect if openshift is running")
+	has := detectApi(gvk)
+	apis[gvk.String()] = has
+	return has
+}
 
-	value, ok := os.LookupEnv("ENMASSE_OPENSHIFT")
+func detectApi(gvk schema.GroupVersionKind) bool {
+
+	name := fmt.Sprintf("ENMASSE_HAS_API_%s_%s_%s", strings.ToUpper(gvk.Group), strings.ToUpper(gvk.Version), strings.ToUpper(gvk.Kind))
+
+	value, ok := os.LookupEnv(name)
 	if ok {
-		log.Info("Set by env-var 'ENMASSE_OPENSHIFT': " + value)
+		log.Info("Set by env-var '" + name + "': " + value)
 		return strings.ToLower(value) == "true"
 	}
 
-	// try to
-
 	cfg, err := config.GetConfig()
 	if err != nil {
-		log.Error(err, "Error getting config: %v")
+		log.Error(err, "Error getting config")
 		return false
 	}
 
-	routeClient, err := routev1.NewForConfig(cfg)
+	cli, err := client.New(cfg, client.Options{})
 	if err != nil {
-		log.Error(err, "Failed to get routeClient")
+		log.Error(err, "Failed to create new client")
 		return false
 	}
+
+	namespace, err := GetInfrastructureNamespace()
+	if err != nil {
+		return false
+	}
+
+	list := unstructured.UnstructuredList{}
+	list.SetGroupVersionKind(gvk)
 
 	retries := 10
 	for retries > 0 {
-		body, err := routeClient.RESTClient().Get().DoRaw()
+
+		err = cli.List(context.Background(), &list, client.Limit(1), client.InNamespace(namespace))
+
 		log.Info(fmt.Sprintf("Request error: %v", err))
-		log.V(2).Info(fmt.Sprintf("Body: %v", string(body)))
+		log.V(2).Info(fmt.Sprintf("Body: %v", list))
 
 		if err == nil {
 			return true
@@ -79,9 +106,24 @@ func detectOpenshift() bool {
 
 		retries -= 1
 		time.Sleep(10 * time.Second)
+
 	}
 
 	return false
+
+}
+
+func detectOpenshift() bool {
+
+	log.Info("Detect if openshift is running")
+
+	value, ok := os.LookupEnv("ENMASSE_OPENSHIFT")
+	if ok {
+		log.Info("Set by env-var 'ENMASSE_OPENSHIFT': " + value)
+		return strings.ToLower(value) == "true"
+	}
+
+	return HasApi(routeapiv1.GroupVersion.WithKind("Route"))
 }
 
 func OpenshiftUri() (*url.URL, bool, error) {
@@ -111,18 +153,18 @@ func OpenshiftUri() (*url.URL, bool, error) {
 
 func WellKnownOauthMetadata() (map[string]interface{}, error) {
 
-	config, err := config.GetConfig()
+	cfg, err := config.GetConfig()
 	if err != nil {
 		log.Error(err, "Error getting config: %v")
 		return nil, err
 	}
 
-	client, err := routev1.NewForConfig(config)
+	cli, err := routev1.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	result := client.RESTClient().Get().AbsPath("/.well-known/oauth-authorization-server").Do()
+	result := cli.RESTClient().Get().AbsPath("/.well-known/oauth-authorization-server").Do()
 	if err := result.Error(); err != nil {
 		return nil, err
 	}

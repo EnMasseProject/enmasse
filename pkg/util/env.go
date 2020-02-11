@@ -90,3 +90,20 @@ func (p MockEnvironmentProvider) Get(name string) string {
 }
 
 var _ EnvironmentProvider = MockEnvironmentProvider{}
+
+// infra namespace
+
+var infraNamespace string
+var infraNamespaceError error
+
+func init() {
+	infraNamespace = os.Getenv("NAMESPACE")
+	if infraNamespace == "" {
+		infraNamespaceError = fmt.Errorf("infrastructure namespace is not set in 'NAMESPACE'")
+	}
+}
+
+// Get the name of the infrastructure namespace
+func GetInfrastructureNamespace() (string, error) {
+	return infraNamespace, infraNamespaceError
+}

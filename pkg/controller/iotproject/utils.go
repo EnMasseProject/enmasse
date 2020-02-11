@@ -47,14 +47,10 @@ func getIoTConfigName() (string, error) {
 	return util.GetEnvOrError("IOT_CONFIG_NAME")
 }
 
-func getInfrastructureNamespace() (string, error) {
-	return util.GetEnvOrError("NAMESPACE")
-}
-
 // get infrastructure config
 func getIoTConfigInstance(ctx context.Context, r client.Reader) (*iotv1alpha1.IoTConfig, error) {
 
-	namespace, err := getInfrastructureNamespace()
+	namespace, err := util.GetInfrastructureNamespace()
 	if err != nil {
 		return nil, err
 	}
