@@ -256,7 +256,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CloseConnection    func(childComplexity int, input v1.ObjectMeta) int
-		CreateAddress      func(childComplexity int, input v1beta1.Address) int
+		CreateAddress      func(childComplexity int, input v1beta1.Address, addressSpace *string) int
 		CreateAddressSpace func(childComplexity int, input v1beta1.AddressSpace) int
 		DeleteAddress      func(childComplexity int, input v1.ObjectMeta) int
 		DeleteAddressSpace func(childComplexity int, input v1.ObjectMeta) int
@@ -284,7 +284,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		AddressCommand            func(childComplexity int, input v1beta1.Address) int
+		AddressCommand            func(childComplexity int, input v1beta1.Address, addressSpace *string) int
 		AddressPlans              func(childComplexity int, addressSpacePlan *string, addressType *AddressType) int
 		AddressSpaceCommand       func(childComplexity int, input v1beta1.AddressSpace) int
 		AddressSpacePlans         func(childComplexity int, addressSpaceType *AddressSpaceType) int
@@ -360,7 +360,7 @@ type MutationResolver interface {
 	CreateAddressSpace(ctx context.Context, input v1beta1.AddressSpace) (*v1.ObjectMeta, error)
 	PatchAddressSpace(ctx context.Context, input v1.ObjectMeta, jsonPatch string, patchType string) (*bool, error)
 	DeleteAddressSpace(ctx context.Context, input v1.ObjectMeta) (*bool, error)
-	CreateAddress(ctx context.Context, input v1beta1.Address) (*v1.ObjectMeta, error)
+	CreateAddress(ctx context.Context, input v1beta1.Address, addressSpace *string) (*v1.ObjectMeta, error)
 	PatchAddress(ctx context.Context, input v1.ObjectMeta, jsonPatch string, patchType string) (*bool, error)
 	DeleteAddress(ctx context.Context, input v1.ObjectMeta) (*bool, error)
 	PurgeAddress(ctx context.Context, input v1.ObjectMeta) (*bool, error)
@@ -392,7 +392,7 @@ type QueryResolver interface {
 	Connections(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1beta1, error)
 	MessagingCertificateChain(ctx context.Context, input v1.ObjectMeta) (string, error)
 	AddressSpaceCommand(ctx context.Context, input v1beta1.AddressSpace) (string, error)
-	AddressCommand(ctx context.Context, input v1beta1.Address) (string, error)
+	AddressCommand(ctx context.Context, input v1beta1.Address, addressSpace *string) (string, error)
 }
 
 type executableSchema struct {
@@ -1145,7 +1145,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateAddress(childComplexity, args["input"].(v1beta1.Address)), true
+		return e.complexity.Mutation.CreateAddress(childComplexity, args["input"].(v1beta1.Address), args["addressSpace"].(*string)), true
 
 	case "Mutation.createAddressSpace":
 		if e.complexity.Mutation.CreateAddressSpace == nil {
@@ -1292,7 +1292,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.AddressCommand(childComplexity, args["input"].(v1beta1.Address)), true
+		return e.complexity.Query.AddressCommand(childComplexity, args["input"].(v1beta1.Address), args["addressSpace"].(*string)), true
 
 	case "Query.addressPlans":
 		if e.complexity.Query.AddressPlans == nil {
@@ -1859,8 +1859,8 @@ type Query {
   "Returns the command-line that, if executed, would create the given address space"
   addressSpaceCommand(input: AddressSpace_enmasse_io_v1beta1_Input!): String!
 
-  "Returns the command-line command, if executed, would create the given address"
-  addressCommand(input: Address_enmasse_io_v1beta1_Input!): String!
+  "Returns the command-line command, if executed, would create the given address."
+  addressCommand(input: Address_enmasse_io_v1beta1_Input!, addressSpace: String): String!
 }
 
 #
@@ -1868,7 +1868,7 @@ type Query {
 #
 
 input ObjectMeta_v1_Input {
-  Name: String!
+  Name: String
   Namespace: String!
   ResourceVersion: String
 }
@@ -1906,7 +1906,7 @@ type Mutation {
   patchAddressSpace(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
   deleteAddressSpace(input: ObjectMeta_v1_Input!): Boolean
 
-  createAddress(input: Address_enmasse_io_v1beta1_Input!): ObjectMeta_v1!
+  createAddress(input: Address_enmasse_io_v1beta1_Input!, addressSpace: String): ObjectMeta_v1!
   patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
   deleteAddress(input: ObjectMeta_v1_Input!): Boolean
   purgeAddress(input: ObjectMeta_v1_Input!): Boolean
@@ -2112,6 +2112,14 @@ func (ec *executionContext) field_Mutation_createAddress_args(ctx context.Contex
 		}
 	}
 	args["input"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["addressSpace"]; ok {
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["addressSpace"] = arg1
 	return args, nil
 }
 
@@ -2242,6 +2250,14 @@ func (ec *executionContext) field_Query_addressCommand_args(ctx context.Context,
 		}
 	}
 	args["input"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["addressSpace"]; ok {
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["addressSpace"] = arg1
 	return args, nil
 }
 
@@ -2891,7 +2907,7 @@ func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1_Ad
 	res := resTmp.([]*consolegraphql.AddressHolder)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddress_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressHolder(ctx, field.Selections, res)
+	return ec.marshalNAddress_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressHolderᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_AddressPlans(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlanSpec) (ret graphql.Marshaler) {
@@ -2928,7 +2944,7 @@ func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_Addre
 	res := resTmp.([]*v1beta2.AddressPlan)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddressPlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlan(ctx, field.Selections, res)
+	return ec.marshalNAddressPlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlanᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_AddressSpaceType(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlanSpec) (ret graphql.Marshaler) {
@@ -3258,7 +3274,7 @@ func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1bet
 	res := resTmp.([]*consolegraphql.AddressSpaceHolder)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddressSpace_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressSpaceHolder(ctx, field.Selections, res)
+	return ec.marshalNAddressSpace_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressSpaceHolderᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_AuthenticationServices(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchemaSpec) (ret graphql.Marshaler) {
@@ -3292,7 +3308,7 @@ func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_Authentic
 	res := resTmp.([]string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚕstring(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_Description(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchemaSpec) (ret graphql.Marshaler) {
@@ -3579,7 +3595,7 @@ func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1_Messages(ctx 
 	res := resTmp.([]string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚕstring(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1_Phase(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceStatus) (ret graphql.Marshaler) {
@@ -4105,7 +4121,7 @@ func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_Metrics(
 	res := resTmp.([]*consolegraphql.Metric)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetric(ctx, field.Selections, res)
+	return ec.marshalOMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_Address(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
@@ -4358,7 +4374,7 @@ func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1_Messages(ctx conte
 	res := resTmp.([]string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚕstring(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1_Phase(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressStatus) (ret graphql.Marshaler) {
@@ -4911,7 +4927,7 @@ func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_Metrics(ctx c
 	res := resTmp.([]*consolegraphql.Metric)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetric(ctx, field.Selections, res)
+	return ec.marshalOMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthenticationServiceSpec_admin_enmasse_io_v1beta1_Type(ctx context.Context, field graphql.CollectedField, obj *v1beta11.AuthenticationServiceSpec) (ret graphql.Marshaler) {
@@ -5244,7 +5260,7 @@ func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1
 	res := resTmp.([]*consolegraphql.Connection)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNConnection_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐConnection(ctx, field.Selections, res)
+	return ec.marshalNConnection_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐConnectionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_AddressSpace(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.ConnectionSpec) (ret graphql.Marshaler) {
@@ -5466,7 +5482,7 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_Proper
 	res := resTmp.([]*KeyValue)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValue(ctx, field.Selections, res)
+	return ec.marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_ObjectMeta(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Connection) (ret graphql.Marshaler) {
@@ -5577,7 +5593,7 @@ func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_Metrics(ct
 	res := resTmp.([]*consolegraphql.Metric)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetric(ctx, field.Selections, res)
+	return ec.marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_Links(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Connection) (ret graphql.Marshaler) {
@@ -5769,7 +5785,7 @@ func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1_Links
 	res := resTmp.([]*consolegraphql.Link)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNLink_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐLink(ctx, field.Selections, res)
+	return ec.marshalNLink_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐLinkᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LinkSpec_consoleapi_enmasse_io_v1beta1_Connection(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.LinkSpec) (ret graphql.Marshaler) {
@@ -5991,7 +6007,7 @@ func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1_Metrics(ctx cont
 	res := resTmp.([]*consolegraphql.Metric)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetric(ctx, field.Selections, res)
+	return ec.marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_Name(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Metric) (ret graphql.Marshaler) {
@@ -6294,7 +6310,7 @@ func (ec *executionContext) _Mutation_createAddress(ctx context.Context, field g
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateAddress(rctx, args["input"].(v1beta1.Address))
+		return ec.resolvers.Mutation().CreateAddress(rctx, args["input"].(v1beta1.Address), args["addressSpace"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6621,7 +6637,7 @@ func (ec *executionContext) _ObjectMeta_v1_Annotations(ctx context.Context, fiel
 	res := resTmp.([]*KeyValue)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValue(ctx, field.Selections, res)
+	return ec.marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ObjectMeta_v1_Name(ctx context.Context, field graphql.CollectedField, obj *v1.ObjectMeta) (ret graphql.Marshaler) {
@@ -6843,7 +6859,7 @@ func (ec *executionContext) _Query_addressSpaceTypes(ctx context.Context, field 
 	res := resTmp.([]AddressSpaceType)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddressSpaceType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceType(ctx, field.Selections, res)
+	return ec.marshalNAddressSpaceType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpaceTypes_v2(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6880,7 +6896,7 @@ func (ec *executionContext) _Query_addressSpaceTypes_v2(ctx context.Context, fie
 	res := resTmp.([]*AddressSpaceTypeConsoleapiEnmasseIoV1beta1)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddressSpaceType_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceTypeConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
+	return ec.marshalNAddressSpaceType_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceTypeConsoleapiEnmasseIoV1beta1ᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressTypes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6917,7 +6933,7 @@ func (ec *executionContext) _Query_addressTypes(ctx context.Context, field graph
 	res := resTmp.([]AddressType)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddressType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx, field.Selections, res)
+	return ec.marshalNAddressType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressTypes_v2(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6961,7 +6977,7 @@ func (ec *executionContext) _Query_addressTypes_v2(ctx context.Context, field gr
 	res := resTmp.([]*AddressTypeConsoleapiEnmasseIoV1beta1)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddressType_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
+	return ec.marshalNAddressType_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeConsoleapiEnmasseIoV1beta1ᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpacePlans(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7005,7 +7021,7 @@ func (ec *executionContext) _Query_addressSpacePlans(ctx context.Context, field 
 	res := resTmp.([]*v1beta2.AddressSpacePlan)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddressSpacePlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressSpacePlan(ctx, field.Selections, res)
+	return ec.marshalNAddressSpacePlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressSpacePlanᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressPlans(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7049,7 +7065,7 @@ func (ec *executionContext) _Query_addressPlans(ctx context.Context, field graph
 	res := resTmp.([]*v1beta2.AddressPlan)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddressPlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlan(ctx, field.Selections, res)
+	return ec.marshalNAddressPlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlanᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_authenticationServices(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7086,7 +7102,7 @@ func (ec *executionContext) _Query_authenticationServices(ctx context.Context, f
 	res := resTmp.([]*v1beta11.AuthenticationService)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAuthenticationService_admin_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta1ᚐAuthenticationService(ctx, field.Selections, res)
+	return ec.marshalNAuthenticationService_admin_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta1ᚐAuthenticationServiceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpaceSchema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7123,7 +7139,7 @@ func (ec *executionContext) _Query_addressSpaceSchema(ctx context.Context, field
 	res := resTmp.([]*v1beta1.AddressSpaceSchema)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddressSpaceSchema_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceSchema(ctx, field.Selections, res)
+	return ec.marshalNAddressSpaceSchema_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceSchemaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpaceSchema_v2(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7167,7 +7183,7 @@ func (ec *executionContext) _Query_addressSpaceSchema_v2(ctx context.Context, fi
 	res := resTmp.([]*v1beta1.AddressSpaceSchema)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddressSpaceSchema_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceSchema(ctx, field.Selections, res)
+	return ec.marshalNAddressSpaceSchema_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceSchemaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_whoami(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7241,7 +7257,7 @@ func (ec *executionContext) _Query_namespaces(ctx context.Context, field graphql
 	res := resTmp.([]*v11.Namespace)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNNamespace_v12ᚕᚖk8sᚗioᚋapiᚋcoreᚋv1ᚐNamespace(ctx, field.Selections, res)
+	return ec.marshalNNamespace_v12ᚕᚖk8sᚗioᚋapiᚋcoreᚋv1ᚐNamespaceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpaces(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7481,7 +7497,7 @@ func (ec *executionContext) _Query_addressCommand(ctx context.Context, field gra
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AddressCommand(rctx, args["input"].(v1beta1.Address))
+		return ec.resolvers.Query().AddressCommand(rctx, args["input"].(v1beta1.Address), args["addressSpace"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7645,7 +7661,7 @@ func (ec *executionContext) _User_v1_Identities(ctx context.Context, field graph
 	res := resTmp.([]string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2ᚕstring(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_v1_Groups(ctx context.Context, field graphql.CollectedField, obj *v12.User) (ret graphql.Marshaler) {
@@ -7682,7 +7698,7 @@ func (ec *executionContext) _User_v1_Groups(ctx context.Context, field graphql.C
 	res := resTmp.([]string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2ᚕstring(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_v1_FullName(ctx context.Context, field graphql.CollectedField, obj *v12.User) (ret graphql.Marshaler) {
@@ -7827,7 +7843,7 @@ func (ec *executionContext) ___Directive_locations(ctx context.Context, field gr
 	res := resTmp.([]string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalN__DirectiveLocation2ᚕstring(ctx, field.Selections, res)
+	return ec.marshalN__DirectiveLocation2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -7864,7 +7880,7 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 	res := resTmp.([]introspection.InputValue)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, field.Selections, res)
+	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
@@ -8114,7 +8130,7 @@ func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.Col
 	res := resTmp.([]introspection.InputValue)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, field.Selections, res)
+	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Field_type(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
@@ -8401,7 +8417,7 @@ func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.C
 	res := resTmp.([]introspection.Type)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
+	return ec.marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Schema_queryType(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
@@ -8543,7 +8559,7 @@ func (ec *executionContext) ___Schema_directives(ctx context.Context, field grap
 	res := resTmp.([]introspection.Directive)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, field.Selections, res)
+	return ec.marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_kind(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -8689,7 +8705,7 @@ func (ec *executionContext) ___Type_fields(ctx context.Context, field graphql.Co
 	res := resTmp.([]introspection.Field)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, field.Selections, res)
+	return ec.marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -8723,7 +8739,7 @@ func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphq
 	res := resTmp.([]introspection.Type)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
+	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -8757,7 +8773,7 @@ func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field gra
 	res := resTmp.([]introspection.Type)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
+	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_enumValues(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -8798,7 +8814,7 @@ func (ec *executionContext) ___Type_enumValues(ctx context.Context, field graphq
 	res := resTmp.([]introspection.EnumValue)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, field.Selections, res)
+	return ec.marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -8832,7 +8848,7 @@ func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graph
 	res := resTmp.([]introspection.InputValue)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, field.Selections, res)
+	return ec.marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -9019,7 +9035,7 @@ func (ec *executionContext) unmarshalInputObjectMeta_v1_Input(ctx context.Contex
 		switch k {
 		case "Name":
 			var err error
-			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			it.Name, err = ec.unmarshalOString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -11110,7 +11126,7 @@ func (ec *executionContext) marshalNAddressPlan_admin_enmasse_io_v1beta22github�
 	return ec._AddressPlan_admin_enmasse_io_v1beta2(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAddressPlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlan(ctx context.Context, sel ast.SelectionSet, v []*v1beta2.AddressPlan) graphql.Marshaler {
+func (ec *executionContext) marshalNAddressPlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlanᚄ(ctx context.Context, sel ast.SelectionSet, v []*v1beta2.AddressPlan) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11179,7 +11195,7 @@ func (ec *executionContext) marshalNAddressSpacePlan_admin_enmasse_io_v1beta22gi
 	return ec._AddressSpacePlan_admin_enmasse_io_v1beta2(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAddressSpacePlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressSpacePlan(ctx context.Context, sel ast.SelectionSet, v []*v1beta2.AddressSpacePlan) graphql.Marshaler {
+func (ec *executionContext) marshalNAddressSpacePlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressSpacePlanᚄ(ctx context.Context, sel ast.SelectionSet, v []*v1beta2.AddressSpacePlan) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11234,7 +11250,7 @@ func (ec *executionContext) marshalNAddressSpaceSchema_enmasse_io_v1beta12github
 	return ec._AddressSpaceSchema_enmasse_io_v1beta1(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAddressSpaceSchema_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceSchema(ctx context.Context, sel ast.SelectionSet, v []*v1beta1.AddressSpaceSchema) graphql.Marshaler {
+func (ec *executionContext) marshalNAddressSpaceSchema_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceSchemaᚄ(ctx context.Context, sel ast.SelectionSet, v []*v1beta1.AddressSpaceSchema) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11294,7 +11310,7 @@ func (ec *executionContext) marshalNAddressSpaceType2githubᚗcomᚋenmasseproje
 	return v
 }
 
-func (ec *executionContext) unmarshalNAddressSpaceType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceType(ctx context.Context, v interface{}) ([]AddressSpaceType, error) {
+func (ec *executionContext) unmarshalNAddressSpaceType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceTypeᚄ(ctx context.Context, v interface{}) ([]AddressSpaceType, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -11314,7 +11330,7 @@ func (ec *executionContext) unmarshalNAddressSpaceType2ᚕgithubᚗcomᚋenmasse
 	return res, nil
 }
 
-func (ec *executionContext) marshalNAddressSpaceType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceType(ctx context.Context, sel ast.SelectionSet, v []AddressSpaceType) graphql.Marshaler {
+func (ec *executionContext) marshalNAddressSpaceType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []AddressSpaceType) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11355,7 +11371,7 @@ func (ec *executionContext) marshalNAddressSpaceType_consoleapi_enmasse_io_v1bet
 	return ec._AddressSpaceType_consoleapi_enmasse_io_v1beta1(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAddressSpaceType_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceTypeConsoleapiEnmasseIoV1beta1(ctx context.Context, sel ast.SelectionSet, v []*AddressSpaceTypeConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
+func (ec *executionContext) marshalNAddressSpaceType_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceTypeConsoleapiEnmasseIoV1beta1ᚄ(ctx context.Context, sel ast.SelectionSet, v []*AddressSpaceTypeConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11406,7 +11422,7 @@ func (ec *executionContext) marshalNAddressSpace_consoleapi_enmasse_io_v1beta12g
 	return ec._AddressSpace_consoleapi_enmasse_io_v1beta1(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAddressSpace_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressSpaceHolder(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.AddressSpaceHolder) graphql.Marshaler {
+func (ec *executionContext) marshalNAddressSpace_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressSpaceHolderᚄ(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.AddressSpaceHolder) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11470,7 +11486,7 @@ func (ec *executionContext) marshalNAddressType2githubᚗcomᚋenmasseprojectᚋ
 	return v
 }
 
-func (ec *executionContext) unmarshalNAddressType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx context.Context, v interface{}) ([]AddressType, error) {
+func (ec *executionContext) unmarshalNAddressType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeᚄ(ctx context.Context, v interface{}) ([]AddressType, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -11490,7 +11506,7 @@ func (ec *executionContext) unmarshalNAddressType2ᚕgithubᚗcomᚋenmasseproje
 	return res, nil
 }
 
-func (ec *executionContext) marshalNAddressType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx context.Context, sel ast.SelectionSet, v []AddressType) graphql.Marshaler {
+func (ec *executionContext) marshalNAddressType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []AddressType) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11545,7 +11561,7 @@ func (ec *executionContext) marshalNAddressType_consoleapi_enmasse_io_v1beta12gi
 	return ec._AddressType_consoleapi_enmasse_io_v1beta1(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAddressType_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeConsoleapiEnmasseIoV1beta1(ctx context.Context, sel ast.SelectionSet, v []*AddressTypeConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
+func (ec *executionContext) marshalNAddressType_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeConsoleapiEnmasseIoV1beta1ᚄ(ctx context.Context, sel ast.SelectionSet, v []*AddressTypeConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11596,7 +11612,7 @@ func (ec *executionContext) marshalNAddress_consoleapi_enmasse_io_v1beta12github
 	return ec._Address_consoleapi_enmasse_io_v1beta1(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAddress_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressHolder(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.AddressHolder) graphql.Marshaler {
+func (ec *executionContext) marshalNAddress_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressHolderᚄ(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.AddressHolder) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11668,7 +11684,7 @@ func (ec *executionContext) marshalNAuthenticationService_admin_enmasse_io_v1bet
 	return ec._AuthenticationService_admin_enmasse_io_v1beta1(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAuthenticationService_admin_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta1ᚐAuthenticationService(ctx context.Context, sel ast.SelectionSet, v []*v1beta11.AuthenticationService) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthenticationService_admin_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta1ᚐAuthenticationServiceᚄ(ctx context.Context, sel ast.SelectionSet, v []*v1beta11.AuthenticationService) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11751,7 +11767,7 @@ func (ec *executionContext) marshalNConnection_consoleapi_enmasse_io_v1beta12git
 	return ec._Connection_consoleapi_enmasse_io_v1beta1(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNConnection_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐConnection(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.Connection) graphql.Marshaler {
+func (ec *executionContext) marshalNConnection_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐConnectionᚄ(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.Connection) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11844,7 +11860,7 @@ func (ec *executionContext) marshalNKeyValue2githubᚗcomᚋenmasseprojectᚋenm
 	return ec._KeyValue(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValue(ctx context.Context, sel ast.SelectionSet, v []*KeyValue) graphql.Marshaler {
+func (ec *executionContext) marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValueᚄ(ctx context.Context, sel ast.SelectionSet, v []*KeyValue) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11922,7 +11938,7 @@ func (ec *executionContext) marshalNLink_consoleapi_enmasse_io_v1beta12githubᚗ
 	return ec._Link_consoleapi_enmasse_io_v1beta1(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNLink_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐLink(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.Link) graphql.Marshaler {
+func (ec *executionContext) marshalNLink_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐLinkᚄ(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.Link) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -11982,7 +11998,7 @@ func (ec *executionContext) marshalNMetric_consoleapi_enmasse_io_v1beta12github�
 	return ec._Metric_consoleapi_enmasse_io_v1beta1(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetric(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.Metric) graphql.Marshaler {
+func (ec *executionContext) marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.Metric) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -12037,7 +12053,7 @@ func (ec *executionContext) marshalNNamespace_v12k8sᚗioᚋapiᚋcoreᚋv1ᚐNa
 	return ec._Namespace_v1(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNNamespace_v12ᚕᚖk8sᚗioᚋapiᚋcoreᚋv1ᚐNamespace(ctx context.Context, sel ast.SelectionSet, v []*v11.Namespace) graphql.Marshaler {
+func (ec *executionContext) marshalNNamespace_v12ᚕᚖk8sᚗioᚋapiᚋcoreᚋv1ᚐNamespaceᚄ(ctx context.Context, sel ast.SelectionSet, v []*v11.Namespace) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -12125,7 +12141,7 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNString2ᚕstring(ctx context.Context, v interface{}) ([]string, error) {
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -12145,7 +12161,7 @@ func (ec *executionContext) unmarshalNString2ᚕstring(ctx context.Context, v in
 	return res, nil
 }
 
-func (ec *executionContext) marshalNString2ᚕstring(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	for i := range v {
 		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
@@ -12172,7 +12188,7 @@ func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlge
 	return ec.___Directive(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v []introspection.Directive) graphql.Marshaler {
+func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Directive) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -12223,7 +12239,7 @@ func (ec *executionContext) marshalN__DirectiveLocation2string(ctx context.Conte
 	return res
 }
 
-func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstring(ctx context.Context, v interface{}) ([]string, error) {
+func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -12243,7 +12259,7 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstring(ctx context.
 	return res, nil
 }
 
-func (ec *executionContext) marshalN__DirectiveLocation2ᚕstring(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+func (ec *executionContext) marshalN__DirectiveLocation2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -12292,7 +12308,7 @@ func (ec *executionContext) marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlg
 	return ec.___InputValue(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
+func (ec *executionContext) marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -12333,7 +12349,7 @@ func (ec *executionContext) marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋg
 	return ec.___Type(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
+func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -12571,7 +12587,7 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return ec.marshalOInt2int(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalOMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetric(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.Metric) graphql.Marshaler {
+func (ec *executionContext) marshalOMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.Metric) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12623,7 +12639,7 @@ func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.S
 	return graphql.MarshalString(v)
 }
 
-func (ec *executionContext) unmarshalOString2ᚕstring(ctx context.Context, v interface{}) ([]string, error) {
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -12643,7 +12659,7 @@ func (ec *executionContext) unmarshalOString2ᚕstring(ctx context.Context, v in
 	return res, nil
 }
 
-func (ec *executionContext) marshalOString2ᚕstring(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12670,7 +12686,7 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return ec.marshalOString2string(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
+func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12710,7 +12726,7 @@ func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgq
 	return ret
 }
 
-func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx context.Context, sel ast.SelectionSet, v []introspection.Field) graphql.Marshaler {
+func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Field) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12750,7 +12766,7 @@ func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgen
 	return ret
 }
 
-func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
+func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -12805,7 +12821,7 @@ func (ec *executionContext) marshalO__Type2githubᚗcomᚋ99designsᚋgqlgenᚋg
 	return ec.___Type(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
+func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

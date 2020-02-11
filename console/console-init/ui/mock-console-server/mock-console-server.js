@@ -712,7 +712,23 @@ function scheduleSetAddressStatus(address, phase, messages, planStatus) {
   }, stateChangeTimeout);
 }
 
-function createAddress(addr) {
+function defaultResourceNameFromAddress(address, addressSpaceName) {
+  var clean = address.toLowerCase();
+  var maxLength = 253 - addressSpaceName.length - 1;
+  if (/^[a-z0-9][-a-z0-9_.]*[a-z0-9]$/.test(clean) && addressSpaceName.length < maxLength) {
+    return addressSpaceName + "." + clean;
+  } else {
+    clean = clean.replace(/[^-a-z0-9_.]/g, "");
+    if (clean.charAt(0) === '-' || clean.charAt(0) === '.' || clean.charAt(0) === '_') clean = clean.substring(1);
+    if (clean.charAt(clean.length - 1) === '-' || clean.charAt(clean.length - 1) === '.' || clean.charAt(clean.length - 1) === '_') clean = clean.substring(0, clean.length - 1);
+    var uid = "" + uuidv1();
+    maxLength = 253 - addressSpaceName.length - uid.length - 2;
+    if (clean.length > maxLength) clean = clean.substring(0, maxLength);
+    return  addressSpaceName + "." + clean + "." + uid;
+  }
+}
+
+function createAddress(addr, addressSpaceName) {
   var namespace = availableNamespaces.find(n => n.ObjectMeta.Name === addr.ObjectMeta.Namespace);
   if (namespace === undefined) {
     var knownNamespaces = availableNamespaces.map(p => p.ObjectMeta.Name);
@@ -720,10 +736,25 @@ function createAddress(addr) {
   }
 
   var addressSpacesInNamespace = addressSpaces.filter(as => as.ObjectMeta.Namespace === addr.ObjectMeta.Namespace);
-  var addressSpace = addressSpacesInNamespace.find(as => as.ObjectMeta.Name === addr.Spec.AddressSpace);
+  if (addr.ObjectMeta.Name) {
+    var parts = addr.ObjectMeta.Name.split(".", 2);
+    if (parts.length < 2) {
+      throw `Address name '${addr.ObjectMeta.Name}' is badly formed, expected for '<addressspace>.<name>'`;
+    }
+    addressSpaceName = parts[0];
+  } else if (addr.Spec.Address) {
+    if (!addressSpaceName) {
+      throw `addressSpace is not provided, cannot default resource name from address '${addr.Spec.Address}'`;
+    }
+    addr.ObjectMeta.Name = defaultResourceNameFromAddress(addr.Spec.Address, addressSpaceName);
+  } else {
+    throw `address is undefined, cannot default resource name`
+  }
+
+  var addressSpace = addressSpacesInNamespace.find(as => as.ObjectMeta.Name === addressSpaceName);
   if (addressSpace === undefined) {
     var addressspacenames = addressSpacesInNamespace.map(p => p.ObjectMeta.Name);
-    throw `Unrecognised address space '${addr.Spec.AddressSpace}', known ones are : ${addressspacenames}`;
+    throw `Unrecognised address space '${addressSpaceName}', known ones are : ${addressspacenames}`;
   }
 
   var knownTypes = ['queue', 'topic', 'subscription', 'multicast', 'anycast'];
@@ -737,10 +768,8 @@ function createAddress(addr) {
     throw `Unrecognised address plan '${addr.Spec.Plan}', known plans for type '${addr.Spec.Type}' are : ${knownPlansNames}`;
   }
 
-
-  var prefix = addr.Spec.AddressSpace + ".";
   if (addr.Spec.Type === 'subscription') {
-      var topics  = addresses.filter(a => a.ObjectMeta.Name.startsWith(prefix) && a.Spec.Type === "topic");
+      var topics  = addresses.filter(a => a.ObjectMeta.Name.startsWith(addressSpaceName) && a.Spec.Type === "topic");
       if (!addr.Spec.Topic) {
         throw `Spec.Topic is mandatory for the subscription type`;
       } else if (topics.find(t => t.Spec.Address === addr.Spec.Topic) === undefined) {
@@ -753,13 +782,8 @@ function createAddress(addr) {
       }
   }
 
-  var prefix = addr.Spec.AddressSpace + ".";
-  if (!addr.ObjectMeta.Name.startsWith(prefix)) {
-    throw `Address name must begin with '${prefix}`;
-  }
-
   if (addresses.find(existing => addr.ObjectMeta.Name === existing.ObjectMeta.Name && addr.ObjectMeta.Namespace === existing.ObjectMeta.Namespace) !== undefined) {
-    throw `Address with name  '${addr.ObjectMeta.Name} already exists in address space ${addr.Spec.AddressSpace}`;
+    throw `Address with name  '${addr.ObjectMeta.Name} already exists in address space ${addressSpaceName}`;
   }
 
   var phase = "Active";
@@ -1168,6 +1192,44 @@ function makeAddressSpaceMetrics(as) {
   ];
 }
 
+function addressCommand(addr, addressSpaceName) {
+  if (addr.ObjectMeta.Name) {
+    // pass
+  } else if (addr.Spec.Address) {
+    if (!addressSpaceName) {
+      throw `addressSpace is not provided, cannot default resource name from address '${addr.Spec.Address}'`;
+    }
+    addr.ObjectMeta.Name = defaultResourceNameFromAddress(addr.Spec.Address, addressSpaceName);
+  } else {
+    throw `address is undefined, cannot default resource name`
+  }
+
+  return `apiVersion: enmasse.io/v1beta1
+oc apply -f - << EOF
+kind: Address
+ObjectMeta:
+  name: ${addr.ObjectMeta.Name}
+spec:
+  address: ${addr.Spec.Address}
+  type: ${addr.Spec.Type}
+  plan: ${addr.Spec.Plan}
+EOF
+`;
+}
+
+function addressSpaceCommand(as) {
+  return `apiVersion: enmasse.io/v1beta1
+oc apply -f - << EOF
+kind: AddressSpace
+ObjectMeta:
+  name: ${as.ObjectMeta.Name}
+spec:
+  type: ${as.Spec.Type}
+  plan: ${as.Spec.Plan}
+EOF
+`;
+}
+
 // A map of functions which return data for the schema.
 const resolvers = {
   Mutation: {
@@ -1182,7 +1244,7 @@ const resolvers = {
       return true;
     },
     createAddress: (parent, args) => {
-      return createAddress(init(args.input));
+      return createAddress(init(args.input), args.addressSpace);
     },
     patchAddress: (parent, args) => {
       return patchAddress(args.input, args.jsonPatch, args.patchType);
@@ -1219,30 +1281,15 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
 -----END CERTIFICATE-----`,
 
     addressSpaceCommand: (parent, args, context, info) => {
-      return `apiVersion: enmasse.io/v1beta1
-oc apply -f - << EOF
-kind: AddressSpace
-ObjectMeta:
-  name: ${args.input.ObjectMeta.Name}
-spec:
-  type: ${args.input.Spec.Type}
-  plan: ${args.input.Spec.Plan}
-EOF
-`;
+      var as = args.input;
+      return addressSpaceCommand(as);
     },
 
     addressCommand: (parent, args, context, info) => {
-      return `apiVersion: enmasse.io/v1beta1
-oc apply -f - << EOF
-kind: Address
-ObjectMeta:
-  name: ${args.input.ObjectMeta.Name}
-spec:
-  address: ${args.input.Spec.Address}
-  type: ${args.input.Spec.Type}
-  plan: ${args.input.Spec.Plan}
-EOF
-`;
+
+      var addr = args.input;
+      var addressSpaceName = args.addressSpace;
+      return addressCommand(addr, addressSpaceName);
     },
 
     namespaces: () => availableNamespaces,
@@ -1456,19 +1503,25 @@ const mocks = {
 };
 
 
-console.log(gql);
-console.log(typeDefs);
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  mocks,
-  mockEntireSchema: false,
-  introspection: true,
-  playground: true,
-});
+if (require.main === module) {
+  console.log(gql);
+  console.log(typeDefs);
+
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    mocks,
+    mockEntireSchema: false,
+    introspection: true,
+    playground: true,
+  });
+
+  server.listen().then(({ url }) => {
+    console.log(`? Server ready at ${url}`);
+  });
+}
 
 
-server.listen().then(({ url }) => {
-  console.log(`? Server ready at ${url}`);
-});
+module.exports.createAddress = createAddress;
+module.exports.addressCommand = addressCommand;
