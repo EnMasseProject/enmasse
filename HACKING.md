@@ -130,6 +130,10 @@ Run the following script:
 
 Running `hack/verify-codegen.sh` checks whether the generated code is up to date.
 
+At the moment updating the Console's generated code is separate:
+
+    hack/run-console-codegen.sh
+
 ## Reference
 
 This is a reference of the different make targets and options that can be set when building an
