@@ -15,5 +15,3 @@ sudo systemctl daemon-reload
 sudo rsync -aqxP /var/lib/docker/ /mnt/docker
 
 sudo systemctl start docker
-
-ps aux | grep -i docker | grep -v grep
