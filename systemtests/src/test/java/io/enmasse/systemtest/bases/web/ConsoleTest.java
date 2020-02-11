@@ -243,7 +243,7 @@ public abstract class ConsoleTest extends TestBase {
         //consolePage.addFilter(FilterType.NAMESPACE, "blah");
         //assertThat("Console should show empty list", consolePage.getAddressSpaceItems().size(), is(0));
 
-        consolePage.removeAllFilters();
+        //consolePage.removeAllFilters();
 
         consolePage.addFilter(FilterType.TYPE, AddressSpaceType.BROKERED.toString());
         assertThat("Console should show not empty list", consolePage.getAddressSpaceItems().size(), is(addressSpaceCount / 2));
