@@ -24,7 +24,7 @@ import io.sundr.builder.annotations.Inline;
         },
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"resources", "addressFullPolicy", "globalMaxSize", "storageClassName", "updatePersistentVolumeClaim", "podTemplate"})
+@JsonPropertyOrder({"resources", "addressFullPolicy", "globalMaxSize", "storageClassName", "updatePersistentVolumeClaim", "podTemplate", "javaOpts"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalProperties {
     private BrokeredInfraConfigSpecBrokerResources resources;
@@ -33,6 +33,7 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
     private String storageClassName;
     private Boolean updatePersistentVolumeClaim;
     private PodTemplateSpec podTemplate;
+    private String javaOpts;
 
     @Override
     public boolean equals(Object o) {
@@ -44,12 +45,13 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
                 Objects.equals(globalMaxSize, that.globalMaxSize) &&
                 Objects.equals(storageClassName, that.storageClassName) &&
                 Objects.equals(updatePersistentVolumeClaim, that.updatePersistentVolumeClaim) &&
-                Objects.equals(podTemplate, that.podTemplate);
+                Objects.equals(podTemplate, that.podTemplate) &&
+                Objects.equals(javaOpts, that.javaOpts);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim, podTemplate);
+        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim, podTemplate, javaOpts);
     }
 
     @Override
@@ -61,6 +63,7 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
                 ", storageClassName='" + storageClassName + '\'' +
                 ", updatePersistentVolumeClaim='" + updatePersistentVolumeClaim + '\'' +
                 ", podTemplate='" + podTemplate + '\'' +
+                ", javaOpts='" + javaOpts + '\'' +
                 '}';
     }
 
@@ -119,5 +122,13 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
 
     public void setPodTemplate(PodTemplateSpec podTemplate) {
         this.podTemplate = podTemplate;
+    }
+
+    public void setJavaOpts(String javaOpts) {
+        this.javaOpts = javaOpts;
+    }
+
+    public String getJavaOpts() {
+        return javaOpts;
     }
 }

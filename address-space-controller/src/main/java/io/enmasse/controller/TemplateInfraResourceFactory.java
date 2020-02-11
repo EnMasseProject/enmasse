@@ -273,6 +273,10 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             if (brokeredInfraConfig.getSpec().getBroker().getGlobalMaxSize() != null) {
                 parameters.put(TemplateParameter.BROKER_GLOBAL_MAX_SIZE, brokeredInfraConfig.getSpec().getBroker().getGlobalMaxSize());
             }
+
+            if (brokeredInfraConfig.getSpec().getBroker().getJavaOpts() != null) {
+                parameters.put(TemplateParameter.BROKER_JAVA_OPTS, brokeredInfraConfig.getSpec().getBroker().getJavaOpts());
+            }
         }
 
         if (brokeredInfraConfig.getSpec().getAdmin() != null && brokeredInfraConfig.getSpec().getAdmin().getResources() != null && brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory() != null) {

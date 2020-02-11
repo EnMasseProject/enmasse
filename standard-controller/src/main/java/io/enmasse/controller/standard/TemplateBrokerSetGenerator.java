@@ -141,6 +141,10 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
                 paramMap.put(TemplateParameter.BROKER_CONNECTOR_NETTY_THREADS, String.valueOf(standardInfraConfig.getSpec().getBroker().getConnectorWorkerThreads()));
             }
 
+            if (standardInfraConfig.getSpec().getBroker().getJavaOpts() != null) {
+                paramMap.put(TemplateParameter.BROKER_JAVA_OPTS, standardInfraConfig.getSpec().getBroker().getJavaOpts());
+            }
+
         }
 
         KubernetesList items = kubernetes.processTemplate(templateName, paramMap);
