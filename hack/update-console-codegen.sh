@@ -29,7 +29,6 @@ echo Generating Console resource watchers
 (cd $SCRIPTPATH/..; go generate pkg/consolegraphql/watchers/resource_watcher.go)
 
 
-# KWTODO fix on Travis - not finding the vendor code??
-#echo Generating Console GraphQL
-#(go run $SCRIPTPATH/gqlgen.go -c console/console-server/src/main/resources/gqlgen.yml)
+echo Generating Console GraphQL
+(cd $SCRIPTPATH/..; GO111MODULE=on go run -mod=vendor $SCRIPTPATH/gqlgen.go -c console/console-server/src/main/resources/gqlgen.yml)
 
