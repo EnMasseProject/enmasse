@@ -13,6 +13,8 @@ spec:
     listKind: StandardInfraConfigList
     singular: standardinfraconfig
     plural: standardinfraconfigs
+    categories:
+    - enmasse
   versions:
     - name: v1beta1
       served: true

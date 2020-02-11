@@ -13,6 +13,8 @@ spec:
     listKind: AddressSpaceSchemaList
     singular: addressspaceschema
     plural: addressspaceschemas
+    categories:
+    - enmasse
   versions:
     - name: v1beta1
       served: true

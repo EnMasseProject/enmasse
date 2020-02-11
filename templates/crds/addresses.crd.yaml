@@ -14,6 +14,8 @@ spec:
     listKind: AddressList
     singular: address
     plural: addresses
+    categories:
+    - enmasse
   versions:
     - name: v1beta1
       served: true

@@ -14,6 +14,8 @@ spec:
     singular: iotconfig
     shortNames:
     - icfg
+    categories:
+    - enmasse
   additionalPrinterColumns:
   - name: Phase
     type: string
