@@ -5,7 +5,10 @@
 
 import React from "react";
 import { useQuery } from "@apollo/react-hooks";
-import { RETURN_ADDRESS_SPACE_PLANS } from "src/Queries/Queries";
+import {
+  RETURN_ADDRESS_SPACE_PLANS,
+  RETURN_FILTERED_AUTHENTICATION_SERVICES
+} from "src/Queries/Queries";
 import {
   Form,
   TextContent,
@@ -18,21 +21,35 @@ import {
   Radio
 } from "@patternfly/react-core";
 import { IAddressSpace } from "src/Components/AddressSpaceList/AddressSpaceList";
-import { IAddressSpacePlans } from "../Pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
+import {
+  IAddressSpacePlans,
+  IAddressSpaceAuthServiceResponse
+} from "../Pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
 import { Loading } from "use-patternfly";
 
 interface IEditAddressSpaceProps {
   addressSpace: IAddressSpace;
   onPlanChange: (type: string) => void;
+  onAuthServiceChanged: (type: string) => void;
 }
 
 export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> = ({
   addressSpace,
-  onPlanChange
+  onPlanChange,
+  onAuthServiceChanged
 }) => {
   const { loading, error, data } = useQuery<IAddressSpacePlans>(
     RETURN_ADDRESS_SPACE_PLANS
   );
+
+  const authServices = useQuery<IAddressSpaceAuthServiceResponse>(
+    RETURN_FILTERED_AUTHENTICATION_SERVICES,
+    {
+      variables: {
+        t: addressSpace.type
+      }
+    }
+  ).data || { addressSpaceSchema_v2: [] };
 
   if (loading) return <Loading />;
   if (error) return <Loading />;
@@ -42,6 +59,8 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
   };
 
   let planOptions: any[] = [];
+
+  let authServiceOptions: any[] = [];
 
   if (addressSpace.type) {
     planOptions =
@@ -56,6 +75,16 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
         })
         .filter(plan => plan !== undefined) || [];
   }
+
+  if (authServices.addressSpaceSchema_v2[0])
+    authServiceOptions = authServices.addressSpaceSchema_v2[0].Spec.AuthenticationServices.map(
+      authService => {
+        return {
+          value: authService,
+          label: authService
+        };
+      }
+    );
 
   return (
     <Form>
@@ -134,11 +163,18 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
       >
         <FormSelect
           id="edit-addr-auth"
-          value={"sample"}
-          isDisabled
+          value={addressSpace.authenticationService}
+          onChange={val => onAuthServiceChanged(val)}
           aria-label="FormSelect Input"
         >
-          <FormSelectOption value={"sample"} label={"Sample"} />
+          {authServiceOptions.map((option, index) => (
+            <FormSelectOption
+              isDisabled={option.disabled}
+              key={index}
+              value={option.value}
+              label={option.label}
+            />
+          ))}
         </FormSelect>
       </FormGroup>
     </Form>

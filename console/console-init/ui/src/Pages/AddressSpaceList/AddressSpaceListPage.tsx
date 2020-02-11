@@ -92,11 +92,16 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           jsonPatch:
             '[{"op":"replace","path":"/Plan","value":"' +
             addressSpaceBeingEdited.planValue +
-            '"}]',
+            '"},' +
+            '{"op":"replace","path":"/AuthenticationService/Name","value":"' +
+            addressSpaceBeingEdited.authenticationService +
+            '"}' +
+            "]",
           patchType: "application/json-patch+json"
         }
       }));
     setAddressSpaceBeingEdited(null);
+    refetch();
   };
 
   const handleEditChange = (addressSpace: IAddressSpace) =>
@@ -134,6 +139,13 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     }
   };
 
+  const handleAuthServiceChanged = (authService: string) => {
+    if (addressSpaceBeingEdited) {
+      addressSpaceBeingEdited.authenticationService = authService;
+      setAddressSpaceBeingEdited({ ...addressSpaceBeingEdited });
+    }
+  };
+
   const { loading, error, data, refetch } = useQuery<IAddressSpacesResponse>(
     RETURN_ALL_ADDRESS_SPACES(
       page,
@@ -162,6 +174,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     addressSpaces: { Total: 0, AddressSpaces: [] }
   };
   setTotalAddressSpaces(addressSpaces.Total);
+  console.log(addressSpaces);
   const addressSpacesList: IAddressSpace[] = addressSpaces.AddressSpaces.map(
     addSpace => ({
       name: addSpace.ObjectMeta.Name,
@@ -177,6 +190,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
         addSpace.Status && addSpace.Status.Messages
           ? addSpace.Status.Messages
           : [],
+      authenticationService: addSpace.Spec.AuthenticationService.Name,
       selected:
         selectedAddressSpaces.filter(({ name, nameSpace }) =>
           compareTwoAddress(
@@ -239,6 +253,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
         >
           <EditAddressSpace
             addressSpace={addressSpaceBeingEdited}
+            onAuthServiceChanged={handleAuthServiceChanged}
             onPlanChange={handlePlanChange}
           ></EditAddressSpace>
         </Modal>
