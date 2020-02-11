@@ -11,9 +11,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/enmasseproject/enmasse/pkg/util"
 	"os"
 	"runtime"
+
+	"github.com/enmasseproject/enmasse/pkg/util"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	"github.com/enmasseproject/enmasse/pkg/cache"
@@ -42,6 +43,8 @@ import (
 	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	customMetrics "github.com/enmasseproject/enmasse/pkg/custom-metrics"
 )
 
 // Change below variables to serve metrics on different host or port.
@@ -96,6 +99,9 @@ func main() {
 		log.Error(err, "")
 		os.Exit(1)
 	}
+
+	// Register custom metrics
+	customMetrics.Init()
 
 	// Install monitoring resources
 	monitoringEnabled := os.Getenv("ENABLE_MONITORING")
