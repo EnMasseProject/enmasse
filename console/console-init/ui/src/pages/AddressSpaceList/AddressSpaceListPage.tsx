@@ -115,8 +115,8 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
         mutation: DELETE_ADDRESS_SPACE,
         variables: {
           a: {
-            Name: addressSpaceBeingDeleted.name,
-            Namespace: addressSpaceBeingDeleted.nameSpace
+            name: addressSpaceBeingDeleted.name,
+            namespace: addressSpaceBeingDeleted.nameSpace
           }
         }
       });
