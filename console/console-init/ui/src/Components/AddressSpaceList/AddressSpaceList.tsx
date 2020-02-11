@@ -34,6 +34,7 @@ export interface IAddressSpace {
   status?: "creating" | "deleting" | "running";
   selected?: boolean;
   messages: Array<string>;
+  authenticationService: string;
 }
 
 interface IAddressListProps {
