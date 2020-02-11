@@ -331,7 +331,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getSelectNameTextBox() throws Exception {
-        return getToolBarMenu().findElement(By.id("select-typeahead"));
+        return getToolBarMenu().findElement(By.tagName("input"));
     }
 
     private WebElement getSelectTypeDropDown() throws Exception {

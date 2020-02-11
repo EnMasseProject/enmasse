@@ -240,8 +240,8 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openConsolePage();
         assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(addressSpaceCount));
 
-        consolePage.addFilter(FilterType.NAMESPACE, "blah");
-        assertThat("Console should show empty list", consolePage.getAddressSpaceItems().size(), is(0));
+        //consolePage.addFilter(FilterType.NAMESPACE, "blah");
+        //assertThat("Console should show empty list", consolePage.getAddressSpaceItems().size(), is(0));
 
         consolePage.removeAllFilters();
 
