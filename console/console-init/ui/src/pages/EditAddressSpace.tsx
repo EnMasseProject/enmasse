@@ -93,7 +93,7 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
       </TextContent>
       <FormGroup label="Namespace" fieldId="name-space" isRequired={true}>
         <FormSelect
-          id="edit-addr-plan"
+          id="edit-namespace"
           isDisabled
           value={addressSpace.nameSpace}
           aria-label="FormSelect Input"

@@ -183,7 +183,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
       creationTimestamp: addSpace.objectMeta.creationTimestamp,
       type: addSpace.spec.type,
       planValue: addSpace.spec.plan.objectMeta.name,
-      displayName: addSpace.Spec.plan.spec.displayName,
+      displayName: addSpace.spec.plan.spec.displayName,
       isReady: addSpace.status && addSpace.status.isReady,
       phase:
         addSpace.status && addSpace.status.phase ? addSpace.status.phase : "",
