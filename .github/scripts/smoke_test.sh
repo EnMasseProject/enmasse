@@ -5,4 +5,4 @@ TAG=${TAG:-latest}
 export TEMPLATES=${PWD}/templates/build/enmasse-${TAG}
 
 echo "Running smoke tests"
-time make SYSTEMTEST_PROFILE=smoke systemtests
+time make PROFILE=smoke systemtests

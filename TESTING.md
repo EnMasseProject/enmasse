@@ -32,13 +32,13 @@ export TEMPLATES="/path/to/your/install/bundle"
 ## Running all tests
 
 ```shell script
-make SYSTEMTEST_PROFILE=${PROFILE} systemtests
+make PROFILE=${PROFILE} systemtests
 ```
 
 ##  Running a single test class
 
 ```shell script
-make SYSTEMTEST_PROFILE=${PROFILE} SYSTEMTEST_ARGS="**.SmokeTest" systemtests
+make PROFILE=${PROFILE} TEST="**.SmokeTest" systemtests
 ```
 
 Where $PROFILE can be:
@@ -64,7 +64,7 @@ tar zxvf templates/build/enmasse-${version}.tgz -C templates/build
 make templates
 export START_TEMPLATES=${pwd}/templates/build/enmasse-${START_VERSION}
 export UPGRADE_TEMPLATES=${pwd}/templates/build/enmasse-latest
-make SYSTEMTEST_PROFILE=upgrade systemtests
+make PROFILE=upgrade systemtests
 ```
 
 ## Test process

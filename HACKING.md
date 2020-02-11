@@ -85,7 +85,7 @@ by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 
 #### Running smoketests against a deployed instance
 
-    make SYSTEMTEST_ARGS=SmokeTest systemtests
+    make PROFILE=smoke systemtests
 
 ### Running full systemtest suite
 
@@ -97,7 +97,7 @@ By default the test suite tears down the EnMasse deployment and namespace after 
 
 #### Run single system test
 
-    make SYSTEMTEST_ARGS="shared.standard.QueueTest#testCreateDeleteQueue" systemtests
+    make TEST="shared.standard.QueueTest#testCreateDeleteQueue" systemtests
 
 #### Systemtests management of enmasse's installation
 

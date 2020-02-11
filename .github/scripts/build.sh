@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo $VERSION
+echo "${VERSION}"
 
 echo "Make"
 make
@@ -12,8 +12,8 @@ make docker_build
 if [[ -v RELEASE ]]
 then
     echo "Logging in to Docker Hub"
-    docker login -u ${REGISTRY_USER} -p ${REGISTRY_PASS} ${DOCKER_REGISTRY}
-    make TAG=${VERSION} docker_tag docker_push
+    docker login -u "${REGISTRY_USER}" -p "${REGISTRY_PASS}" "${DOCKER_REGISTRY}"
+    make TAG="${VERSION}" docker_tag docker_push
 fi
 
 echo "Push to registry"
