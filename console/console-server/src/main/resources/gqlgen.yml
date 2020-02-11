@@ -50,7 +50,7 @@ models:
     model: v1beta1.AuthenticationService
 
   Address_consoleapi_enmasse_io_v1beta1:
-    model: consolegraphql.AddressHolder
+    model: github.com/enmasseproject/enmasse/pkg/consolegraphql.AddressHolder
   AddressSpec_enmasse_io_v1beta1:
     model: v1beta1.AddressSpec
   AddressStatus_enmasse_io_v1beta1:
@@ -59,7 +59,7 @@ models:
     model: v1beta1.AddressPlanStatus
 
   AddressSpace_consoleapi_enmasse_io_v1beta1:
-    model: consolegraphql.AddressSpaceHolder
+    model: github.com/enmasseproject/enmasse/pkg/consolegraphql.AddressSpaceHolder
   AddressSpaceSpec_enmasse_io_v1beta1:
     model: v1beta1.AddressSpaceSpec
   AddressSpaceStatus_enmasse_io_v1beta1:
@@ -76,17 +76,17 @@ models:
     model: v1beta2.AddressSpacePlanSpec
 
   Connection_consoleapi_enmasse_io_v1beta1:
-      model: consolegraphql.Connection
+      model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Connection
   ConnectionSpec_consoleapi_enmasse_io_v1beta1:
-      model: consolegraphql.ConnectionSpec
+      model: github.com/enmasseproject/enmasse/pkg/consolegraphql.ConnectionSpec
 
   Link_consoleapi_enmasse_io_v1beta1:
-      model: consolegraphql.Link
+      model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Link
   LinkSpec_consoleapi_enmasse_io_v1beta1:
-      model: consolegraphql.LinkSpec
+      model: github.com/enmasseproject/enmasse/pkg/consolegraphql.LinkSpec
 
   Address:
-    model: consolegraphql.Address
+    model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Address
 
   ObjectMeta_v1_Input:
     model: v1.ObjectMeta
@@ -104,4 +104,4 @@ models:
     model: v1beta1.AuthenticationService
 
   Metric_consoleapi_enmasse_io_v1beta1:
-    model: consolegraphql.Metric
+    model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Metric

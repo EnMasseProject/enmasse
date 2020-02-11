@@ -175,7 +175,7 @@ export interface IAddressSpacesResponse {
           };
         };
       };
-      Status: {
+      status: {
         isReady: boolean;
         phase: string;
         messages: Array<string>;
