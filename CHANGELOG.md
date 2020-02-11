@@ -19,6 +19,7 @@
 * Change default behavior of handling REJECT outcome in broker from putting on DLQ to retrying
   indefinitely.
 * Change default behavior of responding with MODIFIED outcome for transient delivery errors.
+* Change the service admin example role so it can modify authenticationservices custom resources.
 
 
 * #3673: Add support for pod disruption budgets

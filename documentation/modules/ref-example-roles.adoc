@@ -23,7 +23,7 @@ endif::SingleBookLink[]
 |Role |Description
 |enmasse.io:tenant-view|Specifies `get` and `list` permissions for `addresses`, `addressspaces`, `addressspaceschemas`, and `messagingusers`
 |enmasse.io:tenant-edit|Specifies `create`, `get`, `update`, `delete`, `list`, `watch`, and `patch` permissions for `addresses`, `addressspaces`, and `messagingusers`; `get` and `list` permissions for `addressspaceschemas`
-|`service-admin` cluster role|Specifies `create`, `get`, `update`, `delete`, `list`, `watch`, and `patch` permissions for `addressplans`, `addressspaceplans`, `brokeredinfraconfigs`, and `standardinfraconfigs`
+|`service-admin` cluster role|Specifies `create`, `get`, `update`, `delete`, `list`, `watch`, and `patch` permissions for `addressplans`, `addressspaceplans`, `brokeredinfraconfigs`, `standardinfraconfigs` and `authenticationservices`
 |===
 
 :context: {parent-context}
