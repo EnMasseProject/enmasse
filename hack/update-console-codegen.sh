@@ -13,13 +13,13 @@ set -o pipefail
 
 SCRIPTPATH="$(cd "$(dirname "$0")" && pwd -P)"
 
-if which -s ragel
+if which ragel >/dev/null 2>&1
 then
     echo Generating Console filter lexer
     (cd $SCRIPTPATH/..; ragel -Z -G0 -o pkg/consolegraphql/filter/lex.go pkg/consolegraphql/filter/lex.rl)
 fi
 
-if which -s goyacc
+if which goyacc >/dev/null 2>&1
 then
     echo Generating Console filter parser
     (cd $SCRIPTPATH/..; go generate pkg/consolegraphql/filter/support.go)
