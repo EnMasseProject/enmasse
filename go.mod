@@ -33,7 +33,7 @@ replace (
 )
 
 require (
-	github.com/99designs/gqlgen v0.10.1
+	github.com/99designs/gqlgen v0.10.2
 	github.com/Nerzal/gocloak/v3 v3.7.0
 	github.com/alexedwards/scs/v2 v2.2.0
 	github.com/coreos/prometheus-operator v0.34.0
