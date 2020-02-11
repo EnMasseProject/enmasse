@@ -26,7 +26,8 @@ const rows: IAddressSpace[] = [
     planValue: "standard-small",
     isReady: false,
     phase: "Configuring",
-    messages: []
+    messages: [],
+    authenticationService: "none-authservice"
   },
   {
     name: "saturn-as2",
@@ -37,7 +38,8 @@ const rows: IAddressSpace[] = [
     planValue: "brokered-small",
     isReady: true,
     phase: "Active",
-    messages: []
+    messages: [],
+    authenticationService: "standard-authservice"
   },
   {
     name: "mars_as2",
@@ -48,7 +50,8 @@ const rows: IAddressSpace[] = [
     planValue: "standard-large",
     isReady: false,
     phase: "Failed",
-    messages: []
+    messages: [],
+    authenticationService: "standard-authservice"
   },
   {
     name: "earth_as3",
@@ -59,7 +62,8 @@ const rows: IAddressSpace[] = [
     planValue: "brokered-medium",
     isReady: false,
     phase: "Configuring",
-    messages: []
+    messages: [],
+    authenticationService: "standard-authservice"
   }
 ];
 

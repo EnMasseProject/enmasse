@@ -163,6 +163,9 @@ export const RETURN_ALL_ADDRESS_SPACES = (
                 DisplayName
               }
             }
+            AuthenticationService{
+              Name
+            }
           }
           Status {
             IsReady
@@ -1358,6 +1361,19 @@ export const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_F
 export const RETURN_AUTHENTICATION_SERVICES = gql`
   query addressspace_schema {
     addressSpaceSchema_v2 {
+      ObjectMeta {
+        Name
+      }
+      Spec {
+        AuthenticationServices
+      }
+    }
+  }
+`;
+
+export const RETURN_FILTERED_AUTHENTICATION_SERVICES = gql`
+  query filtered_addressspace_schema($t: AddressSpaceType = standard) {
+    addressSpaceSchema_v2(addressSpaceType: $t) {
       ObjectMeta {
         Name
       }
