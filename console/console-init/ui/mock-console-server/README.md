@@ -488,6 +488,29 @@ args:
 }
 ```
 
+It is also possible to create an address without an ObjectMeta.name.  In this case the ObjectMeta.Name is defaulted
+from the Spec.Address:
+
+```
+mutation create_addr($a:Address_enmasse_io_v1beta1_Input!, $as:String) {
+  createAddress(input: $a, addressSpace: $as) {
+      Name
+      Namespace
+      Uid
+  }
+}
+```
+
+args:
+
+```
+{
+  "as" : "jupiter_as1",
+  "a": { "ObjectMeta": {"Namespace": "app1_ns" },
+    "Spec": {"Type": "queue", "Plan": "standard-small-queue", "Address": "foo2", "AddressSpace": "jupiter_as1"}}
+}
+```
+
 # Patch address
 
 To patch an address, pass the input object corresponding to the address
@@ -589,8 +612,7 @@ query messagingCertificateChain($as:ObjectMeta_v1_Input!) {
 
 # Address Space / Address Command
 
-To get the equivalent command line that, if run, would cause the given address space to be created.
-The addressCommand works in the same manner, but for addresses.
+To get the equivalent command line that, if run, would cause the given address space or address to be created.
 
 ```
 query cmd($as: AddressSpace_enmasse_io_v1beta1_Input!) {
@@ -604,5 +626,25 @@ args:
 {
   "as": { "ObjectMeta": {"Name": "wibx", "Namespace": "app1_ns" },
     "Spec": {"Type": "standard", "Plan": "standard-small"}}
+}
+```
+
+For addresses, it is also possible to create an address without an ObjectMeta.name.  In this case the ObjectMeta.Name
+is defaulted from the Spec.Address:
+
+
+```
+query cmd($a: Address_enmasse_io_v1beta1_Input!, $as:String) {
+  addressCommand(input:$a, addressSpace: $as)
+}
+```
+
+args:
+
+```
+{
+  "as": "jupiter_as",
+  "a": { "ObjectMeta": {"Namespace": "app1_ns" },
+    "Spec": {"Type": "standard", "Plan": "standard-small", "Address":"foo"}}
 }
 ```

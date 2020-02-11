@@ -55,9 +55,37 @@ func createConnection(host, namespace, addressspace string, metrics ...*consoleg
 	}
 }
 
-func createAddress(namespace, name string, metrics... *consolegraphql.Metric) (*consolegraphql.AddressHolder) {
-	return &consolegraphql.AddressHolder{
-		Address: v1beta1.Address {
+type addressHolderOption func(*consolegraphql.AddressHolder)
+
+func withAddressAnnotation(name, value string) addressHolderOption {
+	return func(ah *consolegraphql.AddressHolder) {
+
+		if ah.Annotations == nil {
+			ah.Annotations = make(map[string]string)
+		}
+		ah.Annotations[name] = value
+	}
+}
+
+func withAddressMetrics(metrics... *consolegraphql.Metric) addressHolderOption {
+	return func(ah *consolegraphql.AddressHolder) {
+		if ah.Metrics == nil {
+			ah.Metrics = metrics
+		} else {
+			ah.Metrics = append(ah.Metrics, metrics...)
+		}
+	}
+}
+
+func withAddress(address string) addressHolderOption {
+	return func(ah *consolegraphql.AddressHolder) {
+		ah.Spec.Address = address
+	}
+}
+
+func createAddress(namespace, name string, addressHolderOptions... addressHolderOption) (*consolegraphql.AddressHolder) {
+	ah := &consolegraphql.AddressHolder{
+		Address: v1beta1.Address{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Address",
 			},
@@ -67,6 +95,10 @@ func createAddress(namespace, name string, metrics... *consolegraphql.Metric) (*
 				UID:       types.UID(uuid.New().String()),
 			},
 		},
-		Metrics: metrics,
 	}
+
+	for _, holderOptions := range addressHolderOptions {
+		holderOptions(ah)
+	}
+	return ah
 }

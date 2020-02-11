@@ -315,7 +315,7 @@ const typeDefs = gql`
         addressSpaceCommand(input: AddressSpace_enmasse_io_v1beta1_Input!): String!
 
         "Returns the command-line command, if executed, would create the given address"
-        addressCommand(input: Address_enmasse_io_v1beta1_Input!): String!
+        addressCommand(input: Address_enmasse_io_v1beta1_Input!, addressSpace: String): String!
     }
 
     #
@@ -323,7 +323,7 @@ const typeDefs = gql`
     #
 
     input ObjectMeta_v1_Input {
-        Name: String!
+        Name: String
         Namespace: String!
         ResourceVersion: String
     }
@@ -362,7 +362,7 @@ const typeDefs = gql`
         patchAddressSpace(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
         deleteAddressSpace(input: ObjectMeta_v1_Input!): Boolean
 
-        createAddress(input: Address_enmasse_io_v1beta1_Input!): ObjectMeta_v1!
+        createAddress(input: Address_enmasse_io_v1beta1_Input!, addressSpace: String): ObjectMeta_v1!
         patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
         deleteAddress(input: ObjectMeta_v1_Input!): Boolean
         purgeAddress(input: ObjectMeta_v1_Input!): Boolean
