@@ -8,13 +8,15 @@ package filter
 
 import (
 	"github.com/stretchr/testify/assert"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
 
 func TestParseFilterBooleanExprValid(t *testing.T) {
 
 	testCases := []struct {
-		expr  string
+		expr string
 	}{
 		{"1 = 1"},
 		{"TRUE = TRUE"},
@@ -33,7 +35,7 @@ func TestParseFilterBooleanExprValid(t *testing.T) {
 func TestParseFilterValueExprValid(t *testing.T) {
 
 	testCases := []struct {
-		expr  string
+		expr string
 	}{
 		{"1 > 1"},
 		{"1 >= 1"},
@@ -51,11 +53,11 @@ func TestParseFilterValueExprValid(t *testing.T) {
 func TestFilterEval(t *testing.T) {
 
 	obj := struct {
-		FooStr string
-		FooInt int
+		FooStr   string
+		FooInt   int
 		FooInt32 int32
 		FooInt64 int64
-		FooUint uint
+		FooUint  uint
 	}{"Bar", 10, 11, 12, 13}
 
 	testCases := []struct {
@@ -91,7 +93,7 @@ func TestFilterEval(t *testing.T) {
 		{"'A' = 'B'", false},
 		{"'A' != 'B'", true},
 
-		{"'B' > 'A'", false},  // String comparison is restricted to = and !=.
+		{"'B' > 'A'", false}, // String comparison is restricted to = and !=.
 
 		{"'a' LIKE 'a'", true},
 		{"'a' LIKE 'b'", false},
@@ -155,6 +157,33 @@ func TestFilterEval(t *testing.T) {
 		{"`$.FooInt` IS NOT NULL", true},
 		{"`$.NonExistentNode` IS NULL", true},
 		{"`$.FooStr.NonExistentSubNode` IS NULL", true},
+	}
+
+	for _, tc := range testCases {
+		expr, err := ParseFilterExpression(tc.expr)
+		assert.NoErrorf(t, err, "Unexpected error for case : %s", tc.expr)
+		assert.NotNil(t, expr, "Expected an expression")
+		if expr != nil {
+			actual, _ := expr.Eval(obj)
+			assert.Equal(t, tc.expected, actual, "Unexpected result for case : %s", tc.expr)
+		}
+	}
+}
+
+func TestFilterKubernetesObjectUsingJsonName(t *testing.T) {
+
+	obj := v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "foo",
+		},
+	}
+
+	testCases := []struct {
+		expr     string
+		expected bool
+	}{
+		{"`$.ObjectMeta.Namespace` = 'foo'", true},
+		{"`$.metadata.namespace` = 'foo'", true}, // Respects the json struct tag
 	}
 
 	for _, tc := range testCases {
