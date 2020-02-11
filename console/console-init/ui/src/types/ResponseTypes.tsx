@@ -174,8 +174,8 @@ export interface IAddressSpacesResponse {
             displayName: string;
           };
         };
-        AuthenticationService: {
-          Name: string;
+        authenticationService: {
+          name: string;
         };
       };
       status: {

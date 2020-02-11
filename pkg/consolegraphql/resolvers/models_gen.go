@@ -63,6 +63,15 @@ type LinkQueryResultConsoleapiEnmasseIoV1beta1 struct {
 	Links []*consolegraphql.Link `json:"links"`
 }
 
+type MetadataConsoleapiEnmasseIoV1beta1 struct {
+	Annotations       []*KeyValue `json:"annotations"`
+	Name              string      `json:"name"`
+	Namespace         string      `json:"namespace"`
+	ResourceVersion   string      `json:"resourceVersion"`
+	CreationTimestamp string      `json:"creationTimestamp"`
+	UID               string      `json:"uid"`
+}
+
 type AddressSpaceType string
 
 const (

@@ -94,7 +94,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
             '[{"op":"replace","path":"/spec/plan","value":"' +
             addressSpaceBeingEdited.planValue +
             '"},' +
-            '{"op":"replace","path":"/AuthenticationService/Name","value":"' +
+            '{"op":"replace","path":"/spec/authenticationService/name","value":"' +
             addressSpaceBeingEdited.authenticationService +
             '"}' +
             "]",
@@ -192,9 +192,9 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           ? addSpace.status.messages
           : [],
       authenticationService:
-        addSpace.Spec &&
-        addSpace.Spec.AuthenticationService &&
-        addSpace.Spec.AuthenticationService.Name,
+        addSpace.spec &&
+        addSpace.spec.authenticationService &&
+        addSpace.spec.authenticationService.name,
       selected:
         selectedAddressSpaces.filter(({ name, nameSpace }) =>
           compareTwoAddress(

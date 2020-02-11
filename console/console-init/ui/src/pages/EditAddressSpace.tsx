@@ -77,7 +77,7 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
   }
 
   if (authServices.addressSpaceSchema_v2[0])
-    authServiceOptions = authServices.addressSpaceSchema_v2[0].Spec.AuthenticationServices.map(
+    authServiceOptions = authServices.addressSpaceSchema_v2[0].spec.authenticationServices.map(
       authService => {
         return {
           value: authService,

@@ -51,7 +51,6 @@ type ResolverRoot interface {
 	ConnectionSpec_consoleapi_enmasse_io_v1beta1() ConnectionSpec_consoleapi_enmasse_io_v1beta1Resolver
 	Connection_consoleapi_enmasse_io_v1beta1() Connection_consoleapi_enmasse_io_v1beta1Resolver
 	LinkSpec_consoleapi_enmasse_io_v1beta1() LinkSpec_consoleapi_enmasse_io_v1beta1Resolver
-	Metadata_consoleapi_enmasse_io_v1beta1() Metadata_consoleapi_enmasse_io_v1beta1Resolver
 	Metric_consoleapi_enmasse_io_v1beta1() Metric_consoleapi_enmasse_io_v1beta1Resolver
 	Mutation() MutationResolver
 	NamespaceStatus_v1() NamespaceStatus_v1Resolver
@@ -360,12 +359,6 @@ type LinkSpec_consoleapi_enmasse_io_v1beta1Resolver interface {
 	Connection(ctx context.Context, obj *consolegraphql.LinkSpec) (*consolegraphql.Connection, error)
 
 	Role(ctx context.Context, obj *consolegraphql.LinkSpec) (LinkRole, error)
-}
-type Metadata_consoleapi_enmasse_io_v1beta1Resolver interface {
-	Annotations(ctx context.Context, obj *consolegraphql.Metadata) ([]*KeyValue, error)
-
-	CreationTimestamp(ctx context.Context, obj *consolegraphql.Metadata) (string, error)
-	UID(ctx context.Context, obj *consolegraphql.Metadata) (string, error)
 }
 type Metric_consoleapi_enmasse_io_v1beta1Resolver interface {
 	Type(ctx context.Context, obj *consolegraphql.Metric) (MetricType, error)
@@ -6077,7 +6070,7 @@ func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1_metrics(ctx cont
 	return ec.marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_annotations(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_annotations(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6090,13 +6083,13 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_annotations(
 		Object:   "Metadata_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Metadata_consoleapi_enmasse_io_v1beta1().Annotations(rctx, obj)
+		return obj.Annotations, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6114,7 +6107,7 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_annotations(
 	return ec.marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValueᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_name(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_name(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6151,7 +6144,7 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_name(ctx con
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_namespace(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_namespace(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6188,7 +6181,7 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_namespace(ct
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_resourceVersion(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_resourceVersion(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6225,7 +6218,7 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_resourceVers
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_creationTimestamp(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_creationTimestamp(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6238,13 +6231,13 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_creationTime
 		Object:   "Metadata_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Metadata_consoleapi_enmasse_io_v1beta1().CreationTimestamp(rctx, obj)
+		return obj.CreationTimestamp, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6262,7 +6255,7 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_creationTime
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_uid(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_uid(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6275,13 +6268,13 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_uid(ctx cont
 		Object:   "Metadata_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Metadata_consoleapi_enmasse_io_v1beta1().UID(rctx, obj)
+		return obj.UID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10608,7 +10601,7 @@ func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1(ctx context.Cont
 
 var metadata_consoleapi_enmasse_io_v1beta1Implementors = []string{"Metadata_consoleapi_enmasse_io_v1beta1"}
 
-func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *consolegraphql.Metadata) graphql.Marshaler {
+func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *MetadataConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.RequestContext, sel, metadata_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -10618,62 +10611,35 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1(ctx context.
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Metadata_consoleapi_enmasse_io_v1beta1")
 		case "annotations":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Metadata_consoleapi_enmasse_io_v1beta1_annotations(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Metadata_consoleapi_enmasse_io_v1beta1_annotations(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "name":
 			out.Values[i] = ec._Metadata_consoleapi_enmasse_io_v1beta1_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "namespace":
 			out.Values[i] = ec._Metadata_consoleapi_enmasse_io_v1beta1_namespace(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "resourceVersion":
 			out.Values[i] = ec._Metadata_consoleapi_enmasse_io_v1beta1_resourceVersion(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "creationTimestamp":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Metadata_consoleapi_enmasse_io_v1beta1_creationTimestamp(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Metadata_consoleapi_enmasse_io_v1beta1_creationTimestamp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "uid":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Metadata_consoleapi_enmasse_io_v1beta1_uid(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Metadata_consoleapi_enmasse_io_v1beta1_uid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
