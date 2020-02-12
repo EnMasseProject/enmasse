@@ -196,7 +196,7 @@ public abstract class AbstractClient {
         messages.clear();
         try {
             executor = new Exec(logPath);
-            int ret = executor.exec(prepareCommand(), timeout);
+            int ret = executor.exec(prepareCommand(), timeout, null);
             synchronized (lock) {
                 log.info("{} {} Return code - {}", this.getClass().getName(), clientType, ret);
                 if (logToOutput) {

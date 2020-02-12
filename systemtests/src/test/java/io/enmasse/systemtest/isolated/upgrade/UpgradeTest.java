@@ -41,10 +41,13 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -142,11 +145,26 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small", "pepa", MESSAGE_COUNT, true));
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", "pepa", MESSAGE_COUNT, true));
 
+        createIoTConfigCMD(kubernetes.getInfraNamespace(), Paths.get(templates));
+        Thread.sleep(30_000);
+        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
+
+        createIoTProject(kubernetes.getInfraNamespace(), Paths.get(templates));
+        Thread.sleep(30_000);
+        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
+
+        createIoTUser(kubernetes.getInfraNamespace(), Paths.get(templates));
+        Thread.sleep(30_000);
+
+        //TODO add iot devices and test them
+
         if (this.type.equals(EnmasseInstallType.ANSIBLE)) {
             installEnmasseAnsible(Paths.get(Environment.getInstance().getUpgradeTemplates()), true);
         } else {
             upgradeEnmasseBundle(Paths.get(Environment.getInstance().getUpgradeTemplates()));
         }
+
+        //TODO check iot devicesq
 
         AddressSpace brokered = resourcesManager.getAddressSpace("brokered");
         assertNotNull(brokered);
@@ -222,6 +240,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "bundles", productName));
             KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-plans"));
             KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-authservices", "standard-authservice.yaml"));
+            KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-roles"));
+            KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "preview-bundles", "iot"));
         }
         Thread.sleep(60_000);
         TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
@@ -242,7 +262,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kubernetes.getOcpVersion() == 3 ? "systemtests.inventory" : "systemtests.ocp4.inventory");
         Path ansiblePlaybook = Paths.get(templatePaths.toString(), "ansible", "playbooks", "openshift", "deploy_all.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
-                "--extra-vars", String.format("namespace=%s authentication_services=[\"standard\"]", kubernetes.getInfraNamespace()));
+                "--extra-vars", String.format("namespace=%s authentication_services=[\"standard\"] enable_iot=True", kubernetes.getInfraNamespace()));
 
         assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Deployment of new version of enmasse failed");
         log.info("Sleep after {}", upgrade ? "upgrade" : "install");
@@ -354,4 +374,27 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     private static Stream<Arguments> provideVersions() {
         return Arrays.stream(environment.getStartTemplates().split(",")).map(templates -> Arguments.of(getVersionFromTemplateDir(Paths.get(templates)), templates));
     }
+
+    private void createIoTConfigCMD(String namespace, Path templates) throws MalformedURLException {
+        log.info("Creating IoT configuration in namespace {}", namespace);
+        Exec.execute(Arrays.asList("sh", Paths.get(templates.toString(), "install", "components", "iot", "examples", "k8s-tls", "create").toString()),
+                60_000, true, true, Collections.singletonMap("CLUSTER", new URL(Environment.getInstance().getApiUrl()).getHost()));
+        KubeCMDClient.runOnCluster("create", "secret", "tls", "iot-mqtt-adapter-tls",
+                "--key", Paths.get(templates.toString(), "install", "components", "iot", "examples", "k8s-tls", "build", "iot-mqtt-adapter-key.pem").toString(),
+                "--cert", Paths.get(templates.toString(), "install", "components", "iot", "examples", "k8s-tls", "build", "iot-mqtt-adapter-fullchain.pem").toString());
+        KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templates.toString(), "install", "components", "iot", "examples", "infinispan", "common"));
+        KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templates.toString(), "install", "components", "iot", "examples", "infinispan", "manual"));
+        KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templates.toString(), "install", "components", "iot", "examples", "iot-config.yaml"));
+    }
+
+    private void createIoTProject(String namespace, Path templates) {
+        log.info("Creating IoT project in namespace {}", namespace);
+        KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templates.toString(), "install", "components", "iot", "examples", "iot-project-managed.yaml"));
+    }
+
+    private void createIoTUser(String namespace, Path templates){
+        log.info("Creating IoT user in namespace {}", namespace);
+        KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templates.toString(), "install", "components", "iot", "examples", "iot-user.yaml"));
+    }
+
 }

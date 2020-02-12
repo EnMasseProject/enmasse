@@ -419,3 +419,84 @@ function wait_until_file_close() {
         sleep 5
     done
 }
+
+function create_iot_config() {
+    NAMESPACE=$1
+    NAME=$2
+    API_VERSION=$3
+
+    cat <<EOF | oc create -f -
+kind: IoTConfig
+apiVersion: iot.enmasse.io/${API_VERSION}
+metadata:
+  name: ${NAME}
+  namespace: ${NAMESPACE}
+spec:
+  services:
+    deviceRegistry:
+      infinispan:
+        server:
+          external:
+            host: infinispan
+            port: 11222
+            username: app
+            password: test12
+            saslServerName: hotrod
+            saslRealm: ApplicationRealm
+  adapters:
+    mqtt:
+      endpoint:
+        secretNameStrategy:
+          secretName: iot-mqtt-adapter-tls
+EOF
+}
+
+function create_iot_adapters_config() {
+    NAMESPACE=$1
+    NAME=$2
+    API_VERSION=$3
+
+
+  cat <<EOF | oc create -f -
+kind: IoTConfig
+apiVersion: iot.enmasse.io/${API_VERSION}
+metadata:
+  name: ${NAME}
+  namespace: ${NAMESPACE}
+spec:
+  services:
+    deviceRegistry:
+      infinispan:
+        server:
+          external:
+            host: infinispan
+            port: 11222
+            username: app
+            password: test12
+            saslServerName: hotrod
+            saslRealm: ApplicationRealm
+  adapters:
+    mqtt:
+      enabled: true
+      replicas: 1
+      options:
+        tenantIdleTimeout: 30m
+        maxPayloadSize: 2048
+    http:
+      enabled: true
+      replicas: 1
+      options:
+        tenantIdleTimeout: 30m
+        maxPayloadSize: 2048
+      containers:
+        adapter:
+          resources:
+            limits:
+              memory: 128Mi
+              cpu: 500m
+    lorawan:
+      enabled: false
+    sigfox:
+      enabled: false
+EOF
+}

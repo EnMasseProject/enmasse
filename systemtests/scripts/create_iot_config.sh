@@ -7,11 +7,8 @@ esac
 CURDIR=`${READLINK} -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 
-USER=$1
-PASSWORD=$2
-NAMESPACE=$3
-ADDRESS_SPACE_NAME=$4
-API_VERSION=${5:-v1beta1}
+    NAMESPACE=$1
+    NAME=$2
+    API_VERSION=$3
 
-
-create_user ${USER} ${PASSWORD} ${NAMESPACE} ${ADDRESS_SPACE_NAME} ${API_VERSION}
+create_iot_congif ${NAMESPACE} ${NAME} ${API_VERSION}

@@ -46,7 +46,7 @@ public class Minikube extends Kubernetes {
     private static String runCommand(String... cmd) {
         try {
             Exec executor = new Exec(false);
-            int returnCode = executor.exec(Arrays.asList(cmd), 10000);
+            int returnCode = executor.exec(Arrays.asList(cmd), 10000, null);
             if (returnCode == 0) {
                 return executor.getStdOut();
             } else {
