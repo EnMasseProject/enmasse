@@ -187,9 +187,9 @@ Artemis.prototype._create_temp_response_queue = function (name) {
     this._send_request(request);
 }
 
-Artemis.prototype.createSubscription = function (name, address, shared) {
+Artemis.prototype.createSubscription = function (name, address, maxConsumers) {
     return this._request('broker', 'createQueue', [address, 'MULTICAST', name/*queue name*/, null/*filter*/, true/*durable*/,
-                                                   shared ? -1 : 1/*max consumers*/, false/*purgeOnNoConsumers*/, false/*autoCreateAddress*/]);
+                                                   maxConsumers/*max consumers*/, false/*purgeOnNoConsumers*/, false/*autoCreateAddress*/]);
 }
 
 Artemis.prototype.createQueue = function (name) {

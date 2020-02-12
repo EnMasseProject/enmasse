@@ -450,9 +450,13 @@ BrokerController.prototype.create_address = function (a) {
             self.post_event(myevents.address_failed_create(a, error));
         });
     } else if (a.type === 'subscription') {
-        log.info('[%s] Creating subscription "%s" on "%s"...', self.id, a.address, a.topic);
-        return self.broker.createSubscription(a.address, a.topic).then(function () {
-            log.info('[%s] Created subscription "%s" on "%s"', self.id, a.address, a.topic);
+        var maxConsumers = 1;
+        if (a.subscription !== undefined && a.subscription.maxConsumers !== undefined) {
+            maxConsumers = a.subscription.maxConsumers;
+        }
+        log.info('[%s] Creating subscription "%s" on "%s" with max consumers "%d"...', self.id, a.address, a.topic, maxConsumers);
+        return self.broker.createSubscription(a.address, a.topic, maxConsumers).then(function () {
+            log.info('[%s] Created subscription "%s" on "%s" with max consumers "%d"', self.id, a.address, a.topic, maxConsumers);
             self.post_event(myevents.address_create(a));
         }).catch(function (error) {
             log.error('[%s] Failed to create subscription "%s" on "%s": %s', self.id, a.address, a.topic, error);

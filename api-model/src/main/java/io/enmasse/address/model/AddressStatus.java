@@ -47,6 +47,7 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid BrokerStatus> brokerStatuses = new ArrayList<>();
     private AddressPlanStatus planStatus;
+    private SubscriptionStatus subscription;
 
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid AddressStatusForwarder> forwarders;
@@ -120,12 +121,13 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
                 Objects.equals(messages, status.messages) &&
                 Objects.equals(brokerStatuses, status.brokerStatuses) &&
                 Objects.equals(planStatus, status.planStatus) &&
-                Objects.equals(forwarders, status.forwarders);
+                Objects.equals(forwarders, status.forwarders) &&
+                Objects.equals(subscription, status.subscription);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ready, phase, messages, brokerStatuses, planStatus, forwarders);
+        return Objects.hash(ready, phase, messages, brokerStatuses, planStatus, forwarders, subscription);
     }
 
 
@@ -138,6 +140,7 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
                 .append(",").append("brokerStatuses=").append(brokerStatuses)
                 .append(",").append("planStatus=").append(planStatus)
                 .append(",").append("forwarders=").append(forwarders)
+                .append(",").append("subscription=").append(subscription)
                 .append("}")
                 .toString();
     }
@@ -160,5 +163,13 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
 
     public void setForwarders(List<AddressStatusForwarder> forwarders) {
         this.forwarders = new ArrayList<>(forwarders);
+    }
+
+    public SubscriptionStatus getSubscription() {
+        return subscription;
+    }
+
+    public void setSubscription(SubscriptionStatus subscription) {
+        this.subscription = subscription;
     }
 }

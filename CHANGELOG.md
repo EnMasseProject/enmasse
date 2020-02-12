@@ -21,9 +21,9 @@
 * Change default behavior of responding with MODIFIED outcome for transient delivery errors.
 * Change the service admin example role so it can modify authenticationservices custom resources.
 
-
 * #3673: Add support for pod disruption budgets
 * #3764: validate the topic refenced by a subscription actually exists
+* #3868: Add support for specifying maxConsumers for a subscription
 
 ## 0.30.2
 *  #2714: Allow setting security context of pods using persistent volumes
