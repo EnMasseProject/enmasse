@@ -1090,7 +1090,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LinkConsoleapiEnmasseIoV1beta1.Metrics(childComplexity), true
 
-	case "Link_consoleapi_enmasse_io_v1beta1.objectMeta":
+	case "Link_consoleapi_enmasse_io_v1beta1.metadata":
 		if e.complexity.LinkConsoleapiEnmasseIoV1beta1.ObjectMeta == nil {
 			break
 		}
@@ -1662,7 +1662,7 @@ type ConnectionSpec_consoleapi_enmasse_io_v1beta1 {
 }
 
 type Link_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: LinkSpec_consoleapi_enmasse_io_v1beta1!
   metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
 }
@@ -5959,7 +5959,7 @@ func (ec *executionContext) _LinkSpec_consoleapi_enmasse_io_v1beta1_role(ctx con
 	return ec.marshalNLinkRole2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐLinkRole(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1_objectMeta(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Link) (ret graphql.Marshaler) {
+func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Link) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -10573,8 +10573,8 @@ func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1(ctx context.Cont
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Link_consoleapi_enmasse_io_v1beta1")
-		case "objectMeta":
-			out.Values[i] = ec._Link_consoleapi_enmasse_io_v1beta1_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._Link_consoleapi_enmasse_io_v1beta1_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
