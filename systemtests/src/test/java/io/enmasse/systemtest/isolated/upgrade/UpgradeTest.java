@@ -10,14 +10,21 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceSpecStandardStorage;
 import io.enmasse.admin.model.v1.AuthenticationServiceSpecStandardType;
+import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.iot.CredentialsRegistryClient;
+import io.enmasse.systemtest.iot.DeviceRegistryClient;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
@@ -30,8 +37,12 @@ import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
+import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.UserUtils;
+import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -40,19 +51,21 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.UPGRADE;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(UPGRADE)
 @ExternalClients
@@ -62,6 +75,12 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
     private static String productName;
     private EnmasseInstallType type;
+
+    private HttpAdapterClient httpAdapterClient;
+    private AmqpClient consumerClientIot;
+    private String namespaceIot;
+
+
 
     @BeforeAll
     void prepareUpgradeEnv() throws Exception {
@@ -75,6 +94,14 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             assertTrue(OperatorManager.getInstance().clean());
         } else {
             OperatorManager.getInstance().deleteEnmasseAnsible();
+        }
+        kubernetes.deleteNamespace(namespaceIot);
+        if (consumerClientIot != null) {
+            consumerClientIot.close();
+            consumerClientIot = null;
+        }
+        if (httpAdapterClient != null) {
+            httpAdapterClient.close();
         }
     }
 
@@ -144,11 +171,48 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small", "pepa", MESSAGE_COUNT, true));
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", "pepa", MESSAGE_COUNT, true));
 
+        //iot
+        createIoTConfigCMD(kubernetes.getInfraNamespace(), Paths.get(templates));
+        Thread.sleep(30_000);
+        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
+
+        namespaceIot = "myapp";
+
+        createIoTProject(namespaceIot, Paths.get(templates));
+        Thread.sleep(30_000);
+        resourcesManager.waitForAddressSpaceReady(resourcesManager.getAddressSpace(namespaceIot,"iot"));
+        IoTUtils.waitForIoTProjectReady(kubernetes, resourcesManager.getIoTProject("iot", namespaceIot));
+
+        createIoTUser(namespaceIot, Paths.get(templates));
+        Thread.sleep(30_000);
+
+        //add iot devices and test them
+        String deviceIdIot = String.valueOf(4711); //UUID.randomUUID().toString()
+        String honoAuthId = "sensor1"; //UUID.randomUUID().toString()
+        String honoPassword = "hono-secret"; //UUID.randomUUID().toString()
+        String tenantIdIot = IoTUtils.getTenantId(resourcesManager.getIoTProject("iot", namespaceIot));
+        AddressSpace addressSpaceIot = resourcesManager.getAddressSpace(namespaceIot, "iot");
+
+        createIoTDevice(namespaceIot, deviceIdIot, honoAuthId, honoPassword);
+        Thread.sleep(30_000);
+
+        createConsumerClientIot(tenantIdIot, addressSpaceIot);
+        startHTTPClient(namespaceIot, honoAuthId, honoPassword);
+        sendTelemetryMessageSingle(tenantIdIot);
+        sendEventMessageSingle(tenantIdIot);
+
+        /* UPGRADE */
         if (this.type.equals(EnmasseInstallType.ANSIBLE)) {
             installEnmasseAnsible(Paths.get(Environment.getInstance().getUpgradeTemplates()), true);
         } else {
             upgradeEnmasseBundle(Paths.get(Environment.getInstance().getUpgradeTemplates()));
         }
+
+        //check iot devices
+        AddressSpace iotSpace = resourcesManager.getAddressSpace(namespaceIot, "iot");
+        assertNotNull(iotSpace);
+        sendTelemetryMessageSingle(tenantIdIot);
+        sendEventMessageSingle(tenantIdIot);
 
         AddressSpace brokered = resourcesManager.getAddressSpace("brokered");
         assertNotNull(brokered);
@@ -224,6 +288,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "bundles", productName));
             KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-plans"));
             KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-authservices", "standard-authservice.yaml"));
+            KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-roles"));
+            KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "preview-bundles", "iot"));
         }
         Thread.sleep(60_000);
         TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
@@ -244,7 +310,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kubernetes.getOcpVersion() == OpenShiftVersion.OCP3 ? "systemtests.inventory" : "systemtests.ocp4.inventory");
         Path ansiblePlaybook = Paths.get(templatePaths.toString(), "ansible", "playbooks", "openshift", "deploy_all.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
-                "--extra-vars", String.format("namespace=%s authentication_services=[\"standard\"]", kubernetes.getInfraNamespace()));
+                "--extra-vars", String.format("namespace=%s authentication_services=[\"standard\"] enable_iot=True", kubernetes.getInfraNamespace()));
 
         assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Deployment of new version of enmasse failed");
         log.info("Sleep after {}", upgrade ? "upgrade" : "install");
@@ -356,5 +422,95 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
     private static Stream<Arguments> provideVersions() {
         return Arrays.stream(environment.getStartTemplates().split(",")).map(templates -> Arguments.of(getVersionFromTemplateDir(Paths.get(templates)), templates));
+    }
+
+    private void createIoTConfigCMD(String namespace, Path templates) throws MalformedURLException {
+        log.info("Creating IoT configuration in namespace {}", namespace);
+        //TODO cluster host url too long for openshift4
+        Exec.execute(Arrays.asList("sh", Paths.get(templates.toString(), "install", "components", "iot", "examples", "k8s-tls", "create").toString()),
+                60_000, true, true, Collections.singletonMap("CLUSTER", "my-cluster")); //new URL(Environment.getInstance().getApiUrl()).getHost().replace("api.", "")));
+        //TODO generating secrets doesn't work on Mac
+        KubeCMDClient.runOnCluster("create", "secret", "tls", "iot-mqtt-adapter-tls",
+                "--key", Paths.get(templates.toString(), "install", "components", "iot", "examples", "k8s-tls", "build", "iot-mqtt-adapter-key.pem").toString(),
+                "--cert", Paths.get(templates.toString(), "install", "components", "iot", "examples", "k8s-tls", "build", "iot-mqtt-adapter-fullchain.pem").toString());
+        KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templates.toString(), "install", "components", "iot", "examples", "infinispan", "common"));
+        KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templates.toString(), "install", "components", "iot", "examples", "infinispan", "manual"));
+        KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templates.toString(), "install", "components", "iot", "examples", "iot-config.yaml"));
+    }
+
+    private void createIoTProject(String namespaceIot, Path templates) {
+        log.info("Creating IoT project in namespace {}", namespaceIot);
+        kubernetes.createNamespace(namespaceIot);
+        KubeCMDClient.applyFromFile(namespaceIot, Paths.get(templates.toString(), "install", "components", "iot", "examples", "iot-project-managed.yaml"));
+    }
+
+    private void createIoTUser(String namespaceIot, Path templates){
+        log.info("Creating IoT user in namespace {}", namespaceIot);
+        KubeCMDClient.applyFromFile(namespaceIot, Paths.get(templates.toString(), "install", "components", "iot", "examples", "iot-user.yaml"));
+    }
+
+    private void createIoTDevice(String namespaceIot, String deviceIdIot, String honoAuthId, String honoPassword) throws Exception {
+        log.info("Registering new IoT device {} in namespace {}", deviceIdIot, namespaceIot);
+
+        DeviceRegistryClient deviceRegistryClient = new DeviceRegistryClient(kubernetes.getExternalEndpoint("device-registry"));
+        deviceRegistryClient.registerDevice(String.format("%s.iot", namespaceIot), deviceIdIot);
+
+        CredentialsRegistryClient credentialsRegistryClient = new CredentialsRegistryClient(kubernetes.getExternalEndpoint("device-registry"));
+        credentialsRegistryClient.addCredentials(String.format("%s.iot", namespaceIot), deviceIdIot, honoAuthId, honoPassword, null);
+    }
+
+    private void createConsumerClientIot(String tenantIdIot, AddressSpace addressSpaceIot) throws Exception {
+        log.info("Creating consumer client for IOT");
+        String consumerClientIotUsername = "consumer-user"; //UUID.randomUUID().toString();
+        String consumerClientIotPassword = "consumer-password"; //UUID.randomUUID().toString();
+        User businessApplicationUser = UserUtils.createUserResource(new UserCredentials(consumerClientIotUsername, consumerClientIotPassword))
+                .editSpec()
+                .withAuthorization(
+                        Collections.singletonList(new UserAuthorizationBuilder()
+                                .withAddresses(
+                                        "telemetry" + "/" + tenantIdIot,
+                                        "telemetry" + "/" + tenantIdIot + "/*",
+                                        "event" + "/" + tenantIdIot,
+                                        "event" + "/" + tenantIdIot + "/*")
+                                .withOperations(Operation.recv)
+                                .build()))
+                .endSpec()
+                .done();
+        resourcesManager.createOrUpdateUser(addressSpaceIot, businessApplicationUser);
+        consumerClientIot = getAmqpClientFactory().createQueueClient(addressSpaceIot);
+        consumerClientIot.getConnectOptions()
+                .setUsername(consumerClientIotUsername)
+                .setPassword(consumerClientIotPassword);
+    }
+
+    private void startHTTPClient(String namespaceIot, String honoAuthId, String honoPassword) throws Exception {
+        log.info("Starting HTTP adapter client for IOT");
+        Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
+        IoTProject project = resourcesManager.getIoTProject("iot", namespaceIot);
+        httpAdapterClient = new HttpAdapterClient(httpAdapterEndpoint, honoAuthId, IoTUtils.getTenantId(project), honoPassword);
+    }
+
+    private void sendTelemetryMessageSingle(String tenantIdIot) throws Exception {
+        log.info("Testing sending of single telemetry message");
+        new MessageSendTester()
+                .type(MessageSendTester.Type.TELEMETRY)
+                .delay(Duration.ofSeconds(1))
+                .consumerFactory(MessageSendTester.ConsumerFactory.of(consumerClientIot, tenantIdIot))
+                .sender(httpAdapterClient::send)
+                .amount(1)
+                .consume(MessageSendTester.Consume.BEFORE)
+                .execute();
+    }
+
+    private void sendEventMessageSingle(String tenantIdIot) throws Exception {
+        log.info("Testing sending of single event message");
+        new MessageSendTester()
+                .type(MessageSendTester.Type.EVENT)
+                .delay(Duration.ofSeconds(1))
+                .consumerFactory(MessageSendTester.ConsumerFactory.of(consumerClientIot, tenantIdIot))
+                .sender(httpAdapterClient::send)
+                .amount(1)
+                .consume(MessageSendTester.Consume.BEFORE)
+                .execute();
     }
 }

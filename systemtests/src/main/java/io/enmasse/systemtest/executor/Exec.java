@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -94,7 +95,7 @@ public class Exec {
      * @throws ExecutionException
      */
     public int exec(List<String> commands) throws IOException, InterruptedException, ExecutionException {
-        return exec(commands, 0);
+        return exec(commands, 0, null);
     }
 
     /**
@@ -107,9 +108,12 @@ public class Exec {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public int exec(List<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
+    public int exec(List<String> commands, int timeout, Map<String, String> env) throws IOException, InterruptedException, ExecutionException {
         log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
         ProcessBuilder builder = new ProcessBuilder();
+        if (env != null) {
+            builder.environment().putAll(env);
+        }
         builder.command(commands);
         builder.directory(new File(System.getProperty("user.dir")));
         process = builder.start();
@@ -218,9 +222,13 @@ public class Exec {
     }
 
     public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator) {
+        return execute(command, timeout, logToOutput, appendLineSeparator, null);
+    }
+
+    public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator, Map<String, String> env) {
         try {
             Exec executor = new Exec(appendLineSeparator);
-            int ret = executor.exec(command, timeout);
+            int ret = executor.exec(command, timeout, env);
             synchronized (lock) {
                 if (logToOutput) {
                     log.info("Return code: {}", ret);

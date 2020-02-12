@@ -136,7 +136,7 @@ public class IoTUtils {
         var iotProjectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         while (budget.timeLeft() >= 0 && !isReady) {
             project = iotProjectClient.withName(project.getMetadata().getName()).get();
-            isReady = project.getStatus() != null && "Active".equals(project.getStatus().getPhase());
+            isReady = project.getStatus() != null && ("Active".equals(project.getStatus().getPhase()) || "Ready".equals(project.getStatus().getPhase()));
             if (!isReady) {
                 log.info("Waiting until IoTProject: '{}' will be in ready state -> {}", project.getMetadata().getName(), project.getStatus() != null ? project.getStatus().getPhase() : null);
                 Thread.sleep(10000);

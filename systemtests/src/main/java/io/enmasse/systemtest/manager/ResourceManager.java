@@ -13,6 +13,8 @@ import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -25,6 +27,7 @@ import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
@@ -530,4 +533,11 @@ public abstract class ResourceManager {
         return null;
     }
 
+    //================================================================================================
+    //======================================= IoT methods ============================================
+    //================================================================================================
+
+    public IoTProject getIoTProject(String projectName, String namespace) throws Exception {
+        return kubernetes.getIoTProjectClient(namespace).withName(projectName).get();
+    }
 }

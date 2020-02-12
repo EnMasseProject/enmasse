@@ -392,6 +392,13 @@ public class KubeCMDClient {
         return Exec.execute(command, timeoutMillis, true);
     }
 
+    public static ExecutionResultData getFromCluster(String... args) {
+        List<String> command = new LinkedList<>();
+        command.add(CMD);
+        command.addAll(Arrays.asList(args));
+        return Exec.execute(command, ONE_MINUTE_TIMEOUT, true, false);
+    }
+
     public static ExecutionResultData runOnClusterWithoutLogger(String... args) {
         List<String> command = new LinkedList<>();
         command.add(CMD);
