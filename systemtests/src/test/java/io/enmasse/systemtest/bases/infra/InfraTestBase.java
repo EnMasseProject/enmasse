@@ -61,10 +61,10 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
         }
 
         if (javaOpts != null) {
-            brokerPods.stream().forEach(pod -> {
+            brokerPods.forEach(pod -> {
                 ExecutionResultData result = Exec.execute(List.of("kubectl", "exec", pod.getMetadata().getName(), "-n",
                         pod.getMetadata().getNamespace(), "ps", "auxww"), true);
-                assertTrue(result.getRetCode());
+                assertTrue(result.getRetCode(), result.getStdOut());
                 assertTrue(result.getStdOut().contains(javaOpts),
                         "Unable to find expected java opts in process argument list: " + result.getStdOut());
             });
