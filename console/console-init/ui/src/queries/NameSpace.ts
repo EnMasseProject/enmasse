@@ -8,7 +8,7 @@ import gql from "graphql-tag";
 const RETURN_NAMESPACES = gql`
   query all_namespaces {
     namespaces {
-      objectMeta {
+      metadata {
         name
       }
       status {

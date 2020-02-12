@@ -30,19 +30,19 @@ const ALL_ADDRESS_SPACES_FILTER=(
     if (filterNamesLength > 1) {
       if (filterName.isExact)
         filter +=
-          "(`$.objectMeta.name` = '" + filterNameValue + "'";
+          "(`$.metadata.name` = '" + filterNameValue + "'";
       else
         filter +=
-          "(`$.objectMeta.name` LIKE '" + filterNameValue + "%'";
+          "(`$.metadata.name` LIKE '" + filterNameValue + "%'";
       for (let i = 1; i < filterNamesLength; i++) {
         let filterName=filterNames && filterNames[i];
         let filterNameValue=filterName && filterName.value && filterName.value.trim();
         if (filterName.isExact)
           filter +=
-            "OR `$.objectMeta.name` = '" + filterNameValue + "'";
+            "OR `$.metadata.name` = '" + filterNameValue + "'";
         else
           filter +=
-            "OR `$.objectMeta.name` LIKE '" +
+            "OR `$.metadata.name` LIKE '" +
             filterNameValue +
             "%'";
       }
@@ -50,10 +50,10 @@ const ALL_ADDRESS_SPACES_FILTER=(
     } else {
       if (filterName.isExact)
         filter +=
-          "`$.objectMeta.name` = '" + filterNameValue + "'";
+          "`$.metadata.name` = '" + filterNameValue + "'";
       else
         filter +=
-          "`$.objectMeta.name` LIKE '" + filterNameValue + "%'";
+          "`$.metadata.name` LIKE '" + filterNameValue + "%'";
     }
   }
   if (
@@ -66,13 +66,13 @@ const ALL_ADDRESS_SPACES_FILTER=(
     if (filterNameSpacesLength > 1) {
       if (filterNameSpace.isExact){
         filter +=
-          "(`$.objectMeta.namespace` = '" +
+          "(`$.metadata.namespace` = '" +
           filterNameSpaceValue.trim() +
           "'";
       }
       else{
         filter +=
-          "(`$.objectMeta.namespace` LIKE '" +
+          "(`$.metadata.namespace` LIKE '" +
           filterNameSpaceValue.trim() +
           "%'";
       }
@@ -81,12 +81,12 @@ const ALL_ADDRESS_SPACES_FILTER=(
         let filterNameSpaceValue=filterNameSpace && filterNameSpace.value && filterNameSpace.value.trim();
         if (filterNameSpace.isExact)
           filter +=
-            "OR `$.objectMeta.namespace` = '" +
+            "OR `$.metadata.namespace` = '" +
             filterNameSpaceValue +
             "'";
         else
           filter +=
-            "OR `$.objectMeta.namespace` LIKE '" +
+            "OR `$.metadata.namespace` LIKE '" +
             filterNameSpaceValue +
             "%'";
       }
@@ -94,12 +94,12 @@ const ALL_ADDRESS_SPACES_FILTER=(
     } else {
       if (filterNameSpace.isExact)
         filter +=
-          "`$.objectMeta.namespace` = '" +
+          "`$.metadata.namespace` = '" +
           filterNameSpaceValue +
           "'";
       else
         filter +=
-          "`$.objectMeta.namespace` LIKE '" +
+          "`$.metadata.namespace` LIKE '" +
           filterNameSpaceValue +
           "%'";
     }
@@ -122,13 +122,13 @@ const ALL_ADDRESS_SPACES_SORT=(sortBy?: ISortBy)=>{
   if (sortBy) {
     switch (sortBy.index) {
       case 1:
-        orderBy = "`$.objectMeta.name` ";
+        orderBy = "`$.metadata.name` ";
         break;
       case 2:
       case 3:
         break;
       case 4:
-        orderBy = "`$.objectMeta.creationTimestamp` ";
+        orderBy = "`$.metadata.creationTimestamp` ";
         break;
       default:
         break;
@@ -156,9 +156,9 @@ const RETURN_ALL_ADDRESS_SPACES = (
         addressSpaces(filter: "${filter}"  
         first:${perPage} offset:${perPage *
     (page - 1)} orderBy:"${orderBy}") {
-          Total
-          AddressSpaces {
-            objectMeta {
+          total
+          addressSpaces {
+            metadata {
               namespace
               name
               creationTimestamp
@@ -166,7 +166,7 @@ const RETURN_ALL_ADDRESS_SPACES = (
             spec {
               type
               plan {
-                objectMeta{
+                metadata {
                   name
                 }
                 spec {
@@ -195,8 +195,8 @@ const RETURN_ADDRESS_SPACE_DETAIL = (name?: string, namespace?: string) => {
         addressSpaces(
           filter: "\`$..name\` = '${name}' AND \`$..namespace\` = '${namespace}'"
         ) {
-          AddressSpaces {
-            objectMeta {
+          addressSpaces {
+            metadata {
               namespace
               name
               creationTimestamp
@@ -204,7 +204,7 @@ const RETURN_ADDRESS_SPACE_DETAIL = (name?: string, namespace?: string) => {
             spec {
               type
               plan {
-                objectMeta {
+                metadata {
                   name
                 }
                 spec {
@@ -255,18 +255,18 @@ const RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE = (
   let filter = "";
   if (value) {
     if (isName) {
-      filter += "`$.objectMeta.name` LIKE '" + value + "%'";
+      filter += "`$.metadata.name` LIKE '" + value + "%'";
     } else {
-      filter += "`$.objectMeta.namespace` LIKE '" + value + "%'";
+      filter += "`$.metadata.namespace` LIKE '" + value + "%'";
     }
   }
   const all_address_spaces = gql`
     query all_address_spaces {
       addressSpaces(filter: "${filter}"  
       first:100 offset:0) {
-        Total
-        AddressSpaces {
-          objectMeta {
+        total
+        addressSpaces {
+          metadata {
             namespace
             name
           }

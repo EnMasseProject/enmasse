@@ -510,6 +510,29 @@ func TestCreateAddress(t *testing.T) {
 	assert.Equal(t, addrname, retrieved.Name, "unexpected address resource name")
 }
 
+func TestPatchAddress(t *testing.T) {
+	r, ctx := newTestAddressResolver(t)
+	namespace := "mynamespace"
+	addressspace := "myaddrspace"
+	addrname := addressspace + ".myaddr"
+	addr := createAddress(namespace, addrname)
+	addr.Spec.Address = "myaddr"
+
+	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.Addresses(namespace)
+	_, err := addrClient.Create(&addr.Address)
+	assert.NoError(t, err)
+
+	_, err = r.Mutation().PatchAddress(ctx, addr.Address.ObjectMeta,
+		`[{"op":"replace","path":"/spec/plan","value":"standard-medium"}]`,
+		"application/json-patch+json")
+	assert.NoError(t, err)
+
+	retrieved, err := addrClient.Get(addr.Name, metav1.GetOptions{})
+	assert.NoError(t, err)
+
+	assert.Equal(t, "standard-medium", retrieved.Spec.Plan, "unexpected address plan")
+}
+
 func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"

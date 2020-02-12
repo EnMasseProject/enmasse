@@ -113,7 +113,7 @@ const typeDefs = gql`
     }
 
     type Link_consoleapi_enmasse_io_v1beta1 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         spec: LinkSpec_consoleapi_enmasse_io_v1beta1!
         metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
     }
@@ -130,23 +130,23 @@ const typeDefs = gql`
     #
 
     type AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1 {
-        Total: Int!
-        AddressSpaces: [AddressSpace_consoleapi_enmasse_io_v1beta1!]!
+        total: Int!
+        addressSpaces: [AddressSpace_consoleapi_enmasse_io_v1beta1!]!
     }
 
     type AddressQueryResult_consoleapi_enmasse_io_v1beta1 {
-        Total: Int!
-        Addresses: [Address_consoleapi_enmasse_io_v1beta1!]!
+        total: Int!
+        addresses: [Address_consoleapi_enmasse_io_v1beta1!]!
     }
 
     type ConnectionQueryResult_consoleapi_enmasse_io_v1beta1 {
-        Total: Int!
-        Connections: [Connection_consoleapi_enmasse_io_v1beta1!]!
+        total: Int!
+        connections: [Connection_consoleapi_enmasse_io_v1beta1!]!
     }
 
     type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
-        Total: Int!
-        Links: [Link_consoleapi_enmasse_io_v1beta1!]!
+        total: Int!
+        links: [Link_consoleapi_enmasse_io_v1beta1!]!
     }
 
     #

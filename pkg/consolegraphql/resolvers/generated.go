@@ -475,7 +475,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressPlanStatusEnmasseIoV1beta1.Partitions(childComplexity), true
 
-	case "AddressPlan_admin_enmasse_io_v1beta2.objectMeta":
+	case "AddressPlan_admin_enmasse_io_v1beta2.metadata":
 		if e.complexity.AddressPlanAdminEnmasseIoV1beta2.ObjectMeta == nil {
 			break
 		}
@@ -489,14 +489,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressPlanAdminEnmasseIoV1beta2.Spec(childComplexity), true
 
-	case "AddressQueryResult_consoleapi_enmasse_io_v1beta1.Addresses":
+	case "AddressQueryResult_consoleapi_enmasse_io_v1beta1.addresses":
 		if e.complexity.AddressQueryResultConsoleapiEnmasseIoV1beta1.Addresses == nil {
 			break
 		}
 
 		return e.complexity.AddressQueryResultConsoleapiEnmasseIoV1beta1.Addresses(childComplexity), true
 
-	case "AddressQueryResult_consoleapi_enmasse_io_v1beta1.Total":
+	case "AddressQueryResult_consoleapi_enmasse_io_v1beta1.total":
 		if e.complexity.AddressQueryResultConsoleapiEnmasseIoV1beta1.Total == nil {
 			break
 		}
@@ -545,7 +545,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressSpacePlanSpecAdminEnmasseIoV1beta2.ShortDescription(childComplexity), true
 
-	case "AddressSpacePlan_admin_enmasse_io_v1beta2.objectMeta":
+	case "AddressSpacePlan_admin_enmasse_io_v1beta2.metadata":
 		if e.complexity.AddressSpacePlanAdminEnmasseIoV1beta2.ObjectMeta == nil {
 			break
 		}
@@ -559,14 +559,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressSpacePlanAdminEnmasseIoV1beta2.Spec(childComplexity), true
 
-	case "AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1.AddressSpaces":
+	case "AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1.addressSpaces":
 		if e.complexity.AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1.AddressSpaces == nil {
 			break
 		}
 
 		return e.complexity.AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1.AddressSpaces(childComplexity), true
 
-	case "AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1.Total":
+	case "AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1.total":
 		if e.complexity.AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1.Total == nil {
 			break
 		}
@@ -587,7 +587,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressSpaceSchemaSpecEnmasseIoV1beta1.Description(childComplexity), true
 
-	case "AddressSpaceSchema_enmasse_io_v1beta1.objectMeta":
+	case "AddressSpaceSchema_enmasse_io_v1beta1.metadata":
 		if e.complexity.AddressSpaceSchemaEnmasseIoV1beta1.ObjectMeta == nil {
 			break
 		}
@@ -678,7 +678,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1.ShortDescription(childComplexity), true
 
-	case "AddressSpaceType_consoleapi_enmasse_io_v1beta1.objectMeta":
+	case "AddressSpaceType_consoleapi_enmasse_io_v1beta1.metadata":
 		if e.complexity.AddressSpaceTypeConsoleapiEnmasseIoV1beta1.ObjectMeta == nil {
 			break
 		}
@@ -723,7 +723,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressSpaceConsoleapiEnmasseIoV1beta1.Metrics(childComplexity), true
 
-	case "AddressSpace_consoleapi_enmasse_io_v1beta1.objectMeta":
+	case "AddressSpace_consoleapi_enmasse_io_v1beta1.metadata":
 		if e.complexity.AddressSpaceConsoleapiEnmasseIoV1beta1.ObjectMeta == nil {
 			break
 		}
@@ -849,7 +849,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressTypeSpecConsoleapiEnmasseIoV1beta1.ShortDescription(childComplexity), true
 
-	case "AddressType_consoleapi_enmasse_io_v1beta1.objectMeta":
+	case "AddressType_consoleapi_enmasse_io_v1beta1.metadata":
 		if e.complexity.AddressTypeConsoleapiEnmasseIoV1beta1.ObjectMeta == nil {
 			break
 		}
@@ -882,7 +882,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressConsoleapiEnmasseIoV1beta1.Metrics(childComplexity), true
 
-	case "Address_consoleapi_enmasse_io_v1beta1.objectMeta":
+	case "Address_consoleapi_enmasse_io_v1beta1.metadata":
 		if e.complexity.AddressConsoleapiEnmasseIoV1beta1.ObjectMeta == nil {
 			break
 		}
@@ -924,7 +924,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AuthenticationServiceStatusAdminEnmasseIoV1beta1.Port(childComplexity), true
 
-	case "AuthenticationService_admin_enmasse_io_v1beta1.objectMeta":
+	case "AuthenticationService_admin_enmasse_io_v1beta1.metadata":
 		if e.complexity.AuthenticationServiceAdminEnmasseIoV1beta1.ObjectMeta == nil {
 			break
 		}
@@ -952,14 +952,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AuthenticationServiceEnmasseIoV1beta1.Name(childComplexity), true
 
-	case "ConnectionQueryResult_consoleapi_enmasse_io_v1beta1.Connections":
+	case "ConnectionQueryResult_consoleapi_enmasse_io_v1beta1.connections":
 		if e.complexity.ConnectionQueryResultConsoleapiEnmasseIoV1beta1.Connections == nil {
 			break
 		}
 
 		return e.complexity.ConnectionQueryResultConsoleapiEnmasseIoV1beta1.Connections(childComplexity), true
 
-	case "ConnectionQueryResult_consoleapi_enmasse_io_v1beta1.Total":
+	case "ConnectionQueryResult_consoleapi_enmasse_io_v1beta1.total":
 		if e.complexity.ConnectionQueryResultConsoleapiEnmasseIoV1beta1.Total == nil {
 			break
 		}
@@ -1027,7 +1027,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ConnectionConsoleapiEnmasseIoV1beta1.Metrics(childComplexity), true
 
-	case "Connection_consoleapi_enmasse_io_v1beta1.objectMeta":
+	case "Connection_consoleapi_enmasse_io_v1beta1.metadata":
 		if e.complexity.ConnectionConsoleapiEnmasseIoV1beta1.ObjectMeta == nil {
 			break
 		}
@@ -1055,14 +1055,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.KeyValue.Value(childComplexity), true
 
-	case "LinkQueryResult_consoleapi_enmasse_io_v1beta1.Links":
+	case "LinkQueryResult_consoleapi_enmasse_io_v1beta1.links":
 		if e.complexity.LinkQueryResultConsoleapiEnmasseIoV1beta1.Links == nil {
 			break
 		}
 
 		return e.complexity.LinkQueryResultConsoleapiEnmasseIoV1beta1.Links(childComplexity), true
 
-	case "LinkQueryResult_consoleapi_enmasse_io_v1beta1.Total":
+	case "LinkQueryResult_consoleapi_enmasse_io_v1beta1.total":
 		if e.complexity.LinkQueryResultConsoleapiEnmasseIoV1beta1.Total == nil {
 			break
 		}
@@ -1284,7 +1284,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NamespaceStatusV1.Phase(childComplexity), true
 
-	case "Namespace_v1.objectMeta":
+	case "Namespace_v1.metadata":
 		if e.complexity.NamespaceV1.ObjectMeta == nil {
 			break
 		}
@@ -1530,7 +1530,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserV1.Identities(childComplexity), true
 
-	case "User_v1.objectMeta":
+	case "User_v1.metadata":
 		if e.complexity.UserV1.ObjectMeta == nil {
 			break
 		}
@@ -1652,7 +1652,7 @@ type Metric_consoleapi_enmasse_io_v1beta1 {
 }
 
 type Connection_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: ConnectionSpec_consoleapi_enmasse_io_v1beta1!
 
   metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
@@ -1685,23 +1685,23 @@ type LinkSpec_consoleapi_enmasse_io_v1beta1 {
 #
 
 type AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1 {
-  Total: Int!
-  AddressSpaces: [AddressSpace_consoleapi_enmasse_io_v1beta1!]!
+  total: Int!
+  addressSpaces: [AddressSpace_consoleapi_enmasse_io_v1beta1!]!
 }
 
 type AddressQueryResult_consoleapi_enmasse_io_v1beta1 {
-  Total: Int!
-  Addresses: [Address_consoleapi_enmasse_io_v1beta1!]!
+  total: Int!
+  addresses: [Address_consoleapi_enmasse_io_v1beta1!]!
 }
 
 type ConnectionQueryResult_consoleapi_enmasse_io_v1beta1 {
-  Total: Int!
-  Connections: [Connection_consoleapi_enmasse_io_v1beta1!]!
+  total: Int!
+  connections: [Connection_consoleapi_enmasse_io_v1beta1!]!
 }
 
 type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
-  Total: Int!
-  Links: [Link_consoleapi_enmasse_io_v1beta1!]!
+  total: Int!
+  links: [Link_consoleapi_enmasse_io_v1beta1!]!
 }
 
 #
@@ -1715,7 +1715,7 @@ type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
 
 
 type AddressSpace_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressSpaceSpec_enmasse_io_v1beta1!
   status: AddressSpaceStatus_enmasse_io_v1beta1
   connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1beta1!
@@ -1760,7 +1760,7 @@ type AddressPlanStatus_enmasse_io_v1beta1 {
 }
 
 type Address_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressSpec_enmasse_io_v1beta1!
   status: AddressStatus_enmasse_io_v1beta1
 
@@ -1769,7 +1769,7 @@ type Address_consoleapi_enmasse_io_v1beta1 {
 }
 
 type AddressPlan_admin_enmasse_io_v1beta2 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressPlanSpec_admin_enmasse_io_v1beta2!
 }
 
@@ -1782,7 +1782,7 @@ type AddressPlanSpec_admin_enmasse_io_v1beta2 {
 }
 
 type AddressSpacePlan_admin_enmasse_io_v1beta2 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressSpacePlanSpec_admin_enmasse_io_v1beta2!
 }
 
@@ -1796,7 +1796,7 @@ type AddressSpacePlanSpec_admin_enmasse_io_v1beta2 {
 }
 
 type AddressSpaceType_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
 }
 
@@ -1809,7 +1809,7 @@ type AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1 {
 }
 
 type AddressType_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
 }
 
@@ -1823,7 +1823,7 @@ type AddressTypeSpec_consoleapi_enmasse_io_v1beta1 {
 }
 
 type AuthenticationService_admin_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AuthenticationServiceSpec_admin_enmasse_io_v1beta1!
   status: AuthenticationServiceStatus_admin_enmasse_io_v1beta1!
 }
@@ -1838,7 +1838,7 @@ type AuthenticationServiceSpec_admin_enmasse_io_v1beta1 {
 }
 
 type AddressSpaceSchema_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressSpaceSchemaSpec_enmasse_io_v1beta1!
 }
 
@@ -1866,14 +1866,14 @@ type ObjectMeta_v1 {
 }
 
 type User_v1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   identities: [String!]!
   groups: [String!]!
   fullName: String!
 }
 
 type Namespace_v1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   status: NamespaceStatus_v1!
 }
 
@@ -1951,7 +1951,7 @@ input AuthenticationService_enmasse_io_v1beta1_Input {
 }
 
 input AddressSpace_enmasse_io_v1beta1_Input {
-  objectMeta: ObjectMeta_v1_Input
+  metadata: ObjectMeta_v1_Input @goField(name: "ObjectMeta")
   spec: AddressSpaceSpec_enmasse_io_v1beta1_Input
 }
 
@@ -1964,7 +1964,7 @@ input AddressSpec_enmasse_io_v1beta1_Input {
 }
 
 input Address_enmasse_io_v1beta1_Input {
-  objectMeta: ObjectMeta_v1_Input
+  metadata: ObjectMeta_v1_Input @goField(name: "ObjectMeta")
   spec: AddressSpec_enmasse_io_v1beta1_Input
 }
 
@@ -2829,7 +2829,7 @@ func (ec *executionContext) _AddressPlanStatus_enmasse_io_v1beta1_partitions(ctx
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressPlan_admin_enmasse_io_v1beta2_objectMeta(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressPlan) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressPlan_admin_enmasse_io_v1beta2_metadata(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressPlan) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2903,7 +2903,7 @@ func (ec *executionContext) _AddressPlan_admin_enmasse_io_v1beta2_spec(ctx conte
 	return ec.marshalNAddressPlanSpec_admin_enmasse_io_v1beta22githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlanSpec(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1_Total(ctx context.Context, field graphql.CollectedField, obj *AddressQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx context.Context, field graphql.CollectedField, obj *AddressQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2940,7 +2940,7 @@ func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1_To
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1_Addresses(ctx context.Context, field graphql.CollectedField, obj *AddressQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1_addresses(ctx context.Context, field graphql.CollectedField, obj *AddressQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3196,7 +3196,7 @@ func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_displ
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressSpacePlan_admin_enmasse_io_v1beta2_objectMeta(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlan) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressSpacePlan_admin_enmasse_io_v1beta2_metadata(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlan) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3270,7 +3270,7 @@ func (ec *executionContext) _AddressSpacePlan_admin_enmasse_io_v1beta2_spec(ctx 
 	return ec.marshalNAddressSpacePlanSpec_admin_enmasse_io_v1beta22githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressSpacePlanSpec(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1_Total(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3307,7 +3307,7 @@ func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1bet
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1_AddressSpaces(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1_addressSpaces(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3412,7 +3412,7 @@ func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_descripti
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressSpaceSchema_enmasse_io_v1beta1_objectMeta(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchema) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressSpaceSchema_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchema) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3887,7 +3887,7 @@ func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1_
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressSpaceType_consoleapi_enmasse_io_v1beta1_objectMeta(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceTypeConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressSpaceType_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceTypeConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3961,7 +3961,7 @@ func (ec *executionContext) _AddressSpaceType_consoleapi_enmasse_io_v1beta1_spec
 	return ec.marshalNAddressTypeSpec_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeSpecConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_objectMeta(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressSpaceHolder) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressSpaceHolder) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -4737,7 +4737,7 @@ func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_displ
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AddressType_consoleapi_enmasse_io_v1beta1_objectMeta(ctx context.Context, field graphql.CollectedField, obj *AddressTypeConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+func (ec *executionContext) _AddressType_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *AddressTypeConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -4811,7 +4811,7 @@ func (ec *executionContext) _AddressType_consoleapi_enmasse_io_v1beta1_spec(ctx 
 	return ec.marshalNAddressTypeSpec_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeSpecConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_objectMeta(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressHolder) (ret graphql.Marshaler) {
+func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressHolder) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5108,7 +5108,7 @@ func (ec *executionContext) _AuthenticationServiceStatus_admin_enmasse_io_v1beta
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1_objectMeta(ctx context.Context, field graphql.CollectedField, obj *v1beta11.AuthenticationService) (ret graphql.Marshaler) {
+func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *v1beta11.AuthenticationService) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5256,7 +5256,7 @@ func (ec *executionContext) _AuthenticationService_enmasse_io_v1beta1_name(ctx c
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_Total(ctx context.Context, field graphql.CollectedField, obj *ConnectionQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx context.Context, field graphql.CollectedField, obj *ConnectionQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5293,7 +5293,7 @@ func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_Connections(ctx context.Context, field graphql.CollectedField, obj *ConnectionQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_connections(ctx context.Context, field graphql.CollectedField, obj *ConnectionQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5552,7 +5552,7 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_proper
 	return ec.marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValueᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_objectMeta(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Connection) (ret graphql.Marshaler) {
+func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Connection) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5781,7 +5781,7 @@ func (ec *executionContext) _KeyValue_value(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1_Total(ctx context.Context, field graphql.CollectedField, obj *LinkQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx context.Context, field graphql.CollectedField, obj *LinkQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5818,7 +5818,7 @@ func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1_Total
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1_Links(ctx context.Context, field graphql.CollectedField, obj *LinkQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1_links(ctx context.Context, field graphql.CollectedField, obj *LinkQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6818,7 +6818,7 @@ func (ec *executionContext) _NamespaceStatus_v1_phase(ctx context.Context, field
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Namespace_v1_objectMeta(ctx context.Context, field graphql.CollectedField, obj *v11.Namespace) (ret graphql.Marshaler) {
+func (ec *executionContext) _Namespace_v1_metadata(ctx context.Context, field graphql.CollectedField, obj *v11.Namespace) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -7879,7 +7879,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _User_v1_objectMeta(ctx context.Context, field graphql.CollectedField, obj *v12.User) (ret graphql.Marshaler) {
+func (ec *executionContext) _User_v1_metadata(ctx context.Context, field graphql.CollectedField, obj *v12.User) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -9214,7 +9214,7 @@ func (ec *executionContext) unmarshalInputAddressSpace_enmasse_io_v1beta1_Input(
 
 	for k, v := range asMap {
 		switch k {
-		case "objectMeta":
+		case "metadata":
 			var err error
 			it.ObjectMeta, err = ec.unmarshalOObjectMeta_v1_Input2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, v)
 			if err != nil {
@@ -9280,7 +9280,7 @@ func (ec *executionContext) unmarshalInputAddress_enmasse_io_v1beta1_Input(ctx c
 
 	for k, v := range asMap {
 		switch k {
-		case "objectMeta":
+		case "metadata":
 			var err error
 			it.ObjectMeta, err = ec.unmarshalOObjectMeta_v1_Input2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, v)
 			if err != nil {
@@ -9453,8 +9453,8 @@ func (ec *executionContext) _AddressPlan_admin_enmasse_io_v1beta2(ctx context.Co
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AddressPlan_admin_enmasse_io_v1beta2")
-		case "objectMeta":
-			out.Values[i] = ec._AddressPlan_admin_enmasse_io_v1beta2_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._AddressPlan_admin_enmasse_io_v1beta2_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -9485,13 +9485,13 @@ func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1(ct
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AddressQueryResult_consoleapi_enmasse_io_v1beta1")
-		case "Total":
-			out.Values[i] = ec._AddressQueryResult_consoleapi_enmasse_io_v1beta1_Total(ctx, field, obj)
+		case "total":
+			out.Values[i] = ec._AddressQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Addresses":
-			out.Values[i] = ec._AddressQueryResult_consoleapi_enmasse_io_v1beta1_Addresses(ctx, field, obj)
+		case "addresses":
+			out.Values[i] = ec._AddressQueryResult_consoleapi_enmasse_io_v1beta1_addresses(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -9584,8 +9584,8 @@ func (ec *executionContext) _AddressSpacePlan_admin_enmasse_io_v1beta2(ctx conte
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AddressSpacePlan_admin_enmasse_io_v1beta2")
-		case "objectMeta":
-			out.Values[i] = ec._AddressSpacePlan_admin_enmasse_io_v1beta2_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._AddressSpacePlan_admin_enmasse_io_v1beta2_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -9616,13 +9616,13 @@ func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1bet
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1")
-		case "Total":
-			out.Values[i] = ec._AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1_Total(ctx, field, obj)
+		case "total":
+			out.Values[i] = ec._AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "AddressSpaces":
-			out.Values[i] = ec._AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1_AddressSpaces(ctx, field, obj)
+		case "addressSpaces":
+			out.Values[i] = ec._AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1_addressSpaces(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -9674,8 +9674,8 @@ func (ec *executionContext) _AddressSpaceSchema_enmasse_io_v1beta1(ctx context.C
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AddressSpaceSchema_enmasse_io_v1beta1")
-		case "objectMeta":
-			out.Values[i] = ec._AddressSpaceSchema_enmasse_io_v1beta1_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._AddressSpaceSchema_enmasse_io_v1beta1_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -9839,8 +9839,8 @@ func (ec *executionContext) _AddressSpaceType_consoleapi_enmasse_io_v1beta1(ctx 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AddressSpaceType_consoleapi_enmasse_io_v1beta1")
-		case "objectMeta":
-			out.Values[i] = ec._AddressSpaceType_consoleapi_enmasse_io_v1beta1_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._AddressSpaceType_consoleapi_enmasse_io_v1beta1_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -9871,8 +9871,8 @@ func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1(ctx cont
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AddressSpace_consoleapi_enmasse_io_v1beta1")
-		case "objectMeta":
-			out.Values[i] = ec._AddressSpace_consoleapi_enmasse_io_v1beta1_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._AddressSpace_consoleapi_enmasse_io_v1beta1_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -10085,8 +10085,8 @@ func (ec *executionContext) _AddressType_consoleapi_enmasse_io_v1beta1(ctx conte
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AddressType_consoleapi_enmasse_io_v1beta1")
-		case "objectMeta":
-			out.Values[i] = ec._AddressType_consoleapi_enmasse_io_v1beta1_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._AddressType_consoleapi_enmasse_io_v1beta1_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10117,8 +10117,8 @@ func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1(ctx context.C
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Address_consoleapi_enmasse_io_v1beta1")
-		case "objectMeta":
-			out.Values[i] = ec._Address_consoleapi_enmasse_io_v1beta1_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._Address_consoleapi_enmasse_io_v1beta1_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -10235,8 +10235,8 @@ func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1(ctx 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AuthenticationService_admin_enmasse_io_v1beta1")
-		case "objectMeta":
-			out.Values[i] = ec._AuthenticationService_admin_enmasse_io_v1beta1_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._AuthenticationService_admin_enmasse_io_v1beta1_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10299,13 +10299,13 @@ func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ConnectionQueryResult_consoleapi_enmasse_io_v1beta1")
-		case "Total":
-			out.Values[i] = ec._ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_Total(ctx, field, obj)
+		case "total":
+			out.Values[i] = ec._ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Connections":
-			out.Values[i] = ec._ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_Connections(ctx, field, obj)
+		case "connections":
+			out.Values[i] = ec._ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_connections(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10410,8 +10410,8 @@ func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1(ctx contex
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Connection_consoleapi_enmasse_io_v1beta1")
-		case "objectMeta":
-			out.Values[i] = ec._Connection_consoleapi_enmasse_io_v1beta1_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._Connection_consoleapi_enmasse_io_v1beta1_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -10493,13 +10493,13 @@ func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1(ctx c
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("LinkQueryResult_consoleapi_enmasse_io_v1beta1")
-		case "Total":
-			out.Values[i] = ec._LinkQueryResult_consoleapi_enmasse_io_v1beta1_Total(ctx, field, obj)
+		case "total":
+			out.Values[i] = ec._LinkQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Links":
-			out.Values[i] = ec._LinkQueryResult_consoleapi_enmasse_io_v1beta1_Links(ctx, field, obj)
+		case "links":
+			out.Values[i] = ec._LinkQueryResult_consoleapi_enmasse_io_v1beta1_links(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10840,8 +10840,8 @@ func (ec *executionContext) _Namespace_v1(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Namespace_v1")
-		case "objectMeta":
-			out.Values[i] = ec._Namespace_v1_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._Namespace_v1_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -11210,8 +11210,8 @@ func (ec *executionContext) _User_v1(ctx context.Context, sel ast.SelectionSet, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("User_v1")
-		case "objectMeta":
-			out.Values[i] = ec._User_v1_objectMeta(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._User_v1_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
