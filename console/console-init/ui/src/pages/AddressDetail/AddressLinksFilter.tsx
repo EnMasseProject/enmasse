@@ -189,18 +189,18 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       response &&
       response.data &&
       response.data.addresses &&
-      response.data.addresses.Addresses &&
-      response.data.addresses.Addresses.length > 0 &&
-      response.data.addresses.Addresses[0].links &&
-      response.data.addresses.Addresses[0].links.Links &&
-      response.data.addresses.Addresses[0].links.Links.length > 0
+      response.data.addresses.addresses &&
+      response.data.addresses.addresses.length > 0 &&
+      response.data.addresses.addresses[0].links &&
+      response.data.addresses.addresses[0].links.links &&
+      response.data.addresses.addresses[0].links.links.length > 0
     ) {
-      if (response.data.addresses.Addresses[0].links.Total > 100) {
+      if (response.data.addresses.addresses[0].links.total > 100) {
         setNameOptions([]);
       } else {
-        const obtainedList = response.data.addresses.Addresses[0].links.Links.map(
+        const obtainedList = response.data.addresses.addresses[0].links.links.map(
           (link: any) => {
-            return link.objectMeta.Name;
+            return link.metadata.Name;
           }
         );
         setNameOptions(Array.from(new Set(obtainedList)));
@@ -235,16 +235,16 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       response &&
       response.data &&
       response.data.addresses &&
-      response.data.addresses.Addresses &&
-      response.data.addresses.Addresses.length > 0 &&
-      response.data.addresses.Addresses[0].links &&
-      response.data.addresses.Addresses[0].links.Links &&
-      response.data.addresses.Addresses[0].links.Links.length > 0
+      response.data.addresses.addresses &&
+      response.data.addresses.addresses.length > 0 &&
+      response.data.addresses.addresses[0].links &&
+      response.data.addresses.addresses[0].links.links &&
+      response.data.addresses.addresses[0].links.links.length > 0
     ) {
-      if (response.data.addresses.Addresses[0].links.Total > 100) {
+      if (response.data.addresses.addresses[0].links.total > 100) {
         setContainerOptions([]);
       } else {
-        const obtainedList = response.data.addresses.Addresses[0].links.Links.map(
+        const obtainedList = response.data.addresses.addresses[0].links.links.map(
           (link: any) => {
             return link.spec.connection.spec.containerId;
           }

@@ -57,7 +57,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
     ) {
       const getVariables = () => {
         let variable: any = {
-          objectMeta: {
+          metadata: {
             name: addressSpace + "." + addressName,
             namespace: namespace
           },

@@ -185,14 +185,14 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       response &&
       response.data &&
       response.data.connections &&
-      response.data.connections.Connections &&
-      response.data.connections.Connections.length > 0
+      response.data.connections.connections &&
+      response.data.connections.connections.length > 0
     ) {
       //To display dropdown if fetched records are less than 100 in count.
-      if (response.data.connections.Total > 100) {
+      if (response.data.connections.total > 100) {
         setHostnameOptions([]);
       } else {
-        const obtainedList = response.data.connections.Connections.map(
+        const obtainedList = response.data.connections.connections.map(
           (connection: any) => {
             return connection.spec.hostname;
           }
@@ -233,14 +233,14 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       response &&
       response.data &&
       response.data.connections &&
-      response.data.connections.Connections &&
-      response.data.connections.Connections.length > 0
+      response.data.connections.connections &&
+      response.data.connections.connections.length > 0
     ) {
       //To display dropdown if fetched records are less than 100 in count.
-      if (response.data.connections.Total > 100) {
+      if (response.data.connections.total > 100) {
         setContainerOptions([]);
       } else {
-        const obtainedList = response.data.connections.Connections.map(
+        const obtainedList = response.data.connections.connections.map(
           (connection: any) => {
             return connection.spec.containerId;
           }

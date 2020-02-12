@@ -87,9 +87,9 @@ export default function ConnectionDetailPage() {
     console.log(error);
   }
   const { connections } = data || {
-    connections: { Total: 0, Connections: [] }
+    connections: { total: 0, connections: [] }
   };
-  const connection = connections.Connections[0];
+  const connection = connections.connections[0];
   //Change this logic
   const jvmObject =
     connection.spec &&
@@ -106,7 +106,7 @@ export default function ConnectionDetailPage() {
     version: getProductFilteredValue(connection.spec.properties, "version"),
     protocol: connection.spec.protocol.toUpperCase(),
     encrypted: connection.spec.encrypted || false,
-    creationTimestamp: connection.objectMeta.creationTimestamp,
+    creationTimestamp: connection.metadata.creationTimestamp,
     messageIn: getFilteredValue(connection.metrics, "enmasse_messages_in"),
     messageOut: getFilteredValue(connection.metrics, "enmasse_messages_out"),
     //Change this logic

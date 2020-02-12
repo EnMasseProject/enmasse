@@ -12,9 +12,9 @@ export interface IMetrics {
 
 export interface IConnectionDetailResponse {
   connections: {
-    Total: number;
-    Connections: Array<{
-      objectMeta: {
+    total: number;
+    connections: Array<{
+      metadata: {
         name: string;
         namespace: string;
         creationTimestamp: string;
@@ -36,9 +36,9 @@ export interface IConnectionDetailResponse {
 
 export interface IAddressResponse {
   addresses: {
-    Total: number;
-    Addresses: Array<{
-      objectMeta: {
+    total: number;
+    addresses: Array<{
+      metadata: {
         namespace: string;
         name: string;
       };
@@ -49,7 +49,7 @@ export interface IAddressResponse {
           spec: {
             displayName: string;
           };
-          objectMeta: {
+          metadata: {
             name: string;
           };
         };
@@ -68,9 +68,9 @@ export interface IAddressResponse {
 }
 export interface IConnectionListResponse {
   connections: {
-    Total: number;
-    Connections: Array<{
-      objectMeta: {
+    total: number;
+    connections: Array<{
+      metadata: {
         name: string;
         creationTimestamp: string;
       };
@@ -91,9 +91,9 @@ enum eLinkRole {
 }
 export interface IAddressDetailResponse {
   addresses: {
-    Total: number;
-    Addresses: Array<{
-      objectMeta: {
+    total: number;
+    addresses: Array<{
+      metadata: {
         name: string;
         namespace: String;
         creationTimestamp: string;
@@ -122,24 +122,24 @@ export interface IAddressDetailResponse {
 }
 export interface IAddressLinksResponse {
   addresses: {
-    Total: number;
-    Addresses: Array<{
-      objectMeta: {
+    total: number;
+    addresses: Array<{
+      metadata: {
         name: string;
       };
       spec: {
         addressSpace: string;
       };
       links: {
-        Total: number;
-        Links: Array<{
-          objectMeta: {
+        total: number;
+        links: Array<{
+          metadata: {
             name: string;
           };
           spec: {
             role: string;
             connection: {
-              objectMeta: {
+              metadata: {
                 name: string;
                 namespace: string;
               };
@@ -157,9 +157,9 @@ export interface IAddressLinksResponse {
 
 export interface IAddressSpacesResponse {
   addressSpaces: {
-    Total: number;
-    AddressSpaces: Array<{
-      objectMeta: {
+    total: number;
+    addressSpaces: Array<{
+      metadata: {
         name: string;
         namespace: string;
         creationTimestamp: string;
@@ -167,7 +167,7 @@ export interface IAddressSpacesResponse {
       spec: {
         type: string;
         plan: {
-          objectMeta: {
+          metadata: {
             name: string;
           };
           spec: {
@@ -189,16 +189,16 @@ export interface IAddressSpacesResponse {
 
 export interface IConnectionLinksResponse {
   connections: {
-    Total: number;
-    Connections: Array<{
-      objectMeta: {
+    total: number;
+    connections: Array<{
+      metadata: {
         name: string;
         namespace: string;
       };
       links: {
-        Total: number;
-        Links: Array<{
-          objectMeta: {
+        total: number;
+        links: Array<{
+          metadata: {
             name: string;
           };
           spec: {
@@ -214,12 +214,12 @@ export interface IConnectionLinksResponse {
 
 export interface IConnectionLinksNameSearchResponse {
   connections: {
-    Total: number;
-    Connections: Array<{
+    total: number;
+    connections: Array<{
       links: {
-        Total: number;
-        Links: Array<{
-          objectMeta: {
+        total: number;
+        links: Array<{
+          metadata: {
             name: string;
           };
         }>;
@@ -229,11 +229,11 @@ export interface IConnectionLinksNameSearchResponse {
 }
 export interface IConnectionLinksAddressSearchResponse {
   connections: {
-    Total: number;
-    Connections: Array<{
+    total: number;
+    connections: Array<{
       links: {
-        Total: number;
-        Links: Array<{
+        total: number;
+        links: Array<{
           spec: {
             address: string;
           };
@@ -245,12 +245,12 @@ export interface IConnectionLinksAddressSearchResponse {
 
 export interface ISearchAddressLinkNameResponse {
   addresses: {
-    Total: number;
-    Addresses: Array<{
+    total: number;
+    addresses: Array<{
       links: {
-        Total: number;
-        Links: Array<{
-          objectMeta: {
+        total: number;
+        links: Array<{
+          metadata: {
             name: string;
           };
         }>;
@@ -261,11 +261,11 @@ export interface ISearchAddressLinkNameResponse {
 
 export interface ISearchAddressLinkContainerResponse {
   addresses: {
-    Total: number;
-    Addresses: Array<{
+    total: number;
+    addresses: Array<{
       links: {
-        Total: number;
-        Links: Array<{
+        total: number;
+        links: Array<{
           spec: {
             connection: {
               spec: {
@@ -281,9 +281,9 @@ export interface ISearchAddressLinkContainerResponse {
 
 export interface ISearchNameOrNameSpaceAddressSpaceListResponse {
   addressSpaces: {
-    Total: number;
-    AddressSpaces: Array<{
-      objectMeta: {
+    total: number;
+    addressSpaces: Array<{
+      metadata: {
         name: string;
         namespace: string;
       };
@@ -293,8 +293,8 @@ export interface ISearchNameOrNameSpaceAddressSpaceListResponse {
 
 export interface IAddressListNameSearchResponse {
   addresses: {
-    Total: number;
-    Addresses: Array<{
+    total: number;
+    addresses: Array<{
       spec: {
         address: string;
       };
@@ -304,8 +304,8 @@ export interface IAddressListNameSearchResponse {
 
 export interface IConnectionListNameSearchResponse {
   connections: {
-    Total: number;
-    Connections: Array<{
+    total: number;
+    connections: Array<{
       spec: {
         hostname: string;
         containerId: string;
@@ -316,7 +316,7 @@ export interface IConnectionListNameSearchResponse {
 
 export interface IUserDetail {
   whoami: {
-    objectMeta: {
+    metadata: {
       name: string;
     };
     fullName: string;

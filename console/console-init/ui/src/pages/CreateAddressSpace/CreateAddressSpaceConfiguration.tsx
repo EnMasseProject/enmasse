@@ -48,7 +48,7 @@ export interface IAddressSpaceConfiguration {
 }
 export interface IAddressSpacePlans {
   addressSpacePlans: Array<{
-    objectMeta: {
+    metadata: {
       name: string;
       uid: string;
       creationTimestamp: Date;
@@ -64,7 +64,7 @@ export interface IAddressSpaceAuthServiceResponse {
 }
 
 export interface IAddressSpaceAuthService {
-  objectMeta: {
+  metadata: {
     name: string;
   };
   spec: {
@@ -74,7 +74,7 @@ export interface IAddressSpaceAuthService {
 
 export interface INamespaces {
   namespaces: Array<{
-    objectMeta: {
+    metadata: {
       name: string;
     };
     status: {
@@ -154,8 +154,8 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
 
   namespaceOptions = namespaces.map(namespace => {
     return {
-      value: namespace.objectMeta.name,
-      label: namespace.objectMeta.name
+      value: namespace.metadata.name,
+      label: namespace.metadata.name
     };
   });
   if (type) {
@@ -164,8 +164,8 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
         .map(plan => {
           if (plan.spec.addressSpaceType === type) {
             return {
-              value: plan.objectMeta.name,
-              label: plan.objectMeta.name
+              value: plan.metadata.name,
+              label: plan.metadata.name
             };
           }
         })
@@ -174,7 +174,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
 
   if (authenticationServices) {
     authenticationServices.addressSpaceSchema_v2.forEach(authService => {
-      if (authService.objectMeta.name === type) {
+      if (authService.metadata.name === type) {
         authenticationServiceOptions = authService.spec.authenticationServices.map(
           service => {
             return {

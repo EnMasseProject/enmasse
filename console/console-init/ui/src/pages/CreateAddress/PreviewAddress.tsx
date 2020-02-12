@@ -55,7 +55,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   const { data, loading, error } = useQuery(ADDRESS_COMMAND_PRIVIEW_DETAIL, {
     variables: {
       a: {
-        objectMeta: {
+        metadata: {
           name: addressspace + "." + name,
           namespace: namespace
         },

@@ -53,7 +53,7 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
     {
       variables: {
         as: {
-          objectMeta: {
+          metadata: {
             name: name,
             namespace: namespace
           },

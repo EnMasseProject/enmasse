@@ -46,8 +46,8 @@ const getAddressesList = () =>
 
 interface IAddressSpaceDetailResponse {
   addressSpaces: {
-    AddressSpaces: Array<{
-      objectMeta: {
+    addressSpaces: Array<{
+      metadata: {
         namespace: string;
         name: string;
         creationTimestamp: string;
@@ -98,10 +98,10 @@ export default function AddressSpaceDetailPage() {
     console.log(error);
   }
   const { addressSpaces } = data || {
-    addressSpaces: { Total: 0, AddressSpaces: [] }
+    addressSpaces: { total: 0, addressSpaces: [] }
   };
 
-  if (!addressSpaces || addressSpaces.AddressSpaces.length <= 0) {
+  if (!addressSpaces || addressSpaces.addressSpaces.length <= 0) {
     return <Loading />;
   }
 
@@ -155,10 +155,10 @@ export default function AddressSpaceDetailPage() {
     });
   };
   const addressSpaceDetails: IAddressSpaceHeaderProps = {
-    name: addressSpaces.AddressSpaces[0].objectMeta.name,
-    namespace: addressSpaces.AddressSpaces[0].objectMeta.namespace,
-    createdOn: addressSpaces.AddressSpaces[0].objectMeta.creationTimestamp,
-    type: addressSpaces.AddressSpaces[0].spec.type,
+    name: addressSpaces.addressSpaces[0].metadata.name,
+    namespace: addressSpaces.addressSpaces[0].metadata.namespace,
+    createdOn: addressSpaces.addressSpaces[0].metadata.creationTimestamp,
+    type: addressSpaces.addressSpaces[0].spec.type,
     onDownload: data => {
       downloadCertificate(data);
     },

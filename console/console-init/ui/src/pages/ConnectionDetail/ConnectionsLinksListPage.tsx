@@ -62,14 +62,14 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
     console.log(error);
   }
   const { connections } = data || {
-    connections: { Total: 0, Connections: [] }
+    connections: { total: 0, connections: [] }
   };
-  const connection = connections.Connections[0];
+  const connection = connections.connections[0];
   let linkRows: ILink[] = [];
-  if (connection && connection.links.Total > 0) {
-    setTotalLinks(connection.links.Total);
-    linkRows = connection.links.Links.map(link => ({
-      name: link.objectMeta.name,
+  if (connection && connection.links.total > 0) {
+    setTotalLinks(connection.links.total);
+    linkRows = connection.links.links.map(link => ({
+      name: link.metadata.name,
       role: link.spec.role,
       address: link.spec.address,
       deliveries: getFilteredValue(link.metrics, "enmasse_deliveries"),

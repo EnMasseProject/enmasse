@@ -72,21 +72,21 @@ export default function AddressDetailPage() {
 
   const addressSpaces = useQuery<IAddressSpacePlanResponse>(
     CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
-  ).data || { addressSpaces: { AddressSpaces: [] } };
+  ).data || { addressSpaces: { addressSpaces: [] } };
 
-  if (!addressSpacePlan && addressSpaces.addressSpaces.AddressSpaces[0]) {
+  if (!addressSpacePlan && addressSpaces.addressSpaces.addressSpaces[0]) {
     setAddressSpacePlan(
-      addressSpaces.addressSpaces.AddressSpaces[0].spec.plan.objectMeta.name
+      addressSpaces.addressSpaces.addressSpaces[0].spec.plan.metadata.name
     );
   }
 
   if (loading) return <Loading />;
   if (error) console.log(error);
   const { addresses } = data || {
-    addresses: { Total: 0, Addresses: [] }
+    addresses: { total: 0, addresses: [] }
   };
 
-  const addressDetail = addresses && addresses.Addresses[0];
+  const addressDetail = addresses && addresses.addresses[0];
   if (addressPlan === null) {
     setAddressPlan(addressDetail.spec.plan.spec.displayName);
   }
@@ -112,8 +112,8 @@ export default function AddressDetailPage() {
   };
   const handleDelete = () => {
     deleteAddress({
-      name: addressDetail.objectMeta.name,
-      namespace: addressDetail.objectMeta.namespace.toString()
+      name: addressDetail.metadata.name,
+      namespace: addressDetail.metadata.namespace.toString()
     });
   };
 
@@ -123,8 +123,8 @@ export default function AddressDetailPage() {
         mutation: EDIT_ADDRESS,
         variables: {
           a: {
-            name: addressDetail.objectMeta.name,
-            namespace: addressDetail.objectMeta.namespace.toString()
+            name: addressDetail.metadata.name,
+            namespace: addressDetail.metadata.namespace.toString()
           },
           jsonPatch:
             '[{"op":"replace","path":"/Plan","value":"' + addressPlan + '"}]',
@@ -185,7 +185,7 @@ export default function AddressDetailPage() {
         isFooterLeftAligned
       >
         <EditAddress
-          name={addressDetail.objectMeta.name}
+          name={addressDetail.metadata.name}
           type={addressDetail.spec.plan.spec.addressType}
           plan={addressPlan || ""}
           addressSpacePlan={addressSpacePlan}
@@ -196,7 +196,7 @@ export default function AddressDetailPage() {
         <DialoguePrompt
           option="Delete"
           detail={`Are you sure you want to delete this address: ${addressDetail.spec.address} ?`}
-          names={[addressDetail.objectMeta.name]}
+          names={[addressDetail.metadata.name]}
           header="Delete this Address ?"
           handleCancelDialogue={handleCancelDelete}
           handleConfirmDialogue={handleDelete}

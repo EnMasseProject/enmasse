@@ -25,7 +25,7 @@ interface IEditAddressProps {
 
 interface IAddressPlans {
   addressPlans: Array<{
-    objectMeta: {
+    metadata: {
       name: String;
     };
     spec: {
@@ -55,7 +55,7 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
   let optionsPlan: any[] = addressPlans
     .map(plan => {
       return {
-        value: plan.objectMeta.name,
+        value: plan.metadata.name,
         label: plan.spec.displayName,
         disabled: false
       };

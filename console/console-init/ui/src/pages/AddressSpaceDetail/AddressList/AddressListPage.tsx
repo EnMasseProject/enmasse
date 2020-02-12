@@ -119,16 +119,16 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   if (loading) return <Loading />;
   if (error) return <Loading />;
   const { addresses } = data || {
-    addresses: { Total: 0, Addresses: [] }
+    addresses: { total: 0, addresses: [] }
   };
-  setTotalAddress(addresses.Total);
-  const addressesList: IAddress[] = addresses.Addresses.map(address => ({
-    name: address.objectMeta.name,
+  setTotalAddress(addresses.total);
+  const addressesList: IAddress[] = addresses.addresses.map(address => ({
+    name: address.metadata.name,
     displayName: address.spec.address,
-    namespace: address.objectMeta.namespace,
+    namespace: address.metadata.namespace,
     type: address.spec.type,
     planLabel: address.spec.plan.spec.displayName,
-    planValue: address.spec.plan.objectMeta.name,
+    planValue: address.spec.plan.metadata.name,
     messageIn: getFilteredValue(address.metrics, "enmasse_messages_in"),
     messageOut: getFilteredValue(address.metrics, "enmasse_messages_out"),
     storedMessages: getFilteredValue(
@@ -149,9 +149,9 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       selectedAddresses.filter(({ name, namespace }) =>
         compareTwoAddress(
           name,
-          address.objectMeta.name,
+          address.metadata.name,
           namespace,
-          address.objectMeta.namespace
+          address.metadata.namespace
         )
       ).length == 1
   }));
@@ -248,7 +248,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         onSelectAddress={onSelectAddress}
         onSelectAllAddress={onSelectAllAddress}
       />
-      {addresses.Total > 0 ? (
+      {addresses.total > 0 ? (
         " "
       ) : (
         <EmptyAddress

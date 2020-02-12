@@ -172,17 +172,17 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   }
 
   const { addressSpaces } = data || {
-    addressSpaces: { Total: 0, AddressSpaces: [] }
+    addressSpaces: { total: 0, addressSpaces: [] }
   };
-  setTotalAddressSpaces(addressSpaces.Total);
+  setTotalAddressSpaces(addressSpaces.total);
   console.log(addressSpaces);
-  const addressSpacesList: IAddressSpace[] = addressSpaces.AddressSpaces.map(
+  const addressSpacesList: IAddressSpace[] = addressSpaces.addressSpaces.map(
     addSpace => ({
-      name: addSpace.objectMeta.name,
-      nameSpace: addSpace.objectMeta.namespace,
-      creationTimestamp: addSpace.objectMeta.creationTimestamp,
+      name: addSpace.metadata.name,
+      nameSpace: addSpace.metadata.namespace,
+      creationTimestamp: addSpace.metadata.creationTimestamp,
       type: addSpace.spec.type,
-      planValue: addSpace.spec.plan.objectMeta.name,
+      planValue: addSpace.spec.plan.metadata.name,
       displayName: addSpace.spec.plan.spec.displayName,
       isReady: addSpace.status && addSpace.status.isReady,
       phase:
@@ -199,9 +199,9 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
         selectedAddressSpaces.filter(({ name, nameSpace }) =>
           compareTwoAddress(
             name,
-            addSpace.objectMeta.name,
+            addSpace.metadata.name,
             nameSpace,
-            addSpace.objectMeta.namespace
+            addSpace.metadata.namespace
           )
         ).length == 1
     })

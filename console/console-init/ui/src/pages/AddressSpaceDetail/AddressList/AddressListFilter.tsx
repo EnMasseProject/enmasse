@@ -156,13 +156,13 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
       response &&
       response.data &&
       response.data.addresses &&
-      response.data.addresses.Addresses
+      response.data.addresses.addresses
     ) {
       //To display dropdown if fetched records are less than 100 in count.
-      if (response.data.addresses.Total > 100) {
+      if (response.data.addresses.total > 100) {
         setNameOptions([]);
       } else {
-        const obtainedList = response.data.addresses.Addresses.map(
+        const obtainedList = response.data.addresses.addresses.map(
           (address: any) => {
             return address.spec.address;
           }

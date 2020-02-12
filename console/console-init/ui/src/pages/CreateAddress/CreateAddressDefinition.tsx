@@ -56,7 +56,7 @@ export interface IAddressDefinition {
 }
 interface IAddressPlans {
   addressPlans: Array<{
-    objectMeta: {
+    metadata: {
       name: string;
     };
     spec: {
@@ -114,7 +114,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
       if (addressPlans.data && addressPlans.data.addressPlans.length > 0) {
         const planOptions = addressPlans.data.addressPlans.map(plan => {
           return {
-            value: plan.objectMeta.name,
+            value: plan.metadata.name,
             label: plan.spec.displayName,
             description: plan.spec.shortDescription
           };
@@ -134,13 +134,13 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
         if (
           topics_addresses.data &&
           topics_addresses.data.addresses &&
-          topics_addresses.data.addresses.Addresses.length > 0
+          topics_addresses.data.addresses.addresses.length > 0
         ) {
-          const topics = topics_addresses.data.addresses.Addresses.map(
+          const topics = topics_addresses.data.addresses.addresses.map(
             address => {
               return {
                 value: address.spec.address,
-                label: address.objectMeta.name
+                label: address.metadata.name
               };
             }
           );

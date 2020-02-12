@@ -39,10 +39,10 @@ export const GridStylesForTableHeader = StyleSheet.create({
 
 export interface IAddressSpacePlanResponse {
   addressSpaces: {
-    AddressSpaces: Array<{
+    addressSpaces: Array<{
       spec: {
         plan: {
-          objectMeta: {
+          metadata: {
             name: string;
           };
         };
@@ -99,13 +99,11 @@ export default function AddressesList() {
   );
 
   const { addressSpaces } = data || {
-    addressSpaces: { AddressSpaces: [] }
+    addressSpaces: { addressSpaces: [] }
   };
 
-  if (!addressSpacePlan && addressSpaces.AddressSpaces[0]) {
-    setAddressSpacePlan(
-      addressSpaces.AddressSpaces[0].spec.plan.objectMeta.name
-    );
+  if (!addressSpacePlan && addressSpaces.addressSpaces[0]) {
+    setAddressSpacePlan(addressSpaces.addressSpaces[0].spec.plan.metadata.name);
   }
 
   const setSearchParam = React.useCallback(

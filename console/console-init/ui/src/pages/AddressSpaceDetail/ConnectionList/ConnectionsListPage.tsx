@@ -61,10 +61,10 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
   }
   // if (loading) return <Loading />;
   const { connections } = data || {
-    connections: { Total: 0, Connections: [] }
+    connections: { total: 0, connections: [] }
   };
-  setTotalConnections(connections.Total);
-  const connectionList: IConnection[] = connections.Connections.map(
+  setTotalConnections(connections.total);
+  const connectionList: IConnection[] = connections.connections.map(
     connection => ({
       hostname: connection.spec.hostname,
       containerId: connection.spec.containerId,
@@ -75,8 +75,8 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
       senders: getFilteredValue(connection.metrics, "enmasse_senders"),
       receivers: getFilteredValue(connection.metrics, "enmasse_receivers"),
       status: "running",
-      name: connection.objectMeta.name,
-      creationTimestamp: connection.objectMeta.creationTimestamp
+      name: connection.metadata.name,
+      creationTimestamp: connection.metadata.creationTimestamp
     })
   );
 
@@ -91,7 +91,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
         sortBy={sortBy}
         onSort={onSort}
       />
-      {connections.Total > 0 ? " " : <EmptyConnection />}
+      {connections.total > 0 ? " " : <EmptyConnection />}
     </>
   );
 };

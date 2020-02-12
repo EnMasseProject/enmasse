@@ -43,7 +43,7 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
         mutation: CREATE_ADDRESS_SPACE,
         variables: {
           as: {
-            objectMeta: {
+            metadata: {
               name: addressSpaceName,
               namespace: namespace
             },
