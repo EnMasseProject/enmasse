@@ -72,6 +72,7 @@ public class AddressSpaceController {
 
     private HTTPServer metricsServer;
     private ControllerChain controllerChain;
+    private RouterStatusCache routerStatusCache;
 
     private AddressSpaceController(AddressSpaceControllerOptions options) {
         Config config = new ConfigBuilder().build();
@@ -119,6 +120,9 @@ public class AddressSpaceController {
         KeycloakRealmApi keycloakRealmApi = new KeycloakRealmApi(keycloakFactory, clock, Duration.ZERO);
         schemaProvider.registerListener(newSchema -> keycloakRealmApi.retainAuthenticationServices(newSchema.findAuthenticationServiceType(AuthenticationServiceType.standard)));
 
+        routerStatusCache = new RouterStatusCache(eventLogger, options.getRouterStatusCheckInterval(), controllerClient, controllerClient.getNamespace(), options.getManagementConnectTimeout(), options.getManagementQueryTimeout());
+        routerStatusCache.start();
+
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new DefaultsController(authenticationServiceRegistry));
@@ -131,8 +135,8 @@ public class AddressSpaceController {
         controllerChain.addController(new PodDisruptionBudgetController(controllerClient, controllerClient.getNamespace()));
         controllerChain.addController(new RealmController(keycloakRealmApi, authenticationServiceRegistry));
         controllerChain.addController(new NetworkPolicyController(controllerClient));
-        controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, authenticationServiceRegistry, keycloakRealmApi,
-                new RouterStatusController(controllerClient, controllerClient.getNamespace(), options)));
+        controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, authenticationServiceRegistry, keycloakRealmApi, routerStatusCache));
+        controllerChain.addController(routerStatusCache);
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault(), isOpenShift));
         controllerChain.addController(new ExportsController(controllerClient));
         controllerChain.addController(authController);
@@ -193,6 +197,7 @@ public class AddressSpaceController {
             if (metricsServer != null) {
                 metricsServer.stop();
             }
+
         } finally {
             try {
                 if (controllerChain != null) {
@@ -203,7 +208,16 @@ public class AddressSpaceController {
                 }
             } finally {
                 controllerClient.close();
-                log.info("AddressSpaceController stopped");
+                try {
+                    if (routerStatusCache != null) {
+                        try {
+                            routerStatusCache.stop();
+                        } catch (Exception ignore) {
+                        }
+                    }
+                } finally {
+                    log.info("AddressSpaceController stopped");
+                }
             }
         }
     }

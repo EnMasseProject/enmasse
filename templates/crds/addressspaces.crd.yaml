@@ -379,7 +379,7 @@ spec:
                     type: string
                   undelivered:
                     type: integer
-                  neighbours:
+                  neighbors:
                     type: array
                     items:
                       type: string

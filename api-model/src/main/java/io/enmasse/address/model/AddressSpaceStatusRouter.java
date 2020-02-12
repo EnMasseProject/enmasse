@@ -37,10 +37,10 @@ public class AddressSpaceStatusRouter extends AbstractWithAdditionalProperties {
         @NotNull
         private String id;
 
-        private Integer undelivered;
+        private Long undelivered;
 
         @JsonSetter(nulls = Nulls.AS_EMPTY)
-        private List<String> neighbours = new ArrayList<>();
+        private List<String> neighbors = new ArrayList<>();
 
         public String getId() {
                 return id;
@@ -50,20 +50,20 @@ public class AddressSpaceStatusRouter extends AbstractWithAdditionalProperties {
                 this.id = id;
         }
 
-        public Integer getUndelivered() {
+        public Long getUndelivered() {
                 return undelivered;
         }
 
-        public void setUndelivered(Integer undelivered) {
+        public void setUndelivered(Long undelivered) {
                 this.undelivered = undelivered;
         }
 
-        public List<String> getNeighbours() {
-                return neighbours;
+        public List<String> getNeighbors() {
+                return neighbors;
         }
 
-        public void setNeighbours(List<String> neighbours) {
-                this.neighbours = neighbours;
+        public void setNeighbors(List<String> neighbors) {
+                this.neighbors = neighbors;
         }
 
         @Override
@@ -71,7 +71,7 @@ public class AddressSpaceStatusRouter extends AbstractWithAdditionalProperties {
                 return "AddressSpaceStatusRouter{" +
                         "id='" + id + '\'' +
                         ", undelivered=" + undelivered +
-                        ", neighbours=" + neighbours +
+                        ", neighbors=" + neighbors +
                         '}';
         }
 
@@ -82,11 +82,11 @@ public class AddressSpaceStatusRouter extends AbstractWithAdditionalProperties {
                 AddressSpaceStatusRouter that = (AddressSpaceStatusRouter) o;
                 return Objects.equals(id, that.id) &&
                         Objects.equals(undelivered, that.undelivered) &&
-                        Objects.equals(neighbours, that.neighbours);
+                        Objects.equals(neighbors, that.neighbors);
         }
 
         @Override
         public int hashCode() {
-                return Objects.hash(id, undelivered, neighbours);
+                return Objects.hash(id, undelivered, neighbors);
         }
 }

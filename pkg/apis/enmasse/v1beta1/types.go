@@ -190,7 +190,7 @@ type ConnectorStatus struct {
 
 type RouterStatus struct {
 	Id          string   `json:"id"`
-	Neighbours  []string `json:"neighbours,omitempty"`
+	Neighbors  []string `json:"neighbors,omitempty"`
 	Undelivered int      `json:"undelivered"`
 }
 

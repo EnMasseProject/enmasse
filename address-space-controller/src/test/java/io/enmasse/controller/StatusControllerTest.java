@@ -9,12 +9,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Optional;
 
 import io.enmasse.address.model.AuthenticationService;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
+import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.LogEventLogger;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import org.junit.jupiter.api.Test;
 
@@ -60,7 +63,7 @@ public class StatusControllerTest {
         AuthenticationServiceRegistry authenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
         when(authenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.empty());
         StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory, authenticationServiceRegistry, null,
-                new RouterStatusController(mock(NamespacedKubernetesClient.class), "test", new AddressSpaceControllerOptions()));
+                new RouterStatusCache(new LogEventLogger(), Duration.ofSeconds(100), mock(NamespacedKubernetesClient.class), "test", Duration.ofSeconds(100), Duration.ofSeconds(100)));
 
         AuthenticationService authenticationService = new AuthenticationService();
         authenticationService.setType(AuthenticationServiceType.NONE);
