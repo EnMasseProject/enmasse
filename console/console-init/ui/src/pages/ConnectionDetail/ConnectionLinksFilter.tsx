@@ -205,7 +205,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       } else {
         const obtainedList = response.data.connections.connections[0].links.links.map(
           (link: any) => {
-            return link.metadata.Name;
+            return link.metadata.name;
           }
         );
         setNameOptions(Array.from(new Set(obtainedList)));
@@ -252,7 +252,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       } else {
         const obtainedList = response.data.connections.connections[0].links.links.map(
           (link: any) => {
-            return link.spec.Address;
+            return link.spec.address;
           }
         );
         setAddressOptions(Array.from(new Set(obtainedList)));

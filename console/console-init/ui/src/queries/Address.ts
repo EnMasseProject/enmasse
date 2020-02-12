@@ -101,20 +101,20 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_SORT=(sortBy?: ISortBy)=>{
         orderBy = "`$.metadata.name` ";
         break;
       case 4:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_messages_in')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_in')].value` ";
         break;
       case 5:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_messages_out')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_out')].value` ";
         break;
       case 6:
         orderBy =
-          "`$.metrics[?(@.Name=='enmasse_messages_stored')].value` ";
+          "`$.metrics[?(@.name=='enmasse_messages_stored')].value` ";
         break;
       case 7:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_senders')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_senders')].value` ";
         break;
       case 8:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_receivers')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_receivers')].value` ";
         break;
       default:
         break;
@@ -390,11 +390,11 @@ const ADDRESS_LINKS_SORT=(sortBy?: ISortBy,)=>{
         orderBy = "`$.metadata.name` ";
         break;
       case 3:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_messages_in')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_in')].value` ";
         break;
       case 4:
         orderBy =
-          "`$.metrics[?(@.Name=='enmasse_messages_backlog')].value` ";
+          "`$.metrics[?(@.name=='enmasse_messages_backlog')].value` ";
         break;
       default:
         break;

@@ -113,16 +113,16 @@ const ALL_CONECTION_LIST_SORT=(sortBy?: ISortBy)=>{
         orderBy = "`$.metadata.creationTimestamp` ";
         break;
       case 4:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_messages_in')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_in')].value` ";
         break;
       case 5:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_messages_out')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_out')].value` ";
         break;
       case 6:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_senders')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_senders')].value` ";
         break;
       case 7:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_receivers')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_receivers')].value` ";
         break;
       default:
         break;
@@ -239,25 +239,25 @@ const CONNECTION_LINKS_SORT=( sortBy?: ISortBy,)=>{
         orderBy = "`$.spec.address` ";
         break;
       case 3:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_deliveries')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_deliveries')].value` ";
         break;
       case 4:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_accepted')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_accepted')].value` ";
         break;
       case 5:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_rejected')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_rejected')].value` ";
         break;
       case 5:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_released')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_released')].value` ";
         break;
       case 7:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_modified')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_modified')].value` ";
         break;
       case 8:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_presettled')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_presettled')].value` ";
         break;
       case 9:
-        orderBy = "`$.metrics[?(@.Name=='enmasse_undelivered')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_undelivered')].value` ";
         break;
       default:
         break;

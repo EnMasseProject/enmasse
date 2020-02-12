@@ -200,7 +200,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       } else {
         const obtainedList = response.data.addresses.addresses[0].links.links.map(
           (link: any) => {
-            return link.metadata.Name;
+            return link.metadata.name;
           }
         );
         setNameOptions(Array.from(new Set(obtainedList)));
