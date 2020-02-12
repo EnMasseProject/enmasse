@@ -307,12 +307,10 @@ public class AddressSpaceUtils {
      * @return
      */
     public static boolean areAddressSpaceConnectorsReady(AddressSpace addressSpace) {
-        return Optional.ofNullable(addressSpace)
-                .map(AddressSpace::getStatus)
-                .map(AddressSpaceStatus::getConnectors)
-                .map(c -> c.stream()
-                        .allMatch(AddressSpaceStatusConnector::isReady))
-                .orElse(false);
+        int expectedConnectors = addressSpace.getSpec().getConnectors().size();
+        return addressSpace.getStatus().getConnectors().size() == expectedConnectors &&
+                addressSpace.getStatus().getConnectors().stream()
+                .allMatch(AddressSpaceStatusConnector::isReady);
     }
 
     public static String getConnectorStatuses(AddressSpace addressSpace) {

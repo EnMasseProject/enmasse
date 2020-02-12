@@ -176,10 +176,8 @@ public class AddressUtils {
     }
 
     public static boolean areForwardersReady(Address address) {
-        return Optional.ofNullable(address)
-                .map(Address::getStatus)
-                .map(AddressStatus::getForwarders).stream()
-                .flatMap(Collection::stream)
+        int expectedForwarders = address.getSpec().getForwarders().size();
+        return expectedForwarders == address.getStatus().getForwarders().size() && address.getStatus().getForwarders().stream()
                 .allMatch(AddressStatusForwarder::isReady);
     }
 
