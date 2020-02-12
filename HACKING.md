@@ -97,7 +97,7 @@ By default the test suite tears down the EnMasse deployment and namespace after 
 
 #### Run single system test
 
-    make TEST="shared.standard.QueueTest#testCreateDeleteQueue" systemtests
+    make TESTCASE="shared.standard.QueueTest#testCreateDeleteQueue" systemtests
 
 #### Systemtests management of enmasse's installation
 

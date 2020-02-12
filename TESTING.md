@@ -38,7 +38,7 @@ make PROFILE=${PROFILE} systemtests
 ##  Running a single test class
 
 ```shell script
-make PROFILE=${PROFILE} TEST="**.SmokeTest" systemtests
+make PROFILE=${PROFILE} TESTCASE="**.SmokeTest" systemtests
 ```
 
 Where $PROFILE can be:
