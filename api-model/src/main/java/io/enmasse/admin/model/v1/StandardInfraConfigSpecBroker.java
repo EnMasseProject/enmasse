@@ -23,7 +23,7 @@ import io.sundr.builder.annotations.Inline;
         refs = {@BuildableReference(AbstractHasMetadataWithAdditionalProperties.class)},
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"resources", "addressFullPolicy", "globalMaxSize", "storageClassName", "updatePersistentVolumeClaim", "podTemplate", "connectorIdleTimeout", "connectorWorkerThreads", "minAvailable", "maxUnavailable"})
+@JsonPropertyOrder({"resources", "addressFullPolicy", "globalMaxSize", "storageClassName", "updatePersistentVolumeClaim", "podTemplate", "connectorIdleTimeout", "connectorWorkerThreads", "minAvailable", "maxUnavailable", "javaOpts"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalProperties {
     private StandardInfraConfigSpecBrokerResources resources;
@@ -36,6 +36,7 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
     private Integer connectorWorkerThreads;
     private IntOrString minAvailable;
     private IntOrString maxUnavailable;
+    private String javaOpts;
 
     public void setResources(StandardInfraConfigSpecBrokerResources resources) {
         this.resources = resources;
@@ -126,6 +127,14 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
         this.maxUnavailable = maxUnavailable;
     }
 
+    public void setJavaOpts(String javaOpts) {
+        this.javaOpts = javaOpts;
+    }
+
+    public String getJavaOpts() {
+        return javaOpts;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -140,12 +149,13 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
                 Objects.equals(connectorIdleTimeout, that.connectorIdleTimeout) &&
                 Objects.equals(connectorWorkerThreads, that.connectorWorkerThreads) &&
                 Objects.equals(minAvailable, that.minAvailable) &&
-                Objects.equals(maxUnavailable, that.maxUnavailable);
+                Objects.equals(maxUnavailable, that.maxUnavailable) &&
+                Objects.equals(javaOpts, that.javaOpts);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim, podTemplate, connectorIdleTimeout, connectorWorkerThreads, minAvailable, maxUnavailable);
+        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim, podTemplate, connectorIdleTimeout, connectorWorkerThreads, minAvailable, maxUnavailable, javaOpts);
     }
 
     @Override
@@ -161,6 +171,7 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
                 ", connectorWorkerThreads=" + connectorWorkerThreads +
                 ", minAvailable=" + minAvailable +
                 ", maxUnavailable=" + maxUnavailable +
+                ", javaOpts=" + javaOpts +
                 '}';
     }
 

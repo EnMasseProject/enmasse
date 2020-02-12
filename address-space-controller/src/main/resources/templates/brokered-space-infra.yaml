@@ -81,6 +81,8 @@ objects:
             value: brokered
           - name: ADDRESS_FULL_POLICY
             value: ${BROKER_ADDRESS_FULL_POLICY}
+          - name: JAVA_OPTS
+            value: ${BROKER_JAVA_OPTS}
           - name: CERT_DIR
             value: /etc/enmasse-certs
           - name: AUTHENTICATION_SERVICE_HOST
@@ -142,6 +144,8 @@ objects:
             value: brokered
           - name: ADDRESS_FULL_POLICY
             value: ${BROKER_ADDRESS_FULL_POLICY}
+          - name: JAVA_OPTS
+            value: ${BROKER_JAVA_OPTS}
           - name: GLOBAL_MAX_SIZE
             value: ${BROKER_GLOBAL_MAX_SIZE}
           - name: AUTHENTICATION_SERVICE_HOST
@@ -468,6 +472,9 @@ parameters:
 - description: Broker address full policy
   name: BROKER_ADDRESS_FULL_POLICY
   value: FAIL
+- description: Broker Java Options
+  name: BROKER_JAVA_OPTS
+  value: ""
 - name: IMAGE_PULL_POLICY
   description: Image Pull Policy
   value: ${env.IMAGE_PULL_POLICY}

@@ -116,6 +116,8 @@ objects:
             value: ${BROKER_CONNECTOR_IDLE_TIMEOUT_MS}
           - name: ADDRESS_FULL_POLICY
             value: ${BROKER_ADDRESS_FULL_POLICY}
+          - name: JAVA_OPTS
+            value: ${BROKER_JAVA_OPTS}
           - name: AUTHENTICATION_SERVICE_HOST
             value: ${AUTHENTICATION_SERVICE_HOST}
           - name: AUTHENTICATION_SERVICE_PORT
@@ -193,6 +195,8 @@ objects:
             value: ${BROKER_GLOBAL_MAX_SIZE}
           - name: ADDRESS_FULL_POLICY
             value: ${BROKER_ADDRESS_FULL_POLICY}
+          - name: JAVA_OPTS
+            value: ${BROKER_JAVA_OPTS}
           - name: AUTHENTICATION_SERVICE_HOST
             value: ${AUTHENTICATION_SERVICE_HOST}
           - name: AUTHENTICATION_SERVICE_PORT
@@ -281,6 +285,9 @@ parameters:
 - description: Address full policy
   name: BROKER_ADDRESS_FULL_POLICY
   value: FAIL
+- description: Broker Java Options
+  name: BROKER_JAVA_OPTS
+  value: ""
 - description: Memory limits for container
   name: BROKER_MEMORY_LIMIT
   value: 512Mi

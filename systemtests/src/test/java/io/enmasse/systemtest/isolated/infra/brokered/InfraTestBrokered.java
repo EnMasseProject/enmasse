@@ -51,6 +51,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                         .withMemory("512Mi")
                         .withStorage("1Gi")
                         .endResources()
+                        .withJavaOpts("-Dsystemtest=property")
                         .withPodTemplate(brokerTemplateSpec)
                         .build())
                 .withAdmin(new BrokeredInfraConfigSpecAdminBuilder()
@@ -113,7 +114,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                 .endSpec()
                 .build());
 
-        assertInfra("512Mi", "1Gi", brokerTemplateSpec, "512Mi", adminTemplateSpec);
+        assertInfra("512Mi", "1Gi", brokerTemplateSpec, "512Mi", adminTemplateSpec, "-Dsystemtest=property");
     }
 
     @Test
@@ -175,7 +176,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
         isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
-                () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? brokerStorage : null, null, adminMemory, null),
+            () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? brokerStorage : null, null, adminMemory, null, null),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
@@ -220,9 +221,9 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
 
     }
 
-    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec) {
+    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec, String javaOpts) {
         assertAdminConsole(adminMemory, adminTemplateSpec);
-        assertBroker(brokerMemory, brokerStorage, brokerTemplateSpec);
+        assertBroker(brokerMemory, brokerStorage, brokerTemplateSpec, javaOpts);
         return true;
     }
 

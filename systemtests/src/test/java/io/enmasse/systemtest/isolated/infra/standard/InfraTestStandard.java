@@ -141,7 +141,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build());
 
-        assertInfra("512Mi", "1Gi", brokerTemplateSpec, 1, "256Mi", routerTemplateSpec, "512Mi", adminTemplateSpec);
+        assertInfra("512Mi", "1Gi", brokerTemplateSpec, 1, "256Mi", routerTemplateSpec, "512Mi", adminTemplateSpec, "-Dsystemtest=property");
     }
 
     @Test
@@ -213,6 +213,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         routerMemory,
                         null,
                         adminMemory,
+                        null,
                         null),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
 
@@ -442,7 +443,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
     }
 
-    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, int routerReplicas, String routermemory, PodTemplateSpec routerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec) {
+    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, int routerReplicas, String routermemory, PodTemplateSpec routerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec, String javaOpts) {
         log.info("Checking router infra");
         List<Pod> routerPods = TestUtils.listRouterPods(kubernetes, exampleAddressSpace);
         assertEquals(routerReplicas, routerPods.size(), "incorrect number of routers");
@@ -462,7 +463,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
             }
         }
         assertAdminConsole(adminMemory, adminTemplateSpec);
-        assertBroker(brokerMemory, brokerStorage, brokerTemplateSpec);
+        assertBroker(brokerMemory, brokerStorage, brokerTemplateSpec, javaOpts);
         return true;
     }
 

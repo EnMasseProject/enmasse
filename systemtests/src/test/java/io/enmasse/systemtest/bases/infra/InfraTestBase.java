@@ -8,7 +8,10 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.systemtest.bases.ITestBase;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Container;
@@ -39,7 +42,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
     protected AddressPlan exampleAddressPlan;
     protected AddressSpace exampleAddressSpace;
 
-    protected void assertBroker(String brokerMemory, String brokerStorage, PodTemplateSpec templateSpec) {
+    protected void assertBroker(String brokerMemory, String brokerStorage, PodTemplateSpec templateSpec, String javaOpts) {
         log.info("Checking broker infra");
         List<Pod> brokerPods = TestUtils.listBrokerPods(kubernetes, exampleAddressSpace);
         assertEquals(1, brokerPods.size());
@@ -56,6 +59,16 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
             PersistentVolumeClaim brokerVolumeClaim = getBrokerPVCData(broker);
             assertEquals(brokerStorage, brokerVolumeClaim.getSpec().getResources().getRequests().get("storage").getAmount(),
                     "Broker data storage request incorrect");
+        }
+
+        if (javaOpts != null) {
+            brokerPods.forEach(pod -> {
+                ExecutionResultData result = KubeCMDClient.runOnCluster("exec", pod.getMetadata().getName(), "-n",
+                        pod.getMetadata().getNamespace(), "ps", "auxww");
+                assertTrue(result.getRetCode(), result.getStdOut());
+                assertTrue(result.getStdOut().contains(javaOpts),
+                        "Unable to find expected java opts in process argument list: " + result.getStdOut());
+            });
         }
 
         if (templateSpec != null) {

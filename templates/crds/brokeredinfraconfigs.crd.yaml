@@ -106,6 +106,8 @@ spec:
                       type: string
                     storage:
                       type: string
+                javaOpts:
+                  type: string
                 addressFullPolicy:
                   type: string
                   enum:
