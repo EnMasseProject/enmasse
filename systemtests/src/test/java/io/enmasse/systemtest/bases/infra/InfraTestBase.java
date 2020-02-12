@@ -11,6 +11,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Container;
@@ -62,8 +63,8 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
 
         if (javaOpts != null) {
             brokerPods.forEach(pod -> {
-                ExecutionResultData result = Exec.execute(List.of("kubectl", "exec", pod.getMetadata().getName(), "-n",
-                        pod.getMetadata().getNamespace(), "ps", "auxww"), true);
+                ExecutionResultData result = KubeCMDClient.runOnCluster("exec", pod.getMetadata().getName(), "-n",
+                        pod.getMetadata().getNamespace(), "ps", "auxww");
                 assertTrue(result.getRetCode(), result.getStdOut());
                 assertTrue(result.getStdOut().contains(javaOpts),
                         "Unable to find expected java opts in process argument list: " + result.getStdOut());
