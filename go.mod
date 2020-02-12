@@ -34,6 +34,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.9.4 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.8.1 // indirect
 	github.com/Nerzal/gocloak/v3 v3.7.0
+	github.com/coreos/prometheus-operator v0.34.0
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
 	github.com/google/uuid v1.1.1
