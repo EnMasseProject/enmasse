@@ -24,6 +24,7 @@ import { EditAddress } from "pages/EditAddressPage";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { ISortBy, IRowData } from "@patternfly/react-table";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
+import { ErrorAlert } from "components/common/ErrorAlert";
 
 export interface IAddressListPageProps {
   name?: string;
@@ -117,7 +118,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   }
 
   if (loading) return <Loading />;
-  if (error) return <Loading />;
+  if (error) return <ErrorAlert error={error} />;
+
   const { addresses } = data || {
     addresses: { Total: 0, Addresses: [] }
   };

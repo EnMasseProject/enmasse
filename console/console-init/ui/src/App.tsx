@@ -15,6 +15,7 @@ import { AppRoutes } from "AppRoutes";
 import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
 import avatarImg from "./img_avatar.svg";
+import { ErrorBoundary } from "./components/common/ErrorBoundary";
 
 const graphqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT
   ? process.env.REACT_APP_GRAPHQL_ENDPOINT
@@ -41,14 +42,16 @@ const App: React.FC = () => {
   );
   return (
     <ApolloProvider client={client}>
-      <AppLayout
-        logoProps={logoProps}
-        logo={logo}
-        avatar={avatar}
-        toolbar={<NavToolBar />}
-      >
-        <AppRoutes />
-      </AppLayout>
+      <ErrorBoundary>
+        <AppLayout
+          logoProps={logoProps}
+          logo={logo}
+          avatar={avatar}
+          toolbar={<NavToolBar />}
+        >
+          <AppRoutes />
+        </AppLayout>
+      </ErrorBoundary>
     </ApolloProvider>
   );
 };
