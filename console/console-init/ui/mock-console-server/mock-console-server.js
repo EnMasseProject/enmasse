@@ -636,8 +636,8 @@ function createConnection(addressSpace, hostname) {
       hostname: hostport,
       containerId: uuidv1() + "",
       protocol: encrypted ? "amqps" : "amqp",
-      ecrypted: encrypted,
-      poperties: properties,
+      encrypted: encrypted,
+      properties: properties,
       metrics: []
     }
   };
@@ -1387,7 +1387,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       var orderBy = orderer(args.orderBy);
       var copy = clone(connections);
       copy.forEach(c => {
-        c.Metrics = makeMockConnectionMetrics();
+        c.metrics = makeMockConnectionMetrics();
       });
       var cons = copy.filter(c => filterer.evaluate(c)).sort(orderBy);
 

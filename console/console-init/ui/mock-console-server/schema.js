@@ -181,7 +181,7 @@ const typeDefs = gql`
     }
     
     type AuthenticationService_enmasse_io_v1beta1 {
-        Name: String!
+        name: String!
     }    
 
     type AddressSpaceStatus_enmasse_io_v1beta1 {
