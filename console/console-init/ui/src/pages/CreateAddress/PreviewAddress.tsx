@@ -56,17 +56,17 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
     variables: {
       a: {
         ObjectMeta: {
-          Name: addressspace + "." + name,
           Namespace: namespace
         },
         Spec: {
           Plan: plan ? plan.toLowerCase() : "",
           Type: type ? type.toLowerCase() : "",
-          ...(topic && topic.trim() != "" && { Topic: topic }),
+          ...(topic && topic.trim() !== "" && { Topic: topic }),
           AddressSpace: addressspace,
           Address: name
         }
-      }
+      },
+      as: addressspace
     }
   });
   if (loading) return <Loading />;

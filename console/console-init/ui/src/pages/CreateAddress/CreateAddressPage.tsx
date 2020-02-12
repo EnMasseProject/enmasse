@@ -58,7 +58,6 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
       const getVariables = () => {
         let variable: any = {
           ObjectMeta: {
-            Name: addressSpace + "." + addressName,
             Namespace: namespace
           },
           Spec: {
@@ -75,7 +74,8 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
       const data = await client.mutate({
         mutation: CREATE_ADDRESS,
         variables: {
-          a: getVariables()
+          a: getVariables(),
+          as: addressSpace
         }
       });
       if (data.data) {
