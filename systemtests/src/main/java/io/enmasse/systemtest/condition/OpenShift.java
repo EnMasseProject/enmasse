@@ -15,5 +15,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @ExtendWith(AssumeOpenshiftCondition.class)
 public @interface OpenShift {
-    int version() default 0;
+    OpenShiftVersion version() default OpenShiftVersion.WHATEVER;
 }
