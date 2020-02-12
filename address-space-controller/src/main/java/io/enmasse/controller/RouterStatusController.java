@@ -4,11 +4,7 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceSpecConnector;
-import io.enmasse.address.model.AddressSpaceSpecConnectorEndpoint;
-import io.enmasse.address.model.AddressSpaceStatusConnector;
-import io.enmasse.address.model.KubeUtil;
+import io.enmasse.address.model.*;
 import io.enmasse.amqp.RouterEntity;
 import io.enmasse.amqp.RouterManagement;
 import io.enmasse.config.AnnotationKeys;
@@ -51,7 +47,8 @@ public class RouterStatusController {
 
 
     private static final RouterEntity connection = new RouterEntity( "org.apache.qpid.dispatch.connection", "operStatus", "opened", "host");
-    private static final RouterEntity node = new RouterEntity("org.apache.qpid.dispatch.router.node", "id");
+    private static final RouterEntity node = new RouterEntity("org.apache.qpid.dispatch.router.node", "id", "nextHop");
+    private static final RouterEntity link = new RouterEntity("org.apache.qpid.dispatch.router.link", "linkType", "undeliveredCount");
 
     void checkRouterConnectorStatus(AddressSpace addressSpace) {
         checkRouterStatus(addressSpace, connection, node);
@@ -130,8 +127,9 @@ public class RouterStatusController {
         }
 
         if (results.containsKey(node)) {
-            Map<String, List<List<?>>> response = results.get(node);
-            checkRouterMesh(addressSpace, routerPods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList()), response);
+            Map<String, List<List<?>>> nodeResponse = results.get(node);
+            Map<String, List<List<?>>> linkResponse = results.get(link);
+            checkRouterMesh(addressSpace, routerPods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList()), nodeResponse, linkResponse);
         }
     }
 
@@ -199,24 +197,49 @@ public class RouterStatusController {
         }
     }
 
-    private void checkRouterMesh(AddressSpace addressSpace, List<String> routerIds, Map<String, List<List<?>>> response) {
+    private void checkRouterMesh(AddressSpace addressSpace, List<String> routerIds, Map<String, List<List<?>>> nodeResponse, Map<String, List<List<?>>> linkResponse) {
+        final List<AddressSpaceStatusRouter> routers = new ArrayList<>();
         for (String routerId : routerIds) {
-            List<List<?>> routerResponse = response.get(routerId);
-            if (routerResponse == null) {
+            AddressSpaceStatusRouter routerStatus = new AddressSpaceStatusRouter();
+            List<List<?>> routerNodeResponse = nodeResponse.get(routerId);
+            if (routerNodeResponse == null) {
                 log.warn("No response received from router {}. Will not check mesh connectivity.", routerId);
                 continue;
             }
-            List<String> neighbours = filterOnAttribute(String.class, 0, routerResponse);
-            log.debug("Router {} has neighbours: {}", routerId, neighbours);
+
+            List<String> neighbours = filterOnAttribute(String.class, 0, routerNodeResponse);
+
             if (!neighbours.containsAll(routerIds)) {
                 Set<String> missing = new HashSet<>(routerIds);
                 missing.removeAll(neighbours);
-                String msg = String.format("Router %s is missing connection to %s", routerId, missing);
+                String msg = String.format("Router %s is missing connection to %s.", routerId, missing);
                 log.warn(msg);
                 addressSpace.getStatus().setReady(false);
                 addressSpace.getStatus().appendMessage(msg);
             }
+
+            routerStatus.setId(routerId);
+            routerStatus.setNeighbours(neighbours);
+
+            int undeliveredTotal = 0;
+            List<List<?>>  routerLinkResponse = linkResponse.get(routerId);
+            if (routerLinkResponse == null) {
+                log.warn("Not link response received from router {}. Will not check undelivered messages.", routerId);
+            } else {
+                List<String> linkTypes = filterOnAttribute(String.class, 0, routerLinkResponse);
+                List<Integer> undelivered = filterOnAttribute(Integer.class, 1, routerLinkResponse);
+                for (int i = 0; i < linkTypes.size(); i++) {
+                    if ("inter-router".equals(linkTypes.get(i))) {
+                        undeliveredTotal += undelivered.get(i) != null ? undelivered.get(i) : 0;
+                    }
+                }
+            }
+            routerStatus.setUndelivered(undeliveredTotal);
+
+            log.debug("Router {} has neighbours: {} and undelivered: {}", routerId, neighbours, undeliveredTotal);
+            routers.add(routerStatus);
         }
+        addressSpace.getStatus().setRouters(routers);
     }
 
 

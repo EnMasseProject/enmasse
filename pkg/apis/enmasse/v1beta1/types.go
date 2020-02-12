@@ -163,6 +163,7 @@ type AddressSpaceStatus struct {
 	CACertificate  []byte            `json:"caCert,omitempty"`
 	EndpointStatus []EndpointStatus  `json:"endpointStatuses,omitempty"`
 	Connectors     []ConnectorStatus `json:"connectors,omitempty"`
+	Routers        []RouterStatus    `json:"routers,omitempty"`
 }
 
 type EndpointStatus struct {
@@ -185,6 +186,12 @@ type ConnectorStatus struct {
 	Name     string   `json:"name"`
 	IsReady  bool     `json:"isReady"`
 	Messages []string `json:"messages,omitempty"`
+}
+
+type RouterStatus struct {
+	Id          string   `json:"id"`
+	Neighbours  []string `json:"neighbours,omitempty"`
+	Undelivered int      `json:"undelivered"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

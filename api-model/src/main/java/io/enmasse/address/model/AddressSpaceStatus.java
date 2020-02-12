@@ -56,6 +56,9 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<AddressSpaceStatusConnector> connectors = new ArrayList<>();
 
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private List<AddressSpaceStatusRouter> routers = new ArrayList<>();
+
     public AddressSpaceStatus() {
     }
 
@@ -121,12 +124,13 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
                 Objects.equals(caCert, status.caCert) &&
                 Objects.equals(endpointStatuses, status.endpointStatuses) &&
                 Objects.equals(messages, status.messages) &&
-                Objects.equals(connectors, status.connectors);
+                Objects.equals(connectors, status.connectors) &&
+                Objects.equals(routers, status.routers);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ready, phase, caCert, endpointStatuses, messages, connectors);
+        return Objects.hash(ready, phase, caCert, endpointStatuses, messages, connectors, routers);
     }
 
     @Override
@@ -138,6 +142,7 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
                 .append(",").append("endpointStatuses=").append(endpointStatuses)
                 .append(",").append("messages=").append(messages)
                 .append(",").append("connectors=").append(connectors)
+                .append(",").append("routers=").append(routers)
                 .append("}")
                 .toString();
     }
@@ -165,4 +170,11 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
         this.connectors = connectors;
     }
 
+    public List<AddressSpaceStatusRouter> getRouters() {
+        return routers;
+    }
+
+    public void setRouters(List<AddressSpaceStatusRouter> routers) {
+        this.routers = routers;
+    }
 }
