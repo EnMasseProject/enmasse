@@ -73,6 +73,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   addressSpaceName,
   namespace
 }) => {
+  const TYPEAHEAD_REQUIRED_LENGTH: number = 5;
   const { width } = useWindowDimensions();
   const client = useApolloClient();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState<boolean>(
@@ -174,7 +175,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   };
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if (value.trim().length < 6) {
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
       return;
     }
@@ -386,7 +387,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                       nameOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
                       ))
-                    ) : nameInput.trim().length < 5 ? (
+                    ) : nameInput.trim().length < TYPEAHEAD_REQUIRED_LENGTH ? (
                       <SelectOption
                         key={"invalid-input-length"}
                         value={"Enter more characters"}
@@ -444,7 +445,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                       containerOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
                       ))
-                    ) : containerInput.trim().length < 5 ? (
+                    ) : containerInput.trim().length <
+                      TYPEAHEAD_REQUIRED_LENGTH ? (
                       <SelectOption
                         key={"invalid-input-length"}
                         value={"Enter more characters"}
