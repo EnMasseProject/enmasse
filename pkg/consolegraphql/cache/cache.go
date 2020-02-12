@@ -27,7 +27,7 @@ type ObjectFilter = func(interface{}) (match bool, cont bool, e error)
 // It is illegal for the updater function to mutate the object's key(s).
 type ObjectMutator = func(current interface{}) (replacement interface{}, e error)
 
-func And(filters... ObjectFilter) ObjectFilter {
+func And(filters ...ObjectFilter) ObjectFilter {
 	return func(o interface{}) (bool, bool, error) {
 		c := true
 		for _, filter := range filters {
@@ -130,13 +130,13 @@ func (r *MemdbCache) Update(mutator ObjectMutator, objs ...interface{}) error {
 	defer txn.Abort()
 	for _, o := range objs {
 		if ivFound, key, err := getKeyForObject(o, schema); err == nil && ivFound {
-			if current, err := txn.First("object", "id", key[:len(key) -1]); err == nil && ivFound && current != nil {
+			if current, err := txn.First("object", "id", key[:len(key)-1]); err == nil && ivFound && current != nil {
 				mutated, err := mutator(current)
 				if err != nil {
 					return err
 				}
 				if mutated != nil {
-					if newIvFound, mutatedKey,  err := getKeyForObject(mutated, schema); err == nil && newIvFound && mutatedKey == key {
+					if newIvFound, mutatedKey, err := getKeyForObject(mutated, schema); err == nil && newIvFound && mutatedKey == key {
 						if err := txn.Insert("object", mutated); err != nil {
 							return err
 						}
@@ -155,7 +155,7 @@ func (r *MemdbCache) Update(mutator ObjectMutator, objs ...interface{}) error {
 			}
 		} else if err != nil {
 			return err
-		} else if ! ivFound {
+		} else if !ivFound {
 			return fmt.Errorf("failed to find the index value on the object [object %+v]", o)
 		}
 	}
@@ -246,7 +246,7 @@ func (r *MemdbCache) Dump() error {
 
 func (r *MemdbCache) GetKeyCreator(idxName string) (KeyCreator, error) {
 	if schema, ok := r.schema.Tables["object"].Indexes[idxName]; ok {
-		if indexer, ok  := schema.Indexer.(*hierarchyIndex); ok {
+		if indexer, ok := schema.Indexer.(*hierarchyIndex); ok {
 			return indexer.keyCreator, nil
 		} else {
 			return nil, fmt.Errorf("unexpected indexer type %T", schema.Indexer)

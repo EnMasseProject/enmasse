@@ -118,13 +118,13 @@ func TestQueryConnectionPagination(t *testing.T) {
 
 	one := 1
 	two := 2
-	objs, err = r.Query().Connections(ctx, nil, &one, nil,  nil)
+	objs, err = r.Query().Connections(ctx, nil, &one, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 3, len(objs.Connections), "Unexpected number of addresses in page")
 	assert.Equal(t, con2.ObjectMeta, objs.Connections[0].ObjectMeta, "Unexpected addresses object meta")
 
-	objs, err = r.Query().Connections(ctx, &one, &two, nil,  nil)
+	objs, err = r.Query().Connections(ctx, &one, &two, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 1, len(objs.Connections), "Unexpected number of address spaces in page")
@@ -255,17 +255,16 @@ func TestQueryConnectionLinkPaged(t *testing.T) {
 
 	one := 1
 	two := 2
-	objs, err = r.Connection_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, &one, nil,  nil)
+	objs, err = r.Connection_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, &one, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of links")
 	assert.Equal(t, 3, len(objs.Links), "Unexpected number of links in page")
 
-	objs, err = r.Connection_consoleapi_enmasse_io_v1beta1().Links(ctx, con, &one, &two, nil,  nil)
+	objs, err = r.Connection_consoleapi_enmasse_io_v1beta1().Links(ctx, con, &one, &two, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of links")
 	assert.Equal(t, 1, len(objs.Links), "Unexpected number of links in page")
 }
-
 
 func TestQueryConnectionMetrics(t *testing.T) {
 	r, ctx := newTestConnectionResolver(t)
@@ -326,7 +325,6 @@ func TestQueryConnectionLinkMetric(t *testing.T) {
 		metric.Update(metricValue, time.Now())
 		return (*consolegraphql.Metric)(metric)
 	}
-
 
 	link := createConnectionLink(namespace, addressspace, conuuid, "sender",
 		createMetric(namespace, "", "enmasse_messages_backlog", float64(100)))

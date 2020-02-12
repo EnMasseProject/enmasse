@@ -20,40 +20,40 @@ import (
 )
 
 type AuthenticationServiceWatcher struct {
-	Namespace       string
+	Namespace string
 	cache.Cache
 	ClientInterface cp.AdminV1beta1Interface
 	watching        chan struct{}
-    watchingStarted bool
+	watchingStarted bool
 	stopchan        chan struct{}
 	stoppedchan     chan struct{}
-    create          func(*tp.AuthenticationService) interface{}
-    update          func(*tp.AuthenticationService, interface{}) bool
+	create          func(*tp.AuthenticationService) interface{}
+	update          func(*tp.AuthenticationService, interface{}) bool
 }
 
-func NewAuthenticationServiceWatcher(c cache.Cache, namespace string, options... WatcherOption) (ResourceWatcher, error) {
+func NewAuthenticationServiceWatcher(c cache.Cache, namespace string, options ...WatcherOption) (ResourceWatcher, error) {
 
-    kw := &AuthenticationServiceWatcher{
-		Namespace:       namespace,
-		Cache:           c,
-		watching:        make(chan struct{}),
-		stopchan:        make(chan struct{}),
-		stoppedchan:     make(chan struct{}),
-		create:          func(v *tp.AuthenticationService) interface{} {
-                             return v
-                         },
-	    update:          func(v *tp.AuthenticationService, e interface{}) bool {
-                             if !reflect.DeepEqual(v, e) {
-                                 *e.(*tp.AuthenticationService) = *v
-                                 return true
-                             } else {
-                                 return false
-                             }
-                         },
-    }
+	kw := &AuthenticationServiceWatcher{
+		Namespace:   namespace,
+		Cache:       c,
+		watching:    make(chan struct{}),
+		stopchan:    make(chan struct{}),
+		stoppedchan: make(chan struct{}),
+		create: func(v *tp.AuthenticationService) interface{} {
+			return v
+		},
+		update: func(v *tp.AuthenticationService, e interface{}) bool {
+			if !reflect.DeepEqual(v, e) {
+				*e.(*tp.AuthenticationService) = *v
+				return true
+			} else {
+				return false
+			}
+		},
+	}
 
-    for _, option := range options {
-        option(kw)
+	for _, option := range options {
+		option(kw)
 	}
 
 	if kw.ClientInterface == nil {
@@ -66,8 +66,8 @@ func AuthenticationServiceWatcherFactory(create func(*tp.AuthenticationService) 
 	return func(watcher ResourceWatcher) error {
 		w := watcher.(*AuthenticationServiceWatcher)
 		w.create = create
-        w.update = update
-        return nil
+		w.update = update
+		return nil
 	}
 }
 
@@ -76,7 +76,7 @@ func AuthenticationServiceWatcherConfig(config *rest.Config) WatcherOption {
 		w := watcher.(*AuthenticationServiceWatcher)
 
 		var cl interface{}
-		cl, _  = cp.NewForConfig(config)
+		cl, _ = cp.NewForConfig(config)
 
 		client, ok := cl.(cp.AdminV1beta1Interface)
 		if !ok {
@@ -84,7 +84,7 @@ func AuthenticationServiceWatcherConfig(config *rest.Config) WatcherOption {
 		}
 
 		w.ClientInterface = client
-        return nil
+		return nil
 	}
 }
 
@@ -93,7 +93,7 @@ func AuthenticationServiceWatcherClient(client cp.AdminV1beta1Interface) Watcher
 	return func(watcher ResourceWatcher) error {
 		w := watcher.(*AuthenticationServiceWatcher)
 		w.ClientInterface = client
-        return nil
+		return nil
 	}
 }
 
@@ -168,7 +168,7 @@ func (kw *AuthenticationServiceWatcher) doWatch(resource cp.AuthenticationServic
 			return fmt.Errorf("failed to generate key for new object %+v", copy)
 		}
 		if existing, ok := curr[key]; ok {
-			err = kw.Cache.Update(func (current interface{}) (interface{}, error) {
+			err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
 				if kw.update(copy, current) {
 					updated++
 					return copy, nil
@@ -204,7 +204,7 @@ func (kw *AuthenticationServiceWatcher) doWatch(resource cp.AuthenticationServic
 		ResourceVersion: resourceList.ResourceVersion,
 	})
 
-	if ! kw.watchingStarted {
+	if !kw.watchingStarted {
 		close(kw.watching)
 		kw.watchingStarted = true
 	}
@@ -229,7 +229,7 @@ func (kw *AuthenticationServiceWatcher) doWatch(resource cp.AuthenticationServic
 						err = kw.Cache.Add(kw.create(copy))
 					case watch.Modified:
 						updatingKey := kw.create(copy)
-						err = kw.Cache.Update(func (current interface{}) (interface{}, error) {
+						err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
 							if kw.update(copy, current) {
 								return copy, nil
 							} else {

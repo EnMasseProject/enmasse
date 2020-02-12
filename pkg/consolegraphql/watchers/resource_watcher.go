@@ -23,4 +23,3 @@ type ResourceWatcher interface {
 }
 
 type WatcherOption func(watcher ResourceWatcher) error
-

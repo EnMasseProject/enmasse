@@ -25,7 +25,7 @@ func getMetric(name string, metrics []*consolegraphql.Metric) *consolegraphql.Me
 
 func createAddressSpace(addressspace, namespace string) *consolegraphql.AddressSpaceHolder {
 	return &consolegraphql.AddressSpaceHolder{
-		AddressSpace: v1beta1.AddressSpace {
+		AddressSpace: v1beta1.AddressSpace{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "AddressSpace",
 			},
@@ -67,7 +67,7 @@ func withAddressAnnotation(name, value string) addressHolderOption {
 	}
 }
 
-func withAddressMetrics(metrics... *consolegraphql.Metric) addressHolderOption {
+func withAddressMetrics(metrics ...*consolegraphql.Metric) addressHolderOption {
 	return func(ah *consolegraphql.AddressHolder) {
 		if ah.Metrics == nil {
 			ah.Metrics = metrics
@@ -83,7 +83,7 @@ func withAddress(address string) addressHolderOption {
 	}
 }
 
-func createAddress(namespace, name string, addressHolderOptions... addressHolderOption) (*consolegraphql.AddressHolder) {
+func createAddress(namespace, name string, addressHolderOptions ...addressHolderOption) *consolegraphql.AddressHolder {
 	ah := &consolegraphql.AddressHolder{
 		Address: v1beta1.Address{
 			TypeMeta: metav1.TypeMeta{

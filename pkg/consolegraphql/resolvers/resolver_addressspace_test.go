@@ -77,7 +77,7 @@ func TestQueryAddressSpaceOrder(t *testing.T) {
 	assert.NoError(t, err)
 
 	orderby := "`$.ObjectMeta.Name` DESC"
-	objs, err := r.Query().AddressSpaces(ctx, nil, nil, nil,  &orderby)
+	objs, err := r.Query().AddressSpaces(ctx, nil, nil, nil, &orderby)
 	assert.NoError(t, err)
 
 	expected := 2
@@ -97,19 +97,19 @@ func TestQueryAddressSpacePagination(t *testing.T) {
 	err := r.Cache.Add(as1, as2, as3, as4)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().AddressSpaces(ctx, nil, nil, nil,  nil)
+	objs, err := r.Query().AddressSpaces(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 
 	one := 1
 	two := 2
-	objs, err = r.Query().AddressSpaces(ctx, nil, &one, nil,  nil)
+	objs, err = r.Query().AddressSpaces(ctx, nil, &one, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 3, len(objs.AddressSpaces), "Unexpected number of address spaces in page")
 	assert.Equal(t, as2.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
 
-	objs, err = r.Query().AddressSpaces(ctx, &one, &two, nil,  nil)
+	objs, err = r.Query().AddressSpaces(ctx, &one, &two, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 	assert.Equal(t, 1, len(objs.AddressSpaces), "Unexpected number of address spaces in page")
@@ -129,8 +129,8 @@ func TestQueryAddressSpaceConnections(t *testing.T) {
 	ash := &consolegraphql.AddressSpaceHolder{
 		AddressSpace: v1beta1.AddressSpace{
 			ObjectMeta: v1.ObjectMeta{
-				Name:                       addressspace,
-				Namespace:                  namespace,
+				Name:      addressspace,
+				Namespace: namespace,
 			},
 		},
 	}
@@ -151,8 +151,8 @@ func TestQueryAddressSpaceConnectionFilter(t *testing.T) {
 	ash := &consolegraphql.AddressSpaceHolder{
 		AddressSpace: v1beta1.AddressSpace{
 			ObjectMeta: v1.ObjectMeta{
-				Name:                       addressspace,
-				Namespace:                  namespace,
+				Name:      addressspace,
+				Namespace: namespace,
 			},
 		},
 	}
@@ -176,8 +176,8 @@ func TestQueryAddressSpaceConnectionOrder(t *testing.T) {
 	ash := &consolegraphql.AddressSpaceHolder{
 		AddressSpace: v1beta1.AddressSpace{
 			ObjectMeta: v1.ObjectMeta{
-				Name:                       addressspace,
-				Namespace:                  namespace,
+				Name:      addressspace,
+				Namespace: namespace,
 			},
 		},
 	}
@@ -195,15 +195,15 @@ func TestMessagingCertificateChain(t *testing.T) {
 	addressspace := "myaddressspace"
 	expectedCert := "the bytes"
 	as1 := createAddressSpace(addressspace, namespace)
-	as1.Status = v1beta1.AddressSpaceStatus {
+	as1.Status = v1beta1.AddressSpaceStatus{
 		CACertificate: []byte(expectedCert),
 	}
 	err := r.Cache.Add(as1)
 	assert.NoError(t, err)
 
 	input := v1.ObjectMeta{
-		Name:                       addressspace,
-		Namespace:                  namespace,
+		Name:      addressspace,
+		Namespace: namespace,
 	}
 	cert, err := r.Query().MessagingCertificateChain(ctx, input)
 	assert.NoError(t, err)
@@ -222,8 +222,8 @@ func TestQueryAddressSpaceAddress(t *testing.T) {
 	ash := &consolegraphql.AddressSpaceHolder{
 		AddressSpace: v1beta1.AddressSpace{
 			ObjectMeta: v1.ObjectMeta{
-				Name:                       addressspace,
-				Namespace:                  namespace,
+				Name:      addressspace,
+				Namespace: namespace,
 			},
 		},
 	}
@@ -244,8 +244,8 @@ func TestQueryAddressSpaceAddressFilter(t *testing.T) {
 	ash := &consolegraphql.AddressSpaceHolder{
 		AddressSpace: v1beta1.AddressSpace{
 			ObjectMeta: v1.ObjectMeta{
-				Name:                       addressspace,
-				Namespace:                  namespace,
+				Name:      addressspace,
+				Namespace: namespace,
 			},
 		},
 	}
@@ -261,7 +261,7 @@ func TestQueryAddressSpaceCommand(t *testing.T) {
 	r, ctx := newTestAddressSpaceResolver(t)
 	as := createAddressSpace("mynamespace", "myaddressspace")
 	auth := "auth"
-	as.Spec= v1beta1.AddressSpaceSpec{
+	as.Spec = v1beta1.AddressSpaceSpec{
 		AuthenticationService: &v1beta1.AuthenticationService{
 			Name: auth,
 		},
@@ -286,4 +286,3 @@ spec:
 	assert.Contains(t, obj, expectedMetaData, "Expect name and namespace to be set")
 	assert.Contains(t, obj, expectedSpec, "Expect spec to be set")
 }
-

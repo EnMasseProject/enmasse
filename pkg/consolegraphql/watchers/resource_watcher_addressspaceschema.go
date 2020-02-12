@@ -20,40 +20,40 @@ import (
 )
 
 type AddressSpaceSchemaWatcher struct {
-	Namespace       string
+	Namespace string
 	cache.Cache
 	ClientInterface cp.EnmasseV1beta1Interface
 	watching        chan struct{}
-    watchingStarted bool
+	watchingStarted bool
 	stopchan        chan struct{}
 	stoppedchan     chan struct{}
-    create          func(*tp.AddressSpaceSchema) interface{}
-    update          func(*tp.AddressSpaceSchema, interface{}) bool
+	create          func(*tp.AddressSpaceSchema) interface{}
+	update          func(*tp.AddressSpaceSchema, interface{}) bool
 }
 
-func NewAddressSpaceSchemaWatcher(c cache.Cache, options... WatcherOption) (ResourceWatcher, error) {
+func NewAddressSpaceSchemaWatcher(c cache.Cache, options ...WatcherOption) (ResourceWatcher, error) {
 
-    kw := &AddressSpaceSchemaWatcher{
-		Namespace:       v1.NamespaceAll,
-		Cache:           c,
-		watching:        make(chan struct{}),
-		stopchan:        make(chan struct{}),
-		stoppedchan:     make(chan struct{}),
-		create:          func(v *tp.AddressSpaceSchema) interface{} {
-                             return v
-                         },
-	    update:          func(v *tp.AddressSpaceSchema, e interface{}) bool {
-                             if !reflect.DeepEqual(v, e) {
-                                 *e.(*tp.AddressSpaceSchema) = *v
-                                 return true
-                             } else {
-                                 return false
-                             }
-                         },
-    }
+	kw := &AddressSpaceSchemaWatcher{
+		Namespace:   v1.NamespaceAll,
+		Cache:       c,
+		watching:    make(chan struct{}),
+		stopchan:    make(chan struct{}),
+		stoppedchan: make(chan struct{}),
+		create: func(v *tp.AddressSpaceSchema) interface{} {
+			return v
+		},
+		update: func(v *tp.AddressSpaceSchema, e interface{}) bool {
+			if !reflect.DeepEqual(v, e) {
+				*e.(*tp.AddressSpaceSchema) = *v
+				return true
+			} else {
+				return false
+			}
+		},
+	}
 
-    for _, option := range options {
-        option(kw)
+	for _, option := range options {
+		option(kw)
 	}
 
 	if kw.ClientInterface == nil {
@@ -66,8 +66,8 @@ func AddressSpaceSchemaWatcherFactory(create func(*tp.AddressSpaceSchema) interf
 	return func(watcher ResourceWatcher) error {
 		w := watcher.(*AddressSpaceSchemaWatcher)
 		w.create = create
-        w.update = update
-        return nil
+		w.update = update
+		return nil
 	}
 }
 
@@ -76,7 +76,7 @@ func AddressSpaceSchemaWatcherConfig(config *rest.Config) WatcherOption {
 		w := watcher.(*AddressSpaceSchemaWatcher)
 
 		var cl interface{}
-		cl, _  = cp.NewForConfig(config)
+		cl, _ = cp.NewForConfig(config)
 
 		client, ok := cl.(cp.EnmasseV1beta1Interface)
 		if !ok {
@@ -84,7 +84,7 @@ func AddressSpaceSchemaWatcherConfig(config *rest.Config) WatcherOption {
 		}
 
 		w.ClientInterface = client
-        return nil
+		return nil
 	}
 }
 
@@ -93,7 +93,7 @@ func AddressSpaceSchemaWatcherClient(client cp.EnmasseV1beta1Interface) WatcherO
 	return func(watcher ResourceWatcher) error {
 		w := watcher.(*AddressSpaceSchemaWatcher)
 		w.ClientInterface = client
-        return nil
+		return nil
 	}
 }
 
@@ -168,7 +168,7 @@ func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInter
 			return fmt.Errorf("failed to generate key for new object %+v", copy)
 		}
 		if existing, ok := curr[key]; ok {
-			err = kw.Cache.Update(func (current interface{}) (interface{}, error) {
+			err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
 				if kw.update(copy, current) {
 					updated++
 					return copy, nil
@@ -204,7 +204,7 @@ func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInter
 		ResourceVersion: resourceList.ResourceVersion,
 	})
 
-	if ! kw.watchingStarted {
+	if !kw.watchingStarted {
 		close(kw.watching)
 		kw.watchingStarted = true
 	}
@@ -229,7 +229,7 @@ func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInter
 						err = kw.Cache.Add(kw.create(copy))
 					case watch.Modified:
 						updatingKey := kw.create(copy)
-						err = kw.Cache.Update(func (current interface{}) (interface{}, error) {
+						err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
 							if kw.update(copy, current) {
 								return copy, nil
 							} else {

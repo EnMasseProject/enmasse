@@ -18,7 +18,6 @@ import (
 const idIndex = "id"
 const altIndex = "altIndex"
 
-
 type CacheObj struct {
 	metav1.TypeMeta
 	metav1.ObjectMeta
@@ -36,8 +35,8 @@ func (c *CacheObj) DeepCopyObject() *CacheObj {
 			Kind:       c.Kind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: c.Name,
-			UID:  c.UID,
+			Name:      c.Name,
+			UID:       c.UID,
 			Namespace: c.Namespace,
 		},
 		Spec: CacheObjSpec{
@@ -287,7 +286,6 @@ func TestMemdbCache_Update(t *testing.T) {
 	retrieved, err := c.Get(idIndex, "CacheObject/ns1/ob1", nil)
 	assert.NoError(t, err, "failed to retrieve object")
 
-
 	assert.Equal(t, 1, len(retrieved), "Unexpected object")
 
 	expected := obj.DeepCopyObject()
@@ -350,7 +348,6 @@ func TestDump(t *testing.T) {
 	err = c.Dump()
 	assert.NoError(t, err, "failed to dump database")
 }
-
 
 func createObjWithAttr(namespace, name, attr string) *CacheObj {
 	obj := createObj(namespace, name)

@@ -96,7 +96,6 @@ func TestQueryAddressPlansByAddressSpacePlan(t *testing.T) {
 
 	assert.Equal(t, 2, len(objs), "Unexpected number of address plans restricted by space plan")
 
-
 	topic := AddressTypeTopic
 	objs, err = r.Query().AddressPlans(context.TODO(), &asp.Name, &topic)
 	assert.NoError(t, err)
@@ -142,7 +141,6 @@ func TestQueryAddressPlan(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, ap, plan, "Unexpected plan")
 }
-
 
 func createAddressSpacePlan(addressSpaceType, addressSpacePlanName string, displayOrder int, addressPlans []string) *v1beta2.AddressSpacePlan {
 	asp := &v1beta2.AddressSpacePlan{

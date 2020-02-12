@@ -22,7 +22,7 @@ func TestMetric_CalcValue(t *testing.T) {
 	timeSeries := buildTimeSeries(
 		consolegraphql.DataPointTimePair{
 			DataPoint: float64(0),
-			Timestamp: now.Add(time.Minute * - 1)},
+			Timestamp: now.Add(time.Minute * -1)},
 		consolegraphql.DataPointTimePair{
 			DataPoint: float64(1500),
 			Timestamp: now},

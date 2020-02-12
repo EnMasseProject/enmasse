@@ -37,5 +37,3 @@ func (r *queryResolver) AuthenticationServices(ctx context.Context) ([]*v1beta1.
 	}
 	return nss, e
 }
-
-

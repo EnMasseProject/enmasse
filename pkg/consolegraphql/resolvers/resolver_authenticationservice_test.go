@@ -48,7 +48,6 @@ func TestQueryAuthenticationService(t *testing.T) {
 		t.Fatal(err)
 	}
 
-
 	if !reflect.DeepEqual(authenticationService.Spec, objs[0].Spec) {
 		t.Fatalf("Unexpected authenticationService spec, expected %+v actual %+v", authenticationService.Spec, objs[0].Spec)
 	}

@@ -291,4 +291,3 @@ func loadTypesFrom(fileName string, data interface{}) error {
 	err = json.Unmarshal(byteValue, data)
 	return err
 }
-

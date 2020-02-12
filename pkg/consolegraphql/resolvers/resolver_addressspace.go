@@ -65,12 +65,13 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 func (r *addressSpaceSpecK8sResolver) AuthenticationService(ctx context.Context, obj *v1beta1.AddressSpaceSpec) (*v1beta1.AuthenticationService, error) {
 	if obj != nil {
 		authenticationServiceName := obj.AuthenticationService.Name
-		return &v1beta1.AuthenticationService {
+		return &v1beta1.AuthenticationService{
 			Name: authenticationServiceName,
 		}, nil
 	}
 	return nil, nil
 }
+
 type addressSpaceSpecK8sResolver struct{ *Resolver }
 
 func (r *addressSpaceSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.AddressSpaceSpec) (*v1beta2.AddressSpacePlan, error) {
@@ -215,7 +216,7 @@ func (r *queryResolver) MessagingCertificateChain(ctx context.Context, input v1.
 		return "", e
 	}
 	if len(objects) != 1 {
-		return "", fmt.Errorf("Did not return one address space for %s %s.  Instead found: %d", input.Name, input.Namespace, len(objects) )
+		return "", fmt.Errorf("Did not return one address space for %s %s.  Instead found: %d", input.Name, input.Namespace, len(objects))
 	}
 	return string(objects[0].(*consolegraphql.AddressSpaceHolder).AddressSpace.Status.CACertificate), nil
 

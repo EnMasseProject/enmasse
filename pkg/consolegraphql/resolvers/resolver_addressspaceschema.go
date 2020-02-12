@@ -12,7 +12,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 )
 
-
 type addressSpaceSchemaSpecK8sResolver struct{ *Resolver }
 
 func loadAddressSpaceSchemas(r *queryResolver) ([]*v1beta1.AddressSpaceSchema, error) {
@@ -38,7 +37,7 @@ func (r *queryResolver) AddressSpaceSchema(ctx context.Context) ([]*v1beta1.Addr
 }
 
 func (r *queryResolver) AddressSpaceSchemaV2(ctx context.Context, addressSpaceType *AddressSpaceType) ([]*v1beta1.AddressSpaceSchema, error) {
-	ass,err := loadAddressSpaceSchemas(r)
+	ass, err := loadAddressSpaceSchemas(r)
 	if err != nil {
 		return nil, err
 	}

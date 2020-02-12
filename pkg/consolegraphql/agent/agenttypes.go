@@ -148,4 +148,3 @@ func FromAgentAddressBody(agentConnectionMap map[string]interface{}) (*AgentAddr
 	}
 
 }
-

@@ -40,5 +40,5 @@ func (m metricK8sResolver) Units(ctx context.Context, obj *consolegraphql.Metric
 }
 
 func (m metricK8sResolver) Value(ctx context.Context, obj *consolegraphql.Metric) (float64, error) {
-	return  obj.Value, nil
+	return obj.Value, nil
 }

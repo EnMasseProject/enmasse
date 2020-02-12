@@ -345,7 +345,7 @@ func TestQueryAddressMetrics(t *testing.T) {
 }
 
 func TestAddressCommand(t *testing.T) {
-	r,ctx := newTestAddressResolver(t)
+	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addr := createAddress(namespace, "myaddrspace.myaddr")
 
@@ -359,7 +359,7 @@ metadata:
 }
 
 func TestAddressCommandUsingAddressToFromResourceName(t *testing.T) {
-	r,ctx := newTestAddressResolver(t)
+	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addressSpace := "myaddrspace"
 	ah := createAddress(namespace, "",
@@ -541,13 +541,13 @@ func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 		name               string
 		addressSpace       string
 		address            string
-		assertExpectedName func (name string)
+		assertExpectedName func(name string)
 	}{
 		{
 			"no change",
 			addressspace,
 			"myaddr",
-			func (name string) {
+			func(name string) {
 				assert.Equal(t, "myaddressspace.myaddr", name)
 			},
 		},
@@ -555,7 +555,7 @@ func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 			"lower cased",
 			addressspace,
 			"MYADDR",
-			func (name string) {
+			func(name string) {
 				assert.Equal(t, "myaddressspace.myaddr", name)
 			},
 		},
@@ -563,7 +563,7 @@ func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 			"cleaned prefix",
 			addressspace,
 			"-myaddr",
-			func (name string) {
+			func(name string) {
 				assert.Regexp(t, "^myaddressspace\\.myaddr\\.[-a-z0-9]{36}$", name)
 			},
 		},
@@ -571,7 +571,7 @@ func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 			"cleaned suffix",
 			addressspace,
 			"myaddr.",
-			func (name string) {
+			func(name string) {
 				assert.Regexp(t, "^myaddressspace\\.myaddr\\.[-a-z0-9]{36}$", name)
 			},
 		},
@@ -579,7 +579,7 @@ func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 			"illegals cleaned",
 			addressspace,
 			"€my$.addr12#",
-			func (name string) {
+			func(name string) {
 				assert.Regexp(t, "^myaddressspace\\.my\\.addr12\\.[-a-z0-9]{36}$", name)
 			},
 		},
@@ -587,15 +587,15 @@ func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 			"only illegals",
 			addressspace,
 			"€$#",
-			func (name string) {
+			func(name string) {
 				assert.Regexp(t, "^myaddressspace\\.[-a-z0-9]{36}$", name)
 			},
 		},
 		{
 			"too long",
 			addressspace,
-			strings.Repeat("a", 253 - len(addressspace)),
-			func (name string) {
+			strings.Repeat("a", 253-len(addressspace)),
+			func(name string) {
 				assert.Regexp(t, "^myaddressspace\\.a{201}\\.[-a-z0-9]{36}$", name)
 				assert.Equal(t, 253, len(name))
 			},

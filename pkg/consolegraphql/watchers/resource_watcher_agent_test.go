@@ -456,8 +456,8 @@ func createCaSecret() *v1.Secret {
 		ObjectMeta: v1meta.ObjectMeta{
 			Name: fmt.Sprintf("ca-%s%s", addressSpace, infraUuid),
 		},
-		Data: map[string][]byte {
-			"tls.crt" : []byte("abcd"),
+		Data: map[string][]byte{
+			"tls.crt": []byte("abcd"),
 		},
 	}
 }

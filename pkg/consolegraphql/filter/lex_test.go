@@ -90,7 +90,7 @@ func TestLexValueCarryingLexemes(t *testing.T) {
 
 		{"`$.Foo`", JSON_PATH,
 			func(fst *FilterSymType) {
-				value, err := fst.jsonPathValue.Eval(struct {Foo string }{"MyFoo",})
+				value, err := fst.jsonPathValue.Eval(struct{ Foo string }{"MyFoo"})
 				assert.NoError(t, err)
 				assert.Equal(t, "MyFoo", value)
 			},
@@ -105,7 +105,6 @@ func TestLexValueCarryingLexemes(t *testing.T) {
 		if tc.validatingFunc != nil {
 			tc.validatingFunc(fst)
 		}
-
 
 		assert.NoErrorf(t, lexer.GetError(), "Unexpected error for case : %s", tc.expr)
 		assert.Equal(t, tc.expected, tok, "Unexpected token for case : %s", tc.expr)

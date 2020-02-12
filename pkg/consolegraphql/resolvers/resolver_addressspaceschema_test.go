@@ -47,7 +47,6 @@ func TestQueryResolver_AddressSpaceSchema(t *testing.T) {
 		t.Fatal(err)
 	}
 
-
 	if !reflect.DeepEqual(addrSpaceSchema.Spec, objs[0].Spec) {
 		t.Fatalf("Unexpected addressSpaceSchema spec, expected %+v actual %+v", addrSpaceSchema.Spec, objs[0].Spec)
 	}

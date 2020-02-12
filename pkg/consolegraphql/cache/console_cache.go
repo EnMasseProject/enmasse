@@ -74,5 +74,3 @@ func addressLinkKeyCreator(obj interface{}) (b bool, s string, err error) {
 	}
 	return false, "", nil
 }
-
-

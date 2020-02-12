@@ -20,40 +20,40 @@ import (
 )
 
 type AddressPlanWatcher struct {
-	Namespace       string
+	Namespace string
 	cache.Cache
 	ClientInterface cp.AdminV1beta2Interface
 	watching        chan struct{}
-    watchingStarted bool
+	watchingStarted bool
 	stopchan        chan struct{}
 	stoppedchan     chan struct{}
-    create          func(*tp.AddressPlan) interface{}
-    update          func(*tp.AddressPlan, interface{}) bool
+	create          func(*tp.AddressPlan) interface{}
+	update          func(*tp.AddressPlan, interface{}) bool
 }
 
-func NewAddressPlanWatcher(c cache.Cache, namespace string, options... WatcherOption) (ResourceWatcher, error) {
+func NewAddressPlanWatcher(c cache.Cache, namespace string, options ...WatcherOption) (ResourceWatcher, error) {
 
-    kw := &AddressPlanWatcher{
-		Namespace:       namespace,
-		Cache:           c,
-		watching:        make(chan struct{}),
-		stopchan:        make(chan struct{}),
-		stoppedchan:     make(chan struct{}),
-		create:          func(v *tp.AddressPlan) interface{} {
-                             return v
-                         },
-	    update:          func(v *tp.AddressPlan, e interface{}) bool {
-                             if !reflect.DeepEqual(v, e) {
-                                 *e.(*tp.AddressPlan) = *v
-                                 return true
-                             } else {
-                                 return false
-                             }
-                         },
-    }
+	kw := &AddressPlanWatcher{
+		Namespace:   namespace,
+		Cache:       c,
+		watching:    make(chan struct{}),
+		stopchan:    make(chan struct{}),
+		stoppedchan: make(chan struct{}),
+		create: func(v *tp.AddressPlan) interface{} {
+			return v
+		},
+		update: func(v *tp.AddressPlan, e interface{}) bool {
+			if !reflect.DeepEqual(v, e) {
+				*e.(*tp.AddressPlan) = *v
+				return true
+			} else {
+				return false
+			}
+		},
+	}
 
-    for _, option := range options {
-        option(kw)
+	for _, option := range options {
+		option(kw)
 	}
 
 	if kw.ClientInterface == nil {
@@ -66,8 +66,8 @@ func AddressPlanWatcherFactory(create func(*tp.AddressPlan) interface{}, update 
 	return func(watcher ResourceWatcher) error {
 		w := watcher.(*AddressPlanWatcher)
 		w.create = create
-        w.update = update
-        return nil
+		w.update = update
+		return nil
 	}
 }
 
@@ -76,7 +76,7 @@ func AddressPlanWatcherConfig(config *rest.Config) WatcherOption {
 		w := watcher.(*AddressPlanWatcher)
 
 		var cl interface{}
-		cl, _  = cp.NewForConfig(config)
+		cl, _ = cp.NewForConfig(config)
 
 		client, ok := cl.(cp.AdminV1beta2Interface)
 		if !ok {
@@ -84,7 +84,7 @@ func AddressPlanWatcherConfig(config *rest.Config) WatcherOption {
 		}
 
 		w.ClientInterface = client
-        return nil
+		return nil
 	}
 }
 
@@ -93,7 +93,7 @@ func AddressPlanWatcherClient(client cp.AdminV1beta2Interface) WatcherOption {
 	return func(watcher ResourceWatcher) error {
 		w := watcher.(*AddressPlanWatcher)
 		w.ClientInterface = client
-        return nil
+		return nil
 	}
 }
 
@@ -168,7 +168,7 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 			return fmt.Errorf("failed to generate key for new object %+v", copy)
 		}
 		if existing, ok := curr[key]; ok {
-			err = kw.Cache.Update(func (current interface{}) (interface{}, error) {
+			err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
 				if kw.update(copy, current) {
 					updated++
 					return copy, nil
@@ -204,7 +204,7 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 		ResourceVersion: resourceList.ResourceVersion,
 	})
 
-	if ! kw.watchingStarted {
+	if !kw.watchingStarted {
 		close(kw.watching)
 		kw.watchingStarted = true
 	}
@@ -229,7 +229,7 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 						err = kw.Cache.Add(kw.create(copy))
 					case watch.Modified:
 						updatingKey := kw.create(copy)
-						err = kw.Cache.Update(func (current interface{}) (interface{}, error) {
+						err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
 							if kw.update(copy, current) {
 								return copy, nil
 							} else {

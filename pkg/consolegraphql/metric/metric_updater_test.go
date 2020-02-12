@@ -34,7 +34,7 @@ func TestMetricUpdater(t *testing.T) {
 	addr := createAddress(namespace, addressname, (*consolegraphql.Metric)(consolegraphql.NewRateCalculatingMetric("foo", "mytype", "myunit")))
 
 	now := time.Now()
-	addr.Metrics[0].AddTimeSeriesDataPoint(0, now.Add(time.Minute * - 1))
+	addr.Metrics[0].AddTimeSeriesDataPoint(0, now.Add(time.Minute*-1))
 	addr.Metrics[0].AddTimeSeriesDataPoint(1500, now)
 
 	assert.Equal(t, float64(0), addr.Metrics[0].Value, "unexpected address metric value")
@@ -54,9 +54,9 @@ func TestMetricUpdater(t *testing.T) {
 	assert.NotEqual(t, float64(0), retrievedAddr.Metrics[0].Value, "unexpected address metric value")
 }
 
-func createAddress(namespace, name string, metrics... *consolegraphql.Metric) *consolegraphql.AddressHolder {
+func createAddress(namespace, name string, metrics ...*consolegraphql.Metric) *consolegraphql.AddressHolder {
 	return &consolegraphql.AddressHolder{
-		Address: v1beta1.Address {
+		Address: v1beta1.Address{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Address",
 			},

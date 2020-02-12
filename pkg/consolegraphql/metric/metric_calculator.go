@@ -29,7 +29,7 @@ type promQLCalculator struct {
 }
 
 func New() (p *promQLCalculator) {
-	return &promQLCalculator {
+	return &promQLCalculator{
 		engine: promql.NewEngine(promql.EngineOpts{
 			MaxConcurrent: 1,
 			MaxSamples:    100,
@@ -43,7 +43,7 @@ func (p *promQLCalculator) Calc(timeSeries *ring.Ring) (float64, error) {
 	now := time.Now()
 	query, err := p.engine.NewInstantQuery(&adaptingQueryable{
 		dataPointRing: timeSeries,
-	}, "round(rate(unused_label[5m]), 0.01)", now)  // Rate per second, rounded to hundredths
+	}, "round(rate(unused_label[5m]), 0.01)", now) // Rate per second, rounded to hundredths
 	if err != nil {
 		return 0, err
 	}
@@ -71,7 +71,7 @@ type adaptingQueryable struct {
 
 type adaptingQuerier struct {
 	queryResults *prompb.QueryResult
-	labels []prompb.Label
+	labels       []prompb.Label
 }
 
 func (aqr adaptingQuerier) Select(*storage.SelectParams, ...*labels.Matcher) (storage.SeriesSet, storage.Warnings, error) {
@@ -105,20 +105,20 @@ func (aq adaptingQueryable) Querier(context.Context, int64, int64) (storage.Quer
 		if rv != nil {
 			pair := rv.(consolegraphql.DataPointTimePair)
 			samples = append(samples, prompb.Sample{
-				Value:                pair.DataPoint,
-				Timestamp:            timestamp.FromTime(pair.Timestamp),
+				Value:     pair.DataPoint,
+				Timestamp: timestamp.FromTime(pair.Timestamp),
 			})
 		}
 	})
 
-	labs := []prompb.Label{{Name: "unused_label", Value: "unused_value",},}
+	labs := []prompb.Label{{Name: "unused_label", Value: "unused_value"}}
 	ts := make([]*prompb.TimeSeries, 0)
 	ts = append(ts, &prompb.TimeSeries{
 		Labels:  labs,
 		Samples: samples,
 	})
 	qr := &prompb.QueryResult{
-		Timeseries:           ts,
+		Timeseries: ts,
 	}
 	return &adaptingQuerier{
 		qr,

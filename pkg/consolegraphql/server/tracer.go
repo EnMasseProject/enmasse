@@ -16,7 +16,6 @@ type Tracer struct {
 	http.RoundTripper
 }
 
-
 // http://people.redhat.com/jrivera/openshift-docs_preview/openshift-origin/glusterfs-review/go_client/tracing_api_requests_and_responses.html
 // RoundTrip calls the nested RoundTripper while printing each request and
 // response/error to os.Stderr on either side of the nested call.  WARNING: this
