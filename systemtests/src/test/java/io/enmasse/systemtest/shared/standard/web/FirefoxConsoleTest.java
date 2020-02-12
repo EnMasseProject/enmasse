@@ -224,11 +224,11 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
         doTestSortAddressesByName(getSharedAddressSpace());
     }
 
-    @Test
-    @ExternalClients
-    void testSortAddressesByClients() throws Exception {
-        doTestSortAddressesByClients(getSharedAddressSpace());
-    }
+//    @Test
+//    @ExternalClients
+//    void testSortAddressesByClients() throws Exception {
+//        doTestSortAddressesByClients(getSharedAddressSpace());
+//    }
 
     @Test
     @ExternalClients

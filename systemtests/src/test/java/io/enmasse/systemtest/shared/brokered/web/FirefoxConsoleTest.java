@@ -87,11 +87,11 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
         doTestSortAddressesByName(getSharedAddressSpace());
     }
 
-    @Test
-    @ExternalClients
-    void testSortAddressesByClients() throws Exception {
-        doTestSortAddressesByClients(getSharedAddressSpace());
-    }
+//    @Test
+//    @ExternalClients
+//    void testSortAddressesByClients() throws Exception {
+//        doTestSortAddressesByClients(getSharedAddressSpace());
+//    }
 
     @Test
     @ExternalClients

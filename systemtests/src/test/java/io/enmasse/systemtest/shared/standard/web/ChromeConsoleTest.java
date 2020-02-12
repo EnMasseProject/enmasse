@@ -233,11 +233,11 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
         doTestSortAddressesByName(getSharedAddressSpace());
     }
 
-    @Test
-    @ExternalClients
-    void testSortAddressesByClients() throws Exception {
-        doTestSortAddressesByClients(getSharedAddressSpace());
-    }
+//    @Test
+//    @ExternalClients
+//    void testSortAddressesByClients() throws Exception {
+//        doTestSortAddressesByClients(getSharedAddressSpace());
+//    }
 
     @Test
     @ExternalClients

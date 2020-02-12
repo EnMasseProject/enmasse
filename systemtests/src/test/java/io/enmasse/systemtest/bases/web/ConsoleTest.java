@@ -587,69 +587,70 @@ public abstract class ConsoleTest extends TestBase {
         assertSorted("Console failed, items are not sorted by name desc", consolePage.getAddressItems(), true);
     }
 
-    protected void doTestSortAddressesByClients(AddressSpace addressSpace) throws Exception {
-        int addressCount = 4;
-        List<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
-
-        getResourceManager().setAddresses(addresses.toArray(new Address[0]));
-
-        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
-        consolePage.openConsolePage();
-        consolePage.openAddressList(addressSpace);
-
-        assertEquals(addressCount, consolePage.getAddressItems().size(), "Unexpected number of addresses present before attaching clients");
-
-        List<ExternalMessagingClient> receivers = getClientUtils().attachReceivers(addressSpace, addresses, -1, defaultCredentials);
-        boolean error = true;
-        try {
-
-            TestUtils.waitUntilConditionOrFail(() -> consolePage.getAddressItems().stream()
-                                                   .allMatch(a -> a.getReceiversCount()>0),
-                                           Duration.ofSeconds(60),
-                                           Duration.ofSeconds(1),
-                                           ()->"Failed to wait for addresses count");
-
-            consolePage.sortAddresses(SortType.RECEIVERS, true);
-            assertSorted("Console failed, items are not sorted by count of receivers asc",
-                    consolePage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getReceiversCount));
-
-            consolePage.sortAddresses(SortType.RECEIVERS, false);
-            assertSorted("Console failed, items are not sorted by count of receivers desc",
-                    consolePage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getReceiversCount));
-            error = false;
-        } finally {
-            getClientUtils().stopClients(receivers, error);
-        }
-
-        List<ExternalMessagingClient> senders = getClientUtils().attachSenders(addressSpace, addresses, 360, defaultCredentials);
-        error = true;
-        try {
-
-            TestUtils.waitUntilConditionOrFail(() -> consolePage.getAddressItems().stream()
-                                                    .allMatch(a -> a.getSendersCount()>0),
-                                            Duration.ofSeconds(60),
-                                            Duration.ofSeconds(1),
-                                            ()->"Failed to wait for addresses count");
-
-            consolePage.sortAddresses(SortType.SENDERS, true);
-            assertSorted("Console failed, items are not sorted by count of senders asc",
-                    consolePage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getSendersCount));
-
-            consolePage.sortAddresses(SortType.SENDERS, false);
-            assertSorted("Console failed, items are not sorted by count of senders desc",
-                    consolePage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getSendersCount));
-            error = false;
-        } finally {
-            getClientUtils().stopClients(senders, error);
-        }
-
-    }
+    //already tested with doTestSortAddressesBySenders and doTestSortAddressesByReceivers
+//    protected void doTestSortAddressesByClients(AddressSpace addressSpace) throws Exception {
+//        int addressCount = 4;
+//        List<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
+//
+//        getResourceManager().setAddresses(addresses.toArray(new Address[0]));
+//
+//        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+//        consolePage.openConsolePage();
+//        consolePage.openAddressList(addressSpace);
+//
+//        assertEquals(addressCount, consolePage.getAddressItems().size(), "Unexpected number of addresses present before attaching clients");
+//
+//        List<ExternalMessagingClient> receivers = getClientUtils().attachReceivers(addressSpace, addresses, -1, defaultCredentials);
+//        boolean error = true;
+//        try {
+//
+//            TestUtils.waitUntilConditionOrFail(() -> consolePage.getAddressItems().stream()
+//                                                   .allMatch(a -> a.getReceiversCount()>0),
+//                                           Duration.ofSeconds(60),
+//                                           Duration.ofSeconds(1),
+//                                           ()->"Failed to wait for addresses count");
+//
+//            consolePage.sortAddresses(SortType.RECEIVERS, true);
+//            assertSorted("Console failed, items are not sorted by count of receivers asc",
+//                    consolePage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getReceiversCount));
+//
+//            consolePage.sortAddresses(SortType.RECEIVERS, false);
+//            assertSorted("Console failed, items are not sorted by count of receivers desc",
+//                    consolePage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getReceiversCount));
+//            error = false;
+//        } finally {
+//            getClientUtils().stopClients(receivers, error);
+//        }
+//
+//        List<ExternalMessagingClient> senders = getClientUtils().attachSenders(addressSpace, addresses, 360, defaultCredentials);
+//        error = true;
+//        try {
+//
+//            TestUtils.waitUntilConditionOrFail(() -> consolePage.getAddressItems().stream()
+//                                                    .allMatch(a -> a.getSendersCount()>0),
+//                                            Duration.ofSeconds(60),
+//                                            Duration.ofSeconds(1),
+//                                            ()->"Failed to wait for addresses count");
+//
+//            consolePage.sortAddresses(SortType.SENDERS, true);
+//            assertSorted("Console failed, items are not sorted by count of senders asc",
+//                    consolePage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getSendersCount));
+//
+//            consolePage.sortAddresses(SortType.SENDERS, false);
+//            assertSorted("Console failed, items are not sorted by count of senders desc",
+//                    consolePage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getSendersCount));
+//            error = false;
+//        } finally {
+//            getClientUtils().stopClients(senders, error);
+//        }
+//
+//    }
 
     protected void doTestSortAddressesBySenders(AddressSpace addressSpace) throws Exception {
         doTestSortAddresses(addressSpace,
                 SortType.SENDERS,
-                this::attachClients,
-//                getClientUtils()::attachSenders,
+//                this::attachClients,
+                getClientUtils()::attachSenders,
                 a -> a.getSendersCount()>0,
                 Comparator.comparingInt(AddressWebItem::getSendersCount));
     }
@@ -657,8 +658,8 @@ public abstract class ConsoleTest extends TestBase {
     protected void doTestSortAddressesByReceivers(AddressSpace addressSpace) throws Exception {
         doTestSortAddresses(addressSpace,
                 SortType.RECEIVERS,
-                this::attachClients,
-//                getClientUtils()::attachReceivers,
+//                this::attachClients,
+                getClientUtils()::attachReceivers,
                 a -> a.getReceiversCount()>0,
                 Comparator.comparingInt(AddressWebItem::getReceiversCount));
     }

@@ -21,15 +21,21 @@ import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.sasl.MechanismMismatchException;
 import io.vertx.proton.sasl.SaslSystemException;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import javax.security.sasl.AuthenticationException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -206,7 +212,7 @@ public class ClientUtils {
      */
     public List<ExternalMessagingClient> attachSenders(AddressSpace addressSpace, List<Address> destinations, int timeout, UserCredentials userCredentials) throws Exception {
         List<ExternalMessagingClient> senders = new ArrayList<>();
-
+        LOGGER.info("Connecting senders...");
         for (int i = 0; i < destinations.size(); i++) {
             for (int j = 0; j < i + 1; j++) {
                 ExternalMessagingClient senderClient = new ExternalMessagingClient()
@@ -261,7 +267,7 @@ public class ClientUtils {
      */
     public List<ExternalMessagingClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations, int timeout, UserCredentials userCredentials) throws Exception {
         List<ExternalMessagingClient> receivers = new ArrayList<>();
-
+        LOGGER.info("Connecting receivers...");
         for (int i = 0; i < destinations.size(); i++) {
             for (int j = 0; j < i + 1; j++) {
                 ExternalMessagingClient receiverClient = new ExternalMessagingClient()
@@ -302,17 +308,22 @@ public class ClientUtils {
     /**
      * stop all clients from list of Abstract clients
      */
-    public void stopClients(List<ExternalMessagingClient> clients, boolean testFailed) {
+    public void stopClients(List<ExternalMessagingClient> clients, ExtensionContext context) {
         if (clients != null) {
             LOGGER.info("Stopping clients...");
-            clients.forEach(c -> {
+            Path failedTestLogsPath = TestUtils.getFailedTestLogsPath(context);
+            for (var c : clients) {
                 c.stop();
-                if (testFailed) {
-                    LOGGER.info("=======================================");
-                    LOGGER.info("stderr {}", c.getStdError());
-                    LOGGER.info("stdout {}", c.getStdOutput());
+                if (context.getExecutionException().isPresent()) {
+                    try {
+                        Path logsDir = Files.createDirectories(failedTestLogsPath.resolve(SystemtestsKubernetesApps.MESSAGING_PROJECT));
+                        Files.write(logsDir.resolve(c.getId()+"-output.log"), c.getStdOutput().getBytes());
+                        Files.write(logsDir.resolve(c.getId()+"-error.log"), c.getStdError().getBytes());
+                    } catch (Exception ex) {
+                        LOGGER.warn("Cannot save output of client "+c.getId(), ex);
+                    }
                 }
-            });
+            };
         }
     }
 

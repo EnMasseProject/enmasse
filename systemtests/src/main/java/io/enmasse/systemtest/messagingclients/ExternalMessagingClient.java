@@ -103,6 +103,10 @@ public class ExternalMessagingClient {
         return client.getMessages();
     }
 
+    public String getId() {
+        Objects.requireNonNull(this.client);
+        return client.getId();
+    }
 
     //===================================================================
     //                          Run methods
