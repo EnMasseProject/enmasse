@@ -12,13 +12,13 @@ import (
 )
 
 type AddressQueryResultConsoleapiEnmasseIoV1beta1 struct {
-	Total     int                             `json:"Total"`
-	Addresses []*consolegraphql.AddressHolder `json:"Addresses"`
+	Total     int                             `json:"total"`
+	Addresses []*consolegraphql.AddressHolder `json:"addresses"`
 }
 
 type AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1 struct {
-	Total         int                                  `json:"Total"`
-	AddressSpaces []*consolegraphql.AddressSpaceHolder `json:"AddressSpaces"`
+	Total         int                                  `json:"total"`
+	AddressSpaces []*consolegraphql.AddressSpaceHolder `json:"addressSpaces"`
 }
 
 type AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1 struct {
@@ -30,7 +30,7 @@ type AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1 struct {
 }
 
 type AddressSpaceTypeConsoleapiEnmasseIoV1beta1 struct {
-	ObjectMeta *v1.ObjectMeta                             `json:"objectMeta"`
+	ObjectMeta *v1.ObjectMeta                             `json:"metadata"`
 	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"spec"`
 }
 
@@ -44,13 +44,13 @@ type AddressTypeSpecConsoleapiEnmasseIoV1beta1 struct {
 }
 
 type AddressTypeConsoleapiEnmasseIoV1beta1 struct {
-	ObjectMeta *v1.ObjectMeta                             `json:"objectMeta"`
+	ObjectMeta *v1.ObjectMeta                             `json:"metadata"`
 	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"spec"`
 }
 
 type ConnectionQueryResultConsoleapiEnmasseIoV1beta1 struct {
-	Total       int                          `json:"Total"`
-	Connections []*consolegraphql.Connection `json:"Connections"`
+	Total       int                          `json:"total"`
+	Connections []*consolegraphql.Connection `json:"connections"`
 }
 
 type KeyValue struct {
@@ -59,8 +59,8 @@ type KeyValue struct {
 }
 
 type LinkQueryResultConsoleapiEnmasseIoV1beta1 struct {
-	Total int                    `json:"Total"`
-	Links []*consolegraphql.Link `json:"Links"`
+	Total int                    `json:"total"`
+	Links []*consolegraphql.Link `json:"links"`
 }
 
 type AddressSpaceType string

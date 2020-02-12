@@ -31,10 +31,10 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
   let filterNameValue=filterName && filterName.value && filterName.value.trim();
   
   if (name && name.trim() !== "") {
-    filter += "`$.objectMeta.name` LIKE '" + name + ".%' AND";
+    filter += "`$.metadata.name` LIKE '" + name + ".%' AND";
   }
   if (namespace && namespace.trim() !== "") {
-    filter += "`$.objectMeta.namespace` = '" + namespace + "'";
+    filter += "`$.metadata.namespace` = '" + namespace + "'";
   }
   if ((filterNamesLength && filterNamesLength > 0) || typeValue || statusValue) {
     filter += " AND ";
@@ -98,7 +98,7 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_SORT=(sortBy?: ISortBy)=>{
       case 3:
         break;
       case 1:
-        orderBy = "`$.objectMeta.name` ";
+        orderBy = "`$.metadata.name` ";
         break;
       case 4:
         orderBy = "`$.metrics[?(@.Name=='enmasse_messages_in')].value` ";
@@ -145,9 +145,9 @@ const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
         filter:"${filter}"
         orderBy:"${orderBy}"
       ) {
-        Total
-        Addresses {
-          objectMeta {
+        total
+        addresses {
+          metadata {
             namespace
             name
           }
@@ -158,7 +158,7 @@ const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
               spec {
                 displayName
               }
-              objectMeta {
+              metadata {
                 name
               }
             }
@@ -190,10 +190,10 @@ const CURRENT_ADDRESS_SPACE_PLAN = (name?: string, namespace?: string) => {
         addressSpaces(
           filter: "\`$..Name\` = '${name}' AND \`$..Namespace\` = '${namespace}'"
         ) {
-          AddressSpaces {
+          addressSpaces {
             spec {
               plan {
-                objectMeta {
+                metadata {
                   name
                 }   
               }
@@ -211,22 +211,22 @@ const RETURN_ADDRESS_DETAIL = (
 ) => {
   let filter = "";
   if (addressSpace) {
-    filter += "`$.objectMeta.name` LIKE '" + addressSpace + ".%' AND ";
+    filter += "`$.metadata.name` LIKE '" + addressSpace + ".%' AND ";
   }
   if (namespace) {
-    filter += "`$.objectMeta.namespace` = '" + namespace + "' AND ";
+    filter += "`$.metadata.namespace` = '" + namespace + "' AND ";
   }
   if (addressName) {
-    filter += "`$.objectMeta.name` = '" + addressName + "'";
+    filter += "`$.metadata.name` = '" + addressName + "'";
   }
   const ADDRESSDETAIL = gql`
     query single_addresses {
       addresses(
         filter: "${filter}" 
       ) {
-        Total
-        Addresses {
-          objectMeta {
+        total
+        addresses {
+          metadata {
             namespace
             name
             creationTimestamp
@@ -280,13 +280,13 @@ const ADDRESS_LINKS_FILTER=(
   let filterContainerValue=filterContainer && filterContainer.value && filterContainer.value.trim();
 
   if (addressSpace) {
-    filter += "`$.objectMeta.name` LIKE '" + addressSpace + ".%' AND ";
+    filter += "`$.metadata.name` LIKE '" + addressSpace + ".%' AND ";
   }
   if (namespace) {
-    filter += "`$.objectMeta.namespace` = '" + namespace + "' AND ";
+    filter += "`$.metadata.namespace` = '" + namespace + "' AND ";
   }
   if (addressName) {
-    filter += "`$.objectMeta.name` = '" + addressName + "'";
+    filter += "`$.metadata.name` = '" + addressName + "'";
   }
 
   //links filter
@@ -294,19 +294,19 @@ const ADDRESS_LINKS_FILTER=(
     if (filterNamesLength > 1) {
       if (filterName.isExact)
         filterForLink +=
-          "(`$.objectMeta.name` = '" + filterNameValue + "'";
+          "(`$.metadata.name` = '" + filterNameValue + "'";
       else
         filterForLink +=
-          "(`$.objectMeta.name` LIKE '" + filterNameValue + "%' ";
+          "(`$.metadata.name` LIKE '" + filterNameValue + "%' ";
       for (let i = 1; i < filterNamesLength; i++) {
         let filterName=filterNames && filterNames[i];
         let filterNameValue=filterName && filterName.value && filterName.value.trim();
         if (filterName.isExact)
           filterForLink +=
-            "OR `$.objectMeta.name` = '" + filterNameValue + "'";
+            "OR `$.metadata.name` = '" + filterNameValue + "'";
         else
           filterForLink +=
-            "OR `$.objectMeta.name` LIKE '" +
+            "OR `$.metadata.name` LIKE '" +
             filterNameValue +
             "%' ";
       }
@@ -314,10 +314,10 @@ const ADDRESS_LINKS_FILTER=(
     } else {
       if (filterName.isExact)
         filterForLink +=
-          "(`$.objectMeta.name` = '" + filterNameValue + "')";
+          "(`$.metadata.name` = '" + filterNameValue + "')";
       else
         filterForLink +=
-          "(`$.objectMeta.name` LIKE '" + filterNameValue + "%')";
+          "(`$.metadata.name` LIKE '" + filterNameValue + "%')";
     }
     if (
       (filterContainersLength > 0) ||
@@ -387,7 +387,7 @@ const ADDRESS_LINKS_SORT=(sortBy?: ISortBy,)=>{
         orderBy = "";
         break;
       case 2:
-        orderBy = "`$.objectMeta.name` ";
+        orderBy = "`$.metadata.name` ";
         break;
       case 3:
         orderBy = "`$.metrics[?(@.Name=='enmasse_messages_in')].value` ";
@@ -423,9 +423,9 @@ const RETURN_ADDRESS_LINKS = (
       addresses(
         filter: "${filter}"
       ) {
-        Total
-        Addresses {
-          objectMeta {
+        total
+        addresses {
+          metadata {
             name
           }
           spec {
@@ -433,15 +433,15 @@ const RETURN_ADDRESS_LINKS = (
           }
           links (first:${perPage} offset:${perPage *
     (page - 1)}  orderBy:"${orderBy}" filter:"${filterForLink}"){
-            Total
-            Links {
-              objectMeta {
+            total
+            links {
+              metadata {
                 name
               }
               spec {
                 role
                 connection {
-                  objectMeta{
+                  metadata {
                     name
                     namespace
                   }
@@ -472,7 +472,7 @@ const RETURN_ADDRESS_PLANS = (
   const ADDRESS_PLANS = gql`
     query all_address_plans {
       addressPlans(addressSpacePlan: "${addressSpacePlan}", addressType: ${addressType}) {
-        objectMeta {
+        metadata {
           name
         }
         spec {
@@ -516,7 +516,7 @@ const ADDRESS_COMMAND_PRIVIEW_DETAIL = gql`
 const RETURN_ADDRESS_TYPES = gql`
   query addressTypes($a: AddressSpaceType!) {
     addressTypes_v2(addressSpaceType: $a) {
-      objectMeta {
+      metadata {
         name
       }
       spec {
@@ -531,7 +531,7 @@ const RETURN_ADDRESS_TYPES = gql`
 const RETURN_ADDRESS_SPACE_PLANS = gql`
   query all_address_space_plans {
     addressSpacePlans {
-      objectMeta {
+      metadata {
         name
         uid
         creationTimestamp
@@ -550,10 +550,10 @@ const RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION = (
 ) => {
   let filter = "";
   if (name && name.trim() !== "") {
-    filter += "`$.objectMeta.name` LIKE '" + name + ".%' AND";
+    filter += "`$.metadata.name` LIKE '" + name + ".%' AND";
   }
   if (namespace && namespace.trim() !== "") {
-    filter += "`$.objectMeta.namespace` = '" + namespace + "'";
+    filter += "`$.metadata.namespace` = '" + namespace + "'";
   }
   if (type.trim().toLowerCase() === "subscription") {
     filter += " AND `$.spec.type` = 'topic'";
@@ -563,9 +563,9 @@ const RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION = (
       addresses(
         filter:"${filter}"
       ) {
-        Total
-        Addresses {
-          objectMeta {
+        total
+        addresses {
+          metadata {
             namespace
             name
           }
@@ -593,14 +593,14 @@ const RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH = (
   const all_names = gql`
     query all_link_names_for_connection {
       addresses(
-        filter: "\`$.objectMeta.name\` = '${addressname}' AND \`$.objectMeta.namespace\` = '${namespace}'"
+        filter: "\`$.metadata.name\` = '${addressname}' AND \`$.metadata.namespace\` = '${namespace}'"
       ) {
-        Total
-        Addresses {
-          links(filter:"\`$.objectMeta.name\` LIKE '${name}%'" first:10,offset:0)  {
-            Total
-            Links{
-              objectMeta {
+        total
+        addresses {
+          links(filter:"\`$.metadata.name\` LIKE '${name}%'" first:10,offset:0)  {
+            total
+            links {
+              metadata {
                 name
               }
             }
@@ -620,14 +620,14 @@ const RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH = (
   const all_names = gql`
     query all_link_names_for_connection {
       addresses(
-        filter: "\`$.objectMeta.name\` = '${addressname}' AND \`$.objectMeta.namespace\` = '${namespace}'"
+        filter: "\`$.metadata.name\` = '${addressname}' AND \`$.metadata.namespace\` = '${namespace}'"
       ) {
-        Total
-        Addresses {
+        total
+        addresses {
           links(filter:"\`$.spec.connection.spec.containerId\` LIKE '${container}%'" first:10 ,offset:0)  {
-            Total
-            Links{
-              spec{
+            total
+            links {
+              spec {
                 connection{
                   spec{
                     containerId
@@ -653,7 +653,7 @@ const RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
     filter += "`$.spec.addressSpace` = '" + addressspaceName + "' AND";
   }
   if (namespace && namespace.trim() !== "") {
-    filter += "`$.objectMeta.namespace` = '" + namespace + "'";
+    filter += "`$.metadata.namespace` = '" + namespace + "'";
   }
   if (name && name.trim() != "") {
     filter += " AND ";
@@ -664,8 +664,8 @@ const RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
       addresses( first:10 offset:0
         filter:"${filter}"
       ) {
-        Total
-        Addresses {
+        total
+        addresses {
           spec{
             address
           }

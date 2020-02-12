@@ -1,8 +1,10 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ *
+ */
 
 const uuidv1 = require('uuid/v1');
-const traverse = require('traverse');
-const fs = require('fs');
-const path = require('path');
 const { ApolloServer, gql } = require('apollo-server');
 const typeDefs = require('./schema');
 const { applyPatch, compare } = require('fast-json-patch');
@@ -30,7 +32,7 @@ if (!stateChangeTimeout) {
 
 const availableAddressSpaceTypes = [
   {
-    objectMeta: {
+    metadata: {
       name: "brokered",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -44,7 +46,7 @@ const availableAddressSpaceTypes = [
     }
   },
   {
-    objectMeta: {
+    metadata: {
       name: "standard",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -61,7 +63,7 @@ const availableAddressSpaceTypes = [
 
 const availableAddressTypes = [
   {
-    objectMeta: {
+    metadata: {
       name: "brokered.queue",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -75,7 +77,7 @@ const availableAddressTypes = [
     }
   },
   {
-    objectMeta: {
+    metadata: {
       name: "brokered.topic",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -89,7 +91,7 @@ const availableAddressTypes = [
     }
   },
   {
-    objectMeta: {
+    metadata: {
       name: "standard.anycast",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -103,7 +105,7 @@ const availableAddressTypes = [
     }
   },
   {
-    objectMeta: {
+    metadata: {
       name: "standard.multicast",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -117,7 +119,7 @@ const availableAddressTypes = [
     }
   },
   {
-    objectMeta: {
+    metadata: {
       name: "standard.queue",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -131,7 +133,7 @@ const availableAddressTypes = [
     }
   },
   {
-    objectMeta: {
+    metadata: {
       name: "standard.subscription",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -145,7 +147,7 @@ const availableAddressTypes = [
     }
   },
   {
-    objectMeta: {
+    metadata: {
       name: "standard.topic",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -170,7 +172,7 @@ function createAuthenticationService(type, name) {
     spec: {
       Type: type
     },
-    objectMeta: {
+    metadata: {
       name: name,
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -180,7 +182,7 @@ function createAuthenticationService(type, name) {
 
 const availableAddressSpaceSchemas = [
   {
-    objectMeta: {
+    metadata: {
       name: "brokered"
     },
     spec: {
@@ -190,7 +192,7 @@ const availableAddressSpaceSchemas = [
     }
   },
   {
-    objectMeta: {
+    metadata: {
       name: "standard"
     },
     spec: {
@@ -203,7 +205,7 @@ const availableAddressSpaceSchemas = [
 
 const availableNamespaces = [
   {
-    objectMeta: {
+    metadata: {
       name: "app1_ns",
     },
     status: {
@@ -211,7 +213,7 @@ const availableNamespaces = [
     }
   },
   {
-    objectMeta: {
+    metadata: {
       name: "app2_ns",
     },
     status: {
@@ -223,7 +225,7 @@ const availableNamespaces = [
 function createAddressPlan(name, addressType, displayName, shortDescription, longDescription, resources, displayOrder)
 {
   return {
-    objectMeta: {
+    metadata: {
       name: name,
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
@@ -364,14 +366,14 @@ const availableAddressPlans = [
 
 const availableAddressSpacePlans = [
   {
-    objectMeta: {
+    metadata: {
       name: "standard-small",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
     },
     spec: {
       addressSpaceType: "standard",
-      addressPlans: availableAddressPlans.filter(p => !p.objectMeta.name.startsWith("brokered-")),
+      addressPlans: availableAddressPlans.filter(p => !p.metadata.name.startsWith("brokered-")),
       displayName: "Small",
       shortDescription: "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis",
       longDescription: "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis. This plan allows up to 1 router and 1 broker in total, and is suitable for small applications using small address plans and few addresses.",
@@ -384,14 +386,14 @@ const availableAddressSpacePlans = [
     }
   },
   {
-    objectMeta: {
+    metadata: {
       name: "standard-medium",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
     },
     spec: {
       addressSpaceType: "standard",
-      addressPlans: availableAddressPlans.filter(p => !p.objectMeta.name.startsWith("brokered-")),
+      addressPlans: availableAddressPlans.filter(p => !p.metadata.name.startsWith("brokered-")),
       displayName: "Medium",
       shortDescription: "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis",
       longDescription: "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis. This plan allows up to 3 routers and 3 broker in total, and is suitable for applications using small address plans and few addresses.",
@@ -404,14 +406,14 @@ const availableAddressSpacePlans = [
     }
   },
   {
-    objectMeta: {
+    metadata: {
       name: "brokered-single-broker",
       uid: uuidv1(),
       creationTimestamp: getRandomCreationDate()
     },
     spec: {
       addressSpaceType: "brokered",
-      addressPlans: availableAddressPlans.filter(p => p.objectMeta.name.startsWith("brokered-")),
+      addressPlans: availableAddressPlans.filter(p => p.metadata.name.startsWith("brokered-")),
       displayName: "Single Broker",
       shortDescription: "Single Broker instance",
       longDescription: "Single Broker plan where you can create an infinite number of queues until the system falls over.",
@@ -448,24 +450,24 @@ function scheduleSetAddressSpaceStatus(addressSpace, phase, messages) {
 }
 
 function createAddressSpace(as) {
-  var namespace = availableNamespaces.find(n => n.objectMeta.name === as.objectMeta.namespace);
+  var namespace = availableNamespaces.find(n => n.metadata.name === as.metadata.namespace);
   if (namespace === undefined) {
-    var knownNamespaces = availableNamespaces.map(p => p.objectMeta.name);
-    throw `Unrecognised namespace '${as.objectMeta.namespace}', known ones are : ${knownNamespaces}`;
+    var knownNamespaces = availableNamespaces.map(p => p.metadata.name);
+    throw `Unrecognised namespace '${as.metadata.namespace}', known ones are : ${knownNamespaces}`;
   }
 
   if (as.spec.type !== 'brokered' && as.spec.type !== 'standard') {
     throw `Unrecognised address space type '${(as.spec.type)}', known ones are : brokered, standard`;
   }
 
-  var spacePlan = availableAddressSpacePlans.find(o => o.objectMeta.name === as.spec.plan && as.spec.type === o.spec.addressSpaceType);
+  var spacePlan = availableAddressSpacePlans.find(o => o.metadata.name === as.spec.plan && as.spec.type === o.spec.addressSpaceType);
   if (spacePlan === undefined) {
-    var knownPlansNames = availableAddressSpacePlans.filter(p => as.spec.type === p.spec.addressSpaceType).map(p => p.objectMeta.name);
+    var knownPlansNames = availableAddressSpacePlans.filter(p => as.spec.type === p.spec.addressSpaceType).map(p => p.metadata.name);
     throw `Unrecognised address space plan '${as.spec.plan}', known plans for type '${as.spec.type}' are : ${knownPlansNames}`;
   }
 
-  if (addressSpaces.find(existing => as.objectMeta.name === existing.objectMeta.name && as.objectMeta.namespace === existing.objectMeta.namespace) !== undefined) {
-    throw `Address space with name  '${as.objectMeta.name} already exists in namespace ${as.objectMeta.namespace}`;
+  if (addressSpaces.find(existing => as.metadata.name === existing.metadata.name && as.metadata.namespace === existing.metadata.namespace) !== undefined) {
+    throw `Address space with name  '${as.metadata.name} already exists in namespace ${as.metadata.namespace}`;
   }
 
   var phase = "Active";
@@ -478,17 +480,17 @@ function createAddressSpace(as) {
   }
 
   var addressSpace = {
-    objectMeta: {
-      name: as.objectMeta.name,
-      namespace: namespace.objectMeta.name,
+    metadata: {
+      name: as.metadata.name,
+      namespace: namespace.metadata.name,
       uid: uuidv1(),
-      creationTimestamp: as.objectMeta.creationTimestamp ? as.objectMeta.creationTimestamp : getRandomCreationDate()
+      creationTimestamp: as.metadata.creationTimestamp ? as.metadata.creationTimestamp : getRandomCreationDate()
     },
     spec: {
       plan: spacePlan,
-      type: as.Spec.Type,
+      type: as.spec.type,
       authenticationService: {
-        name: as.Spec.AuthenticationService.Name
+        name: as.spec.authenticationService.name
       }
     },
     status: null
@@ -497,13 +499,13 @@ function createAddressSpace(as) {
   scheduleSetAddressSpaceStatus(addressSpace, phase, messages);
 
   addressSpaces.push(addressSpace);
-  return addressSpace.objectMeta;
+  return addressSpace.metadata;
 }
 
-function patchAddressSpace(objectMeta, jsonPatch, patchType) {
-  var index = addressSpaces.findIndex(existing => objectMeta.name === existing.objectMeta.name && objectMeta.Namespace === existing.objectMeta.namespace);
+function patchAddressSpace(metadata, jsonPatch, patchType) {
+  var index = addressSpaces.findIndex(existing => metadata.name === existing.metadata.name && metadata.namespace === existing.metadata.namespace);
   if (index < 0) {
-    throw `Address space with name  '${objectMeta.name}' in namespace ${objectMeta.namespace} does not exist`;
+    throw `Address space with name  '${metadata.name}' in namespace ${metadata.namespace} does not exist`;
   }
 
   var knownPatchTypes = ["application/json-patch+json", "application/merge-patch+json", "application/strategic-merge-patch+json"];
@@ -514,34 +516,34 @@ function patchAddressSpace(objectMeta, jsonPatch, patchType) {
   }
 
   var patch = JSON.parse(jsonPatch);
-  var current = JSON.parse(JSON.stringify(addressSpaces[index].spec));
+  var current = JSON.parse(JSON.stringify(addressSpaces[index]));
   var patched = applyPatch(JSON.parse(JSON.stringify(current)) , patch);
   if (patched.newDocument) {
     var replacement = patched.newDocument;
-    if (!_.isEqual(replacement.plan, current.plan)) {
-      var replacementPlan = typeof(replacement.plan) === "string" ? replacement.plan : replacement.objectMeta.name;
-      var spacePlan = availableAddressSpacePlans.find(o => o.objectMeta.name === replacementPlan);
+    if (!_.isEqual(replacement.spec.plan, current.spec.plan)) {
+      var replacementPlan = typeof(replacement.spec.plan) === "string" ? replacement.spec.plan : replacement.metadata.name;
+      var spacePlan = availableAddressSpacePlans.find(o => o.metadata.name === replacementPlan);
       if (spacePlan === undefined) {
-        var knownPlansNames = availableAddressSpacePlans.map(p => p.objectMeta.name);
+        var knownPlansNames = availableAddressSpacePlans.map(p => p.metadata.name);
         throw `Unrecognised address space plan '${replacementPlan}', known ones are : ${knownPlansNames}`;
       }
-      replacement.plan = spacePlan;
+      replacement.spec.plan = spacePlan;
     }
 
-    addressSpaces[index].spec = replacement;
-    return true;
+    addressSpaces[index].spec = replacement.spec;
+    return addressSpaces[index];
   } else {
     throw `Failed to patch address space with name  '${metadata.name}' in namespace ${metadata.namespace}`
   }
 }
 
 function deleteAddressSpace(objectmeta) {
-  var index = addressSpaces.findIndex(existing => objectmeta.name === existing.objectMeta.name && objectmeta.namespace === existing.objectMeta.namespace);
+  var index = addressSpaces.findIndex(existing => objectmeta.name === existing.metadata.name && objectmeta.namespace === existing.metadata.namespace);
   if (index < 0) {
     throw `Address space with name  '${objectmeta.name}' in namespace ${objectmeta.namespace} does not exist`;
   }
   var as = addressSpaces[index];
-  delete addressspace_connection[as.objectMeta.uid];
+  delete addressspace_connection[as.metadata.uid];
 
   addressSpaces.splice(index, 1);
 }
@@ -551,9 +553,9 @@ var addressSpaces = [];
 
 createAddressSpace(
     {
-      objectMeta: {
+      metadata: {
         name: "jupiter_as1",
-        namespace: availableNamespaces[0].objectMeta.name,
+        namespace: availableNamespaces[0].metadata.name,
       },
       spec: {
         plan: "standard-small",
@@ -566,9 +568,9 @@ createAddressSpace(
 
 createAddressSpace(
     {
-      objectMeta: {
+      metadata: {
         name: "saturn_as2",
-        namespace: availableNamespaces[0].objectMeta.name,
+        namespace: availableNamespaces[0].metadata.name,
       },
       spec: {
         plan: "standard-medium",
@@ -584,9 +586,9 @@ createAddressSpace(
 
 createAddressSpace(
     {
-      objectMeta: {
+      metadata: {
         name: "mars_as2",
-        namespace: availableNamespaces[1].objectMeta.name,
+        namespace: availableNamespaces[1].metadata.name,
       },
       spec: {
         plan: "brokered-single-broker",
@@ -597,8 +599,6 @@ createAddressSpace(
       }
     });
 
-
-console.log("patch : %j", compare(addressSpaces[0], addressSpaces[1]));
 
 var connections = [];
 
@@ -625,14 +625,14 @@ function createConnection(addressSpace, hostname) {
 
   }
   return {
-    objectMeta: {
+    metadata: {
       name: hostport,
       uid: uuidv1() + "",
-      namespace: addressSpace.objectMeta.namespace,
-      creationTimestamp: getRandomCreationDate(addressSpace.objectMeta.creationTimestamp)
+      namespace: addressSpace.metadata.namespace,
+      creationTimestamp: getRandomCreationDate(addressSpace.metadata.creationTimestamp)
     },
     spec: {
-      addressSpace: addressSpace.objectMeta.name,
+      addressSpace: addressSpace.metadata.name,
       hostname: hostport,
       containerId: uuidv1() + "",
       protocol: encrypted ? "amqps" : "amqp",
@@ -693,7 +693,7 @@ connections = connections.concat(["kosmos",
 
 var addressspace_connection = {};
 addressSpaces.forEach(as => {
-  addressspace_connection[as.objectMeta.uid] = connections.filter((c) => c.spec.addressSpace === as.objectMeta.name);
+  addressspace_connection[as.metadata.uid] = connections.filter((c) => c.spec.addressSpace === as.metadata.name);
 });
 
 var addresses = [];
@@ -729,31 +729,31 @@ function defaultResourceNameFromAddress(address, addressSpaceName) {
 }
 
 function createAddress(addr) {
-  var namespace = availableNamespaces.find(n => n.objectMeta.name === addr.objectMeta.namespace);
+  var namespace = availableNamespaces.find(n => n.metadata.name === addr.metadata.namespace);
   if (namespace === undefined) {
-    var knownNamespaces = availableNamespaces.map(p => p.objectMeta.name);
-    throw `Unrecognised namespace '${addr.objectMeta.namespace}', known ones are : ${knownNamespaces}`;
+    var knownNamespaces = availableNamespaces.map(p => p.metadata.name);
+    throw `Unrecognised namespace '${addr.metadata.namespace}', known ones are : ${knownNamespaces}`;
   }
 
-  var addressSpacesInNamespace = addressSpaces.filter(as => as.objectMeta.namespace === addr.objectMeta.namespace);
-  if (addr.objectMeta.name) {
-    var parts = addr.objectmeta.name.split(".", 2);
+  var addressSpacesInNamespace = addressSpaces.filter(as => as.metadata.namespace === addr.metadata.namespace);
+  if (addr.metadata.name) {
+    var parts = addr.metadata.name.split(".", 2);
     if (parts.length < 2) {
-      throw `Address name '${addr.objectMeta.name}' is badly formed, expected for '<addressspace>.<name>'`;
+      throw `Address name '${addr.metadata.name}' is badly formed, expected for '<addressspace>.<name>'`;
     }
     addressSpaceName = parts[0];
   } else if (addr.spec.address) {
     if (!addressSpaceName) {
       throw `addressSpace is not provided, cannot default resource name from address '${addr.spec.address}'`;
     }
-    addr.objectMeta.name = defaultResourceNameFromAddress(addr.spec.address, addressSpaceName);
+    addr.metadata.name = defaultResourceNameFromAddress(addr.spec.address, addressSpaceName);
   } else {
     throw `address is undefined, cannot default resource name`
   }
 
-  var addressSpace = addressSpacesInNamespace.find(as => as.objectMeta.name === addressSpaceName);
+  var addressSpace = addressSpacesInNamespace.find(as => as.metadata.name === addressSpaceName);
   if (addressSpace === undefined) {
-    var addressspacenames = addressSpacesInNamespace.map(p => p.objectMeta.Name);
+    var addressspacenames = addressSpacesInNamespace.map(p => p.metadata.Name);
     throw `Unrecognised address space '${addressSpaceName}', known ones are : ${addressspacenames}`;
   }
 
@@ -762,14 +762,14 @@ function createAddress(addr) {
     throw `Unrecognised address type '${addr.spec.type}', known ones are : '${knownTypes}'`;
   }
 
-  var plan = availableAddressPlans.find(p => p.objectMeta.name === addr.spec.plan && addr.spec.type === p.spec.addressType);
+  var plan = availableAddressPlans.find(p => p.metadata.name === addr.spec.plan && addr.spec.type === p.spec.addressType);
   if (plan === undefined) {
-    var knownPlansNames = availableAddressPlans.filter(p => addr.spec.Type === p.spec.addressType).map(p => p.objectMeta.name);
+    var knownPlansNames = availableAddressPlans.filter(p => addr.spec.Type === p.spec.addressType).map(p => p.metadata.name);
     throw `Unrecognised address plan '${addr.spec.plan}', known plans for type '${addr.spec.type}' are : ${knownPlansNames}`;
   }
 
   if (addr.spec.type === 'subscription') {
-      var topics  = addresses.filter(a => a.objectMeta.name.startsWith(addressSpaceName) && a.Spec.Type === "topic");
+      var topics  = addresses.filter(a => a.metadata.name.startsWith(addressSpaceName) && a.spec.type === "topic");
       if (!addr.spec.topic) {
         throw `Spec.Topic is mandatory for the subscription type`;
       } else if (topics.find(t => t.spec.address === addr.spec.topic) === undefined) {
@@ -782,8 +782,8 @@ function createAddress(addr) {
       }
   }
 
-  if (addresses.find(existing => addr.objectMeta.name === existing.objectMeta.name && addr.objectMeta.namespace === existing.objectMeta.namespace) !== undefined) {
-    throw `Address with name  '${addr.objectMeta.name} already exists in address space ${addressSpaceName}`;
+  if (addresses.find(existing => addr.metadata.name === existing.metadata.name && addr.metadata.namespace === existing.metadata.namespace) !== undefined) {
+    throw `Address with name  '${addr.metadata.name} already exists in address space ${addressSpaceName}`;
   }
 
   var phase = "Active";
@@ -792,23 +792,23 @@ function createAddress(addr) {
     phase = addr.status.phase
   }
   if (phase !== "Active") {
-    messages.push("Address " + addr.objectMeta.name + " not found on qdrouterd")
+    messages.push("Address " + addr.metadata.name + " not found on qdrouterd")
   }
 
   var planStatus = null;
   if (addressSpace.spec.type === "standard") {
     planStatus = {
-      name: plan.objectMeta.name,
+      name: plan.metadata.name,
       partitions: 1
     }
   }
 
   var address = {
-    objectMeta: {
-      name: addr.objectMeta.name,
-      namespace: addr.objectMeta.namespace,
+    metadata: {
+      name: addr.metadata.name,
+      namespace: addr.metadata.namespace,
       uid: uuidv1(),
-      creationTimestamp: addr.objectMeta.creationTimestamp ? addr.objectMeta.creationTimestamp : getRandomCreationDate()
+      creationTimestamp: addr.metadata.creationTimestamp ? addr.metadata.creationTimestamp : getRandomCreationDate()
     },
     spec: {
       address: addr.spec.address,
@@ -821,11 +821,11 @@ function createAddress(addr) {
   };
   scheduleSetAddressStatus(address, phase, messages, planStatus);
   addresses.push(address);
-  return address.objectMeta;
+  return address.metadata;
 }
 
 function patchAddress(objectmeta, jsonPatch, patchType) {
-  var index = addresses.findIndex(existing => objectmeta.name === existing.objectMeta.name && objectmeta.namespace === existing.objectMeta.namespace);
+  var index = addresses.findIndex(existing => objectmeta.name === existing.metadata.name && objectmeta.namespace === existing.metadata.namespace);
   if (index < 0) {
     throw `Address with name  '${objectmeta.name}' in namespace ${objectmeta.namespace} does not exist`;
   }
@@ -838,22 +838,22 @@ function patchAddress(objectmeta, jsonPatch, patchType) {
   }
 
   var patch = JSON.parse(jsonPatch);
-  var current = JSON.parse(JSON.stringify(addresses[index].spec));
+  var current = JSON.parse(JSON.stringify(addresses[index]));
   var patched = applyPatch(JSON.parse(JSON.stringify(current)) , patch);
   if (patched.newDocument) {
     var replacement = patched.newDocument;
-    if (!_.isEqual(replacement.plan,current.plan)) {
-      var replacementPlan = typeof(replacement.plan) === "string" ? replacement.plan : replacement.plan.objectMeta.name;
-      var spacePlan = availableAddressPlans.find(o => o.objectMeta.name === replacementPlan);
+    if (!_.isEqual(replacement.spec.plan,current.spec.plan)) {
+      var replacementPlan = typeof(replacement.spec.plan) === "string" ? replacement.spec.plan : replacement.plan.metadata.name;
+      var spacePlan = availableAddressPlans.find(o => o.metadata.name === replacementPlan);
       if (spacePlan === undefined) {
-        var knownPlansNames = availableAddressPlans.map(p => p.objectMeta.name);
+        var knownPlansNames = availableAddressPlans.map(p => p.metadata.name);
         throw `Unrecognised address plan '${replacementPlan}', known ones are : ${knownPlansNames}`;
       }
       replacement.spec.plan = spacePlan;
     }
 
     addresses[index].spec = replacement.spec;
-    return true;
+    return addresses[index];
   } else {
     throw `Failed to patch address with name  '${objectmeta.name}' in namespace ${objectmeta.namespace}`
   }
@@ -869,7 +869,7 @@ function titleCasePath(str) {
 }
 
 function deleteAddress(metadata) {
-  var index = addresses.findIndex(existing => metadata.name === existing.objectMeta.name && metadata.namespace === existing.objectMeta.namespace);
+  var index = addresses.findIndex(existing => metadata.name === existing.metadata.name && metadata.namespace === existing.metadata.namespace);
   if (index < 0) {
     throw `Address with name  '${metadata.name}' in namespace ${metadata.namespace} does not exist`;
   }
@@ -877,7 +877,7 @@ function deleteAddress(metadata) {
 }
 
 function purgeAddress(objectmeta) {
-  var index = addresses.findIndex(existing => objectmeta.name === existing.objectMeta.name && objectmeta.namespace === existing.objectMeta.namespace);
+  var index = addresses.findIndex(existing => objectmeta.name === existing.metadata.name && objectmeta.namespace === existing.metadata.namespace);
   if (index < 0) {
     throw `Address with name  '${objectmeta.name}' in namespace ${objectmeta.namespace} does not exist`;
   }
@@ -885,17 +885,17 @@ function purgeAddress(objectmeta) {
 
 function closeConnection(objectmeta) {
 
-  var index = connections.findIndex(existing => objectmeta.name === existing.objectMeta.name && objectmeta.namespace === existing.objectMeta.namespace);
+  var index = connections.findIndex(existing => objectmeta.name === existing.metadata.name && objectmeta.namespace === existing.metadata.namespace);
   if (index < 0) {
-    var knownCons = connections.filter(c => c.objectMeta.namespace === objectmeta.namespace).map(c => c.objectMeta.name);
+    var knownCons = connections.filter(c => c.metadata.namespace === objectmeta.namespace).map(c => c.metadata.name);
     throw `Connection with name  '${objectmeta.name}' in namespace ${objectmeta.namespace} does not exist. Known connection names are: ${knownCons}`;
   }
   var targetCon = connections[index];
 
   var addressSpaceName = connections[index].spec.addressSpace;
-  var as = addressSpaces.find(as => as.objectMeta.name === addressSpaceName);
+  var as = addressSpaces.find(as => as.metadata.name === addressSpaceName);
 
-  var as_cons = addressspace_connection[as.ObjectMeta.Uid];
+  var as_cons = addressspace_connection[as.metadata.uid];
   var as_cons_index = as_cons.findIndex((c) => c === targetCon);
   as_cons.splice(as_cons_index, 1);
 
@@ -905,13 +905,13 @@ function closeConnection(objectmeta) {
 
 ["ganymede", "callisto", "io", "europa", "amalthea", "himalia", "thebe", "elara", "pasiphae", "metis", "carme", "sinope"].map(n =>
     (createAddress({
-      objectMeta: {
-        name: addressSpaces[0].objectMeta.name + "." + n,
-        namespace: addressSpaces[0].objectMeta.namespace
+      metadata: {
+        name: addressSpaces[0].metadata.name + "." + n,
+        namespace: addressSpaces[0].metadata.namespace
       },
       spec: {
         address: n,
-        addressSpace: addressSpaces[0].objectMeta.name,
+        addressSpace: addressSpaces[0].metadata.name,
         plan: "standard-small-queue",
         type: "queue"
       },
@@ -922,13 +922,13 @@ function closeConnection(objectmeta) {
 
 function createTopicWithSub(addressSpace, topicName) {
     createAddress({
-      objectMeta: {
-        name: addressSpace.objectMeta.name + "." + topicName,
-        namespace: addressSpace.objectMeta.namespace
+      metadata: {
+        name: addressSpace.metadata.name + "." + topicName,
+        namespace: addressSpace.metadata.namespace
       },
       spec: {
         address: topicName,
-        addressSpace: addressSpace.objectMeta.name,
+        addressSpace: addressSpace.metadata.name,
         plan: "standard-small-topic",
         type: "topic"
       },
@@ -938,13 +938,13 @@ function createTopicWithSub(addressSpace, topicName) {
     });
     var subname = topicName + '-sub';
     createAddress({
-      objectMeta: {
-        name: addressSpaces[0].objectMeta.name + "." + subname,
-        namespace: addressSpace.objectMeta.namespace
+      metadata: {
+        name: addressSpaces[0].metadata.name + "." + subname,
+        namespace: addressSpace.metadata.namespace
       },
       spec: {
         address: subname,
-        addressSpace: addressSpace.objectMeta.name,
+        addressSpace: addressSpace.metadata.name,
         plan: "standard-small-subscription",
         type: "subscription",
         topic: topicName
@@ -961,13 +961,13 @@ function createTopicWithSub(addressSpace, topicName) {
 
 ["titan", "rhea", "iapetus", "dione", "tethys", "enceladus", "mimas"].map(n =>
     (createAddress({
-      objectMeta: {
-        name: addressSpaces[1].objectMeta.name + "." + n,
-        namespace: addressSpaces[1].objectMeta.namespace
+      metadata: {
+        name: addressSpaces[1].metadata.name + "." + n,
+        namespace: addressSpaces[1].metadata.namespace
       },
       spec: {
         address: n,
-        addressSpace: addressSpaces[1].objectMeta.name,
+        addressSpace: addressSpaces[1].metadata.name,
         plan: "standard-small-queue",
         type: "queue"
       }
@@ -975,20 +975,20 @@ function createTopicWithSub(addressSpace, topicName) {
 
 ["phobos", "deimous"].map(n =>
     (createAddress({
-      objectMeta: {
-        name: addressSpaces[2].objectMeta.name + "." + n,
-        namespace: addressSpaces[2].objectMeta.namespace
+      metadata: {
+        name: addressSpaces[2].metadata.name + "." + n,
+        namespace: addressSpaces[2].metadata.namespace
       },
       spec: {
         address: n,
-        addressSpace: addressSpaces[2].objectMeta.name,
+        addressSpace: addressSpaces[2].metadata.name,
         plan: "brokered-queue",
         type: "queue"
       }
     })));
 
 function* makeAddrIter(namespace, addressspace) {
-  var filter = addresses.filter(a => a.objectMeta.namespace === namespace && a.objectMeta.name.startsWith(addressspace + "."));
+  var filter = addresses.filter(a => a.metadata.namespace === namespace && a.metadata.name.startsWith(addressspace + "."));
   var i = 0;
   while(filter.length) {
     var addr = filter[i++ % filter.length];
@@ -998,25 +998,25 @@ function* makeAddrIter(namespace, addressspace) {
 
 var addressItrs = {};
 addressSpaces.forEach((as) => {
-  addressItrs[as.objectMeta.uid] = makeAddrIter(as.objectMeta.namespace, as.objectMeta.name);
+  addressItrs[as.metadata.uid] = makeAddrIter(as.metadata.namespace, as.metadata.name);
 });
 
 var links = [];
 connections.forEach(c => {
   var addressSpaceName = c.spec.addressSpace;
-  var addressSpace = addressSpaces.find(as => as.objectMeta.name === addressSpaceName);
-  var uid = addressSpace.objectMeta.uid;
+  var addressSpace = addressSpaces.find(as => as.metadata.name === addressSpaceName);
+  var uid = addressSpace.metadata.uid;
   var addr = addressItrs[uid].next().value;
 
-  for (var i = 0; i< addr.objectMeta.name.length; i++) {
+  for (var i = 0; i< addr.metadata.name.length; i++) {
     links.push(
         {
-          objectMeta: {
+          metadata: {
             name: uuidv1(),
           },
           spec: {
             connection: c,
-            address: addr.objectMeta.name,
+            address: addr.metadata.name,
             role: i % 2 === 0 ? "sender" : "receiver",
           }
         });
@@ -1029,8 +1029,8 @@ function buildFilterer(filter) {
 
 
 function init(input) {
-  if (input.objectMeta) {
-    input.objectMeta.creationTimestamp = new Date();
+  if (input.metadata) {
+    input.metadata.creationTimestamp = new Date();
   }
   return input;
 }
@@ -1120,7 +1120,7 @@ function makeMockLinkMetrics(is_addr_query, link) {
   } else {
 
     var addressSpaceName = link.Spec.connection.spec.addressSpace;
-    var as = addressSpaces.find(as => as.objectMeta.name === addressSpaceName);
+    var as = addressSpaces.find(as => as.metadata.name === addressSpaceName);
     if (as.Spec.Type === "brokered") {
       return [
         {
@@ -1181,9 +1181,9 @@ function makeMockLinkMetrics(is_addr_query, link) {
 }
 
 function makeAddressSpaceMetrics(as) {
-  var cons = as.ObjectMeta.Uid in addressspace_connection ? addressspace_connection[as.ObjectMeta.Uid] : [];
-  var addrs = addresses.filter((a) => as.objectMeta.namespace === a.objectMeta.namespace &&
-      a.objectMeta.name.startsWith(as.objectMeta.name + "."));
+  var cons = as.metadata.uid in addressspace_connection ? addressspace_connection[as.metadata.uid] : [];
+  var addrs = addresses.filter((a) => as.metadata.namespace === a.metadata.namespace &&
+      a.metadata.name.startsWith(as.metadata.name + "."));
 
   return [
     {
@@ -1202,13 +1202,13 @@ function makeAddressSpaceMetrics(as) {
 }
 
 function addressCommand(addr, addressSpaceName) {
-  if (addr.objectMeta.name) {
+  if (addr.metadata.name) {
     // pass
   } else if (addr.spec.address) {
     if (!addressSpaceName) {
       throw `addressSpace is not provided, cannot default resource name from address '${addr.spec.address}'`;
     }
-    addr.objectMeta.name = defaultResourceNameFromAddress(addr.spec.address, addressSpaceName);
+    addr.metadata.name = defaultResourceNameFromAddress(addr.spec.address, addressSpaceName);
   } else {
     throw `address is undefined, cannot default resource name`
   }
@@ -1216,8 +1216,8 @@ function addressCommand(addr, addressSpaceName) {
   return `apiVersion: enmasse.io/v1beta1
 oc apply -f - << EOF
 kind: Address
-ObjectMeta:
-  name: ${addr.objectMeta.name}
+metadata:
+  name: ${addr.metadata.name}
 spec:
   address: ${addr.spec.address}
   type: ${addr.spec.type}
@@ -1230,8 +1230,8 @@ function addressSpaceCommand(as) {
   return `apiVersion: enmasse.io/v1beta1
 oc apply -f - << EOF
 kind: AddressSpace
-ObjectMeta:
-  name: ${as.objectMeta.name}
+metadata:
+  name: ${as.metadata.name}
 spec:
   type: ${as.spec.type}
   plan: ${as.spec.plan}
@@ -1246,7 +1246,8 @@ const resolvers = {
       return createAddressSpace(init(args.input));
     },
     patchAddressSpace: (parent, args) => {
-      return patchAddressSpace(args.input, args.jsonPatch, args.patchType);
+      patchAddressSpace(args.input, args.jsonPatch, args.patchType);
+      return true;
     },
     deleteAddressSpace: (parent, args) => {
       deleteAddressSpace(args.input);
@@ -1256,7 +1257,8 @@ const resolvers = {
       return createAddress(init(args.input), args.addressSpace);
     },
     patchAddress: (parent, args) => {
-      return patchAddress(args.input, args.jsonPatch, args.patchType);
+      patchAddress(args.input, args.jsonPatch, args.patchType);
+      return true;
     },
     deleteAddress: (parent, args) => {
       deleteAddress(args.input);
@@ -1309,7 +1311,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       return availableAddressSpaceSchemas.filter(
         o =>
           args.addressSpaceType === undefined ||
-          o.objectMeta.name === args.addressSpaceType
+          o.metadata.name === args.addressSpaceType
       );
     },
 
@@ -1332,9 +1334,9 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
     addressPlans: (parent, args, context, info) => {
       var plans = availableAddressPlans;
       if (args.addressSpacePlan) {
-        var spacePlan = availableAddressSpacePlans.find(o => o.objectMeta.name === args.addressSpacePlan);
+        var spacePlan = availableAddressSpacePlans.find(o => o.metadata.name === args.addressSpacePlan);
         if (spacePlan === undefined) {
-          var knownPlansNames = availableAddressSpacePlans.map(p => p.objectMeta.name);
+          var knownPlansNames = availableAddressSpacePlans.map(p => p.metadata.name);
           throw `Unrecognised address space plan '${args.addressSpacePlan}', known ones are : ${knownPlansNames}`;
         }
         plans = spacePlan.spec.addressPlans;
@@ -1356,7 +1358,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       var page = as.slice(paginationBounds.lower, paginationBounds.upper);
 
       return {
-        Total: as.length,
+        total: as.length,
         AddressSpaces: page
       };
     },
@@ -1376,8 +1378,8 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       var page = a.slice(paginationBounds.lower, paginationBounds.upper);
 
       return {
-        Total: a.length,
-        Addresses: page
+        total: a.length,
+        addresses: page
       };
     },
     connections:(parent, args, context, info) => {
@@ -1393,8 +1395,8 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       var page = cons.slice(paginationBounds.lower, paginationBounds.upper);
 
       return {
-        Total: cons.length,
-        Connections: page
+        total: cons.length,
+        connections: page
       };
 
     }
@@ -1406,7 +1408,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       var orderBy = orderer(args.orderBy);
 
       var as = parent;
-      var cons = as.ObjectMeta.Uid in addressspace_connection ? addressspace_connection[as.objectMeta.uid] : [];
+      var cons = as.metadata.uid in addressspace_connection ? addressspace_connection[as.metadata.uid] : [];
       var copy = clone(cons);
       copy.forEach(c => {
         c.metrics = makeMockConnectionMetrics();
@@ -1416,7 +1418,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
 
       var paginationBounds = calcLowerUpper(args.offset, args.first, copy.length);
       var page = copy.slice(paginationBounds.lower, paginationBounds.upper);
-      return {Total: copy.length, Connections: page};
+      return {total: copy.length, connections: page};
     },
     addresses:(parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
@@ -1424,7 +1426,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
 
       var as = parent;
 
-      var copy = clone(addresses.filter(a => as.objectMeta.namespace === a.objectMeta.namespace && a.objectMeta.name.startsWith(as.objectMeta.name + ".")));
+      var copy = clone(addresses.filter(a => as.metadata.namespace === a.metadata.namespace && a.metadata.name.startsWith(as.metadata.name + ".")));
       copy.forEach(a => {
         a.metrics = makeMockAddressMetrics();
       });
@@ -1433,8 +1435,8 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
 
       var paginationBounds = calcLowerUpper(args.offset, args.first, addrs.length);
       var page = addrs.slice(paginationBounds.lower, paginationBounds.upper);
-      return {Total: addrs.length,
-        Addresses: page};
+      return {total: addrs.length,
+        addresses: page};
     },
   },
   Address_consoleapi_enmasse_io_v1beta1: {
@@ -1444,7 +1446,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
 
 
       var addr = parent;
-      var copy = clone(links.filter((l) => l.Spec.Connection.objectMeta.namespace === addr.objectMeta.namespace && addr.objectMeta.name.startsWith(l.Spec.Connection.spec.addressSpace + ".")));
+      var copy = clone(links.filter((l) => l.Spec.Connection.metadata.namespace === addr.metadata.namespace && addr.metadata.name.startsWith(l.Spec.Connection.spec.addressSpace + ".")));
       copy.forEach(l => {
         l.metrics = makeMockLinkMetrics(true, l);
       });
@@ -1454,8 +1456,8 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       var page = addrlinks.slice(paginationBounds.lower, paginationBounds.upper);
 
       return {
-        Total: addrlinks.length,
-        Links: page
+        total: addrlinks.length,
+        links: page
       };
     },
   },
@@ -1465,7 +1467,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       var orderBy = orderer(args.orderBy);
 
       var con = parent;
-      var copy = clone(links.filter((l) => _.isEqual(l.spec.connection.objectMeta, con.objectMeta)));
+      var copy = clone(links.filter((l) => _.isEqual(l.spec.connection.metadata, con.metadata)));
       copy.forEach(l => {
         l.metrics = makeMockLinkMetrics(false, l);
       });
@@ -1475,14 +1477,14 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       var page = connlinks.slice(paginationBounds.lower, paginationBounds.upper);
 
       return {
-        Total: connlinks.length,
-        Links: page
+        total: connlinks.length,
+        links: page
       };
     },
   },
   ConnectionSpec_consoleapi_enmasse_io_v1beta1: {
     addressSpace: (parent, args, context, info) => {
-      var as = addressSpaces.find(as => as.objectMeta.name ===  parent.AddressSpace);
+      var as = addressSpaces.find(as => as.metadata.name ===  parent.AddressSpace);
       return as
     },
   },
@@ -1502,7 +1504,7 @@ const mocks = {
   Float: () => 22.1,
   String: () => undefined,
   User_v1: () => ({
-    objectMeta: {
+    metadata: {
       name: "vtereshkova"
     },
     identities: ["vtereshkova"],
@@ -1533,4 +1535,7 @@ if (require.main === module) {
 
 
 module.exports.createAddress = createAddress;
+module.exports.patchAddress = patchAddress;
+module.exports.patchAddressSpace = patchAddressSpace;
 module.exports.addressCommand = addressCommand;
+module.exports.resolvers = resolvers;

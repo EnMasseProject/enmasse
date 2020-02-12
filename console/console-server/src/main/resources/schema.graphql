@@ -51,7 +51,7 @@ type Metric_consoleapi_enmasse_io_v1beta1 {
 }
 
 type Connection_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: ConnectionSpec_consoleapi_enmasse_io_v1beta1!
 
   metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
@@ -68,7 +68,7 @@ type ConnectionSpec_consoleapi_enmasse_io_v1beta1 {
 }
 
 type Link_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: LinkSpec_consoleapi_enmasse_io_v1beta1!
   metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
 }
@@ -84,23 +84,23 @@ type LinkSpec_consoleapi_enmasse_io_v1beta1 {
 #
 
 type AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1 {
-  Total: Int!
-  AddressSpaces: [AddressSpace_consoleapi_enmasse_io_v1beta1!]!
+  total: Int!
+  addressSpaces: [AddressSpace_consoleapi_enmasse_io_v1beta1!]!
 }
 
 type AddressQueryResult_consoleapi_enmasse_io_v1beta1 {
-  Total: Int!
-  Addresses: [Address_consoleapi_enmasse_io_v1beta1!]!
+  total: Int!
+  addresses: [Address_consoleapi_enmasse_io_v1beta1!]!
 }
 
 type ConnectionQueryResult_consoleapi_enmasse_io_v1beta1 {
-  Total: Int!
-  Connections: [Connection_consoleapi_enmasse_io_v1beta1!]!
+  total: Int!
+  connections: [Connection_consoleapi_enmasse_io_v1beta1!]!
 }
 
 type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
-  Total: Int!
-  Links: [Link_consoleapi_enmasse_io_v1beta1!]!
+  total: Int!
+  links: [Link_consoleapi_enmasse_io_v1beta1!]!
 }
 
 #
@@ -114,7 +114,7 @@ type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
 
 
 type AddressSpace_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressSpaceSpec_enmasse_io_v1beta1!
   status: AddressSpaceStatus_enmasse_io_v1beta1
   connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1beta1!
@@ -159,7 +159,7 @@ type AddressPlanStatus_enmasse_io_v1beta1 {
 }
 
 type Address_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressSpec_enmasse_io_v1beta1!
   status: AddressStatus_enmasse_io_v1beta1
 
@@ -168,7 +168,7 @@ type Address_consoleapi_enmasse_io_v1beta1 {
 }
 
 type AddressPlan_admin_enmasse_io_v1beta2 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressPlanSpec_admin_enmasse_io_v1beta2!
 }
 
@@ -181,7 +181,7 @@ type AddressPlanSpec_admin_enmasse_io_v1beta2 {
 }
 
 type AddressSpacePlan_admin_enmasse_io_v1beta2 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressSpacePlanSpec_admin_enmasse_io_v1beta2!
 }
 
@@ -195,7 +195,7 @@ type AddressSpacePlanSpec_admin_enmasse_io_v1beta2 {
 }
 
 type AddressSpaceType_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
 }
 
@@ -208,7 +208,7 @@ type AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1 {
 }
 
 type AddressType_consoleapi_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
 }
 
@@ -222,7 +222,7 @@ type AddressTypeSpec_consoleapi_enmasse_io_v1beta1 {
 }
 
 type AuthenticationService_admin_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AuthenticationServiceSpec_admin_enmasse_io_v1beta1!
   status: AuthenticationServiceStatus_admin_enmasse_io_v1beta1!
 }
@@ -237,7 +237,7 @@ type AuthenticationServiceSpec_admin_enmasse_io_v1beta1 {
 }
 
 type AddressSpaceSchema_enmasse_io_v1beta1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   spec: AddressSpaceSchemaSpec_enmasse_io_v1beta1!
 }
 
@@ -265,14 +265,14 @@ type ObjectMeta_v1 {
 }
 
 type User_v1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   identities: [String!]!
   groups: [String!]!
   fullName: String!
 }
 
 type Namespace_v1 {
-  objectMeta: ObjectMeta_v1!
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
   status: NamespaceStatus_v1!
 }
 
@@ -350,7 +350,7 @@ input AuthenticationService_enmasse_io_v1beta1_Input {
 }
 
 input AddressSpace_enmasse_io_v1beta1_Input {
-  objectMeta: ObjectMeta_v1_Input
+  metadata: ObjectMeta_v1_Input @goField(name: "ObjectMeta")
   spec: AddressSpaceSpec_enmasse_io_v1beta1_Input
 }
 
@@ -363,7 +363,7 @@ input AddressSpec_enmasse_io_v1beta1_Input {
 }
 
 input Address_enmasse_io_v1beta1_Input {
-  objectMeta: ObjectMeta_v1_Input
+  metadata: ObjectMeta_v1_Input @goField(name: "ObjectMeta")
   spec: AddressSpec_enmasse_io_v1beta1_Input
 }
 

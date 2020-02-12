@@ -14,7 +14,7 @@ const DOWNLOAD_CERTIFICATE = gql`
 const RETURN_AUTHENTICATION_SERVICES = gql`
   query addressspace_schema {
     addressSpaceSchema_v2 {
-      objectMeta {
+      metadata {
         name
       }
       spec {
@@ -27,7 +27,7 @@ const RETURN_AUTHENTICATION_SERVICES = gql`
 const RETURN_WHOAMI = gql`
   query whoami {
     whoami {
-      objectMeta {
+      metadata {
         name
       }
       fullName
@@ -38,7 +38,7 @@ const RETURN_WHOAMI = gql`
 const RETURN_FILTERED_AUTHENTICATION_SERVICES = gql`
   query filtered_addressspace_schema($t: AddressSpaceType = standard) {
     addressSpaceSchema_v2(addressSpaceType: $t) {
-      objectMeta {
+        metadata {
         name
       }
       spec {

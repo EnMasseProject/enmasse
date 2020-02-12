@@ -1,3 +1,9 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ *
+ */
+
 const { gql } = require('apollo-server');
 
 const typeDefs = gql`
@@ -49,7 +55,7 @@ const typeDefs = gql`
     }
 
     type AddressSpaceType_consoleapi_enmasse_io_v1beta1 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
     }
 
@@ -62,7 +68,7 @@ const typeDefs = gql`
     }
 
     type AddressType_consoleapi_enmasse_io_v1beta1 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
     }
 
@@ -75,7 +81,7 @@ const typeDefs = gql`
     }
 
     type AuthenticationService_admin_enmasse_io_v1beta1 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         spec: AuthenticationServiceSpec_admin_enmasse_io_v1beta1!
         status: AuthenticationServiceStatus_admin_enmasse_io_v1beta1!
     }
@@ -87,7 +93,7 @@ const typeDefs = gql`
         type: AuthenticationServiceType!
     }
     type AddressSpaceSchema_enmasse_io_v1beta1 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         spec: AddressSpaceSchemaSpec_enmasse_io_v1beta1!
     }
     type AddressSpaceSchemaSpec_enmasse_io_v1beta1 {
@@ -96,7 +102,7 @@ const typeDefs = gql`
     }
 
     type Connection_consoleapi_enmasse_io_v1beta1 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         spec: ConnectionSpec_consoleapi_enmasse_io_v1beta1!
 
         metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
@@ -113,7 +119,7 @@ const typeDefs = gql`
     }
 
     type Link_consoleapi_enmasse_io_v1beta1 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         spec: LinkSpec_consoleapi_enmasse_io_v1beta1!
         metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!,
     }
@@ -130,23 +136,23 @@ const typeDefs = gql`
     #
 
     type AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1 {
-        Total: Int!
-        AddressSpaces: [AddressSpace_consoleapi_enmasse_io_v1beta1!]!
+        total: Int!
+        addressSpaces: [AddressSpace_consoleapi_enmasse_io_v1beta1!]!
     }
 
     type AddressQueryResult_consoleapi_enmasse_io_v1beta1 {
-        Total: Int!
-        Addresses: [Address_consoleapi_enmasse_io_v1beta1!]!
+        total: Int!
+        addresses: [Address_consoleapi_enmasse_io_v1beta1!]!
     }
 
     type ConnectionQueryResult_consoleapi_enmasse_io_v1beta1 {
-        Total: Int!
-        Connections: [Connection_consoleapi_enmasse_io_v1beta1!]!
+        total: Int!
+        connections: [Connection_consoleapi_enmasse_io_v1beta1!]!
     }
 
     type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
-        Total: Int!
-        Links: [Link_consoleapi_enmasse_io_v1beta1!]!
+        total: Int!
+        links: [Link_consoleapi_enmasse_io_v1beta1!]!
     }
 
     #
@@ -159,7 +165,7 @@ const typeDefs = gql`
     #
 
     type AddressSpace_consoleapi_enmasse_io_v1beta1 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         spec: AddressSpaceSpec_enmasse_io_v1beta1!
         status: AddressSpaceStatus_enmasse_io_v1beta1
         connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1beta1!
@@ -205,7 +211,7 @@ const typeDefs = gql`
     }
 
     type Address_consoleapi_enmasse_io_v1beta1 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         spec: AddressSpec_enmasse_io_v1beta1!
         status: AddressStatus_enmasse_io_v1beta1
 
@@ -214,7 +220,7 @@ const typeDefs = gql`
     }
 
     type AddressPlan_admin_enmasse_io_v1beta2 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         spec: AddressPlanSpec_admin_enmasse_io_v1beta2!
     }
 
@@ -227,7 +233,7 @@ const typeDefs = gql`
     }
 
     type AddressSpacePlan_admin_enmasse_io_v1beta2 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         spec: AddressSpacePlanSpec_admin_enmasse_io_v1beta2!
     }
 
@@ -251,14 +257,14 @@ const typeDefs = gql`
     }
 
     type User_v1 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         identities: [String!]!
         groups: [String!]!
         fullName: String!
     }
 
     type Namespace_v1 {
-        objectMeta: ObjectMeta_v1!
+        metadata: ObjectMeta_v1!
         status: NamespaceStatus_v1!
     }
 
@@ -340,7 +346,7 @@ const typeDefs = gql`
     }
 
     input AddressSpace_enmasse_io_v1beta1_Input {
-        objectMeta: ObjectMeta_v1_Input
+        metadata: ObjectMeta_v1_Input
         spec: AddressSpaceSpec_enmasse_io_v1beta1_Input
     }
 
@@ -353,7 +359,7 @@ const typeDefs = gql`
     }
 
     input Address_enmasse_io_v1beta1_Input {
-        objectMeta: ObjectMeta_v1_Input
+        metadata: ObjectMeta_v1_Input
         spec: AddressSpec_enmasse_io_v1beta1_Input
     }
 
