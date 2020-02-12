@@ -173,6 +173,9 @@ const RETURN_ALL_ADDRESS_SPACES = (
                   DisplayName
                 }
               }
+              AuthenticationService{
+                Name
+              }
             }
             Status {
               IsReady
