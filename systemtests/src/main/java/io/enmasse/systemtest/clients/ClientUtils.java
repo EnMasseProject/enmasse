@@ -307,16 +307,19 @@ public class ClientUtils {
 
     /**
      * stop all clients from list of Abstract clients
+     * @throws Exception
      */
-    public void stopClients(List<ExternalMessagingClient> clients, ExtensionContext context) {
+    public void stopClients(List<ExternalMessagingClient> clients, ExtensionContext context) throws Exception {
         if (clients != null) {
             LOGGER.info("Stopping clients...");
-            Path failedTestLogsPath = TestUtils.getFailedTestLogsPath(context);
+            Path logsDir = Files.createDirectories(TestUtils.getFailedTestLogsPath(context).resolve(SystemtestsKubernetesApps.MESSAGING_PROJECT));
+            if (context.getExecutionException().isPresent()) {
+                LOGGER.info("Saving clients output into {}", logsDir.toString());
+            }
             for (var c : clients) {
                 c.stop();
                 if (context.getExecutionException().isPresent()) {
                     try {
-                        Path logsDir = Files.createDirectories(failedTestLogsPath.resolve(SystemtestsKubernetesApps.MESSAGING_PROJECT));
                         Files.write(logsDir.resolve(c.getId()+"-output.log"), c.getStdOutput().getBytes());
                         Files.write(logsDir.resolve(c.getId()+"-error.log"), c.getStdError().getBytes());
                     } catch (Exception ex) {

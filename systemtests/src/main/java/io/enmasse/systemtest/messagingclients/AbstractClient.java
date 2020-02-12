@@ -45,7 +45,7 @@ public abstract class AbstractClient {
     /**
      * Important: this is not any container_id nor nothing related with amqp, this is just an identifier for logging in our tests
      */
-    private final String id;
+    private String id;
 
     public AbstractClient(ClientType clientType) throws Exception {
         this(clientType, null, SystemtestsKubernetesApps.MESSAGING_PROJECT);
@@ -74,6 +74,10 @@ public abstract class AbstractClient {
 
     public String getId() {
         return id;
+    }
+
+    public void updateIdWithAddressName(String address) {
+        this.id = this.clientType.name() + "-" + address + "-" + UUID.randomUUID().toString();
     }
 
     public void setPodName(String podName) {

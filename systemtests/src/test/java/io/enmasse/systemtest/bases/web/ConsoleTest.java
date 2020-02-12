@@ -699,8 +699,8 @@ public abstract class ConsoleTest extends TestBase {
     protected void doTestSortConnectionsBySenders(AddressSpace addressSpace) throws Exception {
         doTestSortConnections(addressSpace,
                 SortType.SENDERS,
-                this::attachClients,
-//                getClientUtils()::attachSenders,
+//                this::attachClients,
+                getClientUtils()::attachSenders,
                 c -> c.getSenders()>0,
                 Comparator.comparingInt(ConnectionWebItem::getSenders));
     }
@@ -708,8 +708,8 @@ public abstract class ConsoleTest extends TestBase {
     protected void doTestSortConnectionsByReceivers(AddressSpace addressSpace) throws Exception {
         doTestSortConnections(addressSpace,
                 SortType.RECEIVERS,
-                this::attachClients,
-//                getClientUtils()::attachReceivers,
+//                this::attachClients,
+                getClientUtils()::attachReceivers,
                 c -> c.getReceivers()>0,
                 Comparator.comparingInt(ConnectionWebItem::getReceivers));
     }
