@@ -69,7 +69,7 @@ public abstract class ConsoleTest extends TestBase {
     @AfterEach
     public void tearDownWebConsoleTests(ExtensionContext context) throws Exception {
         if (clientsList != null) {
-            getClientUtils().stopClients(clientsList, context.getExecutionException().isPresent());
+            getClientUtils().stopClients(clientsList, context);
             clientsList.clear();
         }
     }
