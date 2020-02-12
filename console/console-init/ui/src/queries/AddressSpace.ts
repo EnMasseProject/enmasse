@@ -12,102 +12,87 @@ const DELETE_ADDRESS_SPACE = gql`
   }
 `;
 
-const ALL_ADDRESS_SPACES_FILTER=(
+const ALL_ADDRESS_SPACES_FILTER = (
   filterNames?: any[],
   filterNameSpaces?: any[],
-  filterType?: string | null,
-)=>{
-  let filter="";
-  let filterNamesLength=filterNames && filterNames.length;
-  let filterName=filterNames && filterNames[0];
-  let filterNameValue=filterName && filterName.value && filterName.value.trim();
+  filterType?: string | null
+) => {
+  let filter = "";
+  let filterNamesLength = filterNames && filterNames.length;
+  let filterName = filterNames && filterNames[0];
+  let filterNameValue =
+    filterName && filterName.value && filterName.value.trim();
 
-  let filterNameSpacesLength=filterNameSpaces && filterNameSpaces.length;
-  let filterNameSpace=filterNameSpaces && filterNameSpaces[0];
-  let filterNameSpaceValue=filterNameSpace && filterNameSpace.value && filterNameSpace.value.trim();
+  let filterNameSpacesLength = filterNameSpaces && filterNameSpaces.length;
+  let filterNameSpace = filterNameSpaces && filterNameSpaces[0];
+  let filterNameSpaceValue =
+    filterNameSpace && filterNameSpace.value && filterNameSpace.value.trim();
 
   if (filterNamesLength && filterNamesLength > 0) {
     if (filterNamesLength > 1) {
       if (filterName.isExact)
-        filter +=
-          "(`$.ObjectMeta.Name` = '" + filterNameValue + "'";
-      else
-        filter +=
-          "(`$.ObjectMeta.Name` LIKE '" + filterNameValue + "%'";
+        filter += "(`$.ObjectMeta.Name` = '" + filterNameValue + "'";
+      else filter += "(`$.ObjectMeta.Name` LIKE '" + filterNameValue + "%'";
       for (let i = 1; i < filterNamesLength; i++) {
-        let filterName=filterNames && filterNames[i];
-        let filterNameValue=filterName && filterName.value && filterName.value.trim();
+        let filterName = filterNames && filterNames[i];
+        let filterNameValue =
+          filterName && filterName.value && filterName.value.trim();
         if (filterName.isExact)
-          filter +=
-            "OR `$.ObjectMeta.Name` = '" + filterNameValue + "'";
-        else
-          filter +=
-            "OR `$.ObjectMeta.Name` LIKE '" +
-            filterNameValue +
-            "%'";
+          filter += "OR `$.ObjectMeta.Name` = '" + filterNameValue + "'";
+        else filter += "OR `$.ObjectMeta.Name` LIKE '" + filterNameValue + "%'";
       }
       filter += ")";
     } else {
       if (filterName.isExact)
-        filter +=
-          "`$.ObjectMeta.Name` = '" + filterNameValue + "'";
-      else
-        filter +=
-          "`$.ObjectMeta.Name` LIKE '" + filterNameValue + "%'";
+        filter += "`$.ObjectMeta.Name` = '" + filterNameValue + "'";
+      else filter += "`$.ObjectMeta.Name` LIKE '" + filterNameValue + "%'";
     }
   }
   if (
     filterNamesLength &&
-    filterNameSpacesLength && filterNameSpacesLength > 0
+    filterNameSpacesLength &&
+    filterNameSpacesLength > 0
   ) {
     filter += " AND ";
   }
   if (filterNameSpacesLength && filterNameSpacesLength > 0) {
     if (filterNameSpacesLength > 1) {
-      if (filterNameSpace.isExact){
+      if (filterNameSpace.isExact) {
         filter +=
-          "(`$.ObjectMeta.Namespace` = '" +
-          filterNameSpaceValue.trim() +
-          "'";
-      }
-      else{
+          "(`$.ObjectMeta.Namespace` = '" + filterNameSpaceValue.trim() + "'";
+      } else {
         filter +=
           "(`$.ObjectMeta.Namespace` LIKE '" +
           filterNameSpaceValue.trim() +
           "%'";
       }
       for (let i = 1; i < filterNameSpacesLength; i++) {
-        let filterNameSpace=filterNameSpaces && filterNameSpaces[i];
-        let filterNameSpaceValue=filterNameSpace && filterNameSpace.value && filterNameSpace.value.trim();
+        let filterNameSpace = filterNameSpaces && filterNameSpaces[i];
+        let filterNameSpaceValue =
+          filterNameSpace &&
+          filterNameSpace.value &&
+          filterNameSpace.value.trim();
         if (filterNameSpace.isExact)
           filter +=
-            "OR `$.ObjectMeta.Namespace` = '" +
-            filterNameSpaceValue +
-            "'";
+            "OR `$.ObjectMeta.Namespace` = '" + filterNameSpaceValue + "'";
         else
           filter +=
-            "OR `$.ObjectMeta.Namespace` LIKE '" +
-            filterNameSpaceValue +
-            "%'";
+            "OR `$.ObjectMeta.Namespace` LIKE '" + filterNameSpaceValue + "%'";
       }
       filter += ")";
     } else {
       if (filterNameSpace.isExact)
-        filter +=
-          "`$.ObjectMeta.Namespace` = '" +
-          filterNameSpaceValue +
-          "'";
+        filter += "`$.ObjectMeta.Namespace` = '" + filterNameSpaceValue + "'";
       else
         filter +=
-          "`$.ObjectMeta.Namespace` LIKE '" +
-          filterNameSpaceValue +
-          "%'";
+          "`$.ObjectMeta.Namespace` LIKE '" + filterNameSpaceValue + "%'";
     }
   }
   if (
     ((filterNamesLength && filterNamesLength > 0) ||
-      (filterNameSpacesLength && filterNameSpacesLength> 0)) &&
-      filterType && filterType.trim() !== ""
+      (filterNameSpacesLength && filterNameSpacesLength > 0)) &&
+    filterType &&
+    filterType.trim() !== ""
   ) {
     filter += " AND ";
   }
@@ -117,8 +102,8 @@ const ALL_ADDRESS_SPACES_FILTER=(
   return filter;
 };
 
-const ALL_ADDRESS_SPACES_SORT=(sortBy?: ISortBy)=>{
-  let orderBy="";
+const ALL_ADDRESS_SPACES_SORT = (sortBy?: ISortBy) => {
+  let orderBy = "";
   if (sortBy) {
     switch (sortBy.index) {
       case 1:
@@ -148,14 +133,17 @@ const RETURN_ALL_ADDRESS_SPACES = (
   filterType?: string | null,
   sortBy?: ISortBy
 ) => {
-  let filter =ALL_ADDRESS_SPACES_FILTER(filterNames,filterNameSpaces,filterType);  
-  let orderBy =ALL_ADDRESS_SPACES_SORT(sortBy);
-  
+  let filter = ALL_ADDRESS_SPACES_FILTER(
+    filterNames,
+    filterNameSpaces,
+    filterType
+  );
+  let orderBy = ALL_ADDRESS_SPACES_SORT(sortBy);
+
   const ALL_ADDRESS_SPACES = gql`
       query all_address_spaces {
         addressSpaces(filter: "${filter}"  
-        first:${perPage} offset:${perPage *
-    (page - 1)} orderBy:"${orderBy}") {
+        first:${perPage} offset:${perPage * (page - 1)} orderBy:"${orderBy}") {
           Total
           AddressSpaces {
             ObjectMeta {
