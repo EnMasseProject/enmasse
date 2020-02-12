@@ -27,6 +27,7 @@ import {
 import { ISortBy, IRowData } from "@patternfly/react-table";
 import { IAddress } from "components/AddressSpace/Address/AddressList";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
+import { ErrorBoundary } from "components/common/ErrorBoundary";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -301,27 +302,30 @@ export default function AddressesList() {
         </GridItem>
       </Grid>
       <Divider />
-      <AddressListPage
-        name={name}
-        namespace={namespace}
-        addressSpacePlan={addressSpacePlan}
-        filterNames={filterNames}
-        typeValue={typeValue}
-        statusValue={statusValue}
-        setTotalAddress={setTotalAddress}
-        page={page}
-        perPage={perPage}
-        addressSpaceType={type}
-        sortValue={sortDropDownValue}
-        setSortValue={setSortDropdownValue}
-        isWizardOpen={isCreateWizardOpen}
-        setIsWizardOpen={setIsCreateWizardOpen}
-        onCreationRefetch={onCreationRefetch}
-        setOnCreationRefetch={setOnCreationRefetch}
-        selectedAddresses={selectedAddresses}
-        onSelectAddress={onSelectAddress}
-        onSelectAllAddress={onSelectAllAddress}
-      />
+      <ErrorBoundary>
+        <AddressListPage
+          name={name}
+          namespace={namespace}
+          addressSpacePlan={addressSpacePlan}
+          filterNames={filterNames}
+          typeValue={typeValue}
+          statusValue={statusValue}
+          setTotalAddress={setTotalAddress}
+          page={page}
+          perPage={perPage}
+          addressSpaceType={type}
+          sortValue={sortDropDownValue}
+          setSortValue={setSortDropdownValue}
+          isWizardOpen={isCreateWizardOpen}
+          setIsWizardOpen={setIsCreateWizardOpen}
+          onCreationRefetch={onCreationRefetch}
+          setOnCreationRefetch={setOnCreationRefetch}
+          selectedAddresses={selectedAddresses}
+          onSelectAddress={onSelectAddress}
+          onSelectAllAddress={onSelectAllAddress}
+        />
+      </ErrorBoundary>
+
       {totalAddresses > 0 && renderPagination(page, perPage)}
       {isDisplayDeleteDailogue && selectedAddresses.length > 0 && (
         <DialoguePrompt

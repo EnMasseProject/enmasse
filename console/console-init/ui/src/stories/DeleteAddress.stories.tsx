@@ -30,10 +30,10 @@ export const deleteAddressPrompt = () => {
         <DialoguePrompt
           option="Delete"
           header={text("Header", "Delete the Address ?")}
-          names={[text("Name at top of detials", "leo_b")]}
+          names={[text("Name at top of details", "leo_b")]}
           detail={text(
             "Details",
-            "There are some description that telling users what would happenafter deleting this address."
+            "There are some description that telling users what would happen after deleting this address."
           )}
           handleConfirmDialogue={handleDelete}
           handleCancelDialogue={handleCancel}

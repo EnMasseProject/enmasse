@@ -34,6 +34,7 @@ import {
 } from "queries";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { POLL_INTERVAL } from "constants/constants";
+import { ErrorAlert } from "components/common/ErrorAlert";
 const styles = StyleSheet.create({
   no_bottom_padding: {
     paddingBottom: 0
@@ -95,7 +96,7 @@ export default function AddressSpaceDetailPage() {
   if (loading) return <Loading />;
 
   if (error) {
-    console.log(error);
+    return <ErrorAlert error={error} />;
   }
   const { addressSpaces } = data || {
     addressSpaces: { total: 0, addressSpaces: [] }
