@@ -490,7 +490,7 @@ function createAddressSpace(as) {
       plan: spacePlan,
       type: as.spec.type,
       authenticationService: {
-        name: as.spec.authenticationService.name
+        name: as.spec.authenticationService ? as.spec.authenticationService.name : null
       }
     },
     status: null
@@ -771,7 +771,7 @@ function createAddress(addr) {
   if (addr.spec.type === 'subscription') {
       var topics  = addresses.filter(a => a.metadata.name.startsWith(addressSpaceName) && a.spec.type === "topic");
       if (!addr.spec.topic) {
-        throw `Spec.Topic is mandatory for the subscription type`;
+        throw `spec.topic is mandatory for the subscription type`;
       } else if (topics.find(t => t.spec.address === addr.spec.topic) === undefined) {
         var topicNames  = topics.map(t => t.spec.address);
         throw `Unrecognised topic address '${addr.spec.topic}', known ones are : '${topicNames}'`;
@@ -1105,7 +1105,7 @@ function makeMockLinkMetrics(is_addr_query, link) {
 
     return [
       {
-        name: link.Spec.Role === "sender" ? "enmasse_messages_in" : "enmasse_messages_out",
+        name: link.spec.role === "sender" ? "enmasse_messages_in" : "enmasse_messages_out",
         type: "gauge",
         value: Math.floor(Math.random() * 10),
         units: "msg/s"
@@ -1119,9 +1119,9 @@ function makeMockLinkMetrics(is_addr_query, link) {
     ];
   } else {
 
-    var addressSpaceName = link.Spec.connection.spec.addressSpace;
+    var addressSpaceName = link.spec.connection.spec.addressSpace;
     var as = addressSpaces.find(as => as.metadata.name === addressSpaceName);
-    if (as.Spec.Type === "brokered") {
+    if (as.spec.type === "brokered") {
       return [
         {
           name: "enmasse_deliveries",
@@ -1319,17 +1319,17 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
     addressTypes_v2: (parent, args, context, info) => {
       return availableAddressTypes
           .filter(o => args.addressSpaceType === undefined || o.spec.addressSpaceType === args.addressSpaceType)
-          .sort(o => o.Spec.DisplayOrder);
+          .sort(o => o.spec.displayOrder);
     },
     addressSpaceTypes: () => (['standard', 'brokered']),
     addressSpaceTypes_v2: (parent, args, context, info) => {
       return availableAddressSpaceTypes
-          .sort(o => o.Spec.DisplayOrder);
+          .sort(o => o.spec.displayOrder);
     },
     addressSpacePlans: (parent, args, context, info) => {
       return availableAddressSpacePlans
           .filter(o => args.addressSpaceType === undefined || o.spec.addressSpaceType === args.addressSpaceType)
-          .sort(o => o.Spec.DisplayOrder);
+          .sort(o => o.spec.displayOrder);
     },
     addressPlans: (parent, args, context, info) => {
       var plans = availableAddressPlans;
@@ -1342,7 +1342,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
         plans = spacePlan.spec.addressPlans;
       }
 
-      return plans.filter(p => (args.addressType === undefined || p.spec.addressType === args.addressType)).sort(o => o.Spec.DisplayOrder);
+      return plans.filter(p => (args.addressType === undefined || p.spec.addressType === args.addressType)).sort(o => o.spec.displayOrder);
     },
     addressSpaces:(parent, args, context, info) => {
 
@@ -1359,7 +1359,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
 
       return {
         total: as.length,
-        AddressSpaces: page
+        addressSpaces: page
       };
     },
     addresses:(parent, args, context, info) => {
@@ -1446,7 +1446,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
 
 
       var addr = parent;
-      var copy = clone(links.filter((l) => l.Spec.Connection.metadata.namespace === addr.metadata.namespace && addr.metadata.name.startsWith(l.Spec.Connection.spec.addressSpace + ".")));
+      var copy = clone(links.filter((l) => l.spec.connection.metadata.namespace === addr.metadata.namespace && addr.metadata.name.startsWith(l.spec.connection.spec.addressSpace + ".")));
       copy.forEach(l => {
         l.metrics = makeMockLinkMetrics(true, l);
       });
