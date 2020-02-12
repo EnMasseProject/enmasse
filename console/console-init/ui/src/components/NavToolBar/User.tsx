@@ -13,12 +13,12 @@ export const UserDetail: React.FunctionComponent = () => {
   if (
     data &&
     data.whoami &&
-    (data.whoami.FullName || data.whoami.ObjectMeta.Name)
+    (data.whoami.fullName || data.whoami.metadata.name)
   ) {
-    if (data.whoami.FullName) {
-      userName = data.whoami.FullName;
+    if (data.whoami.fullName) {
+      userName = data.whoami.fullName;
     } else {
-      userName = data.whoami.ObjectMeta.Name;
+      userName = data.whoami.metadata.name;
     }
   }
   return <>{userName}</>;

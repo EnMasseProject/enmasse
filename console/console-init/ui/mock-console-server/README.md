@@ -70,28 +70,32 @@ STATE_CHANGE_TIMEOUT - length of time in ms between state transitions of new add
 ```
 query addressSpaceTypes {
   addressSpaceTypes_v2 {
-    ObjectMeta
-    {Name}
-    Spec {
-      DisplayName
-      LongDescription
-      ShortDescription
+    metadata {
+      name
+    }
+    spec {
+      displayName
+      longDescription
+      shortDescription
     }
   }
 }
+
+
 ```
 
 ## all address types
 
 ```
 query addressTypes {
-  addressTypes_v2(addressSpaceType :standard) {
-    ObjectMeta
-    {Name}
-    Spec {
-      DisplayName
-      LongDescription
-      ShortDescription
+  addressTypes_v2(addressSpaceType: standard) {
+    metadata {
+      name
+    }
+    spec {
+      displayName
+      longDescription
+      shortDescription
     }
   }
 }
@@ -103,70 +107,68 @@ query addressTypes {
 ```
 query all_address_spaces {
   addressSpaces {
-    Total
-    AddressSpaces {
-      ObjectMeta {
-        Namespace
-        Name
-        CreationTimestamp
+    total
+    addressSpaces {
+      metadata {
+        namespace
+        name
+        creationTimestamp
       }
-      Spec {
-        Type
-        Plan {
-          Spec {
-            DisplayName
+      spec {
+        type
+        plan {
+          spec {
+            displayName
           }
         }
       }
-      Status {
-        Phase
-        IsReady
-        Messages
+      status {
+        phase
+        isReady
+        messages
       }
     }
   }
-}
-```
+}```
 
 ## all_addresses_for_addressspace_view
 
 ```
 query all_addresses_for_addressspace_view {
   addresses(
-    filter: "`$.Spec.AddressSpace` = 'jupiter_as1' AND `$.ObjectMeta.Namespace` = 'app1_ns'"
+    filter: "`$.spec.addressSpace` = 'jupiter_as1' AND `$.metadata.namespace` = 'app1_ns'"
   ) {
-    Total
-    Addresses {
-      ObjectMeta {
-        Namespace
-        Name
+    total
+    addresses {
+      metadata {
+        namespace
+        name
       }
-      Spec {
-        Address
-        Plan {
-          Spec {
-            DisplayName
+      spec {
+        address
+        plan {
+          spec {
+            displayName
           }
         }
       }
-      Status {
-        IsReady
-        Messages
-        Phase
-        PlanStatus {
-          Partitions
+      status {
+        isReady
+        messages
+        phase
+        planStatus {
+          partitions
         }
       }
-      Metrics {
-        Name
-        Type
-        Value
-        Units
+      metrics {
+        name
+        type
+        value
+        units
       }
     }
   }
 }
-
 ```
 
 ## addresses with ordering
@@ -175,16 +177,16 @@ Illustrates order on a metric (note the uses a JSON path filter to identify the 
 
 ```
 query addr {
- addresses(orderBy: "`$.Metrics[?(@.Name=='enmasse_messages_stored')].Value` ASC"){
-    Total
-    Addresses
+ addresses(orderBy: "`$.metrics[?(@.Name=='enmasse_messages_stored')].Value` ASC"){
+    total
+    addresses
     {
-      ObjectMeta {
-        Name
+      metadata {
+        name
       }
-      Metrics {
-        Name
-        Value
+      metrics {
+        name
+        value
       }
     }
   }
@@ -195,15 +197,15 @@ And a two-column order:
 
 ```
 query addr {
- addresses(orderBy: "`$.Status.Phase` DESC, `$.ObjectMeta.Name` ASC"){
-    Total
-    Addresses
+ addresses(orderBy: "`$.status.phase` DESC, `$.metadata.name` ASC"){
+    total
+    addresses
     {
-      ObjectMeta {
-        Name
+      metadata {
+        name
       }
-      Status {
-        Phase
+      status {
+        phase
       }
     }
   }
@@ -215,18 +217,18 @@ query addr {
 ```
 query all_connections_for_addressspace_view {
   connections(
-    filter: "`$.Spec.AddressSpace.ObjectMeta.Name` = 'jupiter_as1' AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = 'app1_ns'"
+    filter: "`$.spec.addressSpace` = 'jupiter_as1' AND `$.metadata.namespace` = 'app1_ns'"
   ) {
-    Total
-    Connections {
-      ObjectMeta {
-        Name
+    total
+    connections {
+      metadata {
+        name
       }
-      Spec {
-        Hostname
-        ContainerId
-        Protocol
-        Encrypted
+      spec {
+        hostname
+        containerId
+        protocol
+        encrypted
       }
     }
   }
@@ -240,12 +242,12 @@ query all_address_plans {
   addressPlans (
     addressSpacePlan:"standard-small"
   ) {
-    Spec {
-      AddressType
-      DisplayName
-      LongDescription
-      ShortDescription
-      DisplayOrder
+    spec {
+      addressType
+      displayName
+      longDescription
+      shortDescription
+      displayOrder
     }
   }
 }
@@ -257,14 +259,15 @@ address plans can be filtered by address space plan and/or address type.
 
 ```
 query filtered_address_plans {
-  addressPlans(addressSpacePlan:"standard-medium", addressType: queue) {
-    ObjectMeta
-    {Name}
-    Spec {
-      AddressType
-      DisplayName
-      LongDescription
-      ShortDescription
+  addressPlans(addressSpacePlan: "standard-medium", addressType: queue) {
+    metadata {
+      name
+    }
+    spec {
+      addressType
+      displayName
+      longDescription
+      shortDescription
     }
   }
 }
@@ -275,11 +278,11 @@ query filtered_address_plans {
 ```
 query addressspace_schema {
   addressSpaceSchema_v2  {
-    ObjectMeta {
-      Name
+    metadata {
+      name
     }
-    Spec {
-      AuthenticationServices
+    spec {
+      authenticationServices
     }
   }
 }
@@ -292,11 +295,11 @@ schema authentication services can be filtered by address space type (from the a
 ```
 query filtered_addressspace_schema($t:AddressSpaceType = standard){
   addressSpaceSchema_v2(addressSpaceType:$t)  {
-    ObjectMeta {
-      Name
+    metadata {
+      name
     }
-    Spec {
-      AuthenticationServices
+    spec {
+      authenticationServices
     }
   }
 }
@@ -304,20 +307,20 @@ query filtered_addressspace_schema($t:AddressSpaceType = standard){
 
 ## all_authentication_services
 
-all unvalidated authentication services
+all authentication services, including those that have no yet been validated
 
 ```
 query authentication_services {
-  authenticationServices{
-    Spec
-    {
-      Type
+  authenticationServices {
+    spec {
+      type
     }
-    ObjectMeta {
-      Name
+    metadata {
+      name
     }
   }
 }
+
 
 ```
 
@@ -326,14 +329,14 @@ query authentication_services {
 ```
 query all_link_names_for_connection {
   connections(
-    filter: "`$.ObjectMeta.Name` = 'juno:48957' AND `$.Spec.AddressSpace.ObjectMeta.Name` = 'jupiter_as1' AND `$.Spec.AddressSpace.ObjectMeta.Namespace` = 'app1_ns' "
+    filter: "`$.metadata.name` LIKE 'juno:%' AND `$.spec.addressSpace` = 'jupiter_as1' AND `$.metadata.namespace` = 'app1_ns' "
   ) {
-    Connections {
-      Links {
-        Total
-        Links {
-          ObjectMeta {
-            Name
+    connections {
+      links {
+        total
+        links {
+          metadata {
+            name
           }
         }
       }
@@ -348,35 +351,35 @@ query all_link_names_for_connection {
 ```
 query single_address_with_links_and_metrics {
   addresses(
-    filter: "`$.Spec.AddressSpace` = 'jupiter_as1'  AND `$.ObjectMeta.Name` = 'jupiter_as1.ganymede' AND `$.ObjectMeta.Namespace` = 'app1_ns'"
+    filter: "`$.metadata.name` = 'jupiter_as1.ganymede' AND `$.metadata.namespace` = 'app1_ns'"
   ) {
-    Total
-    Addresses {
-      ObjectMeta {
-        Name
+    total
+    addresses {
+      metadata {
+        name
       }
-      Spec {
-        AddressSpace
+      spec {
+        addressSpace
       }
-      Links {
-        Total
-        Links {
-          ObjectMeta {
-            Name
+      links {
+        total
+        links {
+          metadata {
+            name
           }
-          Spec {
-            Role
-            Connection {
-              Spec {
-                ContainerId
+          spec {
+            role
+            connection {
+              spec {
+                containerId
               }
             }
           }
-          Metrics {
-            Name
-            Type
-            Value
-            Units
+          metrics {
+            name
+            type
+            value
+            units
           }
         }
       }
@@ -384,6 +387,7 @@ query single_address_with_links_and_metrics {
   }
 }
 ```
+
 # Example Mutations
 
 ## Create address space
@@ -394,9 +398,9 @@ to be created. The return value is the new address space's metadata.
 ```
 mutation create_as($as: AddressSpace_enmasse_io_v1beta1_Input!) {
   createAddressSpace(input: $as) {
-    Name
-    Uid
-    CreationTimestamp
+    name
+    uid
+    creationTimestamp
   }
 }
 ```
@@ -405,8 +409,8 @@ args:
 
 ```
 {
-  "as": { "ObjectMeta": {"Name": "wibx", "Namespace": "app1_ns" },
-    "Spec": {"Type": "standard", "Plan": "standard-small"}}
+  "as": { "metadata": {"name": "wibx", "namespace": "app1_ns" },
+    "spec": {"type": "standard", "plan": "standard-small"}}
 }
 ```
 
@@ -433,8 +437,8 @@ args:
 (patching a plan)
 ```
 {
-  "a": {"Name": "jupiter_as1", "Namespace": "app1_ns" },
-  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium\"}]",
+  "a": {"name": "jupiter_as1", "namespace": "app1_ns" },
+  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/plan\",\"value\":\"standard-medium\"}]",
   "patchType": "application/json-patch+json"
 }
 ```
@@ -442,8 +446,8 @@ args:
 (patching a authentication service name)
 ```
 {
-  "a": {"Name": "jupiter_as1", "Namespace": "app1_ns" },
-  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/AuthenticationService/Name\",\"value\":\"foo\"}]",
+  "a": {"name": "jupiter_as1", "namespace" : "app1_ns" },
+  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/authenticationService/name\",\"value\":\"foo\"}]",
   "patchType": "application/json-patch+json"
 }
 ```
@@ -463,7 +467,7 @@ args:
 
 ```
 {
-  "a": {"Name": "wibx", "Namespace": "app1_ns" }
+  "a": {"name": "jupiter_as1", "namespace": "app1_ns" }
 }
 ```
 
@@ -483,8 +487,8 @@ args:
 
 ```
 {
-  "a": { "ObjectMeta": {"Name": "jupiter_as1.wiby1", "Namespace": "app1_ns" },
-    "Spec": {"Type": "queue", "Plan": "standard-small-queue", "Address": "wiby1", "AddressSpace": "jupiter_as1"}}
+  "a": { "metadata": {"name": "jupiter_as1.wiby1", "namespace": "app1_ns" },
+    "spec": {"type": "queue", "plan": "standard-small-queue", "address": "wiby1", "addressSpace": "jupiter_as1"}}
 }
 ```
 
@@ -505,9 +509,8 @@ args:
 
 ```
 {
-  "as" : "jupiter_as1",
-  "a": { "ObjectMeta": {"Namespace": "app1_ns" },
-    "Spec": {"Type": "queue", "Plan": "standard-small-queue", "Address": "foo2", "AddressSpace": "jupiter_as1"}}
+  "a": { "metadata": {"namespace": "app1_ns" },
+    "spec": {"type": "queue", "plan": "standard-small-queue", "address": "foo2", "addressSpace": "jupiter_as1"}}
 }
 ```
 
@@ -531,8 +534,8 @@ args:
 
 ```
 {
-  "a": {"Name": "jupiter_as1.ganymede", "Namespace": "app1_ns" },
-  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/Plan\",\"value\":\"standard-medium-queue\"}]",
+  "a": {"name": "jupiter_as1.ganymede", "namespace": "app1_ns" },
+  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/plan\",\"value\":\"standard-medium-queue\"}]",
   "patchType": "application/json-patch+json"
 }
 ```
@@ -552,7 +555,7 @@ args:
 
 ```
 {
-  "a": {"Name": "jupiter_as1.wiby1", "Namespace": "app1_ns" }
+  "a": {"name": "jupiter_as1.wiby1", "namespace": "app1_ns" }
 }
 ```
 
@@ -571,7 +574,7 @@ args:
 
 ```
 {
-  "a": {"Name": "jupiter_as1.wiby1", "Namespace": "app1_ns" }
+  "a": {"name": "jupiter_as1.wiby1", "namespace": "app1_ns" }
 }
 ```
 
@@ -590,7 +593,7 @@ args:
 
 ```
 {
-  "c": {"Name": "cassini:55596", "Namespace": "app1_ns" }
+  "c": {"name": "cassini:55596", "namespace": "app1_ns" }
 }
 ```
 
@@ -606,7 +609,7 @@ query messagingCertificateChain($as:ObjectMeta_v1_Input!) {
 
 ```
 {
-  "as": {"Name": "cassini:55596", "Namespace": "app1_ns" }
+  "as": {"name": "cassini:55596", "namespace": "app1_ns" }
 }
 ```
 
@@ -624,8 +627,8 @@ args:
 
 ```
 {
-  "as": { "ObjectMeta": {"Name": "wibx", "Namespace": "app1_ns" },
-    "Spec": {"Type": "standard", "Plan": "standard-small"}}
+  "as": { "metadata": {"name": "wibx", "namespace": "app1_ns" },
+    "spec": {"type": "standard", "plan": "standard-small"}}
 }
 ```
 
@@ -644,7 +647,7 @@ args:
 ```
 {
   "as": "jupiter_as",
-  "a": { "ObjectMeta": {"Namespace": "app1_ns" },
-    "Spec": {"Type": "standard", "Plan": "standard-small", "Address":"foo"}}
+  "a": { "metadata": {"namespace": "app1_ns" },
+    "spec": {"type": "standard", "plan": "standard-small", "address":"foo"}}
 }
 ```

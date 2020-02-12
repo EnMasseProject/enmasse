@@ -63,33 +63,33 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   if (loading) return <Loading />;
   if (error) console.log(error);
   const { addresses } = data || {
-    addresses: { Total: 0, Addresses: [] }
+    addresses: { total: 0, addresses: [] }
   };
   if (
     addresses &&
-    addresses.Addresses.length > 0 &&
-    addresses.Addresses[0].Links.Total > 0
+    addresses.addresses.length > 0 &&
+    addresses.addresses[0].links.total > 0
   ) {
-    setAddressLinksTotal(addresses.Addresses[0].Links.Total);
+    setAddressLinksTotal(addresses.addresses[0].links.total);
   }
   const links =
     addresses &&
-    addresses.Addresses.length > 0 &&
-    addresses.Addresses[0].Links.Total > 0 &&
-    addresses.Addresses[0].Links;
+    addresses.addresses.length > 0 &&
+    addresses.addresses[0].links.total > 0 &&
+    addresses.addresses[0].links;
 
-  let clientRows: IClient[] = addresses.Addresses[0].Links.Links.map(link => ({
-    role: link.Spec.Role.toString(),
-    containerId: link.Spec.Connection.Spec.ContainerId,
-    name: link.ObjectMeta.Name,
+  let clientRows: IClient[] = addresses.addresses[0].links.links.map(link => ({
+    role: link.spec.role.toString(),
+    containerId: link.spec.connection.spec.containerId,
+    name: link.metadata.name,
     deliveryRate: getFilteredValue(
-      link.Metrics,
-      link.Spec.Role === "sender"
+      link.metrics,
+      link.spec.role === "sender"
         ? "enmasse_messages_in"
         : "enmasse_messages_out"
     ),
-    backlog: getFilteredValue(link.Metrics, "enmasse_messages_backlog"),
-    connectionName: link.Spec.Connection.ObjectMeta.Name,
+    backlog: getFilteredValue(link.metrics, "enmasse_messages_backlog"),
+    connectionName: link.spec.connection.metadata.name,
     addressSpaceName: name,
     addressSpaceNamespace: namespace,
     addressSpaceType: type
@@ -100,7 +100,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   };
   return (
     <>
-      {links && links.Total > 0 ? (
+      {links && links.total > 0 ? (
         <ClientList rows={clientRows} onSort={onSort} sortBy={sortBy} />
       ) : (
         <EmptyLinks />

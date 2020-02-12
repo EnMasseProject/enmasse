@@ -92,11 +92,11 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
       if (
         addressSpace.data &&
         addressSpace.data.addressSpaces &&
-        addressSpace.data.addressSpaces.AddressSpaces.length > 0
+        addressSpace.data.addressSpaces.addressSpaces.length > 0
       ) {
         const plan =
-          addressSpace.data.addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta
-            .Name;
+          addressSpace.data.addressSpaces.addressSpaces[0].spec.plan.metadata
+            .name;
         if (plan) {
           setAddressSpacePlan(plan);
         }

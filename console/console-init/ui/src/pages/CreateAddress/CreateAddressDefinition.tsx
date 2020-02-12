@@ -56,22 +56,22 @@ export interface IAddressDefinition {
 }
 interface IAddressPlans {
   addressPlans: Array<{
-    ObjectMeta: {
-      Name: string;
+    metadata: {
+      name: string;
     };
-    Spec: {
-      AddressType: string;
-      DisplayName: string;
-      ShortDescription: string;
+    spec: {
+      addressType: string;
+      displayName: string;
+      shortDescription: string;
     };
   }>;
 }
 interface IAddressTypes {
   addressTypes_v2: Array<{
-    Spec: {
-      DisplayName: string;
-      LongDescription: string;
-      ShortDescription: string;
+    spec: {
+      displayName: string;
+      longDescription: string;
+      shortDescription: string;
     };
   }>;
 }
@@ -114,9 +114,9 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
       if (addressPlans.data && addressPlans.data.addressPlans.length > 0) {
         const planOptions = addressPlans.data.addressPlans.map(plan => {
           return {
-            value: plan.ObjectMeta.Name,
-            label: plan.Spec.DisplayName,
-            description: plan.Spec.ShortDescription
+            value: plan.metadata.name,
+            label: plan.spec.displayName,
+            description: plan.spec.shortDescription
           };
         });
         setPlan(" ");
@@ -134,13 +134,13 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
         if (
           topics_addresses.data &&
           topics_addresses.data.addresses &&
-          topics_addresses.data.addresses.Addresses.length > 0
+          topics_addresses.data.addresses.addresses.length > 0
         ) {
-          const topics = topics_addresses.data.addresses.Addresses.map(
+          const topics = topics_addresses.data.addresses.addresses.map(
             address => {
               return {
-                value: address.Spec.Address,
-                label: address.ObjectMeta.Name
+                value: address.spec.address,
+                label: address.metadata.name
               };
             }
           );
@@ -177,9 +177,9 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
   };
   const types: IDropdownOption[] = addressTypes_v2.map(type => {
     return {
-      value: type.Spec.DisplayName,
-      label: type.Spec.DisplayName,
-      description: type.Spec.ShortDescription
+      value: type.spec.displayName,
+      label: type.spec.displayName,
+      description: type.spec.shortDescription
     };
   });
   if (typeOptions.length === 0) setTypeOptions(types);

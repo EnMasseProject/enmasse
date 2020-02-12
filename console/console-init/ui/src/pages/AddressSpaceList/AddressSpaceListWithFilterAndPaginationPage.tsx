@@ -103,8 +103,8 @@ export default function AddressSpaceListWithFilterAndPagination() {
       mutation: DELETE_ADDRESS_SPACE,
       variables: {
         a: {
-          Name: data.name,
-          Namespace: data.nameSpace
+          name: data.name,
+          namespace: data.nameSpace
         }
       }
     });

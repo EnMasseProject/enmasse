@@ -87,34 +87,34 @@ export default function ConnectionDetailPage() {
     console.log(error);
   }
   const { connections } = data || {
-    connections: { Total: 0, Connections: [] }
+    connections: { total: 0, connections: [] }
   };
-  const connection = connections.Connections[0];
+  const connection = connections.connections[0];
   //Change this logic
   const jvmObject =
-    connection.Spec &&
-    connection.Spec.Properties &&
-    connection.Spec.Properties.length > 0
+    connection.spec &&
+    connection.spec.properties &&
+    connection.spec.properties.length > 0
       ? getSplitValue(
-          getProductFilteredValue(connection.Spec.Properties, "platform")
+          getProductFilteredValue(connection.spec.properties, "platform")
         )
       : { jvm: "-", os: "-" };
 
   const connectionDetail: IConnectionHeaderDetailProps = {
-    hostname: connection.Spec.Hostname,
-    containerId: connection.Spec.ContainerId,
-    version: getProductFilteredValue(connection.Spec.Properties, "version"),
-    protocol: connection.Spec.Protocol.toUpperCase(),
-    encrypted: connection.Spec.Encrypted || false,
-    creationTimestamp: connection.ObjectMeta.CreationTimestamp,
-    messageIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
-    messageOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
+    hostname: connection.spec.hostname,
+    containerId: connection.spec.containerId,
+    version: getProductFilteredValue(connection.spec.properties, "version"),
+    protocol: connection.spec.protocol.toUpperCase(),
+    encrypted: connection.spec.encrypted || false,
+    creationTimestamp: connection.metadata.creationTimestamp,
+    messageIn: getFilteredValue(connection.metrics, "enmasse_messages_in"),
+    messageOut: getFilteredValue(connection.metrics, "enmasse_messages_out"),
     //Change this logic
     platform: jvmObject && jvmObject.jvm,
     os: jvmObject && jvmObject.os,
     product:
-      connection.Spec.Properties && connection.Spec.Properties.length > 0
-        ? getProductFilteredValue(connection.Spec.Properties, "product")
+      connection.spec.properties && connection.spec.properties.length > 0
+        ? getProductFilteredValue(connection.spec.properties, "product")
         : "-"
   };
 

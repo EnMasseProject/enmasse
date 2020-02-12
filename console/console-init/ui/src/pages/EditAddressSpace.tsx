@@ -66,10 +66,10 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
     planOptions =
       addressSpacePlans
         .map(plan => {
-          if (plan.Spec.AddressSpaceType === addressSpace.type) {
+          if (plan.spec.addressSpaceType === addressSpace.type) {
             return {
-              value: plan.ObjectMeta.Name,
-              label: plan.ObjectMeta.Name
+              value: plan.metadata.name,
+              label: plan.metadata.name
             };
           }
         })
@@ -77,7 +77,7 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
   }
 
   if (authServices.addressSpaceSchema_v2[0])
-    authServiceOptions = authServices.addressSpaceSchema_v2[0].Spec.AuthenticationServices.map(
+    authServiceOptions = authServices.addressSpaceSchema_v2[0].spec.authenticationServices.map(
       authService => {
         return {
           value: authService,
@@ -93,7 +93,7 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
       </TextContent>
       <FormGroup label="Namespace" fieldId="name-space" isRequired={true}>
         <FormSelect
-          id="edit-addr-plan"
+          id="edit-namespace"
           isDisabled
           value={addressSpace.nameSpace}
           aria-label="FormSelect Input"

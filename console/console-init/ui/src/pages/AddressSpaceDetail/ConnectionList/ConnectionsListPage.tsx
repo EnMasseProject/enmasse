@@ -61,22 +61,22 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
   }
   // if (loading) return <Loading />;
   const { connections } = data || {
-    connections: { Total: 0, Connections: [] }
+    connections: { total: 0, connections: [] }
   };
-  setTotalConnections(connections.Total);
-  const connectionList: IConnection[] = connections.Connections.map(
+  setTotalConnections(connections.total);
+  const connectionList: IConnection[] = connections.connections.map(
     connection => ({
-      hostname: connection.Spec.Hostname,
-      containerId: connection.Spec.ContainerId,
-      protocol: connection.Spec.Protocol,
-      encrypted: connection.Spec.Encrypted,
-      messageIn: getFilteredValue(connection.Metrics, "enmasse_messages_in"),
-      messageOut: getFilteredValue(connection.Metrics, "enmasse_messages_out"),
-      senders: getFilteredValue(connection.Metrics, "enmasse_senders"),
-      receivers: getFilteredValue(connection.Metrics, "enmasse_receivers"),
+      hostname: connection.spec.hostname,
+      containerId: connection.spec.containerId,
+      protocol: connection.spec.protocol,
+      encrypted: connection.spec.encrypted,
+      messageIn: getFilteredValue(connection.metrics, "enmasse_messages_in"),
+      messageOut: getFilteredValue(connection.metrics, "enmasse_messages_out"),
+      senders: getFilteredValue(connection.metrics, "enmasse_senders"),
+      receivers: getFilteredValue(connection.metrics, "enmasse_receivers"),
       status: "running",
-      name: connection.ObjectMeta.Name,
-      creationTimestamp: connection.ObjectMeta.CreationTimestamp
+      name: connection.metadata.name,
+      creationTimestamp: connection.metadata.creationTimestamp
     })
   );
 
@@ -91,7 +91,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
         sortBy={sortBy}
         onSort={onSort}
       />
-      {connections.Total > 0 ? " " : <EmptyConnection />}
+      {connections.total > 0 ? " " : <EmptyConnection />}
     </>
   );
 };

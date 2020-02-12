@@ -30,19 +30,19 @@ const ALL_ADDRESS_SPACES_FILTER=(
     if (filterNamesLength > 1) {
       if (filterName.isExact)
         filter +=
-          "(`$.ObjectMeta.Name` = '" + filterNameValue + "'";
+          "(`$.metadata.name` = '" + filterNameValue + "'";
       else
         filter +=
-          "(`$.ObjectMeta.Name` LIKE '" + filterNameValue + "%'";
+          "(`$.metadata.name` LIKE '" + filterNameValue + "%'";
       for (let i = 1; i < filterNamesLength; i++) {
         let filterName=filterNames && filterNames[i];
         let filterNameValue=filterName && filterName.value && filterName.value.trim();
         if (filterName.isExact)
           filter +=
-            "OR `$.ObjectMeta.Name` = '" + filterNameValue + "'";
+            "OR `$.metadata.name` = '" + filterNameValue + "'";
         else
           filter +=
-            "OR `$.ObjectMeta.Name` LIKE '" +
+            "OR `$.metadata.name` LIKE '" +
             filterNameValue +
             "%'";
       }
@@ -50,10 +50,10 @@ const ALL_ADDRESS_SPACES_FILTER=(
     } else {
       if (filterName.isExact)
         filter +=
-          "`$.ObjectMeta.Name` = '" + filterNameValue + "'";
+          "`$.metadata.name` = '" + filterNameValue + "'";
       else
         filter +=
-          "`$.ObjectMeta.Name` LIKE '" + filterNameValue + "%'";
+          "`$.metadata.name` LIKE '" + filterNameValue + "%'";
     }
   }
   if (
@@ -66,13 +66,13 @@ const ALL_ADDRESS_SPACES_FILTER=(
     if (filterNameSpacesLength > 1) {
       if (filterNameSpace.isExact){
         filter +=
-          "(`$.ObjectMeta.Namespace` = '" +
+          "(`$.metadata.namespace` = '" +
           filterNameSpaceValue.trim() +
           "'";
       }
       else{
         filter +=
-          "(`$.ObjectMeta.Namespace` LIKE '" +
+          "(`$.metadata.namespace` LIKE '" +
           filterNameSpaceValue.trim() +
           "%'";
       }
@@ -81,12 +81,12 @@ const ALL_ADDRESS_SPACES_FILTER=(
         let filterNameSpaceValue=filterNameSpace && filterNameSpace.value && filterNameSpace.value.trim();
         if (filterNameSpace.isExact)
           filter +=
-            "OR `$.ObjectMeta.Namespace` = '" +
+            "OR `$.metadata.namespace` = '" +
             filterNameSpaceValue +
             "'";
         else
           filter +=
-            "OR `$.ObjectMeta.Namespace` LIKE '" +
+            "OR `$.metadata.namespace` LIKE '" +
             filterNameSpaceValue +
             "%'";
       }
@@ -94,12 +94,12 @@ const ALL_ADDRESS_SPACES_FILTER=(
     } else {
       if (filterNameSpace.isExact)
         filter +=
-          "`$.ObjectMeta.Namespace` = '" +
+          "`$.metadata.namespace` = '" +
           filterNameSpaceValue +
           "'";
       else
         filter +=
-          "`$.ObjectMeta.Namespace` LIKE '" +
+          "`$.metadata.namespace` LIKE '" +
           filterNameSpaceValue +
           "%'";
     }
@@ -112,7 +112,7 @@ const ALL_ADDRESS_SPACES_FILTER=(
     filter += " AND ";
   }
   if (filterType && filterType.trim() !== "") {
-    filter += "`$.Spec.Type` ='" + filterType.toLowerCase().trim() + "' ";
+    filter += "`$.spec.type` ='" + filterType.toLowerCase().trim() + "' ";
   }
   return filter;
 };
@@ -122,13 +122,13 @@ const ALL_ADDRESS_SPACES_SORT=(sortBy?: ISortBy)=>{
   if (sortBy) {
     switch (sortBy.index) {
       case 1:
-        orderBy = "`$.ObjectMeta.Name` ";
+        orderBy = "`$.metadata.name` ";
         break;
       case 2:
       case 3:
         break;
       case 4:
-        orderBy = "`$.ObjectMeta.CreationTimestamp` ";
+        orderBy = "`$.metadata.creationTimestamp` ";
         break;
       default:
         break;
@@ -156,31 +156,31 @@ const RETURN_ALL_ADDRESS_SPACES = (
         addressSpaces(filter: "${filter}"  
         first:${perPage} offset:${perPage *
     (page - 1)} orderBy:"${orderBy}") {
-          Total
-          AddressSpaces {
-            ObjectMeta {
-              Namespace
-              Name
-              CreationTimestamp
+          total
+          addressSpaces {
+            metadata {
+              namespace
+              name
+              creationTimestamp
             }
-            Spec {
-              Type
-              Plan {
-                ObjectMeta{
-                  Name
+            spec {
+              type
+              plan {
+                metadata {
+                  name
                 }
-                Spec {
-                  DisplayName
+                spec {
+                  displayName
                 }
               }
-              AuthenticationService{
-                Name
+              authenticationService{
+                name
               }
             }
-            Status {
-              IsReady
-              Phase
-              Messages
+            status {
+              isReady
+              phase
+              messages
             }
           }
         }
@@ -193,28 +193,28 @@ const RETURN_ADDRESS_SPACE_DETAIL = (name?: string, namespace?: string) => {
   const ADDRESS_SPACE_DETAIL = gql`
       query all_address_spaces {
         addressSpaces(
-          filter: "\`$..Name\` = '${name}' AND \`$..Namespace\` = '${namespace}'"
+          filter: "\`$..name\` = '${name}' AND \`$..namespace\` = '${namespace}'"
         ) {
-          AddressSpaces {
-            ObjectMeta {
-              Namespace
-              Name
-              CreationTimestamp
+          addressSpaces {
+            metadata {
+              namespace
+              name
+              creationTimestamp
             }
-            Spec {
-              Type
-              Plan {
-                ObjectMeta {
-                  Name
+            spec {
+              type
+              plan {
+                metadata {
+                  name
                 }
-                Spec {
-                  DisplayName
+                spec {
+                  displayName
                 }   
               }
             }
-            Status {
-              IsReady
-              Messages
+            status {
+              isReady
+              messages
             }
           }
         }
@@ -225,9 +225,9 @@ const RETURN_ADDRESS_SPACE_DETAIL = (name?: string, namespace?: string) => {
 const CREATE_ADDRESS_SPACE = gql`
   mutation create_as($as: AddressSpace_enmasse_io_v1beta1_Input!) {
     createAddressSpace(input: $as) {
-      Name
-      Uid
-      CreationTimestamp
+      name
+      uid
+      creationTimestamp
     }
   }
 `;
@@ -255,20 +255,20 @@ const RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE = (
   let filter = "";
   if (value) {
     if (isName) {
-      filter += "`$.ObjectMeta.Name` LIKE '" + value + "%'";
+      filter += "`$.metadata.name` LIKE '" + value + "%'";
     } else {
-      filter += "`$.ObjectMeta.Namespace` LIKE '" + value + "%'";
+      filter += "`$.metadata.namespace` LIKE '" + value + "%'";
     }
   }
   const all_address_spaces = gql`
     query all_address_spaces {
       addressSpaces(filter: "${filter}"  
       first:100 offset:0) {
-        Total
-        AddressSpaces {
-          ObjectMeta {
-            Namespace
-            Name
+        total
+        addressSpaces {
+          metadata {
+            namespace
+            name
           }
         }
       }

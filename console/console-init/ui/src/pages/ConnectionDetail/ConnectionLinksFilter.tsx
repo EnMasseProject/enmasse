@@ -194,18 +194,18 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       response &&
       response.data &&
       response.data.connections &&
-      response.data.connections.Connections &&
-      response.data.connections.Connections.length > 0 &&
-      response.data.connections.Connections[0].Links &&
-      response.data.connections.Connections[0].Links.Links &&
-      response.data.connections.Connections[0].Links.Links.length > 0
+      response.data.connections.connections &&
+      response.data.connections.connections.length > 0 &&
+      response.data.connections.connections[0].links &&
+      response.data.connections.connections[0].links.links &&
+      response.data.connections.connections[0].links.links.length > 0
     ) {
-      if (response.data.connections.Connections[0].Links.Total > 100) {
+      if (response.data.connections.connections[0].links.total > 100) {
         setNameOptions([]);
       } else {
-        const obtainedList = response.data.connections.Connections[0].Links.Links.map(
+        const obtainedList = response.data.connections.connections[0].links.links.map(
           (link: any) => {
-            return link.ObjectMeta.Name;
+            return link.metadata.name;
           }
         );
         setNameOptions(Array.from(new Set(obtainedList)));
@@ -241,18 +241,18 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       response &&
       response.data &&
       response.data.connections &&
-      response.data.connections.Connections &&
-      response.data.connections.Connections.length > 0 &&
-      response.data.connections.Connections[0].Links &&
-      response.data.connections.Connections[0].Links.Links &&
-      response.data.connections.Connections[0].Links.Links.length > 0
+      response.data.connections.connections &&
+      response.data.connections.connections.length > 0 &&
+      response.data.connections.connections[0].links &&
+      response.data.connections.connections[0].links.links &&
+      response.data.connections.connections[0].links.links.length > 0
     ) {
-      if (response.data.connections.Connections[0].Links.Total > 100) {
+      if (response.data.connections.connections[0].links.total > 100) {
         setAddressOptions([]);
       } else {
-        const obtainedList = response.data.connections.Connections[0].Links.Links.map(
+        const obtainedList = response.data.connections.connections[0].links.links.map(
           (link: any) => {
-            return link.Spec.Address;
+            return link.spec.address;
           }
         );
         setAddressOptions(Array.from(new Set(obtainedList)));

@@ -171,7 +171,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
         }
         setFilterNamespaces([...filterNamespaces]);
         break;
-      case "Type":
+      case "type":
         setFilterType(null);
         break;
     }
@@ -209,15 +209,15 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       response &&
       response.data &&
       response.data.addressSpaces &&
-      response.data.addressSpaces.AddressSpaces &&
-      response.data.addressSpaces.AddressSpaces.length > 0
+      response.data.addressSpaces.addressSpaces &&
+      response.data.addressSpaces.addressSpaces.length > 0
     ) {
-      if (response.data.addressSpaces.Total > 100) {
+      if (response.data.addressSpaces.total > 100) {
         setNameOptions([]);
       } else {
-        const obtainedList = response.data.addressSpaces.AddressSpaces.map(
+        const obtainedList = response.data.addressSpaces.addressSpaces.map(
           (link: any) => {
-            return link.ObjectMeta.Name;
+            return link.metadata.name;
           }
         );
         setNameOptions(Array.from(new Set(obtainedList)));
@@ -255,15 +255,15 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       response &&
       response.data &&
       response.data.addressSpaces &&
-      response.data.addressSpaces.AddressSpaces &&
-      response.data.addressSpaces.AddressSpaces.length > 0
+      response.data.addressSpaces.addressSpaces &&
+      response.data.addressSpaces.addressSpaces.length > 0
     ) {
-      if (response.data.addressSpaces.Total > 100) {
+      if (response.data.addressSpaces.total > 100) {
         setNamespaceOptions([]);
       } else {
-        const obtainedList = response.data.addressSpaces.AddressSpaces.map(
+        const obtainedList = response.data.addressSpaces.addressSpaces.map(
           (link: any) => {
-            return link.ObjectMeta.Namespace;
+            return link.metadata.namespace;
           }
         );
         setNamespaceOptions(Array.from(new Set(obtainedList)));

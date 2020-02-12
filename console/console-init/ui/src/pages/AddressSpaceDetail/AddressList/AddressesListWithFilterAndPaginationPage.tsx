@@ -39,11 +39,11 @@ export const GridStylesForTableHeader = StyleSheet.create({
 
 export interface IAddressSpacePlanResponse {
   addressSpaces: {
-    AddressSpaces: Array<{
-      Spec: {
-        Plan: {
-          ObjectMeta: {
-            Name: string;
+    addressSpaces: Array<{
+      spec: {
+        plan: {
+          metadata: {
+            name: string;
           };
         };
       };
@@ -99,13 +99,11 @@ export default function AddressesList() {
   );
 
   const { addressSpaces } = data || {
-    addressSpaces: { AddressSpaces: [] }
+    addressSpaces: { addressSpaces: [] }
   };
 
-  if (!addressSpacePlan && addressSpaces.AddressSpaces[0]) {
-    setAddressSpacePlan(
-      addressSpaces.AddressSpaces[0].Spec.Plan.ObjectMeta.Name
-    );
+  if (!addressSpacePlan && addressSpaces.addressSpaces[0]) {
+    setAddressSpacePlan(addressSpaces.addressSpaces[0].spec.plan.metadata.name);
   }
 
   const setSearchParam = React.useCallback(
@@ -157,8 +155,8 @@ export default function AddressesList() {
       mutation: DELETE_ADDRESS,
       variables: {
         a: {
-          Name: data.name,
-          Namespace: data.namespace
+          name: data.name,
+          namespace: data.namespace
         }
       }
     });
@@ -175,8 +173,8 @@ export default function AddressesList() {
       mutation: PURGE_ADDRESS,
       variables: {
         a: {
-          Name: data.name,
-          Namespace: data.namespace
+          name: data.name,
+          namespace: data.namespace
         }
       }
     });

@@ -52,7 +52,7 @@ type Link struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Spec              LinkSpec  `json:"spec,omitempty"`
-	Metrics           []*Metric `json:"metrics"`
+	Metrics           []*Metric `json:"metrics,omitempty"`
 }
 
 func (l *Link) GetMetrics() []*Metric {
@@ -76,8 +76,8 @@ type Metric struct {
 }
 
 type DataPointTimePair struct {
-	DataPoint float64
-	Timestamp time.Time
+	DataPoint float64   `json:"dataPoint"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 func (m *Metric) GetTimeSeries() *ring.Ring {

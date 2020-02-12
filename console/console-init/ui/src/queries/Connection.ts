@@ -22,10 +22,10 @@ const ALL_CONECTION_LIST_FILTER=(
   let containerValue=container && container.value && container.value.trim();
 
   if (name) {
-    filter += "`$.Spec.AddressSpace` = '" + name + "'";
+    filter += "`$.spec.addressSpace` = '" + name + "'";
   }
   if (namespace) {
-    filter += " AND `$.ObjectMeta.Namespace` = '" + namespace + "'";
+    filter += " AND `$.metadata.namespace` = '" + namespace + "'";
   }
   if (
     (hostnamesLength > 0) ||
@@ -36,27 +36,27 @@ const ALL_CONECTION_LIST_FILTER=(
   if (hostnamesLength > 0) {
     if (hostnamesLength > 1) {
       if (hostname.isExact)
-        filter += "(`$.Spec.Hostname` = '" + hostnameValue + "'";
+        filter += "(`$.spec.hostname` = '" + hostnameValue + "'";
       else
         filter +=
-          "(`$.Spec.Hostname` LIKE '" + hostnameValue+ "%' ";
+          "(`$.spec.hostname` LIKE '" + hostnameValue+ "%' ";
       for (let i = 1; i < hostnamesLength; i++) {
         let hostname=hostnames && hostnames[i];
         let hostnameValue=hostname && hostname.value && hostname.value.trim();
         if (hostname.isExact)
           filter +=
-            "OR `$.Spec.Hostname` = '" + hostnameValue + "'";
+            "OR `$.spec.hostname` = '" + hostnameValue + "'";
         else
           filter +=
-            "OR `$.Spec.Hostname` LIKE '" + hostnameValue + "%' ";
+            "OR `$.spec.hostname` LIKE '" + hostnameValue + "%' ";
       }
       filter += ")";
     } else {
       if (hostname.isExact)
-        filter += "(`$.Spec.Hostname` = '" + hostnameValue + "')";
+        filter += "(`$.spec.hostname` = '" + hostnameValue + "')";
       else
         filter +=
-          "(`$.Spec.Hostname` LIKE '" + hostnameValue + "%')";
+          "(`$.spec.hostname` LIKE '" + hostnameValue + "%')";
     }
   }
 
@@ -67,19 +67,19 @@ const ALL_CONECTION_LIST_FILTER=(
     if (containersLength> 1) {
       if (container.isExact)
         filter +=
-          "(`$.Spec.ContainerId` = '" + containerValue + "'";
+          "(`$.spec.containerId` = '" + containerValue + "'";
       else
         filter +=
-          "(`$.Spec.ContainerId` LIKE '" + containerValue + "%' ";
+          "(`$.spec.containerId` LIKE '" + containerValue + "%' ";
       for (let i = 1; i < containersLength; i++) {
         let container=containers && containers[i];
         let containerValue=container && container.value && container.value.trim();
         if (container.isExact)
           filter +=
-            "OR `$.Spec.ContainerId` = '" + containerValue + "'";
+            "OR `$.spec.containerId` = '" + containerValue + "'";
         else
           filter +=
-            "OR `$.Spec.ContainerId` LIKE '" +
+            "OR `$.spec.containerId` LIKE '" +
             containerValue +
             "%' ";
       }
@@ -87,10 +87,10 @@ const ALL_CONECTION_LIST_FILTER=(
     } else {
       if (container.isExact)
         filter +=
-          "(`$.Spec.ContainerId` = '" + containerValue + "')";
+          "(`$.spec.containerId` = '" + containerValue + "')";
       else
         filter +=
-          "(`$.Spec.ContainerId` LIKE '" + containerValue + "%')";
+          "(`$.spec.containerId` LIKE '" + containerValue + "%')";
     }
   }
   return filter;
@@ -101,28 +101,28 @@ const ALL_CONECTION_LIST_SORT=(sortBy?: ISortBy)=>{
   if (sortBy) {
     switch (sortBy.index) {
       case 0:
-        orderBy = "`$.Spec.Hostname` ";
+        orderBy = "`$.spec.hostname` ";
         break;
       case 1:
-        orderBy = "`$.Spec.ContainerId` ";
+        orderBy = "`$.spec.containerId` ";
         break;
       case 2:
-        orderBy = "`$.Spec.Protocol` ";
+        orderBy = "`$.spec.protocol` ";
         break;
       case 3:
-        orderBy = "`$.ObjectMeta.CreationTimestamp` ";
+        orderBy = "`$.metadata.creationTimestamp` ";
         break;
       case 4:
-        orderBy = "`$.Metrics[?(@.Name=='enmasse_messages_in')].Value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_in')].value` ";
         break;
       case 5:
-        orderBy = "`$.Metrics[?(@.Name=='enmasse_messages_out')].Value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_out')].value` ";
         break;
       case 6:
-        orderBy = "`$.Metrics[?(@.Name=='enmasse_senders')].Value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_senders')].value` ";
         break;
       case 7:
-        orderBy = "`$.Metrics[?(@.Name=='enmasse_receivers')].Value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_receivers')].value` ";
         break;
       default:
         break;
@@ -150,23 +150,23 @@ const RETURN_ALL_CONECTION_LIST = (
           filter: "${filter}" first:${perPage} offset:${perPage *
       (page - 1)} orderBy:"${orderByString}" 
         ) {
-        Total
-        Connections {
-          ObjectMeta {
-            Name
-            CreationTimestamp
+        total
+        connections {
+          metadata {
+            name
+            creationTimestamp
           }
-          Spec {
-            Hostname
-            ContainerId
-            Protocol
-            Encrypted
+          spec {
+            hostname
+            containerId
+            protocol
+            encrypted
           }
-          Metrics {
-            Name
-            Type
-            Value
-            Units
+          metrics {
+            name
+            type
+            value
+            units
           }
         }
       }
@@ -182,41 +182,41 @@ const RETURN_CONNECTION_DETAIL = (
 ) => {
   let filter = "";
   if (addressSpaceName) {
-    filter += "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
+    filter += "`$.spec.addressSpace` = '" + addressSpaceName + "' AND ";
   }
   if (addressSpaceNameSpcae) {
-    filter += "`$.ObjectMeta.Namespace` = '" + addressSpaceNameSpcae + "' AND ";
+    filter += "`$.metadata.namespace` = '" + addressSpaceNameSpcae + "' AND ";
   }
   if (connectionName) {
-    filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
+    filter += "`$.metadata.name` = '" + connectionName + "'";
   }
   const CONNECTION_DETAIL = gql`
     query single_connections {
       connections(
         filter: "${filter}" 
       ) {
-        Total
-        Connections {
-          ObjectMeta {
-            Name
-            Namespace
-            CreationTimestamp
+        total
+        connections {
+          metadata {
+            name
+            namespace
+            creationTimestamp
           }
-          Spec {
-            Hostname
-            ContainerId
-            Protocol
-            Encrypted
-            Properties{
-              Key
-              Value
+          spec {
+            hostname
+            containerId
+            protocol
+            encrypted
+            properties{
+              key
+              value
             }
           }
-          Metrics {
-            Name
-            Type
-            Value
-            Units
+          metrics {
+            name
+            type
+            value
+            units
           }
         }
       }
@@ -233,31 +233,31 @@ const CONNECTION_LINKS_SORT=( sortBy?: ISortBy,)=>{
         orderBy = "";
         break;
       case 1:
-        orderBy = "`$.ObjectMeta.Name` ";
+        orderBy = "`$.metadata.name` ";
         break;
       case 2:
-        orderBy = "`$.Spec.Address` ";
+        orderBy = "`$.spec.address` ";
         break;
       case 3:
-        orderBy = "`$.Metrics[?(@.Name=='enmasse_deliveries')].Value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_deliveries')].value` ";
         break;
       case 4:
-        orderBy = "`$.Metrics[?(@.Name=='enmasse_accepted')].Value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_accepted')].value` ";
         break;
       case 5:
-        orderBy = "`$.Metrics[?(@.Name=='enmasse_rejected')].Value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_rejected')].value` ";
         break;
       case 5:
-        orderBy = "`$.Metrics[?(@.Name=='enmasse_released')].Value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_released')].value` ";
         break;
       case 7:
-        orderBy = "`$.Metrics[?(@.Name=='enmasse_modified')].Value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_modified')].value` ";
         break;
       case 8:
-        orderBy = "`$.Metrics[?(@.Name=='enmasse_presettled')].Value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_presettled')].value` ";
         break;
       case 9:
-        orderBy = "`$.Metrics[?(@.Name=='enmasse_undelivered')].Value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_undelivered')].value` ";
         break;
       default:
         break;
@@ -288,32 +288,32 @@ const CONNECTION_LINKS_FILTER=(
   let filterAddresseValue=filterAddresse && filterAddresse.value && filterAddresse.value.trim();
 
   if (addressSpaceName) {
-    filter += "`$.Spec.AddressSpace` = '" + addressSpaceName + "' AND ";
+    filter += "`$.spec.addressSpace` = '" + addressSpaceName + "' AND ";
   }
   if (addressSpaceNameSpcae) {
-    filter += "`$.ObjectMeta.Namespace` = '" + addressSpaceNameSpcae + "' AND ";
+    filter += "`$.metadata.namespace` = '" + addressSpaceNameSpcae + "' AND ";
   }
   if (connectionName) {
-    filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
+    filter += "`$.metadata.name` = '" + connectionName + "'";
   }
   //filter for links
   if (filterNamesLength> 0) {
     if (filterNamesLength> 1) {
       if (filterName.isExact)
         filterForLink +=
-          "(`$.ObjectMeta.Name` = '" + filterNameValue + "'";
+          "(`$.metadata.name` = '" + filterNameValue + "'";
       else
         filterForLink +=
-          "(`$.ObjectMeta.Name` LIKE '" + filterNameValue + "%' ";
+          "(`$.metadata.name` LIKE '" + filterNameValue + "%' ";
       for (let i = 1; i < filterNamesLength; i++) {
         let filterName=filterNames && filterNames[i];
         let filterNameValue=filterName && filterName.value && filterName.value.trim();
         if (filterName.isExact)
           filterForLink +=
-            "OR `$.ObjectMeta.Name` = '" + filterNameValue + "'";
+            "OR `$.metadata.name` = '" + filterNameValue + "'";
         else
           filterForLink +=
-            "OR `$.ObjectMeta.Name` LIKE '" +
+            "OR `$.metadata.name` LIKE '" +
             filterNameValue +
             "%' ";
       }
@@ -321,10 +321,10 @@ const CONNECTION_LINKS_FILTER=(
     } else {
       if (filterName.isExact)
         filterForLink +=
-          "`$.ObjectMeta.Name` = '" + filterNameValue + "'";
+          "`$.metadata.name` = '" + filterNameValue + "'";
       else
         filterForLink +=
-          "`$.ObjectMeta.Name` LIKE '" + filterNameValue + "%' ";
+          "`$.metadata.name` LIKE '" + filterNameValue + "%' ";
     }
     if (
       (filterAddressesLength> 0) ||
@@ -337,17 +337,17 @@ const CONNECTION_LINKS_FILTER=(
     if (filterAddressesLength > 1) {
       if (filterAddresse.isExact)
         filterForLink +=
-          "(`$.Spec.Address` = '" + filterAddresseValue+ "'";
+          "(`$.spec.address` = '" + filterAddresseValue+ "'";
       else
         filterForLink +=
-          "(`$.Spec.Address` LIKE '" + filterAddresseValue + "%' ";
+          "(`$.spec.address` LIKE '" + filterAddresseValue + "%' ";
       for (let i = 1; i < filterAddresses.length; i++) {
         if (filterAddresse.isExact)
           filterForLink +=
-            "OR `$.Spec.Address` = '" + filterAddresseValue + "'";
+            "OR `$.spec.address` = '" + filterAddresseValue + "'";
         else
           filterForLink +=
-            "OR `$.Spec.Address` LIKE '" +
+            "OR `$.spec.address` LIKE '" +
             filterAddresseValue +
             "%' ";
       }
@@ -355,10 +355,10 @@ const CONNECTION_LINKS_FILTER=(
     } else {
       if (filterAddresse.isExact)
         filterForLink +=
-          "`$.Spec.Address` = '" + filterAddresseValue + "'";
+          "`$.spec.address` = '" + filterAddresseValue + "'";
       else
         filterForLink +=
-          "`$.Spec.Address` LIKE '" + filterAddresseValue + "%' ";
+          "`$.spec.Address` LIKE '" + filterAddresseValue + "%' ";
     }
     if (filterRole && filterRole.trim() != "") {
       filterForLink += " AND ";
@@ -367,7 +367,7 @@ const CONNECTION_LINKS_FILTER=(
 
   if (filterRole && filterRole.trim() != "") {
     filterForLink +=
-      "`$.Spec.Role` = '" + filterRole.trim().toLowerCase() + "' ";
+      "`$.spec.role` = '" + filterRole.trim().toLowerCase() + "' ";
   }
   return {filter,filterForLink};
 };
@@ -391,29 +391,29 @@ const RETURN_CONNECTION_LINKS = (
       connections(
         filter: "${filter}" 
       ) {
-        Total
-        Connections {
-          ObjectMeta {
-            Name
-            Namespace
+        total
+        connections {
+          metadata {
+            name
+            namespace
           }
-          Links(first:${perPage} offset:${perPage *
+          links(first:${perPage} offset:${perPage *
     (page - 1)} orderBy:"${orderBy}"
       filter:"${filterForLink}") {
-            Total
-            Links {
-              ObjectMeta {
-                Name
+            total
+            links {
+              metadata {
+                name
               }
-              Spec {
-                Role
-                Address
+              spec {
+                role
+                address
               }
-              Metrics {
-                Name
-                Type
-                Value
-                Units
+              metrics {
+                name
+                type
+                value
+                units
               }
             }
           }
@@ -431,23 +431,23 @@ const RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH = (
 ) => {
   let filter = "";
   if (namespace) {
-    filter += "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
+    filter += "`$.metadata.namespace` = '" + namespace + "' AND ";
   }
   if (connectionName) {
-    filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
+    filter += "`$.metadata.name` = '" + connectionName + "'";
   }
   const all_links = gql`
     query single_connections {
       connections(
         filter: "${filter}" 
       ) {
-        Total
-        Connections {
-          Links(first:10 offset:0 filter:"\`$.ObjectMeta.Name\` LIKE '${name}%'") {
-            Total
-            Links {
-              ObjectMeta {
-                Name
+        total
+        connections {
+          links(first:10 offset:0 filter:"\`$.metadata.name\` LIKE '${name}%'") {
+            total
+            links {
+              metadata {
+                name
               }
             }
           }
@@ -465,23 +465,23 @@ const RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH = (
 ) => {
   let filter = "";
   if (namespace) {
-    filter += "`$.ObjectMeta.Namespace` = '" + namespace + "' AND ";
+    filter += "`$.metadata.namespace` = '" + namespace + "' AND ";
   }
   if (connectionName) {
-    filter += "`$.ObjectMeta.Name` = '" + connectionName + "'";
+    filter += "`$.metadata.name` = '" + connectionName + "'";
   }
   const all_links = gql`
     query single_connections {
       connections(
         filter: "${filter}" 
       ) {
-        Total
-        Connections {
-          Links(first:10 offset:0
-                filter:"\`$.Spec.Address\` LIKE '${address}%'") {
-            Links {
-              Spec {
-                Address
+        total
+        connections {
+          links(first:10 offset:0
+                filter:"\`$.spec.address\` LIKE '${address}%'") {
+            links {
+              spec {
+                address
               }
             }
           }
@@ -500,17 +500,17 @@ const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPE
 ) => {
   let filter = "";
   if (name) {
-    filter += "`$.Spec.AddressSpace` = '" + name + "'";
+    filter += "`$.spec.addressSpace` = '" + name + "'";
   }
   if (namespace) {
-    filter += " AND `$.ObjectMeta.Namespace` = '" + namespace + "'";
+    filter += " AND `$.metadata.namespace` = '" + namespace + "'";
   }
   if (searchValue.trim() != "") {
     filter += " AND ";
     if (isHostname) {
-      filter += "`$.Spec.Hostname` LIKE '" + searchValue.trim() + "%' ";
+      filter += "`$.spec.hostname` LIKE '" + searchValue.trim() + "%' ";
     } else {
-      filter += "`$.Spec.ContainerId` LIKE '" + searchValue.trim() + "%' ";
+      filter += "`$.spec.containerId` LIKE '" + searchValue.trim() + "%' ";
     }
   }
 
@@ -519,11 +519,11 @@ const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPE
         connections(
           filter: "${filter}" first:10 offset:0
         ) {
-        Total
-        Connections {
-          Spec {
-            Hostname
-            ContainerId
+        total
+        connections {
+          spec {
+            hostname
+            containerId
           }
         }
       }

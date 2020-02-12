@@ -87,14 +87,14 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
         mutation: EDIT_ADDRESS_SPACE,
         variables: {
           a: {
-            Name: addressSpaceBeingEdited.name,
-            Namespace: addressSpaceBeingEdited.nameSpace
+            name: addressSpaceBeingEdited.name,
+            namespace: addressSpaceBeingEdited.nameSpace
           },
           jsonPatch:
-            '[{"op":"replace","path":"/Plan","value":"' +
+            '[{"op":"replace","path":"/spec/plan","value":"' +
             addressSpaceBeingEdited.planValue +
             '"},' +
-            '{"op":"replace","path":"/AuthenticationService/Name","value":"' +
+            '{"op":"replace","path":"/spec/authenticationService/name","value":"' +
             addressSpaceBeingEdited.authenticationService +
             '"}' +
             "]",
@@ -115,8 +115,8 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
         mutation: DELETE_ADDRESS_SPACE,
         variables: {
           a: {
-            Name: addressSpaceBeingDeleted.name,
-            Namespace: addressSpaceBeingDeleted.nameSpace
+            name: addressSpaceBeingDeleted.name,
+            namespace: addressSpaceBeingDeleted.nameSpace
           }
         }
       });
@@ -172,36 +172,36 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   }
 
   const { addressSpaces } = data || {
-    addressSpaces: { Total: 0, AddressSpaces: [] }
+    addressSpaces: { total: 0, addressSpaces: [] }
   };
-  setTotalAddressSpaces(addressSpaces.Total);
+  setTotalAddressSpaces(addressSpaces.total);
   console.log(addressSpaces);
-  const addressSpacesList: IAddressSpace[] = addressSpaces.AddressSpaces.map(
+  const addressSpacesList: IAddressSpace[] = addressSpaces.addressSpaces.map(
     addSpace => ({
-      name: addSpace.ObjectMeta.Name,
-      nameSpace: addSpace.ObjectMeta.Namespace,
-      creationTimestamp: addSpace.ObjectMeta.CreationTimestamp,
-      type: addSpace.Spec.Type,
-      planValue: addSpace.Spec.Plan.ObjectMeta.Name,
-      displayName: addSpace.Spec.Plan.Spec.DisplayName,
-      isReady: addSpace.Status && addSpace.Status.IsReady,
+      name: addSpace.metadata.name,
+      nameSpace: addSpace.metadata.namespace,
+      creationTimestamp: addSpace.metadata.creationTimestamp,
+      type: addSpace.spec.type,
+      planValue: addSpace.spec.plan.metadata.name,
+      displayName: addSpace.spec.plan.spec.displayName,
+      isReady: addSpace.status && addSpace.status.isReady,
       phase:
-        addSpace.Status && addSpace.Status.Phase ? addSpace.Status.Phase : "",
+        addSpace.status && addSpace.status.phase ? addSpace.status.phase : "",
       messages:
-        addSpace.Status && addSpace.Status.Messages
-          ? addSpace.Status.Messages
+        addSpace.status && addSpace.status.messages
+          ? addSpace.status.messages
           : [],
       authenticationService:
-        addSpace.Spec &&
-        addSpace.Spec.AuthenticationService &&
-        addSpace.Spec.AuthenticationService.Name,
+        addSpace.spec &&
+        addSpace.spec.authenticationService &&
+        addSpace.spec.authenticationService.name,
       selected:
         selectedAddressSpaces.filter(({ name, nameSpace }) =>
           compareTwoAddress(
             name,
-            addSpace.ObjectMeta.Name,
+            addSpace.metadata.name,
             nameSpace,
-            addSpace.ObjectMeta.Namespace
+            addSpace.metadata.namespace
           )
         ).length == 1
     })

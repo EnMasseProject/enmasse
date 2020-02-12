@@ -46,23 +46,23 @@ const getAddressesList = () =>
 
 interface IAddressSpaceDetailResponse {
   addressSpaces: {
-    AddressSpaces: Array<{
-      ObjectMeta: {
-        Namespace: string;
-        Name: string;
-        CreationTimestamp: string;
+    addressSpaces: Array<{
+      metadata: {
+        namespace: string;
+        name: string;
+        creationTimestamp: string;
       };
-      Spec: {
-        Type: string;
-        Plan: {
-          Spec: {
-            DisplayName: string;
+      spec: {
+        type: string;
+        plan: {
+          spec: {
+            displayName: string;
           };
         };
       };
-      Status: {
-        IsReady: boolean;
-        Messages: Array<string>;
+      status: {
+        isReady: boolean;
+        messages: Array<string>;
       };
     }>;
   };
@@ -98,10 +98,10 @@ export default function AddressSpaceDetailPage() {
     console.log(error);
   }
   const { addressSpaces } = data || {
-    addressSpaces: { Total: 0, AddressSpaces: [] }
+    addressSpaces: { total: 0, addressSpaces: [] }
   };
 
-  if (!addressSpaces || addressSpaces.AddressSpaces.length <= 0) {
+  if (!addressSpaces || addressSpaces.addressSpaces.length <= 0) {
     return <Loading />;
   }
 
@@ -111,8 +111,8 @@ export default function AddressSpaceDetailPage() {
       query: DOWNLOAD_CERTIFICATE,
       variables: {
         as: {
-          Name: data.name,
-          Namespace: data.namespace
+          name: data.name,
+          namespace: data.namespace
         }
       }
     });
@@ -138,8 +138,8 @@ export default function AddressSpaceDetailPage() {
       mutation: DELETE_ADDRESS_SPACE,
       variables: {
         a: {
-          Name: data.name,
-          Namespace: data.namespace
+          name: data.name,
+          namespace: data.namespace
         }
       }
     });
@@ -155,10 +155,10 @@ export default function AddressSpaceDetailPage() {
     });
   };
   const addressSpaceDetails: IAddressSpaceHeaderProps = {
-    name: addressSpaces.AddressSpaces[0].ObjectMeta.Name,
-    namespace: addressSpaces.AddressSpaces[0].ObjectMeta.Namespace,
-    createdOn: addressSpaces.AddressSpaces[0].ObjectMeta.CreationTimestamp,
-    type: addressSpaces.AddressSpaces[0].Spec.Type,
+    name: addressSpaces.addressSpaces[0].metadata.name,
+    namespace: addressSpaces.addressSpaces[0].metadata.namespace,
+    createdOn: addressSpaces.addressSpaces[0].metadata.creationTimestamp,
+    type: addressSpaces.addressSpaces[0].spec.type,
     onDownload: data => {
       downloadCertificate(data);
     },
