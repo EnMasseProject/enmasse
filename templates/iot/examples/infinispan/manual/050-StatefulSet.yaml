@@ -86,7 +86,6 @@ spec:
           timeoutSeconds: 80
         resources:
           requests:
-            cpu: "0.5"
             memory: 512Mi
         volumeMounts:
         - mountPath: /opt/jboss/infinispan-server/standalone/configuration/custom
