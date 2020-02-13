@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: enmasse
+  name: enmasse.io:console-server
+rules:
+  - apiGroups: [ "admin.enmasse.io" ]
+    resources: [ "authenticationservices", "addressplans", "addressspaceplans" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "" ]
+    resources: [ "services" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "" ]
+    resources: [ "secrets" ]
+    verbs: [ "get" ]

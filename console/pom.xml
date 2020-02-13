@@ -14,7 +14,7 @@
 
   <modules>
     <module>console-init</module>
-    <module>console-httpd</module>
+    <module>console-server</module>
   </modules>
 
 

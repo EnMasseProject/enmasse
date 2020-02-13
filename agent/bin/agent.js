@@ -18,12 +18,10 @@
 var v8 = require('v8');
 var log = require("../lib/log.js").logger();
 var AddressSource = require('../lib/internal_address_source.js');
-var BrokerAddressSettings = require('../lib/broker_address_settings.js');
 var ConsoleServer = require('../lib/console_server.js');
 var kubernetes = require('../lib/kubernetes.js');
 var Ragent = require('../lib/ragent.js');
 var tls_options = require('../lib/tls_options.js');
-var myutils = require('../lib/utils.js');
 
 function bind_event(source, event, target, method) {
     source.on(event, target[method || event].bind(target));
@@ -39,13 +37,7 @@ function start(env) {
             var console_server = new ConsoleServer(address_source, env, openshift);
             bind_event(address_source, 'addresses_defined', console_server.addresses);
 
-            var server_promise = null;
-            if (env.CONSOLE_OAUTH_DISCOVERY_URL) {
-                server_promise = console_server.listen(env);
-            } else {
-                log.info("No OAuth configuration, not running console server");
-                server_promise = Promise.resolve();
-            }
+            var server_promise = console_server.listen(env);
 
             server_promise.then(() => {
                 if (env.ADDRESS_SPACE_TYPE === 'brokered') {

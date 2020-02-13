@@ -22,6 +22,10 @@ var rhea = require('rhea');
 var MockBroker = require('../testlib/mock_broker.js');
 var broker_controller = require('../lib/broker_controller.js');
 
+function random_number(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+}
+
 describe('broker controller', function() {
     var broker;
     var controller;
@@ -101,7 +105,7 @@ describe('broker controller', function() {
             's1':{durable:true, messageCount:10, consumerCount:9, messagesAdded:8, deliveringCount:7, messagesAcked:6, messagesExpired:5, messagesKilled: 4},
             's2':{durable:false, messageCount:11, consumerCount:10, messagesAdded:9, deliveringCount:8, messagesAcked:7, messagesExpired:6, messagesKilled: 5},
         }, 21);
-        for (var i = 0; i < 5; i++) broker.add_connection({}, [{destination:'foo'}]);
+        for (var i = 0; i < 5; i++) broker.add_connection({ clientAddress: "example:" + random_number(16384) + 49152}, [{destination:'foo'}]);
         Promise.all([
             new Promise(function (resolve, reject) {
                 controller.on('address_stats_retrieved', function (stats) {

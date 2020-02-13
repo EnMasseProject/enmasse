@@ -67,6 +67,7 @@
                 <REACT_APP_VERSION>${project.version}</REACT_APP_VERSION>
                 <REACT_APP_NAME>EnMasse Console</REACT_APP_NAME>
                 <REACT_APP_DOCS>${application.docs}</REACT_APP_DOCS>
+                <REACT_APP_GRAPHQL_ENDPOINT>/graphql/query</REACT_APP_GRAPHQL_ENDPOINT>
               </environmentVariables>
               <arguments>run-script build</arguments>
             </configuration>
@@ -81,6 +82,9 @@
               <installDirectory>${console-node-install-directory}</installDirectory>
               <workingDirectory>ui</workingDirectory>
               <arguments>run-script test</arguments>
+              <environmentVariables>
+                <CI>true</CI>
+              </environmentVariables>
             </configuration>
           </execution>
         </executions>

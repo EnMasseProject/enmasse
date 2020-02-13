@@ -517,9 +517,6 @@ objects:
             requests:
               memory: ${ADMIN_MEMORY_LIMIT}
           volumeMounts:
-          - mountPath: /etc/console-certs
-            name: console-secret
-            readOnly: true
           - mountPath: /opt/agent/authservice-ca
             name: authservice-ca
             readOnly: true
@@ -531,9 +528,6 @@ objects:
             readOnly: true
         serviceAccountName: ${ADDRESS_SPACE_ADMIN_SA}
         volumes:
-        - name: console-secret
-          secret:
-            secretName: ${CONSOLE_SECRET}
         - name: authservice-ca
           secret:
             secretName: authservice-ca.${INFRA_UUID}
@@ -652,9 +646,6 @@ parameters:
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY
   value: '250'
-- description: The hostname to use for the exposed route for messaging
-  name: CONSOLE_SECRET
-  required: true
 - description: The secret with cert for the messaging service
   name: MESSAGING_SECRET
   required: true

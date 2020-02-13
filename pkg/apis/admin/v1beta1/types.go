@@ -139,13 +139,24 @@ type ConsoleService struct {
 }
 
 type ConsoleServiceSpec struct {
-	DiscoveryMetadataURL *string                 `json:"discoveryMetadataURL,omitempty"`
-	Scope                *string                 `json:"scope,omitempty"`
-	OauthClientSecret    *corev1.SecretReference `json:"oauthClientSecret,omitempty"`
-	CertificateSecret    *corev1.SecretReference `json:"certificateSecret,omitempty"`
-	SsoCookieSecret      *corev1.SecretReference `json:"ssoCookieSecret,omitempty"`
-	SsoCookieDomain      *string                 `json:"ssoCookieDomain,omitempty"`
-	Host                 *string                 `json:"host,omitempty"`
+	Replicas             *int32                           `json:"replicas,omitempty"`
+	DiscoveryMetadataURL *string                          `json:"discoveryMetadataURL,omitempty"`
+	Scope                *string                          `json:"scope,omitempty"`
+	OauthClientSecret    *corev1.SecretReference          `json:"oauthClientSecret,omitempty"`
+	CertificateSecret    *corev1.SecretReference          `json:"certificateSecret,omitempty"`
+	SsoCookieSecret      *corev1.SecretReference          `json:"ssoCookieSecret,omitempty"`
+	SsoCookieDomain      *string                          `json:"ssoCookieDomain,omitempty"`
+	Host                 *string                          `json:"host,omitempty"`
+	OauthProxy           *ConsoleServiceOauthProxySpec    `json:"oauthProxy,omitempty"`
+	ConsoleServer        *ConsoleServiceConsoleServerSpec `json:"consoleServer,omitempty"`
+}
+
+type ConsoleServiceOauthProxySpec struct {
+	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
+}
+
+type ConsoleServiceConsoleServerSpec struct {
+	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type ConsoleServiceStatus struct {

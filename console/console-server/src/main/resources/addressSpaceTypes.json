@@ -1,0 +1,26 @@
+[
+  {
+    "metadata": {
+      "name": "brokered"
+    },
+    "spec": {
+      "addressSpaceType": "brokered",
+      "displayName": "brokered",
+      "shortDescription": "The brokered address space.",
+      "longDescription": "The brokered address space type is the \"classic\" message broker in the cloud which supports AMQP, CORE, OpenWire, and MQTT protocols. It supports JMS with transactions, message groups, selectors on queues and so on.",
+      "displayOrder": 0
+    }
+  },
+  {
+    "metadata": {
+      "name": "standard"
+    },
+    "spec": {
+      "addressSpaceType": "standard",
+      "displayName": "standard",
+      "shortDescription": "The standard address space.",
+      "longDescription": "The standard address space type is the default address space type, and is focused on scaling in the number of connections and the throughput of the system. It supports AMQP and MQTT protocols.",
+      "displayOrder": 1
+    }
+  }
+]
