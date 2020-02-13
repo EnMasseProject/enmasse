@@ -427,7 +427,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         Future<List<Message>> c2 = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), 0);
 
         // Second consumer should get an error
-        Exception thrown = assertThrows(RuntimeException.class, () -> c2.get(10, TimeUnit.SECONDS));
+        Exception thrown = assertThrows(Exception.class, () -> c2.get(10, TimeUnit.SECONDS));
         assertTrue(thrown.getMessage().contains("Maximum Consumer Limit Reached"), "Unexpected exception message: " + thrown.getMessage());
     }
 
