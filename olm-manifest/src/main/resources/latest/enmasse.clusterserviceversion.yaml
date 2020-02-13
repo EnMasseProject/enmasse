@@ -471,8 +471,6 @@ spec:
       image: ${CONSOLE_PROXY_OPENSHIFT_IMAGE}
     - name: console-proxy-kubernetes
       image: ${CONSOLE_PROXY_KUBERNETES_IMAGE}
-    - name: console-httpd
-      image: ${CONSOLE_HTTPD_IMAGE}
     - name: console-server
       image: ${CONSOLE_SERVER_IMAGE}
     - name: controller-manager
