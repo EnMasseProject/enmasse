@@ -302,29 +302,27 @@ export default function AddressesList() {
         </GridItem>
       </Grid>
       <Divider />
-      <ErrorBoundary>
-        <AddressListPage
-          name={name}
-          namespace={namespace}
-          addressSpacePlan={addressSpacePlan}
-          filterNames={filterNames}
-          typeValue={typeValue}
-          statusValue={statusValue}
-          setTotalAddress={setTotalAddress}
-          page={page}
-          perPage={perPage}
-          addressSpaceType={type}
-          sortValue={sortDropDownValue}
-          setSortValue={setSortDropdownValue}
-          isWizardOpen={isCreateWizardOpen}
-          setIsWizardOpen={setIsCreateWizardOpen}
-          onCreationRefetch={onCreationRefetch}
-          setOnCreationRefetch={setOnCreationRefetch}
-          selectedAddresses={selectedAddresses}
-          onSelectAddress={onSelectAddress}
-          onSelectAllAddress={onSelectAllAddress}
-        />
-      </ErrorBoundary>
+      <AddressListPage
+        name={name}
+        namespace={namespace}
+        addressSpacePlan={addressSpacePlan}
+        filterNames={filterNames}
+        typeValue={typeValue}
+        statusValue={statusValue}
+        setTotalAddress={setTotalAddress}
+        page={page}
+        perPage={perPage}
+        addressSpaceType={type}
+        sortValue={sortDropDownValue}
+        setSortValue={setSortDropdownValue}
+        isWizardOpen={isCreateWizardOpen}
+        setIsWizardOpen={setIsCreateWizardOpen}
+        onCreationRefetch={onCreationRefetch}
+        setOnCreationRefetch={setOnCreationRefetch}
+        selectedAddresses={selectedAddresses}
+        onSelectAddress={onSelectAddress}
+        onSelectAllAddress={onSelectAllAddress}
+      />
 
       {totalAddresses > 0 && renderPagination(page, perPage)}
       {isDisplayDeleteDailogue && selectedAddresses.length > 0 && (
