@@ -145,7 +145,7 @@ spec:
                       - Draining
             subscription:
               type: object
-              description: "Applied poroperties for subscription type addresses."
+              description: "Applied properties for subscription type addresses."
               properties:
                 maxConsumers:
                   type: integer
