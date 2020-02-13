@@ -1508,7 +1508,7 @@ const mocks = {
       name: "vtereshkova"
     },
     identities: ["vtereshkova"],
-    fullname: "Valentina Tereshkova",
+    fullName: "Valentina Tereshkova",
     groups: ["admin"]
   })
 };

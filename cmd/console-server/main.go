@@ -129,7 +129,7 @@ func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 		if sessionManager.Exists(req.Context(), loggedOnUserSessionAttribute) {
 			loggedOnUser = sessionManager.GetString(req.Context(), loggedOnUserSessionAttribute)
 		} else {
-			if util.IsOpenshift() {
+			if util.HasApi(util.UserGVK) {
 				usr, err := userClient.Users().Get("~", metav1.GetOptions{})
 				if err == nil {
 					loggedOnUser = usr.ObjectMeta.Name
