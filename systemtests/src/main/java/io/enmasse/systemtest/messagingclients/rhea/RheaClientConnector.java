@@ -64,6 +64,7 @@ public class RheaClientConnector extends AbstractClient {
     protected ClientArgumentMap transformArguments(ClientArgumentMap args) {
         args = basicBrokerTransformation(args);
         args.put(ClientArgument.LOG_LIB, "TRANSPORT_FRM");
+        args.put(ClientArgument.OBJECT_CONTROL, "CESR");
         return args;
     }
 

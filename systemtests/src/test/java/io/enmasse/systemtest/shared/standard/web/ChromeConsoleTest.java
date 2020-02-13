@@ -290,14 +290,12 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
     }
 
     @Test
-    @ExternalClients
-    void testMessagesMetrics() throws Exception {
-        doTestMessagesMetrics(getSharedAddressSpace());
+    void testMessagesStoredMetrics() throws Exception {
+        doTestMessagesStoredMetrics(getSharedAddressSpace());
     }
 
     @Test
     @ExternalClients
-    @Disabled("Not stable")
     void testClientsMetrics() throws Exception {
         doTestClientsMetrics(getSharedAddressSpace());
     }

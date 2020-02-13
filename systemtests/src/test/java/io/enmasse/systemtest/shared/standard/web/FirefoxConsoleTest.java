@@ -6,7 +6,6 @@ package io.enmasse.systemtest.shared.standard.web;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.address.model.AddressBuilder;
@@ -293,14 +292,12 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     }
 
     @Test
-    @ExternalClients
-    void testMessagesMetrics() throws Exception {
-        doTestMessagesMetrics(getSharedAddressSpace());
+    void testMessagesStoredMetrics() throws Exception {
+        doTestMessagesStoredMetrics(getSharedAddressSpace());
     }
 
     @Test
     @ExternalClients
-    @Disabled("Not stable")
     void testClientsMetrics() throws Exception {
         doTestClientsMetrics(getSharedAddressSpace());
     }
