@@ -54,6 +54,7 @@ public class ExternalMessagingClient {
     public ExternalMessagingClient withAddress(Address address) {
         this.arguments.put(ClientArgument.ADDRESS,
                 (address.getSpec().getType().equals("topic") ? AddressUtils.getTopicPrefix(client) : "") + address.getSpec().getAddress());
+        this.client.updateIdWithAddressName(address.getSpec().getAddress());
         return this;
     }
 
@@ -103,6 +104,10 @@ public class ExternalMessagingClient {
         return client.getMessages();
     }
 
+    public String getId() {
+        Objects.requireNonNull(this.client);
+        return client.getId();
+    }
 
     //===================================================================
     //                          Run methods

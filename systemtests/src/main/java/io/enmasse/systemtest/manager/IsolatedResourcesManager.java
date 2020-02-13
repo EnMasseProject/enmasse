@@ -322,10 +322,12 @@ public class IsolatedResourcesManager extends ResourceManager {
         }
     }
 
+    @Override
     public void addToAddressSpaces(AddressSpace addressSpace) {
         this.currentAddressSpaces.add(addressSpace);
     }
 
+    @Override
     public void deleteAddressSpaceCreatedBySC(AddressSpace addressSpace) throws Exception {
         TestUtils.deleteAddressSpaceCreatedBySC(kubernetes, addressSpace, logCollector);
     }

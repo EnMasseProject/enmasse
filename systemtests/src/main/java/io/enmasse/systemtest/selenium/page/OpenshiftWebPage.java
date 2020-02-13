@@ -9,10 +9,12 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
 import io.enmasse.systemtest.selenium.resources.ProvisionedServiceItem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -390,7 +392,7 @@ public class OpenshiftWebPage implements IWebPage {
         selenium.clickOnItem(serviceItem.getRedirectConsoleButton());
         Set<String> tabHandles = selenium.getDriver().getWindowHandles();
         selenium.getDriver().switchTo().window(tabHandles.toArray()[tabHandles.size() - 1].toString());
-        return new ConsoleWebPage(selenium, addressSpace);
+        return new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), null);
     }
 
     @Override

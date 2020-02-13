@@ -6,10 +6,10 @@ package io.enmasse.systemtest.selenium.resources;
 
 
 public enum FilterType {
-    TYPE, NAME, CONTAINER, HOSTNAME, USER, ENCRYPTED;
+    TYPE, ADDRESS, STATUS, NAMESPACE, NAME, HOSTNAME, CONTAINER;
 
     @Override
     public String toString() {
-        return super.toString().toUpperCase();
+        return super.toString().toLowerCase();
     }
 }

@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Future;
@@ -41,42 +42,42 @@ public abstract class AbstractClient {
     private List<String> executable;
     private String podName;
     private String podNamespace;
-
     /**
-     * Constructor of abstract client
-     *
-     * @param clientType type of client
+     * Important: this is not any container_id nor nothing related with amqp, this is just an identifier for logging in our tests
      */
+    private String id;
+
     public AbstractClient(ClientType clientType) throws Exception {
-        this.clientType = clientType;
-        this.podName = SystemtestsKubernetesApps.getMessagingAppPodName();
-        this.podNamespace = SystemtestsKubernetesApps.MESSAGING_PROJECT;
-        this.fillAllowedArgs();
-        this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
+        this(clientType, null, SystemtestsKubernetesApps.MESSAGING_PROJECT);
     }
 
     public AbstractClient(ClientType clientType, String podNamespace) throws Exception {
+        this(clientType, null, podNamespace);
+    }
+
+    public AbstractClient(ClientType clientType, Path logPath) throws Exception {
+        this(clientType, logPath, SystemtestsKubernetesApps.MESSAGING_PROJECT);
+    }
+
+    private AbstractClient(ClientType clientType, Path logPath, String podNamespace) throws Exception {
+        this.id = clientType.name() + "-" + UUID.randomUUID().toString();
         this.clientType = clientType;
-        this.podName = SystemtestsKubernetesApps.getMessagingAppPodName(podNamespace);
+        if (logPath != null) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSSS");
+            this.logPath = Paths.get(logPath.toString(), clientType.toString() + "_" + dateFormat.format(new Date()));
+        }
         this.podNamespace = podNamespace;
+        this.podName = SystemtestsKubernetesApps.getMessagingAppPodName(this.podNamespace);
         this.fillAllowedArgs();
         this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
 
-    /**
-     * Constructor of abstract client
-     *
-     * @param clientType type of client
-     * @param logPath    path where logs will be stored
-     */
-    public AbstractClient(ClientType clientType, Path logPath) throws Exception {
-        this.clientType = clientType;
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSSS");
-        this.logPath = Paths.get(logPath.toString(), clientType.toString() + "_" + dateFormat.format(new Date()));
-        this.podName = SystemtestsKubernetesApps.getMessagingAppPodName();
-        this.podNamespace = SystemtestsKubernetesApps.MESSAGING_PROJECT;
-        this.fillAllowedArgs();
-        this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
+    public String getId() {
+        return id;
+    }
+
+    public void updateIdWithAddressName(String address) {
+        this.id = this.clientType.name() + "-" + address + "-" + UUID.randomUUID().toString();
     }
 
     public void setPodName(String podName) {
@@ -201,12 +202,12 @@ public abstract class AbstractClient {
                 log.info("{} {} Return code - {}", this.getClass().getName(), clientType, ret);
                 if (logToOutput) {
                     log.info("{} {} stdout : {}", this.getClass().getName(), clientType, executor.getStdOut());
-                    if (ret == 0) {
-                        parseToJson(executor.getStdOut());
-                    } else {
-                        if (!executor.getStdErr().isEmpty()) {
-                            log.error("{} {} stderr : {}", this.getClass().getName(), clientType, executor.getStdErr());
-                        }
+                }
+                if (ret == 0) {
+                    parseToJson(executor.getStdOut());
+                } else {
+                    if (!executor.getStdErr().isEmpty() && logToOutput) {
+                        log.error("{} {} stderr : {}", this.getClass().getName(), clientType, executor.getStdErr());
                     }
                 }
             }

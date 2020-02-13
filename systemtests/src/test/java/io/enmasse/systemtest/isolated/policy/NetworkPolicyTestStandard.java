@@ -24,6 +24,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
@@ -53,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@OpenShift(version = 4)
+@OpenShift(version = OpenShiftVersion.OCP4)
 class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandard {
 
 

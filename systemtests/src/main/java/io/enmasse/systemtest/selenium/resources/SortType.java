@@ -6,10 +6,16 @@ package io.enmasse.systemtest.selenium.resources;
 
 public enum SortType {
     NAME,
+    ADDRESS,
     SENDERS,
     RECEIVERS,
     HOSTNAME,
-    CONTAINER_ID;
+    CONTAINER_ID,
+    PROTOCOL,
+    TIME_CREATED,
+    MESSAGES_IN,
+    MESSAGES_OUT,
+    STORED_MESSAGES;
 
     @Override
     public String toString() {

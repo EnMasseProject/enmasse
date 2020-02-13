@@ -8,6 +8,7 @@ import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.ConsoleServiceSpec;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -16,7 +17,6 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.OpenShift;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
 
 import java.nio.file.Files;
@@ -61,7 +61,7 @@ public class OperatorManager {
     private void installExamplesBundle(String namespace) throws Exception {
         installExamplePlans(namespace);
         installExampleRoles(namespace);
-        if (kube.getOcpVersion() < 4) {
+        if (kube.getOcpVersion() == OpenShiftVersion.OCP3) {
             installServiceCatalog(namespace);
         }
         installExampleAuthServices(namespace);
@@ -79,7 +79,7 @@ public class OperatorManager {
     public void deleteExamplesBundle(String namespace) {
         removeExampleAuthServices(namespace);
         removeExampleRoles(namespace);
-        if (kube.getOcpVersion() < 4) {
+        if (kube.getOcpVersion() == OpenShiftVersion.OCP3) {
             removeServiceCatalog(namespace);
         }
         removeExamplePlans(namespace);
@@ -241,7 +241,7 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
         LOGGER.info("            Enmasse operator delete by ansible");
         LOGGER.info("***********************************************************");
-        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kube.getOcpVersion() == 3 ? "systemtests.inventory": "systemtests.ocp4.inventory");
+        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kube.getOcpVersion() == OpenShiftVersion.OCP3 ? "systemtests.inventory" : "systemtests.ocp4.inventory");
         Path ansiblePlaybook = Paths.get(Environment.getInstance().getUpgradeTemplates(), "ansible", "playbooks", "openshift", "uninstall.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
                 "--extra-vars", String.format("namespace=%s", kube.getInfraNamespace()));
@@ -298,7 +298,6 @@ public class OperatorManager {
 
     private void awaitConsoleReadiness(String namespace) throws Exception {
         final String serviceName = "console";
-
         TestUtils.waitUntilCondition("global console readiness", waitPhase -> {
             try {
                 final ConsoleService console = kube.getConsoleServiceClient().inNamespace(namespace).withName("console").get();
@@ -306,19 +305,19 @@ public class OperatorManager {
                     LOGGER.info("ConsoleService {} not yet available", serviceName);
                     return false;
                 }
-
+                TestUtils.waitForPodReady("console", kube.getInfraNamespace());
                 final ConsoleServiceSpec spec = console.getSpec();
                 final boolean ready = spec != null && spec.getOauthClientSecret() != null && spec.getSsoCookieSecret() != null;
                 if (!ready) {
                     LOGGER.info("ConsoleService {} not yet fully ready: {}", serviceName, spec);
                 }
                 return ready;
-            } catch (KubernetesClientException e) {
+            } catch (Exception e) {
                 LOGGER.warn("Failed to get console service record : {}", serviceName, e);
             }
 
             return false;
-        }, new TimeoutBudget(3, TimeUnit.MINUTES));
+        }, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
     public boolean isEnmasseBundleDeployed() {

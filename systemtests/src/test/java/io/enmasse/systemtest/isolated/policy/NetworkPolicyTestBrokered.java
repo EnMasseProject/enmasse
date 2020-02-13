@@ -23,6 +23,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
@@ -52,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@OpenShift(version = 4)
+@OpenShift(version = OpenShiftVersion.OCP4)
 class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokered {
     private UserCredentials credentials = new UserCredentials("test", "test");
     private String blockedSpace = "blocked-namespace";

@@ -1,784 +1,809 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest.selenium.page;
 
-import com.paulhammant.ngwebdriver.ByAngular;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
+import io.enmasse.systemtest.selenium.resources.AddressSpaceWebItem;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
+import io.enmasse.systemtest.selenium.resources.ClientWebItem;
 import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
 import io.enmasse.systemtest.selenium.resources.FilterType;
 import io.enmasse.systemtest.selenium.resources.SortType;
-import io.enmasse.systemtest.selenium.resources.ToolbarType;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.TestUtils;
 import org.openqa.selenium.By;
-import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.Select;
 import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiPredicate;
+import java.util.function.Supplier;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.fail;
-
-@SuppressWarnings("unused")
 public class ConsoleWebPage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();
-    private SeleniumProvider selenium;
-    private String consoleRoute;
-    private AddressSpace defaultAddressSpace;
-    private ToolbarType toolbarType;
-    private UserCredentials credentials;
-    private GlobalConsolePage globalConsole;
 
-    public ConsoleWebPage(SeleniumProvider selenium, AddressSpace defaultAddressSpace) throws Exception {
+    SeleniumProvider selenium;
+    String ocRoute;
+    UserCredentials credentials;
+    OpenshiftLoginWebPage loginPage;
+
+    public ConsoleWebPage(SeleniumProvider selenium, String ocRoute, UserCredentials credentials) {
         this.selenium = selenium;
-        this.defaultAddressSpace = defaultAddressSpace;
-        this.globalConsole = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), null);
-    }
-
-    public ConsoleWebPage(SeleniumProvider selenium, AddressSpace defaultAddressSpace, UserCredentials credentials) throws Exception {
-        this.selenium = selenium;
-        this.defaultAddressSpace = defaultAddressSpace;
+        this.ocRoute = ocRoute;
         this.credentials = credentials;
-        this.globalConsole = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), credentials);
-    }
-
-    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressSpace defaultAddressSpace, UserCredentials credentials) throws Exception {
-        this(selenium, defaultAddressSpace);
-        this.consoleRoute = consoleRoute;
-        this.credentials = credentials;
-        this.globalConsole = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), credentials);
+        this.loginPage = new OpenshiftLoginWebPage(selenium);
     }
 
     //================================================================================================
     // Getters and finders of elements and data
     //================================================================================================
 
-    private WebElement getNavigateMenu() throws Exception {
+    private WebElement getAddressTab() {
+        return getContentElem().findElement(By.id("ad-space-nav-addresses"));
+    }
+
+    private WebElement getConnectionTab() {
+        return getContentElem().findElement(By.id("ad-space-nav-connections"));
+    }
+
+    // Table selectors
+    private WebElement getContentElem() {
+        return selenium.getDriver().findElement(By.id("main-container"));
+    }
+
+    private WebElement getCreateButtonTop() {
+        return selenium.getDriver().findElement(By.id("al-filter-overflow-button"));
+    }
+
+    private WebElement getCreateButtonEmptyPage() {
+        return selenium.getDriver().findElement(By.id("empty-ad-space-create-button"));
+    }
+
+    private WebElement getAddressSpaceTable() {
+        return selenium.getDriver().findElement(By.xpath("//table[@aria-label='address space list']"));
+    }
+
+    private WebElement getTableAddressSpaceHeader() {
+        return getAddressSpaceTable().findElement(By.id("aslist-table-header"));
+    }
+
+    private WebElement getAddressSpaceList() {
+        return getAddressSpaceTable().findElement(By.tagName("tbody"));
+    }
+
+    private WebElement getAddressTable() {
+        return selenium.getDriver().findElement(By.xpath("//table[@aria-label='Address List']"));
+    }
+
+    private WebElement getTableAddressHeader() {
+        return getAddressTable().findElement(By.id("address-list-table-bodheader"));
+    }
+
+    private WebElement getTableAddressList() {
+        return getAddressTable().findElement(By.tagName("tbody"));
+    }
+
+    private WebElement getConnectionTable() {
+        return selenium.getDriver().findElement(By.xpath("//table[@aria-label='connection list']"));
+    }
+
+    private WebElement getTableConnectionHeader() {
+        return getConnectionTable().findElement(By.id("connectionlist-table-header"));
+    }
+
+    private WebElement getTableClientsList() {
+        return getClientsTable().findElement(By.tagName("tbody"));
+    }
+
+    private WebElement getClientsTable() {
+        return selenium.getDriver().findElement(By.xpath("//table[@aria-label='client list']"));
+    }
+
+    private WebElement getTableClientsHeader() {
+        return getClientsTable().findElement(By.id("aslist-table-header"));
+    }
+
+    private WebElement getTableConnectionList() {
+        return getConnectionTable().findElement(By.tagName("tbody"));
+    }
+
+    private WebElement getTableDropDown() {
+        return getContentElem().findElement(By.id("al-filter-overflow-dropdown"));
+    }
+
+    private WebElement getDeleteAllButton() {
+        return getTableDropDown().findElement(By.xpath("//button[contains(text(), 'Delete Selected')]"));
+    }
+
+    private WebElement getPurgeAllButton() {
+        return getTableDropDown().findElement(By.id("al-filter-dropdown-item-purgeall"));
+    }
+
+    private WebElement getAddressSpaceMainTopDropdown() {
+        return getContentElem().findElement(By.id("as-header-kebab"));
+    }
+
+    private WebElement getAddressMainTopDropdown() {
+        return getContentElem().findElement(By.id("adheader-kebab"));
+    }
+    //==============================================================
+
+    //Items selectors
+    public List<AddressSpaceWebItem> getAddressSpaceItems() {
+        List<AddressSpaceWebItem> addressSpaceItems = new ArrayList<>();
         try {
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(5)).until(ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
-        } catch (Exception ex) {
-            selenium.refreshPage();
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(5)).until(ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
-        }
-        return selenium.getDriver().findElement(By.className("nav-pf-vertical"));
-    }
-
-    private WebElement getLeftMenuItemWebConsole(String itemText) throws Exception {
-        log.info("Getting navigation menu items");
-        List<WebElement> items = getNavigateMenu()
-                .findElement(By.className("list-group"))
-                .findElements(ByAngular.repeater("item in items"));
-        assertNotNull(items, "Console failed, does not contain left menu items");
-        WebElement returnedItem = null;
-        for (WebElement item : items) {
-            log.info("Got item: " + item.getText());
-            if (item.getText().equals(itemText))
-                returnedItem = item;
-        }
-        return returnedItem;
-    }
-
-    public WebElement getCreateButton() throws Exception {
-        return selenium.getWebElement(() -> selenium.getDriver().findElement(ByAngular.buttonText("Create")));
-    }
-
-    public WebElement getRemoveButton() throws Exception {
-        return selenium.getWebElement(() -> selenium.getDriver().findElement(ByAngular.buttonText("Delete")));
-    }
-
-    public WebElement getKekabButton() throws Exception {
-        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("_kebab")));
-    }
-
-    public WebElement getPurgeButton() throws Exception {
-        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.xpath("//a[contains(text(), 'Purge')]")));
-    }
-
-    public void assertDialogPresent(String id) {
-        int timeout = 30;
-        try {
-            WebElement dialog = selenium.getDriverWait().withTimeout(Duration.ofSeconds(timeout)).until(ExpectedConditions.visibilityOfElementLocated(By.id(id)));
-            assertNotNull(dialog);
-        } catch (TimeoutException e) {
-            selenium.takeScreenShot();
-            fail(String.format("Expected dialog with id %s did not appear within timeout %d s", id, timeout));
-        }
-    }
-
-    /**
-     * get toolbar element with all filters for addresses/connections
-     */
-    private WebElement getFilterResultsToolbar() throws Exception {
-        return getToolbar().findElement(By.id("{{filterDomId}_results}"));
-    }
-
-    /**
-     * (addresses/connections tab)
-     * get element with toolbar and all addresses/connections
-     */
-    private WebElement getContentContainer() {
-        return selenium.getDriver().findElement(By.id("contentContainer"));
-    }
-
-    /**
-     * (addresses/connections tab)
-     * get toolbar with filter/sort
-     */
-    private WebElement getToolbar() {
-        return selenium.getDriver().findElement(By.id(toolbarType.toString()));
-    }
-
-    /**
-     * (addresses/connections tab)
-     * get element from toolbar with Filter elements
-     */
-    private WebElement getFilterGroup() {
-        return getToolbar().findElement(By.id("_fields"));
-    }
-
-    /**
-     * (addresses/connections tab)
-     * get button element with filter types * (Type/Name) for addresses
-     * or
-     * (Container/Hostname/User/Encrypted) for connections
-     */
-    private WebElement getFilterSwitch() {
-        return getFilterGroup().findElements(By.tagName("button")).get(0);
-    }
-
-    /**
-     * (addresses/connections tab)
-     * get button element with (address types: [Filter by type.../queue/topic/multicast/anycast])
-     * or
-     * (connections encrypted types: [Filter by encrypted/unencrypted/encrypted/unencrypted])
-     */
-    private WebElement getAddressConnectionsSwitch() {
-        return getFilterGroup().findElements(By.tagName("button")).get(1);
-    }
-
-    /**
-     * (addresses/connections tab)
-     * get input element for search with set filter to (addresses:[Name]) or (connections:[Container/Hostname/User])
-     */
-    private WebElement getInputSearchAddressesConnections() {
-        return getFilterGroup().findElement(By.tagName("input"));
-    }
-
-    /**
-     * (addresses/connections tab)
-     * get list of clickable li elements (addresses: [Type/Name]) or (connections: [Container/Hostname/User/Encrypted])
-     */
-    private List<WebElement> getFilterDropDown() {
-        return getFilterGroup().findElements(ByAngular.repeater("item in config.fields"));
-    }
-
-    /**
-     * get list of clickable li elements (Name/Senders/Receivers)
-     */
-    private List<WebElement> getSortDropDown() throws Exception {
-        return getSortGroup().findElements(ByAngular.repeater("item in config.fields"));
-    }
-
-    /**
-     * get list of li elements from dropdown-menu with allowed types of addresses (queue, topic, multicast, anycast)
-     */
-    private List<WebElement> getDropDownAddressTypes() throws Exception {
-        for (WebElement el : getFilterGroup().findElements(By.className("dropdown-menu"))) {
-            List<WebElement> subEl = el.findElements(By.className("inner"));
-            if (subEl.size() > 0) {
-                List<WebElement> liElements = subEl.get(0).findElements(By.tagName("li"));
-                liElements.forEach(liEl -> {
-                    log.info("Got item: {}",
-                            liEl.findElement(By.tagName("a")).findElement(By.tagName("span")).getText());
-                });
-                return liElements;
+            List<WebElement> elements = getAddressSpaceList().findElements(By.tagName("tr"));
+            for (WebElement element : elements) {
+                AddressSpaceWebItem addressSpace = new AddressSpaceWebItem(element);
+                log.info(String.format("Got addressSpace: %s", addressSpace.toString()));
+                addressSpaceItems.add(addressSpace);
             }
+        } catch (Exception ex) {
+            log.warn("No addressspace items found");
         }
-        throw new IllegalStateException("dropdown-menu doesn't exist");
+        return addressSpaceItems;
     }
 
-    /**
-     * (addresss tab)
-     * get clickable element from list of address types
-     * (DropDown element with: Filter by type.../queue/topic/multicast/anycast values)
-     */
-    private WebElement getDropDownAddressType(String addressType, List<WebElement> dropDownTypes) {
-        HashMap<String, Integer> addressTypesMap = new HashMap<>();
-        addressTypesMap.put("queue", 1);
-        addressTypesMap.put("topic", 2);
-        addressTypesMap.put("multicast", 3);
-        addressTypesMap.put("anycast", 4);
-
-        return dropDownTypes.get(addressTypesMap.get(addressType));
-    }
-
-    /**
-     * (connections tab)
-     * get clickable element from list of connections by encrypted
-     * (DropDown element with: Filter by encrypted/unencrypted.../encrypted/unencrypted values)
-     */
-    private WebElement getDropDownEncryptedType(String encryptedType, List<WebElement> dropDownTypes) {
-        HashMap<String, Integer> addressTypesMap = new HashMap<>();
-        addressTypesMap.put("encrypted", 1);
-        addressTypesMap.put("unencrypted", 2);
-
-        return dropDownTypes.get(addressTypesMap.get(encryptedType));
-    }
-
-    /**
-     * return part of toolbar with sort buttons
-     */
-    private WebElement getSortGroup() throws Exception {
-        return getToolbar().findElement(By.className("sort-pf"));
-    }
-
-    /**
-     * get sort switch container
-     */
-    private WebElement getSortSwitch() throws Exception {
-        return getSortGroup().findElement(By.className("dropdown")).findElement(By.tagName("button"));
-    }
-
-    /**
-     * get sort asc/desc button
-     */
-    private WebElement getAscDescButton() throws Exception {
-        return getSortGroup().findElement(By.className("btn-link"));
-    }
-
-    private WebElement getRightDropDownMenus() throws Exception {
-        return selenium.getDriver().findElement(By.className("navbar-right"));
-    }
-
-    private WebElement getHelpDropDown() throws Exception {
-        return getRightDropDownMenus().findElements(By.className("dropdown")).get(1);
-    }
-
-    private WebElement getUserDropDown() throws Exception {
-        return getRightDropDownMenus().findElements(By.className("dropdown")).get(2);
-    }
-
-    private WebElement getLogoutHref() throws Exception {
-        log.info("Getting logout link");
-        return getUserDropDown().findElement(By.id("globalconsole"));
-    }
-
-    public Integer getResultsCount() throws Exception {
-        String resultsString = getFilterResultsToolbar()
-                .findElement(By.className("col-sm-12"))
-                .findElement(By.className("ng-binding"))
-                .getText();
-        String[] split = resultsString.split(" ");
-        if (split.length == 2) {
-            return Integer.valueOf(split[0]);
+    public AddressSpaceWebItem getAddressSpaceItem(AddressSpace as) {
+        AddressSpaceWebItem returnedElement = null;
+        List<AddressSpaceWebItem> addressWebItems = getAddressSpaceItems();
+        for (AddressSpaceWebItem item : addressWebItems) {
+            if (item.getName().equals(as.getMetadata().getName()) && item.getNamespace().equals(as.getMetadata().getNamespace()))
+                returnedElement = item;
         }
-        throw new IllegalStateException("Incorrect format of results count, Expected: \"Integer 'Results''\"");
+        return returnedElement;
     }
 
-    /**
-     * get all addresses
-     */
     public List<AddressWebItem> getAddressItems() {
-        WebElement content = getContentContainer();
-        List<WebElement> elements = content.findElements(By.className("list-group-item"));
-        List<AddressWebItem> addressItems = new ArrayList<>();
-        for (WebElement element : elements) {
-            AddressWebItem item = new AddressWebItem(element);
-            log.info(String.format("Got address: %s", item.toString()));
-            addressItems.add(item);
+        List<AddressWebItem> addressSpaceItems = new ArrayList<>();
+        try {
+            List<WebElement> elements = getTableAddressList().findElements(By.tagName("tr"));
+            for (WebElement element : elements) {
+                AddressWebItem address = new AddressWebItem(element);
+                log.info(String.format("Got address: %s", address.toString()));
+                addressSpaceItems.add(address);
+            }
+        } catch (Exception ex) {
+            log.warn("No address items found");
         }
-        return addressItems;
+        return addressSpaceItems;
     }
 
-    /**
-     * get specific address
-     */
-    public AddressWebItem getAddressItem(Address destination) {
+    public AddressWebItem getAddressItem(Address as) {
+        AddressWebItem returnedElement = null;
         List<AddressWebItem> addressWebItems = getAddressItems();
         for (AddressWebItem item : addressWebItems) {
-            if (item.getName().equals(destination.getSpec().getAddress())) {
-                return item;
+            if (item.getAddress().equals(as.getSpec().getAddress()))
+                returnedElement = item;
+        }
+        return returnedElement;
+    }
+
+    public List<ConnectionWebItem> getConnectionItems() {
+        Supplier<List<ConnectionWebItem>> getter = () -> {
+            List<WebElement> elements = getTableConnectionList().findElements(By.tagName("tr"));
+            List<ConnectionWebItem> connections = new ArrayList<>();
+            for (WebElement element : elements) {
+                ConnectionWebItem connection = new ConnectionWebItem(element);
+                log.info(String.format("Got connection: %s", connection.toString()));
+                connections.add(connection);
+            }
+            return connections;
+        };
+
+        int attempts = 0;
+        while (attempts < 5) {
+            try {
+                return getter.get();
+            } catch (StaleElementReferenceException e) {
+                log.info("StaleElementReferenceException during getConnectionItems() - retriying");
+            }
+            try {
+                Thread.sleep(1000);
+            } catch ( InterruptedException e ) {
+                log.info("", e);
+            }
+            attempts++;
+        }
+        throw new IllegalStateException("Unable to get connection items from connections table without getting StaleElementReferenceException");
+    }
+
+    public ConnectionWebItem getConnectionItem(String host) {
+        ConnectionWebItem returnedElement = null;
+        List<ConnectionWebItem> connections = getConnectionItems();
+        for (ConnectionWebItem item : connections) {
+            if (item.getHost().equals(host))
+                returnedElement = item;
+        }
+        return returnedElement;
+    }
+
+    public List<ClientWebItem> getClientItems() {
+        List<WebElement> elements = getTableClientsList().findElements(By.tagName("tr"));
+        List<ClientWebItem> clients = new ArrayList<>();
+        for (WebElement element : elements) {
+            ClientWebItem client = new ClientWebItem(element);
+            log.info(String.format("Got client: %s", client.toString()));
+            clients.add(client);
+        }
+        return clients;
+    }
+
+    public ClientWebItem getClientItem(String containerId) {
+        ClientWebItem returnedElement = null;
+        List<ClientWebItem> clients = getClientItems();
+        for (ClientWebItem item : clients) {
+            if (item.getContainerId().equals(containerId))
+                returnedElement = item;
+        }
+        return returnedElement;
+    }
+    //==============================================================
+
+    //Form selectors
+    private WebElement getNamespaceDropDown() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("cas-dropdown-namespace")));
+    }
+
+    private WebElement getAuthServiceDropDown() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("cas-dropdown-auth-service")));
+    }
+
+    private WebElement getAddressSpaceNameInput() {
+        return selenium.getDriver().findElement(By.id("address-space"));
+    }
+
+    private WebElement getBrokeredRadioButton() {
+        return selenium.getDriver().findElement(By.id("cas-brokered-radio"));
+    }
+
+    private WebElement getStandardRadioButton() {
+        return selenium.getDriver().findElement(By.id("cas-standard-radio"));
+    }
+
+    private WebElement getPlanDropDown() {
+        return selenium.getDriver().findElement(By.id("cas-dropdown-plan"));
+    }
+
+    private WebElement getNextButton() {
+        return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Next')]"));
+    }
+
+    private WebElement getCancelButton() {
+        return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Cancel')]"));
+    }
+
+    private WebElement getFinishButton() {
+        return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Finish')]"));
+    }
+
+    private WebElement getBackButton() {
+        return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Back')]"));
+    }
+
+    private WebElement getConfirmButton() {
+        return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Confirm')]"));
+    }
+
+    private WebElement getAddressNameInput() {
+        return selenium.getDriver().findElement(By.id("address-name"));
+    }
+
+    private WebElement getAddressPlanDropDown() {
+        return selenium.getDriver().findElement(By.id("address-definition-plan-dropdown"));
+    }
+
+    private WebElement getAddressTypeDropDown() {
+        return selenium.getDriver().findElement(By.id("address-definition-type-dropdown"));
+    }
+
+    private WebElement getTopicSelectDropDown() {
+        return selenium.getDriver().findElement(By.id("address-definition-topic-dropdown"));
+    }
+
+    //Filter selectors
+    private WebElement getToolBarMenu() throws Exception {
+        return selenium.getWebElement(() -> getContentElem().findElement(By.id("data-toolbar-with-filter")));
+    }
+
+    private WebElement getAddressFilterDropDown() throws Exception {
+        return getToolBarMenu().findElement(By.id("al-filter-dropdown"));
+    }
+
+    private WebElement getConnectionFilterDropDown() throws Exception {
+        return getToolBarMenu().findElement(By.id("cl-filter-dropdown"));
+    }
+
+    private WebElement getSelectNameTextBox() throws Exception {
+        return getToolBarMenu().findElement(By.tagName("input"));
+    }
+
+    private WebElement getSelectTypeDropDown() throws Exception {
+        try {
+            return getToolBarMenu().findElement(By.id("al-filter-select-type-dropdown"));
+        } catch (Exception ex) {
+            return getToolBarMenu().findElement(By.id("al-filter-dropdown-type"));
+        }
+    }
+
+    private WebElement getSelectStatusDropDown() throws Exception {
+        return getToolBarMenu().findElement(By.id("al-filter-select-status-dropdown"));
+    }
+
+    private WebElement getTypeFilterDropDownItem() throws Exception {
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterType"));
+    }
+
+    private WebElement getStatusFilterDropDownItem() throws Exception {
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterStatus"));
+    }
+
+    private WebElement getAddressFilterDropDownItem() throws Exception {
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterAddress"));
+    }
+
+    private WebElement getNamespaceFilterDropDownItem() throws Exception {
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterNamespace"));
+    }
+
+    private WebElement getNameFilterDropDownItem() throws Exception {
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterName"));
+    }
+
+    private WebElement getSearchButtonAddress() throws Exception {
+        return getToolBarMenu().findElement(By.id("al-filter-select-name-search"));
+    }
+
+    private WebElement getSearchButtonNamespace() throws Exception {
+        return getToolBarMenu().findElement(By.id("al-filter-search-namespace"));
+    }
+
+    private WebElement getSearchButtonName() throws Exception {
+        return getToolBarMenu().findElement(By.id("al-filter-search-name"));
+    }
+
+    private WebElement getConnectionsHostnameFilterDropDownItem() throws Exception {
+        return getConnectionFilterDropDown().findElement(By.id("cl-filter-dropdown-itemfilterHostName"));
+    }
+
+    private WebElement getConnectionsContainerFilterDropDownItem() throws Exception {
+        return getConnectionFilterDropDown().findElement(By.id("cl-filter-dropdown-itemfilterContainer"));
+    }
+
+    private WebElement getConnectionsHostnameSearchButton() throws Exception {
+        return getToolBarMenu().findElement(By.id("cl-filter-search-btn"));
+    }
+
+    private WebElement getConnectionsContainerSearchButton() throws Exception {
+        return getToolBarMenu().findElement(By.id("cl-filter-search"));
+    }
+
+    private WebElement getAppliedFilterBar() throws Exception {
+        return getToolBarMenu().findElements(By.className("pf-c-data-toolbar__content")).get(1); //TODO use id when will be implemented
+    }
+
+    private List<WebElement> getAppliedFilterItems() throws Exception {
+        return getAppliedFilterBar().findElements(By.className("pf-m-toolbar")); //TODO use id when will be implemented
+    }
+
+    private WebElement getAppliedFilterItem(FilterType filterType, String filterValue) throws Exception {
+        List<WebElement> filters = getAppliedFilterItems();
+        for (WebElement filter : filters) {
+            String typeOfFilter = filter.findElement(By.tagName("h4")).getText().toLowerCase();
+            String itemFilterValue = filter.findElement(By.tagName("span")).getText().toLowerCase();
+            if (typeOfFilter.equals(filterType.toString()) && itemFilterValue.equals(filterValue.toLowerCase())) {
+                return filter;
             }
         }
         return null;
     }
+    //==================================================================
 
-    /**
-     * get all connections
-     */
-    public List<ConnectionWebItem> getConnectionItems() {
-        WebElement content = getContentContainer();
-        List<WebElement> elements = content.findElements(By.className("list-group-item"));
-        List<ConnectionWebItem> connectionItems = new ArrayList<>();
-        for (WebElement element : elements) {
-            if (!element.getAttribute("class").contains("disabled")) {
-                ConnectionWebItem item = new ConnectionWebItem(element);
-                log.info(String.format("Got connection: %s", item.toString()));
-                connectionItems.add(item);
-            }
-        }
-        return connectionItems;
-    }
-
-    /**
-     * get all connections
-     */
-    public List<ConnectionWebItem> getConnectionItems(int expectedCount) {
-        List<ConnectionWebItem> connectionItems = new ArrayList<>();
-        int timeout = 120000;
-        long endTime = System.currentTimeMillis() + timeout;
-        while (connectionItems.size() != expectedCount && endTime > System.currentTimeMillis()) {
-            log.info("Awaiting {}/{} active connections items", connectionItems.size(), expectedCount);
-            WebElement content = getContentContainer();
-            List<WebElement> elements = content.findElements(By.className("list-group-item"));
-            connectionItems.clear();
-            for (WebElement element : elements) {
-                if (!element.getAttribute("class").contains("disabled")) {
-                    ConnectionWebItem item = new ConnectionWebItem(element);
-                    log.info("Got connection: {}", item);
-                    connectionItems.add(item);
-                }
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-        assertEquals(expectedCount, connectionItems.size(), String.format("Unexpected number of connections after timeout %d", timeout));
-        return connectionItems;
-    }
-
-    private WebElement getSubscriptionComboBox() throws Exception {
-        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.name("topic")));
-    }
-
-    /**
-     * get alert banner when illegal regex is used in filter box
-     */
-    public WebElement getFilterRegexAlert() throws Exception {
-        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-error-circle-o")));
-    }
-
-    private WebElement getFilterRegexAlertClose() throws Exception {
-        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-close")));
-    }
-
-    /**
-     * get the radio button for the destination
-     */
-    public WebElement getRadioButtonForAddressType(Address destination) throws Exception {
-        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getSpec().getType().toLowerCase())));
-    }
-
-    /**
-     * get Address Modal window page by selecting numbered circle
-     */
-    private WebElement getAddressModalPageNumbers() throws Exception {
-        return selenium.getDriver().findElement(By.className("wizard-pf-steps-indicator"));
-    }
-
-    public WebElement getAddressModalPageByNumber(Integer pageNumber) throws Exception {
-        return getAddressModalPageNumbers().findElements(By.className("wizard-pf-step-number")).get(pageNumber - 1);  //zero indexed
-    }
 
     //================================================================================================
     // Operations
     //================================================================================================
 
-    public void openWebConsolePage() throws Exception {
-        openWebConsolePage(credentials);
-    }
-
-    public void openWebConsolePage(UserCredentials credentials) throws Exception {
-        log.info("Opening console web page");
-        selenium.getDriver().get(consoleRoute);
-        selenium.getAngularDriver().waitForAngularRequestsToFinish();
-        selenium.takeScreenShot();
-        if (Kubernetes.getInstance().getAuthenticationServiceClient().withName(defaultAddressSpace.getSpec()
-                .getAuthenticationService().getName()).get().getSpec().getType().equals(AuthenticationServiceType.standard)) {
-            if (!login(credentials.getUsername(), credentials.getPassword()))
-                throw new IllegalAccessException("Cannot login");
-        }
-        checkReachableWebPage();
-    }
-
-
-    public void openAddressesPageWebConsole() throws Exception {
-        selenium.clickOnItem(getLeftMenuItemWebConsole("Addresses"));
-        toolbarType = ToolbarType.ADDRESSES;
-        selenium.getAngularDriver().waitForAngularRequestsToFinish();
-        log.info("Addresses page opened");
-    }
-
-    public void openConnectionsPageWebConsole() throws Exception {
-        selenium.clickOnItem(getLeftMenuItemWebConsole("Connections"));
-        toolbarType = ToolbarType.CONNECTIONS;
-        selenium.getAngularDriver().waitForAngularRequestsToFinish();
-        log.info("Connections page opened");
-    }
-
-    public void clickOnCreateButton() throws Exception {
-        selenium.clickOnItem(getCreateButton());
-    }
-
-    public void clickOnRemoveButton() throws Exception {
-        selenium.clickOnItem(getRemoveButton());
-    }
-
-    public void clickOnPurgeButton() throws Exception {
-        selenium.clickOnItem(getKekabButton(), "Kebab menu button");
-        selenium.clickOnItem(getPurgeButton());
-    }
-
-    public void confirmPurge() throws Exception {
-        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("purge-confirmation-modal")).findElement(ByAngular.buttonText("Purge"))));
-    }
-
-    public void next() throws Exception {
-        WebElement nextButton = selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("nextButton")));
-        selenium.clickOnItem(nextButton);
-    }
-
-    public void clickOnAddressModalPageByNumber(Integer pageNumber) throws Exception {
-        selenium.clickOnItem(getAddressModalPageByNumber(pageNumber));
-    }
-
-    public void clickOnRegexAlertClose() throws Exception {
-        selenium.clickOnItem(getFilterRegexAlertClose(), "Closing regex alert banner");
-    }
-
-    /**
-     * common method for switching type of filtering/sorting
-     */
-    private void switchFilterOrSort(Enum<?> switchElement, WebElement switchButton, List<WebElement> switchElements) throws Exception {
-        selenium.clickOnItem(switchButton);
-        for (WebElement element : switchElements) {
-            if (element.findElement(By.tagName("a")).getText().toUpperCase().equals(switchElement.toString())) {
-                selenium.clickOnItem(element);
-                break;
-            }
-        }
-    }
-
-    /**
-     * switch type of sorting Name/Senders/Receivers
-     */
-    private void switchSort(SortType sortType) throws Exception {
-        log.info("Switch sorting to: " + sortType.toString());
-        switchFilterOrSort(sortType, getSortSwitch(), getSortDropDown());
-    }
-
-    /**
-     * switch type of filtering Name/Type
-     */
-    private void switchFilter(FilterType filterType) throws Exception {
-        log.info("Switch filtering to: " + filterType.toString());
-        switchFilterOrSort(filterType, getFilterSwitch(), getFilterDropDown());
-    }
-
-    /**
-     * check if sorted ASC/DESC button is set to ASC.
-     */
-    private boolean isSortAsc() {
-        Boolean isAsc;
-        try {
-            getAscDescButton().findElement(By.className("fa-sort-alpha-asc"));
-            isAsc = true;
-        } catch (Exception ex) {
-            isAsc = false;
-        }
-
-        if (!isAsc) {
+    public void openConsolePage() throws Exception {
+        log.info("Opening global console on route {}", ocRoute);
+        selenium.getDriver().get(ocRoute);
+        if (waitUntilLoginPage()) {
+            selenium.getAngularDriver().waitForAngularRequestsToFinish();
+            selenium.takeScreenShot();
             try {
-                getAscDescButton().findElement(By.className("fa-sort-numeric-asc"));
-                isAsc = true;
+                logout();
             } catch (Exception ex) {
-                isAsc = false;
+                log.info("User is not logged");
             }
+            if (!login())
+                throw new IllegalAccessException(loginPage.getAlertMessage());
         }
-        return isAsc;
+        selenium.getAngularDriver().waitForAngularRequestsToFinish();
+        if (!waitUntilConsolePage()) {
+            throw new IllegalStateException("Openshift console not loaded");
+        }
     }
 
-    /**
-     * add whatever filter you want
-     *
-     * @param filterType
-     * @param filterValue allowed values are for FilterType.NAME (String), FilterType.NAME (queue, topic, multicast, anycast)
-     * @throws Exception
-     */
-    public void addAddressesFilter(FilterType filterType, String filterValue) throws Exception {
-        log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
-        switchFilter(filterType);
+    public void openAddressList(AddressSpace addressSpace) throws Exception {
+        AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
+        selenium.clickOnItem(item.getConsoleRoute());
+        selenium.getWebElement(this::getAddressTable);
+    }
+
+    public void openConnectionList(AddressSpace addressSpace) throws Exception {
+        AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
+        selenium.clickOnItem(item.getConsoleRoute());
+        switchToConnectionTab();
+        selenium.getWebElement(this::getConnectionTable);
+    }
+
+    public void openClientsList(Address address) throws Exception {
+        AddressWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressItem(address));
+        selenium.clickOnItem(item.getClientsRoute(), "Clients route");
+        selenium.getWebElement(this::getClientsTable);
+    }
+
+    private void selectNamespace(String namespace) throws Exception {
+        selenium.clickOnItem(getNamespaceDropDown(), "namespace dropdown");
+        selenium.clickOnItem(selenium.getDriver().findElement(By.xpath("//button[@value='" + namespace + "']")), namespace);
+    }
+
+    private void selectPlan(String plan) throws Exception {
+        selenium.clickOnItem(getPlanDropDown(), "address space plan dropdown");
+        selenium.clickOnItem(selenium.getDriver().findElement(By.xpath("//button[@value='" + plan + "']")), plan);
+    }
+
+    private void selectAuthService(String authService) throws Exception {
+        selenium.clickOnItem(getAuthServiceDropDown(), "address space plan dropdown");
+        selenium.clickOnItem(selenium.getDriver().findElement(By.xpath("//button[@value='" + authService + "']")), authService);
+    }
+
+    public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        selenium.clickOnItem(getCreateButtonTop());
+        selectNamespace(addressSpace.getMetadata().getNamespace());
+        selenium.fillInputItem(getAddressSpaceNameInput(), addressSpace.getMetadata().getName());
+        selenium.clickOnItem(addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString().toLowerCase()) ? getBrokeredRadioButton() : getStandardRadioButton(),
+                addressSpace.getSpec().getType());
+        selectPlan(addressSpace.getSpec().getPlan());
+        selectAuthService(addressSpace.getSpec().getAuthenticationService().getName());
+        selenium.clickOnItem(getNextButton());
+        selenium.clickOnItem(getFinishButton());
+        selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
+        selenium.takeScreenShot();
+        AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+        selenium.refreshPage();
+    }
+
+    public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
+        AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
+        selenium.clickOnItem(item.getActionDropDown(), "Address space dropdown");
+        selenium.clickOnItem(item.getDeleteMenuItem());
+        selenium.clickOnItem(getConfirmButton());
+        selenium.waitUntilItemNotPresent(30, () -> getAddressSpaceItem(addressSpace));
+    }
+
+    public void switchAddressSpacePlan(AddressSpace addressSpace, String addressSpacePlan) throws Exception {
+        AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
+        selenium.clickOnItem(item.getActionDropDown(), "Address space dropdown");
+        selenium.clickOnItem(item.getEditMenuItem());
+        selenium.clickOnItem(selenium.getDriver().findElement(By.id("edit-addr-plan")));
+        selenium.clickOnItem(selenium.getDriver()
+                .findElement(By.xpath("//option[@value='" + addressSpacePlan + "']")));
+        selenium.clickOnItem(selenium.getDriver().findElement(By.id("as-list-edit-confirm")));
+        selenium.refreshPage();
+        addressSpace.getSpec().setPlan(addressSpacePlan);
+    }
+
+    public void createAddressesAndWait(Address... addresses) throws Exception {
+        for (Address address : addresses) {
+            createAddress(address, false);
+        }
+        AddressUtils.waitForDestinationsReady(addresses);
+    }
+
+    public void createAddresses(Address... addresses) throws Exception {
+        for (Address address : addresses) {
+            createAddress(address, false);
+        }
+    }
+
+    public void createAddress(Address address) throws Exception {
+        createAddress(address, true);
+    }
+
+    public void createAddress(Address address, boolean waitForReady) throws Exception {
+        log.info("Address {} will be created using web console", address);
+        selenium.clickOnItem(getCreateButtonTop());
+        selenium.fillInputItem(getAddressNameInput(), address.getSpec().getAddress());
+        selenium.clickOnItem(getAddressTypeDropDown(), "Address Type dropdown");
+        selenium.clickOnItem(getAddressTypeDropDown().findElement(By.id("address-definition-type-dropdown-item" + address.getSpec().getType())));
+        selenium.clickOnItem(getAddressPlanDropDown(), "address plan dropdown");
+        selenium.clickOnItem(getAddressPlanDropDown().findElement(By.id("address-definition-plan-dropdown-item" + address.getSpec().getPlan())));
+        if (address.getSpec().getType().equals(AddressType.SUBSCRIPTION.toString())) {
+            selenium.clickOnItem(getTopicSelectDropDown(), "topic dropdown");
+            selenium.clickOnItem(getTopicSelectDropDown().findElement(By.id("address-definition-topic-dropdown-item" + address.getSpec().getTopic())));
+        }
+        selenium.clickOnItem(getNextButton());
+        selenium.clickOnItem(getFinishButton());
+        selenium.waitUntilItemPresent(30, () -> getAddressItem(address));
+        if (waitForReady) {
+            AddressUtils.waitForDestinationsReady(address);
+        }
+    }
+
+    public void openAddressCreationDialog() {
+        selenium.clickOnItem(getCreateButtonTop());
+    }
+
+    public void fillAddressName(String name) {
+        selenium.fillInputItem(getAddressNameInput(), name);
+    }
+
+    public boolean isAddressNameInvalid() {
+        String value = getAddressNameInput().getAttribute("aria-invalid");
+        return value.equals("true");
+    }
+
+    public void deleteAddress(Address dest) throws Exception {
+        log.info("Address {} will be deleted using web console", dest);
+        AddressWebItem item = getAddressItem(dest);
+        selenium.clickOnItem(item.getActionDropDown(), "Address item menu");
+        selenium.clickOnItem(item.getDeleteMenuItem());
+        selenium.clickOnItem(getConfirmButton());
+        selenium.waitUntilItemNotPresent(30, () -> getAddressItem(dest));
+        AddressUtils.waitForAddressDeleted(dest, new TimeoutBudget(5, TimeUnit.MINUTES));
+    }
+
+    public void switchToAddressTab() {
+        selenium.clickOnItem(getAddressTab(), "Addresses");
+    }
+
+    public void switchToConnectionTab() {
+        selenium.clickOnItem(getConnectionTab(), "Connections");
+    }
+
+    public void addFilter(FilterType filterType, String filterValue) throws Exception {
+        log.info("Apply filter {} type {}", filterValue, filterType);
+        selenium.clickOnItem(getAddressFilterDropDown(), "Address filter dropdown");
         switch (filterType) {
-            case TYPE:
-                addFilterBy(filterType, filterValue);
+            case ADDRESS:
+                selenium.clickOnItem(getAddressFilterDropDownItem());
+                selenium.fillInputItem(getSelectNameTextBox(), filterValue);
+                selenium.clickOnItem(getSearchButtonAddress(), "Search");
+                break;
+            case STATUS:
+                selenium.clickOnItem(getStatusFilterDropDownItem());
+                selenium.clickOnItem(getSelectStatusDropDown(), "Status phase dropdown");
+                selenium.clickOnItem(getSelectStatusDropDown()
+                        .findElement(By.id("al-filter-select-status-dropdown-itemstatus" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1))));
                 break;
             case NAME:
-                WebElement filterInput = getInputSearchAddressesConnections();
-                selenium.fillInputItem(filterInput, filterValue);
-                selenium.pressEnter(filterInput);
+                selenium.clickOnItem(getNameFilterDropDownItem());
+                selenium.fillInputItem(getSelectNameTextBox(), filterValue);
+                selenium.clickOnItem(getSearchButtonName(), "Search");
                 break;
-            default:
-                throw new IllegalArgumentException("Filter type " + filterType + "isn't supported for addresses");
-        }
-    }
-
-    /**
-     * add whatever filter you want
-     *
-     * @param filterType
-     * @param filterValue allowed values are for FilterType.NAME (String), FilterType.NAME (queue, topic, multicast, anycast)
-     * @throws Exception
-     */
-    public void addConnectionsFilter(FilterType filterType, String filterValue) throws Exception {
-        log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
-        switchFilter(filterType);
-        switch (filterType) {
-            case CONTAINER:
-            case HOSTNAME:
-            case USER:
-                WebElement filterInput = getInputSearchAddressesConnections();
-                selenium.fillInputItem(filterInput, filterValue);
-                selenium.pressEnter(filterInput);
+            case NAMESPACE:
+                selenium.clickOnItem(getNamespaceFilterDropDownItem());
+                selenium.fillInputItem(getSelectNameTextBox(), filterValue);
+                selenium.clickOnItem(getSearchButtonNamespace(), "Search");
                 break;
-            case ENCRYPTED:
-                addFilterBy(filterType, filterValue);
-                break;
-            default:
-                throw new IllegalArgumentException("Filter type " + filterType + "isn't supported for addresses");
-        }
-    }
-
-    /**
-     * add filter by filter type [TYPE/ENCRYPTED]
-     *
-     * @param filterValue queue/topic/multicast/anycast/encrypted/unencrypted
-     */
-    private void addFilterBy(FilterType filterType, String filterValue) throws Exception {
-        WebElement clickableTypeElement;
-        String textToLog;
-        switch (filterType) {
             case TYPE:
-                textToLog = "Click on button: 'Filter by name...'";
-                clickableTypeElement = getDropDownAddressType(filterValue, getDropDownAddressTypes());
+                selenium.clickOnItem(getTypeFilterDropDownItem());
+                selenium.clickOnItem(getSelectTypeDropDown(), "Type filter dropdown");
+                WebElement selectedType;
+                try {
+                    selectedType = getSelectTypeDropDown()
+                            .findElement(By.id("al-filter-select-type-dropdown-itemtype" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1)));
+                } catch (Exception ex) {
+                    selectedType = getSelectTypeDropDown()
+                            .findElement(By.id("al-filter-dropdown-item-typetype" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1)));
+                }
+                selenium.clickOnItem(selectedType);
                 break;
-            case ENCRYPTED:
-                textToLog = "Click on button: 'Filter by encrypted/unencrypted...'";
-                clickableTypeElement = getDropDownEncryptedType(filterValue, getDropDownAddressTypes());
-                break;
-            default:
-                throw new IllegalArgumentException("Filter type " + filterType + "isn't supported for addresses");
-        }
-        selenium.executeJavaScript(
-                "document.getElementById('_fields').getElementsByTagName('button')[1].click();",
-                textToLog);
-        selenium.clickOnItem(clickableTypeElement);
-
-    }
-
-
-    /**
-     * remove filter element by (Name: Value)
-     */
-    private void removeFilter(FilterType filterType, String filterName) throws Exception {
-        log.info("Removing filter: " + filterName);
-        String filterText = String.format("%s: %s", filterType.toString().toLowerCase(), filterName);
-        List<WebElement> filters = getFilterResultsToolbar().findElements(ByAngular.repeater("filter in config.appliedFilters"));
-        for (WebElement filter : filters) {
-            if (filterText.toUpperCase().equals(filter.findElement(By.className("active-filter")).getText().toUpperCase())) {
-                WebElement button = filter.findElement(By.className("pficon-close"));
-                selenium.clickOnItem(button, "clearFilterButton");
-            }
         }
     }
 
-    /**
-     * remove 'type' filter element by (Name: Value)
-     */
-    public void removeFilterByType(String filterName) throws Exception {
-        removeFilter(FilterType.TYPE, filterName);
+    public void addConnectionsFilter(FilterType filterType, String filterValue) throws Exception {
+        selenium.clickOnItem(getConnectionFilterDropDown(), "Connections filter dropdown");
+        switch ( filterType ) {
+            case HOSTNAME:
+                selenium.clickOnItem(getConnectionsHostnameFilterDropDownItem());
+                selenium.fillInputItem(getSelectNameTextBox(), filterValue);
+                selenium.clickOnItem(getConnectionsHostnameSearchButton(), "Search");
+                break;
+            case CONTAINER:
+                selenium.clickOnItem(getConnectionsContainerFilterDropDownItem());
+                selenium.fillInputItem(getSelectNameTextBox(), filterValue);
+                selenium.clickOnItem(getConnectionsContainerSearchButton(), "Search");
+                break;
+        }
     }
 
-    /**
-     * remove 'name' filter element by (Name: Value)
-     */
-    public void removeFilterByName(String filterName) throws Exception {
-        removeFilter(FilterType.NAME, filterName);
+    public void removeAllFilters() throws Exception {
+        log.info("Clear all filters");
+        selenium.clickOnItem(getToolBarMenu().findElements(By.tagName("button")).stream().filter(webElement -> webElement.getText().contains("Clear all filters")).findAny().get());
     }
 
-    /**
-     * remove 'name' filter element by (Name: Value)
-     */
-    public void removeFilterByUser(String filterName) throws Exception {
-        removeFilter(FilterType.USER, filterName);
+    public void removeAddressFilter(FilterType filterType, String filterValue) throws Exception {
+        log.info("Removing filter {} type {}", filterValue, filterType);
+        selenium.clickOnItem(Objects.requireNonNull(getAppliedFilterItem(filterType, filterValue)).findElement(By.tagName("button")), "delete filter");
     }
 
-    /**
-     * remove all filters elements
-     */
-    public void clearAllFilters() throws Exception {
-        log.info("Removing all filters");
-        WebElement clearAllButton = getFilterResultsToolbar().findElement(By.className("clear-filters"));
-        selenium.clickOnItem(clearAllButton);
+    public void selectAddress(Address address) {
+        selenium.clickOnItem(getAddressItem(address).getCheckBox(), "Select address");
     }
 
-    /**
-     * Sort address items
-     */
-    public void sortItems(SortType sortType, boolean asc) throws Exception {
+    public void selectAddressSpace(AddressSpace addressSpace) {
+        selenium.clickOnItem(getAddressSpaceItem(addressSpace).getCheckBox(), "Select address space");
+    }
+
+    public void selectAddresses(Address... addresses) {
+        for (Address address : addresses) {
+            selectAddress(address);
+        }
+    }
+
+    public void selectAddressSpaces(AddressSpace... addressSpacess) {
+        for (AddressSpace addressSpace : addressSpacess) {
+            selectAddressSpace(addressSpace);
+        }
+    }
+
+    public void deleteSelectedAddressSpaces(AddressSpace... addressSpaces) throws Exception {
+        selectAddressSpaces(addressSpaces);
+        selenium.clickOnItem(getTableDropDown(), "Main dropdown");
+        selenium.clickOnItem(getDeleteAllButton());
+        selenium.clickOnItem(getConfirmButton());
+        for (AddressSpace space : addressSpaces) {
+            selenium.waitUntilItemNotPresent(30, () -> getAddressSpaceItem(space));
+        }
+    }
+
+    public void deleteSelectedAddresses(Address... addresses) throws Exception {
+        selectAddresses(addresses);
+        selenium.clickOnItem(getTableDropDown(), "Main dropdown");
+        selenium.clickOnItem(getDeleteAllButton());
+        for (Address address : addresses) {
+            selenium.waitUntilItemNotPresent(30, () -> getAddressItem(address));
+        }
+    }
+
+    public void purgeSelectedAddresses(Address... addresses) {
+        selectAddresses(addresses);
+        selenium.clickOnItem(getTableDropDown(), "Main dropdown");
+        selenium.clickOnItem(getPurgeAllButton());
+        selenium.clickOnItem(getConfirmButton());
+    }
+
+    public void sortAddresses(SortType sortType, boolean asc) throws Exception {
+        sortItems(sortType, asc, this::getTableAddressHeader, this::isAddressSortType);
+    }
+
+    public void sortConnections(SortType sortType, boolean asc) throws Exception {
+        sortItems(sortType, asc, this::getTableConnectionHeader, this::isConnectionsSortType);
+    }
+
+    private void sortItems(SortType sortType, boolean asc, Supplier<WebElement> tableHeaderSupplier, BiPredicate<String, SortType> columnFilter) throws Exception {
         log.info("Sorting");
-        switchSort(sortType);
-        if (asc && !isSortAsc()) {
-            selenium.clickOnItem(getAscDescButton(), "Asc");
-        } else if (!asc && isSortAsc()) {
-            selenium.clickOnItem(getAscDescButton(), "Desc");
+
+        String sortingDirection = asc ? "ascending" : "descending";
+
+        Supplier<WebElement> columnHeaderSupplier = () -> tableHeaderSupplier.get().findElements(By.tagName("th")).stream()
+                .filter(we -> columnFilter.test(we.getAttribute("data-label"), sortType))
+                .findFirst()
+                .orElseThrow(()->new IllegalStateException("Column to sort not found"));
+
+        var columnHeader = columnHeaderSupplier.get();
+        int safeguard = 3;
+        do {
+            if (safeguard<0) {
+                selenium.takeScreenShot();
+                throw new IllegalStateException("Sorting is not working");
+            }
+            selenium.clickOnItem(columnHeader.findElement(By.tagName("button")));
+            Thread.sleep(500);
+            columnHeader = columnHeaderSupplier.get();
+            safeguard--;
+        } while (!columnHeader.getAttribute("aria-sort").equals(sortingDirection));
+        selenium.takeScreenShot();
+    }
+
+    private boolean isAddressSortType(String dataLabel, SortType sortType) {
+        switch ( sortType ) {
+            case MESSAGES_IN:
+                return dataLabel.equals("column-4");
+            case MESSAGES_OUT:
+                return dataLabel.equals("column-5");
+            case STORED_MESSAGES:
+            case ADDRESS:
+            case SENDERS:
+            case RECEIVERS:
+                return dataLabel.toUpperCase().equals(sortType.toString());
+            default:
+                return false;
         }
     }
 
-    /**
-     * create multiple addresses
-     */
-    public void createAddressesWebConsole(Address... destinations) throws Exception {
-        for (Address dest : destinations) {
-            createAddressWebConsole(dest, true);
+    private boolean isConnectionsSortType(String dataLabel, SortType sortType) {
+        switch ( sortType ) {
+            case MESSAGES_IN:
+                return dataLabel.equals("column-4");
+            case MESSAGES_OUT:
+                return dataLabel.equals("column-5");
+            case HOSTNAME:
+            case CONTAINER_ID:
+            case PROTOCOL:
+            case TIME_CREATED:
+            case SENDERS:
+            case RECEIVERS:
+                return dataLabel.toUpperCase().equals(sortType.toString());
+            default:
+                return false;
         }
     }
 
-    /**
-     * create specific address
-     */
-    public void createAddressWebConsole(Address destination) throws Exception {
-        createAddressWebConsole(destination, true);
+    //================================================================================================
+    // Login
+    //================================================================================================
+
+    private boolean login() throws Exception {
+        return loginPage.login(credentials.getUsername(), credentials.getPassword());
     }
 
-    public void createAddressWebConsole(Address destination, boolean waitForReady) throws Exception {
-        log.info("Create address using web console");
-
-        //get addresses item from left panel view
-        openAddressesPageWebConsole();
-
-        //click on create button
-        clickOnCreateButton();
-
-        //fill address name
-        selenium.fillInputItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("new-name"))), destination.getSpec().getAddress());
-
-        //select address type
-        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getSpec().getType()))), "Radio button " + destination.getSpec().getType());
-
-        //if address type is subscription, fill in the topic dropdown box
-        if (destination.getSpec().getType().equals(AddressType.SUBSCRIPTION.toString())) {
-            log.info("Selecting topic to attach subscription to");
-            WebElement topicDropDown = getSubscriptionComboBox();
-            selenium.clickOnItem(topicDropDown);
-            Select combobox = new Select(topicDropDown);
-            combobox.selectByVisibleText(destination.getSpec().getTopic());
-        }
-
-        WebElement nextButton = selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("nextButton")));
-        selenium.clickOnItem(nextButton);
-
-        //select address plan
-        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getSpec().getPlan()))), "Radio button " + destination.getSpec().getPlan());
-
-        selenium.clickOnItem(nextButton);
-        selenium.clickOnItem(nextButton);
-
-        AddressWebItem items = selenium.waitUntilItemPresent(120, () -> getAddressItem(destination));
-
-        assertNotNull(items, String.format("Console failed, does not contain created address item : %s", destination));
-
-        if (waitForReady)
-            AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), destination);
-    }
-
-    /**
-     * delete multiple addresses
-     */
-    public void deleteAddressesWebConsole(Address... destinations) throws Exception {
-        for (Address dest : destinations) {
-            deleteAddressWebConsole(dest);
-        }
-    }
-
-    public void deleteAddressWebConsole(Address destination) throws Exception {
-        log.info("Remove address using web console");
-
-        //open addresses
-        openAddressesPageWebConsole();
-
-        AddressWebItem addressItem = selenium.waitUntilItemPresent(10, () -> getAddressItem(destination));
-
-        //click on check box
-        selenium.clickOnItem(addressItem.getCheckBox(), "check box: " + destination.getSpec().getAddress());
-
-        //click on delete
-        clickOnRemoveButton();
-
-        AddressUtils.waitForAddressDeleted(destination, new TimeoutBudget(5, TimeUnit.MINUTES));
-        selenium.waitUntilItemNotPresent(60, () -> getAddressItem(destination));
-
-        //check if address deleted
-        assertNull(getAddressItem(destination), "Console failed, still contains deleted address item ");
-    }
-
-    public void purgeAddress(Address address) throws Exception {
-        AddressWebItem addressWebItem = selenium.waitUntilItemPresent(10, () -> getAddressItem(address));
-        selenium.clickOnItem(addressWebItem.getCheckBox(), "Selecting address " + addressWebItem.getName());
-        clickOnPurgeButton();
-        confirmPurge();
-    }
-
-    public boolean login() throws Exception {
-        return login(credentials);
-    }
-
-    public boolean login(UserCredentials credentials) throws Exception {
-        return login(credentials.getUsername(), credentials.getPassword());
-    }
-
-    public void logout() throws Exception {
-        selenium.clickOnItem(getUserDropDown(), "User dropdown");
-        selenium.clickOnItem(getLogoutHref(), "Return to global console");
-    }
-
-    public boolean login(String username, String password) throws Exception {
+    public void logout() {
         try {
-            getNavigateMenu();
-            log.info("User is already logged");
+            WebElement userDropdown = selenium.getDriver().findElement(By.id("dd-user"));
+            selenium.clickOnItem(userDropdown, "User dropdown navigation");
+            WebElement logout = selenium.getDriver().findElement(By.id("dd-menuitem-logout"));
+            selenium.clickOnItem(logout, "Log out");
+        } catch (Exception ex) {
+            log.info("Unable to logout, user is not logged in");
+        }
+    }
+
+    private boolean waitUntilLoginPage() {
+        try {
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains("Log"));
+            selenium.clickOnItem(selenium.getDriver().findElement(By.tagName("button")));
             return true;
         } catch (Exception ex) {
-            OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
-            return ocLoginPage.login(username, password);
+            selenium.takeScreenShot();
+            return false;
         }
     }
 
+    private boolean waitUntilConsolePage() {
+        try {
+            selenium.getDriverWait().until(ExpectedConditions.visibilityOfElementLocated(By.id("root")));
+            return true;
+        } catch (Exception ex) {
+            selenium.takeScreenShot();
+            log.info("Error waitUntilConsolePage", ex);
+            return false;
+        }
+    }
 
     @Override
     public void checkReachableWebPage() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.presenceOfElementLocated(By.className("nav-pf-vertical")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.or(
+                ExpectedConditions.presenceOfElementLocated(By.id("root")),
+                ExpectedConditions.titleContains("Address Space List")
+        ));
     }
 }

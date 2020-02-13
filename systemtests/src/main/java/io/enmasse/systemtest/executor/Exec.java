@@ -147,9 +147,12 @@ public class Exec {
 
     /**
      * Method kills process
+     * @throws InterruptedException
      */
-    public void stop() {
-        process.destroyForcibly();
+    public void stop() throws InterruptedException {
+        if (!process.destroyForcibly().waitFor(10, TimeUnit.SECONDS)) {
+            log.warn("Process stop timeout elapsed");
+        }
         stdOut = stdOutReader.getData();
         stdErr = stdErrReader.getData();
     }

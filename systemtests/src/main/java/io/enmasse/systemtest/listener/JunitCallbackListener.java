@@ -127,12 +127,10 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             LOGGER.info("Teardown section: ");
             if (testInfo.isTestShared()) {
                 tearDownSharedResources();
+            } else if (testInfo.isTestIoT()) {
+                isolatedIoTManager.tearDown(testInfo.getActualTest());
             } else {
-                if (testInfo.isTestIoT()) {
-                    isolatedIoTManager.tearDown(testInfo.getActualTest());
-                } else {
-                    tearDownCommonResources();
-                }
+                tearDownCommonResources();
             }
         });
     }
