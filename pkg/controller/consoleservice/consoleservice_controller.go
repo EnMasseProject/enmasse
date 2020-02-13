@@ -730,6 +730,13 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			envvar.Value = "9090"
 		})
 
+		namespace, err := util.GetInfrastructureNamespace()
+		if err == nil {
+			install.ApplyEnv(container, "NAMESPACE", func(envvar *corev1.EnvVar) {
+				envvar.Value = namespace
+			})
+		}
+
 		// TODO use https
 		// TODO add health probe
 		container.Ports = []corev1.ContainerPort{{
