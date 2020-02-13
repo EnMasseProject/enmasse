@@ -73,7 +73,7 @@ under the License.
 
       <acceptors>
          <acceptor name="amqp">tcp://0.0.0.0:5672?protocols=AMQP,CORE,OPENWIRE,STOMP,MQTT;saslMechanisms=PLAIN</acceptor>
-         <acceptor name="amqps">tcp://0.0.0.0:5671?protocols=AMQP,CORE,OPENWIRE,STOMP,MQTT;sslEnabled=true;saslMechanisms=PLAIN;keyStorePath=${EXTERNAL_KEYSTORE_PATH};keyStorePassword=enmasse</acceptor>
+         <acceptor name="amqps">tcp://0.0.0.0:5671?protocols=AMQP,CORE,OPENWIRE,STOMP,MQTT;sslEnabled=true;saslMechanisms=PLAIN;keyStorePath=${EXTERNAL_KEYSTORE_PATH};keyStorePassword=enmasse;enabledProtocols=TLSv1.2,TLSv1.3</acceptor>
          <!-- SASL Mechanism should be EXTERNAL not anonymous... but Artemis doesn't support EXTERNAL -->
          <acceptor name="amqps-normal">tcp://0.0.0.0:55671?protocols=AMQP;saslMechanisms=ANONYMOUS;sslEnabled=true;keyStorePath=${KEYSTORE_PATH};keyStorePassword=enmasse;trustStorePath=${TRUSTSTORE_PATH};trustStorePassword=enmasse;verifyHost=false;needClientAuth=true</acceptor>
       </acceptors>
