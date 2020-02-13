@@ -9,6 +9,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
@@ -176,7 +177,7 @@ public abstract class ConsoleTest extends TestBase {
         }
     }
 
-    protected void doTestSwitchAddressSpacePlan() throws Exception {
+    protected void doEditAddressSpace() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-api")
@@ -203,6 +204,11 @@ public abstract class ConsoleTest extends TestBase {
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
         assertEquals(AddressSpacePlans.STANDARD_UNLIMITED,
                 resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
+
+        consolePage.switchAuthService(addressSpace, "none-authservice", AuthenticationServiceType.NONE);
+        AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+        assertEquals("none-authservice",
+                resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getAuthenticationService().getName());
     }
 
     protected void doTestFilterAddrSpace() throws Exception {

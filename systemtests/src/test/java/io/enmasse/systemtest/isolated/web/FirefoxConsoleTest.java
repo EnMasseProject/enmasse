@@ -70,8 +70,8 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     }
 
     @Test
-    void testSwitchAddressSpacePlan() throws Exception {
-        doTestSwitchAddressSpacePlan();
+    void testEditAddressSpace() throws Exception {
+        doEditAddressSpace();
     }
 
     @Test
