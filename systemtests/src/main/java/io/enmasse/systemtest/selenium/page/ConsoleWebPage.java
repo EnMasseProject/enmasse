@@ -143,6 +143,12 @@ public class ConsoleWebPage implements IWebPage {
         return getAddressesTableDropDown().findElement(By.xpath("//button[contains(text(), 'Purge Selected')]"));
     }
 
+    private WebElement getAddressesDeleteConfirmButton() {
+        return selenium.getDriver().findElement(By.className("pf-c-backdrop"))
+                    .findElement(By.className("pf-c-modal-box"))
+                    .findElement(By.xpath("//button[contains(text(), 'Confirm')]"));
+    }
+
     private WebElement getAddressSpaceMainTopDropdown() {
         return getContentElem().findElement(By.id("as-header-kebab"));
     }
@@ -686,7 +692,8 @@ public class ConsoleWebPage implements IWebPage {
     public void deleteSelectedAddresses(Address... addresses) throws Exception {
         selectAddresses(addresses);
         selenium.clickOnItem(getAddressesTableDropDown(), "Main dropdown");
-        selenium.clickOnItem(getAddressesDeleteAllButton());
+        selenium.clickOnItem(getAddressesDeleteAllButton(), "Deleted selected");
+        selenium.clickOnItem(getAddressesDeleteConfirmButton());
         for (Address address : addresses) {
             selenium.waitUntilItemNotPresent(30, () -> getAddressItem(address));
         }
