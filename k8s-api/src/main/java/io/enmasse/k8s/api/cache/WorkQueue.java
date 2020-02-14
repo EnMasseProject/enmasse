@@ -8,5 +8,6 @@ import java.util.concurrent.TimeUnit;
 
 public interface WorkQueue<T> extends Store<T> {
     void pop(Processor<T> processor, long timeout, TimeUnit timeUnit) throws Exception;
+    void wakeup() throws InterruptedException;
     boolean hasSynced();
 }

@@ -8,6 +8,7 @@ import static io.enmasse.k8s.api.cache.EventCache.EventType.Added;
 import static io.enmasse.k8s.api.cache.EventCache.EventType.Deleted;
 import static io.enmasse.k8s.api.cache.EventCache.EventType.Sync;
 import static io.enmasse.k8s.api.cache.EventCache.EventType.Updated;
+import static io.enmasse.k8s.api.cache.EventCache.EventType.Wakeup;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +34,8 @@ public class EventCache<T> implements WorkQueue<T> {
         Added,
         Updated,
         Deleted,
-        Sync
+        Sync,
+        Wakeup
     }
 
     private static class Event<T> {
@@ -53,7 +55,7 @@ public class EventCache<T> implements WorkQueue<T> {
     @Override
     public void pop(Processor<T> processor, long timeout, TimeUnit timeUnit) throws Exception {
         Event<T> firstEvent = queue.poll(timeout, timeUnit);
-        if (firstEvent == null) {
+        if (firstEvent == null || Wakeup == firstEvent.eventType) {
             log.debug("Woke up but queue is empty");
             return;
         }
@@ -70,6 +72,8 @@ public class EventCache<T> implements WorkQueue<T> {
                 }
 
                 switch (event.eventType) {
+                    case Wakeup:
+                        continue;
                     case Deleted:
                         store.remove(key);
                         break;
@@ -122,6 +126,11 @@ public class EventCache<T> implements WorkQueue<T> {
     @Override
     public void delete(T t) throws InterruptedException {
         queueEvent(Deleted, t);
+    }
+
+    @Override
+    public void wakeup() throws InterruptedException {
+        queue.put(new Event<>(Wakeup, null));
     }
 
     @Override

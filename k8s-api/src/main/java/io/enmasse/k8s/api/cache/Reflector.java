@@ -80,7 +80,7 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList<
             watch.close();
         }
         Instant start = clock.instant();
-        LT list = listerWatcher.list(new ListOptions());
+        LT list = listerWatcher.list(new ListOptions().setResourceVersion(null));
         String resourceVersion = Optional.ofNullable(list)
                 .map(KubernetesResourceList::getMetadata)
                 .map(ListMeta::getResourceVersion).orElse("");
@@ -142,7 +142,16 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList<
                     log.info("Watch closed");
                 }
                 if (e != null) {
-                    log.warn("Unexpected watch close", e);
+                    log.warn("Unexpected watch close. Code {}. Status: {}", e.getCode(), e.getStatus(), e);
+                    if (e.getCode() == 410) {
+                        nextResync = Instant.MIN;
+                        try {
+                            queue.wakeup();
+                        } catch (InterruptedException ex) {
+                            log.warn("Interrupted when waking up queue processor", ex);
+                            Thread.currentThread().interrupt();
+                        }
+                    }
                 }
             }
         }, watchOptions);
