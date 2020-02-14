@@ -1672,7 +1672,7 @@ __required__||enum (password, serviceaccount)
 |**addresses** +
 __optional__|< string > array
 |**operations** +
-__required__|< enum (send, receive, view, manage) > array
+__required__|< enum (send, recv, view, manage) > array
 |===
 
 
