@@ -54,10 +54,16 @@ CLUSTER=x.x.x.x.nip.io install/components/iot/examples/k8s-tls/create
 
 . Install the {DataGridProductName} server:
 +
+
 [options="nowrap",subs="attributes"]
 ----
 {cmdcli} apply -f install/components/iot/examples/infinispan/common
-{cmdcli} apply -f install/components/iot/examples/infinispan/manual
+ifeval::["{cmdcli}" == "oc"]
+{cmdcli} apply -f install/components/iot/examples/infinispan/openshift
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+{cmdcli} apply -f install/components/iot/examples/infinispan/kubernetes
+endif::[]
 ----
 
 . Install an example IoT infrastructure configuration:
