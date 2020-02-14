@@ -293,7 +293,9 @@ public class StatusController implements Controller {
 
         for (RouterStatus routerStatus : routerStatusList) {
             String routerId = routerStatus.getRouterId();
-            List<String> neighbors = routerStatus.getNeighbors();
+            List<String> neighbors = new ArrayList<>(routerStatus.getNeighbors());
+            // Add ourselves to make the comparison simpler
+            neighbors.add(routerId);
 
             if (!neighbors.containsAll(routerIds)) {
                 Set<String> missing = new HashSet<>(routerIds);
