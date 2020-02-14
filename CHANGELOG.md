@@ -24,6 +24,7 @@
 * #3673: Add support for pod disruption budgets
 * #3764: validate the topic refenced by a subscription actually exists
 * #3868: Add support for specifying maxConsumers for a subscription
+* #3873: Require TLSv1.2 or newer for external TLS endpoints
 
 ## 0.30.2
 *  #2714: Allow setting security context of pods using persistent volumes

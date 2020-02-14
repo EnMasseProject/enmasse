@@ -290,6 +290,7 @@ public class RouterConfigController implements Controller {
         sslDetails.setName("ssl_details");
         sslDetails.setCertFile("/etc/qpid-dispatch/ssl/tls.crt");
         sslDetails.setPrivateKeyFile("/etc/qpid-dispatch/ssl/tls.key");
+        sslDetails.setProtocols("TLSv1.2");
         sslProfiles.add(sslDetails);
 
         SslProfile interRouterTls = new SslProfile();

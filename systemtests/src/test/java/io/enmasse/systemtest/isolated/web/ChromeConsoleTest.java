@@ -70,6 +70,11 @@ class ChromeConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     }
 
     @Test
+    void testEditAddressSpace() throws Exception {
+        doEditAddressSpace();
+    }
+
+    @Test
     void testFilterAddressSpace() throws Exception {
         doTestFilterAddrSpace();
     }

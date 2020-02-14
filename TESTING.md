@@ -62,6 +62,7 @@ export START_VERSION=0.28.2
 wget https://github.com/EnMasseProject/enmasse/releases/download/${START_VERSION}/enmasse-${START_VERSION}.tgz -O templates/build/enmasse-${START_VERSION}.tgz
 tar zxvf templates/build/enmasse-${version}.tgz -C templates/build
 make templates
+make TAG=latest imageenv
 export START_TEMPLATES=${pwd}/templates/build/enmasse-${START_VERSION}
 export UPGRADE_TEMPLATES=${pwd}/templates/build/enmasse-latest
 make PROFILE=upgrade systemtests

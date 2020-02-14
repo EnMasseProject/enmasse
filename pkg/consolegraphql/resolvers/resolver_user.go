@@ -14,7 +14,7 @@ import (
 )
 
 func (r *queryResolver) Whoami(ctx context.Context) (*v1.User, error) {
-	if util.IsOpenshift() {
+	if util.HasApi(util.UserGVK) {
 		requestState := server.GetRequestStateFromContext(ctx)
 		return requestState.UserInterface.Get("~", metav1.GetOptions{})
 	} else {

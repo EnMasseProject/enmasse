@@ -29,6 +29,7 @@ import { AddressLinksWithFilterAndPagination } from "./AddressLinksWithFilterAnd
 import { EditAddress } from "pages/EditAddressPage";
 import { IAddressSpacePlanResponse } from "pages/AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
 import { POLL_INTERVAL } from "constants/constants";
+import { ErrorAlert } from "components/common/ErrorAlert";
 
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();
@@ -81,7 +82,7 @@ export default function AddressDetailPage() {
   }
 
   if (loading) return <Loading />;
-  if (error) console.log(error);
+  if (error) return <ErrorAlert error={error} />;
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }
   };

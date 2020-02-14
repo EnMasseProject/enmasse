@@ -11,6 +11,7 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SslProfile {
     private String name;
+    private String protocols;
     private String caCertFile;
     private String certFile;
     private String privateKeyFile;
@@ -47,10 +48,19 @@ public class SslProfile {
         this.privateKeyFile = privateKeyFile;
     }
 
+    public String getProtocols() {
+        return protocols;
+    }
+
+    public void setProtocols(String protocols) {
+        this.protocols = protocols;
+    }
+
     @Override
     public String toString() {
         return "SslProfile{" +
                 "name='" + name + '\'' +
+                ", protocols='" + protocols + '\'' +
                 ", caCertFile='" + caCertFile + '\'' +
                 ", certFile='" + certFile + '\'' +
                 ", privateKeyFile='" + privateKeyFile + '\'' +
@@ -63,6 +73,7 @@ public class SslProfile {
         if (o == null || getClass() != o.getClass()) return false;
         SslProfile that = (SslProfile) o;
         return Objects.equals(name, that.name) &&
+                Objects.equals(protocols, that.protocols) &&
                 Objects.equals(caCertFile, that.caCertFile) &&
                 Objects.equals(certFile, that.certFile) &&
                 Objects.equals(privateKeyFile, that.privateKeyFile);
@@ -70,6 +81,6 @@ public class SslProfile {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, caCertFile, certFile, privateKeyFile);
+        return Objects.hash(name, protocols, caCertFile, certFile, privateKeyFile);
     }
 }

@@ -27,6 +27,7 @@ import {
 import { ISortBy, IRowData } from "@patternfly/react-table";
 import { IAddress } from "components/AddressSpace/Address/AddressList";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
+import { ErrorBoundary } from "components/common/ErrorBoundary";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -322,6 +323,7 @@ export default function AddressesList() {
         onSelectAddress={onSelectAddress}
         onSelectAllAddress={onSelectAllAddress}
       />
+
       {totalAddresses > 0 && renderPagination(page, perPage)}
       {isDisplayDeleteDailogue && selectedAddresses.length > 0 && (
         <DialoguePrompt

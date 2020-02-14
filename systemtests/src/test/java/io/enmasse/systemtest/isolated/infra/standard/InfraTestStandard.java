@@ -71,6 +71,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .withStorage("1Gi")
                         .endResources()
                         .withPodTemplate(brokerTemplateSpec)
+                        .withJavaOpts("-Dsystemtest=property")
                         .build())
                 .withRouter(new StandardInfraConfigSpecRouterBuilder()
                         .withNewResources()

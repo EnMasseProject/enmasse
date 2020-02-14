@@ -6,6 +6,7 @@ package io.enmasse.systemtest.selenium.page;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -508,6 +509,19 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(selenium.getDriver().findElement(By.id("as-list-edit-confirm")));
         selenium.refreshPage();
         addressSpace.getSpec().setPlan(addressSpacePlan);
+    }
+
+    public void switchAuthService(AddressSpace addressSpace, String authServiceName, AuthenticationServiceType type) throws Exception {
+        AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
+        selenium.clickOnItem(item.getActionDropDown(), "AddressSpaceDropdown");
+        selenium.clickOnItem(item.getEditMenuItem());
+        selenium.clickOnItem(selenium.getDriver().findElement(By.id("edit-addr-auth")));
+        selenium.clickOnItem(selenium.getDriver()
+                .findElement(By.xpath("//option[@value='" + authServiceName  + "']")));
+        selenium.clickOnItem(selenium.getDriver().findElement(By.id("as-list-edit-confirm")));
+        selenium.refreshPage();
+        addressSpace.getSpec().getAuthenticationService().setName(authServiceName);
+        addressSpace.getSpec().getAuthenticationService().setType(type);
     }
 
     public void createAddressesAndWait(Address... addresses) throws Exception {

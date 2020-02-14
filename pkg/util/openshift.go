@@ -32,6 +32,12 @@ var (
 
 const ConnectsTo = "app.openshift.io/connects-to"
 
+var UserGVK = schema.GroupVersionKind{
+	Group:   "user.openshift.io",
+	Version: "v1",
+	Kind:    "User",
+}
+
 func IsOpenshift() bool {
 
 	if openshift == nil {
@@ -77,19 +83,40 @@ func detectApi(gvk schema.GroupVersionKind) bool {
 
 	namespace, err := GetInfrastructureNamespace()
 	if err != nil {
+		log.Info("Infra namespace not defined, cannot detect api")
 		return false
 	}
 
-	list := unstructured.UnstructuredList{}
-	list.SetGroupVersionKind(gvk)
+	var probeApi func() error
+	if gvk == UserGVK {
+		// special case the User API as listing user will not normally be permitted (or possible)
+		get := unstructured.Unstructured{}
+		get.SetGroupVersionKind(gvk)
+		probeApi = func() error {
+			err := cli.Get(context.Background(), client.ObjectKey{Namespace: namespace, Name: "~"}, &get)
+			log.V(2).Info(fmt.Sprintf("Body: %v", get))
+			return err
+		}
+	} else {
+		list := unstructured.UnstructuredList{}
+		list.SetGroupVersionKind(gvk)
+
+		probeApi = func() error {
+			err := cli.List(context.Background(), &list, client.Limit(1), client.InNamespace(namespace))
+			log.V(2).Info(fmt.Sprintf("Body: %v", list))
+			return err
+		}
+
+	}
+
+	get := unstructured.Unstructured{}
+	get.SetGroupVersionKind(gvk)
 
 	retries := 10
 	for retries > 0 {
 
-		err = cli.List(context.Background(), &list, client.Limit(1), client.InNamespace(namespace))
-
+		err = probeApi()
 		log.Info(fmt.Sprintf("Request error: %v", err))
-		log.V(2).Info(fmt.Sprintf("Body: %v", list))
 
 		if err == nil {
 			return true
