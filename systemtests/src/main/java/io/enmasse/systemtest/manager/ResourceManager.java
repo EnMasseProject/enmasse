@@ -404,6 +404,10 @@ public abstract class ResourceManager {
         AddressUtils.replaceAddress(destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
     }
 
+    public Address getAddress(String namespace, Address destination) {
+        return kubernetes.getAddressClient().inNamespace(namespace).withName(destination.getMetadata().getName()).get();
+    }
+
     //================================================================================================
     //======================================= User methods ===========================================
     //================================================================================================
