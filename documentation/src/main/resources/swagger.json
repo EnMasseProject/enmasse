@@ -835,7 +835,7 @@
                                 "items": {
                                     "enum": [
                                         "send",
-                                        "receive",
+                                        "recv",
                                         "view",
                                         "manage"
                                     ],
