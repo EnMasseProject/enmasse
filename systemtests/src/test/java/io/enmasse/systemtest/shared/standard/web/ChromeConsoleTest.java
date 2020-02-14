@@ -218,6 +218,23 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
         doTestDeleteFilteredAddress(getSharedAddressSpace());
     }
 
+    @Test
+    @Disabled("Only smoke console tests runs in chrome")
+    void testEditAddress() throws Exception {
+        doTestEditAddress(getSharedAddressSpace(), new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue-edit"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue-edit")
+                        .withPlan(getDefaultPlan(AddressType.QUEUE))
+                        .endSpec()
+                        .build(),
+                DestinationPlan.STANDARD_XLARGE_QUEUE);
+    }
+
 //     @Test
 //     void testFilterAddressWithRegexSymbols() throws Exception {
 //     doTestFilterAddressWithRegexSymbols();

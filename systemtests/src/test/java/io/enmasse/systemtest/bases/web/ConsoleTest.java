@@ -474,6 +474,17 @@ public abstract class ConsoleTest extends TestBase {
         assertThat(client.getMessages().size(), is(0));
     }
 
+    protected void doTestEditAddress(AddressSpace addressSpace, Address address, String plan) throws Exception {
+        resourcesManager.setAddresses(address);
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
+        consolePage.changeAddressPlan(address, plan);
+        Thread.sleep(10_000);
+        AddressUtils.waitForDestinationsReady(address);
+        assertThat(resourcesManager.getAddress(kubernetes.getInfraNamespace(), address).getSpec().getPlan(), is(plan));
+    }
+
     protected void doTestDeleteFilteredAddress(AddressSpace addressSpace) throws Exception {
         int addressTotal = 2;
 

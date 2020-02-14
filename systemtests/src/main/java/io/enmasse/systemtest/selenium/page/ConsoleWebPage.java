@@ -231,7 +231,7 @@ public class ConsoleWebPage implements IWebPage {
             }
             try {
                 Thread.sleep(1000);
-            } catch ( InterruptedException e ) {
+            } catch (InterruptedException e) {
                 log.info("", e);
             }
             attempts++;
@@ -531,7 +531,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(item.getEditMenuItem());
         selenium.clickOnItem(selenium.getDriver().findElement(By.id("edit-addr-auth")));
         selenium.clickOnItem(selenium.getDriver()
-                .findElement(By.xpath("//option[@value='" + authServiceName  + "']")));
+                .findElement(By.xpath("//option[@value='" + authServiceName + "']")));
         selenium.clickOnItem(selenium.getDriver().findElement(By.id("as-list-edit-confirm")));
         selenium.refreshPage();
         addressSpace.getSpec().getAuthenticationService().setName(authServiceName);
@@ -649,7 +649,7 @@ public class ConsoleWebPage implements IWebPage {
 
     public void addConnectionsFilter(FilterType filterType, String filterValue) throws Exception {
         selenium.clickOnItem(getConnectionFilterDropDown(), "Connections filter dropdown");
-        switch ( filterType ) {
+        switch (filterType) {
             case HOSTNAME:
                 selenium.clickOnItem(getConnectionsHostnameFilterDropDownItem());
                 selenium.fillInputItem(getSelectNameTextBox(), filterValue);
@@ -720,6 +720,16 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getConfirmButton());
     }
 
+    public void changeAddressPlan(Address address, String plan) throws Exception {
+        AddressWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressItem(address));
+        selenium.clickOnItem(item.getActionDropDown(), "Action drop down");
+        selenium.clickOnItem(item.getEditMenuItem(), "Edit");
+        selenium.clickOnItem(selenium.getDriver().findElement(By.id("edit-addr-plan")), "Edit address plan");
+        selenium.clickOnItem(selenium.getDriver()
+                .findElement(By.xpath("//option[@value='" + plan + "']")));
+        selenium.clickOnItem(getConfirmButton());
+    }
+
     public void sortAddresses(SortType sortType, boolean asc) throws Exception {
         sortItems(sortType, asc, this::getTableAddressHeader, this::isAddressSortType);
     }
@@ -736,12 +746,12 @@ public class ConsoleWebPage implements IWebPage {
         Supplier<WebElement> columnHeaderSupplier = () -> tableHeaderSupplier.get().findElements(By.tagName("th")).stream()
                 .filter(we -> columnFilter.test(we.getAttribute("data-label"), sortType))
                 .findFirst()
-                .orElseThrow(()->new IllegalStateException("Column to sort not found"));
+                .orElseThrow(() -> new IllegalStateException("Column to sort not found"));
 
         var columnHeader = columnHeaderSupplier.get();
         int safeguard = 3;
         do {
-            if (safeguard<0) {
+            if (safeguard < 0) {
                 selenium.takeScreenShot();
                 throw new IllegalStateException("Sorting is not working");
             }
@@ -754,7 +764,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private boolean isAddressSortType(String dataLabel, SortType sortType) {
-        switch ( sortType ) {
+        switch (sortType) {
             case MESSAGES_IN:
                 return dataLabel.equals("column-4");
             case MESSAGES_OUT:
@@ -770,7 +780,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private boolean isConnectionsSortType(String dataLabel, SortType sortType) {
-        switch ( sortType ) {
+        switch (sortType) {
             case MESSAGES_IN:
                 return dataLabel.equals("column-4");
             case MESSAGES_OUT:

@@ -204,6 +204,22 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     }
 
     @Test
+    void testEditAddress() throws Exception {
+        doTestEditAddress(getSharedAddressSpace(), new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue-edit"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue-edit")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build(),
+                DestinationPlan.STANDARD_XLARGE_QUEUE);
+    }
+
+    @Test
     void testDeleteFilteredAddress() throws Exception {
         doTestDeleteFilteredAddress(getSharedAddressSpace());
     }
