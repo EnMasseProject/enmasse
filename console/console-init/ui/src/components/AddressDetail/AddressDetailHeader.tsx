@@ -114,7 +114,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
             <FlexItem id="adheader-plans">
               Plan : <b>{plan}</b>
             </FlexItem>
-            {topic && topic != null && (
+            {topic && topic !== null && (
               <FlexItem
                 id="adheader-subscription-topic"
                 className={css(styles.flex_left_border)}
@@ -130,7 +130,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
                 className={css(styles.flex_left_border)}
               >
                 <b>
-                  {storedMessages && storedMessages != "" ? storedMessages : 0}
+                  {storedMessages && storedMessages !== "" ? storedMessages : 0}
                 </b>{" "}
                 stored messages
               </FlexItem>

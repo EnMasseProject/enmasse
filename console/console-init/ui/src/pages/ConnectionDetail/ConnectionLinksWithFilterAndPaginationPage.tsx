@@ -89,7 +89,7 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
         size={"lg"}
         className={css(GridStylesForTableHeader.filter_left_margin)}
       >
-        Links
+        Links for connection - {connectionname}
       </Title>
       <br />
       <Grid>

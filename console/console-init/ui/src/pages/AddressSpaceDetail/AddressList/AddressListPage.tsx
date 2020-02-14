@@ -22,7 +22,7 @@ import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "components/AddressSpace/Address/EmptyAddress";
 import { EditAddress } from "pages/EditAddressPage";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
-import { ISortBy, IRowData } from "@patternfly/react-table";
+import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 import { ErrorAlert } from "components/common/ErrorAlert";
 
@@ -155,7 +155,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           namespace,
           address.metadata.namespace
         )
-      ).length == 1
+      ).length === 1
   }));
 
   const handleEdit = (data: IAddress) => {
@@ -210,8 +210,10 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           }
         }
       });
-      refetch();
-      setAddressBeingDeleted(null);
+      if (deletedData.data && deletedData.data.deletedAddress === true) {
+        refetch();
+        setAddressBeingDeleted(null);
+      }
     }
   };
 
@@ -226,8 +228,10 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           }
         }
       });
-      refetch();
-      setAddressBeingPurged(null);
+      if (purgeData && purgeData.data && purgeData.data.purgeAddress === true) {
+        refetch();
+        setAddressBeingPurged(null);
+      }
     }
   };
   const handleDeleteChange = (address: IAddress) => {

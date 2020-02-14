@@ -45,9 +45,6 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
   namespace,
   authenticationService
 }) => {
-  const [keepInViewChecked, setKeepInViewChecked] = React.useState<boolean>(
-    false
-  );
   const { data, loading, error } = useQuery(
     ADDRESS_SPACE_COMMAND_REVIEW_DETAIL,
     {
@@ -147,7 +144,7 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
             <Tooltip
               id="preview-addr-copy-tooltip"
               position={TooltipPosition.top}
-              enableFlip={keepInViewChecked}
+              enableFlip={false}
               content={<div>Copy the configuration details on clipboard</div>}
             >
               <OutlinedCopyIcon

@@ -20,7 +20,7 @@ import {
 } from "queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
 import { EditAddressSpace } from "pages/EditAddressSpace";
-import { ISortBy, IRowData } from "@patternfly/react-table";
+import { ISortBy } from "@patternfly/react-table";
 import { compareTwoAddress } from "pages/AddressSpaceDetail/AddressList/AddressListPage";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 
@@ -77,7 +77,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   ] = React.useState<IAddressSpace | null>();
 
   const [sortBy, setSortBy] = React.useState<ISortBy>();
-  if (sortValue && sortBy != sortValue) {
+  if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
   const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
@@ -203,7 +203,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
             nameSpace,
             addSpace.metadata.namespace
           )
-        ).length == 1
+        ).length === 1
     })
   );
   const onSort = (_event: any, index: any, direction: any) => {
