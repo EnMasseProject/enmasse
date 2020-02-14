@@ -124,16 +124,30 @@ public class ConsoleWebPage implements IWebPage {
         return getConnectionTable().findElement(By.tagName("tbody"));
     }
 
-    private WebElement getTableDropDown() {
-        return getContentElem().findElement(By.id("al-filter-overflow-dropdown"));
+    private WebElement getAddressSpacesTableDropDown() {
+        return getContentElem().findElement(By.id("al-filter-overflow-kebab"));
     }
 
-    private WebElement getDeleteAllButton() {
-        return getTableDropDown().findElement(By.xpath("//button[contains(text(), 'Delete Selected')]"));
+    private WebElement getAddressesTableDropDown() {
+        return getContentElem().findElement(By.id("al-filter-overflow-kebab"));
     }
 
-    private WebElement getPurgeAllButton() {
-        return getTableDropDown().findElement(By.id("al-filter-dropdown-item-purgeall"));
+    private WebElement getAddressSpacesDeleteAllButton() {
+        return getAddressSpacesTableDropDown().findElement(By.xpath("//button[contains(text(), 'Delete Selected')]"));
+    }
+
+    private WebElement getAddressesDeleteAllButton() {
+        return getAddressesTableDropDown().findElement(By.xpath("//button[contains(text(), 'Delete Selected')]"));
+    }
+
+    private WebElement getAddressesPurgeAllButton() {
+        return getAddressesTableDropDown().findElement(By.xpath("//button[contains(text(), 'Purge Selected')]"));
+    }
+
+    private WebElement getAddressesDeleteConfirmButton() {
+        return selenium.getDriver().findElement(By.className("pf-c-backdrop"))
+                    .findElement(By.className("pf-c-modal-box"))
+                    .findElement(By.xpath("//button[contains(text(), 'Confirm')]"));
     }
 
     private WebElement getAddressSpaceMainTopDropdown() {
@@ -681,8 +695,8 @@ public class ConsoleWebPage implements IWebPage {
 
     public void deleteSelectedAddressSpaces(AddressSpace... addressSpaces) throws Exception {
         selectAddressSpaces(addressSpaces);
-        selenium.clickOnItem(getTableDropDown(), "Main dropdown");
-        selenium.clickOnItem(getDeleteAllButton());
+        selenium.clickOnItem(getAddressSpacesTableDropDown(), "Main dropdown");
+        selenium.clickOnItem(getAddressSpacesDeleteAllButton());
         selenium.clickOnItem(getConfirmButton());
         for (AddressSpace space : addressSpaces) {
             selenium.waitUntilItemNotPresent(30, () -> getAddressSpaceItem(space));
@@ -691,8 +705,9 @@ public class ConsoleWebPage implements IWebPage {
 
     public void deleteSelectedAddresses(Address... addresses) throws Exception {
         selectAddresses(addresses);
-        selenium.clickOnItem(getTableDropDown(), "Main dropdown");
-        selenium.clickOnItem(getDeleteAllButton());
+        selenium.clickOnItem(getAddressesTableDropDown(), "Main dropdown");
+        selenium.clickOnItem(getAddressesDeleteAllButton(), "Deleted selected");
+        selenium.clickOnItem(getAddressesDeleteConfirmButton());
         for (Address address : addresses) {
             selenium.waitUntilItemNotPresent(30, () -> getAddressItem(address));
         }
@@ -700,8 +715,8 @@ public class ConsoleWebPage implements IWebPage {
 
     public void purgeSelectedAddresses(Address... addresses) {
         selectAddresses(addresses);
-        selenium.clickOnItem(getTableDropDown(), "Main dropdown");
-        selenium.clickOnItem(getPurgeAllButton());
+        selenium.clickOnItem(getAddressesTableDropDown(), "Main dropdown");
+        selenium.clickOnItem(getAddressesPurgeAllButton());
         selenium.clickOnItem(getConfirmButton());
     }
 
