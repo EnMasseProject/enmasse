@@ -55,7 +55,7 @@ public class EventCache<T> implements WorkQueue<T> {
     @Override
     public void pop(Processor<T> processor, long timeout, TimeUnit timeUnit) throws Exception {
         Event<T> firstEvent = queue.poll(timeout, timeUnit);
-        if (firstEvent == null || Wakeup.equals(firstEvent.eventType)) {
+        if (firstEvent == null || Wakeup == firstEvent.eventType) {
             log.debug("Woke up but queue is empty");
             return;
         }
@@ -72,6 +72,8 @@ public class EventCache<T> implements WorkQueue<T> {
                 }
 
                 switch (event.eventType) {
+                    case Wakeup:
+                        continue;
                     case Deleted:
                         store.remove(key);
                         break;
