@@ -101,6 +101,16 @@ public class EventCacheTest {
     }
 
     @Test
+    public void testWakeup() throws Exception {
+        WorkQueue<ConfigMap> queue = new EventCache<>(new HasMetadataFieldExtractor<>());
+        queue.wakeup();
+        Processor<ConfigMap> mockProc = mockProcessor();
+        queue.pop(mockProc, 1, TimeUnit.DAYS);
+        verifyZeroInteractions(mockProc);
+        assertFalse(queue.hasSynced());
+    }
+
+    @Test
     public void testSync() throws Exception {
         WorkQueue<ConfigMap> queue = new EventCache<>(new HasMetadataFieldExtractor<>());
         queue.replace(Arrays.asList(map("ns", "k1"), map("ns", "k2"), map("ns", "k3")), "33");
