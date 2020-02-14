@@ -40,7 +40,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
   setSortValue
 }) => {
   const [sortBy, setSortBy] = React.useState<ISortBy>();
-  if (sortValue && sortBy != sortValue) {
+  if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
   const { loading, error, data } = useQuery<IConnectionLinksResponse>(

@@ -23,12 +23,14 @@ interface IAddressLinksWithFilterAndPaginationProps {
   addressspace_namespace: string;
   addressspace_type: string;
   addressName: string;
+  addressDisplayName: string;
 }
 export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddressLinksWithFilterAndPaginationProps> = ({
   addressspace_name,
   addressspace_namespace,
   addressspace_type,
-  addressName
+  addressName,
+  addressDisplayName
 }) => {
   const location = useLocation();
   const history = useHistory();
@@ -92,7 +94,7 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
           size={"lg"}
           className={css(GridStylesForTableHeader.filter_left_margin)}
         >
-          Clients
+          Links for address - {addressDisplayName}
         </Title>
         <Grid>
           <GridItem span={7}>

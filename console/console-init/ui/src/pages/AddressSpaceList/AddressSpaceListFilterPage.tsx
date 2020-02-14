@@ -14,7 +14,7 @@ import {
   AddressSpaceListFilter,
   AddressSpaceListKebab
 } from "components/AddressSpaceList/AddressSpaceListFilter";
-import { ISortBy, IRowData } from "@patternfly/react-table";
+import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView } from "components/common/SortForMobileView";
 import useWindowDimensions from "components/common/WindowDimension";
 

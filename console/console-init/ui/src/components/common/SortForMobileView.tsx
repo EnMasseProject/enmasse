@@ -37,7 +37,7 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
   React.useEffect(() => {
     if (sortValue) {
       const data = sortMenu.filter(data => data.index === sortValue.index);
-      if (data && sortData != data[0].value) {
+      if (data && sortData !== data[0].value) {
         setSortData(data[0].value);
         setSortDirection(sortValue.direction);
       }

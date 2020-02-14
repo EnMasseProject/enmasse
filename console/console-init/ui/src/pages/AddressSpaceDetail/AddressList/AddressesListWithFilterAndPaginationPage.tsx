@@ -24,7 +24,7 @@ import {
   DELETE_ADDRESS,
   PURGE_ADDRESS
 } from "queries";
-import { ISortBy, IRowData } from "@patternfly/react-table";
+import { ISortBy } from "@patternfly/react-table";
 import { IAddress } from "components/AddressSpace/Address/AddressList";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { ErrorBoundary } from "components/common/ErrorBoundary";

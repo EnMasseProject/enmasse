@@ -49,9 +49,6 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   namespace,
   addressspace
 }) => {
-  const [keepInViewChecked, setKeepInViewChecked] = React.useState<boolean>(
-    false
-  );
   const { data, loading, error } = useQuery(ADDRESS_COMMAND_PRIVIEW_DETAIL, {
     variables: {
       a: {
@@ -62,7 +59,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
         spec: {
           plan: plan ? plan.toLowerCase() : "",
           type: type ? type.toLowerCase() : "",
-          ...(topic && topic.trim() != "" && { topic: topic }),
+          ...(topic && topic.trim() !== "" && { topic: topic }),
           addressSpace: addressspace,
           address: name
         }
@@ -138,7 +135,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
             {`Configuration details  `}
             <Tooltip
               position={TooltipPosition.top}
-              enableFlip={keepInViewChecked}
+              enableFlip={false}
               content={<div>Copy the configuration details on clipboard</div>}
             >
               <Button

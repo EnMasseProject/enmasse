@@ -2,11 +2,10 @@ import * as React from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { IUserDetail } from "types/ResponseTypes";
 import { RETURN_WHOAMI } from "queries";
-import { FetchPolicy, UNKNOWN, POLL_INTERVAL_USER } from "constants/constants";
+import { FetchPolicy, UNKNOWN } from "constants/constants";
 
 export const UserDetail: React.FunctionComponent = () => {
-  const { data, loading, error } = useQuery<IUserDetail>(RETURN_WHOAMI, {
-    pollInterval: POLL_INTERVAL_USER,
+  const { data } = useQuery<IUserDetail>(RETURN_WHOAMI, {
     fetchPolicy: FetchPolicy.NETWORK_ONLY
   });
   let userName = UNKNOWN;

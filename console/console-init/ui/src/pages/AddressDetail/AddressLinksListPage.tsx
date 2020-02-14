@@ -43,7 +43,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   filterRole
 }) => {
   const [sortBy, setSortBy] = React.useState<ISortBy>();
-  if (sortValue && sortBy != sortValue) {
+  if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
   const { loading, error, data } = useQuery<IAddressLinksResponse>(

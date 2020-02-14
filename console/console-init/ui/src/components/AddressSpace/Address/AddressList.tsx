@@ -136,7 +136,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
             : row.storedMessages,
           row.senders,
           row.receivers,
-          row.type == "queue" ? row.partitions : ""
+          row.type === "queue" ? row.partitions : ""
         ],
         originalData: row
       };

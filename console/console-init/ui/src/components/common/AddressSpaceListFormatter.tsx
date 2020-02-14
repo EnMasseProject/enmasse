@@ -56,7 +56,7 @@ export const statusToDisplay = (phase: string) => {
   }
   return (
     <>
-      {icon}&nbsp;{phase.trim() != "" ? phase : "Configuring"}
+      {icon}&nbsp;{phase.trim() !== "" ? phase : "Configuring"}
     </>
   );
 };

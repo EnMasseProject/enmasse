@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ApolloError } from "apollo-boost";
 import { Alert, AlertActionCloseButton } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+// import { StyleSheet } from "@patternfly/react-styles";
 
 export interface IError {
   error: ApolloError;
@@ -12,11 +12,11 @@ export const ErrorAlert: React.FunctionComponent<IError> = ({ error }) => {
   const hideAlert = () => {
     setAlertVisible(false);
   };
-  const styles = StyleSheet.create({
-    alert_dimentions: {
-      width: 40
-    }
-  });
+  // const styles = StyleSheet.create({
+  //   alert_dimentions: {
+  //     width: 40
+  //   }
+  // });
   return (
     <>
       {alertVisible && (

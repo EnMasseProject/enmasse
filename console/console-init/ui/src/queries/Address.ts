@@ -321,7 +321,7 @@ const ADDRESS_LINKS_FILTER=(
     }
     if (
       (filterContainersLength > 0) ||
-      (filterRole && filterRole.trim() != "")
+      (filterRole && filterRole.trim() !== "")
     ) {
       filterForLink += " AND ";
     }
@@ -365,12 +365,12 @@ const ADDRESS_LINKS_FILTER=(
           filterContainerValue +
           "%')";
     }
-    if (filterRole && filterRole.trim() != "") {
+    if (filterRole && filterRole.trim() !== "") {
       filterForLink += " AND ";
     }
   }
 
-  if (filterRole && filterRole.trim() != "") {
+  if (filterRole && filterRole.trim() !== "") {
     filterForLink +=
       "`$.spec.role` = '" + filterRole.trim().toLowerCase() + "' ";
   }
@@ -655,7 +655,7 @@ const RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
   if (namespace && namespace.trim() !== "") {
     filter += "`$.metadata.namespace` = '" + namespace + "'";
   }
-  if (name && name.trim() != "") {
+  if (name && name.trim() !== "") {
     filter += " AND ";
     filter += "`$.spec.address` LIKE '" + name.trim() + "%' ";
   }

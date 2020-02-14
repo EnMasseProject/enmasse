@@ -68,7 +68,7 @@ export default function AddressDetailPage() {
   );
   const { loading, error, data, refetch } = useQuery<IAddressDetailResponse>(
     RETURN_ADDRESS_DETAIL(name, namespace, addressname),
-    { pollInterval: 5000 }
+    { pollInterval: POLL_INTERVAL }
   );
 
   const addressSpaces = useQuery<IAddressSpacePlanResponse>(
@@ -208,6 +208,7 @@ export default function AddressDetailPage() {
         addressspace_namespace={namespace || ""}
         addressspace_type={type || " "}
         addressName={addressname || " "}
+        addressDisplayName={addressDetail && addressDetail.spec.address}
       />
     </>
   );

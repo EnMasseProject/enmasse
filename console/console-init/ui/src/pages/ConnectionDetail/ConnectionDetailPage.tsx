@@ -125,7 +125,7 @@ export default function ConnectionDetailPage() {
         <ConnectionLinksWithFilterAndPaginationPage
           name={name}
           namespace={namespace}
-          connectionname={connectionname}
+          connectionName={connectionname}
         />
       </PageSection>
     </>

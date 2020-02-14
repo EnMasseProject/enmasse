@@ -21,12 +21,12 @@ import { ISortBy } from "@patternfly/react-table";
 interface IConnectionLinksWithFilterAndPaginationPageProps {
   name?: string;
   namespace?: string;
-  connectionname?: string;
+  connectionName?: string;
 }
 export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent<IConnectionLinksWithFilterAndPaginationPageProps> = ({
   name,
   namespace,
-  connectionname
+  connectionName
 }) => {
   const location = useLocation();
   const history = useHistory();
@@ -89,7 +89,7 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
         size={"lg"}
         className={css(GridStylesForTableHeader.filter_left_margin)}
       >
-        Links
+        Links for connection - {connectionName}
       </Title>
       <br />
       <Grid>
@@ -108,7 +108,7 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
             setSortValue={setSortDropdownValue}
             addressSpaceName={name || ""}
             namespace={namespace || ""}
-            connectionName={connectionname || ""}
+            connectionName={connectionName || ""}
           />
         </GridItem>
         <GridItem span={6}>{renderPagination(page, perPage)}</GridItem>
@@ -116,7 +116,7 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
       <ConnectionLinksListPage
         name={name || ""}
         namespace={namespace || ""}
-        connectionName={connectionname || ""}
+        connectionName={connectionName || ""}
         page={page}
         perPage={perPage}
         setTotalLinks={setTotalLinks}
