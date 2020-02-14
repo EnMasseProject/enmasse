@@ -5,10 +5,7 @@ env:
   KUBERNETES_NAMESPACE: "enmasse-infra"
   REGISTRY_USER: "enmasse+ci"
 
-on:
-  schedule:
-    - cron:  '0 * * * *'
-
+on: [push]
 jobs:
   unit:
     strategy:
