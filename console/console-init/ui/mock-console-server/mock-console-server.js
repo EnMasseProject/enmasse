@@ -728,7 +728,7 @@ function defaultResourceNameFromAddress(address, addressSpaceName) {
   }
 }
 
-function createAddress(addr) {
+function createAddress(addr, addressSpaceName) {
   var namespace = availableNamespaces.find(n => n.metadata.name === addr.metadata.namespace);
   if (namespace === undefined) {
     var knownNamespaces = availableNamespaces.map(p => p.metadata.name);
