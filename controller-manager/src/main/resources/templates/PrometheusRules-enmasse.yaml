@@ -40,3 +40,17 @@ spec:
         severity: warning
       expr: enmasse_addresses_not_ready_total > 0
       for: 300s
+    - alert: RouterMeshConnectivityHealth
+      annotations:
+        description: Router mesh(s) have not been fully connected for over 5 minutes
+        value: "{{ "{{" }} $value {{ "}}" }}"
+        severity: warning
+      expr: enmasse_router_mesh_not_connected_total > 0
+      for: 300s
+    - alert: RouterMeshUndeliveredHealth
+      annotations:
+        description: Router mesh(s) have undelivered messages for over 5 minutes
+        value: "{{ "{{" }} $value {{ "}}" }}"
+        severity: warning
+      expr: enmasse_router_mesh_undelivered_total > 0
+      for: 300s

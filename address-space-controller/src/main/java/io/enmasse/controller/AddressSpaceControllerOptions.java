@@ -26,6 +26,8 @@ public final class AddressSpaceControllerOptions {
     private Duration resyncInterval;
     private Duration recheckInterval;
 
+    private Duration routerStatusCheckInterval;
+
     private String version;
 
     private Duration managementQueryTimeout;
@@ -117,6 +119,9 @@ public final class AddressSpaceControllerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30)));
 
+        options.setRouterStatusCheckInterval(getEnv(env, "ROUTER_STATUS_CHECK_INTERVAL")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
 
         options.setVersion(getEnvOrThrow(env, "VERSION"));
         return options;
@@ -246,4 +251,11 @@ public final class AddressSpaceControllerOptions {
         this.kubernetesApiWriteTimeout = kubernetesApiWriteTimeout;
     }
 
+    public Duration getRouterStatusCheckInterval() {
+        return routerStatusCheckInterval;
+    }
+
+    public void setRouterStatusCheckInterval(Duration routerStatusCheckInterval) {
+        this.routerStatusCheckInterval = routerStatusCheckInterval;
+    }
 }

@@ -180,13 +180,13 @@ function verify_addresses(inputs, router, verify_extra) {
     }
 }
 
-function get_neighbours(name, connectivity) {
-    var neighbours = connectivity[name];
-    if (neighbours === undefined) {
-        neighbours = [];
-        connectivity[name] = neighbours;
+function get_neighbors(name, connectivity) {
+    var neighbors = connectivity[name];
+    if (neighbors === undefined) {
+        neighbors = [];
+        connectivity[name] = neighbors;
     }
-    return neighbours;
+    return neighbors;
 }
 
 function are_connected(router_a, router_b, n) {

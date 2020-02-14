@@ -186,6 +186,7 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 		install.ApplyEnvConfigMap(container, "WILDCARD_ENDPOINT_CERT_SECRET", "wildcardEndpointCertSecret", "address-space-controller-config", &t)
 		install.ApplyEnvConfigMap(container, "RESYNC_INTERVAL", "resyncInterval", "address-space-controller-config", &t)
 		install.ApplyEnvConfigMap(container, "RECHECK_INTERVAL", "recheckInterval", "address-space-controller-config", &t)
+		install.ApplyEnvConfigMap(container, "ROUTER_STATUS_CHECK_INTERVAL", "routerStatusCheckInterval", "address-space-controller-config", &t)
 
 		install.ApplyEnvSimple(container, "IMAGE_PULL_POLICY", string(images.PullPolicyFromImageName(container.Image)))
 		applyImageEnv(container, "ROUTER_IMAGE", "router")

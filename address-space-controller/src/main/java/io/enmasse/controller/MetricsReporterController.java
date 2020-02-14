@@ -4,9 +4,7 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.Phase;
-import io.enmasse.address.model.AddressSpaceStatusConnector;
+import io.enmasse.address.model.*;
 import io.enmasse.metrics.api.MetricLabel;
 import io.enmasse.metrics.api.MetricType;
 import io.enmasse.metrics.api.MetricValue;
@@ -14,6 +12,7 @@ import io.enmasse.metrics.api.Metrics;
 import io.enmasse.metrics.api.ScalarMetric;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static io.enmasse.address.model.Phase.Active;
 import static io.enmasse.address.model.Phase.Configuring;
@@ -28,6 +27,8 @@ public class MetricsReporterController implements Controller {
     private volatile List<MetricValue> readyConnectorValues = new ArrayList<>();
     private volatile List<MetricValue> notReadyConnectorValues = new ArrayList<>();
     private volatile List<MetricValue> numConnectors = new ArrayList<>();
+    private volatile List<MetricValue> routerMeshNotConnected = new ArrayList<>();
+    private volatile List<MetricValue> routerMeshUndelivered = new ArrayList<>();
     private volatile int numAddressSpaces = 0;
     private volatile Map<Phase, Long> countByPhase = new HashMap<>();
 
@@ -42,6 +43,8 @@ public class MetricsReporterController implements Controller {
         List<MetricValue> readyConnectorValues = new ArrayList<>();
         List<MetricValue> notReadyConnectorValues = new ArrayList<>();
         List<MetricValue> numConnectors = new ArrayList<>();
+        List<MetricValue> routerMeshNotConnected = new ArrayList<>();
+        List<MetricValue> routerMeshUndelivered = new ArrayList<>();
 
         for (Phase phase : Phase.values()) {
             countByPhase.put(phase, 0L);
@@ -60,6 +63,35 @@ public class MetricsReporterController implements Controller {
                 readyConnectorValues.add(new MetricValue(connectorStatus.isReady() ? 1 : 0, connectorLabels));
                 notReadyConnectorValues.add(new MetricValue(connectorStatus.isReady() ? 0 : 1, connectorLabels));
             }
+
+            // Only check routers if we have some defined. For brokered address space, these metrics will not exist
+            if (!addressSpace.getStatus().getRouters().isEmpty()) {
+                int totalNotConnected = 0;
+                long totalUndelivered = 0;
+
+                Set<String> knownRouters = addressSpace.getStatus().getRouters().stream()
+                        .map(AddressSpaceStatusRouter::getId)
+                        .collect(Collectors.toSet());
+
+                for (AddressSpaceStatusRouter routerStatus : addressSpace.getStatus().getRouters()) {
+
+                    // Verify that this router can reach all neighbors
+                    Set<String> neighborIds = new HashSet<>(routerStatus.getNeighbors());
+                    if (!neighborIds.containsAll(knownRouters)) {
+                        routerMeshNotConnected.add(new MetricValue(1, new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace()), new MetricLabel("router", routerStatus.getId())));
+                        totalNotConnected++;
+                    }
+
+                    // Calculate the sum of undelivered messages in inter-router links
+                    if (routerStatus.getUndelivered() != null) {
+                        totalUndelivered += routerStatus.getUndelivered();
+                        routerMeshUndelivered.add(new MetricValue(routerStatus.getUndelivered(), new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace()), new MetricLabel("router", routerStatus.getId())));
+                    }
+                }
+
+                routerMeshNotConnected.add(new MetricValue(totalNotConnected, new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())));
+                routerMeshUndelivered.add(new MetricValue(totalUndelivered, new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())));
+            }
         }
 
         this.readyValues = readyValues;
@@ -68,6 +100,8 @@ public class MetricsReporterController implements Controller {
         this.notReadyConnectorValues = notReadyConnectorValues;
         this.numConnectors = numConnectors;
         this.numAddressSpaces = addressSpaces.size();
+        this.routerMeshNotConnected = routerMeshNotConnected;
+        this.routerMeshUndelivered = routerMeshUndelivered;
     }
 
     private void registerMetrics(Metrics metrics) {
@@ -112,6 +146,18 @@ public class MetricsReporterController implements Controller {
                 "Total number of connectors of address spaces",
                 MetricType.gauge,
                 () -> numConnectors));
+
+        metrics.registerMetric(new ScalarMetric(
+                "router_mesh_not_connected_total",
+                "Total number of router mesh networks not connected",
+                MetricType.gauge,
+                () -> routerMeshNotConnected));
+
+        metrics.registerMetric(new ScalarMetric(
+                "router_mesh_undelivered_total",
+                "Total number of undelivered messages in router mesh networks",
+                MetricType.gauge,
+                () -> routerMeshUndelivered));
 
         metrics.registerMetric(new ScalarMetric(
                 "address_spaces_pending_total",

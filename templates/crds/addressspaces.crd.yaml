@@ -367,6 +367,22 @@ spec:
             caCert:
               description: "CA certificate for endpoints."
               type: string
+            routers:
+              type: array
+              description: "Router status for this address space."
+              items:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                  undelivered:
+                    type: integer
+                  neighbors:
+                    type: array
+                    items:
+                      type: string
             connectors:
               type: array
               description: "Connector status for this address space."

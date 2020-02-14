@@ -31,7 +31,7 @@ public class MetricsReporterTest {
                 createAddressSpace("s3", false)));
 
         List<Metric> metricList = metrics.getMetrics();
-        assertEquals(12, metricList.size());
+        assertEquals(14, metricList.size());
         MetricSnapshot numReady = createSnapshot("address_space_status_ready", metricList);
         assertNotNull(numReady);
         assertEquals(3, numReady.getValues().size());
