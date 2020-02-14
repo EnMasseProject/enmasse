@@ -211,12 +211,17 @@ type Address struct {
 }
 
 type AddressSpec struct {
-	Address      string          `json:"address"`
-	AddressSpace string          `json:"addressSpace,omitempty"`
-	Type         string          `json:"type"`
-	Plan         string          `json:"plan"`
-	Topic        string          `json:"topic,omitempty"`
-	Forwarders   []ForwarderSpec `json:"forwarders,omitempty"`
+	Address      string            `json:"address"`
+	AddressSpace string            `json:"addressSpace,omitempty"`
+	Type         string            `json:"type"`
+	Plan         string            `json:"plan"`
+	Topic        string            `json:"topic,omitempty"`
+	Subscription *SubscriptionSpec `json:"subscription,omitempty"`
+	Forwarders   []ForwarderSpec   `json:"forwarders,omitempty"`
+}
+
+type SubscriptionSpec struct {
+	MaxConsumers *int `json:"maxConsumers,omitempty"`
 }
 
 type ForwarderSpec struct {
@@ -233,12 +238,17 @@ const (
 )
 
 type AddressStatus struct {
-	IsReady        bool               `json:"isReady"`
-	Phase          string             `json:"phase,omitempty"`
-	Messages       []string           `json:"messages,omitempty"`
-	BrokerStatuses []BrokerStatus     `json:"brokerStatus,omitempty"`
-	PlanStatus     *AddressPlanStatus `json:"planStatus,omitempty"`
-	Forwarders     []ForwarderStatus  `json:"forwarders,omitempty"`
+	IsReady        bool                `json:"isReady"`
+	Phase          string              `json:"phase,omitempty"`
+	Messages       []string            `json:"messages,omitempty"`
+	BrokerStatuses []BrokerStatus      `json:"brokerStatus,omitempty"`
+	PlanStatus     *AddressPlanStatus  `json:"planStatus,omitempty"`
+	Forwarders     []ForwarderStatus   `json:"forwarders,omitempty"`
+	Subscription   *SubscriptionStatus `json:"subscription,omitempty"`
+}
+
+type SubscriptionStatus struct {
+	MaxConsumers *int `json:"maxConsumers,omitempty"`
 }
 
 type BrokerStatus struct {

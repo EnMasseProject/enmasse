@@ -46,6 +46,9 @@ import java.util.concurrent.TimeoutException;
 import static io.enmasse.systemtest.TestTag.NON_PR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 public class TopicTest extends TestBase implements ITestSharedStandard {
@@ -386,6 +389,91 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         log.info("Receiving second batch");
         recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), batch2.size());
         assertThat("Wrong messages received: batch2", extractBodyAsString(recvResults), is(batch2));
+    }
+
+    @Test
+    void testDurableSubscriptionMaxConsumers() throws Exception {
+        Address topic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic-max-sub"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("test-topic-max-sub")
+                .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
+                .endSpec()
+                .build();
+        Address subscription = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "mysub-max"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("subscription")
+                .withTopic(topic.getSpec().getAddress())
+                .withAddress("mysub-max")
+                .editOrNewSubscription()
+                .withMaxConsumers(1)
+                .endSubscription()
+                .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(topic, subscription);
+
+        // Start two consumers and check that the second consumer is disconnected
+        AmqpClient client = getAmqpClientFactory().createTopicClient();
+        Future<List<Message>> c1 = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), 0);
+        Future<List<Message>> c2 = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), 0);
+
+        // Second consumer should get an error
+        Exception thrown = assertThrows(Exception.class, () -> c2.get(10, TimeUnit.SECONDS));
+        assertTrue(thrown.getMessage().contains("Maximum Consumer Limit Reached"), "Unexpected exception message: " + thrown.getMessage());
+    }
+
+    @Test
+    void testDurableSubscriptionMultipleConsumers() throws Exception {
+        Address topic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic-shared-sub"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("test-topic-shared-sub")
+                .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
+                .endSpec()
+                .build();
+        Address subscription = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "mysub-shared"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("subscription")
+                .withTopic(topic.getSpec().getAddress())
+                .withAddress("mysub-shared")
+                .editOrNewSubscription()
+                .withMaxConsumers(2)
+                .endSubscription()
+                .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(topic, subscription);
+
+        AmqpClient client = getAmqpClientFactory().createTopicClient();
+
+        log.info("Start consumers");
+        Future<List<Message>> c1 = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), 10);
+        Future<List<Message>> c2 = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), 10);
+
+        log.info("Starting producer");
+        assertEquals((Integer)20, client.sendMessages(topic.getSpec().getAddress(), TestUtils.generateMessages(20)).get(1, TimeUnit.MINUTES));
+
+        int c1Result = c1.get(1, TimeUnit.MINUTES).size();
+        int c2Result = c2.get(1, TimeUnit.MINUTES).size();
+        log.info("C1 = {}, C2 = {}", c1Result, c2Result);
+        assertEquals(20, c1Result + c2Result);
     }
 
     @Test

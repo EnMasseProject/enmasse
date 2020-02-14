@@ -43,6 +43,8 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
     private String plan;
     private String topic;
 
+    private SubscriptionSpec subscription;
+
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid AddressSpecForwarder> forwarders;
 
@@ -98,6 +100,14 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
         this.forwarders = forwarders;
     }
 
+    public SubscriptionSpec getSubscription() {
+        return subscription;
+    }
+
+    public void setSubscription(SubscriptionSpec subscription) {
+        this.subscription = subscription;
+    }
+
     @Override
     public String toString() {
 
@@ -112,6 +122,7 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
          if (forwarders != null) {
              sb.append(",forwarders=").append(forwarders);
          }
+         sb.append(",subscription=").append(subscription);
          sb.append("}");
 
          return sb.toString();

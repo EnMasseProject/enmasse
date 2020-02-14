@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
+import io.enmasse.address.model.SubscriptionStatus;
+import io.enmasse.address.model.SubscriptionStatusBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -169,6 +171,13 @@ public class AddressProvisioner {
                     AddressPlan addressPlan = addressResolver.getDesiredPlan(address);
                     address.getStatus().setPhase(Phase.Configuring);
                     address.getStatus().setPlanStatus(AddressPlanStatus.fromAddressPlan(addressPlan));
+                    int maxConsumers = 1;
+                    if (address.getSpec().getSubscription() != null && address.getSpec().getSubscription().getMaxConsumers() != null) {
+                        maxConsumers = address.getSpec().getSubscription().getMaxConsumers();
+                    }
+                    address.getStatus().setSubscription(new SubscriptionStatusBuilder()
+                            .withMaxConsumers(maxConsumers)
+                            .build());
                     address.putAnnotation(AnnotationKeys.APPLIED_PLAN, address.getSpec().getPlan());
                 } else {
                     address.getStatus().setBrokerStatuses(previousStatus.getBrokerStatuses());

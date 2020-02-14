@@ -47,7 +47,7 @@ public class PodDisruptionBudgetController implements Controller {
 
     private void reconcileRouterPodDisruptionBudget(AddressSpace addressSpace, RouterSet routerSet, StandardInfraConfig infraConfig) {
         String name = String.format("enmasse.%s.%s.qdrouterd", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
-        if (infraConfig.getSpec() != null && infraConfig.getSpec().getRouter() != null && (infraConfig.getSpec().getRouter().getMinAvailable() != null || infraConfig.getSpec().getRouter().getMaxUnavailable() != null)) {
+        if (routerSet.getStatefulSet() != null && infraConfig.getSpec() != null && infraConfig.getSpec().getRouter() != null && (infraConfig.getSpec().getRouter().getMinAvailable() != null || infraConfig.getSpec().getRouter().getMaxUnavailable() != null)) {
             String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
             try {
                 boolean changed = false;

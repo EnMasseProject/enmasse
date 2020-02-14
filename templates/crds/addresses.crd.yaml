@@ -85,6 +85,13 @@ spec:
             topic:
               type: string
               description: "Address of topic that this subscription refers to (only applicable to subscription types)."
+            subscription:
+              type: object
+              description: "Properties that can be set for subscription type addresses."
+              properties:
+                maxConsumers:
+                  type: integer
+                  description: "Maximum number of concurrent consumers that can be attached to this subscription. If unspecified, 1 consumer is allowed per subscription"
             forwarders:
               type: array
               description: "Address forwarders for this address."
@@ -136,6 +143,13 @@ spec:
                       - Active
                       - Migrating
                       - Draining
+            subscription:
+              type: object
+              description: "Applied properties for subscription type addresses."
+              properties:
+                maxConsumers:
+                  type: integer
+                  description: "Maximum number of concurrent consumers that can be attached to this subscription."
             planStatus:
               type: object
               required:
