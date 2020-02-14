@@ -5,10 +5,7 @@
 
 package io.enmasse.osb;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Base64;
 
 import org.slf4j.Logger;
@@ -63,7 +60,6 @@ public class ServiceBroker extends AbstractVerticle {
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
-        ensureRouteExists(client.adapt(OpenShiftClient.class), options);
         ensureCredentialsExist(client, options);
 
         AddressSpaceApi addressSpaceApi = KubeAddressSpaceApi.create(client, null, options.getVersion());
@@ -72,11 +68,12 @@ public class ServiceBroker extends AbstractVerticle {
         UserApi userApi = createUserApi();
 
         ConsoleProxy consoleProxy = addressSpace -> {
-            Route route = client.adapt(OpenShiftClient.class).routes().inNamespace(client.getNamespace()).withName(options.getConsoleProxyRouteName()).get();
+            Route route = client.adapt(OpenShiftClient.class).routes().inNamespace(client.getNamespace()).withName(options.getConsoleRouteName()).get();
             if (route == null) {
                 return null;
             }
-            return String.format("https://%s/console/%s/%s", route.getSpec().getHost(), addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
+
+            return String.format("https://%s/#/address-spaces/%s/%s/%s/addresses", route.getSpec().getHost(), addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), addressSpace.getSpec().getType());
         };
 
         vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), userApi, options.getListenPort(), consoleProxy),
@@ -116,32 +113,6 @@ public class ServiceBroker extends AbstractVerticle {
                 return userClient.inNamespace(namespace).withName(name).delete();
             }
         };
-    }
-
-    private static void ensureRouteExists(OpenShiftClient client, ServiceBrokerOptions serviceBrokerOptions) throws IOException {
-        Route proxyRoute = client.routes().inNamespace(client.getNamespace()).withName(serviceBrokerOptions.getConsoleProxyRouteName()).get();
-        if (proxyRoute == null) {
-            String caCertificate = new String(Files.readAllBytes(new File(serviceBrokerOptions.getCertDir(), "tls.crt").toPath()), StandardCharsets.UTF_8);
-            client.routes().createNew()
-                    .editOrNewMetadata()
-                    .withName(serviceBrokerOptions.getConsoleProxyRouteName())
-                    .addToLabels("app", "enmasse")
-                    .endMetadata()
-                    .editOrNewSpec()
-                    .editOrNewPort()
-                    .withNewTargetPort("https")
-                    .endPort()
-                    .editOrNewTo()
-                    .withKind("Service")
-                    .withName("service-broker")
-                    .endTo()
-                    .editOrNewTls()
-                    .withTermination("reencrypt")
-                    .withCaCertificate(caCertificate)
-                    .endTls()
-                    .endSpec()
-                    .done();
-        }
     }
 
     public static void main(String args[]) {

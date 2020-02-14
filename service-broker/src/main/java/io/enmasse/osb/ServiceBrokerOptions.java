@@ -16,7 +16,7 @@ public class ServiceBrokerOptions {
     private String standardAuthserviceCredentialsSecretName;
     private String standardAuthserviceCertSecretName;
     private String serviceCatalogCredentialsSecretName;
-    private String consoleProxyRouteName;
+    private String consoleRouteName;
     private int listenPort = 8080;
     private String version;
 
@@ -89,7 +89,7 @@ public class ServiceBrokerOptions {
         options.setStandardAuthserviceConfigName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CONFIG_NAME"));
         options.setStandardAuthserviceCredentialsSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME"));
         options.setStandardAuthserviceCertSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CERT_SECRET_NAME"));
-        options.setConsoleProxyRouteName(getEnv(env, "CONSOLE_PROXY_ROUTE_NAME").orElse("console-proxy"));
+        options.setConsoleRouteName(getEnv(env, "CONSOLE_ROUTE_NAME").orElse("console"));
         options.setServiceCatalogCredentialsSecretName(getEnvOrThrow(env, "SERVICE_CATALOG_CREDENTIALS_SECRET_NAME"));
 
         String resyncInterval = env.get("RESYNC_INTERVAL");
@@ -125,12 +125,12 @@ public class ServiceBrokerOptions {
         return getEnv(env, envVar).orElseThrow(() -> new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar)));
     }
 
-    public String getConsoleProxyRouteName() {
-        return consoleProxyRouteName;
+    public String getConsoleRouteName() {
+        return consoleRouteName;
     }
 
-    public void setConsoleProxyRouteName(String consoleProxyRouteName) {
-        this.consoleProxyRouteName = consoleProxyRouteName;
+    public void setConsoleRouteName(String consoleRouteName) {
+        this.consoleRouteName = consoleRouteName;
     }
 
     public String getServiceCatalogCredentialsSecretName() {

@@ -41,8 +41,8 @@ spec:
           value: standard-authservice-cert
         - name: SERVICE_CATALOG_CREDENTIALS_SECRET_NAME
           value: service-catalog-credentials
-        - name: CONSOLE_PROXY_ROUTE_NAME
-          value: console-proxy
+        - name: CONSOLE_ROUTE_NAME
+          value: console
         - name: CERT_DIR
           value: /service-broker-cert
         - name: LISTEN_PORT

@@ -21,7 +21,6 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.osb.api.bind.OSBBindingService;
 import io.enmasse.osb.api.catalog.OSBCatalogService;
-import io.enmasse.osb.api.console.HttpConsoleService;
 import io.enmasse.osb.api.lastoperation.OSBLastOperationService;
 import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.osb.api.provision.OSBProvisioningService;
@@ -67,15 +66,13 @@ public class HTTPServer extends AbstractVerticle {
         if (enableRbac) {
             log.info("Enabling RBAC for REST API");
             deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, ApiHeaderConfig.DEFAULT_HEADERS_CONFIG, path ->
-                    path.startsWith(HttpHealthService.BASE_URI) ||
-                    path.startsWith(HttpConsoleService.BASE_URI)));
+                    path.startsWith(HttpHealthService.BASE_URI)));
         } else {
             log.info("Disabling authentication and authorization for REST API");
             deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
         }
 
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
-        deployment.getRegistry().addSingletonResource(new HttpConsoleService(addressSpaceApi));
         deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi, authApi, schemaProvider));
         deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, authApi, schemaProvider, consoleProxy));
         deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi, authApi, schemaProvider, userApi));
