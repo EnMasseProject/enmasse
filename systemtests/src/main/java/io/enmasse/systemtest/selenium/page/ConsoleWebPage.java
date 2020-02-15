@@ -455,6 +455,25 @@ public class ConsoleWebPage implements IWebPage {
         }
     }
 
+    public String getAddressSpaceSnippet() throws InterruptedException {
+        StringBuilder addressSpaceDeployment = new StringBuilder();
+        Thread.sleep(2000);
+        List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
+
+        for (WebElement currentElement : snippetElements) {
+            if (currentElement.getText().contains("kubectl")
+                    || currentElement.getText().isEmpty() || currentElement.getText().equals("EOF")) {
+                continue;
+            } else if (addressSpaceDeployment.length() == 0) {
+                addressSpaceDeployment = new StringBuilder(currentElement.getText());
+            } else {
+                addressSpaceDeployment.append(System.lineSeparator()).append(currentElement.getText());
+            }
+
+        }
+        return addressSpaceDeployment.toString();
+    }
+
     public void openAddressList(AddressSpace addressSpace) throws Exception {
         AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getConsoleRoute());
@@ -489,7 +508,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(selenium.getDriver().findElement(By.xpath("//button[@value='" + authService + "']")), authService);
     }
 
-    public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+    public void prepareAddressSpaceInstall(AddressSpace addressSpace) throws Exception {
         selenium.clickOnItem(getCreateButtonTop());
         selectNamespace(addressSpace.getMetadata().getNamespace());
         selenium.fillInputItem(getAddressSpaceNameInput(), addressSpace.getMetadata().getName());
@@ -498,6 +517,10 @@ public class ConsoleWebPage implements IWebPage {
         selectPlan(addressSpace.getSpec().getPlan());
         selectAuthService(addressSpace.getSpec().getAuthenticationService().getName());
         selenium.clickOnItem(getNextButton());
+    }
+
+    public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        prepareAddressSpaceInstall(addressSpace);
         selenium.clickOnItem(getFinishButton());
         selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.takeScreenShot();

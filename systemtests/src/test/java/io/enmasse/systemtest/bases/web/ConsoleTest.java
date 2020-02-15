@@ -46,6 +46,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -927,6 +928,14 @@ public abstract class ConsoleTest extends TestBase {
             consolePage.fillAddressName(name);
             assertFalse(consolePage.isAddressNameInvalid(), String.format("Address name %s is not marked as valid", name));
         }
+    }
+
+    protected void doTestDeploymentSnippet(AddressSpace addressSpace) throws Exception {
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.prepareAddressSpaceInstall(addressSpace);
+        String snippet = consolePage.getAddressSpaceSnippet();
+        KubeCMDClient.createCR(Kubernetes.getInstance().getInfraNamespace(), snippet);
     }
 
     //============================================================================================

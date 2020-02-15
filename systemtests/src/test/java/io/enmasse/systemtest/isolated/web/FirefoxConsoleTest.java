@@ -4,16 +4,21 @@
  */
 package io.enmasse.systemtest.isolated.web;
 
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SeleniumFirefox
 class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
@@ -21,6 +26,48 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     @Test
     void testLoginLogout() throws Exception {
         doTestOpen();
+    }
+
+    @Test
+    void testAddressSpaceSnippetStandard() throws Exception {
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-address-space")
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_MEDIUM)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        doTestDeploymentSnippet(addressSpace);
+        assertTrue(AddressSpaceUtils.addressSpaceExists(Kubernetes.getInstance().getInfraNamespace(),
+                addressSpace.getMetadata().getName()));
+    }
+
+    @Test
+    void testAddressSpaceSnippetBrokered() throws Exception {
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-address-space-brokered")
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        doTestDeploymentSnippet(addressSpace);
+        assertTrue(AddressSpaceUtils.addressSpaceExists(Kubernetes.getInstance().getInfraNamespace(),
+                addressSpace.getMetadata().getName()));
     }
 
     @Test
