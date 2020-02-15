@@ -63,7 +63,8 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           addressSpace: addressspace,
           address: name
         }
-      }
+      },
+      as: addressspace
     }
   });
   if (loading) return <Loading />;

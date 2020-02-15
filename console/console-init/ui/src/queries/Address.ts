@@ -25,47 +25,44 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
   typeValue?: string | null,
   statusValue?: string | null
 ) => {
-  let filter="";
-  let filterNamesLength=filterNames && filterNames.length;
-  let filterName=filterNames && filterNames[0];
-  let filterNameValue=filterName && filterName.value && filterName.value.trim();
-  
+  let filter = "";
+  let filterNamesLength = filterNames && filterNames.length;
+  let filterName = filterNames && filterNames[0];
+  let filterNameValue =
+    filterName && filterName.value && filterName.value.trim();
+
   if (name && name.trim() !== "") {
     filter += "`$.metadata.name` LIKE '" + name + ".%' AND";
   }
   if (namespace && namespace.trim() !== "") {
     filter += "`$.metadata.namespace` = '" + namespace + "'";
   }
-  if ((filterNamesLength && filterNamesLength > 0) || typeValue || statusValue) {
+  if (
+    (filterNamesLength && filterNamesLength > 0) ||
+    typeValue ||
+    statusValue
+  ) {
     filter += " AND ";
   }
-  if (filterNamesLength && filterNamesLength> 0) {
+  if (filterNamesLength && filterNamesLength > 0) {
     if (filterNamesLength > 1) {
       if (filterName.isExact)
-      filter +=
-          "(`$.spec.address` = '" + filterNameValue + "'";
-      else
-      filter +=
-          "(`$.spec.address` LIKE '" + filterNameValue + "%' ";
+        filter += "(`$.spec.address` = '" + filterNameValue + "'";
+      else filter += "(`$.spec.address` LIKE '" + filterNameValue + "%' ";
       for (let i = 1; i < filterNamesLength; i++) {
-        let filterName=filterNames && filterNames[i];
-        let filterNameValue=filterName && filterName.value.trim();
+        let filterName = filterNames && filterNames[i];
+        let filterNameValue = filterName && filterName.value.trim();
         if (filterName.isExact) {
-          filter +=
-            "OR `$.spec.address` = '" + filterNameValue + "'";
+          filter += "OR `$.spec.address` = '" + filterNameValue + "'";
         } else {
-          filter +=
-            "OR `$.spec.address` LIKE '" + filterNameValue + "%' ";
+          filter += "OR `$.spec.address` LIKE '" + filterNameValue + "%' ";
         }
       }
       filter += ")";
     } else {
       if (filterName.isExact)
-      filter +=
-          "`$.spec.address` = '" + filterNameValue + "'";
-      else
-      filter +=
-          "`$.spec.address` LIKE '" + filterNameValue + "%' ";
+        filter += "`$.spec.address` = '" + filterNameValue + "'";
+      else filter += "`$.spec.address` LIKE '" + filterNameValue + "%' ";
     }
   }
   if (filterName && filterName > 0 && (typeValue || statusValue)) {
@@ -89,8 +86,8 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
   return filter;
 };
 
-const ALL_ADDRESS_FOR_ADDRESS_SPACE_SORT=(sortBy?: ISortBy)=>{
-  let orderBy="";
+const ALL_ADDRESS_FOR_ADDRESS_SPACE_SORT = (sortBy?: ISortBy) => {
+  let orderBy = "";
   if (sortBy) {
     switch (sortBy.index) {
       case 0:
@@ -107,8 +104,7 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_SORT=(sortBy?: ISortBy)=>{
         orderBy = "`$.metrics[?(@.name=='enmasse_messages_out')].value` ";
         break;
       case 6:
-        orderBy =
-          "`$.metrics[?(@.name=='enmasse_messages_stored')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_stored')].value` ";
         break;
       case 7:
         orderBy = "`$.metrics[?(@.name=='enmasse_senders')].value` ";
@@ -136,9 +132,15 @@ const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
   statusValue?: string | null,
   sortBy?: ISortBy
 ) => {
-  let filter =ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER(name,namespace,filterNames,typeValue,statusValue);
-  let orderBy =ALL_ADDRESS_FOR_ADDRESS_SPACE_SORT(sortBy);
-  
+  let filter = ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER(
+    name,
+    namespace,
+    filterNames,
+    typeValue,
+    statusValue
+  );
+  let orderBy = ALL_ADDRESS_FOR_ADDRESS_SPACE_SORT(sortBy);
+
   const ALL_ADDRESS_FOR_ADDRESS_SPACE = gql`
     query all_addresses_for_addressspace_view {
       addresses( first:${perPage} offset:${perPage * (page - 1)}
@@ -262,22 +264,25 @@ const RETURN_ADDRESS_DETAIL = (
   return ADDRESSDETAIL;
 };
 
-const ADDRESS_LINKS_FILTER=(
+const ADDRESS_LINKS_FILTER = (
   filterNames: any[],
   filterContainers: any[],
   addressSpace?: string,
   namespace?: string,
   addressName?: string,
   filterRole?: string
-)=>{
-  let filter="",filterForLink="";
-  let filterNamesLength=filterNames && filterNames.length;
-  let filterName=filterNames && filterNames[0];
-  let filterNameValue=filterName && filterName.value && filterName.value.trim();
+) => {
+  let filter = "",
+    filterForLink = "";
+  let filterNamesLength = filterNames && filterNames.length;
+  let filterName = filterNames && filterNames[0];
+  let filterNameValue =
+    filterName && filterName.value && filterName.value.trim();
 
-  let filterContainersLength=filterContainers && filterContainers.length;
-  let filterContainer=filterContainers && filterContainers[0];
-  let filterContainerValue=filterContainer && filterContainer.value && filterContainer.value.trim();
+  let filterContainersLength = filterContainers && filterContainers.length;
+  let filterContainer = filterContainers && filterContainers[0];
+  let filterContainerValue =
+    filterContainer && filterContainer.value && filterContainer.value.trim();
 
   if (addressSpace) {
     filter += "`$.metadata.name` LIKE '" + addressSpace + ".%' AND ";
@@ -290,37 +295,31 @@ const ADDRESS_LINKS_FILTER=(
   }
 
   //links filter
-  if (filterNamesLength> 0) {
+  if (filterNamesLength > 0) {
     if (filterNamesLength > 1) {
       if (filterName.isExact)
-        filterForLink +=
-          "(`$.metadata.name` = '" + filterNameValue + "'";
+        filterForLink += "(`$.metadata.name` = '" + filterNameValue + "'";
       else
-        filterForLink +=
-          "(`$.metadata.name` LIKE '" + filterNameValue + "%' ";
+        filterForLink += "(`$.metadata.name` LIKE '" + filterNameValue + "%' ";
       for (let i = 1; i < filterNamesLength; i++) {
-        let filterName=filterNames && filterNames[i];
-        let filterNameValue=filterName && filterName.value && filterName.value.trim();
+        let filterName = filterNames && filterNames[i];
+        let filterNameValue =
+          filterName && filterName.value && filterName.value.trim();
         if (filterName.isExact)
-          filterForLink +=
-            "OR `$.metadata.name` = '" + filterNameValue + "'";
+          filterForLink += "OR `$.metadata.name` = '" + filterNameValue + "'";
         else
           filterForLink +=
-            "OR `$.metadata.name` LIKE '" +
-            filterNameValue +
-            "%' ";
+            "OR `$.metadata.name` LIKE '" + filterNameValue + "%' ";
       }
       filterForLink += ")";
     } else {
       if (filterName.isExact)
-        filterForLink +=
-          "(`$.metadata.name` = '" + filterNameValue + "')";
+        filterForLink += "(`$.metadata.name` = '" + filterNameValue + "')";
       else
-        filterForLink +=
-          "(`$.metadata.name` LIKE '" + filterNameValue + "%')";
+        filterForLink += "(`$.metadata.name` LIKE '" + filterNameValue + "%')";
     }
     if (
-      (filterContainersLength > 0) ||
+      filterContainersLength > 0 ||
       (filterRole && filterRole.trim() !== "")
     ) {
       filterForLink += " AND ";
@@ -339,8 +338,11 @@ const ADDRESS_LINKS_FILTER=(
           filterContainerValue +
           "%'";
       for (let i = 1; i < filterContainers.length; i++) {
-        let filterContainer=filterContainers && filterContainers[i];
-        let filterContainerValue=filterContainer && filterContainer.value && filterContainer.value.trim();
+        let filterContainer = filterContainers && filterContainers[i];
+        let filterContainerValue =
+          filterContainer &&
+          filterContainer.value &&
+          filterContainer.value.trim();
         if (filterContainer.isExact)
           filterForLink +=
             "OR `$.spec.connection.spec.containerId` = '" +
@@ -375,11 +377,11 @@ const ADDRESS_LINKS_FILTER=(
       "`$.spec.role` = '" + filterRole.trim().toLowerCase() + "' ";
   }
 
-  return {filter,filterForLink};
-}
+  return { filter, filterForLink };
+};
 
-const ADDRESS_LINKS_SORT=(sortBy?: ISortBy,)=>{
-  let orderBy="";
+const ADDRESS_LINKS_SORT = (sortBy?: ISortBy) => {
+  let orderBy = "";
   if (sortBy) {
     switch (sortBy.index) {
       case 0:
@@ -393,8 +395,7 @@ const ADDRESS_LINKS_SORT=(sortBy?: ISortBy,)=>{
         orderBy = "`$.metrics[?(@.name=='enmasse_messages_in')].value` ";
         break;
       case 4:
-        orderBy =
-          "`$.metrics[?(@.name=='enmasse_messages_backlog')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_backlog')].value` ";
         break;
       default:
         break;
@@ -402,7 +403,7 @@ const ADDRESS_LINKS_SORT=(sortBy?: ISortBy,)=>{
     orderBy += sortBy.direction;
   }
   return orderBy;
-}
+};
 
 const RETURN_ADDRESS_LINKS = (
   page: number,
@@ -415,10 +416,17 @@ const RETURN_ADDRESS_LINKS = (
   sortBy?: ISortBy,
   filterRole?: string
 ) => {
-  const {filter,filterForLink} =ADDRESS_LINKS_FILTER(filterNames,filterContainers,addressSpace,namespace,addressName,filterRole);
-  const orderBy =ADDRESS_LINKS_SORT(sortBy);
- 
- const query = gql`
+  const { filter, filterForLink } = ADDRESS_LINKS_FILTER(
+    filterNames,
+    filterContainers,
+    addressSpace,
+    namespace,
+    addressName,
+    filterRole
+  );
+  const orderBy = ADDRESS_LINKS_SORT(sortBy);
+
+  const query = gql`
     query single_address_with_links_and_metrics {
       addresses(
         filter: "${filter}"
@@ -488,8 +496,8 @@ const RETURN_ADDRESS_PLANS = (
 };
 
 const CREATE_ADDRESS = gql`
-  mutation create_addr($a: Address_enmasse_io_v1beta1_Input!) {
-    createAddress(input: $a) {
+  mutation create_addr($a: Address_enmasse_io_v1beta1_Input!, $as: String) {
+    createAddress(input: $a, addressSpace: $as) {
       name
       namespace
       uid
