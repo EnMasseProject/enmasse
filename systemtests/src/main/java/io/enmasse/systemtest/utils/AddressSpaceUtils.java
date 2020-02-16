@@ -336,14 +336,6 @@ public class AddressSpaceUtils {
         }
     }
 
-    public static Endpoint getConsoleEndpoint(AddressSpace addressSpace) {
-        Endpoint consoleEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "console");
-        if (consoleEndpoint == null) {
-            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "console");
-            consoleEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName);
-        }
-        return consoleEndpoint;
-    }
 
     public static Endpoint getMessagingWssRoute(AddressSpace addressSpace) throws Exception {
         if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
