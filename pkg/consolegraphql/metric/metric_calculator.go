@@ -25,16 +25,18 @@ type Calculator interface {
 }
 
 type promQLCalculator struct {
-	engine *promql.Engine
+	engine           *promql.Engine
+	promQLExpression string
 }
 
-func New() (p *promQLCalculator) {
+func New(promQLExpression string) (p *promQLCalculator) {
 	return &promQLCalculator{
 		engine: promql.NewEngine(promql.EngineOpts{
 			MaxConcurrent: 1,
 			MaxSamples:    100,
 			Timeout:       10 * time.Second,
 		}),
+		promQLExpression: promQLExpression,
 	}
 }
 
@@ -43,7 +45,7 @@ func (p *promQLCalculator) Calc(timeSeries *ring.Ring) (float64, error) {
 	now := time.Now()
 	query, err := p.engine.NewInstantQuery(&adaptingQueryable{
 		dataPointRing: timeSeries,
-	}, "round(rate(unused_label[5m]), 0.01)", now) // Rate per second, rounded to hundredths
+	}, p.promQLExpression, now)
 	if err != nil {
 		return 0, err
 	}

@@ -528,6 +528,24 @@ func OverrideSecurityContextFsGroup(componentName string, securityContext *corev
 	}
 }
 
+func OverrideProbe(override *corev1.Probe, target *corev1.Probe) {
+	if override.InitialDelaySeconds > 0 {
+		target.InitialDelaySeconds = override.InitialDelaySeconds
+	}
+	if override.PeriodSeconds > 0 {
+		target.PeriodSeconds = override.PeriodSeconds
+	}
+	if override.TimeoutSeconds > 0 {
+		target.TimeoutSeconds = override.TimeoutSeconds
+	}
+	if override.FailureThreshold > 0 {
+		target.FailureThreshold = override.FailureThreshold
+	}
+	if override.SuccessThreshold > 0 {
+		target.SuccessThreshold = override.SuccessThreshold
+	}
+}
+
 // Ensure that an owner is set
 func AddOwnerReference(owner v1.Object, object v1.Object, scheme *runtime.Scheme) error {
 

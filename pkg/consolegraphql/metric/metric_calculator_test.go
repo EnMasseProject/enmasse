@@ -17,7 +17,7 @@ import (
 func TestMetric_CalcValue(t *testing.T) {
 
 	now := time.Now()
-	calculator := New()
+	calculator := New("round(rate(unused_label[5m]), 0.01)")
 
 	timeSeries := buildTimeSeries(
 		consolegraphql.DataPointTimePair{
@@ -35,7 +35,7 @@ func TestMetric_CalcValue(t *testing.T) {
 
 func TestMetric_NoData(t *testing.T) {
 
-	calculator := New()
+	calculator := New("round(rate(unused_label[5m]), 0.01)")
 	timeSeries := buildTimeSeries()
 
 	value, err := calculator.Calc(timeSeries)

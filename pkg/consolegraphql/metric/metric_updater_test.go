@@ -42,7 +42,7 @@ func TestMetricUpdater(t *testing.T) {
 	err := objectCache.Add(addr)
 	assert.NoError(t, err)
 
-	err, updated := UpdateAllMetrics(objectCache)
+	err, updated := UpdateAllMetrics(objectCache, "")
 	assert.NoError(t, err)
 	assert.Equal(t, 1, updated)
 
