@@ -68,8 +68,8 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.id("main-container"));
     }
 
-    private WebElement getCreateButtonTop() {
-        return selenium.getDriver().findElement(By.id("al-filter-overflow-button"));
+    private WebElement getCreateButtonTop() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("al-filter-overflow-button")));
     }
 
     private WebElement getCreateButtonEmptyPage() {
@@ -575,7 +575,7 @@ public class ConsoleWebPage implements IWebPage {
         }
     }
 
-    public void openAddressCreationDialog() {
+    public void openAddressCreationDialog() throws Exception {
         selenium.clickOnItem(getCreateButtonTop());
     }
 
@@ -842,7 +842,8 @@ public class ConsoleWebPage implements IWebPage {
     public void checkReachableWebPage() {
         selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.or(
                 ExpectedConditions.presenceOfElementLocated(By.id("root")),
-                ExpectedConditions.titleContains("Address Space List")
+                ExpectedConditions.titleContains("Address Space List"),
+                ExpectedConditions.titleContains("Address List")
         ));
     }
 }

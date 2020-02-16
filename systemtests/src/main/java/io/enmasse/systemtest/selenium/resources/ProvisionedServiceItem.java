@@ -103,4 +103,8 @@ public class ProvisionedServiceItem {
     public WebElement getRedirectConsoleButton() {
         return serviceItem.findElement(By.className("list-pf-details")).findElement(By.cssSelector("a[target='_blank']"));
     }
+
+    public String getConsoleRoute() {
+        return getRedirectConsoleButton().getAttribute("href");
+    }
 }
