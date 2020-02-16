@@ -726,9 +726,17 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		}
 		container.Command = []string{"/console-server"}
 
+		port := int32(9090)
+		metricsPort := int32(9089)
 		install.ApplyEnv(container, "PORT", func(envvar *corev1.EnvVar) {
-			envvar.Value = "9090"
+			envvar.Value = strconv.Itoa(int(port))
 		})
+
+		install.ApplyEnv(container, "METRICS_PORT", func(envvar *corev1.EnvVar) {
+			envvar.Value = strconv.Itoa(int(metricsPort))
+		})
+
+		container.Ports = []corev1.ContainerPort{}
 
 		namespace, err := util.GetInfrastructureNamespace()
 		if err == nil {
@@ -760,12 +768,21 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		}
 
 		container.Ports = []corev1.ContainerPort{{
-			ContainerPort: 9090,
+			ContainerPort: port,
 			Name:          "http",
+		}, {
+			ContainerPort: metricsPort,
+			Name:          "metrics",
 		}}
 
 		if consoleservice.Spec.ConsoleServer != nil && consoleservice.Spec.ConsoleServer.Resources != nil {
 			container.Resources = *consoleservice.Spec.ConsoleServer.Resources
+		}
+
+		if value := util.GetBooleanEnvOrDefault("ENABLE_MONITORING_ANNOTATIONS", false); value {
+			deployment.ObjectMeta.Annotations["prometheus.io/scrape"] = "true"
+			deployment.ObjectMeta.Annotations["prometheus.io/path"] = "/metrics"
+			deployment.ObjectMeta.Annotations["prometheus.io/port"] = strconv.Itoa(int(metricsPort))
 		}
 
 		return nil
