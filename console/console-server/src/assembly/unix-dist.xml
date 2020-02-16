@@ -37,6 +37,14 @@
             <outputDirectory></outputDirectory>
             <directory>src/main/resources/</directory>
             <includes>
+                <include>*.sh</include>
+            </includes>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <outputDirectory></outputDirectory>
+            <directory>src/main/resources/</directory>
+            <includes>
                 <include>*.json</include>
             </includes>
         </fileSet>

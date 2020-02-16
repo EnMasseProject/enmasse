@@ -738,7 +738,27 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		}
 
 		// TODO use https
-		// TODO add health probe
+
+		probeHandler := corev1.Handler{
+			Exec: &corev1.ExecAction{
+				Command: []string{
+					"sh",
+					"-c",
+					"/probe.sh",
+				},
+			},
+		}
+
+		container.ReadinessProbe = &corev1.Probe{
+			InitialDelaySeconds: 30,
+			Handler:             probeHandler,
+		}
+
+		container.LivenessProbe = &corev1.Probe{
+			InitialDelaySeconds: 30,
+			Handler:             probeHandler,
+		}
+
 		container.Ports = []corev1.ContainerPort{{
 			ContainerPort: 9090,
 			Name:          "http",
