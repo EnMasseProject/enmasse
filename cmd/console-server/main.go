@@ -40,17 +40,10 @@ import (
 )
 
 /*
-
 console-server - presents a GraphQL API allowing the client to query details of address spaces, addresses,
 connections and links.
 
 For development purposes, you can run the console backend outside the container.  See the Makefile target 'run'.
-
-TODO:
-
-2) Mutations
-4) Pass CA to the Go-AMQP client when connecting to agents.
-
 */
 
 const accessControllerStateCookieName = "accessControllerState"
@@ -101,12 +94,6 @@ func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 		kubeClient, err := kubernetes.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if err != nil {
-			log.Printf("Failed to build config : %v", err)
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -381,7 +368,7 @@ http://localhost:` + port + `/graphql
 	sessionManager.Cookie.Persist = false
 	sessionManager.Cookie.Secure = true
 
-	graphql := handler.GraphQL(resolvers.NewExecutableSchema(resolvers.Config{Resolvers: &resolver}),
+	gql := handler.GraphQL(resolvers.NewExecutableSchema(resolvers.Config{Resolvers: &resolver}),
 		handler.ErrorPresenter(
 			func(ctx context.Context, e error) *gqlerror.Error {
 				rctx := graphql.GetRequestContext(ctx)
@@ -418,9 +405,9 @@ http://localhost:` + port + `/graphql
 	)
 
 	if *developmentMode {
-		http.Handle(queryEndpoint, developmentHandler(graphql, sessionManager, config.BearerToken))
+		http.Handle(queryEndpoint, developmentHandler(gql, sessionManager, config.BearerToken))
 	} else {
-		http.Handle(queryEndpoint, authHandler(graphql, sessionManager))
+		http.Handle(queryEndpoint, authHandler(gql, sessionManager))
 	}
 
 	err = http.ListenAndServe(":"+port, sessionManager.LoadAndSave(http.DefaultServeMux))
