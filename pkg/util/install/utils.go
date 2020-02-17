@@ -101,6 +101,28 @@ func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, na
 
 }
 
+// Apply some default deployment values
+func ApplyStatefulSetDefaults(statefulset *appsv1.StatefulSet, component string, name string) {
+
+	ApplyDefaultLabels(&statefulset.ObjectMeta, component, name)
+
+	if statefulset.CreationTimestamp.IsZero() {
+		statefulset.Spec.Selector = &v1.LabelSelector{
+			MatchLabels: CreateDefaultLabels(nil, component, name),
+		}
+	}
+
+	if statefulset.Annotations == nil {
+		statefulset.Annotations = map[string]string{}
+	}
+
+	replicas := int32(1)
+	statefulset.Spec.Replicas = &replicas
+
+	statefulset.Spec.Template.Annotations = CreateDefaultAnnotations(statefulset.Spec.Template.Annotations)
+	statefulset.Spec.Template.Labels = CreateDefaultLabels(statefulset.Spec.Template.Labels, component, name)
+}
+
 func DropContainer(deployment *appsv1.Deployment, name string) {
 	if deployment.Spec.Template.Spec.Containers == nil {
 		return

@@ -1,0 +1,107 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: enmasse-operator
+  labels:
+    app: enmasse
+    name: enmasse-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: enmasse
+      name: enmasse-operator
+  template:
+    metadata:
+      labels:
+        app: enmasse
+        name: enmasse-operator
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: node-role.enmasse.io/operator-infra
+                    operator: In
+                    values:
+                      - "true"
+      serviceAccountName: enmasse-operator
+      containers:
+      - name: controller
+        image: ${CONTROLLER_MANAGER_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTROLLER_ENABLE_MESSAGING_INFRA
+          value: "true"
+        - name: IOT_CONFIG_NAME
+          value: "default"
+        - name: OPERATOR_NAME
+          value: "enmasse-operator"
+        - name: IMAGE_PULL_POLICY
+          value: "${IMAGE_PULL_POLICY}"
+        - name: CONTROLLER_DISABLE_ALL
+          value: "true"
+        - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
+          value: "false"
+        - name: CONTROLLER_MANAGER_IMAGE
+          value: ${CONTROLLER_MANAGER_IMAGE}
+        - name: IOT_AUTH_SERVICE_IMAGE
+          value: ${IOT_AUTH_SERVICE_IMAGE}
+        - name: IOT_DEVICE_REGISTRY_FILE_IMAGE
+          value: ${IOT_DEVICE_REGISTRY_FILE_IMAGE}
+        - name: IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE
+          value: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
+        - name: IOT_HTTP_ADAPTER_IMAGE
+          value: ${IOT_HTTP_ADAPTER_IMAGE}
+        - name: IOT_MQTT_ADAPTER_IMAGE
+          value: ${IOT_MQTT_ADAPTER_IMAGE}
+        - name: IOT_LORAWAN_ADAPTER_IMAGE
+          value: ${IOT_LORAWAN_ADAPTER_IMAGE}
+        - name: IOT_SIGFOX_ADAPTER_IMAGE
+          value: ${IOT_SIGFOX_ADAPTER_IMAGE}
+        - name: IOT_TENANT_CLEANER_IMAGE
+          value: ${IOT_TENANT_CLEANER_IMAGE}
+        - name: IOT_TENANT_SERVICE_IMAGE
+          value: ${IOT_TENANT_SERVICE_IMAGE}
+        - name: IOT_PROXY_CONFIGURATOR_IMAGE
+          value: ${IOT_PROXY_CONFIGURATOR_IMAGE}
+        - name: ROUTER_IMAGE
+          value: ${ROUTER_IMAGE}
+        - name: BROKER_IMAGE
+          value: ${BROKER_IMAGE}
+        - name: BROKER_PLUGIN_IMAGE
+          value: ${BROKER_PLUGIN_IMAGE}
+        - name: NONE_AUTHSERVICE_IMAGE
+          value: ${NONE_AUTHSERVICE_IMAGE}
+        - name: KEYCLOAK_IMAGE
+          value: ${KEYCLOAK_IMAGE}
+        - name: KEYCLOAK_PLUGIN_IMAGE
+          value: ${KEYCLOAK_PLUGIN_IMAGE}
+        - name: CONTROLLER_ENABLE_CONSOLE_SERVICE
+          value: "false"
+        - name: CONSOLE_INIT_IMAGE
+          value: "${CONSOLE_INIT_IMAGE}"
+        - name: CONSOLE_SERVER_IMAGE
+          value: "${CONSOLE_SERVER_IMAGE}"
+        - name: CONSOLE_PROXY_OPENSHIFT_IMAGE
+          value: "${CONSOLE_PROXY_OPENSHIFT_IMAGE}"
+        - name: CONSOLE_PROXY_KUBERNETES_IMAGE
+          value: "${CONSOLE_PROXY_KUBERNETES_IMAGE}"
+        - name: CONSOLE_LINK_SECTION_NAME
+          value: "${CONSOLE_LINK_SECTION_NAME}"
+        - name: CONSOLE_LINK_NAME
+          value: "${CONSOLE_LINK_NAME}"
+        - name: CONSOLE_LINK_IMAGE_URL
+          value: "${CONSOLE_LINK_IMAGE_URL}"
+        - name: ENABLE_MONITORING
+          value: "false"

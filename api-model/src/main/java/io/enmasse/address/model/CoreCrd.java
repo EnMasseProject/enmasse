@@ -4,6 +4,8 @@
  */
 package io.enmasse.address.model;
 
+import io.enmasse.api.model.MessagingInfra;
+import io.enmasse.api.model.MessagingInfraList;
 import io.enmasse.common.model.CustomResources;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.internal.KubernetesDeserializer;
@@ -11,17 +13,21 @@ import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 public class CoreCrd {
 
     public static final String VERSION = "v1beta1";
+    public static final String VERSION_BETA2 = "v1beta2";
     public static final String GROUP = "enmasse.io";
     public static final String API_VERSION = GROUP + "/" + VERSION;
+    public static final String API_VERSION_BETA2 = GROUP + "/" + VERSION_BETA2;
 
     private static final CustomResourceDefinition ADDRESS_CRD;
     private static final CustomResourceDefinition ADDRESS_SPACE_CRD;
     private static final CustomResourceDefinition ADDRESS_SPACE_SCHEMA_CRD;
+    private static final CustomResourceDefinition MESSAGING_INFRA_CRD;
 
     static {
         ADDRESS_CRD = CustomResources.createCustomResource(GROUP, VERSION, Address.KIND);
         ADDRESS_SPACE_CRD = CustomResources.createCustomResource(GROUP, VERSION, AddressSpace.KIND);
         ADDRESS_SPACE_SCHEMA_CRD = CustomResources.createCustomResource(GROUP, VERSION, AddressSpaceSchema.KIND, "Cluster");
+        MESSAGING_INFRA_CRD = CustomResources.createCustomResource(GROUP, VERSION_BETA2, "MessagingInfra");
     }
 
     public static void registerCustomCrds() {
@@ -33,6 +39,9 @@ public class CoreCrd {
 
         KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpaceSchema.KIND, AddressSpaceSchema.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpaceSchemaList.KIND, AddressSpaceSchemaList.class);
+
+        KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingInfra", MessagingInfra.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingInfraList", MessagingInfraList.class);
     }
     public static CustomResourceDefinition addresses() {
         return ADDRESS_CRD;
@@ -44,5 +53,9 @@ public class CoreCrd {
 
     public static CustomResourceDefinition addresseSpaceSchemas() {
         return ADDRESS_SPACE_SCHEMA_CRD;
+    }
+
+    public static CustomResourceDefinition messagingInfras() {
+        return MESSAGING_INFRA_CRD;
     }
 }

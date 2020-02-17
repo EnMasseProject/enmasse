@@ -29,9 +29,11 @@ function init_configure() {
 
 function update_ssl_certs() {
     local instanceDir=$1
-    rm -rf ${TRUSTSTORE_PATH} ${KEYSTORE_PATH} ${AUTH_TRUSTSTORE_PATH} ${EXTERNAL_KEYSTORE_PATH}
-    cp -n ${BROKER_CUSTOM_DIR}/certs/* ${instanceDir}/etc/
-    echo "cp -n ${BROKER_CUSTOM_DIR}/certs/* ${instanceDir}/etc/"
+    if [ "$ADDRESS_SPACE_TYPE" != "shared" ]; then
+        rm -rf ${TRUSTSTORE_PATH} ${KEYSTORE_PATH} ${AUTH_TRUSTSTORE_PATH} ${EXTERNAL_KEYSTORE_PATH}
+        cp -n ${BROKER_CUSTOM_DIR}/certs/* ${instanceDir}/etc/
+        echo "cp -n ${BROKER_CUSTOM_DIR}/certs/* ${instanceDir}/etc/"
+    fi
 }
 
 function startServer() {

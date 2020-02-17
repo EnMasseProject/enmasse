@@ -234,6 +234,13 @@
             </properties>
         </profile>
         <profile>
+            <id>isolated-shared-infra</id>
+            <properties>
+                <groups>(isolated-shared-infra) &amp; !soak &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale</groups>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
+        <profile>
             <id>isolated</id>
             <properties>
                 <groups>(isolated | isolated-broker | isolated-standard) &amp; !soak &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>

@@ -25,6 +25,13 @@ function configure_brokered() {
     fi
     cp $CONFIG_TEMPLATES/brokered/broker.xml /tmp/broker.xml
     cp $CONFIG_TEMPLATES/brokered/login.config /tmp/login.config
+    cp $CONFIG_TEMPLATES/bootstrap.xml $BROKER_CONF_DIR/bootstrap.xml
+    export HAWTIO_ROLE=manage
+}
+
+function configure_shared() {
+    cp $CONFIG_TEMPLATES/shared/broker.xml /tmp/broker.xml
+    cp $CONFIG_TEMPLATES/shared/bootstrap.xml $BROKER_CONF_DIR/bootstrap.xml
     export HAWTIO_ROLE=manage
 }
 
@@ -38,6 +45,7 @@ function configure_standard() {
     fi
 
     cp $CONFIG_TEMPLATES/standard/login.config /tmp/login.config    
+    cp $CONFIG_TEMPLATES/bootstrap.xml $BROKER_CONF_DIR/bootstrap.xml
     export HAWTIO_ROLE=manage
 }
 
@@ -52,8 +60,13 @@ function pre_configuration() {
     echo "export AMQ_ROLE=admin" >> $BROKER_CUSTOM/bin/env.sh
     echo "export ARTEMIS_HOME=$ARTEMIS_HOME" >> $BROKER_CUSTOM/bin/env.sh
     echo "export CONTAINER_ID=$HOSTNAME" >> $BROKER_CUSTOM/bin/env.sh
-    echo "export KEYSTORE_PATH=$instanceDir/etc/enmasse-keystore.jks" >> $BROKER_CUSTOM/bin/env.sh
-    echo "export TRUSTSTORE_PATH=$instanceDir/etc/enmasse-truststore.jks" >> $BROKER_CUSTOM/bin/env.sh
+    if [ "$ADDRESS_SPACE_TYPE" == "shared" ]; then
+        echo "export KEYSTORE_PATH=/etc/enmasse-certs/keystore.p12" >> $BROKER_CUSTOM/bin/env.sh
+        echo "export TRUSTSTORE_PATH=/etc/enmasse-certs/keystore.p12" >> $BROKER_CUSTOM/bin/env.sh
+    else
+        echo "export KEYSTORE_PATH=$instanceDir/etc/enmasse-keystore.jks" >> $BROKER_CUSTOM/bin/env.sh
+        echo "export TRUSTSTORE_PATH=$instanceDir/etc/enmasse-truststore.jks" >> $BROKER_CUSTOM/bin/env.sh
+    fi
     echo "export AUTH_TRUSTSTORE_PATH=$instanceDir/etc/enmasse-authtruststore.jks" >> $BROKER_CUSTOM/bin/env.sh
     echo "export EXTERNAL_KEYSTORE_PATH=$instanceDir/etc/external-keystore.jks" >> $BROKER_CUSTOM/bin/env.sh
     TRUSTSTORE_PASS=enmasse
@@ -79,14 +92,16 @@ function pre_configuration() {
 
     if [ "$ADDRESS_SPACE_TYPE" == "brokered" ]; then
         configure_brokered
+        envsubst < /tmp/login.config > $BROKER_CONF_DIR/login.config
+    elif [ "$ADDRESS_SPACE_TYPE" == "shared" ]; then
+        configure_shared
     else
         configure_standard
+        envsubst < /tmp/login.config > $BROKER_CONF_DIR/login.config
     fi
 
     envsubst < /tmp/broker.xml > $BROKER_CONF_DIR/broker.xml
-    envsubst < /tmp/login.config > $BROKER_CONF_DIR/login.config
 
-    cp $CONFIG_TEMPLATES/bootstrap.xml $BROKER_CONF_DIR/bootstrap.xml
     cp $CONFIG_TEMPLATES/jolokia-access.xml $BROKER_CONF_DIR/jolokia-access.xml
     cp /opt/broker-plugin/lib/broker-cli.jar $BROKER_CUSTOM/bin/broker-cli.jar
 
@@ -104,30 +119,38 @@ function configure_ssl() {
     TRUSTSTORE_PASS=enmasse
     KEYSTORE_PASS=enmasse
 
-    export CUSTOM_KEYSTORE_PATH=$BROKER_CUSTOM/certs/enmasse-keystore.jks
-    export CUSTOM_TRUSTSTORE_PATH=$BROKER_CUSTOM/certs/enmasse-truststore.jks
-    export CUSTOM_AUTH_TRUSTSTORE_PATH=$BROKER_CUSTOM/certs/enmasse-authtruststore.jks
-    export CUSTOM_EXTERNAL_KEYSTORE_PATH=$BROKER_CUSTOM/certs/external-keystore.jks
-    mkdir -p $BROKER_CUSTOM/certs
+    if [ "$ADDRESS_SPACE_TYPE" == "shared" ]; then
+        # Use pre-generated store
+        mkdir -p $BROKER_CUSTOM/certs
+        export CUSTOM_KEYSTORE_PATH=/etc/enmasse-certs/keystore.p12
+        export CUSTOM_TRUSTSTORE_PATH=/etc/enmasse-certs/keystore.p12
+    else
+        export CUSTOM_KEYSTORE_PATH=$BROKER_CUSTOM/certs/enmasse-keystore.jks
+        export CUSTOM_TRUSTSTORE_PATH=$BROKER_CUSTOM/certs/enmasse-truststore.jks
+        export CUSTOM_AUTH_TRUSTSTORE_PATH=$BROKER_CUSTOM/certs/enmasse-authtruststore.jks
+        export CUSTOM_EXTERNAL_KEYSTORE_PATH=$BROKER_CUSTOM/certs/external-keystore.jks
+        mkdir -p $BROKER_CUSTOM/certs
 
-    # Recreate certs in case they have been updated
-    rm -rf ${CUSTOM_TRUSTSTORE_PATH} ${CUSTOM_KEYSTORE_PATH} ${CUSTOM_AUTH_TRUSTSTORE_PATH} ${CUSTOM_EXTERNAL_KEYSTORE_PATH}
+        # Recreate certs in case they have been updated
+        rm -rf ${CUSTOM_TRUSTSTORE_PATH} ${CUSTOM_KEYSTORE_PATH} ${CUSTOM_AUTH_TRUSTSTORE_PATH} ${CUSTOM_EXTERNAL_KEYSTORE_PATH}
 
-    # Convert certs
-    openssl pkcs12 -export -passout pass:${KEYSTORE_PASS} -in /etc/enmasse-certs/tls.crt -inkey /etc/enmasse-certs/tls.key -chain -CAfile /etc/enmasse-certs/ca.crt -name "io.enmasse" -out /tmp/enmasse-keystore.p12
+        # Convert certs
+        openssl pkcs12 -export -passout pass:${KEYSTORE_PASS} -in /etc/enmasse-certs/tls.crt -inkey /etc/enmasse-certs/tls.key -chain -CAfile /etc/enmasse-certs/ca.crt -name "io.enmasse" -out /tmp/enmasse-keystore.p12
 
-    keytool -importkeystore -srcstorepass ${KEYSTORE_PASS} -deststorepass ${KEYSTORE_PASS} -destkeystore $CUSTOM_KEYSTORE_PATH -srckeystore /tmp/enmasse-keystore.p12 -srcstoretype PKCS12
-    keytool -import -noprompt -file /etc/enmasse-certs/ca.crt -alias firstCA -deststorepass ${TRUSTSTORE_PASS} -keystore $CUSTOM_TRUSTSTORE_PATH
+        keytool -importkeystore -srcstorepass ${KEYSTORE_PASS} -deststorepass ${KEYSTORE_PASS} -destkeystore $CUSTOM_KEYSTORE_PATH -srckeystore /tmp/enmasse-keystore.p12 -srcstoretype PKCS12
+        keytool -import -noprompt -file /etc/enmasse-certs/ca.crt -alias firstCA -deststorepass ${TRUSTSTORE_PASS} -keystore $CUSTOM_TRUSTSTORE_PATH
 
-    cp /etc/pki/java/cacerts ${CUSTOM_AUTH_TRUSTSTORE_PATH}
-    chmod 644 ${CUSTOM_AUTH_TRUSTSTORE_PATH}
-    keytool -storepasswd -storepass changeit -new ${TRUSTSTORE_PASS} -keystore $CUSTOM_AUTH_TRUSTSTORE_PATH
-    keytool -import -noprompt -file /etc/authservice-ca/tls.crt -alias firstCA -deststorepass ${TRUSTSTORE_PASS} -keystore $CUSTOM_AUTH_TRUSTSTORE_PATH
+        cp /etc/pki/java/cacerts ${CUSTOM_AUTH_TRUSTSTORE_PATH}
 
-    if [ -d /etc/external-certs ]
-    then
-        openssl pkcs12 -export -passout pass:${KEYSTORE_PASS} -in /etc/external-certs/tls.crt -inkey /etc/external-certs/tls.key -name "io.enmasse" -out /tmp/external-keystore.p12
-        keytool -importkeystore -srcstorepass ${KEYSTORE_PASS} -deststorepass ${KEYSTORE_PASS} -destkeystore $CUSTOM_EXTERNAL_KEYSTORE_PATH -srckeystore /tmp/external-keystore.p12 -srcstoretype PKCS12
+        chmod 644 ${CUSTOM_AUTH_TRUSTSTORE_PATH}
+        keytool -storepasswd -storepass changeit -new ${TRUSTSTORE_PASS} -keystore $CUSTOM_AUTH_TRUSTSTORE_PATH
+        keytool -import -noprompt -file /etc/authservice-ca/tls.crt -alias firstCA -deststorepass ${TRUSTSTORE_PASS} -keystore $CUSTOM_AUTH_TRUSTSTORE_PATH
+
+        if [ -d /etc/external-certs ]
+        then
+            openssl pkcs12 -export -passout pass:${KEYSTORE_PASS} -in /etc/external-certs/tls.crt -inkey /etc/external-certs/tls.key -name "io.enmasse" -out /tmp/external-keystore.p12
+            keytool -importkeystore -srcstorepass ${KEYSTORE_PASS} -deststorepass ${KEYSTORE_PASS} -destkeystore $CUSTOM_EXTERNAL_KEYSTORE_PATH -srckeystore /tmp/external-keystore.p12 -srcstoretype PKCS12
+        fi
     fi
 }
 

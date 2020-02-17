@@ -174,6 +174,16 @@ func main() {
 				Version: "v1alpha1",
 				Kind:    "IoTProjectList",
 			},
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingInfra",
+			},
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingInfraList",
+			},
 		),
 	})
 	if err != nil {
