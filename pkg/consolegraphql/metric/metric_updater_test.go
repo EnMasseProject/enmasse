@@ -42,7 +42,7 @@ func TestMetricUpdater(t *testing.T) {
 	err := objectCache.Add(addr)
 	assert.NoError(t, err)
 
-	err, updated := UpdateAllMetrics(objectCache)
+	err, updated := UpdateAllMetrics(objectCache, "round(rate(unused_label[5m]), 0.01)")
 	assert.NoError(t, err)
 	assert.Equal(t, 1, updated)
 

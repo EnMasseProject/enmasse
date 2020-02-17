@@ -12,6 +12,7 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.Minikube;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -83,13 +84,18 @@ public class SystemtestsKubernetesApps {
     public static final String INFINISPAN_PROJECT = Environment.getInstance().getInfinispanProject();
     public static final String INFINISPAN_SERVER = "infinispan";
     private static final Path INFINISPAN_EXAMPLE_BASE;
-    private static final String[] INFINISPAN_DIRECTORIES;
+    private static final String[] INFINISPAN_OPENSHIFT;
+    private static final String[] INFINISPAN_KUBERNETES;
 
     static {
         INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
-        INFINISPAN_DIRECTORIES = new String[] {
+        INFINISPAN_OPENSHIFT = new String[] {
                         "common",
-                        "manual"
+                        "openshift"
+        };
+        INFINISPAN_KUBERNETES = new String[] {
+                "common",
+                "kubernetes"
         };
     }
 
@@ -262,8 +268,13 @@ public class SystemtestsKubernetesApps {
 
         // apply "common" and "manual" folders
 
-        applyDirectories(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
-                resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_DIRECTORIES));
+        if (Minikube.getInstance().getCluster() instanceof Minikube) {
+            applyDirectories(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
+                    resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_KUBERNETES));
+        } else {
+            applyDirectories(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
+                    resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_OPENSHIFT));
+        }
 
         // wait for the deployment
 
@@ -300,7 +311,7 @@ public class SystemtestsKubernetesApps {
 
             log.info("Infinispan server will be removed");
 
-            for(final Path path : resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_DIRECTORIES)) {
+            for(final Path path : resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_OPENSHIFT)) {
                 KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, path);
             }
 

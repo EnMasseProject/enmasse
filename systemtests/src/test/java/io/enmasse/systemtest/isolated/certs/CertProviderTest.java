@@ -90,36 +90,6 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
     @Test
     @OpenShift
-    void testConsoleSelfSigned() throws Exception {
-        CertSpec spec = new CertSpecBuilder()
-                .withProvider(CertProvider.selfsigned.name())
-                .build();
-
-        createTestEnv(
-                createEndpoint("console", spec, null, "https"));
-
-        String endpointCert = new String(Base64.getDecoder().decode(
-                resourcesManager.getAddressSpace(addressSpace.getMetadata().getName())
-                        .getStatus()
-                        .getEndpointStatuses()
-                        .stream()
-                        .filter(e -> e.getName().equals("console"))
-                        .findFirst()
-                        .get()
-                        .getCert()));
-
-
-        testConsole(endpointCert);
-
-        String caCert = new String(Base64.getDecoder().decode(
-                resourcesManager.getAddressSpace(addressSpace.getMetadata().getName())
-                        .getStatus().getCaCert()));
-
-        testConsole(caCert);
-    }
-
-    @Test
-    @OpenShift
     void testCertBundle() throws Exception {
         String domain = environment.kubernetesDomain();
         String messagingHost = String.format("messaging.%s", domain);
@@ -149,23 +119,6 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
     @Test
     @OpenShift
-    void testConsoleCertBundle() throws Exception {
-        String domain = environment.kubernetesDomain();
-        String consoleHost = String.format("space-console.%s", domain);
-        CertBundle certBundle = CertificateUtils.createCertBundle(consoleHost);
-
-        createTestEnv(false,
-                createEndpoint("console", new CertSpecBuilder()
-                        .withProvider(CertProvider.certBundle.name())
-                        .withTlsKey(certBundle.getKeyB64())
-                        .withTlsCert(certBundle.getCertB64())
-                        .build(), consoleHost, "https"));
-
-        testConsole(certBundle.getCaCert());
-    }
-
-    @Test
-    @OpenShift
     void testOpenshiftCertProvider() throws Exception {
         createTestEnv(false,
                 new EndpointSpecBuilder()
@@ -178,13 +131,6 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 new EndpointSpecBuilder()
                         .withName("mqtt")
                         .withService("mqtt")
-                        .editOrNewCert()
-                        .withProvider(CertProvider.openshift.name())
-                        .endCert()
-                        .build(),
-                new EndpointSpecBuilder()
-                        .withName("console")
-                        .withService("console")
                         .editOrNewCert()
                         .withProvider(CertProvider.openshift.name())
                         .endCert()
@@ -206,10 +152,6 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 Endpoint mqttEndpoint = kubernetes.getEndpoint("mqtt-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "secure-mqtt");
                 request.put("mqttHost", mqttEndpoint.getHost());
                 request.put("mqttPort", Integer.toString(mqttEndpoint.getPort()));
-
-                Endpoint consoleEndpoint = kubernetes.getEndpoint("console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "https");
-                request.put("consoleHost", consoleEndpoint.getHost());
-                request.put("consolePort", consoleEndpoint.getPort());
 
                 TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
                 Exception lastException = null;
@@ -317,31 +259,6 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         mqttClient.connect();
         assertSimpleMQTTSendReceive(topic, mqttClient, 3);
         mqttClient.disconnect();
-    }
-
-    private void testConsole(String endpointCert) throws Exception {
-        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
-                .setSsl(true)
-                .setFollowRedirects(false)
-                .setTrustAll(false)
-                .setPemTrustOptions(new PemTrustOptions()
-                        .addCertValue(Buffer.buffer(endpointCert)))
-                .setVerifyHost(true));
-
-        Endpoint consoleEndpoint = AddressSpaceUtils.getConsoleEndpoint(addressSpace);
-        CompletableFuture<Optional<Throwable>> promise = new CompletableFuture<>();
-        webClient.get(consoleEndpoint.getPort(), consoleEndpoint.getHost(), "").ssl(true).send(ar -> {
-            log.info("get console " + ar.toString());
-            if (ar.succeeded()) {
-                promise.complete(Optional.empty());
-            } else {
-                log.info("Exception in get console", ar.cause());
-                promise.complete(Optional.of(ar.cause()));
-            }
-        });
-
-        Optional<Throwable> optError = promise.get();
-        optError.ifPresent(Assertions::fail);
     }
 
     private SSLSocketFactory getSocketFactory(InputStream caCrtFile) throws Exception {

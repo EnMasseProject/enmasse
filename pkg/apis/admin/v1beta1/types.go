@@ -156,7 +156,15 @@ type ConsoleServiceOauthProxySpec struct {
 }
 
 type ConsoleServiceConsoleServerSpec struct {
-	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
+	Resources      *corev1.ResourceRequirements            `json:"resources,omitempty"`
+	Session        *ConsoleServiceConsoleServerSessionSpec `json:"session,omitempty"`
+	LivenessProbe  *corev1.Probe                           `json:"livenessProbe,omitempty"`
+	ReadinessProbe *corev1.Probe                           `json:"readinessProbe,omitempty"`
+}
+
+type ConsoleServiceConsoleServerSessionSpec struct {
+	Lifetime    *string `json:"lifetime,omitempty"`
+	IdleTimeout *string `json:"idleTimeout,omitempty"`
 }
 
 type ConsoleServiceStatus struct {

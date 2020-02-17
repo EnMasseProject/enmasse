@@ -12,15 +12,12 @@ import (
 	"fmt"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"strconv"
-	"time"
-
 	"net"
 	"net/url"
 	"reflect"
+	"strconv"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
-	enmasse_v1beta1_client "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	oauthv1 "github.com/openshift/api/oauth/v1"
@@ -266,8 +263,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 		return newSsoCookieDomain, nil
 	})
 
-	// TODO: Remove RequeueAfter once per-address space console is gone
-	return reconcile.Result{Requeue: requeue, RequeueAfter: 10 * time.Second}, err
+	return reconcile.Result{Requeue: requeue}, err
 }
 
 type UpdateStatusFn func(status *v1beta1.ConsoleServiceStatus) error
@@ -526,7 +522,7 @@ func (r *ReconcileConsoleService) reconcileConsoleLink(ctx context.Context, cons
 	}
 
 	// we could also use the structured type here, but we do use the
-	// unstructed type in this simple case, as a reference if we should
+	// unstructured type in this simple case, as a reference if we should
 	// need it in the future
 
 	consoleLink := unstructured.Unstructured{}
@@ -757,14 +753,24 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			},
 		}
 
+		consoleServer := consoleservice.Spec.ConsoleServer
+
 		container.ReadinessProbe = &corev1.Probe{
 			InitialDelaySeconds: 30,
 			Handler:             probeHandler,
 		}
 
+		if consoleServer != nil && consoleServer.ReadinessProbe != nil {
+			install.OverrideProbe(consoleservice.Spec.ConsoleServer.ReadinessProbe, container.ReadinessProbe)
+		}
+
 		container.LivenessProbe = &corev1.Probe{
 			InitialDelaySeconds: 30,
 			Handler:             probeHandler,
+		}
+
+		if consoleServer != nil && consoleServer.LivenessProbe != nil {
+			install.OverrideProbe(consoleservice.Spec.ConsoleServer.LivenessProbe, container.LivenessProbe)
 		}
 
 		container.Ports = []corev1.ContainerPort{{
@@ -775,8 +781,24 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			Name:          "metrics",
 		}}
 
-		if consoleservice.Spec.ConsoleServer != nil && consoleservice.Spec.ConsoleServer.Resources != nil {
-			container.Resources = *consoleservice.Spec.ConsoleServer.Resources
+		if consoleServer != nil && consoleServer.Resources != nil {
+			container.Resources = *consoleServer.Resources
+		}
+
+		if consoleServer != nil && consoleServer.Session != nil && consoleServer.Session.Lifetime != nil && *consoleServer.Session.Lifetime != "" {
+			install.ApplyEnv(container, "HTTP_SESSION_LIFETIME", func(envvar *corev1.EnvVar) {
+				envvar.Value = *consoleServer.Session.Lifetime
+			})
+		} else {
+			install.RemoveEnv(container, "HTTP_SESSION_LIFETIME")
+		}
+
+		if consoleServer != nil && consoleServer.Session != nil && consoleServer.Session.IdleTimeout != nil && *consoleServer.Session.IdleTimeout != "" {
+			install.ApplyEnv(container, "HTTP_SESSION_IDLE_TIMEOUT", func(envvar *corev1.EnvVar) {
+				envvar.Value = *consoleServer.Session.IdleTimeout
+			})
+		} else {
+			install.RemoveEnv(container, "HTTP_SESSION_IDLE_TIMEOUT")
 		}
 
 		if value := util.GetBooleanEnvOrDefault("ENABLE_MONITORING_ANNOTATIONS", false); value {
@@ -869,41 +891,6 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 		redirects, err = buildRedirectsForRoute(*route, redirects)
 		if err != nil {
 			return reconcile.Result{}, nil, err
-		}
-
-		// Redirects for the address space console(s)
-		// Currently we have to create a new client that is able to read address spaces across all namespaces,
-		// as the controller-runtime client is only able to run in single namespace or all namespaces mode.
-		eclient, err := enmasse_v1beta1_client.NewForConfig(r.config)
-		if err != nil {
-			return reconcile.Result{}, nil, err
-		}
-		list, err := eclient.AddressSpaces("").List(metav1.ListOptions{})
-		if err != nil {
-			return reconcile.Result{}, nil, err
-		} else {
-
-			for _, space := range list.Items {
-				consoleEndpointName := "console"
-				for _, specEndpoints := range space.Spec.Endpoints {
-					if specEndpoints.Service == "console" && specEndpoints.Name != "" {
-						consoleEndpointName = specEndpoints.Name
-						break
-					}
-				}
-
-				for _, s := range space.Status.EndpointStatus {
-					if s.Name == consoleEndpointName {
-						for _, p := range s.ExternalPorts {
-							scheme := "http"
-							if p.Name == "https" || p.Port == 443 {
-								scheme = "https"
-							}
-							redirects, err = appendRedirect(scheme, s.ExternalHost, redirects)
-						}
-					}
-				}
-			}
 		}
 
 		oauth := &oauthv1.OAuthClient{

@@ -265,33 +265,6 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    void testLoginWithOpensShiftCredentials() throws Exception {
-        AddressSpace brokeredSpace = new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withName("login-via-oc")
-                .withNamespace(getUserProjectName("login-via-oc"))
-                .endMetadata()
-                .withNewSpec()
-                .withType(AddressSpaceType.BROKERED.toString())
-                .withPlan(AddressSpacePlans.BROKERED)
-                .withNewAuthenticationService()
-                .withName("standard-authservice")
-                .endAuthenticationService()
-                .endSpec()
-                .build();
-        //provision via oc web ui and wait until ready
-        provisionedServices.add(brokeredSpace);
-        OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, kubernetes.getOCConsoleRoute(), ocTestUser);
-        ocPage.openOpenshiftPage();
-        ocPage.provisionAddressSpaceViaSC(brokeredSpace);
-        brokeredSpace = kubernetes.getAddressSpaceClient(brokeredSpace.getMetadata().getNamespace()).withName(brokeredSpace.getMetadata().getName()).get();
-
-        //open console login web page and use OpenShift credentials for login
-        ConsoleWebPage consolePage = ocPage.clickOnDashboard(brokeredSpace);
-        consolePage.openConsolePage();
-    }
-
-    @Test
     @ExternalClients
     void testSendReceiveInsideCluster() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()

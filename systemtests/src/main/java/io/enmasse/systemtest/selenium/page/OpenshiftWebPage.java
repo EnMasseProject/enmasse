@@ -390,9 +390,10 @@ public class OpenshiftWebPage implements IWebPage {
         ProvisionedServiceItem serviceItem = getProvisionedServiceItem();
         serviceItem.collapseServiceItem();
         selenium.clickOnItem(serviceItem.getRedirectConsoleButton());
+        String route = serviceItem.getConsoleRoute();
         Set<String> tabHandles = selenium.getDriver().getWindowHandles();
         selenium.getDriver().switchTo().window(tabHandles.toArray()[tabHandles.size() - 1].toString());
-        return new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), null);
+        return new ConsoleWebPage(selenium, route, credentials);
     }
 
     @Override

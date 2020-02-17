@@ -210,11 +210,15 @@ http://localhost:` + port + `/graphql
 			`)
 	}
 
+	graphqlPlayground := util.GetBooleanEnvOrDefault("GRAPHQL_PLAYGROUND", false)
+	promQLRateMetricExpression := util.GetEnvOrDefault("PROMQL_RATE_METRIC_EXPRESSION", "round(rate(unused_label[5m]), 0.01)") // Rate per second, rounded to hundredths
 	dumpCachePeriod := util.GetDurationEnvOrDefault("DUMP_CACHE_PERIOD", time.Second*0)
 	updateMetricsPeriod := util.GetDurationEnvOrDefault("UPDATE_METRICS_PERIOD", time.Second*5)
 	agentCommandDelegateExpiryPeriod := util.GetDurationEnvOrDefault("AGENT_COMMAND_DELEGATE_EXPIRY_PERIOD", time.Minute*5)
 	agentAmqpConnectTimeout := util.GetDurationEnvOrDefault("AGENT_AMQP_CONNECT_TIMEOUT", time.Second*10)
 	agentAmqpMaxFrameSize := uint32(util.GetUintEnvOrDefault("AGENT_AMQP_MAX_FRAME_SIZE", 0, 32, 4294967295)) // Matches Rhea default
+	sessionLifetime := util.GetDurationEnvOrDefault("HTTP_SESSION_LIFETIME", 30*time.Minute)
+	sessionIdleTimeout := util.GetDurationEnvOrDefault("HTTP_SESSION_IDLE_TIMEOUT", 5*time.Minute)
 
 	log.Printf("Namespace: %s\n", infraNamespace)
 
@@ -348,7 +352,7 @@ http://localhost:` + port + `/graphql
 
 	if updateMetricsPeriod.Nanoseconds() > 0 {
 		schedule(func() {
-			err, updated := metric.UpdateAllMetrics(objectCache)
+			err, updated := metric.UpdateAllMetrics(objectCache, promQLRateMetricExpression)
 			if err != nil {
 				log.Printf("failed to update metrics, %s", err)
 			} else if updated > 0 {
@@ -373,12 +377,14 @@ http://localhost:` + port + `/graphql
 	queryServer := http.NewServeMux()
 
 	queryEndpoint := "/graphql/query"
-	playground := handler.Playground("GraphQL playground", queryEndpoint)
-	queryServer.Handle("/graphql/", playground)
+	if graphqlPlayground {
+		playground := handler.Playground("GraphQL playground", queryEndpoint)
+		queryServer.Handle("/graphql/", playground)
+	}
 
 	sessionManager := scs.New()
-	sessionManager.Lifetime = 30 * time.Minute
-	sessionManager.IdleTimeout = 5 * time.Minute
+	sessionManager.Lifetime = sessionLifetime
+	sessionManager.IdleTimeout = sessionIdleTimeout
 	sessionManager.Cookie.HttpOnly = true
 	sessionManager.Cookie.Persist = false
 	sessionManager.Cookie.Secure = true
