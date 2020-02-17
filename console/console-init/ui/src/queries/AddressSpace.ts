@@ -178,7 +178,7 @@ const RETURN_ADDRESS_SPACE_DETAIL = (name?: string, namespace?: string) => {
   const ADDRESS_SPACE_DETAIL = gql`
       query all_address_spaces {
         addressSpaces(
-          filter: "\`$..name\` = '${name}' AND \`$..namespace\` = '${namespace}'"
+          filter: "\`$.metadata.name\` = '${name}' AND \`$.metadata.namespace\` = '${namespace}'"
         ) {
           addressSpaces {
             metadata {

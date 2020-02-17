@@ -190,7 +190,7 @@ const CURRENT_ADDRESS_SPACE_PLAN = (name?: string, namespace?: string) => {
   const ADDRESS_SPACE_PLAN = gql`
       query all_address_spaces {
         addressSpaces(
-          filter: "\`$..Name\` = '${name}' AND \`$..Namespace\` = '${namespace}'"
+          filter: "\`$.metadata.name\` = '${name}' AND \`$.metadata.namespace\` = '${namespace}'"
         ) {
           addressSpaces {
             spec {
