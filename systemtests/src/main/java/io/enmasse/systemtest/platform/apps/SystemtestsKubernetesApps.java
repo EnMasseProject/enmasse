@@ -13,6 +13,7 @@ import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.Minikube;
+import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -268,7 +269,7 @@ public class SystemtestsKubernetesApps {
 
         // apply "common" and "manual" folders
 
-        if (Minikube.getInstance().getCluster() instanceof Minikube) {
+        if (kubeCli.getCluster() instanceof MinikubeCluster) {
             applyDirectories(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
                     resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_KUBERNETES));
         } else {
