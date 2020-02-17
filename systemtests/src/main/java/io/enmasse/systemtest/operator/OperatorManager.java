@@ -305,7 +305,7 @@ public class OperatorManager {
                     LOGGER.info("ConsoleService {} not yet available", serviceName);
                     return false;
                 }
-                TestUtils.waitForPodReady("console", kube.getInfraNamespace());
+                TestUtils.waitForPodReady("console", namespace);
                 final ConsoleServiceSpec spec = console.getSpec();
                 final boolean ready = spec != null && spec.getOauthClientSecret() != null && spec.getSsoCookieSecret() != null;
                 if (!ready) {
