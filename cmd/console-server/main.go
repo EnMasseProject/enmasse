@@ -360,12 +360,12 @@ http://localhost:` + port + `/graphql
 	}
 
 	queryTimeMetric := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "enmasse_console_query_time_seconds",
-		Help:    "The query time in seconds.",
+		Name:    "console_query_time_seconds",
+		Help:    "The query time in seconds",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"operationName"})
 	queryErrorCountMetric := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "enmasse_console_query_error_total",
+		Name: "console_query_error_total",
 		Help: "Number of queries that have ended in error",
 	}, []string{"operationName"})
 	prometheus.MustRegister(queryTimeMetric, queryErrorCountMetric)
