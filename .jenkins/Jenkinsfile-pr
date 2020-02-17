@@ -7,7 +7,11 @@ def NODE_LABEL = null
 node('master') {
     stage('Set agent label') {
         echo "Github PR comment: ${env.ghprbCommentBody}"
-        if (env.ghprbCommentBody.contains('ocp4') || env.ghprbCommentBody.contains('OLM')) {
+        if (env.ghprbCommentBody.contains('ocp4')
+                || env.ghprbCommentBody.contains('OLM')
+                || env.ghprbCommentBody.contains('olm')
+                || env.ghprbCommentBody.contains('OCP4')
+                || env.ghprbCommentBody.contains('crc')) {
             NODE_LABEL = "enmasse-crc"
         } else {
             NODE_LABEL = params.AGENT_LABEL
