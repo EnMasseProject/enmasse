@@ -11,7 +11,6 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"flag"
-	"github.com/99designs/gqlgen/cmd"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/handler"
 	"github.com/alexedwards/scs/v2"
@@ -28,6 +27,8 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	user "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vektah/gqlparser/gqlerror"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -189,6 +190,7 @@ func developmentHandler(next http.Handler, _ *scs.SessionManager, accessToken st
 func main() {
 	infraNamespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
 	port := util.GetEnvOrDefault("PORT", "8080")
+	metricsPort := util.GetEnvOrDefault("METRICS_PORT", "8889")
 
 	var developmentMode = flag.Bool("developmentMode", false,
 		"set to true to run console-server outside of the OpenShift container.  It will look for"+
@@ -361,10 +363,23 @@ http://localhost:` + port + `/graphql
 
 	}
 
+	queryTimeMetric := prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "console_query_time_seconds",
+		Help:    "The query time in seconds",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"operationName"})
+	queryErrorCountMetric := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "console_query_error_total",
+		Help: "Number of queries that have ended in error",
+	}, []string{"operationName"})
+	prometheus.MustRegister(queryTimeMetric, queryErrorCountMetric)
+
+	queryServer := http.NewServeMux()
+
 	queryEndpoint := "/graphql/query"
 	if graphqlPlayground {
 		playground := handler.Playground("GraphQL playground", queryEndpoint)
-		http.Handle("/graphql/", playground)
+		queryServer.Handle("/graphql/", playground)
 	}
 
 	sessionManager := scs.New()
@@ -381,6 +396,7 @@ http://localhost:` + port + `/graphql
 				if rctx != nil {
 					log.Printf("Query error - op: %s query: %s vars: %+v error: %s\n", rctx.OperationName, rctx.RawQuery, rctx.Variables, e)
 				}
+				queryErrorCountMetric.WithLabelValues(rctx.OperationName).Inc()
 				return graphql.DefaultErrorPresenter(ctx, e)
 			},
 		),
@@ -404,24 +420,35 @@ http://localhost:` + port + `/graphql
 
 			rctx := graphql.GetRequestContext(ctx)
 			if rctx != nil {
-				log.Printf("[%s] Query execution - op: %s %s\n", loggedOnUser, rctx.OperationName, time.Since(start))
+				since := time.Since(start)
+				log.Printf("[%s] Query execution - op: %s %s\n", loggedOnUser, rctx.OperationName, since)
+				queryTimeMetric.WithLabelValues(rctx.OperationName).Observe(since.Seconds())
 			}
 			return result
 		}),
 	)
 
 	if *developmentMode {
-		http.Handle(queryEndpoint, developmentHandler(gql, sessionManager, config.BearerToken))
+		queryServer.Handle(queryEndpoint, developmentHandler(gql, sessionManager, config.BearerToken))
 	} else {
-		http.Handle(queryEndpoint, authHandler(gql, sessionManager))
+		queryServer.Handle(queryEndpoint, authHandler(gql, sessionManager))
 	}
 
-	err = http.ListenAndServe(":"+port, sessionManager.LoadAndSave(http.DefaultServeMux))
+	go func() {
+		err = http.ListenAndServe(":"+port, sessionManager.LoadAndSave(queryServer))
+		if err != nil {
+			panic(err.Error())
+		}
+	}()
+
+	metricsServer := http.NewServeMux()
+
+	metricsServer.Handle("/metrics", promhttp.Handler())
+	err = http.ListenAndServe(":"+metricsPort, metricsServer)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	cmd.Execute()
 }
 
 func schedule(f func(), delay time.Duration) (chan bool, chan bool) {

@@ -233,7 +233,7 @@ func addMetrics(ctx context.Context, cfg *rest.Config, namespace string) {
 		log.Info("Could not create metrics Service", "error", err.Error())
 	}
 
-	// Adding the monitoring-key:middleware to the operator service which will get propograted to the serviceMonitor
+	// Adding the monitoring-key:middleware to the operator service which will get propagated to the serviceMonitor
 	err = addMonitoringKeyLabelToOperatorService(ctx, cfg, service)
 	if err != nil {
 		log.Error(err, "Could not add monitoring-key label to operator metrics Service")

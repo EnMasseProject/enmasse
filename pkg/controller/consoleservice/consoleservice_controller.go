@@ -435,6 +435,12 @@ func applyService(consoleService *v1beta1.ConsoleService, service *corev1.Servic
 			TargetPort: intstr.FromString("https"),
 			Name:       "https",
 		},
+		{
+			Port:       8080,
+			Protocol:   corev1.ProtocolTCP,
+			TargetPort: intstr.FromString("metrics"),
+			Name:       "metrics",
+		},
 	}
 	return nil
 }
@@ -722,9 +728,17 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		}
 		container.Command = []string{"/console-server"}
 
+		port := int32(9090)
+		metricsPort := int32(9089)
 		install.ApplyEnv(container, "PORT", func(envvar *corev1.EnvVar) {
-			envvar.Value = "9090"
+			envvar.Value = strconv.Itoa(int(port))
 		})
+
+		install.ApplyEnv(container, "METRICS_PORT", func(envvar *corev1.EnvVar) {
+			envvar.Value = strconv.Itoa(int(metricsPort))
+		})
+
+		container.Ports = []corev1.ContainerPort{}
 
 		namespace, err := util.GetInfrastructureNamespace()
 		if err == nil {
@@ -766,8 +780,11 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		}
 
 		container.Ports = []corev1.ContainerPort{{
-			ContainerPort: 9090,
+			ContainerPort: port,
 			Name:          "http",
+		}, {
+			ContainerPort: metricsPort,
+			Name:          "metrics",
 		}}
 
 		if consoleServer != nil && consoleServer.Resources != nil {
@@ -788,6 +805,12 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			})
 		} else {
 			install.RemoveEnv(container, "HTTP_SESSION_IDLE_TIMEOUT")
+		}
+
+		if value := util.GetBooleanEnvOrDefault("ENABLE_MONITORING_ANNOTATIONS", false); value {
+			deployment.ObjectMeta.Annotations["prometheus.io/scrape"] = "true"
+			deployment.ObjectMeta.Annotations["prometheus.io/path"] = "/metrics"
+			deployment.ObjectMeta.Annotations["prometheus.io/port"] = strconv.Itoa(int(metricsPort))
 		}
 
 		return nil

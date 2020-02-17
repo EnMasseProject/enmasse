@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: enmasse-console
+  namespace: {{ index .Params "Namespace" }}
+  labels:
+    monitoring-key: middleware
+    app: enmasse
+spec:
+  selector:
+    matchLabels:
+      app: enmasse
+      component: consoleservice
+  endpoints:
+  - port: metrics
+    path: /metrics
+    metricRelabelings:
+      - sourceLabels: [__name__]
+        targetLabel: __name__
+        replacement: "enmasse_${1}"
+  namespaceSelector:
+    matchLabels:
+      monitoring-key: middleware
