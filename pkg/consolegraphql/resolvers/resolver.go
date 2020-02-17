@@ -81,7 +81,6 @@ func BuildFilter(f *string, orderedKeyElements ...string) (cache.ObjectFilter, s
 func buildKey(expression filter.Expr, orderedKeyElements ...string) string {
 	keyElements := make([]string, 0)
 
-
 	for i, keyElement := range orderedKeyElements {
 		foundTerm := false
 
