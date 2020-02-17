@@ -57,6 +57,7 @@ func GetTemplateList() []string {
 		"ServiceMonitor-router.yaml",
 		"ServiceMonitor-broker.yaml",
 		"ServiceMonitor-iot.yaml",
+		"ServiceMonitor-console.yaml",
 		"GrafanaDashboard-brokers.yaml",
 		"GrafanaDashboard-components.yaml",
 		"GrafanaDashboard-routers.yaml",
