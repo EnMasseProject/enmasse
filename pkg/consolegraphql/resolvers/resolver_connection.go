@@ -23,7 +23,8 @@ func (r *Resolver) Connection_consoleapi_enmasse_io_v1beta1() Connection_console
 
 func (cr connectionK8sResolver) Links(ctx context.Context, obj *consolegraphql.Connection, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
-		fltrfunc, e := BuildFilter(filter)
+
+		fltrfunc, keyElements, e := BuildFilter(filter, "$.metadata.name")
 		if e != nil {
 			return nil, e
 		}
@@ -33,7 +34,7 @@ func (cr connectionK8sResolver) Links(ctx context.Context, obj *consolegraphql.C
 			return nil, e
 		}
 
-		links, e := cr.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, obj.Spec.AddressSpace, obj.ObjectMeta.Name), fltrfunc)
+		links, e := cr.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Link/%s/%s/%s/%s", obj.ObjectMeta.Namespace, obj.Spec.AddressSpace, obj.ObjectMeta.Name, keyElements), fltrfunc)
 		if e != nil {
 			return nil, e
 		}
@@ -121,7 +122,7 @@ func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int
 	requestState := server.GetRequestStateFromContext(ctx)
 	viewFilter := requestState.AccessController.ViewFilter()
 
-	fltrfunc, e := BuildFilter(filter)
+	fltrfunc, keyElements, e := BuildFilter(filter, "$.metadata.namespace", "$.spec.addressSpace", "$.metadata.name")
 	if e != nil {
 		return nil, e
 	}
@@ -131,7 +132,7 @@ func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int
 		return nil, e
 	}
 
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Connection/", cache.And(viewFilter, fltrfunc))
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Connection/%s", keyElements), cache.And(viewFilter, fltrfunc))
 	if e != nil {
 		return nil, e
 	}

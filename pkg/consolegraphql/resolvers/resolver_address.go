@@ -37,7 +37,7 @@ const infraUuidAnnotation = "enmasse.io/infra-uuid"
 
 func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.AddressHolder, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
-		fltrfunc, e := BuildFilter(filter)
+		fltrfunc, keyElements, e := BuildFilter(filter, "$.metadata.name")
 		if e != nil {
 			return nil, e
 		}
@@ -52,7 +52,7 @@ func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.Addr
 			return nil, e
 		}
 		// N.B. address name not prefixed in the link index
-		links, e := ar.Cache.Get(cache.AddressLinkObjectIndex, fmt.Sprintf("Link/%s/%s/%s/", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1]), fltrfunc)
+		links, e := ar.Cache.Get(cache.AddressLinkObjectIndex, fmt.Sprintf("Link/%s/%s/%s/%s", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1], keyElements), fltrfunc)
 		if e != nil {
 			return nil, e
 		}
@@ -93,7 +93,7 @@ func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, 
 	requestState := server.GetRequestStateFromContext(ctx)
 	viewFilter := requestState.AccessController.ViewFilter()
 
-	fltrfunc, e := BuildFilter(filter)
+	fltrfunc, keyElements, e := BuildFilter(filter, "$.metadata.namespace", "$.metadata.name")
 	if e != nil {
 		return nil, e
 	}
@@ -103,7 +103,7 @@ func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, 
 		return nil, e
 	}
 
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Address/", cache.And(viewFilter, fltrfunc))
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s", keyElements), cache.And(viewFilter, fltrfunc))
 	if e != nil {
 		return nil, e
 	}
@@ -231,7 +231,7 @@ func (r *mutationResolver) PurgeAddress(ctx context.Context, input metav1.Object
 		return &f, fmt.Errorf("address space: '%s' does not have expected '%s' annotation ", as.Name, infraUuidAnnotation)
 	}
 
-	addresses, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s/%s", input.Namespace, as.Name, input.Name), nil)
+	addresses, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s", input.Namespace, input.Name), nil)
 	if e != nil {
 		return nil, e
 	}

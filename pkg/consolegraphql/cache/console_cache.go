@@ -49,8 +49,7 @@ func primaryUniqueKeyCreator(obj interface{}) (b bool, s string, err error) {
 		if i < 0 {
 			return false, "", fmt.Errorf("unexpected address name formation '%s', expected dot separator", o.Name)
 		}
-		addressSpaceName := o.Name[:i]
-		return true, o.Kind + "/" + o.Namespace + "/" + addressSpaceName + "/" + o.Name, nil
+		return true, o.Kind + "/" + o.Namespace + "/" + o.Name, nil
 	case *consolegraphql.Connection:
 		return true, o.Kind + "/" + o.Namespace + "/" + o.Spec.AddressSpace + "/" + o.Name, nil
 	case *consolegraphql.Link:

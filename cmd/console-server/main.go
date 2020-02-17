@@ -377,7 +377,7 @@ http://localhost:` + port + `/graphql
 	queryServer := http.NewServeMux()
 
 	queryEndpoint := "/graphql/query"
-	if graphqlPlayground {
+	if graphqlPlayground || *developmentMode {
 		playground := handler.Playground("GraphQL playground", queryEndpoint)
 		queryServer.Handle("/graphql/", playground)
 	}
