@@ -107,10 +107,12 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 	}
 
 	// Currently we need a single instance of console called "console", ensure that it exists.
-	err = ensureSingletonConsoleService(context.TODO(), metav1.ObjectMeta{Namespace: r.namespace, Name: CONSOLE_NAME}, r.client, r.reader)
-	if err != nil {
-		log.Error(err, "Failed create singleton ConsoleService instance")
-	}
+	/*
+		err = ensureSingletonConsoleService(context.TODO(), metav1.ObjectMeta{Namespace: r.namespace, Name: CONSOLE_NAME}, r.client, r.reader)
+		if err != nil {
+			log.Error(err, "Failed create singleton ConsoleService instance")
+		}
+	*/
 
 	return nil
 }
