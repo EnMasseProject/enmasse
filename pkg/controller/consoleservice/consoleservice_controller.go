@@ -745,9 +745,15 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			},
 		}
 
+		consoleServer := consoleservice.Spec.ConsoleServer
+
 		container.ReadinessProbe = &corev1.Probe{
 			InitialDelaySeconds: 30,
 			Handler:             probeHandler,
+		}
+
+		if consoleServer != nil && consoleServer.ReadinessProbe != nil {
+			install.OverrideProbe(consoleservice.Spec.ConsoleServer.ReadinessProbe, container.ReadinessProbe)
 		}
 
 		container.LivenessProbe = &corev1.Probe{
@@ -755,13 +761,33 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			Handler:             probeHandler,
 		}
 
+		if consoleServer != nil && consoleServer.LivenessProbe != nil {
+			install.OverrideProbe(consoleservice.Spec.ConsoleServer.LivenessProbe, container.LivenessProbe)
+		}
+
 		container.Ports = []corev1.ContainerPort{{
 			ContainerPort: 9090,
 			Name:          "http",
 		}}
 
-		if consoleservice.Spec.ConsoleServer != nil && consoleservice.Spec.ConsoleServer.Resources != nil {
-			container.Resources = *consoleservice.Spec.ConsoleServer.Resources
+		if consoleServer != nil && consoleServer.Resources != nil {
+			container.Resources = *consoleServer.Resources
+		}
+
+		if consoleServer != nil && consoleServer.Session != nil && consoleServer.Session.Lifetime != nil && *consoleServer.Session.Lifetime != "" {
+			install.ApplyEnv(container, "HTTP_SESSION_LIFETIME", func(envvar *corev1.EnvVar) {
+				envvar.Value = *consoleServer.Session.Lifetime
+			})
+		} else {
+			install.RemoveEnv(container, "HTTP_SESSION_LIFETIME")
+		}
+
+		if consoleServer != nil && consoleServer.Session != nil && consoleServer.Session.IdleTimeout != nil && *consoleServer.Session.IdleTimeout != "" {
+			install.ApplyEnv(container, "HTTP_SESSION_IDLE_TIMEOUT", func(envvar *corev1.EnvVar) {
+				envvar.Value = *consoleServer.Session.IdleTimeout
+			})
+		} else {
+			install.RemoveEnv(container, "HTTP_SESSION_IDLE_TIMEOUT")
 		}
 
 		return nil

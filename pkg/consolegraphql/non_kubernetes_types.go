@@ -8,12 +8,15 @@ package consolegraphql
 import (
 	"container/ring"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/util"
 	authv1 "k8s.io/api/authorization/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"time"
 )
+
+var rateMetricTimeSeriesElements = util.GetUintEnvOrDefault("RATE_METRIC_TIME_SERIES_ELEMENTS", 0, 8, 100)
 
 type HasMetrics interface {
 	GetMetrics() []*Metric
@@ -136,7 +139,7 @@ func NewRateCalculatingMetric(n string, t string, u string) *RateCalculatingMetr
 		Name:       n,
 		Type:       t,
 		Unit:       u,
-		timeseries: ring.New(100),
+		timeseries: ring.New(int(rateMetricTimeSeriesElements)),
 	}
 	return &m
 }

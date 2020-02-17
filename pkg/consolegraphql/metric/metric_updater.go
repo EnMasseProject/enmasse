@@ -11,7 +11,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 )
 
-func UpdateAllMetrics(objectCache cache.Cache) (error, int) {
+func UpdateAllMetrics(objectCache cache.Cache, promQLExpression string) (error, int) {
 
 	objs, err := objectCache.Get(cache.PrimaryObjectIndex, "", func(o interface{}) (bool, bool, error) {
 		if _, ok := o.(consolegraphql.HasMetrics); ok {
@@ -24,7 +24,7 @@ func UpdateAllMetrics(objectCache cache.Cache) (error, int) {
 		return err, 0
 	}
 
-	calc := New()
+	calc := New(promQLExpression)
 	updatedRecords := 0
 	for i := range objs {
 		objectWithMetrics := objs[i].(consolegraphql.HasMetrics)
@@ -45,7 +45,7 @@ func UpdateAllMetrics(objectCache cache.Cache) (error, int) {
 			}
 		}
 		if len(updated) > 0 {
-			objectCache.Update(func(current interface{}) (interface{}, error) {
+			err := objectCache.Update(func(current interface{}) (interface{}, error) {
 				metrics := objectWithMetrics.GetMetrics()
 				for _, m := range metrics {
 					if update, present := updated[m.Name]; present {
@@ -55,6 +55,9 @@ func UpdateAllMetrics(objectCache cache.Cache) (error, int) {
 				updatedRecords++
 				return current, nil
 			}, objectWithMetrics)
+			if err != nil {
+				return err, updatedRecords
+			}
 		}
 	}
 	return nil, updatedRecords
