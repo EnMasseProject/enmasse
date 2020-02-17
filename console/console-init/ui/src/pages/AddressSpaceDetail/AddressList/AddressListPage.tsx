@@ -210,7 +210,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
           }
         }
       });
-      if (deletedData.data && deletedData.data.deletedAddress === true) {
+      if (deletedData.data && deletedData.data.deleteAddress === true) {
         refetch();
         setAddressBeingDeleted(null);
       }
@@ -219,16 +219,16 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
 
   const handlePurgeChange = async () => {
     if (addressBeingPurged) {
-      const purgeData = await client.mutate({
+      const { data } = await client.mutate({
         mutation: PURGE_ADDRESS,
         variables: {
           a: {
-            Name: addressBeingPurged.name,
-            Namespace: addressBeingPurged.namespace
+            name: addressBeingPurged.name,
+            namespace: addressBeingPurged.namespace
           }
         }
       });
-      if (purgeData && purgeData.data && purgeData.data.purgeAddress === true) {
+      if (data && data.purgeAddress) {
         refetch();
         setAddressBeingPurged(null);
       }
