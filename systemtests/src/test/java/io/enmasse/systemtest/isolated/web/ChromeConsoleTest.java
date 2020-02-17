@@ -113,7 +113,7 @@ class ChromeConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
                 .build();
         doTestAddressDeploymentSnippet(addressSpace, address);
         AddressUtils.waitForDestinationsReady(address);
-        AddressUtils.isAddressReady(address);
+        AddressUtils.isAddressReady(addressSpace, address);
     }
 
     @Test
@@ -167,7 +167,7 @@ class ChromeConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
                 .build();
         doTestAddressDeploymentSnippet(addressSpace, address);
         AddressUtils.waitForDestinationsReady(address);
-        AddressUtils.isAddressReady(address);
+        AddressUtils.isAddressReady(addressSpace, address);
     }
 
 
