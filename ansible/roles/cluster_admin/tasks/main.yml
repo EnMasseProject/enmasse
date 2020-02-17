@@ -48,6 +48,8 @@
 - import_role:
     name: address_space_controller
 - import_role:
+    name: console_server
+- import_role:
     name: enmasse_operator
 - import_role:
     name: service_catalog
