@@ -54,6 +54,39 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     }
 
     @Test
+    void testAddressSnippetStandard() throws Exception {
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-address-space-standard")
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_MEDIUM)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        isolatedResourcesManager.createAddressSpace(addressSpace);
+
+        Address address = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("test-queue")
+                .withType("queue")
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
+        doTestAddressDeploymentSnippet(addressSpace, address);
+        AddressUtils.waitForDestinationsReady(address);
+        AddressUtils.isAddressReady(address);
+    }
+
+    @Test
     void testAddressSpaceSnippetBrokered() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
