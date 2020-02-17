@@ -267,12 +267,13 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             kubernetes.listPods().forEach(pod -> {
                 pod.getSpec().getContainers().forEach(container -> {
                     log.info("Pod {}, current container {}", pod.getMetadata().getName(), container.getImage());
-                    log.info("Comparing: {}", container.getImage()
-                            .replaceAll("^.*/", "")
-                            .replace("enmasse-controller-manager", "controller-manager"));
-                    if (!images.contains(container.getImage()
-                            .replaceAll("^.*/", "")
-                            .replace("enmasse-controller-manager", "controller-manager")) && !container.getImage().contains("postgresql")) {
+                    String replaced = container.getImage()
+                        .replaceAll("^.*/", "")
+                        .replace("enmasse-controller-manager", "controller-manager")
+                        .replace("console-httpd", "console-server");
+
+                    log.info("Comparing: {}", replaced);
+                    if (!images.contains(replaced) && !container.getImage().contains("postgresql")) {
                         log.warn("Container is not upgraded");
                         ready.set(false);
                     } else {

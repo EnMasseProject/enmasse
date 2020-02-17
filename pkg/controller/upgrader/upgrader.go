@@ -192,7 +192,7 @@ func (u *Upgrader) performUpgrade(addressSpaceControllerDeployment *appsv1.Deplo
 	}
 
 	// Delete iot-operator deployment
-	return u.deleteDeployment("iot-operator")
+	return u.deleteDeploymentIfExists("iot-operator")
 }
 
 func (u *Upgrader) convertMessagingUsers() error {
@@ -302,6 +302,19 @@ func (u *Upgrader) deleteDeployment(name string) error {
 	return deploymentClient.Delete(name, &metav1.DeleteOptions{
 		PropagationPolicy: &propagationPolicy,
 	})
+}
+
+func (u *Upgrader) deleteDeploymentIfExists(deploymentName string) error {
+	deploymentClient := u.client.AppsV1().Deployments(u.namespace)
+
+	_, err := deploymentClient.Get(deploymentName, metav1.GetOptions{})
+	if err != nil && k8errors.IsNotFound(err) {
+		return nil
+	} else if err != nil {
+		return err
+	} else {
+		return u.deleteDeployment(deploymentName)
+	}
 }
 
 func (u *Upgrader) scale(deploymentName string, replicas int32) error {
