@@ -278,6 +278,17 @@ public abstract class ConsoleTest extends TestBase {
         assertThat("Console should show empty list", consolePage.getAddressSpaceItems().size(), is(0));
     }
 
+    protected void doTestHelpLink() throws Exception {
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        String expectedUrl = environment.enmasseDocs();
+        String actualLink = consolePage.getHelpLink();
+
+        assertEquals(expectedUrl, actualLink);
+
+        consolePage.openHelpLink(expectedUrl);
+    }
+
     //============================================================================================
     //============================ do test methods for address part ==============================
     //============================================================================================

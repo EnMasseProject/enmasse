@@ -20,6 +20,7 @@ public class Environment {
     public static final String K8S_API_URL_ENV = "KUBERNETES_API_URL";
     public static final String K8S_API_TOKEN_ENV = "KUBERNETES_API_TOKEN";
     public static final String ENMASSE_VERSION_SYSTEM_PROPERTY = "enmasse.version";
+    public static final String ENMASSE_DOCS_SYSTEM_PROPERTY = "enmasse.docs";
     public static final String K8S_DOMAIN_ENV = "KUBERNETES_DOMAIN";
     public static final String K8S_API_CONNECT_TIMEOUT = "KUBERNETES_API_CONNECT_TIMEOUT";
     public static final String K8S_API_READ_TIMEOUT = "KUBERNETES_API_READ_TIMEOUT";
@@ -44,6 +45,7 @@ public class Environment {
     private final String namespace = System.getenv().getOrDefault(K8S_NAMESPACE_ENV, "enmasse-infra");
     private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
     private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
+    private final String enmasseDocs = System.getProperty(ENMASSE_DOCS_SYSTEM_PROPERTY);
     private final String kubernetesDomain = System.getenv().getOrDefault(K8S_DOMAIN_ENV, "nip.io");
     private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
@@ -149,6 +151,10 @@ public class Environment {
 
     public String enmasseVersion() {
         return enmasseVersion;
+    }
+
+    public String enmasseDocs() {
+        return enmasseDocs;
     }
 
     public String kubernetesDomain() {
