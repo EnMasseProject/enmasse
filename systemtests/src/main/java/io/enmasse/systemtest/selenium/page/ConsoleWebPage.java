@@ -456,20 +456,24 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     public String getDeploymentSnippet() throws InterruptedException {
+        final int RETRY_COUNTER = 5;
+
         StringBuilder addressSpaceDeployment = new StringBuilder();
-        Thread.sleep(2000);
-        List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
+        for (int i = 0; i < RETRY_COUNTER && addressSpaceDeployment.toString().isEmpty(); i++) {
+            List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
 
-        for (WebElement currentElement : snippetElements) {
-            if (currentElement.getText().contains("kubectl")
-                    || currentElement.getText().isEmpty() || currentElement.getText().equals("EOF")) {
-                continue;
-            } else if (addressSpaceDeployment.length() == 0) {
-                addressSpaceDeployment = new StringBuilder(currentElement.getText());
-            } else {
-                addressSpaceDeployment.append(System.lineSeparator()).append(currentElement.getText());
+            for (WebElement currentElement : snippetElements) {
+                if (currentElement.getText().contains("kubectl")
+                        || currentElement.getText().isEmpty() || currentElement.getText().equals("EOF")) {
+                    continue;
+                } else if (addressSpaceDeployment.length() == 0) {
+                    addressSpaceDeployment = new StringBuilder(currentElement.getText());
+                } else {
+                    addressSpaceDeployment.append(System.lineSeparator()).append(currentElement.getText());
+                }
+
             }
-
+            Thread.sleep(2000);
         }
         return addressSpaceDeployment.toString();
     }
