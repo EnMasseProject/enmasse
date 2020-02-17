@@ -435,6 +435,12 @@ func applyService(consoleService *v1beta1.ConsoleService, service *corev1.Servic
 			TargetPort: intstr.FromString("https"),
 			Name:       "https",
 		},
+		{
+			Port:       8080,
+			Protocol:   corev1.ProtocolTCP,
+			TargetPort: intstr.FromString("metrics"),
+			Name:       "metrics",
+		},
 	}
 	return nil
 }
