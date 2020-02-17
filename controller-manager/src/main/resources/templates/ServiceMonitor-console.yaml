@@ -10,7 +10,7 @@ spec:
   selector:
     matchLabels:
       app: enmasse
-      component: console
+      component: consoleservice
   endpoints:
   - port: metrics
     path: /metrics
