@@ -74,7 +74,7 @@ class ChromeConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        doTestDeploymentSnippet(addressSpace);
+        doTestAddressSpaceDeploymentSnippet(addressSpace);
         assertTrue(AddressSpaceUtils.addressSpaceExists(Kubernetes.getInstance().getInfraNamespace(),
                 addressSpace.getMetadata().getName()));
     }
@@ -95,7 +95,7 @@ class ChromeConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        doTestDeploymentSnippet(addressSpace);
+        doTestAddressSpaceDeploymentSnippet(addressSpace);
         assertTrue(AddressSpaceUtils.addressSpaceExists(Kubernetes.getInstance().getInfraNamespace(),
                 addressSpace.getMetadata().getName()));
     }

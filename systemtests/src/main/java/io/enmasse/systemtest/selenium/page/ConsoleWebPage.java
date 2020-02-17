@@ -455,7 +455,7 @@ public class ConsoleWebPage implements IWebPage {
         }
     }
 
-    public String getAddressSpaceSnippet() throws InterruptedException {
+    public String getDeploymentSnippet() throws InterruptedException {
         StringBuilder addressSpaceDeployment = new StringBuilder();
         Thread.sleep(2000);
         List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
@@ -578,8 +578,7 @@ public class ConsoleWebPage implements IWebPage {
         createAddress(address, true);
     }
 
-    public void createAddress(Address address, boolean waitForReady) throws Exception {
-        log.info("Address {} will be created using web console", address);
+    public void prepareAddressCreation(Address address) {
         selenium.clickOnItem(getCreateButtonTop());
         selenium.fillInputItem(getAddressNameInput(), address.getSpec().getAddress());
         selenium.clickOnItem(getAddressTypeDropDown(), "Address Type dropdown");
@@ -591,6 +590,11 @@ public class ConsoleWebPage implements IWebPage {
             selenium.clickOnItem(getTopicSelectDropDown().findElement(By.id("address-definition-topic-dropdown-item" + address.getSpec().getTopic())));
         }
         selenium.clickOnItem(getNextButton());
+    }
+
+    public void createAddress(Address address, boolean waitForReady) throws Exception {
+        log.info("Address {} will be created using web console", address);
+        prepareAddressCreation(address);
         selenium.clickOnItem(getFinishButton());
         selenium.waitUntilItemPresent(30, () -> getAddressItem(address));
         if (waitForReady) {

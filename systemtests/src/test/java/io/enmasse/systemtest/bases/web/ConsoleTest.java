@@ -46,7 +46,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -930,11 +929,20 @@ public abstract class ConsoleTest extends TestBase {
         }
     }
 
-    protected void doTestDeploymentSnippet(AddressSpace addressSpace) throws Exception {
+    protected void doTestAddressSpaceDeploymentSnippet(AddressSpace addressSpace) throws Exception {
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.prepareAddressSpaceInstall(addressSpace);
-        String snippet = consolePage.getAddressSpaceSnippet();
+        String snippet = consolePage.getDeploymentSnippet();
+        KubeCMDClient.createCR(Kubernetes.getInstance().getInfraNamespace(), snippet);
+    }
+
+    protected void doTestAddressDeploymentSnippet(AddressSpace addressSpace, Address address) throws Exception {
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
+        consolePage.prepareAddressCreation(address);
+        String snippet = consolePage.getDeploymentSnippet();
         KubeCMDClient.createCR(Kubernetes.getInstance().getInfraNamespace(), snippet);
     }
 
@@ -1011,4 +1019,5 @@ public abstract class ConsoleTest extends TestBase {
                 });
         assertTrue(active, String.format("Address space %s not marked active in UI within timeout", name));
     }
+
 }
