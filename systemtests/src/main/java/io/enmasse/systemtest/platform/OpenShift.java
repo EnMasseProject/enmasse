@@ -44,7 +44,7 @@ public class OpenShift extends Kubernetes {
             // Workaround https://github.com/square/okhttp/issues/3146
             httpClient = httpClient.newBuilder()
                     .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-                    .connectionPool(new ConnectionPool(0, 0, TimeUnit.SECONDS))
+                    .connectionPool(new ConnectionPool(0, 1, TimeUnit.SECONDS))
                     .connectTimeout(environment.getKubernetesApiConnectTimeout())
                     .writeTimeout(environment.getKubernetesApiWriteTimeout())
                     .readTimeout(environment.getKubernetesApiReadTimeout())
