@@ -84,7 +84,10 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 	// this is necessary to detach the volume first
 	deployment.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 
+	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
+
+		tracingContainer = container
 
 		if err := install.SetContainerImage(container, "iot-device-registry-file", config); err != nil {
 			return err
@@ -161,6 +164,10 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 	if err != nil {
 		return err
 	}
+
+	// tracing
+
+	SetupTracing(config, deployment, tracingContainer)
 
 	// volumes
 

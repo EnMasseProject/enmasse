@@ -85,7 +85,10 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 	applyDefaultAdapterDeploymentSpec(deployment)
 
 	install.DropContainer(deployment, "http-adapter")
+	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
+
+		tracingContainer = container
 
 		if err := install.SetContainerImage(container, "iot-http-adapter", config); err != nil {
 			return err
@@ -150,6 +153,10 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 	if err := r.addQpidProxySetup(config, deployment, adapter.Containers); err != nil {
 		return err
 	}
+
+	// tracing
+
+	SetupTracing(config, deployment, tracingContainer)
 
 	// volumes
 

@@ -22,6 +22,12 @@
       <artifactId>hono-adapter-lora-vertx</artifactId>
       <version>${hono.version}</version>
     </dependency>
+
+    <!-- tracing -->
+    <dependency>
+      <groupId>io.jaegertracing</groupId>
+      <artifactId>jaeger-client</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

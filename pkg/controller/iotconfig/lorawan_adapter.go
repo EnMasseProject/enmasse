@@ -84,7 +84,10 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 	applyDefaultAdapterDeploymentSpec(deployment)
 
 	install.DropContainer(deployment, "lorawan-adapter")
+	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
+
+		tracingContainer = container
 
 		if err := install.SetContainerImage(container, "iot-lorawan-adapter", config); err != nil {
 			return err
@@ -149,6 +152,10 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 	if err := r.addQpidProxySetup(config, deployment, adapter.Containers); err != nil {
 		return err
 	}
+
+	// tracing
+
+	SetupTracing(config, deployment, tracingContainer)
 
 	// volumes
 

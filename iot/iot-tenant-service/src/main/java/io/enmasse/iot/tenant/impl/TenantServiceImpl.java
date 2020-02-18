@@ -21,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.ImmutableMap;
+
 import io.enmasse.iot.model.v1.IoTProject;
 import io.opentracing.Span;
 import io.vertx.core.json.JsonObject;
@@ -37,11 +39,17 @@ public class TenantServiceImpl extends AbstractKubernetesTenantService {
 
         logger.debug("Get tenant - name: {}", tenantName);
 
+        span.log(ImmutableMap.<String,Object>builder()
+                .put("event", "get tenant")
+                .put("tenant_id", tenantName)
+                .build());
+
         return getProject(tenantName)
 
                 .thenApply(project -> project
                         .map(p -> convertToHono(tenantName, p))
                         .orElse(RESULT_NOT_FOUND));
+
     }
 
     @Override

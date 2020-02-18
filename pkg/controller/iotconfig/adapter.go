@@ -111,6 +111,10 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		container.VolumeMounts[0].MountPath = "/var/qdr-certs"
 		container.VolumeMounts[0].ReadOnly = false
 
+		// tracing config
+
+		BlockTracingSidecarConfig(config, container)
+
 		// apply container options
 
 		applyContainerConfig(container, containers.ProxyConfigurator)
@@ -151,6 +155,10 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		container.VolumeMounts[1].Name = "qdr-proxy-config"
 		container.VolumeMounts[1].MountPath = "/etc/qdr/config"
 		container.VolumeMounts[1].ReadOnly = true
+
+		// tracing config
+
+		BlockTracingSidecarConfig(config, container)
 
 		// apply container options
 

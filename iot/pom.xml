@@ -138,6 +138,19 @@
         <version>${micrometer.version}</version>
       </dependency>
 
+      <!-- tracing -->
+      <dependency>
+        <groupId>io.jaegertracing</groupId>
+        <artifactId>jaeger-client</artifactId>
+        <version>${jaeger-client.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.opentracing</groupId>
+        <artifactId>opentracing-api</artifactId>
+        <version>${opentracing.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-core</artifactId>
