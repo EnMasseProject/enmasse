@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import static io.enmasse.systemtest.TestTag.NON_PR;
 
 @Tag(NON_PR)
+@Disabled
 @SeleniumChrome
 public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandard {
 

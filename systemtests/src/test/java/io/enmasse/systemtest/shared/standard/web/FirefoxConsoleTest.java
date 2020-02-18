@@ -6,6 +6,7 @@ package io.enmasse.systemtest.shared.standard.web;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.address.model.AddressBuilder;
@@ -19,6 +20,7 @@ import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
 
 @SeleniumFirefox
+@Disabled
 public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStandard {
 
     @Test

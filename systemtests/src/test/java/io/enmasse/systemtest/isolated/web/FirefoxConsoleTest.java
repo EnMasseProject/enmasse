@@ -10,12 +10,14 @@ import io.enmasse.systemtest.bases.web.ConsoleTest;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
 @SeleniumFirefox
+@Disabled
 class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
 
     @Test

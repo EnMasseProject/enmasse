@@ -10,12 +10,14 @@ import io.enmasse.systemtest.bases.web.ConsoleTest;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumChrome;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.NON_PR;
 
 @Tag(NON_PR)
+@Disabled
 @SeleniumChrome
 class ChromeConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
 
