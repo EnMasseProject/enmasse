@@ -730,6 +730,32 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getConfirmButton());
     }
 
+    private WebElement getApplicationsButton() {
+        return selenium.getDriver().findElement(By.xpath("//button[@aria-label='Applications']"));
+    }
+
+    private WebElement getApplicationsElem() {
+        return selenium.getDriver().findElement(By.xpath("//ul[@role='menu']"));
+    }
+
+    public String getHelpLink() {
+        selenium.clickOnItem(getApplicationsButton());
+
+        return getApplicationsElem()
+            .findElement(By.xpath("//a[@index='0']"))
+            .getAttribute("href");
+    }
+
+    public void openHelpLink(String expectedUrl) {
+        selenium.takeScreenShot();
+        try {
+            selenium.clickOnItem(getApplicationsElem().findElement(By.xpath("//a[contains(text(), 'Help')]")));
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.urlToBe(expectedUrl));
+        } finally {
+            selenium.takeScreenShot();
+        }
+    }
+
     public void sortAddresses(SortType sortType, boolean asc) throws Exception {
         sortItems(sortType, asc, this::getTableAddressHeader, this::isAddressSortType);
     }

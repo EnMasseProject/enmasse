@@ -156,6 +156,7 @@
                     <skipTests>${skip.tests}</skipTests>
                     <systemProperties>
                         <enmasse.version>${release.version}</enmasse.version>
+                        <enmasse.docs>${application.docs}</enmasse.docs>
                     </systemProperties>
                     <includes>
                         <include>io.enmasse.systemtest.**</include>
