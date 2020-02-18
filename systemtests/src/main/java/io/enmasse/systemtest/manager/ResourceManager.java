@@ -260,7 +260,7 @@ public abstract class ResourceManager {
             LOGGER.info("Address space '" + addressSpace + "' already exists.");
         }
         AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-        syncAddressSpaceAndCollectLogs(addressSpace, operationID);
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public void createAddressSpace(AddressSpace... addressSpaces) throws Exception {
@@ -276,20 +276,15 @@ public abstract class ResourceManager {
         for (AddressSpace addressSpace : addressSpaces) {
             AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-            syncAddressSpaceAndCollectLogs(addressSpace, operationID);
         }
+        TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public void waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
         LOGGER.info("Waiting for address space ready");
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
-        syncAddressSpaceAndCollectLogs(addressSpace, operationID);
-    }
-
-    protected void syncAddressSpaceAndCollectLogs(AddressSpace addressSpace, String operationID) throws Exception {
         AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-        logCollector.startCollecting(addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
@@ -300,7 +295,6 @@ public abstract class ResourceManager {
     public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             AddressSpaceUtils.deleteAddressSpaceAndWait(addressSpace, logCollector);
-            logCollector.stopCollecting(addressSpace);
         } else {
             LOGGER.info("Address space '" + addressSpace.getMetadata().getName() + "' doesn't exists!");
         }
@@ -312,7 +306,6 @@ public abstract class ResourceManager {
         for (AddressSpace addressSpace : addressSpaces) {
             AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-            logCollector.startCollecting(addressSpace);
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }

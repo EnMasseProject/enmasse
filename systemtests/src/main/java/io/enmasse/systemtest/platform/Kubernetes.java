@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.platform;
 
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -92,9 +91,6 @@ import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.VersionInfo;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
@@ -446,14 +442,6 @@ public abstract class Kubernetes {
             }
             return true;
         }).collect(Collectors.toList());
-    }
-
-    public Watch watchPods(String uuid, Watcher<Pod> podWatcher) {
-        return client.pods().withLabel("enmasse.io/infra", uuid).watch(podWatcher);
-    }
-
-    public LogWatch watchPodLog(String name, String container, OutputStream outputStream) {
-        return client.pods().withName(name).inContainer(container).watchLog(outputStream);
     }
 
     public Pod getPod(String name) {
