@@ -15,6 +15,7 @@ import io.enmasse.systemtest.utils.AddressUtils;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 @SeleniumFirefox
@@ -72,73 +73,35 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
         doTestDeleteFilteredAddress(getSharedAddressSpace());
     }
 
-//    @Test
-//    void testFilterAddressWithRegexSymbols() throws Exception {
-//        doTestFilterAddressWithRegexSymbols();
-//    }
-
-//    @Test
-//    void testRegexAlertBehavesConsistently() throws Exception {
-//        doTestRegexAlertBehavesConsistently();
-//    }
-
     @Test
     void testSortAddressesByName() throws Exception {
         doTestSortAddressesByName(getSharedAddressSpace());
     }
 
-//    @Test
-//    @ExternalClients
-//    void testSortAddressesByClients() throws Exception {
-//        doTestSortAddressesByClients(getSharedAddressSpace());
-//    }
-
     @Test
     @ExternalClients
+    @Disabled
     void testSortConnectionsBySenders() throws Exception {
         doTestSortConnectionsBySenders(getSharedAddressSpace());
     }
 
     @Test
     @ExternalClients
+    @Disabled
     void testSortConnectionsByReceivers() throws Exception {
         doTestSortConnectionsByReceivers(getSharedAddressSpace());
     }
 
-//    @Test
-//    @ExternalClients
-//    @Disabled("disabled due to #669")
-//    void testFilterConnectionsByEncrypted() throws Exception {
-//        doTestFilterConnectionsByEncrypted();
-//    }
-//
-//    @Test
-//    @ExternalClients
-//    void testFilterConnectionsByUser() throws Exception {
-//        doTestFilterConnectionsByUser();
-//    }
-//
-    //hostname tests don't make much sense
-//    @Test
-//    @ExternalClients
-//    void testFilterConnectionsByHostname() throws Exception {
-//        doTestFilterConnectionsByHostname();
-//    }
-//
-//    @Test
-//    @ExternalClients
-//    void testSortConnectionsByHostname() throws Exception {
-//        doTestSortConnectionsByHostname();
-//    }
-
     @Test
     @ExternalClients
+    @Disabled
     void testFilterConnectionsByContainerId() throws Exception {
         doTestFilterConnectionsByContainerId(getSharedAddressSpace());
     }
 
     @Test
     @ExternalClients
+    @Disabled
     void testSortConnectionsByContainerId() throws Exception {
         doTestSortConnectionsByContainerId(getSharedAddressSpace());
     }
@@ -150,6 +113,7 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
 
     @Test
     @ExternalClients
+    @Disabled
     void testClientsMetrics() throws Exception {
         doTestClientsMetrics(getSharedAddressSpace());
     }

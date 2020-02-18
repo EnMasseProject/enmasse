@@ -4,11 +4,9 @@
  */
 package io.enmasse.systemtest.logs;
 
-import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 
@@ -23,7 +21,6 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,7 +29,6 @@ import java.util.stream.Stream;
 
 public class GlobalLogCollector {
     private final static Logger log = CustomLogger.getLogger();
-    private final Map<String, LogCollector> collectorMap = new HashMap<>();
     private final Kubernetes kubernetes;
     private final Path logDir;
     private final String namespace;
@@ -45,20 +41,6 @@ public class GlobalLogCollector {
         this.kubernetes = kubernetes;
         this.logDir = logDir;
         this.namespace = namespace;
-    }
-
-
-    public synchronized void startCollecting(AddressSpace addressSpace) throws Exception {
-        log.info("Start collecting logs for address space {}", addressSpace.getMetadata().getName());
-        collectorMap.put(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), new LogCollector(kubernetes, logDir.resolve(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)), AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)));
-    }
-
-    public synchronized void stopCollecting(AddressSpace addressSpace) throws Exception {
-        log.info("Stop collecting logs for address space {}", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-        LogCollector collector = collectorMap.remove(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-        if (collector != null) {
-            collector.close();
-        }
     }
 
     public void collectConfigMaps() {

@@ -16,12 +16,17 @@ import io.enmasse.systemtest.utils.AddressUtils;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.NON_PR;
 
+/**
+*
+* We are only adding a few tests for chrome because, the rest of the functionality is covered by firefox.
+* Among other reasons, for not making the test runs too long.
+*
+*/
 @Tag(NON_PR)
 @SeleniumChrome
 public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandard {
@@ -140,121 +145,14 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
     }
 
     @Test
-    @Disabled("Only smoke console tests runs in chrome")
-    void testAddressStatus() throws Exception {
-        doTestAddressStatus(getSharedAddressSpace(), new AddressBuilder()
-                .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue"))
-                .endMetadata()
-                .withNewSpec()
-                .withType("queue")
-                .withAddress("test-queue")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
-                .endSpec()
-                .build());
-        doTestAddressStatus(getSharedAddressSpace(), new AddressBuilder()
-                .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic"))
-                .endMetadata()
-                .withNewSpec()
-                .withType("queue")
-                .withAddress("test-topic")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
-                .endSpec()
-                .build());
-        doTestAddressStatus(getSharedAddressSpace(), new AddressBuilder()
-                .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-anycast"))
-                .endMetadata()
-                .withNewSpec()
-                .withType("anycast")
-                .withAddress("test-anycast")
-                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
-                .endSpec()
-                .build());
-        doTestAddressStatus(getSharedAddressSpace(), new AddressBuilder()
-                .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-multicast"))
-                .endMetadata()
-                .withNewSpec()
-                .withType("multicast")
-                .withAddress("test-multicast")
-                .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
-                .endSpec()
-                .build());
-    }
-
-    @Test
-    @Disabled("Only smoke console tests runs in chrome")
-    void testFilterAddressesByType() throws Exception {
-        doTestFilterAddressesByType(getSharedAddressSpace());
-    }
-
-    @Test
-    @Disabled("Only smoke console tests runs in chrome")
-    void testFilterAddressesByName() throws Exception {
-        doTestFilterAddressesByName(getSharedAddressSpace());
-    }
-
-    @Test
-    @Disabled("Only smoke console tests runs in chrome")
-    void testFilterAddressesByStatus() throws Exception {
-        doTestFilterAddressesByStatus(getSharedAddressSpace());
-    }
-
-    @Test
-    @Disabled("Only smoke console tests runs in chrome")
-    @ExternalClients
-    void testPurgeAddress() throws Exception {
-        doTestPurgeMessages(getSharedAddressSpace());
-    }
-
-    @Test
     void testDeleteFilteredAddress() throws Exception {
         doTestDeleteFilteredAddress(getSharedAddressSpace());
     }
 
     @Test
-    @Disabled("Only smoke console tests runs in chrome")
-    void testEditAddress() throws Exception {
-        doTestEditAddress(getSharedAddressSpace(), new AddressBuilder()
-                        .withNewMetadata()
-                        .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue-edit"))
-                        .endMetadata()
-                        .withNewSpec()
-                        .withType("queue")
-                        .withAddress("test-queue-edit")
-                        .withPlan(getDefaultPlan(AddressType.QUEUE))
-                        .endSpec()
-                        .build(),
-                DestinationPlan.STANDARD_XLARGE_QUEUE);
-    }
-
-//     @Test
-//     void testFilterAddressWithRegexSymbols() throws Exception {
-//     doTestFilterAddressWithRegexSymbols();
-//     }
-//
-//     @Test
-//     void testRegexAlertBehavesConsistently() throws Exception {
-//     doTestRegexAlertBehavesConsistently();
-//     }
-
-    @Test
     void testSortAddressesByName() throws Exception {
         doTestSortAddressesByName(getSharedAddressSpace());
     }
-
-//    @Test
-//    @ExternalClients
-//    void testSortAddressesByClients() throws Exception {
-//        doTestSortAddressesByClients(getSharedAddressSpace());
-//    }
 
     @Test
     @ExternalClients
@@ -267,32 +165,6 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
     void testSortConnectionsByReceivers() throws Exception {
         doTestSortConnectionsByReceivers(getSharedAddressSpace());
     }
-
-//     @Test
-//     @ExternalClients
-//     void testFilterConnectionsByEncrypted() throws Exception {
-//     doTestFilterConnectionsByEncrypted();
-//     }
-//
-//     @Test
-//     @ExternalClients
-//     @Disabled("related issue: #667")
-//     void testFilterConnectionsByUser() throws Exception {
-//     doTestFilterConnectionsByUser();
-//     }
-
-    //hostname tests doesn't make much sense
-//    @Test
-//    @ExternalClients
-//    void testFilterConnectionsByHostname() throws Exception {
-//        doTestFilterConnectionsByHostname(getSharedAddressSpace());
-//    }
-//
-//    @Test
-//    @ExternalClients
-//    void testSortConnectionsByHostname() throws Exception {
-//        doTestSortConnectionsByHostname(getSharedAddressSpace());
-//    }
 
     @Test
     @ExternalClients
