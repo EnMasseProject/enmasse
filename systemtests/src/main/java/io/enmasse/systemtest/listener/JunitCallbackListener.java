@@ -218,7 +218,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                         }
                     }
                 } catch (Exception ex) {
-                    LOGGER.warn("Cannot access logs from container: ", ex);
+                    LOGGER.warn("Cannot access logs from pod {} ", p.getMetadata().getName(), ex);
                 }
             }
 

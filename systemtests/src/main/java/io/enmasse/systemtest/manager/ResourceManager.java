@@ -300,6 +300,7 @@ public abstract class ResourceManager {
     public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             AddressSpaceUtils.deleteAddressSpaceAndWait(addressSpace, logCollector);
+            logCollector.stopCollecting(addressSpace);
         } else {
             LOGGER.info("Address space '" + addressSpace.getMetadata().getName() + "' doesn't exists!");
         }

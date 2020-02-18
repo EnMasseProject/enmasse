@@ -53,13 +53,12 @@ public class GlobalLogCollector {
         collectorMap.put(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), new LogCollector(kubernetes, logDir.resolve(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)), AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)));
     }
 
-    public synchronized void stopCollecting(String namespace) throws Exception {
-        log.info("Stop collecting logs for pods in namespace {}", namespace);
-        LogCollector collector = collectorMap.get(namespace);
+    public synchronized void stopCollecting(AddressSpace addressSpace) throws Exception {
+        log.info("Stop collecting logs for address space {}", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+        LogCollector collector = collectorMap.remove(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
         if (collector != null) {
             collector.close();
         }
-        collectorMap.remove(namespace);
     }
 
     public void collectConfigMaps() {
