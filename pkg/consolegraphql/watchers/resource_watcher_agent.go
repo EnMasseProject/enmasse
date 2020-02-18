@@ -125,7 +125,7 @@ func (clw *AgentWatcher) Watch() error {
 		for running {
 			err := clw.doWatch(resource)
 			if err != nil {
-				log.Printf("Agent - Restarting watch %v", err)
+				log.Printf("Agent - Restarting watch - %v", err)
 			} else {
 				running = false
 			}
@@ -213,47 +213,49 @@ func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {
 	ch := resourceWatch.ResultChan()
 	for {
 		select {
-		case event := <-ch:
+		case event, chok := <-ch:
+			if !chok {
+				return fmt.Errorf("watch ended due to channel error")
+			} else if event.Type == watch.Error {
+				return fmt.Errorf("watch ended in error")
+			}
+
 			var err error
-			if event.Type == watch.Error {
-				err = fmt.Errorf("watch ended in error")
+			service, ok := event.Object.(*tp.Service)
+			if !ok {
+				err = fmt.Errorf("watch error - object of unexpected type received")
 			} else {
-				service, ok := event.Object.(*tp.Service)
-				if !ok {
-					err = fmt.Errorf("watch error - object of unexpected type received")
-				} else {
-					infraUuid, addressSpace, addressSpaceNamespace, err := getServiceDetails(*service)
-					if err != nil {
-						log.Printf("Failed to find required labels on agent service, skipped agent %s, %v", service.Name, err)
-						break
+				infraUuid, addressSpace, addressSpaceNamespace, err := getServiceDetails(*service)
+				if err != nil {
+					log.Printf("Failed to find required labels on agent service, skipped agent %s, %v", service.Name, err)
+					break
+				}
+
+				switch event.Type {
+				case watch.Added:
+					if _, present := clw.collectors[*infraUuid]; !present {
+						host, port, err := clw.getHostPortFrom(*service)
+						if err != nil {
+							return err
+						}
+
+						if clw.developmentMode && clw.RouteClientInterface != nil {
+							host, port, err = clw.tryRouteForHostPort(*service, infraUuid)
+							if err != nil {
+								break
+							}
+						}
+
+						collector, err := clw.createCollector(host, port, infraUuid, addressSpace, addressSpaceNamespace)
+						if err != nil {
+							return err
+						}
+						clw.collectors[*infraUuid] = collector
 					}
-
-					switch event.Type {
-					case watch.Added:
-						if _, present := clw.collectors[*infraUuid]; !present {
-							host, port, err := clw.getHostPortFrom(*service)
-							if err != nil {
-								return err
-							}
-
-							if clw.developmentMode && clw.RouteClientInterface != nil {
-								host, port, err = clw.tryRouteForHostPort(*service, infraUuid)
-								if err != nil {
-									break
-								}
-							}
-
-							collector, err := clw.createCollector(host, port, infraUuid, addressSpace, addressSpaceNamespace)
-							if err != nil {
-								return err
-							}
-							clw.collectors[*infraUuid] = collector
-						}
-					case watch.Deleted:
-						if collector, present := clw.collectors[*infraUuid]; present {
-							delete(clw.collectors, *infraUuid)
-							collector.Shutdown()
-						}
+				case watch.Deleted:
+					if collector, present := clw.collectors[*infraUuid]; present {
+						delete(clw.collectors, *infraUuid)
+						collector.Shutdown()
 					}
 				}
 			}
