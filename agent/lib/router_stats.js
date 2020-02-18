@@ -289,8 +289,7 @@ function get_normal_connections (results) {
                 },
                 senders: [],
                 receivers: [],
-                // DISPATCH-1439 - remove conditional once we have 1.10.0
-                creationTimestamp:  Math.floor(Date.now() / 1000) - (c.uptimeSeconds ? c.uptimeSeconds : 0),
+                creationTimestamp:  Math.floor(Date.now() / 1000) - c.uptimeSeconds,
             };
         });
     });

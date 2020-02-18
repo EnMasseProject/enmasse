@@ -205,11 +205,12 @@ function transform_producer_stats(raw) {
 
 function transform_consumer_stats(raw) {
     return {
-        uuid: generateStableUuid(raw.connectionID, raw.consumerID),
+        uuid: generateStableUuid(raw.connectionID, raw.sessionID, raw.consumerID),
         name: raw.consumerID,
         connection_id: raw.connectionID,
         address: raw.queueName,//mapped to address in later step
         deliveries: 0,//TODO: not yet available from broker
+
         lastUpdated: Date.now()
     };
 }
@@ -271,6 +272,7 @@ BrokerController.prototype.retrieve_stats = function () {
 
                 for(var c in connection_stats) {
                     connection_stats[c].messages_in = connection_stats[c].senders.reduce(function (total, sender) { return total + sender.deliveries; }, 0);
+                    // there is currently insufficient data exposed by the consumer to compute a messages_out
                 }
 
                 self.retrieve_count++;
