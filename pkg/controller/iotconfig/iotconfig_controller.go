@@ -25,6 +25,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -433,6 +434,36 @@ func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, conf
 		return err
 	}
 
+	return nil
+}
+
+func (r *ReconcileIoTConfig) processLoadBalancer(ctx context.Context, name string, config *iotv1alpha1.IoTConfig,
+	delete bool, endpointStatus *iotv1alpha1.EndpointStatus,
+	manipulator func(config *iotv1alpha1.IoTConfig, service *networkingv1beta1.Ingress,
+		endpointStatus *iotv1alpha1.EndpointStatus) error) error {
+
+
+	loadBalancer := &networkingv1beta1.Ingress{
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: config.Namespace,
+			Name:      name,
+		},
+	}
+
+	//TODO : if delete
+
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, loadBalancer, func() error {
+		if err := controllerutil.SetControllerReference(config, loadBalancer, r.scheme); err != nil {
+			return err
+		}
+
+		return manipulator(config, loadBalancer, endpointStatus)
+	})
+
+	if err != nil {
+		log.Error(err, "Failed calling CreateOrUpdate")
+		return err
+	}
 	return nil
 }
 

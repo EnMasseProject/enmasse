@@ -21,6 +21,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
@@ -48,13 +49,20 @@ func (r *ReconcileIoTConfig) processInfinispanDeviceRegistry(ctx context.Context
 		})
 	}
 
+	routesEnabled := config.WantDefaultRoutes(nil)
 	if util.IsOpenshift() {
-		routesEnabled := config.WantDefaultRoutes(nil)
 
 		rc.ProcessSimple(func() error {
 			endpoint := config.Status.Services["deviceRegistry"]
 			err := r.processRoute(ctx, routeDeviceRegistry, config, !routesEnabled, &endpoint.Endpoint, r.reconcileInfinispanDeviceRegistryRoute)
-			config.Status.Services["deviceRegistry"] = endpoint
+			endpoint = config.Status.Services["deviceRegistry"]
+			return err
+		})
+	} else {
+		rc.ProcessSimple(func() error {
+			endpoint := config.Status.Services["deviceRegistry"]
+			err := r.processLoadBalancer(ctx, routeDeviceRegistry, config, !routesEnabled, &endpoint.Endpoint, r.reconcileInfinispanDeviceRegistryLoadBalancer)
+			endpoint = config.Status.Services["deviceRegistry"]
 			return err
 		})
 	}
@@ -350,6 +358,35 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryRoute(config *iotv
 	// Update endpoint
 
 	updateEndpointStatus("https", false, route, endpointStatus)
+
+	// return
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryLoadBalancer(config *iotv1alpha1.IoTConfig, loadBalancer *networkingv1beta1.Ingress, endpointStatus *iotv1alpha1.EndpointStatus) error {
+
+	install.ApplyDefaultLabels(&loadBalancer.ObjectMeta, "iot", loadBalancer.Name)
+
+	// Port
+	loadBalancer.Spec.Backend.ServicePort = intstr.FromString("https")
+
+	// TLS
+	//if loadBalancer.Spec.TLS == nil {
+	//	loadBalancer.Spec.TLS = &networkingv1beta1.IngressTLS{
+	//		// Must contrain hostnames in the cert and secret to use.
+	//	}
+	//}
+
+	// Don't know how to port that in k8s.
+	//route.Spec.TLS.Termination = routev1.TLSTerminationReencrypt
+	//route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
+
+	// Service
+	loadBalancer.Spec.Backend.ServiceName = nameDeviceRegistry
+
+	// Update endpoint
+	updateEndpointStatusWithLoadBalancer("https", false, loadBalancer, endpointStatus)
 
 	// return
 

@@ -22,6 +22,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 )
 
 // This sets the default Hono probes
@@ -181,6 +182,23 @@ func updateEndpointStatus(protocol string, forcePort bool, service *routev1.Rout
 	}
 
 	status.URI = protocol + "://" + service.Spec.Host
+
+	if forcePort {
+		status.URI += ":443"
+	}
+
+}
+
+
+func updateEndpointStatusWithLoadBalancer(protocol string, forcePort bool, service *networkingv1beta1.Ingress, status *iotv1alpha1.EndpointStatus) {
+
+	status.URI = ""
+
+	if service.Spec.Backend.ServiceName == "" {
+		return
+	}
+
+	status.URI = protocol + "://" + service.Spec.Backend.ServiceName
 
 	if forcePort {
 		status.URI += ":443"
