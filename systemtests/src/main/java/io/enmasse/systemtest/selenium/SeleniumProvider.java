@@ -12,9 +12,11 @@ import io.enmasse.systemtest.selenium.resources.WebItem;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -106,6 +108,8 @@ public class SeleniumProvider {
         this.driver = driver;
         angularDriver = new NgWebDriver((JavascriptExecutor) driver);
         driverWait = new WebDriverWait(driver, 10);
+        driver.manage().window().setPosition(new Point(0, 0));
+        driver.manage().window().setSize(new Dimension(1920, 1080));
         browserScreenshots.clear();
     }
 
