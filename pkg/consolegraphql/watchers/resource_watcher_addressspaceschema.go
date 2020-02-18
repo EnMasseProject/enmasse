@@ -111,7 +111,7 @@ func (kw *AddressSpaceSchemaWatcher) Watch() error {
 		for running {
 			err := kw.doWatch(resource)
 			if err != nil {
-				log.Printf("AddressSpaceSchema - Restarting watch")
+				log.Printf("AddressSpaceSchema - Restarting watch - %s", err)
 			} else {
 				running = false
 			}
@@ -217,10 +217,10 @@ func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInter
 			if event.Type == watch.Error {
 				err = fmt.Errorf("Watch ended in error")
 			} else {
-				res, ok := event.Object.(*tp.AddressSpaceSchema)
 				log.Printf("AddressSpaceSchema - Received event type %s", event.Type)
+				res, ok := event.Object.(*tp.AddressSpaceSchema)
 				if !ok {
-					err = fmt.Errorf("Watch error - object of unexpected type received")
+					err = fmt.Errorf("Watch error - object of unexpected type, %T, received", event.Object)
 				} else {
 					copy := res.DeepCopy()
 					kw.updateKind(copy)

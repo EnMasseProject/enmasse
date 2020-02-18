@@ -111,7 +111,7 @@ func (kw *NamespaceWatcher) Watch() error {
 		for running {
 			err := kw.doWatch(resource)
 			if err != nil {
-				log.Printf("Namespace - Restarting watch")
+				log.Printf("Namespace - Restarting watch - %s", err)
 			} else {
 				running = false
 			}
@@ -217,10 +217,10 @@ func (kw *NamespaceWatcher) doWatch(resource cp.NamespaceInterface) error {
 			if event.Type == watch.Error {
 				err = fmt.Errorf("Watch ended in error")
 			} else {
-				res, ok := event.Object.(*tp.Namespace)
 				log.Printf("Namespace - Received event type %s", event.Type)
+				res, ok := event.Object.(*tp.Namespace)
 				if !ok {
-					err = fmt.Errorf("Watch error - object of unexpected type received")
+					err = fmt.Errorf("Watch error - object of unexpected type, %T, received", event.Object)
 				} else {
 					copy := res.DeepCopy()
 					kw.updateKind(copy)

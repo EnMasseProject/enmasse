@@ -111,7 +111,7 @@ func (kw *AuthenticationServiceWatcher) Watch() error {
 		for running {
 			err := kw.doWatch(resource)
 			if err != nil {
-				log.Printf("AuthenticationService - Restarting watch")
+				log.Printf("AuthenticationService - Restarting watch - %s", err)
 			} else {
 				running = false
 			}
@@ -217,10 +217,10 @@ func (kw *AuthenticationServiceWatcher) doWatch(resource cp.AuthenticationServic
 			if event.Type == watch.Error {
 				err = fmt.Errorf("Watch ended in error")
 			} else {
-				res, ok := event.Object.(*tp.AuthenticationService)
 				log.Printf("AuthenticationService - Received event type %s", event.Type)
+				res, ok := event.Object.(*tp.AuthenticationService)
 				if !ok {
-					err = fmt.Errorf("Watch error - object of unexpected type received")
+					err = fmt.Errorf("Watch error - object of unexpected type, %T, received", event.Object)
 				} else {
 					copy := res.DeepCopy()
 					kw.updateKind(copy)
