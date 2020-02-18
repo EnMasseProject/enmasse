@@ -5,12 +5,12 @@
 
 import * as React from "react";
 import { Wizard } from "@patternfly/react-core";
-import { AddressDefinitaion } from "pages/CreateAddress/CreateAddressDefinition";
+import { AddressDefinition } from "pages/CreateAddress/CreateAddressDefinition";
 import { PreviewAddress } from "./PreviewAddress";
 import { useApolloClient } from "@apollo/react-hooks";
 import { CREATE_ADDRESS } from "queries";
 import { IDropdownOption } from "components/common/FilterDropdown";
-import { regexp } from "types/Configs";
+import { messagingAddressNameRegexp } from "types/Configs";
 interface ICreateAddressProps {
   name: string;
   namespace: string;
@@ -44,7 +44,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
   const [isNameValid, setIsNameValid] = React.useState(true);
   const handleAddressChange = (name: string) => {
     setAddressName(name);
-    !regexp.test(name) ? setIsNameValid(false) : setIsNameValid(true);
+    !messagingAddressNameRegexp.test(name) ? setIsNameValid(false) : setIsNameValid(true);
   };
 
   const handleSave = async () => {
@@ -90,7 +90,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
     {
       name: "Definition",
       component: (
-        <AddressDefinitaion
+        <AddressDefinition
           addressspaceName={name}
           namespace={namespace}
           addressSpacePlan={addressSpacePlan}
