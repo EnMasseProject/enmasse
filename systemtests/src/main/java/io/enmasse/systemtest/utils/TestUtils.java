@@ -387,6 +387,7 @@ public class TestUtils {
         Endpoint endpoint = SystemtestsKubernetesApps.getChromeSeleniumAppEndpoint(Kubernetes.getInstance());
         ChromeOptions options = new ChromeOptions();
         options.setAcceptInsecureCerts(true);
+        options.addArguments("test-type", "--headless", "--no-sandbox", "--disable-dev-shm-usage", "--disable-extensions");
         return getRemoteDriver(endpoint.getHost(), endpoint.getPort(), options);
     }
 

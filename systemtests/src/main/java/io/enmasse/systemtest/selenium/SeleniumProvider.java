@@ -106,10 +106,10 @@ public class SeleniumProvider {
 
     public void setupDriver(WebDriver driver) {
         this.driver = driver;
+        this.driver.manage().window().setPosition(new Point(0, 0));
+        this.driver.manage().window().setSize(new Dimension(1920, 1080));
         angularDriver = new NgWebDriver((JavascriptExecutor) driver);
         driverWait = new WebDriverWait(driver, 10);
-        driver.manage().window().setPosition(new Point(0, 0));
-        driver.manage().window().setSize(new Dimension(1920, 1080));
         browserScreenshots.clear();
     }
 

@@ -316,8 +316,8 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Confirm')]"));
     }
 
-    private WebElement getAddressNameInput() {
-        return selenium.getDriver().findElement(By.id("address-name"));
+    private WebElement getAddressNameInput() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("address-name")));
     }
 
     private WebElement getAddressPlanDropDown() {
@@ -579,11 +579,11 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getCreateButtonTop());
     }
 
-    public void fillAddressName(String name) {
+    public void fillAddressName(String name) throws Exception {
         selenium.fillInputItem(getAddressNameInput(), name);
     }
 
-    public boolean isAddressNameInvalid() {
+    public boolean isAddressNameInvalid() throws Exception {
         String value = getAddressNameInput().getAttribute("aria-invalid");
         return value.equals("true");
     }
