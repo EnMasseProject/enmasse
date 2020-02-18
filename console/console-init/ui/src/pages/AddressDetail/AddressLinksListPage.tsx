@@ -60,7 +60,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
     ),
     { pollInterval: POLL_INTERVAL }
   );
-  if (loading) return <Loading />;
+  if (loading && !data) return <Loading />;
   if (error) console.log(error);
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }
@@ -68,7 +68,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   if (
     addresses &&
     addresses.addresses.length > 0 &&
-    addresses.addresses[0].links.total > 0
+    addresses.addresses[0].links.total >= 0
   ) {
     setAddressLinksTotal(addresses.addresses[0].links.total);
   }
@@ -100,11 +100,8 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
   };
   return (
     <>
-      {links && links.total > 0 ? (
-        <ClientList rows={clientRows} onSort={onSort} sortBy={sortBy} />
-      ) : (
-        <EmptyLinks />
-      )}
+      <ClientList rows={clientRows} onSort={onSort} sortBy={sortBy} />
+      {links && links.total > 0 ? <></> : <EmptyLinks />}
     </>
   );
 };

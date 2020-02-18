@@ -18,6 +18,7 @@ import { useHistory, useLocation } from "react-router";
 import { css } from "emotion";
 import { AddressLinksFilter } from "pages/AddressDetail/AddressLinksFilter";
 import { ISortBy } from "@patternfly/react-table";
+import { Divider } from "@patternfly/react-core/dist/js/experimental";
 interface IAddressLinksWithFilterAndPaginationProps {
   addressspace_name: string;
   addressspace_namespace: string;
@@ -119,6 +120,7 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
             {addresLinksTotal > 0 && renderPagination(page, perPage)}
           </GridItem>
         </Grid>
+        <Divider />
         <AddressLinksListPage
           page={page}
           perPage={perPage}

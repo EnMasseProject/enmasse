@@ -175,7 +175,6 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     addressSpaces: { total: 0, addressSpaces: [] }
   };
   setTotalAddressSpaces(addressSpaces.total);
-  console.log(addressSpaces);
   const addressSpacesList: IAddressSpace[] = addressSpaces.addressSpaces.map(
     addSpace => ({
       name: addSpace.metadata.name,
