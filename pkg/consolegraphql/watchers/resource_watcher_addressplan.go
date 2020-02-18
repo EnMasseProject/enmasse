@@ -111,7 +111,7 @@ func (kw *AddressPlanWatcher) Watch() error {
 		for running {
 			err := kw.doWatch(resource)
 			if err != nil {
-				log.Printf("AddressPlan - Restarting watch")
+				log.Printf("AddressPlan - Restarting watch - %v", err)
 			} else {
 				running = false
 			}
@@ -212,35 +212,38 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 	ch := resourceWatch.ResultChan()
 	for {
 		select {
-		case event := <-ch:
+		case event, chok := <-ch:
+			if !chok {
+				return fmt.Errorf("watch ended due to channel error")
+			} else if event.Type == watch.Error {
+				return fmt.Errorf("watch ended in error")
+			}
+
 			var err error
-			if event.Type == watch.Error {
-				err = fmt.Errorf("Watch ended in error")
+			log.Printf("AddressPlan - Received event type %s", event.Type)
+			res, ok := event.Object.(*tp.AddressPlan)
+			if !ok {
+				err = fmt.Errorf("Watch error - object of unexpected type, %T, received", event.Object)
 			} else {
-				res, ok := event.Object.(*tp.AddressPlan)
-				log.Printf("AddressPlan - Received event type %s", event.Type)
-				if !ok {
-					err = fmt.Errorf("Watch error - object of unexpected type received")
-				} else {
-					copy := res.DeepCopy()
-					kw.updateKind(copy)
-					switch event.Type {
-					case watch.Added:
-						err = kw.Cache.Add(kw.create(copy))
-					case watch.Modified:
-						updatingKey := kw.create(copy)
-						err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
-							if kw.update(copy, current) {
-								return copy, nil
-							} else {
-								return nil, nil
-							}
-						}, updatingKey)
-					case watch.Deleted:
-						err = kw.Cache.Delete(kw.create(copy))
-					}
+				copy := res.DeepCopy()
+				kw.updateKind(copy)
+				switch event.Type {
+				case watch.Added:
+					err = kw.Cache.Add(kw.create(copy))
+				case watch.Modified:
+					updatingKey := kw.create(copy)
+					err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
+						if kw.update(copy, current) {
+							return copy, nil
+						} else {
+							return nil, nil
+						}
+					}, updatingKey)
+				case watch.Deleted:
+					err = kw.Cache.Delete(kw.create(copy))
 				}
 			}
+
 			if err != nil {
 				return err
 			}
