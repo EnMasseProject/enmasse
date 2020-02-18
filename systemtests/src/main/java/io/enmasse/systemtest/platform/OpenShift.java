@@ -18,11 +18,13 @@ import io.fabric8.openshift.api.model.RouteBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfig;
+import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import org.slf4j.Logger;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Handles interaction with openshift cluster
@@ -42,6 +44,7 @@ public class OpenShift extends Kubernetes {
             // Workaround https://github.com/square/okhttp/issues/3146
             httpClient = httpClient.newBuilder()
                     .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                    .connectionPool(new ConnectionPool(0, 0, TimeUnit.SECONDS))
                     .connectTimeout(environment.getKubernetesApiConnectTimeout())
                     .writeTimeout(environment.getKubernetesApiWriteTimeout())
                     .readTimeout(environment.getKubernetesApiReadTimeout())
