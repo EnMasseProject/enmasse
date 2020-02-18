@@ -123,6 +123,7 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 			{Name: "HONO_LORA_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(adapter.IsNativeTlsRequired(config))},
 		}
 
+		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)
 
 		if err := AppendHonoAdapterEnvs(config, container, findAdapter("lorawan")); err != nil {

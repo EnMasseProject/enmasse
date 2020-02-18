@@ -125,6 +125,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 			{Name: "HONO_MQTT_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(adapter.IsNativeTlsRequired(config))},
 		}
 
+		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)
 
 		if err := AppendHonoAdapterEnvs(config, container, findAdapter("mqtt")); err != nil {
