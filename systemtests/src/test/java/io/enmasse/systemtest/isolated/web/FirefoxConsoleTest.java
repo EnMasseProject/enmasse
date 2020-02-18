@@ -4,25 +4,17 @@
  */
 package io.enmasse.systemtest.isolated.web;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
-import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SeleniumFirefox
 class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
@@ -34,110 +26,22 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
 
     @Test
     void testAddressSpaceSnippetStandard() throws Exception {
-        AddressSpace addressSpace = new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withName("test-address-space")
-                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withType(AddressSpaceType.STANDARD.toString())
-                .withPlan(AddressSpacePlans.STANDARD_MEDIUM)
-                .withNewAuthenticationService()
-                .withName("standard-authservice")
-                .endAuthenticationService()
-                .endSpec()
-                .build();
-
-        doTestAddressSpaceDeploymentSnippet(addressSpace);
-        assertTrue(AddressSpaceUtils.addressSpaceExists(Kubernetes.getInstance().getInfraNamespace(),
-                addressSpace.getMetadata().getName()));
+        doTestAddressSpaceSnippet(AddressSpaceType.STANDARD);
     }
 
     @Test
     void testAddressSnippetStandard() throws Exception {
-        AddressSpace addressSpace = new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withName("test-address-space-standard")
-                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withType(AddressSpaceType.STANDARD.toString())
-                .withPlan(AddressSpacePlans.STANDARD_MEDIUM)
-                .withNewAuthenticationService()
-                .withName("standard-authservice")
-                .endAuthenticationService()
-                .endSpec()
-                .build();
-        isolatedResourcesManager.createAddressSpace(addressSpace);
-
-        Address address = new AddressBuilder()
-                .withNewMetadata()
-                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
-                .endMetadata()
-                .withNewSpec()
-                .withAddress("test-queue")
-                .withType("queue")
-                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
-                .endSpec()
-                .build();
-        doTestAddressDeploymentSnippet(addressSpace, address);
-        AddressUtils.waitForDestinationsReady(address);
-        AddressUtils.isAddressReady(addressSpace, address);
+        doTestAddressSnippet(AddressSpaceType.STANDARD, DestinationPlan.STANDARD_SMALL_QUEUE);
     }
 
     @Test
     void testAddressSpaceSnippetBrokered() throws Exception {
-        AddressSpace addressSpace = new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withName("test-address-space-brokered")
-                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withType(AddressSpaceType.BROKERED.toString())
-                .withPlan(AddressSpacePlans.BROKERED)
-                .withNewAuthenticationService()
-                .withName("standard-authservice")
-                .endAuthenticationService()
-                .endSpec()
-                .build();
-
-        doTestAddressSpaceDeploymentSnippet(addressSpace);
-        assertTrue(AddressSpaceUtils.addressSpaceExists(Kubernetes.getInstance().getInfraNamespace(),
-                addressSpace.getMetadata().getName()));
+        doTestAddressSpaceSnippet(AddressSpaceType.BROKERED);
     }
 
     @Test
     void testAddressSnippetBrokered() throws Exception {
-        AddressSpace addressSpace = new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withName("test-address-space-brokered")
-                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withType(AddressSpaceType.BROKERED.toString())
-                .withPlan(AddressSpacePlans.BROKERED)
-                .withNewAuthenticationService()
-                .withName("standard-authservice")
-                .endAuthenticationService()
-                .endSpec()
-                .build();
-        isolatedResourcesManager.createAddressSpace(addressSpace);
-
-        Address address = new AddressBuilder()
-                .withNewMetadata()
-                    .withNamespace(Kubernetes.getInstance().getInfraNamespace())
-                    .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
-                .endMetadata()
-                .withNewSpec()
-                    .withAddress("test-queue")
-                    .withType("queue")
-                    .withPlan(DestinationPlan.BROKERED_QUEUE)
-                .endSpec()
-                .build();
-        doTestAddressDeploymentSnippet(addressSpace, address);
-        AddressUtils.waitForDestinationsReady(address);
-        AddressUtils.isAddressReady(addressSpace, address);
+        doTestAddressSnippet(AddressSpaceType.BROKERED, DestinationPlan.BROKERED_QUEUE);
     }
 
     @Test
