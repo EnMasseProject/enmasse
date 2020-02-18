@@ -582,7 +582,7 @@ public class ConsoleWebPage implements IWebPage {
         createAddress(address, true);
     }
 
-    public void prepareAddressCreation(Address address) {
+    public void prepareAddressCreation(Address address) throws Exception{
         selenium.clickOnItem(getCreateButtonTop());
         selenium.fillInputItem(getAddressNameInput(), address.getSpec().getAddress());
         selenium.clickOnItem(getAddressTypeDropDown(), "Address Type dropdown");
