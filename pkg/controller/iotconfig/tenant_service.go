@@ -94,6 +94,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 			{Name: "ENMASSE_IOT_TENANT_ENDPOINT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.IsNativeTlsRequired(config))},
 		}
 
+		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)
 
 		if err := AppendTrustStores(config, container, []string{"ENMASSE_IOT_AUTH_TRUST_STORE_PATH"}); err != nil {

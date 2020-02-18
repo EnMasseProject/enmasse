@@ -127,6 +127,7 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 			{Name: "HONO_REGISTRY_SVC_SAVE_TO_FILE", Value: "true"},
 		}
 
+		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)
 
 		// set max devices per tenant limit
