@@ -55,7 +55,10 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-tenant-service"
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, nil)
 
+	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "tenant-service", func(container *corev1.Container) error {
+
+		tracingContainer = container
 
 		if err := install.SetContainerImage(container, "iot-tenant-service", config); err != nil {
 			return err
@@ -114,6 +117,10 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 	if err != nil {
 		return err
 	}
+
+	// tracing
+
+	SetupTracing(config, deployment, tracingContainer)
 
 	// volumes
 

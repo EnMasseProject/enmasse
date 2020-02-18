@@ -33,6 +33,22 @@ type IoTConfigSpec struct {
 
 	ServicesConfig ServicesConfig `json:"services"`
 	AdaptersConfig AdaptersConfig `json:"adapters"`
+	Tracing        TracingConfig  `json:"tracing"`
+}
+
+type TracingConfig struct {
+	Strategy TracingStrategy `json:"strategy,omitempty"`
+}
+
+type TracingStrategy struct {
+	Sidecar   *SidecarTracingStrategy   `json:"sidecar,omitempty"`
+	DaemonSet *DaemonSetTracingStrategy `json:"daemonSet,omitempty"`
+}
+
+type SidecarTracingStrategy struct {
+}
+
+type DaemonSetTracingStrategy struct {
 }
 
 type JavaContainerDefaults struct {

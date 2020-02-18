@@ -7,6 +7,7 @@ package iotconfig
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -62,12 +63,92 @@ func AppendEnvVarValue(container *corev1.Container, name string, value string) {
 	})
 }
 
+// block injection of sidecar variables, for containers not using jaeger
+func BlockTracingSidecarConfig(config *iotv1alpha1.IoTConfig, container *corev1.Container) {
+
+	if config.Spec.Tracing.Strategy.Sidecar != nil || config.Spec.Tracing.Strategy.DaemonSet != nil {
+
+		install.ApplyEnvSimple(container, "JAEGER_SERVICE_NAME", "")
+		install.ApplyEnvSimple(container, "JAEGER_PROPAGATION", "")
+
+	} else {
+
+		install.RemoveEnv(container, "JAEGER_SERVICE_NAME")
+		install.RemoveEnv(container, "JAEGER_PROPAGATION")
+
+	}
+
+}
+
+// setup tracing for a container
+func SetupTracing(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, container *corev1.Container) {
+
+	if config.Spec.Tracing.Strategy.Sidecar != nil {
+
+		// sidecar
+
+		install.ApplyEnvSimple(container, "JAEGER_SERVICE_NAME", deployment.Name)
+		install.ApplyEnvSimple(container, "JAEGER_PROPAGATION", "jaeger,b3")
+		install.ApplyEnvSimple(container, "JAEGER_AGENT_HOST", "localhost")
+
+	} else if config.Spec.Tracing.Strategy.DaemonSet != nil {
+
+		// daemon set
+
+		install.ApplyEnvSimple(container, "JAEGER_SERVICE_NAME", deployment.Name)
+		install.ApplyEnvSimple(container, "JAEGER_PROPAGATION", "jaeger,b3")
+		install.ApplyEnv(container, "JAEGER_AGENT_HOST", func(envvar *corev1.EnvVar) {
+			envvar.Value = ""
+			envvar.ValueFrom = &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "status.hostIP",
+				},
+			}
+		})
+
+	} else {
+
+		// disabled
+
+		install.RemoveEnv(container, "JAEGER_AGENT_HOST")
+		install.RemoveEnv(container, "JAEGER_SERVICE_NAME")
+		install.RemoveEnv(container, "JAEGER_PROPAGATION")
+
+	}
+
+	if config.Spec.Tracing.Strategy.Sidecar != nil {
+
+		if deployment.Annotations["sidecar.jaegertracing.io/inject"] == "" {
+			// we only set this to true when unset, because the tracing operator
+			// will replace this with the actual tracing instance
+			deployment.Annotations["sidecar.jaegertracing.io/inject"] = "true"
+		}
+
+	} else {
+
+		delete(deployment.Labels, "sidecar.jaegertracing.io/injected")
+		delete(deployment.Annotations, "sidecar.jaegertracing.io/inject")
+
+		for i, c := range deployment.Spec.Template.Spec.Containers {
+			if c.Name == "jaeger-agent" {
+				log.Info(fmt.Sprintf("Removing jaeger tracing sidecar from deployment: %s", deployment.Name))
+				deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers[:i], deployment.Spec.Template.Spec.Containers[i+1:]...)
+				break
+			}
+		}
+
+	}
+
+}
+
 func AppendStandardHonoJavaOptions(container *corev1.Container) {
+
 	AppendEnvVarValue(
 		container,
 		"JAVA_APP_OPTS",
 		"-Djava.net.preferIPv4Stack=true -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory",
 	)
+
 }
 
 func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig iotv1alpha1.ServiceConfig, configCtx *cchange.ConfigChangeRecorder) {
