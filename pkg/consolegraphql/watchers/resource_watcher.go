@@ -32,12 +32,7 @@ type ResourceWatcher interface {
 type WatcherOption func(watcher ResourceWatcher) error
 
 func atomicInc(i *int32) {
-	for {
-		val := atomic.LoadInt32(i)
-		if atomic.CompareAndSwapInt32(i, val, val+1) {
-			break
-		}
-	}
+	atomic.AddInt32(i, 1)
 }
 func atomicGet(i *int32) int32 {
 	return atomic.LoadInt32(i)
