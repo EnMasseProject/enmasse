@@ -13,6 +13,8 @@ node('master') {
                 || env.ghprbCommentBody.contains('OCP4')
                 || env.ghprbCommentBody.contains('crc')) {
             NODE_LABEL = "enmasse-crc"
+        } else if (env.ghprbCommentBody.contains('agent=debug')) {
+            NODE_LABEL = "enmasse-debug"
         } else {
             NODE_LABEL = params.AGENT_LABEL
         }
