@@ -50,9 +50,10 @@ spec:
     priority: 0
     type: date
     JSONPath: .metadata.creationTimestamp
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
-      type: object
       description: AddressSpace is a group of addresses that can be accessed through a single connection (per protocol). An AddressSpace can support multiple protocols, as defined by the type. This resource is created by messaging tenants.
       properties:
         spec:
@@ -364,6 +365,9 @@ spec:
               description: "Status and error messages for address space."
               items:
                 type: string
+            infraUuid:
+              description: "The UUID applied to the infrastructure for address space."
+              type: string
             caCert:
               description: "CA certificate for endpoints."
               type: string

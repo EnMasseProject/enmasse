@@ -53,6 +53,8 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
     @ValidBase64
     private String caCert;
 
+    private String infraUuid;
+
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<AddressSpaceStatusConnector> connectors = new ArrayList<>();
 
@@ -122,6 +124,7 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
         return ready == status.ready &&
                 phase == status.phase &&
                 Objects.equals(caCert, status.caCert) &&
+                Objects.equals(infraUuid, status.infraUuid) &&
                 Objects.equals(endpointStatuses, status.endpointStatuses) &&
                 Objects.equals(messages, status.messages) &&
                 Objects.equals(connectors, status.connectors) &&
@@ -139,6 +142,7 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
                 .append("{ready=").append(ready)
                 .append(",").append("phase=").append(phase)
                 .append(",").append("caCert=").append(caCert)
+                .append(",").append("infraUuid=").append(infraUuid)
                 .append(",").append("endpointStatuses=").append(endpointStatuses)
                 .append(",").append("messages=").append(messages)
                 .append(",").append("connectors=").append(connectors)
@@ -177,4 +181,13 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
     public void setRouters(List<AddressSpaceStatusRouter> routers) {
         this.routers = routers;
     }
+
+    public String getInfraUuid() {
+        return infraUuid;
+    }
+
+    public void setInfraUuid(String infraUuid) {
+        this.infraUuid = infraUuid;
+    }
+
 }

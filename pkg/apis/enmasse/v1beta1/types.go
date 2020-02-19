@@ -23,24 +23,24 @@ import (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type AddressSpaceSchema struct {
-       metav1.TypeMeta   `json:",inline"`
-       metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-       Spec    AddressSpaceSchemaSpec   `json:"spec"`
+	Spec AddressSpaceSchemaSpec `json:"spec"`
 }
 
 type AddressSpaceSchemaSpec struct {
-	   AuthenticationServices []string `json:"authenticationServices,omitempty"`
-       Description            string   `json:"description,omitempty"`
+	AuthenticationServices []string `json:"authenticationServices,omitempty"`
+	Description            string   `json:"description,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type AddressSpaceSchemaList struct {
-       metav1.TypeMeta `json:",inline"`
-       metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 
-       Items []AddressSpaceSchema `json:"items"`
+	Items []AddressSpaceSchema `json:"items"`
 }
 
 // ** AuthenticationService
@@ -49,11 +49,10 @@ type AddressSpaceSchemaList struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type AuthenticationService struct {
-
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Type string `json:"type,omitempty"`
-	Name string `json:"name,omitempty"`
+	Type              string `json:"type,omitempty"`
+	Name              string `json:"name,omitempty"`
 
 	Overrides *AuthenticationServiceSettings `json:"overrides,omitempty"`
 }
@@ -70,10 +69,10 @@ type AuthenticationServiceSettings struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type AuthenticationServiceList struct {
-       metav1.TypeMeta `json:",inline"`
-       metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 
-       Items []AuthenticationService `json:"items"`
+	Items []AuthenticationService `json:"items"`
 }
 
 // ** AddressSpace
@@ -161,6 +160,7 @@ type AddressSpaceStatus struct {
 	Phase          string            `json:"phase,omitempty"`
 	Messages       []string          `json:"messages,omitempty"`
 	CACertificate  []byte            `json:"caCert,omitempty"`
+	InfraUuid      string            `json:"infraUuid,omitempty"`
 	EndpointStatus []EndpointStatus  `json:"endpointStatuses,omitempty"`
 	Connectors     []ConnectorStatus `json:"connectors,omitempty"`
 	Routers        []RouterStatus    `json:"routers,omitempty"`
@@ -190,7 +190,7 @@ type ConnectorStatus struct {
 
 type RouterStatus struct {
 	Id          string   `json:"id"`
-	Neighbors  []string `json:"neighbors,omitempty"`
+	Neighbors   []string `json:"neighbors,omitempty"`
 	Undelivered int      `json:"undelivered"`
 }
 
