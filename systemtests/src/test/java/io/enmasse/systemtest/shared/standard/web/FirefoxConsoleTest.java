@@ -224,26 +224,10 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
         doTestDeleteFilteredAddress(getSharedAddressSpace());
     }
 
-//    @Test
-//    void testFilterAddressWithRegexSymbols() throws Exception {
-//        doTestFilterAddressWithRegexSymbols();
-//    }
-//
-//    @Test
-//    void testRegexAlertBehavesConsistently() throws Exception {
-//        doTestRegexAlertBehavesConsistently();
-//    }
-
     @Test
     void testSortAddressesByName() throws Exception {
         doTestSortAddressesByName(getSharedAddressSpace());
     }
-
-//    @Test
-//    @ExternalClients
-//    void testSortAddressesByClients() throws Exception {
-//        doTestSortAddressesByClients(getSharedAddressSpace());
-//    }
 
     @Test
     @ExternalClients
@@ -268,32 +252,6 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     void testSortConnectionsByReceivers() throws Exception {
         doTestSortConnectionsByReceivers(getSharedAddressSpace());
     }
-
-//    @Test
-//    @ExternalClients
-//    void testFilterConnectionsByEncrypted() throws Exception {
-//        doTestFilterConnectionsByEncrypted();
-//    }
-//
-//    @Test
-//    @ExternalClients
-//    @Disabled("related issue: #667")
-//    void testFilterConnectionsByUser() throws Exception {
-//        doTestFilterConnectionsByUser();
-//    }
-
-    //hostname tests doesn't make much sense
-//    @Test
-//    @ExternalClients
-//    void testFilterConnectionsByHostname() throws Exception {
-//        doTestFilterConnectionsByHostname(getSharedAddressSpace());
-//    }
-//
-//    @Test
-//    @ExternalClients
-//    void testSortConnectionsByHostname() throws Exception {
-//        doTestSortConnectionsByHostname(getSharedAddressSpace());
-//    }
 
     @Test
     @ExternalClients
