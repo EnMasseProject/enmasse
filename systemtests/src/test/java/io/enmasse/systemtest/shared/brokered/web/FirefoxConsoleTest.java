@@ -156,8 +156,8 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
     }
 
     @Test
-    void testCreateAddressWithSpecialCharsShowsErrorMessage() throws Exception {
-        doTestCreateAddressWithSpecialCharsShowsErrorMessage(getSharedAddressSpace());
+    void testValidAddressNames() throws Exception {
+        doTestValidAddressNames(getSharedAddressSpace());
     }
 
 }
