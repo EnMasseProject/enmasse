@@ -39,6 +39,7 @@ type AgentWatcher struct {
 
 	developmentMode      bool
 	RouteClientInterface *routev1.RouteV1Client
+	restartCounter       int32
 }
 
 func NewAgentWatcher(c cache.Cache, namespace string, creator AgentCollectorCreator, developmentMode bool, options ...WatcherOption) (*AgentWatcher, error) {
@@ -126,6 +127,7 @@ func (clw *AgentWatcher) Watch() error {
 			err := clw.doWatch(resource)
 			if err != nil {
 				log.Printf("Agent - Restarting watch - %v", err)
+				atomicInc(&clw.restartCounter)
 			} else {
 				running = false
 			}
@@ -149,6 +151,10 @@ func (clw *AgentWatcher) AwaitWatching() {
 func (clw *AgentWatcher) Shutdown() {
 	close(clw.stopchan)
 	<-clw.stoppedchan
+}
+
+func (clw *AgentWatcher) GetRestartCount() int32 {
+	return atomicGet(&clw.restartCounter)
 }
 
 func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {

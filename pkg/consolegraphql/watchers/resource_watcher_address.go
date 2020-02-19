@@ -29,6 +29,7 @@ type AddressWatcher struct {
 	stoppedchan     chan struct{}
 	create          func(*tp.Address) interface{}
 	update          func(*tp.Address, interface{}) bool
+	restartCounter  int32
 }
 
 func NewAddressWatcher(c cache.Cache, options ...WatcherOption) (ResourceWatcher, error) {
@@ -112,6 +113,7 @@ func (kw *AddressWatcher) Watch() error {
 			err := kw.doWatch(resource)
 			if err != nil {
 				log.Printf("Address - Restarting watch - %v", err)
+				atomicInc(&kw.restartCounter)
 			} else {
 				running = false
 			}
@@ -129,6 +131,10 @@ func (kw *AddressWatcher) AwaitWatching() {
 func (kw *AddressWatcher) Shutdown() {
 	close(kw.stopchan)
 	<-kw.stoppedchan
+}
+
+func (kw *AddressWatcher) GetRestartCount() int32 {
+	return atomicGet(&kw.restartCounter)
 }
 
 func (kw *AddressWatcher) doWatch(resource cp.AddressInterface) error {
@@ -168,10 +174,10 @@ func (kw *AddressWatcher) doWatch(resource cp.AddressInterface) error {
 			return fmt.Errorf("failed to generate key for new object %+v", copy)
 		}
 		if existing, ok := curr[key]; ok {
-			err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
-				if kw.update(copy, current) {
+			err = kw.Cache.Update(func(target interface{}) (interface{}, error) {
+				if kw.update(copy, target) {
 					updated++
-					return copy, nil
+					return target, nil
 				} else {
 					unchanged++
 					return nil, nil
@@ -232,9 +238,9 @@ func (kw *AddressWatcher) doWatch(resource cp.AddressInterface) error {
 					err = kw.Cache.Add(kw.create(copy))
 				case watch.Modified:
 					updatingKey := kw.create(copy)
-					err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
-						if kw.update(copy, current) {
-							return copy, nil
+					err = kw.Cache.Update(func(target interface{}) (interface{}, error) {
+						if kw.update(copy, target) {
+							return target, nil
 						} else {
 							return nil, nil
 						}

@@ -15,11 +15,61 @@
 
 package watchers
 
+import (
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
+	"reflect"
+	"sync/atomic"
+)
+
 type ResourceWatcher interface {
-	//NewClientForConfig(config *rest.Config) (interface{}, error)
 	Watch() error
 	AwaitWatching()
 	Shutdown()
+	GetRestartCount() int32
 }
 
 type WatcherOption func(watcher ResourceWatcher) error
+
+func atomicInc(i *int32) {
+	for {
+		val := atomic.LoadInt32(i)
+		if atomic.CompareAndSwapInt32(i, val, val+1) {
+			break
+		}
+	}
+}
+func atomicGet(i *int32) int32 {
+	return atomic.LoadInt32(i)
+}
+
+func AddressCreate(space *v1beta1.Address) interface{} {
+	return &consolegraphql.AddressHolder{
+		Address: *space,
+	}
+}
+
+func AddressUpdate(value *v1beta1.Address, existing interface{}) bool {
+	ash := existing.(*consolegraphql.AddressHolder)
+	if reflect.DeepEqual(ash.Address, *value) {
+		return false
+	} else {
+		value.DeepCopyInto(&ash.Address)
+		return true
+	}
+}
+
+func AddressSpaceCreate(space *v1beta1.AddressSpace) interface{} {
+	return &consolegraphql.AddressSpaceHolder{
+		AddressSpace: *space,
+	}
+}
+func AddressSpaceUpdate(value *v1beta1.AddressSpace, existing interface{}) bool {
+	ash := existing.(*consolegraphql.AddressSpaceHolder)
+	if reflect.DeepEqual(ash.AddressSpace, *value) {
+		return false
+	} else {
+		value.DeepCopyInto(&ash.AddressSpace)
+		return true
+	}
+}

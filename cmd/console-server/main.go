@@ -14,10 +14,8 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/handler"
 	"github.com/alexedwards/scs/v2"
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
@@ -36,7 +34,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 	"log"
 	"net/http"
-	"reflect"
 	"time"
 )
 
@@ -252,41 +249,11 @@ http://localhost:` + port + `/graphql
 	creators := []func() (watchers.ResourceWatcher, error){
 		func() (watchers.ResourceWatcher, error) {
 			return watchers.NewAddressSpaceWatcher(objectCache, watchers.AddressSpaceWatcherConfig(config),
-				watchers.AddressSpaceWatcherFactory(
-					func(space *v1beta1.AddressSpace) interface{} {
-						return &consolegraphql.AddressSpaceHolder{
-							AddressSpace: *space,
-						}
-					},
-					func(value *v1beta1.AddressSpace, existing interface{}) bool {
-						ash := existing.(*consolegraphql.AddressSpaceHolder)
-						if reflect.DeepEqual(ash.AddressSpace, *value) {
-							return false
-						} else {
-							value.DeepCopyInto(&ash.AddressSpace)
-							return true
-						}
-					},
-				))
+				watchers.AddressSpaceWatcherFactory(watchers.AddressSpaceCreate, watchers.AddressSpaceUpdate))
 		},
 		func() (watchers.ResourceWatcher, error) {
 			return watchers.NewAddressWatcher(objectCache, watchers.AddressWatcherConfig(config),
-				watchers.AddressWatcherFactory(
-					func(space *v1beta1.Address) interface{} {
-						return &consolegraphql.AddressHolder{
-							Address: *space,
-						}
-					},
-					func(value *v1beta1.Address, existing interface{}) bool {
-						ash := existing.(*consolegraphql.AddressHolder)
-						if reflect.DeepEqual(ash.Address, *value) {
-							return false
-						} else {
-							value.DeepCopyInto(&ash.Address)
-							return true
-						}
-					},
-				))
+				watchers.AddressWatcherFactory(watchers.AddressCreate, watchers.AddressUpdate))
 		},
 		func() (watchers.ResourceWatcher, error) {
 			return watchers.NewNamespaceWatcher(objectCache, watchers.NamespaceWatcherConfig(config))
