@@ -22,7 +22,7 @@ import { StyleSheet, css } from "@patternfly/react-styles";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
-import { ADDRESS_COMMAND_PRIVIEW_DETAIL } from "queries";
+import { ADDRESS_COMMAND_PREVIEW_DETAIL } from "queries";
 
 export interface IAddressPreview {
   name?: string;
@@ -49,18 +49,16 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   namespace,
   addressspace
 }) => {
-  const { data, loading, error } = useQuery(ADDRESS_COMMAND_PRIVIEW_DETAIL, {
+  const { data, loading, error } = useQuery(ADDRESS_COMMAND_PREVIEW_DETAIL, {
     variables: {
       a: {
         metadata: {
-          name: addressspace + "." + name,
           namespace: namespace
         },
         spec: {
           plan: plan ? plan.toLowerCase() : "",
           type: type ? type.toLowerCase() : "",
           ...(topic && topic.trim() !== "" && { topic: topic }),
-          addressSpace: addressspace,
           address: name
         }
       },
@@ -68,7 +66,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
     }
   });
   if (loading) return <Loading />;
-  if (error) console.log("Address Priview Query Error", error);
+  if (error) console.log("Address Preview Query Error", error);
 
   return (
     <PageSection variant={PageSectionVariants.light}>
