@@ -7,6 +7,7 @@ package io.enmasse.systemtest.isolated.web;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumChrome;
@@ -53,6 +54,27 @@ class ChromeConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
                 .endSpec()
                 .build());
     }
+
+    @Test
+    void testAddressSpaceSnippetStandard() throws Exception {
+        doTestAddressSpaceSnippet(AddressSpaceType.STANDARD);
+    }
+
+    @Test
+    void testAddressSnippetStandard() throws Exception {
+        doTestAddressSnippet(AddressSpaceType.STANDARD, DestinationPlan.STANDARD_SMALL_QUEUE);
+    }
+
+    @Test
+    void testAddressSpaceSnippetBrokered() throws Exception {
+        doTestAddressSpaceSnippet(AddressSpaceType.BROKERED);
+    }
+
+    @Test
+    void testAddressSnippetBrokered() throws Exception {
+       doTestAddressSnippet(AddressSpaceType.BROKERED, DestinationPlan.BROKERED_QUEUE);
+    }
+
 
     @Test
     void testCreateAddrSpaceWithCustomAuthService() throws Exception {

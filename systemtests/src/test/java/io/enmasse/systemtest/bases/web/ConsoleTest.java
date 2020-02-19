@@ -18,6 +18,7 @@ import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.clients.ClientUtils.ClientAttacher;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
@@ -103,6 +104,16 @@ public abstract class ConsoleTest extends TestBase {
         waitUntilAddressSpaceActive(addressSpace);
         consolePage.deleteAddressSpace(addressSpace);
     }
+
+    protected void doTestAddressSpaceSnippet(AddressSpaceType addressSpaceType) throws Exception {
+        AddressSpace addressSpace = generateAddressSpaceObject(addressSpaceType);
+
+        getAndExecAddressSpaceDeploymentSnippet(addressSpace);
+        assertTrue(AddressSpaceUtils.addressSpaceExists(Kubernetes.getInstance().getInfraNamespace(),
+                addressSpace.getMetadata().getName()));
+        IsolatedResourcesManager.getInstance().deleteAddressSpace(addressSpace);
+    }
+
 
     protected void doTestCreateAddrSpaceWithCustomAuthService() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
@@ -292,6 +303,19 @@ public abstract class ConsoleTest extends TestBase {
     //============================================================================================
     //============================ do test methods for address part ==============================
     //============================================================================================
+
+    protected void doTestAddressSnippet(AddressSpaceType addressSpaceType, String destinationPlan) throws Exception {
+        IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
+        AddressSpace addressSpace = generateAddressSpaceObject(addressSpaceType);
+        isolatedResourcesManager.createAddressSpace(addressSpace);
+
+        Address address = generateAddressObject(addressSpace, destinationPlan);
+        getAndExecAddressDeploymentSnippet(addressSpace, address);
+        AddressUtils.waitForDestinationsReady(address);
+        AddressUtils.isAddressReady(addressSpace, address);
+        isolatedResourcesManager.deleteAddresses(address);
+        isolatedResourcesManager.deleteAddressSpace(addressSpace);
+    }
 
     protected void doTestCreateDeleteAddress(AddressSpace addressSpace, Address... destinations) throws Exception {
         Kubernetes.getInstance().getAddressClient().inNamespace(addressSpace.getMetadata().
@@ -929,9 +953,58 @@ public abstract class ConsoleTest extends TestBase {
         }
     }
 
+    protected void getAndExecAddressSpaceDeploymentSnippet(AddressSpace addressSpace) throws Exception {
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.prepareAddressSpaceInstall(addressSpace);
+        String snippet = consolePage.getDeploymentSnippet();
+        KubeCMDClient.createCR(Kubernetes.getInstance().getInfraNamespace(), snippet);
+    }
+
+    protected void getAndExecAddressDeploymentSnippet(AddressSpace addressSpace, Address address) throws Exception {
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
+        consolePage.prepareAddressCreation(address);
+        String snippet = consolePage.getDeploymentSnippet();
+        KubeCMDClient.createCR(Kubernetes.getInstance().getInfraNamespace(), snippet);
+    }
+
     //============================================================================================
     //============================ Help methods ==================================================
     //============================================================================================
+
+    private AddressSpace generateAddressSpaceObject(AddressSpaceType addressSpaceType) {
+        return new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-address-space-" + addressSpaceType.toString())
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(addressSpaceType.toString())
+                .withPlan(addressSpaceType.toString().equals(AddressSpaceType.BROKERED.toString()) ?
+                        AddressSpacePlans.BROKERED : AddressSpacePlans.STANDARD_MEDIUM)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+    }
+
+    private Address generateAddressObject(AddressSpace addressSpace, String destinationPlan) {
+        return new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("test-queue")
+                .withType("queue")
+                .withPlan(destinationPlan)
+                .endSpec()
+                .build();
+    }
+
     private List<Address> generateQueueTopicList(AddressSpace addressspace, String infix, IntStream range) {
         List<Address> addresses = new ArrayList<>();
         range.forEach(i -> {
@@ -1002,4 +1075,5 @@ public abstract class ConsoleTest extends TestBase {
                 });
         assertTrue(active, String.format("Address space %s not marked active in UI within timeout", name));
     }
+
 }

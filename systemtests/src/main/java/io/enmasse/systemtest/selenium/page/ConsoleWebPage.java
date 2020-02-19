@@ -455,6 +455,29 @@ public class ConsoleWebPage implements IWebPage {
         }
     }
 
+    public String getDeploymentSnippet() throws InterruptedException {
+        final int RETRY_COUNTER = 5;
+
+        StringBuilder addressSpaceDeployment = new StringBuilder();
+        for (int i = 0; i < RETRY_COUNTER && addressSpaceDeployment.toString().isEmpty(); i++) {
+            List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
+
+            for (WebElement currentElement : snippetElements) {
+                if (currentElement.getText().contains("kubectl")
+                        || currentElement.getText().isEmpty() || currentElement.getText().equals("EOF")) {
+                    continue;
+                } else if (addressSpaceDeployment.length() == 0) {
+                    addressSpaceDeployment = new StringBuilder(currentElement.getText());
+                } else {
+                    addressSpaceDeployment.append(System.lineSeparator()).append(currentElement.getText());
+                }
+
+            }
+            Thread.sleep(2000);
+        }
+        return addressSpaceDeployment.toString();
+    }
+
     public void openAddressList(AddressSpace addressSpace) throws Exception {
         AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getConsoleRoute());
@@ -489,7 +512,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(selenium.getDriver().findElement(By.xpath("//button[@value='" + authService + "']")), authService);
     }
 
-    public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+    public void prepareAddressSpaceInstall(AddressSpace addressSpace) throws Exception {
         selenium.clickOnItem(getCreateButtonTop());
         selectNamespace(addressSpace.getMetadata().getNamespace());
         selenium.fillInputItem(getAddressSpaceNameInput(), addressSpace.getMetadata().getName());
@@ -498,6 +521,10 @@ public class ConsoleWebPage implements IWebPage {
         selectPlan(addressSpace.getSpec().getPlan());
         selectAuthService(addressSpace.getSpec().getAuthenticationService().getName());
         selenium.clickOnItem(getNextButton());
+    }
+
+    public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        prepareAddressSpaceInstall(addressSpace);
         selenium.clickOnItem(getFinishButton());
         selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.takeScreenShot();
@@ -555,8 +582,7 @@ public class ConsoleWebPage implements IWebPage {
         createAddress(address, true);
     }
 
-    public void createAddress(Address address, boolean waitForReady) throws Exception {
-        log.info("Address {} will be created using web console", address);
+    public void prepareAddressCreation(Address address) throws Exception{
         selenium.clickOnItem(getCreateButtonTop());
         selenium.fillInputItem(getAddressNameInput(), address.getSpec().getAddress());
         selenium.clickOnItem(getAddressTypeDropDown(), "Address Type dropdown");
@@ -568,6 +594,11 @@ public class ConsoleWebPage implements IWebPage {
             selenium.clickOnItem(getTopicSelectDropDown().findElement(By.id("address-definition-topic-dropdown-item" + address.getSpec().getTopic())));
         }
         selenium.clickOnItem(getNextButton());
+    }
+
+    public void createAddress(Address address, boolean waitForReady) throws Exception {
+        log.info("Address {} will be created using web console", address);
+        prepareAddressCreation(address);
         selenium.clickOnItem(getFinishButton());
         selenium.waitUntilItemPresent(30, () -> getAddressItem(address));
         if (waitForReady) {

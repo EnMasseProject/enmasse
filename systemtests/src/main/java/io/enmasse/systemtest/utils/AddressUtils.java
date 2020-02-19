@@ -147,6 +147,15 @@ public class AddressUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
+    public static boolean isAddressReady(AddressSpace addressSpace, Address address) {
+        for (Address currentAdd : getAddresses(addressSpace)) {
+            if(currentAdd.getMetadata().getName().equals(address.getMetadata().getName())
+                    && currentAdd.getStatus().isReady()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static boolean isAddressReady(Address address) {
         return address.getStatus().isReady();
