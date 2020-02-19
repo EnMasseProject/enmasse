@@ -100,6 +100,7 @@ type {{ .Name }}Watcher struct {
 	stoppedchan     chan struct{}
 	create          func(*tp.{{ .Name }}) interface{}
 	update          func(*tp.{{ .Name }}, interface{}) bool
+	restartCounter  int32
 }
 
 func New{{ .Name }}Watcher(c cache.Cache, {{if not .WatchAll}}namespace string, {{end}}options ...WatcherOption) (ResourceWatcher, error) {
@@ -183,6 +184,7 @@ func (kw *{{ .Name }}Watcher) Watch() error {
 			err := kw.doWatch(resource)
 			if err != nil {
 				log.Printf("{{ .Name }} - Restarting watch - %v", err)
+				atomicInc(&kw.restartCounter)
 			} else {
 				running = false
 			}
@@ -200,6 +202,10 @@ func (kw *{{ .Name }}Watcher) AwaitWatching() {
 func (kw *{{ .Name }}Watcher) Shutdown() {
 	close(kw.stopchan)
 	<-kw.stoppedchan
+}
+
+func (kw *{{ .Name }}Watcher) GetRestartCount() int32 {
+	return atomicGet(&kw.restartCounter)
 }
 
 func (kw *{{ .Name }}Watcher) doWatch(resource cp.{{ .Name }}Interface) error {
@@ -239,10 +245,10 @@ func (kw *{{ .Name }}Watcher) doWatch(resource cp.{{ .Name }}Interface) error {
 			return fmt.Errorf("failed to generate key for new object %+v", copy)
 		}
 		if existing, ok := curr[key]; ok {
-			err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
-				if kw.update(copy, current) {
+			err = kw.Cache.Update(func(target interface{}) (interface{}, error) {
+				if kw.update(copy, target) {
 					updated++
-					return copy, nil
+					return target, nil
 				} else {
 					unchanged++
 					return nil, nil
@@ -303,9 +309,9 @@ func (kw *{{ .Name }}Watcher) doWatch(resource cp.{{ .Name }}Interface) error {
 					err = kw.Cache.Add(kw.create(copy))
 				case watch.Modified:
 					updatingKey := kw.create(copy)
-					err = kw.Cache.Update(func(current interface{}) (interface{}, error) {
-						if kw.update(copy, current) {
-							return copy, nil
+					err = kw.Cache.Update(func(target interface{}) (interface{}, error) {
+						if kw.update(copy, target) {
+							return target, nil
 						} else {
 							return nil, nil
 						}

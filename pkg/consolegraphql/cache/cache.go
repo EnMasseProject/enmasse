@@ -143,7 +143,7 @@ func (r *MemdbCache) Update(mutator ObjectMutator, objs ...interface{}) error {
 					} else if err != nil {
 						return err
 					} else if !newIvFound {
-						return fmt.Errorf("failed to find the index value on the mutated object [original key: %s, mutated object %+v]", key, mutated)
+						return fmt.Errorf("failed to find the index value on the mutated object [original key: %s, mutated object (%T) %+v]", key, mutated, mutated)
 					} else if mutatedKey != key {
 						return fmt.Errorf("update mutator must not change the key [original: %s mutated :%s]", key, mutatedKey)
 					}

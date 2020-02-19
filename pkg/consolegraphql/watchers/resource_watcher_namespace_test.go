@@ -41,6 +41,7 @@ func TestWatchNamespace_ListProvidesNewValue(t *testing.T) {
 	expected := 1
 	actual := len(objs)
 	assert.Equal(t, expected, actual, "Unexpected number of namespaces")
+	assert.Equal(t, int32(0), w.GetRestartCount())
 }
 
 func TestWatchNamespace_ListProvidesDifferingValues(t *testing.T) {
@@ -88,6 +89,7 @@ func TestWatchNamespace_ListProvidesDifferingValues(t *testing.T) {
 
 	assert.NotNil(t, updatedNs2.Annotations)
 	assert.Equal(t, "bar", updatedNs2.Annotations["foo"])
+	assert.Equal(t, int32(0), w.GetRestartCount())
 }
 
 func TestWatchNamespace_WatchCreatesNewValue(t *testing.T) {
@@ -108,6 +110,7 @@ func TestWatchNamespace_WatchCreatesNewValue(t *testing.T) {
 	expected := 1
 	actual := len(objs)
 	assert.Equal(t, expected, actual, "Unexpected number of namespaces")
+	assert.Equal(t, int32(0), w.GetRestartCount())
 }
 
 func TestWatchNamespace_WatchUpdatesExistingValue(t *testing.T) {
@@ -143,7 +146,7 @@ func TestWatchNamespace_WatchUpdatesExistingValue(t *testing.T) {
 	} else if val != "bar" {
 		t.Fatalf("Updated namespace has wrong annotation value")
 	}
-
+	assert.Equal(t, int32(0), w.GetRestartCount())
 }
 
 func TestWatchNamespace_WatchDeletesExistingValue(t *testing.T) {
@@ -167,6 +170,7 @@ func TestWatchNamespace_WatchDeletesExistingValue(t *testing.T) {
 	expected := 0
 	actual := len(objs)
 	assert.Equal(t, expected, actual, "Unexpected number of namespaces")
+	assert.Equal(t, int32(0), w.GetRestartCount())
 }
 
 func createNamespace(name string) *v1.Namespace {
