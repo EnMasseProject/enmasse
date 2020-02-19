@@ -10,8 +10,11 @@ import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
+
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled
 @SeleniumFirefox
 class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestSharedBrokered {
 

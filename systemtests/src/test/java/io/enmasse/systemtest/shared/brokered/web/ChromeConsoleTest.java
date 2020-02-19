@@ -13,6 +13,7 @@ import io.enmasse.systemtest.utils.AddressUtils;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 
 import static io.enmasse.systemtest.TestTag.NON_PR;
 
@@ -22,6 +23,7 @@ import static io.enmasse.systemtest.TestTag.NON_PR;
 * Among other reasons, for not making the test runs too long.
 *
 */
+@Disabled
 @Tag(NON_PR)
 @SeleniumChrome
 class ChromeConsoleTest extends ConsoleTest implements ITestSharedBrokered {

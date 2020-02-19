@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 
 import static io.enmasse.systemtest.TestTag.NON_PR;
 
@@ -27,6 +28,7 @@ import static io.enmasse.systemtest.TestTag.NON_PR;
 * Among other reasons, for not making the test runs too long.
 *
 */
+@Disabled
 @Tag(NON_PR)
 @SeleniumChrome
 public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandard {

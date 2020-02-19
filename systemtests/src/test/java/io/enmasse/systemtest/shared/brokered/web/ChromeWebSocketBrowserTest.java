@@ -12,9 +12,11 @@ import io.enmasse.systemtest.selenium.SeleniumChrome;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 
 import static io.enmasse.systemtest.TestTag.NON_PR;
 
+@Disabled
 @Tag(NON_PR)
 @SeleniumChrome
 class ChromeWebSocketBrowserTest extends WebSocketBrowserTest implements ITestSharedBrokered {
