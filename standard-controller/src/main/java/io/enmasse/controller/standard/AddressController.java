@@ -431,7 +431,7 @@ public class AddressController implements Watcher<Address> {
             if (!current.equals(previous)) {
                 log.debug("Address did change: {}", addressName);
                 try {
-                    if(!addressApi.replaceAddress(address)) {
+                    if(!addressApi.replaceAddressStatus(address)) {
                         log.info("Failed to persist address state: {}", addressName);
                     }
                 } catch (KubernetesClientException e) {

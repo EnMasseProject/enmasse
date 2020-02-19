@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AddressSpaceList;
@@ -24,6 +25,7 @@ import io.enmasse.k8s.api.cache.ListOptions;
 import io.enmasse.k8s.api.cache.ListerWatcher;
 import io.enmasse.k8s.api.cache.Reflector;
 import io.enmasse.k8s.api.cache.WorkQueue;
+import io.fabric8.kubernetes.api.model.Status;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
@@ -31,8 +33,11 @@ import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.utils.URLUtils;
+import okhttp3.*;
 
 public class KubeAddressSpaceApi implements AddressSpaceApi, ListerWatcher<AddressSpace, AddressSpaceList> {
+    private static final ObjectMapper mapper = new ObjectMapper();
     private final NamespacedKubernetesClient kubernetesClient;
     private final MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>> client;
     private final String namespace;
@@ -81,6 +86,43 @@ public class KubeAddressSpaceApi implements AddressSpaceApi, ListerWatcher<Addre
                     .replace(addressSpace);
             cache.replace(addressSpace);
             return result != null;
+        } catch (KubernetesClientException e) {
+            if (e.getStatus().getCode() == 404) {
+                return false;
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    @Override
+    public boolean replaceAddressSpaceStatus(AddressSpace addressSpace) throws Exception {
+        boolean exists = client.inNamespace(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get() != null;
+        if (!exists) {
+            return false;
+        }
+
+        // Make a copy, so that no one else makes modifications to our instance.
+        // This is important as we do put this instance into your cache.
+        addressSpace = new AddressSpaceBuilder(addressSpace).build();
+
+        try {
+
+            final String statusUri = URLUtils.join(kubernetesClient.getMasterUrl().toString(), "apis", "enmasse.io", "v1beta1", "namespaces",
+                    namespace, addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), "status");
+            final RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsBytes(addressSpace));
+            OkHttpClient baseClient = kubernetesClient.adapt(OkHttpClient.class);
+            try (Response response = baseClient.newCall(new Request.Builder()
+                    .method("PUT", requestBody)
+                    .url(statusUri)
+                    .build())
+                    .execute()) {
+                if (response.code() < 200 || response.code() >= 300) {
+                    return false;
+                }
+                cache.replace(addressSpace);
+            }
+            return true;
         } catch (KubernetesClientException e) {
             if (e.getStatus().getCode() == 404) {
                 return false;

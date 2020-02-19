@@ -109,9 +109,17 @@ public class ControllerChain implements Watcher<AddressSpace> {
 
                 if (hasAddressSpaceChanged(original, addressSpace)) {
                     log.debug("Change detected. Executing update.");
-                    if (!this.addressSpaceApi.replaceAddressSpace(addressSpace)) {
-                        log.info("Unable to persist address space state: {}", addressSpaceName);
+                    if (!original.getMetadata().equals(addressSpace.getMetadata()) || !original.getSpec().equals(addressSpace.getSpec())) {
+                        if (!this.addressSpaceApi.replaceAddressSpace(addressSpace)) {
+                            log.info("Unable to persist address space state: {}", addressSpaceName);
+                        }
                     }
+                    if (!original.getStatus().equals(addressSpace.getStatus())) {
+                        if (!this.addressSpaceApi.replaceAddressSpaceStatus(addressSpace)) {
+                            log.info("Unable to persist address space status state: {}", addressSpaceName);
+                        }
+                    }
+
                 } else {
                     log.debug("No change detected. Not triggering update.");
                 }

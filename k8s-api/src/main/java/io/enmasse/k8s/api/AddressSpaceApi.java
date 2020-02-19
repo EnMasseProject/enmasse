@@ -31,6 +31,9 @@ public interface AddressSpaceApi {
      * @throws Exception In case of any error other than a non-existing instance.
      */
     boolean replaceAddressSpace(AddressSpace addressSpace) throws Exception;
+    default boolean replaceAddressSpaceStatus(AddressSpace addressSpace) throws Exception {
+        return false;
+    }
     boolean deleteAddressSpace(AddressSpace addressSpace);
     Set<AddressSpace> listAddressSpaces(String namespace);
     Set<AddressSpace> listAddressSpacesWithLabels(String namespace, Map<String, String> labels);

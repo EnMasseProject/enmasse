@@ -33,6 +33,9 @@ public interface AddressApi {
 
     void createAddress(Address address);
     boolean replaceAddress(Address address);
+    default boolean replaceAddressStatus(Address address) throws Exception {
+        return false;
+    }
     boolean deleteAddress(Address address);
 
     Watch watchAddresses(CacheWatcher<Address> watcher, Duration resyncInterval) throws Exception;

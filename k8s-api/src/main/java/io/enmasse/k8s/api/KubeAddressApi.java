@@ -4,6 +4,7 @@
  */
 package io.enmasse.k8s.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
@@ -18,6 +19,8 @@ import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.utils.URLUtils;
+import okhttp3.*;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -26,6 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class KubeAddressApi implements AddressApi, ListerWatcher<Address, AddressList> {
+    private static final ObjectMapper mapper = new ObjectMapper();
     private final NamespacedKubernetesClient kubernetesClient;
     private final MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> client;
     private final String namespace;
@@ -74,6 +78,40 @@ public class KubeAddressApi implements AddressApi, ListerWatcher<Address, Addres
 
             cache.replace(address);
             return result != null;
+        } catch (KubernetesClientException e) {
+            if (e.getStatus().getCode() == 404) {
+                return false;
+            } else {
+                throw e;
+            }
+        }
+    }
+
+
+    @Override
+    public boolean replaceAddressStatus(Address address) throws Exception {
+        boolean exists = client.inNamespace(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get() != null;
+        if (!exists) {
+            return false;
+        }
+
+        address = setDefaults(address);
+        try {
+            final String statusUri = URLUtils.join(kubernetesClient.getMasterUrl().toString(), "apis", "enmasse.io", "v1beta1", "namespaces",
+                    namespace, address.getMetadata().getNamespace(), address.getMetadata().getName(), "status");
+            final RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsBytes(address));
+            OkHttpClient baseClient = kubernetesClient.adapt(OkHttpClient.class);
+            try (Response response = baseClient.newCall(new Request.Builder()
+                    .method("PUT", requestBody)
+                    .url(statusUri)
+                    .build())
+                    .execute()) {
+                if (response.code() < 200 || response.code() >= 300) {
+                    return false;
+                }
+                cache.replace(address);
+            }
+            return true;
         } catch (KubernetesClientException e) {
             if (e.getStatus().getCode() == 404) {
                 return false;
