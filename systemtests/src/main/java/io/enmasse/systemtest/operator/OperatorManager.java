@@ -17,6 +17,8 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.OpenShift;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+
 import org.slf4j.Logger;
 
 import java.nio.file.Files;
@@ -321,8 +323,15 @@ public class OperatorManager {
     }
 
     public boolean isEnmasseBundleDeployed() {
-        return kube.namespaceExists(kube.getInfraNamespace())
-                && kube.listPods(kube.getInfraNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("enmasse-operator")).count() == 1;
+        try {
+            return kube.namespaceExists(kube.getInfraNamespace())
+                    && kube.listPods(kube.getInfraNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("enmasse-operator")).count() == 1;
+        } catch (KubernetesClientException e) {
+            if (e.getMessage().contains("Unauthorized")) {
+                System.exit(1);
+            }
+            throw e;
+        }
     }
 
     public boolean isEnmasseOlmDeployed() {
