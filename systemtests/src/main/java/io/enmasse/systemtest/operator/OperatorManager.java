@@ -285,7 +285,7 @@ public class OperatorManager {
 
         if (kube instanceof OpenShift) {
             // Kubernetes does not make a console service available by default.
-            awaitConsoleReadiness(namespace);
+//            awaitConsoleReadiness(namespace);
         }
     }
 
@@ -296,29 +296,29 @@ public class OperatorManager {
         }
     }
 
-    private void awaitConsoleReadiness(String namespace) throws Exception {
-        final String serviceName = "console";
-        TestUtils.waitUntilCondition("global console readiness", waitPhase -> {
-            try {
-                final ConsoleService console = kube.getConsoleServiceClient().inNamespace(namespace).withName("console").get();
-                if (console == null) {
-                    LOGGER.info("ConsoleService {} not yet available", serviceName);
-                    return false;
-                }
-                TestUtils.waitForPodReady("console", namespace);
-                final ConsoleServiceSpec spec = console.getSpec();
-                final boolean ready = spec != null && spec.getOauthClientSecret() != null && spec.getSsoCookieSecret() != null;
-                if (!ready) {
-                    LOGGER.info("ConsoleService {} not yet fully ready: {}", serviceName, spec);
-                }
-                return ready;
-            } catch (Exception e) {
-                LOGGER.warn("Failed to get console service record : {}", serviceName, e);
-            }
-
-            return false;
-        }, new TimeoutBudget(10, TimeUnit.MINUTES));
-    }
+//    private void awaitConsoleReadiness(String namespace) throws Exception {
+//        final String serviceName = "console";
+//        TestUtils.waitUntilCondition("global console readiness", waitPhase -> {
+//            try {
+//                final ConsoleService console = kube.getConsoleServiceClient().inNamespace(namespace).withName("console").get();
+//                if (console == null) {
+//                    LOGGER.info("ConsoleService {} not yet available", serviceName);
+//                    return false;
+//                }
+//                TestUtils.waitForPodReady("console", namespace);
+//                final ConsoleServiceSpec spec = console.getSpec();
+//                final boolean ready = spec != null && spec.getOauthClientSecret() != null && spec.getSsoCookieSecret() != null;
+//                if (!ready) {
+//                    LOGGER.info("ConsoleService {} not yet fully ready: {}", serviceName, spec);
+//                }
+//                return ready;
+//            } catch (Exception e) {
+//                LOGGER.warn("Failed to get console service record : {}", serviceName, e);
+//            }
+//
+//            return false;
+//        }, new TimeoutBudget(10, TimeUnit.MINUTES));
+//    }
 
     public boolean isEnmasseBundleDeployed() {
         return kube.namespaceExists(kube.getInfraNamespace())
