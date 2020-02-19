@@ -12,6 +12,7 @@ import { ILink, LinkList } from "components/ConnectionDetail/LinkList";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { ISortBy } from "@patternfly/react-table";
 import { POLL_INTERVAL } from "constants/constants";
+import { EmptyLinks } from "components/common/EmptyLinks";
 
 interface IConnectionLinksListPageProps {
   name: string;
@@ -57,7 +58,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
     ),
     { pollInterval: POLL_INTERVAL }
   );
-  if (loading) return <Loading />;
+  if (loading && !data) return <Loading />;
   if (error) {
     console.log(error);
   }
@@ -66,7 +67,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
   };
   const connection = connections.connections[0];
   let linkRows: ILink[] = [];
-  if (connection && connection.links.total > 0) {
+  if (connection && connection.links.total >= 0) {
     setTotalLinks(connection.links.total);
     linkRows = connection.links.links.map(link => ({
       name: link.metadata.name,
@@ -90,6 +91,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
   return (
     <>
       <LinkList rows={linkRows} onSort={onSort} sortBy={sortBy} />
+      {linkRows && linkRows.length > 0 ? <></> : <EmptyLinks />}
     </>
   );
 };

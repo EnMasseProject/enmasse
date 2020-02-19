@@ -18,6 +18,7 @@ import { useLocation, useHistory } from "react-router";
 import { css } from "@patternfly/react-styles";
 import { ConnectionLinksFilter } from "pages/ConnectionDetail/ConnectionLinksFilter";
 import { ISortBy } from "@patternfly/react-table";
+import { Divider } from "@patternfly/react-core/dist/js/experimental";
 interface IConnectionLinksWithFilterAndPaginationPageProps {
   name?: string;
   namespace?: string;
@@ -71,7 +72,7 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
   );
 
   const renderPagination = (page: number, perPage: number) => {
-    return (
+    return totalLinks > 0 ? (
       <Pagination
         itemCount={totalLinks}
         perPage={perPage}
@@ -80,6 +81,8 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
         variant="top"
         onPerPageSelect={handlePerPageChange}
       />
+    ) : (
+      <></>
     );
   };
 
@@ -113,6 +116,7 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
         </GridItem>
         <GridItem span={6}>{renderPagination(page, perPage)}</GridItem>
       </Grid>
+      <Divider />
       <ConnectionLinksListPage
         name={name || ""}
         namespace={namespace || ""}
