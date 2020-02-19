@@ -909,26 +909,34 @@ public abstract class ConsoleTest extends TestBase {
         }
     }
 
-    protected void doTestCreateAddressWithSpecialCharsShowsErrorMessage(AddressSpace addressSpace) throws Exception {
+    protected void doTestValidAddressNames(AddressSpace addressSpace) throws Exception {
 
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.openAddressList(addressSpace);
         consolePage.openAddressCreationDialog();
 
-        String validName = AddressUtils.generateAddressMetadataName(addressSpace, "dummy");
+        String validName = "dummy";
         String[] invalidNames = {
                         "#dummy",
                         "du#mmy",
+                        "dummy#",
+
+                        "*dummy",
+                        "du*mmy",
+                        "dummy*",
+
                         ":dummy",
                         "du:mmy",
-                        "$dummy",
+                        "dummy:",
+
                         ".dummy",
+                        "dum.my",
                         "dummy.",
-                        "dummy-",
-                        "-dummy",
-                        "duMmy",
-                        "DUM-MY"
+
+                        " dummy",
+                        "dum my",
+                        "dummy ",
         };
 
         for ( var name : invalidNames) {
@@ -940,8 +948,11 @@ public abstract class ConsoleTest extends TestBase {
         }
 
         String[] validNames = {
-                        "du.mmy",
-                        "du-mmy"
+                        "du$mmy",
+                        "du-mmy",
+                        "dummy/foo",
+                        "dum)my",
+                        "dum2my"
         };
 
         for (String name : validNames) {

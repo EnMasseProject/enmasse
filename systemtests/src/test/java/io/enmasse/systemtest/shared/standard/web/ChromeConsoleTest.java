@@ -213,8 +213,8 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
     }
 
     @Test
-    void testCreateAddressWithSpecialCharsShowsErrorMessage() throws Exception {
-        doTestCreateAddressWithSpecialCharsShowsErrorMessage(getSharedAddressSpace());
+    void testValidAddressNames() throws Exception {
+        doTestValidAddressNames(getSharedAddressSpace());
     }
 
 }

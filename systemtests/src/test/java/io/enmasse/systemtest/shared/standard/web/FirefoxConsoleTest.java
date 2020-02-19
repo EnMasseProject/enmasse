@@ -344,8 +344,8 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     }
 
     @Test
-    void testCreateAddressWithSpecialCharsShowsErrorMessage() throws Exception {
-        doTestCreateAddressWithSpecialCharsShowsErrorMessage(getSharedAddressSpace());
+    void testValidAddressNames() throws Exception {
+        doTestValidAddressNames(getSharedAddressSpace());
     }
 
 }
