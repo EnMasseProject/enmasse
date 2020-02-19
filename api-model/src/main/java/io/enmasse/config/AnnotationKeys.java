@@ -34,4 +34,5 @@ public interface AnnotationKeys {
     String VERSION = "enmasse.io/version";
     String APPLIED_CONFIGURATION = "enmasse.io/applied-configuration";
     String APPLIED_PLAN = "enmasse.io/applied-plan";
+    String ADDRESS_SPACE_NAMESPACE = "enmasse.io/address-space-namespace";
 }

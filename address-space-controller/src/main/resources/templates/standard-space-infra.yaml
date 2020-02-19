@@ -10,6 +10,7 @@ objects:
   metadata:
     annotations:
       addressSpace: ${ADDRESS_SPACE}
+      enmasse.io/address-space-namespace: ${ADDRESS_SPACE_NAMESPACE}
       enmasse.io/service-port.amqp: 5672
       enmasse.io/service-port.amqps: 5671
       enmasse.io/service-port.amqp-wss: 443

@@ -125,7 +125,7 @@ public class AddressSpaceController {
 
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
-        controllerChain.addController(new DefaultsController(authenticationServiceRegistry));
+        controllerChain.addController(new DefaultsController(authenticationServiceRegistry, kubernetes));
         controllerChain.addController(new AddressFinalizerController(addressSpaceApi));
         controllerChain.addController(new MessagingUserFinalizerController(controllerClient));
         controllerChain.addController(new ComponentFinalizerController(kubernetes));

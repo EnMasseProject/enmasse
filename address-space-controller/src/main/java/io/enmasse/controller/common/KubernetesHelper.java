@@ -5,13 +5,6 @@
 
 package io.enmasse.controller.common;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.admin.model.v1.InfraConfig;
@@ -26,12 +19,20 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.OpenShiftClient;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Wraps the Kubernetes client and adds some helper methods.
@@ -172,6 +173,35 @@ public class KubernetesHelper implements Kubernetes {
             return null;
         }
         return AppliedConfig.parseCurrentAppliedConfig(messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_CONFIGURATION));
+    }
+
+    /**
+     * Attempt to find the infra uuid of an address space by doing a reverse-lookup on the expected services.
+     */
+    @Override
+    public String getInfraUuid(AddressSpace addressSpace) {
+        if (addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID) != null) {
+            return addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        }
+        ServiceList services = client.services().inNamespace(namespace).list();
+        if (services == null) {
+            return null;
+        }
+        Service found = null;
+        for (Service service : services.getItems()) {
+            if (service.getMetadata().getAnnotations() != null) {
+                String addressSpaceName = service.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE);
+                String addressSpaceNamespace = service.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE_NAMESPACE);
+                if (addressSpace.getMetadata().getName().equals(addressSpaceName) && addressSpace.getMetadata().getNamespace().equals(addressSpaceNamespace)) {
+                    found = service;
+                    break;
+                }
+            }
+        }
+        if (found == null || found.getMetadata().getLabels() == null) {
+            return null;
+        }
+        return found.getMetadata().getLabels().get(LabelKeys.INFRA_UUID);
     }
 
     @Override

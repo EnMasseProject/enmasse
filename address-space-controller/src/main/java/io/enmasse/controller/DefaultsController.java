@@ -8,13 +8,16 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 
 public class DefaultsController implements Controller {
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
+    private final Kubernetes kubernetes;
 
-    public DefaultsController(AuthenticationServiceRegistry authenticationServiceRegistry) {
+    public DefaultsController(AuthenticationServiceRegistry authenticationServiceRegistry, Kubernetes kubernetes) {
         this.authenticationServiceRegistry = authenticationServiceRegistry;
+        this.kubernetes = kubernetes;
     }
 
     @Override
@@ -22,9 +25,16 @@ public class DefaultsController implements Controller {
         AddressSpaceBuilder builder = new AddressSpaceBuilder(addressSpace);
 
         if (addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID) == null) {
-            builder.editOrNewMetadata()
-                    .addToAnnotations(AnnotationKeys.INFRA_UUID, KubeUtil.infraUuid(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName()))
-                    .endMetadata();
+            String infraUuid = kubernetes.getInfraUuid(addressSpace);
+            if (infraUuid != null) {
+                builder.editOrNewMetadata()
+                        .addToAnnotations(AnnotationKeys.INFRA_UUID, infraUuid)
+                        .endMetadata();
+            } else {
+                builder.editOrNewMetadata()
+                        .addToAnnotations(AnnotationKeys.INFRA_UUID, KubeUtil.infraUuid(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName()))
+                        .endMetadata();
+            }
         }
 
         if (addressSpace.getAnnotation(AnnotationKeys.REALM_NAME) == null) {
