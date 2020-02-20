@@ -28,7 +28,7 @@ if [ ! -x "${NODE_EXE}" ]; then
 fi
 
 if [ ! -f "${LICENSE_REPORTER_EXE}" ]; then
-   >&2 echo "license-reporter ${LICENSE_REPORTER_EXE} not found.  Check that the npm module is installed."
+   >&2 echo "license-reporter ${LICENSE_REPORTER_EXE} not found.  Check that the yarn module is installed."
    exit 1
 fi
 
