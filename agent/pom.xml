@@ -12,7 +12,7 @@
   <properties>
     <agent-node-install-directory>${project.build.directory}/noderoot/agent</agent-node-install-directory>
     <licensereporter-node-install-directory>${project.build.directory}/noderoot/licensereporter</licensereporter-node-install-directory>
-    <license-reporter-opts>--silent</license-reporter-opts>  <!-- verbose option - details -->
+    <nicense-reporter-opts>--silent</license-reporter-opts>  <!-- verbose option - details -->
     <license-report-stylesheet>${project.basedir}/../scripts/licenses.xsl</license-report-stylesheet>
   </properties>
   <build>
@@ -34,7 +34,7 @@
                   <directory>${project.basedir}</directory>
                   <includes>
                     <include>package.json</include>
-                    <include>npm-shrinkwrap.json</include>
+                    <include>yarn.lock</include>
                   </includes>
                 </resource>
               </resources>
@@ -47,20 +47,20 @@
         <artifactId>frontend-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>install node and npm - agent</id>
+            <id>install node and yarn - agent</id>
             <goals>
-              <goal>install-node-and-npm</goal>
+              <goal>install-node-and-yarn</goal>
             </goals>
             <configuration>
               <nodeVersion>${node.version}</nodeVersion>
-              <npmVersion>${npm.version}</npmVersion>
+              <yarnVersion>${yarn.version}</yarnVersion>
               <installDirectory>${agent-node-install-directory}</installDirectory>
             </configuration>
           </execution>
           <execution>
-            <id>npm install - agent</id>
+            <id>yarn install - agent</id>
             <goals>
-              <goal>npm</goal>
+              <goal>yarn</goal>
             </goals>
             <phase>process-resources</phase>
             <configuration>
@@ -69,9 +69,9 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm install tests</id>
+            <id>yarn install tests</id>
             <goals>
-              <goal>npm</goal>
+              <goal>yarn</goal>
             </goals>
             <phase>test</phase>
             <configuration>
@@ -80,9 +80,9 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm test</id>
+            <id>yarn test</id>
             <goals>
-              <goal>npm</goal>
+              <goal>yarn</goal>
             </goals>
             <phase>test</phase>
             <configuration>
@@ -159,20 +159,20 @@
             <artifactId>frontend-maven-plugin</artifactId>
             <executions>
               <execution>
-                <id>install node and npm - license-reporter</id>
+                <id>install node and yarn - license-reporter</id>
                 <goals>
-                  <goal>install-node-and-npm</goal>
+                  <goal>install-node-and-yarn</goal>
                 </goals>
                 <configuration>
                   <nodeVersion>${node.version}</nodeVersion>
-                  <npmVersion>${npm.version}</npmVersion>
+                  <yarnVersion>${yarn.version}</yarnVersion>
                   <installDirectory>${licensereporter-node-install-directory}</installDirectory>
                 </configuration>
               </execution>
               <execution>
-                <id>npm install - license-reporter</id>
+                <id>yarn install - license-reporter</id>
                 <goals>
-                  <goal>npm</goal>
+                  <goal>yarn</goal>
                 </goals>
                 <phase>process-resources</phase>
                 <configuration>

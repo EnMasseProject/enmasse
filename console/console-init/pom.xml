@@ -119,20 +119,20 @@
             <artifactId>frontend-maven-plugin</artifactId>
             <executions>
               <execution>
-                <id>install node and npm - license-reporter</id>
+                <id>install node and yarn - license-reporter</id>
                 <goals>
-                  <goal>install-node-and-npm</goal>
+                  <goal>install-node-and-yarn</goal>
                 </goals>
                 <configuration>
                   <nodeVersion>${node.version}</nodeVersion>
-                  <npmVersion>${npm.version}</npmVersion>
+                  <yarnVersion>${yarn.version}</yarnVersion>
                   <installDirectory>${licensereporter-node-install-directory}</installDirectory>
                 </configuration>
               </execution>
               <execution>
-                <id>npm install - license-reporter</id>
+                <id>yarn install - license-reporter</id>
                 <goals>
-                  <goal>npm</goal>
+                  <goal>yarn</goal>
                 </goals>
                 <phase>process-resources</phase>
                 <configuration>

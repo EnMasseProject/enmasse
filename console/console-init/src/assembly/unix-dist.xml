@@ -54,6 +54,7 @@
           <directory>${project.basedir}/ui</directory>
            <includes>
               <include>package.json</include>
+              <include>yarn.lock</include>
            </includes>
            <fileMode>0644</fileMode>
         </fileSet>
