@@ -12,7 +12,7 @@
   <properties>
     <agent-node-install-directory>${project.build.directory}/noderoot/agent</agent-node-install-directory>
     <licensereporter-node-install-directory>${project.build.directory}/noderoot/licensereporter</licensereporter-node-install-directory>
-    <nicense-reporter-opts>--silent</license-reporter-opts>  <!-- verbose option - details -->
+    <license-reporter-opts>--silent</license-reporter-opts>  <!-- verbose option - details -->
     <license-report-stylesheet>${project.basedir}/../scripts/licenses.xsl</license-report-stylesheet>
   </properties>
   <build>
