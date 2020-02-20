@@ -647,6 +647,21 @@ public abstract class ConsoleTest extends TestBase {
                 Comparator.comparingInt(ConnectionWebItem::getReceivers));
     }
 
+
+    protected void doTestAddressLinks(AddressSpace addressSpace, String destinationPlan) throws Exception {
+        Address address = generateAddressObject(addressSpace, destinationPlan);
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
+        consolePage.createAddress(address);
+        consolePage.openClientsList(address);
+        assertThat("Link table is not empty!", consolePage.isClientListEmpty());
+        int link_count  = attachClients(addressSpace, address, defaultCredentials);
+        selenium.waitUntilPropertyPresent(60, link_count, ()->consolePage.getClientItems().size());
+        assertThat(consolePage.getClientItems().size(), is(link_count));
+    }
+
+
     private void doTestSortConnections(AddressSpace addressSpace, SortType sortType, ClientAttacher attacher, Predicate<ConnectionWebItem> readyCondition, Comparator<ConnectionWebItem> sortingComparator) throws Exception {
         int addressCount = 2;
         List<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
@@ -1046,6 +1061,22 @@ public abstract class ConsoleTest extends TestBase {
             }
         });
         return addresses;
+    }
+
+    /**
+     *
+     * @param addressSpace dest addressspace
+     * @param destination dest address
+     * @param userCredentials messaging user credentials
+     * @return senders + receivers count
+     * @throws Exception
+     */
+    private int attachClients(AddressSpace addressSpace, Address destination, UserCredentials userCredentials) throws Exception {
+        final int SENDER_COUNT = 6;
+        final int RECEIVER_COUNT = 4;
+        getClientUtils().attachConnector(addressSpace, destination, 1, SENDER_COUNT, RECEIVER_COUNT, userCredentials, 360);
+
+        return (SENDER_COUNT + RECEIVER_COUNT);
     }
 
     private List<ExternalMessagingClient> attachClients(AddressSpace addressSpace, List<Address> destinations, UserCredentials userCredentials) throws Exception {

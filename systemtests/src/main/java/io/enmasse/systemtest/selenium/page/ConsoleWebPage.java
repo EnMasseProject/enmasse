@@ -175,6 +175,10 @@ public class ConsoleWebPage implements IWebPage {
         return addressSpaceItems;
     }
 
+    public Boolean isClientListEmpty() {
+        return (selenium.getDriver().findElements(By.xpath("//div[@class='pf-c-empty-state']")).size() == 1);
+    }
+
     public AddressSpaceWebItem getAddressSpaceItem(AddressSpace as) {
         AddressSpaceWebItem returnedElement = null;
         List<AddressSpaceWebItem> addressWebItems = getAddressSpaceItems();
