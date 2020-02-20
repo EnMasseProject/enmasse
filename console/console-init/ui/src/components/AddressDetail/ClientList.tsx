@@ -79,16 +79,18 @@ export const ClientList: React.FunctionComponent<IClientListProps> = ({
   ];
 
   return (
-    <Table
-      variant={TableVariant.compact}
-      cells={tableColumns}
-      rows={tableRows}
-      aria-label="client list"
-      onSort={onSort}
-      sortBy={sortBy}
-    >
-      <TableHeader />
-      <TableBody />
-    </Table>
+    <div style={{ overflowY: "auto" }}>
+      <Table
+        variant={TableVariant.compact}
+        cells={tableColumns}
+        rows={tableRows}
+        aria-label="client list"
+        onSort={onSort}
+        sortBy={sortBy}
+      >
+        <TableHeader />
+        <TableBody />
+      </Table>
+    </div>
   );
 };

@@ -170,18 +170,20 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   };
 
   return (
-    <Table
-      variant={TableVariant.compact}
-      onSelect={onSelect}
-      cells={tableColumns}
-      rows={tableRows}
-      actionResolver={actionResolver}
-      aria-label="address space list"
-      onSort={onSort}
-      sortBy={sortBy}
-    >
-      <TableHeader id="aslist-table-header" />
-      <TableBody />
-    </Table>
+    <div style={{ overflowY: "auto" }}>
+      <Table
+        variant={TableVariant.compact}
+        onSelect={onSelect}
+        cells={tableColumns}
+        rows={tableRows}
+        actionResolver={actionResolver}
+        aria-label="address space list"
+        onSort={onSort}
+        sortBy={sortBy}
+      >
+        <TableHeader id="aslist-table-header" />
+        <TableBody />
+      </Table>
+    </div>
   );
 };

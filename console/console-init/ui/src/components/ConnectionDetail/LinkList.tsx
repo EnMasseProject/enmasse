@@ -72,16 +72,18 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({
   ];
 
   return (
-    <Table
-      variant={TableVariant.compact}
-      cells={tableColumns}
-      rows={tableRows}
-      aria-label="links list"
-      onSort={onSort}
-      sortBy={sortBy}
-    >
-      <TableHeader />
-      <TableBody />
-    </Table>
+    <div style={{ overflowY: "auto" }}>
+      <Table
+        variant={TableVariant.compact}
+        cells={tableColumns}
+        rows={tableRows}
+        aria-label="links list"
+        onSort={onSort}
+        sortBy={sortBy}
+      >
+        <TableHeader />
+        <TableBody />
+      </Table>
+    </div>
   );
 };

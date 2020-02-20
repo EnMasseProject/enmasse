@@ -118,16 +118,18 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   ];
 
   return (
-    <Table
-      variant={TableVariant.compact}
-      cells={tableColumns}
-      rows={tableRows}
-      aria-label="connection list"
-      sortBy={sortBy}
-      onSort={onSort}
-    >
-      <TableHeader id="connectionlist-table-header" />
-      <TableBody />
-    </Table>
+    <div style={{ overflowY: "auto" }}>
+      <Table
+        variant={TableVariant.compact}
+        cells={tableColumns}
+        rows={tableRows}
+        aria-label="connection list"
+        sortBy={sortBy}
+        onSort={onSort}
+      >
+        <TableHeader id="connectionlist-table-header" />
+        <TableBody />
+      </Table>
+    </div>
   );
 };
