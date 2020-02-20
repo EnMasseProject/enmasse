@@ -18,12 +18,14 @@ const styles = StyleSheet.create({
 export interface IMessagesDetail {
   messageIn?: number | string;
   messageOut?: number | string;
+  addressSpaceType?: string;
   isMobileView: boolean;
 }
 
 export const MessagesDetail: React.FunctionComponent<IMessagesDetail> = ({
   messageIn,
   messageOut,
+  addressSpaceType,
   isMobileView
 }) => {
   return (
@@ -36,14 +38,18 @@ export const MessagesDetail: React.FunctionComponent<IMessagesDetail> = ({
         {messageIn || messageIn === "" ? messageIn : 0}
         {isMobileView ? "" : <br />} Message in/sec
       </SplitItem>
-      <SplitItem
-        id="message-detail-message-out"
-        span={6}
-        className={css(styles.message_split)}
-      >
-        {messageOut || messageOut === "" ? messageOut : 0}
-        {isMobileView ? "" : <br />} Message out/sec
-      </SplitItem>
+      {!addressSpaceType || addressSpaceType === "brokered" ? (
+        ""
+      ) : (
+        <SplitItem
+          id="message-detail-message-out"
+          span={6}
+          className={css(styles.message_split)}
+        >
+          {messageOut || messageOut === "" ? messageOut : 0}
+          {isMobileView ? "" : <br />} Message out/sec
+        </SplitItem>
+      )}
     </Split>
   );
 };

@@ -20,6 +20,7 @@ import { FormatDistance } from "use-patternfly";
 
 interface IConnectionListProps {
   rows: IConnection[];
+  addressSpaceType?: string;
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
 }
@@ -40,6 +41,7 @@ export interface IConnection {
 
 export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   rows,
+  addressSpaceType,
   sortBy,
   onSort
 }) => {
@@ -67,7 +69,9 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
           )
         },
         row.messageIn,
-        row.messageOut,
+        !addressSpaceType || addressSpaceType === "brokered"
+          ? ""
+          : row.messageOut,
         row.senders,
         row.receivers
       ],
@@ -94,19 +98,21 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
         ),
       transforms: [sortable]
     },
-    {
-      title:
-        width > 769 ? (
-          <span style={{ display: "inline-flex" }}>
-            Message Out/sec
-            <br />
-            {`(over last 5 min)`}
-          </span>
-        ) : (
-          "Message Out/sec"
-        ),
-      transforms: [sortable]
-    },
+    !addressSpaceType || addressSpaceType === "brokered"
+      ? ""
+      : {
+          title:
+            width > 769 ? (
+              <span style={{ display: "inline-flex" }}>
+                Message Out/sec
+                <br />
+                {`(over last 5 min)`}
+              </span>
+            ) : (
+              "Message Out/sec"
+            ),
+          transforms: [sortable]
+        },
     {
       title: "Senders",
       transforms: [sortable]
