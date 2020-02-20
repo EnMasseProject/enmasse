@@ -34,7 +34,7 @@ func newTestAgentWatcher(t *testing.T) (*AgentWatcher, chan agent.AgentEvent) {
 
 	eventChan := make(chan agent.AgentEvent)
 
-	watcher, err := NewAgentWatcher(objectCache, v1.NamespaceAll, MockAgentCollectorCreator(eventChan), false, AgentWatcherClient(fake.NewSimpleClientset().CoreV1()))
+	watcher, err := NewAgentWatcher(objectCache, nil, v1.NamespaceAll, MockAgentCollectorCreator(eventChan), false, AgentWatcherClient(fake.NewSimpleClientset().CoreV1()))
 	assert.NoError(t, err)
 
 	_, err = watcher.ClientInterface.Secrets("").(*fake2.FakeSecrets).Create(createCaSecret())
