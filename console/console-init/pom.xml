@@ -50,7 +50,7 @@
             <configuration>
               <installDirectory>${console-node-install-directory}</installDirectory>
               <workingDirectory>ui</workingDirectory>
-              <arguments>install --prefer-offline --no-progress</arguments>
+              <arguments>install --prefer-offline --no-progress --frozen-lockfile</arguments>
             </configuration>
           </execution>
 
