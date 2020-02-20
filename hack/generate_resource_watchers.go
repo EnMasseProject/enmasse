@@ -87,7 +87,9 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/rest"
 	"log"
+	"math/rand"
 	"reflect"
+	"time"
 )
 
 type {{ .Name }}Watcher struct {
@@ -101,16 +103,18 @@ type {{ .Name }}Watcher struct {
 	create          func(*tp.{{ .Name }}) interface{}
 	update          func(*tp.{{ .Name }}, interface{}) bool
 	restartCounter  int32
+	resyncInterval  *time.Duration
 }
 
-func New{{ .Name }}Watcher(c cache.Cache, {{if not .WatchAll}}namespace string, {{end}}options ...WatcherOption) (ResourceWatcher, error) {
+func New{{ .Name }}Watcher(c cache.Cache, resyncInterval *time.Duration, {{if not .WatchAll}}namespace string, {{end}}options ...WatcherOption) (ResourceWatcher, error) {
 
 	kw := &{{ .Name }}Watcher{
-		Namespace:   {{if .WatchAll}}v1.NamespaceAll{{else}}namespace{{end}},
-		Cache:       c,
-		watching:    make(chan struct{}),
-		stopchan:    make(chan struct{}),
-		stoppedchan: make(chan struct{}),
+		Namespace:      {{if .WatchAll}}v1.NamespaceAll{{else}}namespace{{end}},
+		Cache:          c,
+		watching:       make(chan struct{}),
+		stopchan:       make(chan struct{}),
+		stoppedchan:    make(chan struct{}),
+		resyncInterval: resyncInterval,
 		create: func(v *tp.{{ .Name }}) interface{} {
 			return v
 		},
@@ -275,11 +279,16 @@ func (kw *{{ .Name }}Watcher) doWatch(resource cp.{{ .Name }}Interface) error {
 		}
 	}
 	var stale = len(curr)
-
 	log.Printf("{{ .Name }} - Cache initialised population added %d, updated %d, unchanged %d, stale %d", added, updated, unchanged, stale)
-	resourceWatch, err := resource.Watch(v1.ListOptions{
+
+	watchOptions := v1.ListOptions{
 		ResourceVersion: resourceList.ResourceVersion,
-	})
+	}
+	if kw.resyncInterval != nil {
+		ts := int64(kw.resyncInterval.Seconds() * (rand.Float64() + 1.0))
+		watchOptions.TimeoutSeconds = &ts
+	}
+	resourceWatch, err := resource.Watch(watchOptions)
 	if err != nil {
 		return err
 	}
