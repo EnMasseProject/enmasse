@@ -29,7 +29,7 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 	requestState := server.GetRequestStateFromContext(ctx)
 	viewFilter := requestState.AccessController.ViewFilter()
 
-	fltrfunc, err := BuildFilter(filter)
+	fltrfunc, keyElements, err := BuildFilter(filter, "$.metadata.namespace", "$.metadata.name")
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 		return nil, err
 	}
 
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpace/", cache.And(viewFilter, fltrfunc))
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("AddressSpace/%s", keyElements), cache.And(viewFilter, fltrfunc))
 	if e != nil {
 		return nil, e
 	}
@@ -128,7 +128,7 @@ type addressSpaceK8sResolver struct{ *Resolver }
 
 func (r *addressSpaceK8sResolver) Connections(ctx context.Context, obj *consolegraphql.AddressSpaceHolder, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
-		fltrfunc, e := BuildFilter(filter)
+		fltrfunc, keyElements, e := BuildFilter(filter, "$.spec.addressSpace", "$.metadata.name")
 		if e != nil {
 			return nil, e
 		}
@@ -138,7 +138,7 @@ func (r *addressSpaceK8sResolver) Connections(ctx context.Context, obj *consoleg
 			return nil, e
 		}
 
-		key := fmt.Sprintf("Connection/%s/%s/", obj.Namespace, obj.Name)
+		key := fmt.Sprintf("Connection/%s/%s/%s", obj.Namespace, obj.Name, keyElements)
 		objects, e := r.Cache.Get(cache.PrimaryObjectIndex, key, fltrfunc)
 		if e != nil {
 			return nil, e
@@ -170,7 +170,7 @@ func (r *addressSpaceK8sResolver) Addresses(ctx context.Context, obj *consolegra
 		requestState := server.GetRequestStateFromContext(ctx)
 		viewFilter := requestState.AccessController.ViewFilter()
 
-		fltrfunc, e := BuildFilter(filter)
+		fltrfunc, keyElements, e := BuildFilter(filter, "$.metadata.name")
 		if e != nil {
 			return nil, e
 		}
@@ -180,7 +180,12 @@ func (r *addressSpaceK8sResolver) Addresses(ctx context.Context, obj *consolegra
 			return nil, e
 		}
 
-		key := fmt.Sprintf("Address/%s/%s/", obj.Namespace, obj.Name)
+		var key string
+		if keyElements == "" {
+			key = fmt.Sprintf("Address/%s/%s", obj.Namespace, obj.Name)
+		} else {
+			key = fmt.Sprintf("Address/%s/%s", obj.Namespace, keyElements)
+		}
 		objects, e := r.Cache.Get(cache.PrimaryObjectIndex, key, cache.And(viewFilter, fltrfunc))
 		if e != nil {
 			return nil, e

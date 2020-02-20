@@ -684,14 +684,14 @@ execFuncs:
  lex.te = ( lex.p)
 ( lex.p)--
 {
-            val := "{" + strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "```", "`", -1) + "}"
+            val := strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "```", "`", -1)
             tok = JSON_PATH
             jsonPath := jsonpath.New("filter expr").AllowMissingKeys(true)
-            err := jsonPath.Parse(val)
+            err := jsonPath.Parse("{" + val + "}")
             if err != nil {
                 lex.e = err
             }
-            out.jsonPathValue = NewJSONPathVal(jsonPath)
+            out.jsonPathValue = NewJSONPathVal(jsonPath, val)
             ( lex.p)++; goto _out
  }
 		case 28:
@@ -723,14 +723,14 @@ execFuncs:
 //line pkg/consolegraphql/filter/lex.rl:97
 ( lex.p) = ( lex.te) - 1
 {
-            val := "{" + strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "```", "`", -1) + "}"
+            val := strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "```", "`", -1)
             tok = JSON_PATH
             jsonPath := jsonpath.New("filter expr").AllowMissingKeys(true)
-            err := jsonPath.Parse(val)
+            err := jsonPath.Parse("{" + val + "}")
             if err != nil {
                 lex.e = err
             }
-            out.jsonPathValue = NewJSONPathVal(jsonPath)
+            out.jsonPathValue = NewJSONPathVal(jsonPath, val)
             ( lex.p)++; goto _out
  }
 		case 32:
@@ -751,14 +751,14 @@ goto _again
 	case 4:
 	{( lex.p) = ( lex.te) - 1
 
-            val := "{" + strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "```", "`", -1) + "}"
+            val := strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "```", "`", -1)
             tok = JSON_PATH
             jsonPath := jsonpath.New("filter expr").AllowMissingKeys(true)
-            err := jsonPath.Parse(val)
+            err := jsonPath.Parse("{" + val + "}")
             if err != nil {
                 lex.e = err
             }
-            out.jsonPathValue = NewJSONPathVal(jsonPath)
+            out.jsonPathValue = NewJSONPathVal(jsonPath, val)
             ( lex.p)++; goto _out
  }
 	}

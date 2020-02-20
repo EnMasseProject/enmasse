@@ -540,7 +540,7 @@ Filterdefault:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
 //line pkg/consolegraphql/filter/parser.y:95
 		{
-			FilterVAL.expr = NewBoolExpr(FilterDollar[2].expr)
+			FilterVAL.expr = FilterDollar[2].expr
 		}
 	case 5:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]

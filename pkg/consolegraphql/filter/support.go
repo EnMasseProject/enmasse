@@ -50,38 +50,18 @@ func ParseOrderByExpression(s string) (OrderBy, error) {
 
 type Expr interface {
 	Eval(interface{}) (interface{}, error)
-}
-
-func NewBoolExpr(e Expr) Expr {
-	return &boolExpr{e}
-}
-
-type boolExpr struct {
-	Expr
-}
-
-func (e boolExpr) Eval(v interface{}) (interface{}, error) {
-	result, err := e.Expr.Eval(v)
-	if err != nil {
-		return nil, err
-	}
-	switch rv := result.(type) {
-	case bool:
-		return rv, nil
-	default:
-		return false, nil
-	}
+	Traverse(accept func(a Expr) bool, visit func(v Expr))
 }
 
 func NewAndExpr(left, right Expr) Expr {
-	return &andExpr{left, right}
+	return &AndExpr{left, right}
 }
 
-type andExpr struct {
+type AndExpr struct {
 	Left, Right Expr
 }
 
-func (e andExpr) Eval(v interface{}) (interface{}, error) {
+func (e AndExpr) Eval(v interface{}) (interface{}, error) {
 	left, err := e.Left.Eval(v)
 	if err != nil {
 		return nil, err
@@ -106,15 +86,23 @@ func (e andExpr) Eval(v interface{}) (interface{}, error) {
 	return false, nil
 }
 
-func NewOrExpr(left, right Expr) Expr {
-	return &orExpr{left, right}
+func (e AndExpr) Traverse(accept func(Expr) bool, visit func(Expr)) {
+	if accept(e) {
+		e.Left.Traverse(accept, visit)
+		visit(e)
+		e.Right.Traverse(accept, visit)
+	}
 }
 
-type orExpr struct {
+func NewOrExpr(left, right Expr) Expr {
+	return &OrExpr{left, right}
+}
+
+type OrExpr struct {
 	Left, Right Expr
 }
 
-func (e orExpr) Eval(v interface{}) (interface{}, error) {
+func (e OrExpr) Eval(v interface{}) (interface{}, error) {
 	left, err := e.Left.Eval(v)
 	if err != nil {
 		return nil, err
@@ -139,15 +127,23 @@ func (e orExpr) Eval(v interface{}) (interface{}, error) {
 	}
 }
 
-func NewNotExpr(e Expr) Expr {
-	return &notExpr{e}
+func (e OrExpr) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
+	if accept(e) {
+		e.Left.Traverse(accept, visit)
+		visit(e)
+		e.Right.Traverse(accept, visit)
+	}
 }
 
-type notExpr struct {
+func NewNotExpr(e Expr) Expr {
+	return &NotExpr{e}
+}
+
+type NotExpr struct {
 	Expr Expr
 }
 
-func (e notExpr) Eval(v interface{}) (interface{}, error) {
+func (e NotExpr) Eval(v interface{}) (interface{}, error) {
 	val, err := e.Expr.Eval(v)
 	if err != nil {
 		return nil, err
@@ -160,16 +156,23 @@ func (e notExpr) Eval(v interface{}) (interface{}, error) {
 	}
 }
 
-func NewIsNullExpr(expr Expr, operator string) Expr {
-	return &isNullExpr{operator, expr}
+func (e NotExpr) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
+	if accept(e) {
+		e.Expr.Traverse(accept, visit)
+		visit(e)
+	}
 }
 
-type isNullExpr struct {
+func NewIsNullExpr(expr Expr, operator string) Expr {
+	return &IsNullExpr{operator, expr}
+}
+
+type IsNullExpr struct {
 	Operator string
 	Expr     Expr
 }
 
-func (e isNullExpr) Eval(v interface{}) (interface{}, error) {
+func (e IsNullExpr) Eval(v interface{}) (interface{}, error) {
 	val, err := e.Expr.Eval(v)
 	if err != nil {
 		return nil, err
@@ -194,16 +197,23 @@ func (e isNullExpr) Eval(v interface{}) (interface{}, error) {
 	return false, nil
 }
 
-func NewComparisonExpr(left Expr, operator string, right Expr) Expr {
-	return &comparisonExpr{operator, left, right}
+func (e IsNullExpr) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
+	if accept(e) {
+		e.Expr.Traverse(accept, visit)
+		visit(e)
+	}
 }
 
-type comparisonExpr struct {
+func NewComparisonExpr(left Expr, operator string, right Expr) Expr {
+	return &ComparisonExpr{operator, left, right}
+}
+
+type ComparisonExpr struct {
 	Operator    string
 	Left, Right Expr
 }
 
-func (e comparisonExpr) Eval(v interface{}) (interface{}, error) {
+func (e ComparisonExpr) Eval(v interface{}) (interface{}, error) {
 
 	left, err := e.Left.Eval(v)
 	if err != nil {
@@ -525,10 +535,22 @@ func (e comparisonExpr) Eval(v interface{}) (interface{}, error) {
 	}
 }
 
+func (e ComparisonExpr) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
+	if accept(e) {
+		e.Left.Traverse(accept, visit)
+		visit(e)
+		e.Right.Traverse(accept, visit)
+	}
+}
+
 type BoolVal bool
 
 func (e BoolVal) Eval(interface{}) (interface{}, error) {
 	return bool(e), nil
+}
+
+func (e BoolVal) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
+	visit(e)
 }
 
 type StringVal string
@@ -537,16 +559,28 @@ func (e StringVal) Eval(interface{}) (interface{}, error) {
 	return string(e), nil
 }
 
+func (e StringVal) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
+	visit(e)
+}
+
 type IntVal int
 
 func (e IntVal) Eval(interface{}) (interface{}, error) {
 	return int(e), nil
 }
 
+func (e IntVal) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
+	visit(e)
+}
+
 type FloatVal float64
 
 func (e FloatVal) Eval(interface{}) (interface{}, error) {
 	return float64(e), nil
+}
+
+func (e FloatVal) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
+	visit(e)
 }
 
 func NewNullVal() nullVal {
@@ -559,14 +593,20 @@ func (e nullVal) Eval(interface{}) (interface{}, error) {
 	return e, nil
 }
 
-func NewJSONPathVal(jsonPath *jsonpath.JSONPath) JSONPathVal {
+func (e nullVal) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
+	visit(e)
+}
+
+func NewJSONPathVal(jsonPath *jsonpath.JSONPath, pathExpr string) JSONPathVal {
 	return JSONPathVal{
 		jsonPath,
+		pathExpr,
 	}
 }
 
 type JSONPathVal struct {
-	*jsonpath.JSONPath
+	JSONPath     *jsonpath.JSONPath
+	JSONPathExpr string
 }
 
 func (e JSONPathVal) Eval(v interface{}) (interface{}, error) {
@@ -584,7 +624,9 @@ func (e JSONPathVal) Eval(v interface{}) (interface{}, error) {
 	return NewNullVal(), nil
 }
 
-// Wrapping the JSON object and implementing Eval
+func (e JSONPathVal) Traverse(accept func(e Expr) bool, visit func(e Expr)) {
+	visit(e)
+}
 
 func like(str, likePattern string) bool {
 	reEscapedLikePattern := regexp.QuoteMeta(likePattern)

@@ -46,7 +46,7 @@ func TestMetricUpdater(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, updated)
 
-	objs, err := objectCache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s/%s", namespace, addressspace, addressname), nil)
+	objs, err := objectCache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s", namespace, addressname), nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, len(objs), "unexpected number of addresses")

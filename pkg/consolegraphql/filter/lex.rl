@@ -95,14 +95,14 @@ func (lex *lexer) Lex(out *FilterSymType) int {
             fbreak; };
 
             bquoted_string => {
-            val := "{" + strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "```", "`", -1) + "}"
+            val := strings.Replace(string(lex.data[lex.ts+1:lex.te-1]), "```", "`", -1)
             tok = JSON_PATH
             jsonPath := jsonpath.New("filter expr").AllowMissingKeys(true)
-            err := jsonPath.Parse(val)
+            err := jsonPath.Parse("{" + val + "}")
             if err != nil {
                 lex.e = err
             }
-            out.jsonPathValue = NewJSONPathVal(jsonPath)
+            out.jsonPathValue = NewJSONPathVal(jsonPath, val)
             fbreak; };
 
             /AND/i => { tok = AND; fbreak;};

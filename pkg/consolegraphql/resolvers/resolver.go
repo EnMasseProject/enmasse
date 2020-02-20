@@ -13,6 +13,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/filter"
+	"strings"
 )
 
 type Resolver struct {
@@ -53,11 +54,15 @@ func Min(x, y int) int {
 	return y
 }
 
-func BuildFilter(f *string) (cache.ObjectFilter, error) {
+func BuildFilter(f *string, orderedKeyElements ...string) (cache.ObjectFilter, string, error) {
 	if f != nil && *f != "" {
+		key := ""
 		expression, err := filter.ParseFilterExpression(*f)
 		if err != nil {
-			return nil, err
+			return nil, "", err
+		}
+		if len(orderedKeyElements) > 0 {
+			key = buildKey(expression, orderedKeyElements...)
 		}
 		return func(i interface{}) (match bool, cont bool, e error) {
 			rv, e := expression.Eval(i)
@@ -65,9 +70,80 @@ func BuildFilter(f *string) (cache.ObjectFilter, error) {
 				return false, false, e
 			}
 			return rv.(bool), true, nil
-		}, nil
+		}, key, nil
 	}
-	return nil, nil
+	return nil, "", nil
+}
+
+// builds the longest possible hierarchical key, in key element order, that matches the filter.
+// The filter tree traversal is pruned whenever boolean logic other from an "and" is encountered.
+// (This allows the indices provided by hashicorp memdb to be used efficiently).
+func buildKey(expression filter.Expr, orderedKeyElements ...string) string {
+	keyElements := make([]string, 0)
+
+	for i, keyElement := range orderedKeyElements {
+		foundTerm := false
+
+		doCmp := func(left, right filter.Expr,
+			fltKeyElement func(string) bool,
+			fltStrVal func(string) (string, bool)) bool {
+			if jpv, jpok := left.(filter.JSONPathVal); jpok && fltKeyElement(jpv.JSONPathExpr) {
+				if stv, stok := right.(filter.StringVal); stok {
+					if sv, ok := fltStrVal(string(stv)); ok {
+						keyElements = append(keyElements, sv)
+						return true
+					}
+				}
+			}
+			return false
+		}
+
+		accept := func(e filter.Expr) bool {
+			if foundTerm {
+				return false
+			}
+			switch e.(type) {
+			case filter.AndExpr:
+				return true
+			case filter.ComparisonExpr:
+				return true
+			}
+			return false
+		}
+		visit := func(e filter.Expr) {
+			if ce, ceok := e.(filter.ComparisonExpr); ceok {
+				fltKeyElement := func(jp string) bool { return jp == keyElement }
+
+				if ce.Operator == filter.EqualStr {
+					fltStrVal := func(sv string) (string, bool) { return sv, true }
+					if doCmp(ce.Left, ce.Right, fltKeyElement, fltStrVal) || doCmp(ce.Right, ce.Left, fltKeyElement, fltStrVal) {
+						foundTerm = true
+					}
+				} else if ce.Operator == filter.LikeStr && i == len(orderedKeyElements)-1 {
+					// Like eligible for last key element only
+					fltStrVal := func(sv string) (string, bool) {
+						// Allow only a single trailing % and no _
+						return strings.TrimSuffix(sv, "%"),
+							strings.Index(sv, "%") == len(sv)-1 && strings.Index(sv, "_") == -1
+					}
+					if doCmp(ce.Left, ce.Right, fltKeyElement, fltStrVal) || doCmp(ce.Right, ce.Left, fltKeyElement, fltStrVal) {
+						foundTerm = true
+					}
+				}
+			}
+		}
+		expression.Traverse(accept, visit)
+
+		if !foundTerm {
+			break
+		}
+	}
+
+	if len(orderedKeyElements) > len(keyElements) {
+		keyElements = append(keyElements, "")
+	}
+
+	return strings.Join(keyElements, "/")
 }
 
 func BuildOrderer(o *string) (func(interface{}) error, error) {

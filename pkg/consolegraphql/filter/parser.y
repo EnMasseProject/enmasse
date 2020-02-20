@@ -93,7 +93,7 @@ expression:
   }
 |  '(' expression ')'
   {
-    $$ = NewBoolExpr($2)
+    $$ = $2
   }
 | expression AND expression
   {

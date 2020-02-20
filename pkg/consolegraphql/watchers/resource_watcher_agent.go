@@ -427,7 +427,7 @@ func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {
 			}
 
 		case *agent.AgentAddress:
-			objs, err := clw.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s/%s", target.AddressSpaceNamespace, target.AddressSpace, target.Name), nil)
+			objs, err := clw.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s", target.AddressSpaceNamespace, target.Name), nil)
 			if err != nil {
 				return err
 			}
