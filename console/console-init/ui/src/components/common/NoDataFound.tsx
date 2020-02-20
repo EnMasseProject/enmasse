@@ -29,8 +29,7 @@ export const NoDataFound: React.FunctionComponent<INoDataFoundProps> = ({
             {type} Not Found
           </Title>
           <EmptyStateBody>
-            The {type} <b>{name}</b> you are looking for, does not exist
-            anymore.
+            {type} <b>{name}</b> no longer exists.
           </EmptyStateBody>
           <Link to={routeLink}>Go to {type} list</Link>
         </EmptyState>
