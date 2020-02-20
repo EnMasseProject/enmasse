@@ -926,14 +926,6 @@ public abstract class ConsoleTest extends TestBase {
                         "du*mmy",
                         "dummy*",
 
-                        ":dummy",
-                        "du:mmy",
-                        "dummy:",
-
-                        ".dummy",
-                        "dum.my",
-                        "dummy.",
-
                         " dummy",
                         "dum my",
                         "dummy ",
@@ -952,7 +944,15 @@ public abstract class ConsoleTest extends TestBase {
                         "du-mmy",
                         "dummy/foo",
                         "dum)my",
-                        "dum2my"
+                        "dum2my",
+
+                        ":dummy",
+                        "du:mmy",
+                        "dummy:",
+
+                        ".dummy",
+                        "dum.my",
+                        "dummy.",
         };
 
         for (String name : validNames) {
