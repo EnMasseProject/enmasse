@@ -7,8 +7,8 @@ import * as React from "react";
 import { Wizard } from "@patternfly/react-core";
 import { AddressSpaceConfiguration } from "pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
 import { ReviewAddressSpace } from "pages/CreateAddressSpace/ReviewAddressSpace";
-import { useApolloClient } from "@apollo/react-hooks";
 import { CREATE_ADDRESS_SPACE } from "queries";
+import { useMutationQuery } from "hooks";
 
 interface ICreateAddressSpaceProps {
   isCreateWizardOpen: boolean;
@@ -27,9 +27,23 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
   const [addressSpacePlan, setAddressSpacePlan] = React.useState(" ");
   const [namespace, setNamespace] = React.useState(" ");
   const [authenticationService, setAuthenticationService] = React.useState(" ");
-  const [isError, setIsError] = React.useState();
   const [isNameValid, setIsNameValid] = React.useState(true);
-  const client = useApolloClient();
+
+  const resetFormState = () => {
+    setIsCreateWizardOpen(false);
+    setAddressSpaceType("");
+    setAddressSpacePlan("");
+    setAddressSpaceName("");
+    setNamespace("");
+    setAuthenticationService("");
+    if (setOnCreationRefetch) setOnCreationRefetch(true);
+  };
+
+  const [setQueryVariables] = useMutationQuery(
+    CREATE_ADDRESS_SPACE,
+    resetFormState,
+    resetFormState
+  );
 
   const isReviewEnabled = () => {
     if (
@@ -63,37 +77,22 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
 
   const handleSave = async () => {
     if (isFinishEnabled()) {
-      const data = await client.mutate({
-        mutation: CREATE_ADDRESS_SPACE,
-        variables: {
-          as: {
-            metadata: {
-              name: addressSpaceName,
-              namespace: namespace
-            },
-            spec: {
-              type: addressSpaceType.toLowerCase(),
-              plan: addressSpacePlan.toLowerCase(),
-              authenticationService: {
-                name: authenticationService
-              }
+      const variables = {
+        as: {
+          metadata: {
+            name: addressSpaceName,
+            namespace: namespace
+          },
+          spec: {
+            type: addressSpaceType.toLowerCase(),
+            plan: addressSpacePlan.toLowerCase(),
+            authenticationService: {
+              name: authenticationService
             }
           }
         }
-      });
-      if (data.errors) {
-        setIsError(true);
-        console.log("Error", data);
-      }
-      if (data.data) {
-        setIsCreateWizardOpen(false);
-        setAddressSpaceType("");
-        setAddressSpacePlan("");
-        setAddressSpaceName("");
-        setNamespace("");
-        setAuthenticationService("");
-      }
-      if (setOnCreationRefetch) setOnCreationRefetch(true);
+      };
+      setQueryVariables(variables);
     }
   };
 

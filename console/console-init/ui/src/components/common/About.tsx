@@ -22,16 +22,16 @@ export const About: React.FunctionComponent<IAboutProps> = ({
       backgroundImageSrc: "",
       brandImageSrc: "",
       brandImageAlt: ""
-    };
-
-    let img = require("assets/images/" + imagePrefix + "_about_logo.svg");
+    };    
 
     modalImgProps = {
-      brandImageSrc: img,
+      brandImageSrc: "",
       brandImageAlt: productName,
       backgroundImageSrc: ""
     };
     try {
+      let img = require("assets/images/" + imagePrefix + "_about_logo.svg");
+      modalImgProps.brandImageSrc=img;
       modalImgProps.backgroundImageSrc = require("assets/images/" +
         imagePrefix +
         "_about_bg.svg");

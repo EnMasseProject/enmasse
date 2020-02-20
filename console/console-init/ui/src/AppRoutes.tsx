@@ -6,6 +6,8 @@
 import * as React from "react";
 import { SwitchWith404, LazyRoute } from "use-patternfly";
 import { Redirect } from "react-router";
+import { Route } from "react-router-dom";
+import { NotFound } from "components/common";
 
 const getAddressSpaceListPage = () =>
   import("pages/AddressSpaceList/AddressSpaceListWithFilterAndPaginationPage");
@@ -38,5 +40,6 @@ export const AppRoutes = () => (
       getComponent={getConnectionDetail}
       exact={true}
     />
+    <Route path="/server-error" component={NotFound} />
   </SwitchWith404>
 );
