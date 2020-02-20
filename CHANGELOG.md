@@ -26,7 +26,6 @@
 * #3868: Add support for specifying maxConsumers for a subscription
 * #3873: Require TLSv1.2 or newer for external TLS endpoints
 * #3867: Add addition checks for router mesh status
-# #3923: Address CRD now validates the spec.address field comprises permitted characters.
 
 ## 0.30.2
 *  #2714: Allow setting security context of pods using persistent volumes

@@ -25,7 +25,7 @@ import {
 } from "queries";
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { k8NameRegexp } from "types/Configs";
+import { regexp } from "types/Configs";
 const styles = StyleSheet.create({
   capitalize_labels: {
     "text-transform": "capitalize"
@@ -205,7 +205,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
 
   const handleNameChange = (name: string) => {
     setName(name);
-    !k8NameRegexp.test(name) ? setIsNameValid(false) : setIsNameValid(true);
+    !regexp.test(name) ? setIsNameValid(false) : setIsNameValid(true);
   };
 
   return (

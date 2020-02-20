@@ -515,9 +515,9 @@ const EDIT_ADDRESS = gql`
   }
 `;
 
-const ADDRESS_COMMAND_PREVIEW_DETAIL = gql`
-  query cmd($a: Address_enmasse_io_v1beta1_Input!, $as: String) {
-    addressCommand(input: $a, addressSpace: $as)
+const ADDRESS_COMMAND_PRIVIEW_DETAIL = gql`
+  query cmd($a: Address_enmasse_io_v1beta1_Input!) {
+    addressCommand(input: $a)
   }
 `;
 
@@ -694,7 +694,7 @@ export {
   RETURN_ADDRESS_PLANS,
   CREATE_ADDRESS,
   EDIT_ADDRESS,
-  ADDRESS_COMMAND_PREVIEW_DETAIL,
+  ADDRESS_COMMAND_PRIVIEW_DETAIL,
   RETURN_ADDRESS_TYPES,
   RETURN_ADDRESS_SPACE_PLANS,
   RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION,
