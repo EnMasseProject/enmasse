@@ -75,7 +75,7 @@ interface IAddressTypes {
     };
   }>;
 }
-export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = ({
+export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
   addressspaceName,
   namespace,
   addressName,
@@ -190,15 +190,12 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
         <GridItem span={6}>
           <Form>
             <FormGroup
-              label="Name"
+              label="Address"
               isRequired={true}
               fieldId="address-name"
               helperText={
                 !isNameValid ? (
-                  <small>
-                    Only digits (0-9), lower case letters (a-z), -, and .
-                    allowed, and should start with alpha-numeric characters.
-                  </small>
+                  <small>The address must not include # * or whitespace.</small>
                 ) : (
                   ""
                 )
