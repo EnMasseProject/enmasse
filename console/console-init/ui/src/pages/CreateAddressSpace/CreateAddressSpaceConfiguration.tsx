@@ -251,7 +251,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
               isRequired={true}
               fieldId="address-space"
               helperText={
-                !isNameValid ? (
+                name.trim() !== "" && !isNameValid ? (
                   <small>
                     Only digits (0-9), lower case letters (a-z), -, and .
                     allowed, and should start with alpha-numeric characters.
@@ -263,7 +263,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
             >
               <TextInput
                 isRequired={true}
-                isValid={isNameValid}
+                isValid={name.trim() === "" || isNameValid}
                 type="text"
                 id="address-space"
                 name="address-space"

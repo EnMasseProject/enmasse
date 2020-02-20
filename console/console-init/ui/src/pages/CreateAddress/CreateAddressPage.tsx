@@ -47,14 +47,36 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
     !regexp.test(name) ? setIsNameValid(false) : setIsNameValid(true);
   };
 
-  const handleSave = async () => {
+  const isReviewEnabled = () => {
     if (
-      addressSpace &&
       addressName.trim() !== "" &&
+      isNameValid &&
       plan.trim() !== "" &&
       addressType.trim() !== "" &&
       (addressType === "subscription") === (topic.trim() !== "")
     ) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const isFinishEnabled = () => {
+    if (
+      addressName.trim() !== "" &&
+      plan.trim() !== "" &&
+      addressType.trim() !== "" &&
+      (addressType === "subscription") === (topic.trim() !== "") &&
+      isNameValid
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const handleSave = async () => {
+    if (addressSpace && isFinishEnabled()) {
       const getVariables = () => {
         let variable: any = {
           metadata: {
@@ -112,11 +134,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           setTopicForSubscripitons={setTopicForSubscription}
         />
       ),
-      enableNext:
-        addressName.trim() !== "" &&
-        plan.trim() !== "" &&
-        addressType.trim() !== "" &&
-        (addressType === "subscription") === (topic.trim() !== ""),
+      enableNext: isReviewEnabled(),
       backButton: "hide"
     },
     {
@@ -131,17 +149,8 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           addressspace={addressSpace}
         />
       ),
-      enableNext:
-        addressName.trim() !== "" &&
-        plan.trim() !== "" &&
-        addressType.trim() !== "" &&
-        (addressType === "subscription") === (topic.trim() !== "") &&
-        isNameValid,
-      canJumpTo:
-        addressName.trim() !== "" &&
-        plan.trim() !== "" &&
-        addressType.trim() !== "" &&
-        (addressType === "subscription") === (topic.trim() !== ""),
+      enableNext: isFinishEnabled(),
+      canJumpTo: isReviewEnabled(),
       nextButtonText: "Finish"
     }
   ];

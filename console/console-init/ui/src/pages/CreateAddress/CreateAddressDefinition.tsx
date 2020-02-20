@@ -194,7 +194,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
               isRequired={true}
               fieldId="address-name"
               helperText={
-                !isNameValid ? (
+                addressName.trim() !== "" && !isNameValid ? (
                   <small>
                     Only digits (0-9), lower case letters (a-z), -, and .
                     allowed, and should start with alpha-numeric characters.
@@ -211,7 +211,7 @@ export const AddressDefinitaion: React.FunctionComponent<IAddressDefinition> = (
                 name="address-name"
                 value={addressName}
                 onChange={handleAddressChange}
-                isValid={isNameValid}
+                isValid={addressName.trim() === "" || isNameValid}
               />
             </FormGroup>
 
