@@ -25,6 +25,8 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+//workaround: disable this at the class level as well because a class with all tests disabled at method level makes JunitCallbackListener throw errors
+@Disabled
 class PlansTest extends TestBase implements ITestSharedStandard {
 
     @Test
