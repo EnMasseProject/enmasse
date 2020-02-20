@@ -209,6 +209,10 @@ func (kw *NamespaceWatcher) doWatch(resource cp.NamespaceInterface) error {
 	resourceWatch, err := resource.Watch(v1.ListOptions{
 		ResourceVersion: resourceList.ResourceVersion,
 	})
+	if err != nil {
+		return err
+	}
+	defer resourceWatch.Stop()
 
 	if !kw.watchingStarted {
 		close(kw.watching)

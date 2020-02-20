@@ -210,6 +210,10 @@ func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {
 		ResourceVersion: resourceList.ResourceVersion,
 		LabelSelector:   "app=enmasse,component=agent",
 	})
+	if err != nil {
+		return err
+	}
+	defer resourceWatch.Stop()
 
 	if !clw.watchingAgentsStarted {
 		close(clw.watching)
