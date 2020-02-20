@@ -21,6 +21,7 @@ import {
   AddressSpaceIcon
 } from "components/common/AddressSpaceListFormatter";
 import { FormatDistance } from "use-patternfly";
+import { StyleSheet, css } from "@patternfly/react-styles";
 
 export interface IAddressSpace {
   name: string;
@@ -49,6 +50,12 @@ interface IAddressListProps {
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
 }
+
+export const StyleForTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto"
+  }
+});
 
 export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   rows,
@@ -170,7 +177,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   };
 
   return (
-    <div style={{ overflowY: "auto" }}>
+    <div className={css(StyleForTable.scroll_overflow)}>
       <Table
         variant={TableVariant.compact}
         onSelect={onSelect}

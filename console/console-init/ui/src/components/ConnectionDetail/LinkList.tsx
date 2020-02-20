@@ -13,6 +13,8 @@ import {
   sortable,
   ISortBy
 } from "@patternfly/react-table";
+import { StyleForTable } from "components/AddressSpaceList/AddressSpaceList";
+import { css } from "@patternfly/react-styles";
 
 interface ILinkListProps {
   rows: ILink[];
@@ -72,7 +74,7 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({
   ];
 
   return (
-    <div style={{ overflowY: "auto" }}>
+    <div className={css(StyleForTable.scroll_overflow)}>
       <Table
         variant={TableVariant.compact}
         cells={tableColumns}

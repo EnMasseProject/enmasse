@@ -20,6 +20,8 @@ import { Messages } from "components/common/Messages";
 import useWindowDimensions from "components/common/WindowDimension";
 import { AddressSpaceStatus } from "components/common/AddressSpaceListFormatter";
 import { AddressStatus } from "components/common/AddressFormatter";
+import { css } from "@patternfly/react-styles";
+import { StyleForTable } from "components/AddressSpaceList/AddressSpaceList";
 
 export interface IAddress {
   name: string;
@@ -224,7 +226,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     }
   };
   return (
-    <div style={{ overflowY: "auto" }}>
+    <div className={css(StyleForTable.scroll_overflow)}>
       <Table
         variant={TableVariant.compact}
         onSelect={onSelect}

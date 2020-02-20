@@ -17,6 +17,8 @@ import { Link } from "react-router-dom";
 import { ConnectionProtocolFormat } from "components/common/ConnectionListFormatter";
 import useWindowDimensions from "components/common/WindowDimension";
 import { FormatDistance } from "use-patternfly";
+import { StyleForTable } from "components/AddressSpaceList/AddressSpaceList";
+import { css } from "@patternfly/react-styles";
 
 interface IConnectionListProps {
   rows: IConnection[];
@@ -118,7 +120,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   ];
 
   return (
-    <div style={{ overflowY: "auto" }}>
+    <div className={css(StyleForTable.scroll_overflow)}>
       <Table
         variant={TableVariant.compact}
         cells={tableColumns}
