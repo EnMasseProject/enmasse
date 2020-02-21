@@ -22,7 +22,7 @@ const ConnectionListFunction = () => {
   useDocumentTitle("Connection List");
 
   useA11yRouteChange();
-  const { name, namespace } = useParams();
+  const { name, namespace, type } = useParams();
   const [filterValue, setFilterValue] = React.useState<string>("Hostname");
   const [hostnames, setHostnames] = React.useState<Array<any>>([]);
   const [containerIds, setContainerIds] = React.useState<Array<any>>([]);
@@ -108,6 +108,7 @@ const ConnectionListFunction = () => {
         perPage={perPage}
         sortValue={sortDropDownValue}
         setSortValue={setSortDropdownValue}
+        addressSpaceType={type}
       />
       {totalConnections > 0 && renderPagination(page, perPage)}
     </PageSection>

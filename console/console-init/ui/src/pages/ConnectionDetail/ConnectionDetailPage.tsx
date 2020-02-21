@@ -120,7 +120,7 @@ export default function ConnectionDetailPage() {
 
   return (
     <>
-      <ConnectionDetailHeader {...connectionDetail} />
+      <ConnectionDetailHeader {...connectionDetail} addressSpaceType={type} />
       <PageSection>
         <ConnectionLinksWithFilterAndPaginationPage
           name={name}
