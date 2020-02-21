@@ -540,7 +540,7 @@ func (r *ReconcileConsoleService) reconcileConsoleLink(ctx context.Context, cons
 		// we have a URL, so use it
 
 		_, err := controllerutil.CreateOrUpdate(ctx, r.client, &consoleLink, func() error {
-			applyConsoleLink(&consoleLink, host)
+			applyConsoleLink(&consoleLink, host, consoleservice.Name)
 			if err := controllerutil.SetControllerReference(consoleservice, route, r.scheme); err != nil {
 				return err
 			}
@@ -560,7 +560,7 @@ func (r *ReconcileConsoleService) reconcileConsoleLink(ctx context.Context, cons
 	}
 }
 
-func applyConsoleLink(consoleLink *unstructured.Unstructured, host string) {
+func applyConsoleLink(consoleLink *unstructured.Unstructured, host string, name string) {
 
 	consoleLink.Object["spec"] = map[string]interface{}{
 		"text":     consoleLinkName,
@@ -571,7 +571,7 @@ func applyConsoleLink(consoleLink *unstructured.Unstructured, host string) {
 		},
 		"href": host,
 	}
-
+	consoleLink.SetLabels(install.CreateDefaultLabels(consoleLink.GetLabels(), "console", name))
 }
 
 func (r *ReconcileConsoleService) reconcileSsoCookieSecret(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {

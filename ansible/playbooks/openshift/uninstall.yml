@@ -13,6 +13,8 @@
       shell: oc delete clusterroles -l app=enmasse
     - name: Delete API services
       shell: oc delete apiservices -l app=enmasse
+    - name: Delete consolelinks
+      shell: oc api-resources --namespaced=false --api-group=console.openshift.io --no-headers | grep -q ConsoleLink && oc delete consolelinks -l app=enmasse || echo
     - name: Delete OAUTH clients
       shell: oc delete oauthclients -l app=enmasse
     - name: Delete clusterservicebrokers
