@@ -31,14 +31,38 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
   const [isNameValid, setIsNameValid] = React.useState(true);
   const client = useApolloClient();
 
-  const handleSave = async () => {
+  const isReviewEnabled = () => {
     if (
-      addressSpaceName &&
-      authenticationService &&
-      addressSpaceType &&
-      addressSpacePlan &&
-      namespace
+      addressSpaceName.trim() !== "" &&
+      addressSpaceType.trim() !== "" &&
+      authenticationService.trim() !== "" &&
+      addressSpacePlan.trim() !== "" &&
+      namespace.trim() !== "" &&
+      isNameValid
     ) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const isFinishEnabled = () => {
+    if (
+      addressSpaceName.trim() !== "" &&
+      addressSpaceType.trim() !== "" &&
+      authenticationService.trim() !== "" &&
+      addressSpacePlan.trim() !== "" &&
+      namespace.trim() !== "" &&
+      isNameValid
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const handleSave = async () => {
+    if (isFinishEnabled()) {
       const data = await client.mutate({
         mutation: CREATE_ADDRESS_SPACE,
         variables: {
@@ -92,12 +116,7 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
           setIsNameValid={setIsNameValid}
         />
       ),
-      enableNext:
-        addressSpaceName.trim() !== "" &&
-        addressSpaceType.trim() !== "" &&
-        authenticationService.trim() !== "" &&
-        addressSpacePlan.trim() !== "" &&
-        namespace.trim() !== "",
+      enableNext: isReviewEnabled(),
       backButton: "hide"
     },
     {
@@ -112,19 +131,8 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
           authenticationService={authenticationService}
         />
       ),
-      enableNext:
-        addressSpaceName.trim() !== "" &&
-        addressSpaceType.trim() !== "" &&
-        authenticationService.trim() !== "" &&
-        addressSpacePlan.trim() !== "" &&
-        namespace.trim() !== "" &&
-        isNameValid,
-      canJumpTo:
-        addressSpaceName.trim() !== "" &&
-        addressSpaceType.trim() !== "" &&
-        authenticationService.trim() !== "" &&
-        addressSpacePlan.trim() !== "" &&
-        namespace.trim() !== "",
+      enableNext: isFinishEnabled(),
+      canJumpTo: isReviewEnabled(),
       nextButtonText: "Finish"
     }
   ];

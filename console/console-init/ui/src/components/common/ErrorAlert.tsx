@@ -1,7 +1,11 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React, { useState } from "react";
 import { ApolloError } from "apollo-boost";
 import { Alert, AlertActionCloseButton } from "@patternfly/react-core";
-// import { StyleSheet } from "@patternfly/react-styles";
 
 export interface IError {
   error: ApolloError;
@@ -12,11 +16,7 @@ export const ErrorAlert: React.FunctionComponent<IError> = ({ error }) => {
   const hideAlert = () => {
     setAlertVisible(false);
   };
-  // const styles = StyleSheet.create({
-  //   alert_dimentions: {
-  //     width: 40
-  //   }
-  // });
+
   return (
     <>
       {alertVisible && (
