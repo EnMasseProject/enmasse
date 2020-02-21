@@ -89,11 +89,11 @@ public class SystemtestsKubernetesApps {
 
     static {
         INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
-        INFINISPAN_OPENSHIFT = new String[] {
-                        "common",
-                        "openshift"
+        INFINISPAN_OPENSHIFT = new String[]{
+                "common",
+                "openshift"
         };
-        INFINISPAN_KUBERNETES = new String[] {
+        INFINISPAN_KUBERNETES = new String[]{
                 "common",
                 "kubernetes"
         };
@@ -248,7 +248,7 @@ public class SystemtestsKubernetesApps {
         return in -> ReplaceValueStream.replaceValues(in, values);
     }
 
-    public static Path[] resolveAll(final Path base, final String ... localPaths) {
+    public static Path[] resolveAll(final Path base, final String... localPaths) {
         return Arrays.asList(localPaths)
                 .stream()
                 .map(l -> base.resolve(l))
@@ -311,7 +311,7 @@ public class SystemtestsKubernetesApps {
 
             log.info("Infinispan server will be removed");
 
-            for(final Path path : resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_OPENSHIFT)) {
+            for (final Path path : resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_OPENSHIFT)) {
                 KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, path);
             }
 
@@ -511,6 +511,9 @@ public class SystemtestsKubernetesApps {
                 .endMetadata()
                 .withNewSpec()
                 .addNewContainer()
+                .withNewResources()
+                .addToRequests("memory", new Quantity("512Mi"))
+                .endResources()
                 .withName(appName)
                 .withImage(imageName)
                 .addNewPort()
@@ -551,18 +554,18 @@ public class SystemtestsKubernetesApps {
                 .endSelector()
                 .withReplicas(1)
                 .withNewTemplate()
-                    .withNewMetadata()
-                    .addToLabels("app", MESSAGING_CLIENTS)
-                    .endMetadata()
-                    .withNewSpec()
-                    .addNewContainer()
-                    .withName(MESSAGING_CLIENTS)
-                    .withImage("quay.io/enmasse/systemtests-clients:latest")
-                    .withCommand("sleep")
-                    .withArgs("infinity")
-                    .endContainer()
-                    .endSpec()
-                    .endTemplate()
+                .withNewMetadata()
+                .addToLabels("app", MESSAGING_CLIENTS)
+                .endMetadata()
+                .withNewSpec()
+                .addNewContainer()
+                .withName(MESSAGING_CLIENTS)
+                .withImage("quay.io/enmasse/systemtests-clients:latest")
+                .withCommand("sleep")
+                .withArgs("infinity")
+                .endContainer()
+                .endSpec()
+                .endTemplate()
                 .endSpec()
                 .build();
     }
