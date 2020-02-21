@@ -294,13 +294,6 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     }
 
     @Test
-    void testAddressNameWithHyphens() throws Exception {
-        doTestWithStrangeAddressNames(getSharedAddressSpace(), true, false,
-                AddressType.QUEUE, AddressType.ANYCAST, AddressType.MULTICAST, AddressType.TOPIC, AddressType.SUBSCRIPTION
-        );
-    }
-
-    @Test
     void testVerylongAddressName() throws Exception {
         doTestWithStrangeAddressNames(getSharedAddressSpace(), false, true,
                 AddressType.QUEUE, AddressType.ANYCAST, AddressType.MULTICAST, AddressType.TOPIC, AddressType.SUBSCRIPTION
