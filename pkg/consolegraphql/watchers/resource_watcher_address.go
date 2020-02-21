@@ -16,7 +16,9 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/rest"
 	"log"
+	"math/rand"
 	"reflect"
+	"time"
 )
 
 type AddressWatcher struct {
@@ -30,16 +32,18 @@ type AddressWatcher struct {
 	create          func(*tp.Address) interface{}
 	update          func(*tp.Address, interface{}) bool
 	restartCounter  int32
+	resyncInterval  *time.Duration
 }
 
-func NewAddressWatcher(c cache.Cache, options ...WatcherOption) (ResourceWatcher, error) {
+func NewAddressWatcher(c cache.Cache, resyncInterval *time.Duration, options ...WatcherOption) (ResourceWatcher, error) {
 
 	kw := &AddressWatcher{
-		Namespace:   v1.NamespaceAll,
-		Cache:       c,
-		watching:    make(chan struct{}),
-		stopchan:    make(chan struct{}),
-		stoppedchan: make(chan struct{}),
+		Namespace:      v1.NamespaceAll,
+		Cache:          c,
+		watching:       make(chan struct{}),
+		stopchan:       make(chan struct{}),
+		stoppedchan:    make(chan struct{}),
+		resyncInterval: resyncInterval,
 		create: func(v *tp.Address) interface{} {
 			return v
 		},
@@ -204,11 +208,16 @@ func (kw *AddressWatcher) doWatch(resource cp.AddressInterface) error {
 		}
 	}
 	var stale = len(curr)
-
 	log.Printf("Address - Cache initialised population added %d, updated %d, unchanged %d, stale %d", added, updated, unchanged, stale)
-	resourceWatch, err := resource.Watch(v1.ListOptions{
+
+	watchOptions := v1.ListOptions{
 		ResourceVersion: resourceList.ResourceVersion,
-	})
+	}
+	if kw.resyncInterval != nil {
+		ts := int64(kw.resyncInterval.Seconds() * (rand.Float64() + 1.0))
+		watchOptions.TimeoutSeconds = &ts
+	}
+	resourceWatch, err := resource.Watch(watchOptions)
 	if err != nil {
 		return err
 	}

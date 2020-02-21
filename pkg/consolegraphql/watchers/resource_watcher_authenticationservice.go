@@ -16,7 +16,9 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/rest"
 	"log"
+	"math/rand"
 	"reflect"
+	"time"
 )
 
 type AuthenticationServiceWatcher struct {
@@ -30,16 +32,18 @@ type AuthenticationServiceWatcher struct {
 	create          func(*tp.AuthenticationService) interface{}
 	update          func(*tp.AuthenticationService, interface{}) bool
 	restartCounter  int32
+	resyncInterval  *time.Duration
 }
 
-func NewAuthenticationServiceWatcher(c cache.Cache, namespace string, options ...WatcherOption) (ResourceWatcher, error) {
+func NewAuthenticationServiceWatcher(c cache.Cache, resyncInterval *time.Duration, namespace string, options ...WatcherOption) (ResourceWatcher, error) {
 
 	kw := &AuthenticationServiceWatcher{
-		Namespace:   namespace,
-		Cache:       c,
-		watching:    make(chan struct{}),
-		stopchan:    make(chan struct{}),
-		stoppedchan: make(chan struct{}),
+		Namespace:      namespace,
+		Cache:          c,
+		watching:       make(chan struct{}),
+		stopchan:       make(chan struct{}),
+		stoppedchan:    make(chan struct{}),
+		resyncInterval: resyncInterval,
 		create: func(v *tp.AuthenticationService) interface{} {
 			return v
 		},
@@ -204,11 +208,16 @@ func (kw *AuthenticationServiceWatcher) doWatch(resource cp.AuthenticationServic
 		}
 	}
 	var stale = len(curr)
-
 	log.Printf("AuthenticationService - Cache initialised population added %d, updated %d, unchanged %d, stale %d", added, updated, unchanged, stale)
-	resourceWatch, err := resource.Watch(v1.ListOptions{
+
+	watchOptions := v1.ListOptions{
 		ResourceVersion: resourceList.ResourceVersion,
-	})
+	}
+	if kw.resyncInterval != nil {
+		ts := int64(kw.resyncInterval.Seconds() * (rand.Float64() + 1.0))
+		watchOptions.TimeoutSeconds = &ts
+	}
+	resourceWatch, err := resource.Watch(watchOptions)
 	if err != nil {
 		return err
 	}

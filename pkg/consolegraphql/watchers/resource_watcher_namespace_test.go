@@ -18,7 +18,7 @@ import (
 func newTestNamespaceWatcher(t *testing.T) *NamespaceWatcher {
 	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err, "failed to create object cache")
-	watcher, err := NewNamespaceWatcher(objectCache, NamespaceWatcherClient(fake.NewSimpleClientset().CoreV1()))
+	watcher, err := NewNamespaceWatcher(objectCache, nil, NamespaceWatcherClient(fake.NewSimpleClientset().CoreV1()))
 	assert.NoError(t, err, "failed to create test resolver")
 
 	return watcher.(*NamespaceWatcher)

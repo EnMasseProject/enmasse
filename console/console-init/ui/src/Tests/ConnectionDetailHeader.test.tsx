@@ -26,7 +26,9 @@ describe("Connection Detail Header with all connection details", () => {
       messageOut: 1
     };
 
-    const { getByText } = render(<ConnectionDetailHeader {...props} />);
+    const { getByText } = render(
+      <ConnectionDetailHeader {...props} addressSpaceType={"standard"} />
+    );
     getByText(props.hostname);
     getByText(props.containerId);
     getByText(props.protocol);

@@ -21,7 +21,7 @@ func newTestAddressWatcher(t *testing.T) *AddressWatcher {
 
 	clientset := fake.NewSimpleClientset()
 
-	watcher, err := NewAddressWatcher(objectCache, AddressWatcherClient(clientset.EnmasseV1beta1()),
+	watcher, err := NewAddressWatcher(objectCache, nil, AddressWatcherClient(clientset.EnmasseV1beta1()),
 		AddressWatcherFactory(AddressCreate, AddressUpdate))
 	assert.NoError(t, err, "failed to create test resolver")
 

@@ -20,6 +20,7 @@ import (
 	cp "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"log"
+	"math/rand"
 	"reflect"
 	"time"
 )
@@ -40,9 +41,10 @@ type AgentWatcher struct {
 	developmentMode      bool
 	RouteClientInterface *routev1.RouteV1Client
 	restartCounter       int32
+	resyncInterval       *time.Duration
 }
 
-func NewAgentWatcher(c cache.Cache, namespace string, creator AgentCollectorCreator, developmentMode bool, options ...WatcherOption) (*AgentWatcher, error) {
+func NewAgentWatcher(c cache.Cache, resyncInterval *time.Duration, namespace string, creator AgentCollectorCreator, developmentMode bool, options ...WatcherOption) (*AgentWatcher, error) {
 
 	clw := &AgentWatcher{
 		Namespace:             namespace,
@@ -206,10 +208,15 @@ func (clw *AgentWatcher) doWatch(resource cp.ServiceInterface) error {
 		v.Shutdown()
 	}
 
-	resourceWatch, err := resource.Watch(v1.ListOptions{
+	watchOptions := v1.ListOptions{
 		ResourceVersion: resourceList.ResourceVersion,
 		LabelSelector:   "app=enmasse,component=agent",
-	})
+	}
+	if clw.resyncInterval != nil {
+		ts := int64(clw.resyncInterval.Seconds() * (rand.Float64() + 1.0))
+		watchOptions.TimeoutSeconds = &ts
+	}
+	resourceWatch, err := resource.Watch(watchOptions)
 	if err != nil {
 		return err
 	}

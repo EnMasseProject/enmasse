@@ -26,6 +26,7 @@ export interface IConnectionListPageProps {
   perPage: number;
   sortValue?: ISortBy;
   setSortValue: (value?: ISortBy) => void;
+  addressSpaceType?: string;
 }
 
 export const ConnectionsListPage: React.FunctionComponent<IConnectionListPageProps> = ({
@@ -37,7 +38,8 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
   page,
   perPage,
   sortValue,
-  setSortValue
+  setSortValue,
+  addressSpaceType
 }) => {
   const [sortBy, setSortBy] = React.useState<ISortBy>();
   if (sortValue && sortBy !== sortValue) {
@@ -88,6 +90,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
     <>
       <ConnectionList
         rows={connectionList ? connectionList : []}
+        addressSpaceType={addressSpaceType}
         sortBy={sortBy}
         onSort={onSort}
       />

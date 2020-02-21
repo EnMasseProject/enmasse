@@ -41,6 +41,7 @@ export interface IConnectionHeaderDetailProps {
   os?: string;
   messageIn?: number | string;
   messageOut?: number | string;
+  addressSpaceType?: string;
 }
 export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDetailProps> = ({
   hostname,
@@ -53,10 +54,12 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
   platform,
   os,
   messageIn,
-  messageOut
+  messageOut,
+  addressSpaceType
 }) => {
   const [isHidden, setIsHidden] = React.useState(true);
   const { width } = useWindowDimensions();
+  console.log("addressSpaceType", addressSpaceType);
   return (
     <Card>
       <CardHeader>
@@ -128,6 +131,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
                 messageIn={messageIn}
                 messageOut={messageOut}
                 isMobileView={width < 992 ? true : false}
+                addressSpaceType={addressSpaceType}
               />
             </>
           ) : (

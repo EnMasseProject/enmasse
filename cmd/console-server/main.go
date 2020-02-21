@@ -216,6 +216,7 @@ http://localhost:` + port + `/graphql
 	agentAmqpMaxFrameSize := uint32(util.GetUintEnvOrDefault("AGENT_AMQP_MAX_FRAME_SIZE", 0, 32, 4294967295)) // Matches Rhea default
 	sessionLifetime := util.GetDurationEnvOrDefault("HTTP_SESSION_LIFETIME", 30*time.Minute)
 	sessionIdleTimeout := util.GetDurationEnvOrDefault("HTTP_SESSION_IDLE_TIMEOUT", 5*time.Minute)
+	resyncInterval := util.GetDurationEnvOrDefault("RESYNC_INTERVAL", 5*time.Minute)
 
 	log.Printf("Namespace: %s\n", infraNamespace)
 
@@ -248,27 +249,27 @@ http://localhost:` + port + `/graphql
 
 	creators := []func() (watchers.ResourceWatcher, error){
 		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAddressSpaceWatcher(objectCache, watchers.AddressSpaceWatcherConfig(config),
+			return watchers.NewAddressSpaceWatcher(objectCache, &resyncInterval, watchers.AddressSpaceWatcherConfig(config),
 				watchers.AddressSpaceWatcherFactory(watchers.AddressSpaceCreate, watchers.AddressSpaceUpdate))
 		},
 		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAddressWatcher(objectCache, watchers.AddressWatcherConfig(config),
+			return watchers.NewAddressWatcher(objectCache, &resyncInterval, watchers.AddressWatcherConfig(config),
 				watchers.AddressWatcherFactory(watchers.AddressCreate, watchers.AddressUpdate))
 		},
 		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewNamespaceWatcher(objectCache, watchers.NamespaceWatcherConfig(config))
+			return watchers.NewNamespaceWatcher(objectCache, &resyncInterval, watchers.NamespaceWatcherConfig(config))
 		},
 		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAddressSpacePlanWatcher(objectCache, infraNamespace, watchers.AddressSpacePlanWatcherConfig(config))
+			return watchers.NewAddressSpacePlanWatcher(objectCache, &resyncInterval, infraNamespace, watchers.AddressSpacePlanWatcherConfig(config))
 		},
 		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAddressPlanWatcher(objectCache, infraNamespace, watchers.AddressPlanWatcherConfig(config))
+			return watchers.NewAddressPlanWatcher(objectCache, &resyncInterval, infraNamespace, watchers.AddressPlanWatcherConfig(config))
 		},
 		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAuthenticationServiceWatcher(objectCache, infraNamespace, watchers.AuthenticationServiceWatcherConfig(config))
+			return watchers.NewAuthenticationServiceWatcher(objectCache, &resyncInterval, infraNamespace, watchers.AuthenticationServiceWatcherConfig(config))
 		},
 		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAddressSpaceSchemaWatcher(objectCache, watchers.AddressSpaceSchemaWatcherConfig(config))
+			return watchers.NewAddressSpaceSchemaWatcher(objectCache, &resyncInterval, watchers.AddressSpaceSchemaWatcherConfig(config))
 		},
 		func() (watchers.ResourceWatcher, error) {
 			watcherConfigs := make([]watchers.WatcherOption, 0)
@@ -276,7 +277,7 @@ http://localhost:` + port + `/graphql
 			if *developmentMode {
 				watcherConfigs = append(watcherConfigs, watchers.AgentWatcherRouteConfig(config))
 			}
-			watcher, err := watchers.NewAgentWatcher(objectCache, infraNamespace,
+			watcher, err := watchers.NewAgentWatcher(objectCache, &resyncInterval, infraNamespace,
 				func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, tlsConfig *tls.Config) agent.Delegate {
 					return agent.NewAmqpAgentDelegate(config.BearerToken,
 						host, port, tlsConfig,
