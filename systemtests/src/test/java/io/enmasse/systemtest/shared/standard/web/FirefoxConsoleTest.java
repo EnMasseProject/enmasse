@@ -255,6 +255,12 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
     @Test
     @ExternalClients
+    void testAddressLinks() throws Exception {
+        doTestAddressLinks(getSharedAddressSpace(), DestinationPlan.STANDARD_SMALL_QUEUE);
+    }
+
+    @Test
+    @ExternalClients
     void testFilterConnectionsByContainerId() throws Exception {
         doTestFilterConnectionsByContainerId(getSharedAddressSpace());
     }

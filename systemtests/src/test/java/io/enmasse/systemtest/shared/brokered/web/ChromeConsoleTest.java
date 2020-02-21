@@ -7,7 +7,9 @@ package io.enmasse.systemtest.shared.brokered.web;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.selenium.SeleniumChrome;
 import io.enmasse.systemtest.utils.AddressUtils;
 
@@ -49,6 +51,12 @@ class ChromeConsoleTest extends ConsoleTest implements ITestSharedBrokered {
     @Test
     void testSortAddressesByName() throws Exception {
         doTestSortAddressesByName(getSharedAddressSpace());
+    }
+
+    @Test
+    @ExternalClients
+    void testAddressLinks() throws Exception {
+        doTestAddressLinks(getSharedAddressSpace(), DestinationPlan.BROKERED_QUEUE);
     }
 
 }

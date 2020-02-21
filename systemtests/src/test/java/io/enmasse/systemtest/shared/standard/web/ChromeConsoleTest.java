@@ -179,6 +179,12 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
     }
 
     @Test
+    @ExternalClients
+    void testAddressLinks() throws Exception {
+        doTestAddressLinks(getSharedAddressSpace(), DestinationPlan.STANDARD_SMALL_QUEUE);
+    }
+
+    @Test
     void testMessagesStoredMetrics() throws Exception {
         doTestMessagesStoredMetrics(getSharedAddressSpace());
     }

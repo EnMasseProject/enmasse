@@ -20,7 +20,7 @@ public class ClientWebItem extends WebItem implements Comparable<ClientWebItem> 
         this.containerId = webItem.findElement(By.xpath("./td[@data-label='Container ID']")).getText();
         this.name = webItem.findElement(By.xpath("./td[@data-label='Name']")).getText().split(" ")[0];
         this.deliveryRate = webItem.findElement(By.xpath("./td[@data-label='Delivery Rate']")).getText();
-        this.backlog = webItem.findElement(By.xpath("./td[@data-label='Backlog]")).getText();
+        this.backlog = webItem.findElement(By.xpath("./td[@data-label='Backlog']")).getText();
     }
 
     public String getRole() {

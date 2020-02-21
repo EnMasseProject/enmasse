@@ -10,6 +10,7 @@ import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
 
@@ -160,4 +161,9 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
         doTestValidAddressNames(getSharedAddressSpace());
     }
 
+    @Test
+    @ExternalClients
+    void testAddressLinks() throws Exception {
+        doTestAddressLinks(getSharedAddressSpace(), DestinationPlan.BROKERED_QUEUE);
+    }
 }
