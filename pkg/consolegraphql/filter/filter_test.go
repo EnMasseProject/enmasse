@@ -27,8 +27,10 @@ func TestParseFilterBooleanExprValid(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := ParseFilterExpression(tc.expr)
-		assert.NoErrorf(t, err, "Unexpected error for case : %s", tc.expr)
+		t.Run(tc.expr, func(t *testing.T) {
+			_, err := ParseFilterExpression(tc.expr)
+			assert.NoErrorf(t, err, "Unexpected error")
+		})
 	}
 }
 
@@ -45,8 +47,10 @@ func TestParseFilterValueExprValid(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := ParseFilterExpression(tc.expr)
-		assert.NoErrorf(t, err, "Unexpected error for case : %s", tc.expr)
+		t.Run(tc.expr, func(t *testing.T) {
+			_, err := ParseFilterExpression(tc.expr)
+			assert.NoErrorf(t, err, "Unexpected error")
+		})
 	}
 }
 
@@ -160,13 +164,16 @@ func TestFilterEval(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		expr, err := ParseFilterExpression(tc.expr)
-		assert.NoErrorf(t, err, "Unexpected error for case : %s", tc.expr)
-		assert.NotNil(t, expr, "Expected an expression")
-		if expr != nil {
-			actual, _ := expr.Eval(obj)
-			assert.Equal(t, tc.expected, actual, "Unexpected result for case : %s", tc.expr)
-		}
+		t.Run(tc.expr, func(t *testing.T) {
+			expr, err := ParseFilterExpression(tc.expr)
+			assert.NoErrorf(t, err, "Unexpected error")
+			assert.NotNil(t, expr, "Expected an expression")
+			if expr != nil {
+				actual, _ := expr.Eval(obj)
+				assert.Equal(t, tc.expected, actual, "Unexpected result")
+			}
+		})
+
 	}
 }
 
@@ -187,12 +194,14 @@ func TestFilterKubernetesObjectUsingJsonName(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		expr, err := ParseFilterExpression(tc.expr)
-		assert.NoErrorf(t, err, "Unexpected error for case : %s", tc.expr)
-		assert.NotNil(t, expr, "Expected an expression")
-		if expr != nil {
-			actual, _ := expr.Eval(obj)
-			assert.Equal(t, tc.expected, actual, "Unexpected result for case : %s", tc.expr)
-		}
+		t.Run(tc.expr, func(t *testing.T) {
+			expr, err := ParseFilterExpression(tc.expr)
+			assert.NoErrorf(t, err, "Unexpected error")
+			assert.NotNil(t, expr, "Expected an expression")
+			if expr != nil {
+				actual, _ := expr.Eval(obj)
+				assert.Equal(t, tc.expected, actual, "Unexpected result")
+			}
+		})
 	}
 }

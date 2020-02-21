@@ -33,21 +33,23 @@ func TestLexSimpleLexemes(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		lexer := newLexer([]byte(tc.expr))
-		fst := &FilterSymType{}
+		t.Run(tc.expr, func(t *testing.T) {
+			lexer := newLexer([]byte(tc.expr))
+			fst := &FilterSymType{}
 
-		toks := make([]int, 0)
-		for {
-			tok := lexer.Lex(fst)
-			if tok == 0 {
-				break
+			toks := make([]int, 0)
+			for {
+				tok := lexer.Lex(fst)
+				if tok == 0 {
+					break
+				}
+				toks = append(toks, tok)
+
 			}
-			toks = append(toks, tok)
 
-		}
-
-		assert.NoErrorf(t, lexer.GetError(), "Unexpected error for case : %s", tc.expr)
-		assert.Equal(t, tc.expected, toks, "Unexpected tokens for case : %s", tc.expr)
+			assert.NoErrorf(t, lexer.GetError(), "Unexpected error")
+			assert.Equal(t, tc.expected, toks, "Unexpected tokens")
+		})
 	}
 }
 
@@ -98,16 +100,18 @@ func TestLexValueCarryingLexemes(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		lexer := newLexer([]byte(tc.expr))
-		fst := &FilterSymType{}
+		t.Run(tc.expr, func(t *testing.T) {
+			lexer := newLexer([]byte(tc.expr))
+			fst := &FilterSymType{}
 
-		tok := lexer.Lex(fst)
-		if tc.validatingFunc != nil {
-			tc.validatingFunc(fst)
-		}
+			tok := lexer.Lex(fst)
+			if tc.validatingFunc != nil {
+				tc.validatingFunc(fst)
+			}
 
-		assert.NoErrorf(t, lexer.GetError(), "Unexpected error for case : %s", tc.expr)
-		assert.Equal(t, tc.expected, tok, "Unexpected token for case : %s", tc.expr)
+			assert.NoErrorf(t, lexer.GetError(), "Unexpected error")
+			assert.Equal(t, tc.expected, tok, "Unexpected token")
+		})
 	}
 
 }
