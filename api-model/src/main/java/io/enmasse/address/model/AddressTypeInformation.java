@@ -77,6 +77,15 @@ public class AddressTypeInformation {
         return Objects.hash(name, description, plans);
     }
 
+    @Override
+    public String toString() {
+        return "AddressTypeInformation{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", plans=" + plans +
+                '}';
+    }
+
     public static AddressTypeInformation fromAddressType(final AddressType addressType) {
         if (addressType == null) {
             return null;

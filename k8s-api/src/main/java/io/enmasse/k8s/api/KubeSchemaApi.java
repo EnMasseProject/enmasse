@@ -294,32 +294,44 @@ public class KubeSchemaApi implements SchemaApi {
     public Watch watchSchema(Watcher<Schema> watcher, Duration resyncInterval) {
         List<Watch> watches = new ArrayList<>();
         watches.add(addressSpacePlanApi.watchResources(items -> {
-            currentAddressSpacePlans = items;
+            synchronized (KubeSchemaApi.this) {
+                currentAddressSpacePlans = items;
+            }
             updateSchema(watcher);
         }, resyncInterval));
 
         watches.add(addressPlanApi.watchResources(items -> {
-            currentAddressPlans = items;
+            synchronized (KubeSchemaApi.this) {
+                currentAddressPlans = items;
+            }
             updateSchema(watcher);
         }, resyncInterval));
 
         watches.add(brokeredInfraConfigApi.watchResources(items -> {
-            currentBrokeredInfraConfigs = items;
+            synchronized (KubeSchemaApi.this) {
+                currentBrokeredInfraConfigs = items;
+            }
             updateSchema(watcher);
         }, resyncInterval));
 
         watches.add(standardInfraConfigApi.watchResources(items -> {
-            currentStandardInfraConfigs = items;
+            synchronized (KubeSchemaApi.this) {
+                currentStandardInfraConfigs = items;
+            }
             updateSchema(watcher);
         }, resyncInterval));
 
         watches.add(authenticationServiceApi.watchResources(items -> {
-            currentAuthenticationServices = items;
+            synchronized (KubeSchemaApi.this) {
+                currentAuthenticationServices = items;
+            }
             updateSchema(watcher);
         }, resyncInterval));
 
         watches.add(consoleServiceApi.watchResources(items -> {
-            currentConsoleServices = items;
+            synchronized (KubeSchemaApi.this) {
+                currentConsoleServices = items;
+            }
             updateSchema(watcher);
         }, resyncInterval));
 
