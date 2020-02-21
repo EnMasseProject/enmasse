@@ -600,19 +600,37 @@ func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 				assert.Equal(t, 253, len(name))
 			},
 		},
+		{
+			"only DNS-1123 dot separators",
+			addressspace,
+			"...",
+			func(name string) {
+				assert.Regexp(t, "^myaddressspace\\.[-a-z0-9]{36}$", name)
+			},
+		},
+		{
+			"only DNS-1123 dash separators",
+			addressspace,
+			"-",
+			func(name string) {
+				assert.Regexp(t, "^myaddressspace\\.[-a-z0-9]{36}$", name)
+			},
+		},
 	}
 	for _, testCase := range testCases {
-		r, ctx := newTestAddressResolver(t)
-		ah := createAddress(namespace, "",
-			withAddress(testCase.address))
+		t.Run(testCase.name, func(t *testing.T) {
+			r, ctx := newTestAddressResolver(t)
+			ah := createAddress(namespace, "",
+				withAddress(testCase.address))
 
-		meta, err := r.Mutation().CreateAddress(ctx, ah.Address, &testCase.addressSpace)
-		assert.NoError(t, err)
+			meta, err := r.Mutation().CreateAddress(ctx, ah.Address, &testCase.addressSpace)
+			assert.NoError(t, err)
 
-		retrieved, err := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.Addresses(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
-		assert.NoError(t, err)
+			retrieved, err := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.Addresses(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
+			assert.NoError(t, err)
 
-		testCase.assertExpectedName(retrieved.Name)
+			testCase.assertExpectedName(retrieved.Name)
+		})
 	}
 }
 

@@ -21,7 +21,7 @@ import (
 )
 
 // From https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-var validNameRegexp = regexp.MustCompile("^[a-z0-9][-a-z0-9_.]*[a-z0-9]$")
+var validDnsSubDomainRfc1123NameRegexp = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$")
 var legalNameCharRegexp = regexp.MustCompile("[^-a-z0-9_.]")
 var separators = []string{"_", ".", "-"}
 
@@ -314,7 +314,7 @@ func defaultResourceNameFromAddress(input *v1beta1.Address, addressSpace *string
 }
 
 func isValidName(name string, maxLength int) bool {
-	return validNameRegexp.MatchString(name) && maxLength >= len(name)
+	return validDnsSubDomainRfc1123NameRegexp.MatchString(name) && maxLength >= len(name)
 }
 
 func cleanName(name string, qualifier string, maxLength int) string {
@@ -328,6 +328,11 @@ func cleanName(name string, qualifier string, maxLength int) string {
 	if len(name) > maxLength {
 		name = name[:maxLength]
 	}
+
+	if !validDnsSubDomainRfc1123NameRegexp.MatchString(name) {
+		name = ""
+	}
+
 	if name == "" {
 		return qualifier
 	} else {
