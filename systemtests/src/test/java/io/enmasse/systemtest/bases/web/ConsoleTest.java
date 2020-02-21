@@ -1074,8 +1074,16 @@ public abstract class ConsoleTest extends TestBase {
     private int attachClients(AddressSpace addressSpace, Address destination, UserCredentials userCredentials) throws Exception {
         final int SENDER_COUNT = 6;
         final int RECEIVER_COUNT = 4;
-        getClientUtils().attachConnector(addressSpace, destination, 1, SENDER_COUNT, RECEIVER_COUNT, userCredentials, 360);
-
+        if (addressSpace.getSpec().getPlan().equals(AddressSpacePlans.BROKERED)) {
+            for (int i = 0; i < SENDER_COUNT; i++) {
+                getClientUtils().attachSender(addressSpace, destination, userCredentials, 1000, 60000);
+                    if (i < RECEIVER_COUNT) {
+                        getClientUtils().attachReceiver(addressSpace, destination, userCredentials, 1100);
+                    }
+            }
+        } else {
+            getClientUtils().attachConnector(addressSpace, destination, 1, SENDER_COUNT, RECEIVER_COUNT, userCredentials, 60000);
+        }
         return (SENDER_COUNT + RECEIVER_COUNT);
     }
 
