@@ -26,6 +26,12 @@ spec:
         severity: critical
       expr: enmasse_component_health == 0
       for: 300s
+    - alert: AuthenticationService
+      annotations:
+        description: "{{ "{{" }} $labels.authservice_name {{ "}}" }} has been down for over 5 minutes"
+        severity: critical
+      expr: enmasse_authentication_service_ready == 0
+      for: 300s
     - alert: AddressSpaceHealth
       annotations:
         description: Address Space(s) have been in a not ready state for over 5 minutes

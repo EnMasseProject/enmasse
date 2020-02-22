@@ -15,6 +15,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 
 	routev1 "github.com/openshift/api/route/v1"
+	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8errors "k8s.io/apimachinery/pkg/api/errors"
@@ -26,9 +27,20 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+)
+
+var (
+	authinfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "authentication_service_ready",
+			Help: "EnMasse authentication services in the ready state",
+		},
+		[]string{"authservice_name", "authservice_type"},
+	)
 )
 
 var log = logf.Log.WithName("controller_authenticationservice")
@@ -72,6 +84,8 @@ func add(mgr manager.Manager, r *ReconcileAuthenticationService) error {
 		return err
 	}
 
+	metrics.Registry.MustRegister(authinfo)
+
 	return nil
 }
 
@@ -105,12 +119,6 @@ func (r *ReconcileAuthenticationService) Reconcile(request reconcile.Request) (r
 		return reconcile.Result{}, err
 	}
 
-	if authservice.Status.Phase == "" {
-		authservice.Status.Phase = adminv1beta1.AuthenticationServicePending
-	} else if authservice.Status.Phase == adminv1beta1.AuthenticationServicePending {
-		authservice.Status.Phase = adminv1beta1.AuthenticationServiceConfiguring
-	}
-
 	if authservice.Spec.Type == adminv1beta1.None {
 		return r.reconcileNoneAuthService(ctx, authservice)
 	} else if authservice.Spec.Type == adminv1beta1.Standard {
@@ -122,6 +130,7 @@ func (r *ReconcileAuthenticationService) Reconcile(request reconcile.Request) (r
 }
 
 func (r *ReconcileAuthenticationService) reconcileNoneAuthService(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (reconcile.Result, error) {
+	currentStatus := authservice.Status
 	rc := &recon.ReconcileContext{}
 	rc.ProcessSimple(func() error {
 		return applyNoneAuthServiceDefaults(ctx, r.client, r.scheme, authservice)
@@ -140,8 +149,9 @@ func (r *ReconcileAuthenticationService) reconcileNoneAuthService(ctx context.Co
 	}
 
 	rc.Process(func() (reconcile.Result, error) {
-		return r.updateStatus(ctx, authservice, func(status *adminv1beta1.AuthenticationServiceStatus) error {
-			status.Phase = adminv1beta1.AuthenticationServiceActive
+		return r.updateStatus(ctx, authservice, currentStatus, func(status *adminv1beta1.AuthenticationServiceStatus) error {
+			status.Phase = authservice.Status.Phase
+			status.Message = authservice.Status.Message
 			status.Host = fmt.Sprintf("%s.%s.svc", authservice.Name, authservice.Namespace)
 			status.Port = 5671
 			status.CaCertSecret = authservice.Spec.None.CertificateSecret
@@ -149,11 +159,18 @@ func (r *ReconcileAuthenticationService) reconcileNoneAuthService(ctx context.Co
 		})
 	})
 
+	if authservice.Status.Phase == adminv1beta1.AuthenticationServiceActive {
+		authinfo.WithLabelValues(authservice.Name, fmt.Sprintf("%v", authservice.Spec.Type)).Set(1)
+	} else {
+		authinfo.WithLabelValues(authservice.Name, fmt.Sprintf("%v", authservice.Spec.Type)).Set(0)
+	}
+
 	return rc.Result()
 }
 
 func (r *ReconcileAuthenticationService) reconcileStandardAuthService(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (reconcile.Result, error) {
 
+	currentStatus := authservice.Status
 	rc := &recon.ReconcileContext{}
 	rc.ProcessSimple(func() error {
 		return applyStandardAuthServiceDefaults(ctx, r.client, r.scheme, authservice)
@@ -164,7 +181,6 @@ func (r *ReconcileAuthenticationService) reconcileStandardAuthService(ctx contex
 	})
 
 	rc.Process(func() (reconcile.Result, error) {
-
 		return r.reconcileStandardVolume(ctx, *authservice.Spec.Standard.Storage.ClaimName, authservice)
 	})
 
@@ -181,14 +197,21 @@ func (r *ReconcileAuthenticationService) reconcileStandardAuthService(ctx contex
 	}
 
 	rc.Process(func() (reconcile.Result, error) {
-		return r.updateStatus(ctx, authservice, func(status *adminv1beta1.AuthenticationServiceStatus) error {
-			status.Phase = adminv1beta1.AuthenticationServiceActive
+		return r.updateStatus(ctx, authservice, currentStatus, func(status *adminv1beta1.AuthenticationServiceStatus) error {
+			status.Phase = authservice.Status.Phase
+			status.Message = authservice.Status.Message
 			status.Host = fmt.Sprintf("%s.%s.svc", authservice.Name, authservice.Namespace)
 			status.Port = 5671
 			status.CaCertSecret = authservice.Spec.Standard.CertificateSecret
 			return nil
 		})
 	})
+
+	if authservice.Status.Phase == adminv1beta1.AuthenticationServiceActive {
+		authinfo.WithLabelValues(authservice.Name, fmt.Sprintf("%v", authservice.Spec.Type)).Set(1)
+	} else {
+		authinfo.WithLabelValues(authservice.Name, fmt.Sprintf("%v", authservice.Spec.Type)).Set(0)
+	}
 
 	rc.Process(func() (reconcile.Result, error) {
 		return r.removeKeycloakController(ctx, authservice)
@@ -198,7 +221,9 @@ func (r *ReconcileAuthenticationService) reconcileStandardAuthService(ctx contex
 }
 
 func (r *ReconcileAuthenticationService) reconcileExternalAuthService(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (reconcile.Result, error) {
-	return r.updateStatus(ctx, authservice, func(status *adminv1beta1.AuthenticationServiceStatus) error {
+	currentStatus := authservice.Status
+	authinfo.WithLabelValues(authservice.Name, fmt.Sprintf("%v", authservice.Spec.Type)).Set(1)
+	return r.updateStatus(ctx, authservice, currentStatus, func(status *adminv1beta1.AuthenticationServiceStatus) error {
 		status.Phase = adminv1beta1.AuthenticationServiceActive
 		status.Host = authservice.Spec.External.Host
 		status.Port = authservice.Spec.External.Port
@@ -210,17 +235,19 @@ func (r *ReconcileAuthenticationService) reconcileExternalAuthService(ctx contex
 
 type UpdateStatusFn func(status *adminv1beta1.AuthenticationServiceStatus) error
 
-func (r *ReconcileAuthenticationService) updateStatus(ctx context.Context, authservice *adminv1beta1.AuthenticationService, updateFn UpdateStatusFn) (reconcile.Result, error) {
+func (r *ReconcileAuthenticationService) updateStatus(ctx context.Context, authservice *adminv1beta1.AuthenticationService, currentStatus adminv1beta1.AuthenticationServiceStatus, updateFn UpdateStatusFn) (reconcile.Result, error) {
 
 	newStatus := adminv1beta1.AuthenticationServiceStatus{}
 	if err := updateFn(&newStatus); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	if authservice.Status.Host != newStatus.Host ||
-		authservice.Status.Port != newStatus.Port ||
-		!reflect.DeepEqual(authservice.Status.CaCertSecret, newStatus.CaCertSecret) ||
-		!reflect.DeepEqual(authservice.Status.ClientCertSecret, newStatus.ClientCertSecret) {
+	if currentStatus.Host != newStatus.Host ||
+		currentStatus.Port != newStatus.Port ||
+		currentStatus.Phase != newStatus.Phase ||
+		currentStatus.Message != newStatus.Message ||
+		!reflect.DeepEqual(currentStatus.CaCertSecret, newStatus.CaCertSecret) ||
+		!reflect.DeepEqual(currentStatus.ClientCertSecret, newStatus.ClientCertSecret) {
 
 		authservice.Status = newStatus
 		err := r.client.Update(ctx, authservice)
@@ -242,9 +269,16 @@ func (r *ReconcileAuthenticationService) reconcileDeployment(ctx context.Context
 		if err := controllerutil.SetControllerReference(authservice, deployment, r.scheme); err != nil {
 			return err
 		}
-
 		return fn(authservice, deployment)
 	})
+
+	if deployment.Status.AvailableReplicas < 1 {
+		authservice.Status.Phase = adminv1beta1.AuthenticationServiceConfiguring
+		authservice.Status.Message = "Waiting for deployment: " + deployment.Name
+	} else {
+		authservice.Status.Phase = adminv1beta1.AuthenticationServiceActive
+		authservice.Status.Message = ""
+	}
 
 	if err != nil {
 		log.Error(err, "Failed reconciling Deployment")
