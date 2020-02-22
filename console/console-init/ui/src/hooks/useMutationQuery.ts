@@ -1,22 +1,18 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@apollo/react-hooks";
 import { ApolloError, OperationVariables } from "apollo-client";
+import { DocumentNode } from "graphql";
 
-import { useErrorContext, types } from "context-state-reducer";
-
-export const useMutationQuery = (
-  query: any,
+export const useMutationQuery = <TData = any, TVariables = OperationVariables>(
+  query: DocumentNode,
   callbackOnError?: Function,
   callbackOnCompleted?: Function
 ) => {
-  const [variables, setVariables] = useState<OperationVariables>();
-  const { dispatch } = useErrorContext();
+  const [variables, setVariables] = useState<TVariables>();
 
-  const [addVariables] = useMutation(query, {
+  const [addVariables] = useMutation<TData>(query, {
     onError(error: ApolloError) {
-      const { graphQLErrors } = error;
-      callbackOnError && callbackOnError(graphQLErrors);
-      dispatch({ type: types.SET_SERVER_ERROR, payload: error });
+      callbackOnError && callbackOnError(error);
     },
     onCompleted(data: any) {
       callbackOnCompleted && callbackOnCompleted(data);

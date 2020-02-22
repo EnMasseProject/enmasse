@@ -25,6 +25,7 @@ import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 import { ErrorAlert } from "components/common/ErrorAlert";
+import { useMutationQuery } from "hooks";
 
 export interface IAddressListPageProps {
   name?: string;
@@ -94,6 +95,37 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
 
   const client = useApolloClient();
   const [sortBy, setSortBy] = React.useState<ISortBy>();
+
+  const resetEditFormState = () => {
+    refetch();
+    setAddressBeingEdited(null);
+  };
+
+  const resetDeleteFormState = () => {
+    refetch();
+    setAddressBeingDeleted(null);
+  };
+
+  const resetPurgeFormState = () => {
+    refetch();
+    setAddressBeingPurged(null);
+  };
+
+  const [setEditAddressQueryVariables] = useMutationQuery(
+    EDIT_ADDRESS,
+    resetEditFormState,
+    resetEditFormState
+  );
+  const [setDeleteAddressQueryVariablse] = useMutationQuery(
+    DELETE_ADDRESS,
+    resetDeleteFormState,
+    resetDeleteFormState
+  );
+  const [setPurgeAddressQueryVariables] = useMutationQuery(
+    PURGE_ADDRESS,
+    resetPurgeFormState,
+    resetPurgeFormState
+  );
 
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
@@ -170,24 +202,20 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   };
   const handleCancelEdit = () => setAddressBeingEdited(null);
 
-  const handleSaving = async () => {
+  const handleSaving = () => {
     if (addressBeingEdited && addressSpaceType) {
-      await client.mutate({
-        mutation: EDIT_ADDRESS,
-        variables: {
-          a: {
-            name: addressBeingEdited.name,
-            namespace: addressBeingEdited.namespace
-          },
-          jsonPatch:
-            '[{"op":"replace","path":"/spec/plan","value":"' +
-            addressBeingEdited.planValue +
-            '"}]',
-          patchType: "application/json-patch+json"
-        }
-      });
-      refetch();
-      setAddressBeingEdited(null);
+      const variables = {
+        a: {
+          name: addressBeingEdited.name,
+          namespace: addressBeingEdited.namespace
+        },
+        jsonPatch:
+          '[{"op":"replace","path":"/spec/plan","value":"' +
+          addressBeingEdited.planValue +
+          '"}]',
+        patchType: "application/json-patch+json"
+      };
+      setEditAddressQueryVariables(variables);
     }
   };
 
@@ -201,37 +229,25 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   const handleCancelPurge = () => setAddressBeingPurged(null);
   const handleDelete = async () => {
     if (addressBeingDeleted) {
-      const deletedData = await client.mutate({
-        mutation: DELETE_ADDRESS,
-        variables: {
-          a: {
-            name: addressBeingDeleted.name,
-            namespace: addressBeingDeleted.namespace
-          }
+      const variables = {
+        a: {
+          name: addressBeingDeleted.name,
+          namespace: addressBeingDeleted.namespace
         }
-      });
-      if (deletedData.data && deletedData.data.deleteAddress === true) {
-        refetch();
-        setAddressBeingDeleted(null);
-      }
+      };
+      setDeleteAddressQueryVariablse(variables);
     }
   };
 
   const handlePurgeChange = async () => {
     if (addressBeingPurged) {
-      const { data } = await client.mutate({
-        mutation: PURGE_ADDRESS,
-        variables: {
-          a: {
-            name: addressBeingPurged.name,
-            namespace: addressBeingPurged.namespace
-          }
+      const variables = {
+        a: {
+          Name: addressBeingPurged.name,
+          Namespace: addressBeingPurged.namespace
         }
-      });
-      if (data && data.purgeAddress) {
-        refetch();
-        setAddressBeingPurged(null);
-      }
+      };
+      setPurgeAddressQueryVariables(variables);
     }
   };
   const handleDeleteChange = (address: IAddress) => {

@@ -11,7 +11,7 @@ const NotFound: React.FunctionComponent = () => (
   <PageSection>
     <Alert variant="danger" title="Something went wrong!" />
     <br />
-    <NavLink to="/" className="pf-c-nav__link">
+    <NavLink to="oauth/sign_in" className="pf-c-nav__link">
       Take me home
     </NavLink>
   </PageSection>

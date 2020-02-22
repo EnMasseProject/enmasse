@@ -11,6 +11,8 @@ import { useApolloClient } from "@apollo/react-hooks";
 import { CREATE_ADDRESS } from "queries";
 import { IDropdownOption } from "components/common/FilterDropdown";
 import { messagingAddressNameRegexp } from "types/Configs";
+import { useMutationQuery } from "hooks";
+
 interface ICreateAddressProps {
   name: string;
   namespace: string;
@@ -42,6 +44,20 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
     IDropdownOption[]
   >([]);
   const [isNameValid, setIsNameValid] = React.useState(true);
+
+  const resetFormState = () => {
+    setIsCreateWizardOpen(false);
+    setAddressType("");
+    setPlan("");
+    setOnCreationRefetch && setOnCreationRefetch(true);
+  };
+
+  const [setAddressQueryVariables] = useMutationQuery(
+    CREATE_ADDRESS,
+    resetFormState,
+    resetFormState
+  );
+
   const handleAddressChange = (name: string) => {
     setAddressName(name);
     !messagingAddressNameRegexp.test(name)
@@ -95,19 +111,10 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           variable.spec.topic = topic;
         return variable;
       };
-      const data = await client.mutate({
-        mutation: CREATE_ADDRESS,
-        variables: {
-          a: getVariables(),
-          as: addressSpace
-        }
-      });
-      if (data.data) {
-        setIsCreateWizardOpen(false);
-        setAddressType("");
-        setPlan("");
-        setOnCreationRefetch && setOnCreationRefetch(true);
-      }
+      const variables = {
+        a: getVariables()
+      };
+      setAddressQueryVariables(variables);
     }
   };
   const steps = [

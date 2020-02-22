@@ -25,6 +25,7 @@ import { ISortBy } from "@patternfly/react-table";
 import { compareTwoAddress } from "pages/AddressSpaceDetail/AddressList/AddressListPage";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 import { IObjectMeta_v1_Input } from "pages/AddressSpaceDetail/AddressSpaceDetailPage";
+import { useMutationQuery } from "hooks";
 
 interface AddressSpaceListPageProps {
   page: number;
@@ -82,54 +83,69 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
-  const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
-  const handleSaving = async () => {
-    addressSpaceBeingEdited &&
-      (await client.mutate({
-        mutation: EDIT_ADDRESS_SPACE,
-        variables: {
-          a: {
-            name: addressSpaceBeingEdited.name,
-            namespace: addressSpaceBeingEdited.nameSpace
-          },
-          jsonPatch:
-            '[{"op":"replace","path":"/spec/plan","value":"' +
-            addressSpaceBeingEdited.planValue +
-            '"},' +
-            '{"op":"replace","path":"/spec/authenticationService/name","value":"' +
-            addressSpaceBeingEdited.authenticationService +
-            '"}' +
-            "]",
-          patchType: "application/json-patch+json"
-        }
-      }));
+
+  const resetEditFormState = () => {
     setAddressSpaceBeingEdited(null);
     refetch();
+  };
+
+  /**
+   * calling useMutationQuery hook for edit address space
+   * passing cal back function resetFormState which will call on onError and onCompleted query respectively
+   */
+  const [setEditAddressSpaceQueryVariables] = useMutationQuery(
+    EDIT_ADDRESS_SPACE,
+    resetEditFormState,
+    resetEditFormState
+  );
+
+  const resetDeleteFormState = (data: any) => {
+    if (data && data.deleteAddressSpace === true) {
+      setAddressSpaceBeingDeleted(null);
+      refetch();
+    }
+  };
+  const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
+    DELETE_ADDRESS_SPACE,
+    resetDeleteFormState,
+    resetDeleteFormState
+  );
+
+  const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
+  const handleSaving = () => {
+    if (addressSpaceBeingEdited) {
+      const variables = {
+        a: {
+          name: addressSpaceBeingEdited.name,
+          namespace: addressSpaceBeingEdited.nameSpace
+        },
+        jsonPatch:
+          '[{"op":"replace","path":"/spec/plan","value":"' +
+          addressSpaceBeingEdited.planValue +
+          '"},' +
+          '{"op":"replace","path":"/spec/authenticationService/name","value":"' +
+          addressSpaceBeingEdited.authenticationService +
+          '"}' +
+          "]",
+        patchType: "application/json-patch+json"
+      };
+      setEditAddressSpaceQueryVariables(variables);
+    }
   };
 
   const handleEditChange = (addressSpace: IAddressSpace) =>
     setAddressSpaceBeingEdited(addressSpace);
 
   const handleCancelDelete = () => setAddressSpaceBeingDeleted(null);
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (addressSpaceBeingDeleted) {
-      const deletedData = await client.mutate({
-        mutation: DELETE_ADDRESS_SPACE,
-        variables: {
-          a: {
-            name: addressSpaceBeingDeleted.name,
-            namespace: addressSpaceBeingDeleted.nameSpace
-          }
+      const variables = {
+        a: {
+          name: addressSpaceBeingDeleted.name,
+          namespace: addressSpaceBeingDeleted.nameSpace
         }
-      });
-      if (
-        deletedData &&
-        deletedData.data &&
-        deletedData.data.deleteAddressSpace === true
-      ) {
-        setAddressSpaceBeingDeleted(null);
-        refetch();
-      }
+      };
+      setDeleteAddressSpaceQueryVariables(variables);
     }
   };
   const handleDeleteChange = (addressSpace: IAddressSpace) =>
