@@ -29,6 +29,8 @@ This method uninstalls {ProductName} that was installed using the Operator Lifec
 {cmdcli} delete all -l app=enmasse -n _{ProductNamespace}_
 {cmdcli} delete cm -l app=enmasse -n _{ProductNamespace}_
 {cmdcli} delete secret -l app=enmasse _{ProductNamespace}_
+{cmdcli} delete consolelinks -l app=enmasse
+{cmdcli} delete oauthclients -l app=enmasse
 ----
 
 . (Optional. Skip this step if {ProductName} is installed in the openshift-operators namespace) Delete the namespace where {ProductName} was installed:
