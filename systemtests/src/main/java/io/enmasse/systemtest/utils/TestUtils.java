@@ -578,8 +578,6 @@ public class TestUtils {
     }
 
     public static String getGlobalConsoleRoute() throws Exception {
-//        String clusterIp = Kubernetes.getInstance().getClient().services().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("console").get().getSpec().getClusterIP();
-//        return String.format("https://%s:%d", clusterIp, 8443);
         return Kubernetes.getInstance().getConsoleServiceClient().withName("console").get().getStatus().getUrl();
     }
 

@@ -6,7 +6,7 @@ metadata:
   name: enmasse.io:address-space-controller
 rules:
   - apiGroups: [ "admin.enmasse.io" ]
-    resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices", "consoleservices"]
+    resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices"]
     verbs: [ "patch", "get", "list", "watch" ]
   - apiGroups: [ "" ]
     resources: [ "pods" ]

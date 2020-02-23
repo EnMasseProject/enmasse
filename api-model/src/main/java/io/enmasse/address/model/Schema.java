@@ -35,7 +35,6 @@ import io.sundr.builder.annotations.Inline;
 public class Schema {
     private List<@Valid AddressSpaceType> addressSpaceTypes = new ArrayList<>();
     private List<io.enmasse.admin.model.v1.AuthenticationService> authenticationServices = new ArrayList<>();
-    private List<io.enmasse.admin.model.v1.ConsoleService> consoleServices = new ArrayList<>();
     private String creationTimestamp;
 
     public Schema() {
@@ -63,14 +62,6 @@ public class Schema {
         this.authenticationServices = authenticationServices;
     }
 
-    public List<ConsoleService> getConsoleServices() {
-        return Collections.unmodifiableList(consoleServices);
-    }
-
-    public void setConsoleServices(List<ConsoleService> consoleServices) {
-        this.consoleServices = consoleServices;
-    }
-
     public Optional<AddressSpaceType> findAddressSpaceType(String name) {
         for (AddressSpaceType type : addressSpaceTypes) {
             if (type.getName().equals(name)) {
@@ -84,15 +75,6 @@ public class Schema {
         for (AuthenticationService authenticationService : authenticationServices) {
             if (authenticationService.getMetadata().getName().equals(name)) {
                 return Optional.of(authenticationService);
-            }
-        }
-        return Optional.empty();
-    }
-
-    public Optional<io.enmasse.admin.model.v1.ConsoleService> findConsoleService(String name) {
-        for (ConsoleService consoleService : consoleServices) {
-            if (consoleService.getMetadata().getName().equals(name)) {
-                return Optional.of(consoleService);
             }
         }
         return Optional.empty();
@@ -136,7 +118,6 @@ public class Schema {
         return "Schema{" +
                 "addressSpaceTypes=" + addressSpaceTypes +
                 ", authenticationServices=" + authenticationServices +
-                ", consoleServices=" + consoleServices +
                 ", creationTimestamp='" + creationTimestamp + '\'' +
                 '}';
     }
