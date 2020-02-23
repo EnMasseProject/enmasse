@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
-import { useQuery, QueryHookOptions } from "@apollo/react-hooks";
+import {
+  useQuery as graphqlQuery,
+  QueryHookOptions
+} from "@apollo/react-hooks";
 import { DocumentNode } from "graphql";
 import { ApolloError, OperationVariables } from "apollo-boost";
 import { QueryResult } from "@apollo/react-common";
 
-export const useClientQuery = <TData = any, TVariables = OperationVariables>(
+export const useQuery = <TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
-  options?: QueryHookOptions
+  options?: QueryHookOptions,
+  callbackOnError?: Function,
+  callbackOnComplete?: Function
 ): QueryResult<TData, TVariables> => {
   const [graphqlState, setGraphqlState] = useState<any>({
     loading: true,
@@ -14,13 +19,13 @@ export const useClientQuery = <TData = any, TVariables = OperationVariables>(
     error: null
   });
 
-  const { data, error, loading } = useQuery<TData>(query, {
+  const { data, error, loading } = graphqlQuery<TData>(query, {
     ...options,
     onError(error: ApolloError) {
-      console.log("error", error);
+      callbackOnError && callbackOnError(error);
     },
-    onCompleted(data) {
-      console.log(data);
+    onCompleted(data: TData) {
+      callbackOnComplete && callbackOnComplete(data);
     }
   });
 

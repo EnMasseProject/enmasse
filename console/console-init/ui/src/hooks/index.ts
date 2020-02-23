@@ -1,2 +1,2 @@
 export * from "./useMutationQuery";
-export * from "./useClientQuery";
+export * from "./useQuery";
