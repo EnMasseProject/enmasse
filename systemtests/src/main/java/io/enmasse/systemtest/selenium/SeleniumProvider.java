@@ -107,7 +107,7 @@ public class SeleniumProvider {
     public void setupDriver(WebDriver driver) {
         this.driver = driver;
         this.driver.manage().window().setPosition(new Point(0, 0));
-        this.driver.manage().window().setSize(new Dimension(1920, 1080));
+        this.driver.manage().window().setSize(new Dimension(1366, 768));
         angularDriver = new NgWebDriver((JavascriptExecutor) driver);
         driverWait = new WebDriverWait(driver, 10);
         browserScreenshots.clear();
@@ -269,7 +269,7 @@ public class SeleniumProvider {
     }
 
     public WebElement getWebElement(Supplier<WebElement> webElement) throws Exception {
-        return getElement(webElement, 30, 0);
+        return getElement(webElement, 60, 0);
     }
 
     public WebElement getWebElement(Supplier<WebElement> webElement, int attempts) throws Exception {
@@ -277,7 +277,7 @@ public class SeleniumProvider {
     }
 
     public List<WebElement> getWebElements(Supplier<List<WebElement>> webElements, int count) throws Exception {
-        return getElement(webElements, 30, count);
+        return getElement(webElements, 60, count);
     }
 
     public <T extends WebItem> T waitUntilItemPresent(int timeInSeconds, Supplier<T> item) throws Exception {
