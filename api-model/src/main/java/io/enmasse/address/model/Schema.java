@@ -130,4 +130,14 @@ public class Schema {
         builder.append("}");
         return builder.toString();
     }
+
+    @Override
+    public String toString() {
+        return "Schema{" +
+                "addressSpaceTypes=" + addressSpaceTypes +
+                ", authenticationServices=" + authenticationServices +
+                ", consoleServices=" + consoleServices +
+                ", creationTimestamp='" + creationTimestamp + '\'' +
+                '}';
+    }
 }
