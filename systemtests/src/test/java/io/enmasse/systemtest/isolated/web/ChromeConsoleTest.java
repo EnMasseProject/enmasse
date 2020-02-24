@@ -7,6 +7,7 @@ package io.enmasse.systemtest.isolated.web;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -87,8 +88,14 @@ class ChromeConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     }
 
     @Test
+    @ExternalClients
     void testCreateAddrSpaceNonClusterAdmin() throws Exception {
         doTestCreateAddrSpaceNonClusterAdmin();
+    }
+
+    @Test
+    void testViewAddressSpacesAsBasicUser() throws Exception {
+        doTestRestrictAddressSpaceView();
     }
 
     @Test
