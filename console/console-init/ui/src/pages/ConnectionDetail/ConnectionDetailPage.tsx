@@ -27,6 +27,7 @@ import { Link } from "react-router-dom";
 import { RETURN_CONNECTION_DETAIL } from "queries";
 import { ConnectionLinksWithFilterAndPaginationPage } from "./ConnectionLinksWithFilterAndPaginationPage";
 import { POLL_INTERVAL } from "constants/constants";
+import { NoDataFound } from "components/common/NoDataFound";
 
 const getProductFilteredValue = (object: any[], value: string) => {
   if (object && object != null) {
@@ -89,6 +90,15 @@ export default function ConnectionDetailPage() {
   const { connections } = data || {
     connections: { total: 0, connections: [] }
   };
+  if (connections.connections.length <= 0) {
+    return (
+      <NoDataFound
+        type={"Connection"}
+        name={connectionname || ""}
+        routeLink={`/address-spaces/${namespace}/${name}/${type}/connections`}
+      />
+    );
+  }
   const connection = connections.connections[0];
   //Change this logic
   const jvmObject =

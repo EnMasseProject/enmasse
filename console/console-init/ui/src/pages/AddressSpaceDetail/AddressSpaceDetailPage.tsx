@@ -35,6 +35,7 @@ import {
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { POLL_INTERVAL } from "constants/constants";
 import { ErrorAlert } from "components/common/ErrorAlert";
+import { NoDataFound } from "components/common/NoDataFound";
 const styles = StyleSheet.create({
   no_bottom_padding: {
     paddingBottom: 0
@@ -102,8 +103,10 @@ export default function AddressSpaceDetailPage() {
     addressSpaces: { total: 0, addressSpaces: [] }
   };
 
-  if (!addressSpaces || addressSpaces.addressSpaces.length <= 0) {
-    return <Loading />;
+  if (addressSpaces.addressSpaces.length <= 0) {
+    return (
+      <NoDataFound type={"Address Space"} name={name || ""} routeLink={"/"} />
+    );
   }
 
   //Download the certificate function

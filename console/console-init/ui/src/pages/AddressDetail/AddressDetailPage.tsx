@@ -30,6 +30,7 @@ import { EditAddress } from "pages/EditAddressPage";
 import { IAddressSpacePlanResponse } from "pages/AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
 import { POLL_INTERVAL } from "constants/constants";
 import { ErrorAlert } from "components/common/ErrorAlert";
+import { NoDataFound } from "components/common/NoDataFound";
 
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();
@@ -86,7 +87,15 @@ export default function AddressDetailPage() {
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }
   };
-
+  if (addresses.addresses.length <= 0) {
+    return (
+      <NoDataFound
+        type={"Address"}
+        name={addressname || ""}
+        routeLink={`/address-spaces/${namespace}/${name}/${type}/addresses`}
+      />
+    );
+  }
   const addressDetail = addresses && addresses.addresses[0];
   if (addressPlan === null) {
     setAddressPlan(addressDetail.spec.plan.spec.displayName);
