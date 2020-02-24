@@ -65,7 +65,11 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
       else filter += "`$.spec.address` LIKE '" + filterNameValue + "%' ";
     }
   }
-  if (filterName && filterName > 0 && (typeValue || statusValue)) {
+  if (
+    filterNamesLength &&
+    filterNamesLength > 0 &&
+    (typeValue || statusValue)
+  ) {
     filter += " AND ";
   }
   if (typeValue) {
