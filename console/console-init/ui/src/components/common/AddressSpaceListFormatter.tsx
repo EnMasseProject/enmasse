@@ -55,9 +55,9 @@ export const statusToDisplay = (phase: string) => {
       break;
   }
   return (
-    <>
+    <span>
       {icon}&nbsp;{phase.trim() !== "" ? phase : "Configuring"}
-    </>
+    </span>
   );
 };
 export const AddressSpaceType: React.FunctionComponent<AddressSpaceTypeProps> = ({

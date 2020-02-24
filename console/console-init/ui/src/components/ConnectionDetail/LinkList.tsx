@@ -13,6 +13,8 @@ import {
   sortable,
   ISortBy
 } from "@patternfly/react-table";
+import { StyleForTable } from "components/AddressSpaceList/AddressSpaceList";
+import { css } from "@patternfly/react-styles";
 
 interface ILinkListProps {
   rows: ILink[];
@@ -72,16 +74,18 @@ export const LinkList: React.FunctionComponent<ILinkListProps> = ({
   ];
 
   return (
-    <Table
-      variant={TableVariant.compact}
-      cells={tableColumns}
-      rows={tableRows}
-      aria-label="links list"
-      onSort={onSort}
-      sortBy={sortBy}
-    >
-      <TableHeader />
-      <TableBody />
-    </Table>
+    <div className={css(StyleForTable.scroll_overflow)}>
+      <Table
+        variant={TableVariant.compact}
+        cells={tableColumns}
+        rows={tableRows}
+        aria-label="links list"
+        onSort={onSort}
+        sortBy={sortBy}
+      >
+        <TableHeader />
+        <TableBody />
+      </Table>
+    </div>
   );
 };

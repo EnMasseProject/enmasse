@@ -20,6 +20,8 @@ import { Messages } from "components/common/Messages";
 import useWindowDimensions from "components/common/WindowDimension";
 import { AddressSpaceStatus } from "components/common/AddressSpaceListFormatter";
 import { AddressStatus } from "components/common/AddressFormatter";
+import { css } from "@patternfly/react-styles";
+import { StyleForTable } from "components/AddressSpaceList/AddressSpaceList";
 
 export interface IAddress {
   name: string;
@@ -224,19 +226,21 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     }
   };
   return (
-    <Table
-      variant={TableVariant.compact}
-      onSelect={onSelect}
-      cells={tableColumns}
-      rows={tableRows}
-      actionResolver={actionResolver}
-      aria-label="Address List"
-      canSelectAll={true}
-      sortBy={sortBy}
-      onSort={onSort}
-    >
-      <TableHeader id="address-list-table-bodheader" />
-      <TableBody />
-    </Table>
+    <div className={css(StyleForTable.scroll_overflow)}>
+      <Table
+        variant={TableVariant.compact}
+        onSelect={onSelect}
+        cells={tableColumns}
+        rows={tableRows}
+        actionResolver={actionResolver}
+        aria-label="Address List"
+        canSelectAll={true}
+        sortBy={sortBy}
+        onSort={onSort}
+      >
+        <TableHeader id="address-list-table-bodheader" />
+        <TableBody />
+      </Table>
+    </div>
   );
 };

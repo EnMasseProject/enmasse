@@ -16,6 +16,8 @@ import {
 import { ExternalLinkAltIcon } from "@patternfly/react-icons";
 import { Link } from "react-router-dom";
 import { Tooltip, TooltipPosition } from "@patternfly/react-core";
+import { StyleForTable } from "components/AddressSpaceList/AddressSpaceList";
+import { css } from "emotion";
 
 interface IClientListProps {
   rows: IClient[];
@@ -79,16 +81,18 @@ export const ClientList: React.FunctionComponent<IClientListProps> = ({
   ];
 
   return (
-    <Table
-      variant={TableVariant.compact}
-      cells={tableColumns}
-      rows={tableRows}
-      aria-label="client list"
-      onSort={onSort}
-      sortBy={sortBy}
-    >
-      <TableHeader />
-      <TableBody />
-    </Table>
+    <div className={css(StyleForTable.scroll_overflow)}>
+      <Table
+        variant={TableVariant.compact}
+        cells={tableColumns}
+        rows={tableRows}
+        aria-label="client list"
+        onSort={onSort}
+        sortBy={sortBy}
+      >
+        <TableHeader />
+        <TableBody />
+      </Table>
+    </div>
   );
 };

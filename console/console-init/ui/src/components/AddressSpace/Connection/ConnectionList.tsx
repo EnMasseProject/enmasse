@@ -17,6 +17,8 @@ import { Link } from "react-router-dom";
 import { ConnectionProtocolFormat } from "components/common/ConnectionListFormatter";
 import useWindowDimensions from "components/common/WindowDimension";
 import { FormatDistance } from "use-patternfly";
+import { StyleForTable } from "components/AddressSpaceList/AddressSpaceList";
+import { css } from "@patternfly/react-styles";
 
 interface IConnectionListProps {
   rows: IConnection[];
@@ -124,16 +126,18 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   ];
 
   return (
-    <Table
-      variant={TableVariant.compact}
-      cells={tableColumns}
-      rows={tableRows}
-      aria-label="connection list"
-      sortBy={sortBy}
-      onSort={onSort}
-    >
-      <TableHeader id="connectionlist-table-header" />
-      <TableBody />
-    </Table>
+    <div className={css(StyleForTable.scroll_overflow)}>
+      <Table
+        variant={TableVariant.compact}
+        cells={tableColumns}
+        rows={tableRows}
+        aria-label="connection list"
+        sortBy={sortBy}
+        onSort={onSort}
+      >
+        <TableHeader id="connectionlist-table-header" />
+        <TableBody />
+      </Table>
+    </div>
   );
 };
