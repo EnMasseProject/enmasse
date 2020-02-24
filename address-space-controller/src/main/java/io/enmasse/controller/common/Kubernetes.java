@@ -39,4 +39,6 @@ public interface Kubernetes {
 
     InfraConfig getAppliedInfraConfig(AddressSpace addressSpace) throws IOException;
     AppliedConfig getAppliedConfig(AddressSpace addressSpace) throws IOException;
+
+    String getInfraUuid(AddressSpace addressSpace);
 }
