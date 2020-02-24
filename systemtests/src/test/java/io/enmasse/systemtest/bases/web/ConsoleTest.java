@@ -29,6 +29,7 @@ import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
@@ -43,6 +44,7 @@ import io.enmasse.systemtest.utils.Count;
 import io.enmasse.systemtest.utils.TestUtils;
 
 import org.apache.qpid.proton.message.Message;
+import org.eclipse.hono.util.Strings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
@@ -68,6 +70,8 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -164,8 +168,11 @@ public abstract class ConsoleTest extends TestBase {
     }
 
     protected void doTestCreateAddrSpaceNonClusterAdmin() throws Exception {
+        int addressCount = 4;
         String namespace = "test-namespace";
         UserCredentials user = Credentials.userCredentials();
+        UserCredentials messagingUser = new UserCredentials("pepa", "zdepa");
+        KubeCMDClient.runOnCluster("create", "rolebinding", "clients-admin", "--clusterrole", "admin", "--user", user.getUsername(), "--namespace", SystemtestsKubernetesApps.MESSAGING_PROJECT);
         try {
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
@@ -176,8 +183,8 @@ public abstract class ConsoleTest extends TestBase {
                     .withNamespace(namespace)
                     .endMetadata()
                     .withNewSpec()
-                    .withType(AddressSpaceType.BROKERED.toString())
-                    .withPlan(AddressSpacePlans.BROKERED)
+                    .withType(AddressSpaceType.STANDARD.toString())
+                    .withPlan(AddressSpacePlans.STANDARD_MEDIUM)
                     .withNewAuthenticationService()
                     .withName("standard-authservice")
                     .endAuthenticationService()
@@ -188,7 +195,67 @@ public abstract class ConsoleTest extends TestBase {
             consolePage.openConsolePage();
             consolePage.createAddressSpace(addressSpace);
             waitUntilAddressSpaceActive(addressSpace);
+
+            resourcesManager.createOrUpdateUser(addressSpace, messagingUser);
+
+            consolePage.openAddressList(addressSpace);
+
+            List<Address> addresses = generateQueueTopicList(addressSpace, "test", IntStream.range(0, addressCount));
+            consolePage.createAddresses(addresses.toArray(new Address[0]));
+            AddressUtils.waitForDestinationsReady(addresses.toArray(new Address[0]));
+
+            clientsList = attachClients(addressSpace, addresses, messagingUser);
+
+            consolePage.switchToConnectionTab();
+            TestUtils.waitUntilConditionOrFail(() -> consolePage.getConnectionItems().stream()
+                            .allMatch(c -> c.getReceivers() > 0),
+                    Duration.ofSeconds(60),
+                    Duration.ofSeconds(1),
+                    () -> "Failed to wait for connections count");
+
+            consolePage.switchToAddressTab();
+            consolePage.openClientsList(addresses.get(1));
+
+            TestUtils.waitUntilConditionOrFail(() -> consolePage.getClientItems().stream()
+                            .noneMatch(c -> Strings.isNullOrEmpty(c.getContainerId())),
+                    Duration.ofSeconds(60),
+                    Duration.ofSeconds(1),
+                    () -> "Failed to wait for clients count");
+
+            consolePage.openConsolePage();
             consolePage.deleteAddressSpace(addressSpace);
+        } finally {
+            KubeCMDClient.loginUser(environment.getApiToken());
+            KubeCMDClient.switchProject(environment.namespace());
+            kubernetes.deleteNamespace(namespace);
+        }
+    }
+
+    protected void doTestRestrictAddressSpaceView() throws Exception {
+        String namespace = "test-namespace";
+        UserCredentials user = Credentials.userCredentials();
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-api-2")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(addressSpace);
+        try {
+            KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
+            KubeCMDClient.createNamespace(namespace);
+
+            consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), user);
+            consolePage.openConsolePage();
+            assertNull(consolePage.getAddressSpaceItem(addressSpace));
 
         } finally {
             KubeCMDClient.loginUser(environment.getApiToken());
@@ -430,7 +497,7 @@ public abstract class ConsoleTest extends TestBase {
 
         consolePage.addFilter(FilterType.STATUS, "Configuring");
 
-        TestUtils.waitUntilCondition(()-> consolePage.getAddressItems().size()==addressCount, Duration.ofSeconds(30), Duration.ofMillis(500));
+        TestUtils.waitUntilCondition(() -> consolePage.getAddressItems().size() == addressCount, Duration.ofSeconds(30), Duration.ofMillis(500));
 
         List<AddressWebItem> items = consolePage.getAddressItems();
         assertEquals(addressCount, items.size(),
@@ -587,7 +654,7 @@ public abstract class ConsoleTest extends TestBase {
         doTestSortAddresses(addressSpace,
                 SortType.SENDERS,
                 this::attachClients,
-                a -> a.getSendersCount()>0,
+                a -> a.getSendersCount() > 0,
                 Comparator.comparingInt(AddressWebItem::getSendersCount));
     }
 
@@ -595,7 +662,7 @@ public abstract class ConsoleTest extends TestBase {
         doTestSortAddresses(addressSpace,
                 SortType.RECEIVERS,
                 this::attachClients,
-                a -> a.getReceiversCount()>0,
+                a -> a.getReceiversCount() > 0,
                 Comparator.comparingInt(AddressWebItem::getReceiversCount));
     }
 
@@ -614,10 +681,10 @@ public abstract class ConsoleTest extends TestBase {
         clientsList = attacher.attach(addressSpace, addresses, defaultCredentials);
 
         TestUtils.waitUntilConditionOrFail(() -> consolePage.getAddressItems().stream()
-                                                .allMatch(readyCondition),
-                                        Duration.ofSeconds(60),
-                                        Duration.ofSeconds(1),
-                                        ()->"Failed to wait for addresses count");
+                        .allMatch(readyCondition),
+                Duration.ofSeconds(60),
+                Duration.ofSeconds(1),
+                () -> "Failed to wait for addresses count");
 
         consolePage.sortAddresses(sortType, true);
         assertSorted("Console failed, items are not sorted by count of senders asc",
@@ -635,7 +702,7 @@ public abstract class ConsoleTest extends TestBase {
         doTestSortConnections(addressSpace,
                 SortType.SENDERS,
                 this::attachClients,
-                c -> c.getSenders()>0,
+                c -> c.getSenders() > 0,
                 Comparator.comparingInt(ConnectionWebItem::getSenders));
     }
 
@@ -643,7 +710,7 @@ public abstract class ConsoleTest extends TestBase {
         doTestSortConnections(addressSpace,
                 SortType.RECEIVERS,
                 this::attachClients,
-                c -> c.getReceivers()>0,
+                c -> c.getReceivers() > 0,
                 Comparator.comparingInt(ConnectionWebItem::getReceivers));
     }
 
@@ -656,8 +723,8 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.createAddress(address);
         consolePage.openClientsList(address);
         assertThat("Link table is not empty!", consolePage.isClientListEmpty());
-        int link_count  = attachClients(addressSpace, address, defaultCredentials);
-        selenium.waitUntilPropertyPresent(60, link_count, ()->consolePage.getClientItems().size());
+        int link_count = attachClients(addressSpace, address, defaultCredentials);
+        selenium.waitUntilPropertyPresent(60, link_count, () -> consolePage.getClientItems().size());
         assertThat(consolePage.getClientItems().size(), is(link_count));
     }
 
@@ -676,13 +743,13 @@ public abstract class ConsoleTest extends TestBase {
 
         clientsList = attacher.attach(addressSpace, addresses, defaultCredentials);
 
-        selenium.waitUntilPropertyPresent(60, clientsList.size(), ()->consolePage.getConnectionItems().size());
+        selenium.waitUntilPropertyPresent(60, clientsList.size(), () -> consolePage.getConnectionItems().size());
 
         TestUtils.waitUntilConditionOrFail(() -> consolePage.getConnectionItems().stream()
-                                               .allMatch(readyCondition),
-                                       Duration.ofSeconds(60),
-                                       Duration.ofSeconds(1),
-                                       ()->"Failed to wait for connections count");
+                        .allMatch(readyCondition),
+                Duration.ofSeconds(60),
+                Duration.ofSeconds(1),
+                () -> "Failed to wait for connections count");
 
         consolePage.sortConnections(sortType, true);
         assertSorted("Console failed, items are not sorted by count of senders asc",
@@ -734,7 +801,7 @@ public abstract class ConsoleTest extends TestBase {
     protected void doTestSortConnectionsByContainerId(AddressSpace addressSpace) throws Exception {
         doTestSortConnections(addressSpace, SortType.CONTAINER_ID,
                 this::attachClients,
-                c -> c.getContainerId()!=null,
+                c -> c.getContainerId() != null,
                 Comparator.comparing(ConnectionWebItem::getContainerId));
     }
 
@@ -778,28 +845,28 @@ public abstract class ConsoleTest extends TestBase {
         TestUtils.waitUntilConditionOrFail(() -> consolePage.getAddressItem(dest).getMessagesIn() >= 5,
                 Duration.ofSeconds(180),
                 Duration.ofSeconds(3),
-                ()->"Failed to wait for messagesIn/sec to reach 1");
+                () -> "Failed to wait for messagesIn/sec to reach 1");
 
         TestUtils.waitUntilConditionOrFail(() -> consolePage.getAddressItem(dest).getMessagesOut() >= 5,
                 Duration.ofSeconds(180),
                 Duration.ofSeconds(3),
-                ()->"Failed to wait for messagesOut/sec to reach 1");
+                () -> "Failed to wait for messagesOut/sec to reach 1");
 
     }
 
     protected void doTestMessagesStoredMetrics(AddressSpace addressSpace) throws Exception {
 
-      Address dest = new AddressBuilder()
-              .withNewMetadata()
-              .withNamespace(addressSpace.getMetadata().getNamespace())
-              .withName(AddressUtils.generateAddressMetadataName(addressSpace, "queue-stored-msg"))
-              .endMetadata()
-              .withNewSpec()
-              .withType("queue")
-              .withAddress("queue-stored-msg")
-              .withPlan(getDefaultPlan(AddressType.QUEUE))
-              .endSpec()
-              .build();
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "queue-stored-msg"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue-stored-msg")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
 
         getResourceManager().setAddresses(dest);
 
@@ -839,13 +906,13 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openConsolePage();
         log.info("User {} successfully authenticated", credentials);
 
-        if ( userAllowed ) {
+        if (userAllowed) {
             consolePage.openAddressList(addressSpace);
         } else {
             try {
                 consolePage.openAddressList(addressSpace);
                 fail("Exception not thrown");
-            } catch ( NullPointerException ex ) {
+            } catch (NullPointerException ex) {
                 // PASS
             }
 
@@ -933,20 +1000,20 @@ public abstract class ConsoleTest extends TestBase {
 
         String validName = "dummy";
         String[] invalidNames = {
-                        "#dummy",
-                        "du#mmy",
-                        "dummy#",
+                "#dummy",
+                "du#mmy",
+                "dummy#",
 
-                        "*dummy",
-                        "du*mmy",
-                        "dummy*",
+                "*dummy",
+                "du*mmy",
+                "dummy*",
 
-                        " dummy",
-                        "dum my",
-                        "dummy ",
+                " dummy",
+                "dum my",
+                "dummy ",
         };
 
-        for ( var name : invalidNames) {
+        for (var name : invalidNames) {
             consolePage.fillAddressName(validName);
             assertFalse(consolePage.isAddressNameInvalid());
 
@@ -955,19 +1022,19 @@ public abstract class ConsoleTest extends TestBase {
         }
 
         String[] validNames = {
-                        "du$mmy",
-                        "du-mmy",
-                        "dummy/foo",
-                        "dum)my",
-                        "dum2my",
+                "du$mmy",
+                "du-mmy",
+                "dummy/foo",
+                "dum)my",
+                "dum2my",
 
-                        ":dummy",
-                        "du:mmy",
-                        "dummy:",
+                ":dummy",
+                "du:mmy",
+                "dummy:",
 
-                        ".dummy",
-                        "dum.my",
-                        "dummy.",
+                ".dummy",
+                "dum.my",
+                "dummy.",
         };
 
         for (String name : validNames) {
@@ -1064,9 +1131,8 @@ public abstract class ConsoleTest extends TestBase {
     }
 
     /**
-     *
-     * @param addressSpace dest addressspace
-     * @param destination dest address
+     * @param addressSpace    dest addressspace
+     * @param destination     dest address
      * @param userCredentials messaging user credentials
      * @return senders + receivers count
      * @throws Exception
@@ -1077,9 +1143,9 @@ public abstract class ConsoleTest extends TestBase {
         if (addressSpace.getSpec().getPlan().equals(AddressSpacePlans.BROKERED)) {
             for (int i = 0; i < SENDER_COUNT; i++) {
                 getClientUtils().attachSender(addressSpace, destination, userCredentials, 1000, 60000);
-                    if (i < RECEIVER_COUNT) {
-                        getClientUtils().attachReceiver(addressSpace, destination, userCredentials, 1100);
-                    }
+                if (i < RECEIVER_COUNT) {
+                    getClientUtils().attachReceiver(addressSpace, destination, userCredentials, 1100);
+                }
             }
         } else {
             getClientUtils().attachConnector(addressSpace, destination, 1, SENDER_COUNT, RECEIVER_COUNT, userCredentials, 60000);
@@ -1089,10 +1155,10 @@ public abstract class ConsoleTest extends TestBase {
 
     private List<ExternalMessagingClient> attachClients(AddressSpace addressSpace, List<Address> destinations, UserCredentials userCredentials) throws Exception {
         List<ExternalMessagingClient> clients = new ArrayList<>();
-        for ( Address destination : destinations ) {
-            clients.add(getClientUtils().attachConnector(addressSpace, destination, 1, 6, 1, userCredentials, 360));
-            clients.add(getClientUtils().attachConnector(addressSpace, destination, 1, 4, 4, userCredentials, 360));
-            clients.add(getClientUtils().attachConnector(addressSpace, destination, 1, 1, 6, userCredentials, 360));
+        for (Address destination : destinations) {
+            clients.add(getClientUtils().attachConnector(addressSpace, destination, 1, 6, 1, userCredentials, 60000));
+            clients.add(getClientUtils().attachConnector(addressSpace, destination, 1, 4, 4, userCredentials, 60000));
+            clients.add(getClientUtils().attachConnector(addressSpace, destination, 1, 1, 6, userCredentials, 60000));
         }
         Thread.sleep(5000);
         return clients;
