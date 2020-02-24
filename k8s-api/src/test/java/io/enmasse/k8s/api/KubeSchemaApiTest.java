@@ -47,7 +47,7 @@ public class KubeSchemaApiTest {
 
     @Test
     public void testSchemaAssemble() {
-        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, consoleServiceApi, "1.0", Clock.systemUTC(), false, true);
+        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, "1.0", Clock.systemUTC(), false, true);
 
         List<AddressSpacePlan> addressSpacePlans = Arrays.asList(
                 new AddressSpacePlanBuilder()
@@ -145,7 +145,7 @@ public class KubeSchemaApiTest {
                         .endMetadata()
                         .build());
 
-        Schema schema = schemaApi.assembleSchema(addressSpacePlans, addressPlans, standardInfraConfigs, brokeredInfraConfigs, authenticationServices, consoleServices);
+        Schema schema = schemaApi.assembleSchema(addressSpacePlans, addressPlans, standardInfraConfigs, brokeredInfraConfigs, authenticationServices);
 
         assertTrue(schema.findAddressSpaceType("standard").isPresent());
         assertTrue(schema.findAddressSpaceType("brokered").isPresent());
@@ -207,7 +207,7 @@ public class KubeSchemaApiTest {
         when(standardInfraConfigApi.watchResources(any(), any())).thenReturn(mockWatch);
         when(authenticationServiceApi.watchResources(any(), any())).thenReturn(mockWatch);
 
-        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, consoleServiceApi, "1.0", Clock.systemUTC(), true, false);
+        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, "1.0", Clock.systemUTC(), true, false);
 
         schemaApi.watchSchema(items -> { }, Duration.ofSeconds(5));
         verify(addressSpacePlanApi).watchResources(any(), eq(Duration.ofSeconds(5)));

@@ -31,7 +31,6 @@ public class KubeSchemaApi implements SchemaApi {
     private final CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi;
     private final CrdApi<StandardInfraConfig> standardInfraConfigApi;
     private final CrdApi<AuthenticationService> authenticationServiceApi;
-    private final CrdApi<ConsoleService> consoleServiceApi;
     private final String defaultVersion;
 
     private final Clock clock;
@@ -46,21 +45,19 @@ public class KubeSchemaApi implements SchemaApi {
     private volatile List<StandardInfraConfig> currentStandardInfraConfigs = Collections.emptyList();
     private volatile List<BrokeredInfraConfig> currentBrokeredInfraConfigs = Collections.emptyList();
     private volatile List<AuthenticationService> currentAuthenticationServices = Collections.emptyList();
-    private volatile List<ConsoleService> currentConsoleServices = Collections.emptyList();
 
     public KubeSchemaApi(CrdApi<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlanApi,
                          CrdApi<io.enmasse.admin.model.v1.AddressPlan> addressPlanApi,
                          CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi,
                          CrdApi<StandardInfraConfig> standardInfraConfigApi,
                          CrdApi<AuthenticationService> authenticationServiceApi,
-                         CrdApi<ConsoleService> consoleServiceApi, String defaultVersion, Clock clock,
+                         String defaultVersion, Clock clock,
                          boolean isOpenShift, boolean updateStatus) {
         this.addressSpacePlanApi = addressSpacePlanApi;
         this.addressPlanApi = addressPlanApi;
         this.brokeredInfraConfigApi = brokeredInfraConfigApi;
         this.standardInfraConfigApi = standardInfraConfigApi;
         this.authenticationServiceApi = authenticationServiceApi;
-        this.consoleServiceApi = consoleServiceApi;
         this.defaultVersion = defaultVersion;
         this.clock = clock;
         this.isOpenShift = isOpenShift;
@@ -93,14 +90,9 @@ public class KubeSchemaApi implements SchemaApi {
                 AuthenticationServiceList.class,
                 DoneableAuthenticationService.class);
 
-        CrdApi<ConsoleService> consoleServiceApi = new KubeCrdApi<>(openShiftClient, namespace, AdminCrd.consoleServices(),
-                ConsoleService.class,
-                ConsoleServiceList.class,
-                DoneableConsoleService.class);
-
         Clock clock = Clock.systemUTC();
 
-        return new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, consoleServiceApi, defaultVersion, clock, isOpenShift, updateStatus);
+        return new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, defaultVersion, clock, isOpenShift, updateStatus);
     }
 
     private void validateAddressSpacePlan(AddressSpacePlan addressSpacePlan, List<AddressPlan> addressPlans, List<String> infraTemplateNames) {
@@ -328,13 +320,6 @@ public class KubeSchemaApi implements SchemaApi {
             updateSchema(watcher);
         }, resyncInterval));
 
-        watches.add(consoleServiceApi.watchResources(items -> {
-            synchronized (KubeSchemaApi.this) {
-                currentConsoleServices = items;
-            }
-            updateSchema(watcher);
-        }, resyncInterval));
-
         return () -> {
             Exception e = null;
             for (Watch watch : watches) {
@@ -351,13 +336,13 @@ public class KubeSchemaApi implements SchemaApi {
     }
 
     private synchronized void updateSchema(Watcher<Schema> watcher) throws Exception {
-        Schema schema = assembleSchema(currentAddressSpacePlans, currentAddressPlans, currentStandardInfraConfigs, currentBrokeredInfraConfigs, currentAuthenticationServices, currentConsoleServices);
+        Schema schema = assembleSchema(currentAddressSpacePlans, currentAddressPlans, currentStandardInfraConfigs, currentBrokeredInfraConfigs, currentAuthenticationServices);
         if (schema != null) {
             watcher.onUpdate(Collections.singletonList(schema));
         }
     }
 
-    Schema assembleSchema(List<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlans, List<io.enmasse.admin.model.v1.AddressPlan> addressPlans, List<StandardInfraConfig> standardInfraConfigs, List<BrokeredInfraConfig> brokeredInfraConfigs, List<AuthenticationService> authenticationServices, List<ConsoleService> consoleServices) {
+    Schema assembleSchema(List<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlans, List<io.enmasse.admin.model.v1.AddressPlan> addressPlans, List<StandardInfraConfig> standardInfraConfigs, List<BrokeredInfraConfig> brokeredInfraConfigs, List<AuthenticationService> authenticationServices) {
 
         Set<AddressPlan> validAddressPlans = new HashSet<>();
         Map<String, io.enmasse.admin.model.v1.AddressPlan> addressPlanByName = new HashMap<>();
@@ -453,7 +438,6 @@ public class KubeSchemaApi implements SchemaApi {
         return new SchemaBuilder()
                 .withAddressSpaceTypes(types)
                 .withAuthenticationServices(authenticationServices)
-                .withConsoleServices(consoleServices)
                 .withCreationTimestamp(formatter.format(clock.instant()))
                 .build();
     }
