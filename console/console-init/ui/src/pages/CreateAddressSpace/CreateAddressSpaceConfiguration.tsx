@@ -25,7 +25,7 @@ import {
 } from "queries";
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { k8NameRegexp } from "types/Configs";
+import { dnsSubDomainRfc1123NameRegexp } from "types/Configs";
 const styles = StyleSheet.create({
   capitalize_labels: {
     "text-transform": "capitalize"
@@ -205,7 +205,9 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
 
   const handleNameChange = (name: string) => {
     setName(name);
-    !k8NameRegexp.test(name) ? setIsNameValid(false) : setIsNameValid(true);
+    !dnsSubDomainRfc1123NameRegexp.test(name)
+      ? setIsNameValid(false)
+      : setIsNameValid(true);
   };
 
   return (
@@ -253,8 +255,8 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
               helperText={
                 name.trim() !== "" && !isNameValid ? (
                   <small>
-                    Only digits (0-9), lower case letters (a-z), -, and .
-                    allowed, and should start with alpha-numeric characters.
+                    Only lowercase alphanumeric characters, -, and . allowed,
+                    and should start and end with an alpha-numeric character.
                   </small>
                 ) : (
                   ""
