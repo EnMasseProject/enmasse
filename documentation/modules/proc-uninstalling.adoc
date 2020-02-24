@@ -31,6 +31,13 @@ ifeval::["{cmdcli}" == "oc"]
 {cmdcli} delete oauthclients -l app=enmasse
 ----
 
+. (OpenShift 4) Delete the console integration:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} delete consolelinks -l app=enmasse
+----
+
 . (Optional) Delete the service catalog integration:
 +
 [options="nowrap",subs="attributes"]

@@ -47,6 +47,8 @@ endif::[]
 {cmdcli} delete all -l app=enmasse -n _{ProductNamespace}_
 {cmdcli} delete cm -l app=enmasse -n _{ProductNamespace}_
 {cmdcli} delete secret -l app=enmasse _{ProductNamespace}_
+{cmdcli} delete consolelinks -l app=enmasse
+{cmdcli} delete oauthclients -l app=enmasse
 {cmdcli} delete crd -l app=enmasse
 ----
 

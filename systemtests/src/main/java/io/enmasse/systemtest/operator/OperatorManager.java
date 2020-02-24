@@ -255,6 +255,9 @@ public class OperatorManager {
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "oauthclients", "-l", "app=enmasse");
+        if (kube.getOcpVersion() == OpenShiftVersion.OCP4) {
+            KubeCMDClient.runOnCluster("delete", "consolelinks", "-l", "app=enmasse");
+        }
         KubeCMDClient.runOnCluster("delete", "clusterservicebrokers", "-l", "app=enmasse");
         if (!kube.getInfraNamespace().equals(kube.getOlmNamespace())) {
             try {
