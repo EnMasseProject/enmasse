@@ -18,7 +18,7 @@ import { StyleSheet } from "@patternfly/react-styles";
 import { AddressListFilterPage } from "./AddressListFilterPage";
 import { AddressListPage, compareTwoAddress } from "./AddressListPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
-import { useQuery, useApolloClient } from "@apollo/react-hooks";
+import { useQuery, useMutation } from "@apollo/react-hooks";
 import {
   CURRENT_ADDRESS_SPACE_PLAN,
   DELETE_ADDRESS,
@@ -27,6 +27,7 @@ import {
 import { ISortBy } from "@patternfly/react-table";
 import { IAddress } from "components/AddressSpace/Address/AddressList";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
+import { useErrorContext, types } from "context-state-reducer";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -52,6 +53,7 @@ export interface IAddressSpacePlanResponse {
 }
 
 export default function AddressesList() {
+  const { dispatch } = useErrorContext();
   useDocumentTitle("Address List");
   useA11yRouteChange();
   const { name, namespace, type } = useParams();
@@ -65,12 +67,13 @@ export default function AddressesList() {
   const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(
     null
   );
+
   const location = useLocation();
   const history = useHistory();
-  const client = useApolloClient();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+
   const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
   const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
   const [onCreationRefetch, setOnCreationRefetch] = React.useState<boolean>(
@@ -98,12 +101,21 @@ export default function AddressesList() {
     CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
   );
 
+  const [setDeleteAdressQueryVariables] = useMutation(DELETE_ADDRESS);
+  const [setPurgeAddressQueryVariables] = useMutation(PURGE_ADDRESS);
+
   const { addressSpaces } = data || {
     addressSpaces: { addressSpaces: [] }
   };
 
   if (!addressSpacePlan && addressSpaces.addressSpaces[0]) {
-    setAddressSpacePlan(addressSpaces.addressSpaces[0].spec.plan.metadata.name);
+    let name =
+      addressSpaces.addressSpaces[0] &&
+      addressSpaces.addressSpaces[0].spec &&
+      addressSpaces.addressSpaces[0].spec.plan &&
+      addressSpaces.addressSpaces[0].spec.plan.metadata &&
+      addressSpaces.addressSpaces[0].spec.plan.metadata.name;
+    setAddressSpacePlan(name);
   }
 
   const setSearchParam = React.useCallback(
@@ -147,42 +159,64 @@ export default function AddressesList() {
     );
   };
 
-  let deleteErrorData = [],
-    purgeErrorData = [];
+  const purgeAddressErrors: any = [];
+  const deleteAdressErrors: any = [];
 
-  const deleteAddress = async (data: any) => {
-    const deletedData = await client.mutate({
-      mutation: DELETE_ADDRESS,
-      variables: {
+  const deleteAddress = async (address: any, index: number) => {
+    try {
+      const variables = {
         a: {
-          name: data.name,
-          namespace: data.namespace
+          name: address.name,
+          namespace: address.namespace
         }
-      }
-    });
-    if (deletedData.errors) {
-      deleteErrorData.push(deletedData);
+      };
+      await setDeleteAdressQueryVariables({ variables });
+    } catch (error) {
+      deleteAdressErrors.push(error);
     }
-    if (deletedData.data) {
-      return deletedData;
+    /**
+     * dispatch action to set server errors after completion all queries
+     */
+    if (
+      selectedAddresses &&
+      selectedAddresses.length === index + 1 &&
+      deleteAdressErrors.length > 0
+    ) {
+      dispatch({
+        type: types.SET_SERVER_ERROR,
+        payload: { errors: deleteAdressErrors }
+      });
     }
   };
 
-  const purgeAddress = async (data: any) => {
-    const purgeData = await client.mutate({
-      mutation: PURGE_ADDRESS,
-      variables: {
+  const purgeAddress = async (
+    address: any,
+    filteredAddresses: any,
+    index: number
+  ) => {
+    try {
+      const variables = {
         a: {
-          name: data.name,
-          namespace: data.namespace
+          name: address.name,
+          namespace: address.namespace
         }
-      }
-    });
-    if (purgeData.errors) {
-      purgeErrorData.push(purgeData);
+      };
+      await setPurgeAddressQueryVariables({ variables });
+    } catch (error) {
+      purgeAddressErrors.push(error);
     }
-    if (purgeData.data) {
-      return purgeData;
+    /**
+     * dispatch action to set server errors after completion all queries
+     */
+    if (
+      filteredAddresses &&
+      filteredAddresses.length === index + 1 &&
+      purgeAddressErrors.length > 0
+    ) {
+      dispatch({
+        type: types.SET_SERVER_ERROR,
+        payload: { errors: purgeAddressErrors }
+      });
     }
   };
 
@@ -221,7 +255,9 @@ export default function AddressesList() {
   const handleConfirmDeleteSelected = async () => {
     if (selectedAddresses && selectedAddresses.length > 0) {
       const data = selectedAddresses;
-      await Promise.all(data.map(address => deleteAddress(address)));
+      await Promise.all(
+        data.map((address, index) => deleteAddress(address, index))
+      );
       setSelectedAddresses([]);
     }
     setOnCreationRefetch(true);
@@ -236,7 +272,11 @@ export default function AddressesList() {
     );
     if (filteredAddresses && filteredAddresses.length > 0) {
       const data = filteredAddresses;
-      await Promise.all(data.map(address => purgeAddress(address)));
+      await Promise.all(
+        data.map((address, index) =>
+          purgeAddress(address, filteredAddresses, index)
+        )
+      );
       setSelectedAddresses([]);
     }
     setOnCreationRefetch(true);

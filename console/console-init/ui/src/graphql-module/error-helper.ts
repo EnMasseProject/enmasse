@@ -1,3 +1,10 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
+import { types } from "context-state-reducer";
+
 const onServerError = (
   error: any,
   history: any,
@@ -10,7 +17,10 @@ const onServerError = (
   } else if (graphQLErrors) {
     hasServerError !== true &&
       dispactAction &&
-      dispactAction({ type: "SET_SERVER_ERROR", payload: error });
+      dispactAction({
+        type: types.SET_SERVER_ERROR,
+        payload: { errors: [error] }
+      });
   }
 };
 

@@ -1,9 +1,14 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 export interface IInitialState {
   hasServerError: boolean;
-  errors: any;
+  errors: any[];
 }
 
 export const initialState: IInitialState = {
   hasServerError: false,
-  errors: ""
+  errors: []
 };

@@ -18,15 +18,16 @@ import { AddressSpaceListFilterPage } from "./AddressSpaceListFilterPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
 import { DELETE_ADDRESS_SPACE } from "queries";
-import { useApolloClient } from "@apollo/react-hooks";
+import { useMutation } from "@apollo/react-hooks";
 import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
 import { compareTwoAddress } from "pages/AddressSpaceDetail/AddressList/AddressListPage";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
+import { useErrorContext, types } from "context-state-reducer";
 
 export default function AddressSpaceListWithFilterAndPagination() {
   useDocumentTitle("Address Space List");
   useA11yRouteChange();
-  const client = useApolloClient();
+
   const [filterValue, setFilterValue] = React.useState<string>("Name");
   const [filterNames, setFilterNames] = React.useState<string[]>([]);
   const [onCreationRefetch, setOnCreationRefetch] = React.useState<boolean>(
@@ -51,6 +52,13 @@ export default function AddressSpaceListWithFilterAndPagination() {
   const [isDeleteAllDisabled, setIsDeleteAllDisabled] = React.useState<boolean>(
     true
   );
+
+  const { dispatch } = useErrorContext();
+
+  const [setDeleteAddressSpaceQueryVariables] = useMutation(
+    DELETE_ADDRESS_SPACE
+  );
+
   const setSearchParam = React.useCallback(
     (name: string, value: string) => {
       searchParams.set(name, value.toString());
@@ -97,22 +105,34 @@ export default function AddressSpaceListWithFilterAndPagination() {
       />
     );
   };
-  let errorData = [];
-  const deleteAddressSpace = async (data: IAddressSpace) => {
-    const deletedData = await client.mutate({
-      mutation: DELETE_ADDRESS_SPACE,
-      variables: {
+  let deleteAddressSpaceErrors: any = [];
+  const deleteAddressSpace = async (
+    addressSpace: IAddressSpace,
+    index: number
+  ) => {
+    try {
+      const variables = {
         a: {
-          name: data.name,
-          namespace: data.nameSpace
+          name: addressSpace.name,
+          namespace: addressSpace.nameSpace
         }
-      }
-    });
-    if (deletedData.errors) {
-      errorData.push(data);
+      };
+      await setDeleteAddressSpaceQueryVariables({ variables });
+    } catch (error) {
+      deleteAddressSpaceErrors.push(error);
     }
-    if (deletedData.data) {
-      return deletedData;
+    /**
+     * dispatch action to set server errors after completion all queries
+     */
+    if (
+      selectedAddressSpaces &&
+      selectedAddressSpaces.length === index + 1 &&
+      deleteAddressSpaceErrors.length > 0
+    ) {
+      dispatch({
+        type: types.SET_SERVER_ERROR,
+        payload: { errors: deleteAddressSpaceErrors }
+      });
     }
   };
   const onDeleteAll = () => {
@@ -126,7 +146,9 @@ export default function AddressSpaceListWithFilterAndPagination() {
     if (selectedAddressSpaces && selectedAddressSpaces.length > 0) {
       const data = selectedAddressSpaces;
       await Promise.all(
-        data.map(addressSpace => deleteAddressSpace(addressSpace))
+        data.map((addressSpace, index) =>
+          deleteAddressSpace(addressSpace, index)
+        )
       );
       setSelectedAddressSpaces([]);
     }

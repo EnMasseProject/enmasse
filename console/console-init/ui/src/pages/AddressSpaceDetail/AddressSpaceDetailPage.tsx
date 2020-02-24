@@ -37,7 +37,6 @@ import {
 } from "queries";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
-import { ErrorAlert } from "components/common/ErrorAlert";
 import { NoDataFound } from "components/common/NoDataFound";
 import { EditAddressSpace } from "pages/EditAddressSpace";
 import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
@@ -130,9 +129,6 @@ export default function AddressSpaceDetailPage() {
 
   if (loading) return <Loading />;
 
-  if (error) {
-    return <ErrorAlert error={error} />;
-  }
   const { addressSpaces } = data || {
     addressSpaces: { total: 0, addressSpaces: [] }
   };
@@ -211,11 +207,19 @@ export default function AddressSpaceDetailPage() {
     });
   };
 
+  const metadata =
+    addressSpaces &&
+    addressSpaces.addressSpaces[0] &&
+    addressSpaces.addressSpaces[0].metadata;
   const addressSpaceDetails: IAddressSpaceHeaderProps = {
-    name: addressSpaces.addressSpaces[0].metadata.name,
-    namespace: addressSpaces.addressSpaces[0].metadata.namespace,
-    createdOn: addressSpaces.addressSpaces[0].metadata.creationTimestamp,
-    type: addressSpaces.addressSpaces[0].spec.type,
+    name: metadata && metadata.name,
+    namespace: metadata && metadata.namespace,
+    createdOn: metadata && metadata.creationTimestamp,
+    type:
+      addressSpaces &&
+      addressSpaces.addressSpaces[0] &&
+      addressSpaces.addressSpaces[0].spec &&
+      addressSpaces.addressSpaces[0].spec.type,
     onDownload: data => {
       downloadCertificate(data);
     },

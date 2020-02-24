@@ -4,7 +4,7 @@
  */
 
 import * as React from "react";
-import { useApolloClient, useQuery } from "@apollo/react-hooks";
+import { useQuery } from "@apollo/react-hooks";
 import { IAddressResponse } from "types/ResponseTypes";
 import {
   RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE,
@@ -16,7 +16,6 @@ import {
   IAddress,
   AddressList
 } from "components/AddressSpace/Address/AddressList";
-import { Loading } from "use-patternfly";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "components/AddressSpace/Address/EmptyAddress";
@@ -24,7 +23,6 @@ import { EditAddress } from "pages/EditAddressPage";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
-import { ErrorAlert } from "components/common/ErrorAlert";
 import { useMutationQuery } from "hooks";
 
 export interface IAddressListPageProps {
@@ -93,7 +91,6 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     setAddressBeingPurged
   ] = React.useState<IAddress | null>();
 
-  const client = useApolloClient();
   const [sortBy, setSortBy] = React.useState<ISortBy>();
 
   const resetEditFormState = () => {
@@ -130,7 +127,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
-  const { loading, error, data, refetch } = useQuery<IAddressResponse>(
+  const { data, refetch } = useQuery<IAddressResponse>(
     RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE(
       page,
       perPage,
@@ -148,9 +145,6 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     refetch();
     setOnCreationRefetch(false);
   }
-
-  if (loading) return <Loading />;
-  if (error) return <ErrorAlert error={error} />;
 
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }

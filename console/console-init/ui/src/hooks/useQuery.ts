@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import { useState, useEffect } from "react";
 import {
   useQuery as graphqlQuery,
@@ -11,7 +16,7 @@ export const useQuery = <TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
   options?: QueryHookOptions,
   callbackOnError?: Function,
-  callbackOnComplete?: Function
+  callbackOnCompleted?: Function
 ): QueryResult<TData, TVariables> => {
   const [graphqlState, setGraphqlState] = useState<any>({
     loading: true,
@@ -25,7 +30,7 @@ export const useQuery = <TData = any, TVariables = OperationVariables>(
       callbackOnError && callbackOnError(error);
     },
     onCompleted(data: TData) {
-      callbackOnComplete && callbackOnComplete(data);
+      callbackOnCompleted && callbackOnCompleted(data);
     }
   });
 
