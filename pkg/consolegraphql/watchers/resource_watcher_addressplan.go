@@ -168,7 +168,7 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 	var unchanged = 0
 	for _, res := range resourceList.Items {
 		copy := res.DeepCopy()
-		kw.updateKind(copy)
+		kw.updateGroupVersionKind(copy)
 
 		candidate := kw.create(copy)
 		gen, key, err := keyCreator(candidate)
@@ -245,7 +245,7 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 				err = fmt.Errorf("Watch error - object of unexpected type, %T, received", event.Object)
 			} else {
 				copy := res.DeepCopy()
-				kw.updateKind(copy)
+				kw.updateGroupVersionKind(copy)
 				switch event.Type {
 				case watch.Added:
 					err = kw.Cache.Add(kw.create(copy))
@@ -273,8 +273,10 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 	}
 }
 
-func (kw *AddressPlanWatcher) updateKind(o *tp.AddressPlan) {
-	if o.TypeMeta.Kind == "" {
-		o.TypeMeta.Kind = "AddressPlan"
+// KubernetesRBACAccessController relies on the GVK information to be set on objects.
+// List provides GVK (https://github.com/kubernetes/kubernetes/pull/63972) but Watch does not not so we set it ourselves.
+func (kw *AddressPlanWatcher) updateGroupVersionKind(o *tp.AddressPlan) {
+	if o.TypeMeta.Kind == "" || o.TypeMeta.APIVersion == "" {
+		o.TypeMeta.SetGroupVersionKind(tp.SchemeGroupVersion.WithKind("AddressPlan"))
 	}
 }

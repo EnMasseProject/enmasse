@@ -38,10 +38,12 @@ func TestWatchNamespace_ListProvidesNewValue(t *testing.T) {
 
 	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Namespace", nil)
 	assert.NoError(t, err, "failed to query cache")
-	expected := 1
-	actual := len(objs)
-	assert.Equal(t, expected, actual, "Unexpected number of namespaces")
+	assert.Equal(t, 1, len(objs), "Unexpected number of namespaces")
 	assert.Equal(t, int32(0), w.GetRestartCount())
+
+	received := objs[0].(*v1.Namespace)
+	assert.NotEmpty(t, received.TypeMeta.APIVersion)
+	assert.NotEmpty(t, received.TypeMeta.Kind)
 }
 
 func TestWatchNamespace_ListProvidesDifferingValues(t *testing.T) {
@@ -107,10 +109,12 @@ func TestWatchNamespace_WatchCreatesNewValue(t *testing.T) {
 
 	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Namespace", nil)
 	assert.NoError(t, err, "failed to query cache")
-	expected := 1
-	actual := len(objs)
-	assert.Equal(t, expected, actual, "Unexpected number of namespaces")
+	assert.Equal(t, 1, len(objs), "Unexpected number of namespaces")
 	assert.Equal(t, int32(0), w.GetRestartCount())
+
+	received := objs[0].(*v1.Namespace)
+	assert.NotEmpty(t, received.TypeMeta.APIVersion)
+	assert.NotEmpty(t, received.TypeMeta.Kind)
 }
 
 func TestWatchNamespace_WatchUpdatesExistingValue(t *testing.T) {
