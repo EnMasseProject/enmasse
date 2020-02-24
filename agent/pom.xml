@@ -177,9 +177,7 @@
                 <phase>process-resources</phase>
                 <configuration>
                   <workingDirectory>${licensereporter-node-install-directory}</workingDirectory>
-                  <arguments>install --prefix ${licensereporter-node-install-directory} -g
-                  license-reporter@1.2.1
-                  </arguments>
+                  <arguments>global add --prefix ${licensereporter-node-install-directory} license-reporter@1.2.1</arguments>
                 </configuration>
               </execution>
             </executions>
