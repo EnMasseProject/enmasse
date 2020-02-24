@@ -278,8 +278,6 @@ metadata:
 	expectedSpec := `
 spec:
   authenticationService:
-    metadata:
-      creationTimestamp: null
     name: auth
   plan: standard-small-queue
   type: queue`
