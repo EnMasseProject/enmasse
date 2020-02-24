@@ -165,7 +165,7 @@ public abstract class Kubernetes {
     }
 
     public double getKubernetesVersion() {
-        try ( var client = new DefaultKubernetesClient() ) {
+        try (var client = new DefaultKubernetesClient()) {
             final VersionInfo versionInfo = client.getVersion();
             return Double.parseDouble(versionInfo.getMajor() + "." + versionInfo.getMinor().replace("+", ""));
         }
@@ -418,7 +418,8 @@ public abstract class Kubernetes {
     }
 
     public List<Pod> listPods(String namespace) {
-        return new ArrayList<>(client.pods().inNamespace(namespace).list().getItems());
+        return new ArrayList<>(client.pods().inNamespace(namespace).list().getItems())
+                .stream().filter(pod -> !pod.getMetadata().getName().contains("tenant-cleanup")).collect(Collectors.toList()); //TODO remove until cleaning of this pod will be fixed;
     }
 
     public List<Pod> listPods() {
@@ -820,7 +821,6 @@ public abstract class Kubernetes {
      * @param namespace namespace
      * @param pvcName   of pvc
      * @return boolean    private static final String OLM_NAMESPACE = "operators";
-
      */
     public boolean pvcExists(String namespace, String pvcName) {
         return client.persistentVolumeClaims().inNamespace(namespace).list().getItems().stream()
