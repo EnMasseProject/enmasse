@@ -200,7 +200,7 @@ func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result
 	if isComplete(job) {
 		// done
 		err := deleteJob(ctx, job)
-		log.Info("Tenant cleanup job completed. Delete job -> err: %v", err)
+		log.Info("Tenant cleanup job completed", "Delete job error", err)
 		// remove finalizer
 		return reconcile.Result{}, err
 	} else if isFailed(job) {
