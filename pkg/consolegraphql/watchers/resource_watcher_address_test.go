@@ -43,10 +43,12 @@ func TestWatchAddress_ListProvidesNewValue(t *testing.T) {
 
 	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Address", nil)
 	assert.NoError(t, err, "failed to query cache")
-	expected := 1
-	actual := len(objs)
-	assert.Equal(t, expected, actual, "Unexpected number of addresses")
+	assert.Equal(t, 1, len(objs), "Unexpected number of addresses")
 	assert.Equal(t, int32(0), w.GetRestartCount())
+
+	received := objs[0].(*consolegraphql.AddressHolder)
+	assert.NotEmpty(t, received.TypeMeta.APIVersion)
+	assert.NotEmpty(t, received.TypeMeta.Kind)
 }
 
 func TestWatchAddress_ListProvidesDifferingValues(t *testing.T) {
@@ -113,10 +115,12 @@ func TestWatchAddress_WatchCreatesNewValue(t *testing.T) {
 
 	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Address", nil)
 	assert.NoError(t, err, "failed to query cache")
-	expected := 1
-	actual := len(objs)
-	assert.Equal(t, expected, actual, "Unexpected number of addresses")
+	assert.Equal(t, 1, len(objs), "Unexpected number of addresses")
 	assert.Equal(t, int32(0), w.GetRestartCount())
+
+	received := objs[0].(*consolegraphql.AddressHolder)
+	assert.NotEmpty(t, received.TypeMeta.APIVersion)
+	assert.NotEmpty(t, received.TypeMeta.Kind)
 }
 
 func TestWatchAddress_WatchUpdatesExistingValue(t *testing.T) {
