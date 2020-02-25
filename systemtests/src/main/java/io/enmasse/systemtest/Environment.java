@@ -9,6 +9,7 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.fabric8.kubernetes.client.Config;
 import org.slf4j.Logger;
 
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -46,7 +47,7 @@ public class Environment {
     private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
     private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
     private final String enmasseDocs = System.getProperty(ENMASSE_DOCS_SYSTEM_PROPERTY);
-    private final String kubernetesDomain = System.getenv().getOrDefault(K8S_DOMAIN_ENV, "nip.io");
+    private String kubernetesDomain = System.getenv().getOrDefault(K8S_DOMAIN_ENV, "nip.io");
     private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String upgradeTemplates = System.getenv().getOrDefault(UPGRADE_TEPLATES_ENV,
@@ -62,7 +63,7 @@ public class Environment {
     private final Duration kubernetesApiReadTimeout = Optional.ofNullable(System.getenv().get(K8S_API_READ_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
     private final Duration kubernetesApiWriteTimeout = Optional.ofNullable(System.getenv().get(K8S_API_WRITE_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
     private final EnmasseInstallType installType = Optional.ofNullable(System.getenv().get(INSTALL_TYPE)).map(EnmasseInstallType::valueOf).orElse(EnmasseInstallType.BUNDLE);
-    private final OLMInstallationType olmInstallType = Optional.ofNullable(System.getenv().get(OLM_INSTALL_TYPE)).map(s->s.isEmpty() ? OLMInstallationType.SPECIFIC.name() : s)
+    private final OLMInstallationType olmInstallType = Optional.ofNullable(System.getenv().get(OLM_INSTALL_TYPE)).map(s -> s.isEmpty() ? OLMInstallationType.SPECIFIC.name() : s)
             .map(OLMInstallationType::valueOf).orElse(OLMInstallationType.SPECIFIC);
     protected String templatesPath = System.getenv().getOrDefault(TEMPLATES_PATH,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
@@ -93,6 +94,13 @@ public class Environment {
         log.info(debugFormat, INSTALL_TYPE, installType.name());
         if (installType == EnmasseInstallType.OLM) {
             log.info(debugFormat, OLM_INSTALL_TYPE, olmInstallType.name());
+        }
+        if (url.startsWith("https://api")) {
+            try {
+                this.kubernetesDomain = new URL(url).getHost().replace("api", "apps");
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
         }
         log.info(debugFormat, TEST_LOG_DIR_ENV, testLogDir);
         log.info(debugFormat, K8S_NAMESPACE_ENV, namespace);
