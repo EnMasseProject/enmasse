@@ -10,13 +10,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"net"
 	"net/url"
 	"reflect"
 	"strconv"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -48,6 +50,12 @@ var consoleLinkGVK = schema.GroupVersionKind{
 	Group:   "console.openshift.io",
 	Version: "v1",
 	Kind:    "ConsoleLink",
+}
+
+var monitoringGVK = schema.GroupVersionKind{
+	Group:   "monitoring.coreos.com",
+	Version: "v1",
+	Kind:    "PrometheusRule",
 }
 
 // information for console link
@@ -223,6 +231,13 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 
 	// deployment
 	result, err = r.reconcileDeployment(ctx, consoleservice)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	requeue = requeue || result.Requeue
+
+	// prometheus rules
+	result, err = r.reconcilePrometheusRule(ctx, consoleservice)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -443,6 +458,45 @@ func applyService(consoleService *v1beta1.ConsoleService, service *corev1.Servic
 		},
 	}
 	return nil
+}
+
+func (r *ReconcileConsoleService) reconcilePrometheusRule(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
+
+	if !util.HasApi(monitoringGVK) {
+		return reconcile.Result{}, nil
+	}
+
+	prometheusRule := &monitoringv1.PrometheusRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "enmasse-console-rules",
+			Namespace: consoleservice.Namespace,
+		},
+	}
+
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, prometheusRule, func() error {
+
+		install.ApplyDefaultLabels(&prometheusRule.ObjectMeta, "consoleservice", consoleservice.Name)
+		install.ApplyCustomLabel(&prometheusRule.ObjectMeta, "monitoring-key", "middleware")
+		prometheusRule.Spec = monitoringv1.PrometheusRuleSpec{
+			Groups: []monitoringv1.RuleGroup{
+				{
+					Name: "ComponentHealth",
+					Rules: []monitoringv1.Rule{
+						{
+							Record: "enmasse_component_health",
+							Expr:   intstr.FromString("up{job='console',namespace='enmasse-infra'} or on(namespace) (1- absent(up{job='console',namespace='enmasse-infra'}))"),
+						},
+					},
+				},
+			},
+		}
+		return nil
+	})
+	if err != nil {
+		log.Error(err, "Failed reconciling PrometheusRule")
+		return reconcile.Result{}, err
+	}
+	return reconcile.Result{}, nil
 }
 
 func (r *ReconcileConsoleService) reconcileRoute(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, *routev1.Route, error) {

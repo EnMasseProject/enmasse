@@ -19,8 +19,6 @@ spec:
 
     - record: enmasse_component_health
       expr: up{job="address-space-controller"} or on(namespace) (1- absent(up{job="address-space-controller"}) )
-    - record: enmasse_component_health
-      expr: up{job="console",namespace='{{ index .Params "Namespace" }}'} or on(namespace) (1- absent(up{job="console",namespace='{{ index .Params "Namespace" }}'}) )
 
     - alert: ComponentHealth
       annotations:
