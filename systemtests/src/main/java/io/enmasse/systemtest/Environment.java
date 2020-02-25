@@ -98,7 +98,8 @@ public class Environment {
         if (url.startsWith("https://api")) {
             try {
                 this.kubernetesDomain = new URL(url).getHost().replace("api", "apps");
-            } catch (Exception ignored) {
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
         log.info(debugFormat, TEST_LOG_DIR_ENV, testLogDir);
