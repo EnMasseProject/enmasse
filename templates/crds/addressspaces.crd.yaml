@@ -142,7 +142,10 @@ spec:
                     description: "Expose configuration of this endpoint."
                     type: object
                     anyOf:
-                      - properties:
+                      - required:
+                          - type
+                          - loadBalancerPorts
+                        properties:
                           type:
                             type: string
                             description: "Expose this endpoint as LoadBalancer service."
@@ -158,7 +161,10 @@ spec:
                             type: array
                             items:
                               type: string
-                      - properties:
+                      - required:
+                          - type
+                          - routeTlsTermination
+                        properties:
                           type:
                             type: string
                             description: "Expose this endpoint as an OpenShift route."
@@ -178,6 +184,9 @@ spec:
                               - secure-mqtt
                           routeTlsTermination:
                             type: string
+                            enum:
+                              - passthrough
+                              - reencrypt
             networkPolicy:
               type: object
               description: "Define NetworkPolicy for this address space."

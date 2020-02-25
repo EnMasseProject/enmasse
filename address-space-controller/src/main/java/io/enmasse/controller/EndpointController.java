@@ -299,13 +299,13 @@ public class EndpointController implements Controller {
             TlsTermination tlsTermination = exposeSpec.getRouteTlsTermination();
             CertSpec certSpec = endpointSpec.getCert();
 
-            if (tlsTermination.equals(TlsTermination.passthrough)) {
+            if (TlsTermination.passthrough.equals(tlsTermination)) {
                 route.editOrNewSpec()
                     .withNewTls()
                     .withTermination("passthrough")
                     .endTls()
                     .endSpec();
-            } else if (tlsTermination.equals(TlsTermination.reencrypt)) {
+            } else if (TlsTermination.reencrypt.equals(tlsTermination)) {
                 if ("selfsigned".equals(certSpec.getProvider())) {
                     String caSecretName = KubeUtil.getAddressSpaceExternalCaSecretName(addressSpace);
                     Secret secret = client.secrets().inNamespace(namespace).withName(caSecretName).get();
