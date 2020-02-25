@@ -8,14 +8,14 @@ set -e
 
 get_endpoint() {
    key=$1
-   out=$(python -c "import sys, json;  print(json.load(sys.stdin)['$key'])")
+   out=$(python3 -c "import sys, json;  print(json.load(sys.stdin)['$key'])")
    echo ${out}
 }
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 TARGET_DIR=${1-/apps}
 
-SSO_COOKIE_SECRET=$(python -c \
+SSO_COOKIE_SECRET=$(python3 -c \
 'import os,base64; \
  print(base64.urlsafe_b64encode(bytes(os.environ["SSO_COOKIE_SECRET"], "utf-8") if "SSO_COOKIE_SECRET" in os.environ and os.environ["SSO_COOKIE_SECRET"] else os.urandom(32)).decode())')
 
