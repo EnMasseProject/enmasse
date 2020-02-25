@@ -34,6 +34,10 @@ public class PodDisruptionBudgetController implements Controller {
 
         if (infraConfig instanceof StandardInfraConfig) {
             RouterSet routerSet = RouterSet.create(namespace, addressSpace, client);
+            /*
+             * NOTE: PodDistruptionBudget spec cannot be modified on Kubernetes versions < 1.15.
+             * See https://github.com/kubernetes/kubernetes/pull/69867 for more information.
+             */
             reconcileRouterPodDisruptionBudget(addressSpace, routerSet, (StandardInfraConfig) infraConfig);
             reconcileBrokerPodDisruptionBudget(addressSpace, (StandardInfraConfig) infraConfig);
         }
