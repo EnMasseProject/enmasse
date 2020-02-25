@@ -6,30 +6,22 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"crypto/sha256"
 	"flag"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/handler"
-	"github.com/alexedwards/scs/v2"
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/metric"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/resolvers"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/watchers"
 	"github.com/enmasseproject/enmasse/pkg/util"
-	user "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vektah/gqlparser/gqlerror"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/clientcmd/api"
 	"log"
 	"net/http"
 	"time"
@@ -41,159 +33,6 @@ connections and links.
 
 For development purposes, you can run the console backend outside the container.  See the Makefile target 'run'.
 */
-
-const accessControllerStateCookieName = "accessControllerState"
-const sessionOwnerSessionAttribute = "sessionOwnerSessionAttribute"
-const loggedOnUserSessionAttribute = "loggedOnUserSessionAttribute"
-
-func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Handler {
-
-	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		var state *server.RequestState
-
-		accessToken := req.Header.Get("X-Forwarded-Access-Token")
-
-		if accessToken == "" {
-			http.Error(rw, "No access token", http.StatusUnauthorized)
-			rw.WriteHeader(401)
-			return
-		}
-
-		accessTokenSha := getShaSum(accessToken)
-		if sessionManager.Exists(req.Context(), sessionOwnerSessionAttribute) {
-			sessionOwnerAccessTokenSha := sessionManager.Get(req.Context(), sessionOwnerSessionAttribute).([]byte)
-			if !bytes.Equal(sessionOwnerAccessTokenSha, accessTokenSha) {
-				// This session must have belonged to a different accessToken, destroy it.
-				// New session created automatically.
-				_ = sessionManager.Destroy(req.Context())
-				sessionManager.Put(req.Context(), sessionOwnerSessionAttribute, accessTokenSha)
-			}
-		} else {
-			sessionManager.Put(req.Context(), sessionOwnerSessionAttribute, accessTokenSha)
-		}
-
-		kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-			clientcmd.NewDefaultClientConfigLoadingRules(),
-			&clientcmd.ConfigOverrides{
-				AuthInfo: api.AuthInfo{
-					Token: accessToken,
-				},
-			},
-		)
-
-		config, err := kubeConfig.ClientConfig()
-
-		//config.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
-		//	return &server.Tracer{RoundTripper: rt}
-		//}
-
-		kubeClient, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			log.Printf("Failed to build client set : %v", err)
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		userClient, err := user.NewForConfig(config)
-		if err != nil {
-			log.Printf("Failed to build client set : %v", err)
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		coreClient, err := enmassev1beta1.NewForConfig(config)
-		if err != nil {
-			log.Printf("Failed to build client set : %v", err)
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		loggedOnUser := "<unknown>"
-		if sessionManager.Exists(req.Context(), loggedOnUserSessionAttribute) {
-			loggedOnUser = sessionManager.GetString(req.Context(), loggedOnUserSessionAttribute)
-		} else {
-			if util.HasApi(util.UserGVK) {
-				usr, err := userClient.Users().Get("~", metav1.GetOptions{})
-				if err == nil {
-					loggedOnUser = usr.ObjectMeta.Name
-					sessionManager.Put(req.Context(), loggedOnUserSessionAttribute, loggedOnUser)
-				}
-			}
-		}
-
-		accessControllerState := sessionManager.Get(req.Context(), accessControllerStateCookieName)
-
-		controller := accesscontroller.NewKubernetesRBACAccessController(kubeClient, accessControllerState)
-
-		state = &server.RequestState{
-			UserInterface:        userClient.Users(),
-			EnmasseV1beta1Client: coreClient,
-			AccessController:     controller,
-			User:                 loggedOnUser,
-			UserAccessToken:      accessToken,
-		}
-
-		ctx := server.ContextWithRequestState(state, req.Context())
-
-		next.ServeHTTP(rw, req.WithContext(ctx))
-	})
-}
-
-func developmentHandler(next http.Handler, sessionManager *scs.SessionManager, accessToken string) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-
-		kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-			clientcmd.NewDefaultClientConfigLoadingRules(),
-			&clientcmd.ConfigOverrides{},
-		)
-
-		config, err := kubeconfig.ClientConfig()
-
-		if err != nil {
-			log.Printf("Failed to build config : %v", err)
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		userclientset, err := user.NewForConfig(config)
-		if err != nil {
-			log.Printf("Failed to build client set : %v", err)
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		coreClient, err := enmassev1beta1.NewForConfig(config)
-		if err != nil {
-			log.Printf("Failed to build client set : %v", err)
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		requestState := &server.RequestState{
-			UserInterface:        userclientset.Users(),
-			EnmasseV1beta1Client: coreClient,
-			AccessController:     accesscontroller.NewAllowAllAccessController(),
-			User:                 "<unknown>",
-			UserAccessToken:      accessToken,
-		}
-
-		loggedOnUser := "<unknown>"
-		if sessionManager.Exists(req.Context(), loggedOnUserSessionAttribute) {
-			loggedOnUser = sessionManager.GetString(req.Context(), loggedOnUserSessionAttribute)
-		} else {
-			if util.HasApi(util.UserGVK) {
-				usr, err := userclientset.Users().Get("~", metav1.GetOptions{})
-				if err == nil {
-					loggedOnUser = usr.ObjectMeta.Name
-					sessionManager.Put(req.Context(), loggedOnUserSessionAttribute, loggedOnUser)
-				}
-			}
-		}
-
-		ctx := server.ContextWithRequestState(requestState, req.Context())
-		next.ServeHTTP(rw, req.WithContext(ctx))
-	})
-}
 
 func main() {
 	infraNamespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
@@ -270,7 +109,6 @@ http://localhost:` + port + `/graphql
 		schedule(func() {
 			_ = objectCache.Dump()
 		}, dumpCachePeriod)
-
 	}
 
 	if updateMetricsPeriod.Nanoseconds() > 0 {
@@ -293,7 +131,11 @@ http://localhost:` + port + `/graphql
 		Name: "console_query_error_total",
 		Help: "Number of queries that have ended in error",
 	}, []string{"operationName"})
-	prometheus.MustRegister(queryTimeMetric, queryErrorCountMetric)
+	sessionCountMetric := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "console_active_session_count",
+		Help: "Number of active HTTP sessions",
+	})
+	prometheus.MustRegister(queryTimeMetric, queryErrorCountMetric, sessionCountMetric)
 
 	queryServer := http.NewServeMux()
 
@@ -305,7 +147,8 @@ http://localhost:` + port + `/graphql
 
 	sessionManager := server.CreateSessionManager(sessionLifetime, sessionIdleTimeout,
 		func() { manager.BeginWatching() },
-		func() { manager.EndWatching() })
+		func() { manager.EndWatching() },
+		sessionCountMetric)
 
 	gql := handler.GraphQL(resolvers.NewExecutableSchema(resolvers.Config{Resolvers: &resolver}),
 		handler.ErrorPresenter(
@@ -324,17 +167,7 @@ http://localhost:` + port + `/graphql
 			start := time.Now()
 			result := next(ctx)
 
-			requestState := server.GetRequestStateFromContext(ctx)
-			if requestState != nil {
-				loggedOnUser = requestState.User
-				if updated, accessControllerState := requestState.AccessController.GetState(); updated {
-					if accessControllerState == nil {
-						sessionManager.Remove(ctx, accessControllerStateCookieName)
-					} else {
-						sessionManager.Put(ctx, accessControllerStateCookieName, accessControllerState)
-					}
-				}
-			}
+			loggedOnUser = server.UpdateAccessControllerState(ctx, loggedOnUser, sessionManager)
 
 			rctx := graphql.GetRequestContext(ctx)
 			if rctx != nil {
@@ -347,9 +180,9 @@ http://localhost:` + port + `/graphql
 	)
 
 	if *developmentMode {
-		queryServer.Handle(queryEndpoint, developmentHandler(gql, sessionManager, config.BearerToken))
+		queryServer.Handle(queryEndpoint, server.DevelopmentHandler(gql, sessionManager, config.BearerToken))
 	} else {
-		queryServer.Handle(queryEndpoint, authHandler(gql, sessionManager))
+		queryServer.Handle(queryEndpoint, server.AuthHandler(gql, sessionManager))
 	}
 
 	go func() {
@@ -386,9 +219,4 @@ func schedule(f func(), delay time.Duration) (chan bool, chan bool) {
 	}()
 
 	return stop, bump
-}
-
-func getShaSum(accessToken string) []byte {
-	accessTokenSha := sha256.Sum256([]byte(accessToken))
-	return accessTokenSha[:]
 }
