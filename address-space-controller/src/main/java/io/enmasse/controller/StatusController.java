@@ -203,11 +203,11 @@ public class StatusController implements Controller {
         InfraConfig infraConfig = InfraConfigs.parseCurrentInfraConfig(addressSpace);
         if (infraConfig instanceof StandardInfraConfig) {
             List<RouterStatus> routerStatusList = routerStatusCache.getLatestResult(addressSpace);
-            if (routerStatusList == null) {
+            if (routerStatusList == null || routerStatusList.isEmpty()) {
                 addressSpace.getStatus().setReady(false);
                 addressSpace.getStatus().appendMessage("No router status found.");
             } else {
-                if (!addressSpace.getStatus().getConnectors().isEmpty()) {
+                if (!addressSpace.getSpec().getConnectors().isEmpty()) {
                     checkRouterConnectorStatus(addressSpace, routerStatusList);
                 } else {
                     checkRouterMesh(addressSpace, routerStatusList);
