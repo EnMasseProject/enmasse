@@ -25,9 +25,9 @@
 * #3764: validate the topic refenced by a subscription actually exists
 * #3868: Add support for specifying maxConsumers for a subscription
 * #3873: Require TLSv1.2 or newer for external TLS endpoints
-* #3867: Add addition checks for router mesh status
-#      : Address CRD now validates the spec.address field comprises permitted characters.
-# #3949: Address unsafe publication to volatiles used to form the schema
+* #3867: Add addition checks for router mesh status: Address CRD now validates the spec.address field comprises permitted characters.
+* #3949: Address unsafe publication to volatiles used to form the schema
+* #3981: Timeout when deleting address space
 
 ## 0.30.2
 *  #2714: Allow setting security context of pods using persistent volumes
