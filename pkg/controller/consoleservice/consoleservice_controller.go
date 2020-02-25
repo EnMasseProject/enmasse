@@ -726,7 +726,6 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		if err := install.ApplyContainerImage(container, "console-server", nil); err != nil {
 			return err
 		}
-		container.Command = []string{"/console-server"}
 
 		port := int32(9090)
 		metricsPort := int32(9089)
