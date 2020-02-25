@@ -186,7 +186,7 @@ http://localhost:` + port + `/graphql
 	}
 
 	go func() {
-		err = http.ListenAndServe(":"+port, sessionManager.LoadAndSave(queryServer))
+		err = http.ListenAndServe("127.0.0.1:"+port, sessionManager.LoadAndSave(queryServer))
 		if err != nil {
 			panic(err.Error())
 		}
