@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	"crypto/tls"
 	"flag"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/handler"
@@ -17,7 +16,6 @@ import (
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/metric"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/resolvers"
@@ -141,7 +139,7 @@ func authHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 	})
 }
 
-func developmentHandler(next http.Handler, _ *scs.SessionManager, accessToken string) http.Handler {
+func developmentHandler(next http.Handler, sessionManager *scs.SessionManager, accessToken string) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 
 		kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -177,6 +175,19 @@ func developmentHandler(next http.Handler, _ *scs.SessionManager, accessToken st
 			AccessController:     accesscontroller.NewAllowAllAccessController(),
 			User:                 "<unknown>",
 			UserAccessToken:      accessToken,
+		}
+
+		loggedOnUser := "<unknown>"
+		if sessionManager.Exists(req.Context(), loggedOnUserSessionAttribute) {
+			loggedOnUser = sessionManager.GetString(req.Context(), loggedOnUserSessionAttribute)
+		} else {
+			if util.HasApi(util.UserGVK) {
+				usr, err := userclientset.Users().Get("~", metav1.GetOptions{})
+				if err == nil {
+					loggedOnUser = usr.ObjectMeta.Name
+					sessionManager.Put(req.Context(), loggedOnUserSessionAttribute, loggedOnUser)
+				}
+			}
 		}
 
 		ctx := server.ContextWithRequestState(requestState, req.Context())
@@ -245,70 +256,14 @@ http://localhost:` + port + `/graphql
 		panic(err.Error())
 	}
 
-	var getCollector func(string) agent.Delegate
-
-	creators := []func() (watchers.ResourceWatcher, error){
-		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAddressSpaceWatcher(objectCache, &resyncInterval, watchers.AddressSpaceWatcherConfig(config),
-				watchers.AddressSpaceWatcherFactory(watchers.AddressSpaceCreate, watchers.AddressSpaceUpdate))
-		},
-		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAddressWatcher(objectCache, &resyncInterval, watchers.AddressWatcherConfig(config),
-				watchers.AddressWatcherFactory(watchers.AddressCreate, watchers.AddressUpdate))
-		},
-		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewNamespaceWatcher(objectCache, &resyncInterval, watchers.NamespaceWatcherConfig(config))
-		},
-		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAddressSpacePlanWatcher(objectCache, &resyncInterval, infraNamespace, watchers.AddressSpacePlanWatcherConfig(config))
-		},
-		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAddressPlanWatcher(objectCache, &resyncInterval, infraNamespace, watchers.AddressPlanWatcherConfig(config))
-		},
-		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAuthenticationServiceWatcher(objectCache, &resyncInterval, infraNamespace, watchers.AuthenticationServiceWatcherConfig(config))
-		},
-		func() (watchers.ResourceWatcher, error) {
-			return watchers.NewAddressSpaceSchemaWatcher(objectCache, &resyncInterval, watchers.AddressSpaceSchemaWatcherConfig(config))
-		},
-		func() (watchers.ResourceWatcher, error) {
-			watcherConfigs := make([]watchers.WatcherOption, 0)
-			watcherConfigs = append(watcherConfigs, watchers.AgentWatcherServiceConfig(config))
-			if *developmentMode {
-				watcherConfigs = append(watcherConfigs, watchers.AgentWatcherRouteConfig(config))
-			}
-			watcher, err := watchers.NewAgentWatcher(objectCache, &resyncInterval, infraNamespace,
-				func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, tlsConfig *tls.Config) agent.Delegate {
-					return agent.NewAmqpAgentDelegate(config.BearerToken,
-						host, port, tlsConfig,
-						addressSpaceNamespace, addressSpace, infraUuid,
-						agentCommandDelegateExpiryPeriod, agentAmqpConnectTimeout, agentAmqpMaxFrameSize)
-				}, *developmentMode, watcherConfigs...)
-			getCollector = watcher.Collector
-			return watcher, err
-		},
-	}
-
-	resourcewatchers := make([]watchers.ResourceWatcher, 0)
-
-	for _, f := range creators {
-		watcher, err := f()
-		if err != nil {
-			panic(err.Error())
-		}
-		resourcewatchers = append(resourcewatchers, watcher)
-
-		err = watcher.Watch()
-		if err != nil {
-			panic(err.Error())
-		}
-	}
+	manager := watchers.New(objectCache, resyncInterval, config, infraNamespace, developmentMode, agentCommandDelegateExpiryPeriod, agentAmqpConnectTimeout, agentAmqpMaxFrameSize)
+	manager.Start()
 
 	resolver := resolvers.Resolver{
 		AdminConfig:  adminclient,
 		CoreConfig:   coreclient,
 		Cache:        objectCache,
-		GetCollector: getCollector,
+		GetCollector: manager.GetCollector,
 	}
 
 	if dumpCachePeriod > 0 {
@@ -325,10 +280,8 @@ http://localhost:` + port + `/graphql
 				log.Printf("failed to update metrics, %s", err)
 			} else if updated > 0 {
 				log.Printf("%d object metric(s) updated", updated)
-
 			}
 		}, updateMetricsPeriod)
-
 	}
 
 	queryTimeMetric := prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -350,12 +303,9 @@ http://localhost:` + port + `/graphql
 		queryServer.Handle("/graphql/", playground)
 	}
 
-	sessionManager := scs.New()
-	sessionManager.Lifetime = sessionLifetime
-	sessionManager.IdleTimeout = sessionIdleTimeout
-	sessionManager.Cookie.HttpOnly = true
-	sessionManager.Cookie.Persist = false
-	sessionManager.Cookie.Secure = true
+	sessionManager := server.CreateSessionManager(sessionLifetime, sessionIdleTimeout,
+		func() { manager.BeginWatching() },
+		func() { manager.EndWatching() })
 
 	gql := handler.GraphQL(resolvers.NewExecutableSchema(resolvers.Config{Resolvers: &resolver}),
 		handler.ErrorPresenter(
