@@ -24,13 +24,7 @@ import {
   RETURN_AUTHENTICATION_SERVICES
 } from "queries";
 import { Loading } from "use-patternfly";
-import { css, StyleSheet } from "@patternfly/react-styles";
 import { dnsSubDomainRfc1123NameRegexp } from "types/Configs";
-const styles = StyleSheet.create({
-  capitalize_labels: {
-    "text-transform": "capitalize"
-  }
-});
 
 export interface IAddressSpaceConfiguration {
   name: string;
@@ -239,9 +233,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                     itemID={option.value}
                     component={"button"}
                   >
-                    <b className={css(styles.capitalize_labels)}>
-                      {option.label}
-                    </b>
+                    <b>{option.label}</b>
                     <br />
                     {option.description ? option.description : ""}
                   </DropdownItem>
