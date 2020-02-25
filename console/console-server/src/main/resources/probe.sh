@@ -15,6 +15,6 @@ curl 'http://localhost:9090/graphql/query' \
 -H 'Origin: http://localhost:9090' \
 -H "X-Forwarded-Access-Token: ${KUBE_TOKEN}" \
 -H "X-Health: true" \
---data-binary '{"query":"query whoami {\n  whoami {\n    metadata {\n      name\n    }\n  }\n}"}' \
+--data-binary '{"operationName": "health_probe_whoami", "query":"query health_probe_whoami {\n  whoami {\n    metadata {\n      name\n    }\n  }\n}"}' \
 --compressed \
 --fail
