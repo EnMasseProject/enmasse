@@ -2,6 +2,8 @@
 //
 // assembly-monitoring.adoc
 
+:parent-context: {context}
+
 [id='assembly-metrics-rules-{context}]
 = Metrics and rules
 
@@ -12,4 +14,6 @@ include::../modules/ref-metrics-address-space-controller.adoc[leveloffset=+1]
 include::../modules/ref-metrics-standard-controller-agent.adoc[leveloffset=+1]
 
 include::assembly-rules.adoc[leveloffset=+1]
+
+:context: {parent-context}
 

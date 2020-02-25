@@ -4,7 +4,6 @@
 
 :parent-context: {context}
 [id='monitoring-{context}']
-
 = Monitoring {ProductName}
 
 You can monitor {ProductName} by deploying built-in monitoring tools or using your pre-existing monitoring infrastructure.
