@@ -31,9 +31,8 @@ func generateApplyCommand(object interface{}, namespace string) (string, error) 
 	}
 
 	delete(jsonMap, "status")
-	delete(jsonMap["metadata"].(map[string]interface{}), "creationTimestamp")
 	delete(jsonMap["metadata"].(map[string]interface{}), "uid")
-
+	pruneEmpty(&jsonMap)
 	bytes, err = yaml.Marshal(jsonMap)
 
 	kubectl := "kubectl"
@@ -46,5 +45,21 @@ func generateApplyCommand(object interface{}, namespace string) (string, error) 
 		return shell, nil
 	} else {
 		return "", err
+	}
+}
+
+func pruneEmpty(m *map[string]interface{}) {
+	for k, v := range *m {
+		if v == nil {
+			delete(*m, k)
+		} else {
+			switch t := v.(type) {
+			case map[string]interface{}:
+				pruneEmpty(&t)
+				if len(t) == 0 {
+					delete(*m, k)
+				}
+			}
+		}
 	}
 }
