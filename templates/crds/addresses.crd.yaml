@@ -70,7 +70,7 @@ spec:
             address:
               type: string
               description: "Messaging address."
-              pattern: "^[^#*\\s]+$"
+              pattern: "^[^\\s]+$"
             type:
               type: string
               description: "Address type for this address."
