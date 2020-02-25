@@ -12,7 +12,6 @@ import {
 } from "@patternfly/react-core";
 
 import { useErrorContext, types } from "context-state-reducer";
-import { isArray } from "util";
 
 export const ServerMessageAlert: React.FC = () => {
   const { state, dispatch } = useErrorContext();
@@ -26,7 +25,7 @@ export const ServerMessageAlert: React.FC = () => {
 
   const getErrorMessage = () => {
     let message: string = "Something went wrong, please try again...";
-    if (errors && isArray(errors)) {
+    if (errors && Array.isArray(errors)) {
       return (
         <List>
           {errors &&

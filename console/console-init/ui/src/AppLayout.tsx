@@ -15,13 +15,11 @@ import { AppRoutes } from "AppRoutes";
 import brandImg from "./assets/images/logo.svg";
 import avatarImg from "./img_avatar.svg";
 import "./App.css";
-import { ServerMessageAlert } from "./components/common";
+import { ServerMessageAlert, NetworkStatusAlert } from "./components/common";
 import { useErrorContext } from "./context-state-reducer";
 import { onServerError } from "./graphql-module";
 
-let history: any;
-let dispactAction: any;
-let hasServerError: any;
+let history: any, dispactAction: any, states: any;
 
 const graphqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT
   ? process.env.REACT_APP_GRAPHQL_ENDPOINT
@@ -30,7 +28,7 @@ const graphqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT
 const client = new ApolloClient({
   uri: graphqlEndpoint,
   onError(error: any) {
-    onServerError(error, history, dispactAction, hasServerError);
+    onServerError(error, dispactAction, states);
   }
 });
 
@@ -45,7 +43,7 @@ const logo = <Brand src={brandImg} alt="Console Logo" />;
 const AppLayout: React.FC = () => {
   history = useHistory();
   const { dispatch, state } = useErrorContext();
-  hasServerError = state && state.hasServerError;
+  states = state;
   dispactAction = dispatch;
   const logoProps = React.useMemo(
     () => ({
@@ -62,6 +60,7 @@ const AppLayout: React.FC = () => {
         avatar={avatar}
         toolbar={<NavToolBar />}
       >
+        <NetworkStatusAlert />
         <ServerMessageAlert />
         <AppRoutes />
       </Layout>

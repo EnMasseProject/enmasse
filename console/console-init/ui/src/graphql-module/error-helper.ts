@@ -4,17 +4,26 @@
  */
 
 import { types } from "context-state-reducer";
+import { QUERY } from "constants/constants";
 
-const onServerError = (
-  error: any,
-  history: any,
-  dispactAction: any,
-  hasServerError: boolean
-) => {
-  const { graphQLErrors, networkError } = error;
+const onServerError = (error: any, dispactAction: any, states: any) => {
+  const { graphQLErrors, networkError, operation } = error;
+  const { hasNetworkError, hasServerError } = states;
+  const operationType =
+    operation &&
+    operation.query &&
+    operation.query.definitions[0] &&
+    operation.query.definitions[0].operation;
   if (networkError && !graphQLErrors) {
-    history && history.push("/server-error");
-  } else if (graphQLErrors) {
+    dispactAction &&
+      hasNetworkError !== true &&
+      dispactAction({
+        type: types.SET_NETWORK_ERROR,
+        payload: true
+      });
+  }
+  //catch the server error for queries
+  else if (graphQLErrors && operationType === QUERY) {
     hasServerError !== true &&
       dispactAction &&
       dispactAction({

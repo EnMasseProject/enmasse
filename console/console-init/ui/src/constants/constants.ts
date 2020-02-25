@@ -6,6 +6,7 @@
 const UNKNOWN: string = "unknown";
 const POLL_INTERVAL: number = 5000;
 const POLL_INTERVAL_USER: number = 20000;
+const QUERY: string = "query";
 enum FetchPolicy {
   NETWORK_ONLY = "network-only",
   CACHE_FIRST = "cache-first",
@@ -15,4 +16,4 @@ enum FetchPolicy {
   CACHE_AND_NETWORK = "cache-and-network"
 }
 
-export { UNKNOWN, POLL_INTERVAL, POLL_INTERVAL_USER, FetchPolicy };
+export { UNKNOWN, POLL_INTERVAL, POLL_INTERVAL_USER, FetchPolicy, QUERY };

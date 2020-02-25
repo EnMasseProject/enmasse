@@ -5,10 +5,12 @@
 
 export interface IInitialState {
   hasServerError: boolean;
+  hasNetworkError: boolean;
   errors: any[];
 }
 
 export const initialState: IInitialState = {
   hasServerError: false,
+  hasNetworkError: false,
   errors: []
 };
