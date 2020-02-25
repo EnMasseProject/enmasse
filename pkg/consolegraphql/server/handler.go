@@ -169,13 +169,15 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 
 func UpdateAccessControllerState(ctx context.Context, loggedOnUser string, sessionManager *scs.SessionManager) string {
 	requestState := GetRequestStateFromContext(ctx)
-	if requestState != nil && requestState.UseSession {
+	if requestState != nil {
 		loggedOnUser = requestState.User
-		if updated, accessControllerState := requestState.AccessController.GetState(); updated {
-			if accessControllerState == nil {
-				sessionManager.Remove(ctx, accessControllerStateCookieName)
-			} else {
-				sessionManager.Put(ctx, accessControllerStateCookieName, accessControllerState)
+		if requestState.UseSession {
+			if updated, accessControllerState := requestState.AccessController.GetState(); updated {
+				if accessControllerState == nil {
+					sessionManager.Remove(ctx, accessControllerStateCookieName)
+				} else {
+					sessionManager.Put(ctx, accessControllerStateCookieName, accessControllerState)
+				}
 			}
 		}
 	}
