@@ -122,12 +122,33 @@ public class KubernetesHelper implements Kubernetes {
         return res.getKind().equals("StatefulSet");  // TODO: is there an existing constant for this somewhere?
     }
 
+    private void waitForZeroPods(String infraUuid, Map<String, String> labels, long timeoutInMillis) throws InterruptedException {
+        long end = System.currentTimeMillis() + timeoutInMillis;
+        int podsLeft = client.pods().withLabels(labels).list().getItems().size();
+        while (podsLeft > 0 && System.currentTimeMillis() < end) {
+            Thread.sleep(5000);
+            podsLeft = client.pods().withLabels(labels).list().getItems().size();
+        }
+        podsLeft = client.pods().withLabels(labels).list().getItems().size();
+        if (podsLeft > 0) {
+            String message = String.format("Failed to delete infra with uuid %s: %d pods still exists", infraUuid, podsLeft);
+            throw new RuntimeException(message);
+        }
+    }
+
     @Override
-    public void deleteResources(String infraUuid) {
+    public void deleteResources(String infraUuid) throws InterruptedException {
+        // Delete and await deployments to be deleted so that the per-address space controllers are not re-creating any resources
+        for (Deployment deployment : client.apps().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems()) {
+            if (!client.apps().deployments().inNamespace(deployment.getMetadata().getNamespace()).withName(deployment.getMetadata().getName()).withPropagationPolicy("Background").delete()) {
+                throw new RuntimeException("Failed to delete infra with uuid " + infraUuid + ": failed to delete deployment " + deployment.getMetadata().getName());
+            }
+            waitForZeroPods(infraUuid, deployment.getSpec().getTemplate().getMetadata().getLabels(), 300_000);
+        }
         client.apps().statefulSets().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
+
         client.secrets().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         client.configMaps().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
-        client.apps().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         client.network().networkPolicies().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         client.services().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();

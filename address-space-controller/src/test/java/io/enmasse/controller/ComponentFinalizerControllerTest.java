@@ -39,7 +39,7 @@ public class ComponentFinalizerControllerTest {
     }
 
     @Test
-    public void testFinalizerSuccess() {
+    public void testFinalizerSuccess() throws Exception {
         AbstractFinalizerController.Result result = controller.processFinalizer(createTestSpace());
         assertNotNull(result);
         assertTrue(result.isFinalized());
@@ -47,7 +47,7 @@ public class ComponentFinalizerControllerTest {
     }
 
     @Test
-    public void testFinalizerFailure() {
+    public void testFinalizerFailure() throws Exception {
         doThrow(new RuntimeException("ERROR")).when(client).deleteResources(any());
         AbstractFinalizerController.Result result = controller.processFinalizer(createTestSpace());
         assertNotNull(result);
