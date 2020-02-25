@@ -99,7 +99,7 @@ public class Environment {
             try {
                 this.kubernetesDomain = new URL(url).getHost().replace("api", "apps");
             } catch (Exception ex) {
-                ex.printStackTrace();
+                throw new RuntimeException(ex);
             }
         }
         log.info(debugFormat, TEST_LOG_DIR_ENV, testLogDir);
