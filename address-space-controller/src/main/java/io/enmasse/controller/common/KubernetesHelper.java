@@ -140,7 +140,7 @@ public class KubernetesHelper implements Kubernetes {
     public void deleteResources(String infraUuid) throws InterruptedException {
         // Delete and await deployments to be deleted so that the per-address space controllers are not re-creating any resources
         for (Deployment deployment : client.apps().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems()) {
-            if (!client.apps().deployments().delete(deployment)) {
+            if (!client.apps().deployments().inNamespace(deployment.getMetadata().getNamespace()).withName(deployment.getMetadata().getName()).withPropagationPolicy("Background").delete()) {
                 throw new RuntimeException("Failed to delete infra with uuid " + infraUuid + ": failed to delete deployment " + deployment.getMetadata().getName());
             }
             waitForZeroPods(infraUuid, deployment.getSpec().getTemplate().getMetadata().getLabels(), 300_000);
