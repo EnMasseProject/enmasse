@@ -4,16 +4,18 @@
  */
 
 import * as React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { Alert, PageSection } from "@patternfly/react-core";
 
 const NotFound: React.FunctionComponent = () => (
   <PageSection>
-    <Alert variant="danger" title="Something went wrong!" />
+    <Alert variant="danger" title="Connection Error">
+      You have been disconnected from the server. Please login again.
+    </Alert>
     <br />
-    <NavLink to="oauth/sign_in" className="pf-c-nav__link">
+    <a href="oauth/sign_in" className="pf-c-nav__link">
       Take me home
-    </NavLink>
+    </a>
   </PageSection>
 );
 

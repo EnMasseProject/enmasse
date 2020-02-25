@@ -23,7 +23,7 @@ export const ConnectionProtocolFormat: React.FunctionComponent<ProtocolIcon> = (
 }) => {
   return (
     <>
-      {protocol.toUpperCase()} {protocolIconToDisplay(encrypted)}
+      {protocol && protocol.toUpperCase()} {protocolIconToDisplay(encrypted)}
     </>
   );
 };
