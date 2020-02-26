@@ -24,7 +24,7 @@ export const About: React.FunctionComponent<IAboutProps> = ({
       brandImageAlt: ""
     };
 
-    let img = require("assets/images/enmasse_about_logo.svg");
+    let img = require("assets/images/" + imagePrefix + "_about_logo.svg");
 
     modalImgProps = {
       brandImageSrc: img,
