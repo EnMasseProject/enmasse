@@ -19,7 +19,6 @@ import {
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { AddressSpaceType } from "components/common/AddressSpaceListFormatter";
 import { FormatDistance } from "use-patternfly";
-import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
 
 const styles = StyleSheet.create({
   flex_right_border: {

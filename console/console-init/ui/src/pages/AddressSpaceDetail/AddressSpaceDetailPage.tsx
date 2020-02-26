@@ -41,7 +41,6 @@ import { ErrorAlert } from "components/common/ErrorAlert";
 import { NoDataFound } from "components/common/NoDataFound";
 import { EditAddressSpace } from "pages/EditAddressSpace";
 import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
-import { string } from "prop-types";
 const styles = StyleSheet.create({
   no_bottom_padding: {
     paddingBottom: 0
