@@ -23,6 +23,7 @@
     "react-ace": "^8.0.0",
     "react-async": "^9.0.0",
     "react-dom": "^16.12.0",
+    "react-popper": "1.3.5",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
     "react-router-last-location": "^2.0.1",
@@ -93,5 +94,9 @@
       "prettier --write",
       "git add"
     ]
+  },
+  "resolutions": {
+    "handlebars": "4.5.3",
+    "react-popper": "1.3.5"
   }
 }
