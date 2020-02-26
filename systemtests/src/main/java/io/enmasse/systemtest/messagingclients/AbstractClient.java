@@ -42,6 +42,7 @@ public abstract class AbstractClient {
     private List<String> executable;
     private String podName;
     private String podNamespace;
+    private Future<Boolean> asyncClient;
     /**
      * Important: this is not any container_id nor nothing related with amqp, this is just an identifier for logging in our tests
      */
@@ -211,9 +212,11 @@ public abstract class AbstractClient {
                     }
                 }
             }
+            asyncClient = null;
             return ret == 0;
         } catch (Exception ex) {
             ex.printStackTrace();
+            asyncClient = null;
             return false;
         }
     }
@@ -257,13 +260,14 @@ public abstract class AbstractClient {
      * @return future of exit status of client
      */
     public Future<Boolean> runAsync(boolean logToOutput) {
-        return CompletableFuture.supplyAsync(() -> {
+        asyncClient = CompletableFuture.supplyAsync(() -> {
             try {
                 return runClient(DEFAULT_ASYNC_TIMEOUT, logToOutput);
             } catch (Exception e) {
                 throw new CompletionException(e);
             }
         }, runnable -> new Thread(runnable).start());
+        return asyncClient;
     }
 
     /**
@@ -302,10 +306,14 @@ public abstract class AbstractClient {
      */
     public void stop() {
         try {
+            if (asyncClient != null) {
+                asyncClient.cancel(true);
+            }
             executor.stop();
         } catch (Exception ex) {
             log.warn("Client stop raise exception: " + ex.getMessage());
         }
+        asyncClient = null;
     }
 
     /**

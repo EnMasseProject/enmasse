@@ -829,7 +829,7 @@ public abstract class ConsoleTest extends TestBase {
         assertEquals(1, consolePage.getAddressItems().size(), "Unexpected number of addresses present before attaching clients");
 
         //this creates 11 senders and 11 receivers in total
-        clientsList = this.attachClients(addressSpace, Arrays.asList(dest), defaultCredentials);
+        clientsList = this.attachClients(addressSpace, Collections.singletonList(dest), defaultCredentials);
         var senderCount = 11;
         var receiverCount = 11;
 
