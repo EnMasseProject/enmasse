@@ -53,7 +53,8 @@ interface IAddressListProps {
 
 export const StyleForTable = StyleSheet.create({
   scroll_overflow: {
-    overflowY: "auto"
+    overflowY: "auto",
+    paddingBottom: 100
   }
 });
 
