@@ -249,9 +249,8 @@ public class SystemtestsKubernetesApps {
     }
 
     public static Path[] resolveAll(final Path base, final String... localPaths) {
-        return Arrays.asList(localPaths)
-                .stream()
-                .map(l -> base.resolve(l))
+        return Arrays.stream(localPaths)
+                .map(base::resolve)
                 .toArray(Path[]::new);
     }
 
@@ -512,7 +511,7 @@ public class SystemtestsKubernetesApps {
                 .withNewSpec()
                 .addNewContainer()
                 .withNewResources()
-                .addToRequests("memory", new Quantity("512Mi"))
+                .addToRequests("memory", new Quantity("1024Mi"))
                 .endResources()
                 .withName(appName)
                 .withImage(imageName)
