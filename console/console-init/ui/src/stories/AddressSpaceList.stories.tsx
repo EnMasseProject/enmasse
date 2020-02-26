@@ -75,6 +75,7 @@ stories.add("Address Space List", () => (
       rows={rows}
       onEdit={action("onEdit")}
       onDelete={action("onDelete")}
+      onDownload={action("download Certificate")}
     />
   </MemoryRouter>
 ));

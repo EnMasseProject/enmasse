@@ -16,13 +16,15 @@ import { DialoguePrompt } from "components/common/DialoguePrompt";
 import {
   DELETE_ADDRESS_SPACE,
   RETURN_ALL_ADDRESS_SPACES,
-  EDIT_ADDRESS_SPACE
+  EDIT_ADDRESS_SPACE,
+  DOWNLOAD_CERTIFICATE
 } from "queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
 import { EditAddressSpace } from "pages/EditAddressSpace";
 import { ISortBy } from "@patternfly/react-table";
 import { compareTwoAddress } from "pages/AddressSpaceDetail/AddressList/AddressListPage";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
+import { IObjectMeta_v1_Input } from "pages/AddressSpaceDetail/AddressSpaceDetailPage";
 
 interface AddressSpaceListPageProps {
   page: number;
@@ -175,6 +177,32 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     addressSpaces: { total: 0, addressSpaces: [] }
   };
   setTotalAddressSpaces(addressSpaces.total);
+
+  //Download the certificate function
+  const downloadCertificate = async (data: IObjectMeta_v1_Input) => {
+    const dataToDownload = await client.query({
+      query: DOWNLOAD_CERTIFICATE,
+      variables: {
+        as: {
+          name: data.name,
+          namespace: data.namespace
+        }
+      }
+    });
+    if (dataToDownload.errors) {
+      console.log("Error while download", dataToDownload.errors);
+    }
+    const url = window.URL.createObjectURL(
+      new Blob([dataToDownload.data.messagingCertificateChain])
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${data.name}.crt`);
+    document.body.appendChild(link);
+    link.click();
+    if (link.parentNode) link.parentNode.removeChild(link);
+  };
+
   const addressSpacesList: IAddressSpace[] = addressSpaces.addressSpaces.map(
     addSpace => ({
       name: addSpace.metadata.name,
@@ -220,6 +248,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           onDelete={handleDeleteChange}
           onSort={onSort}
           sortBy={sortBy}
+          onDownload={downloadCertificate}
         />
       ) : (
         <EmptyAddressSpace
