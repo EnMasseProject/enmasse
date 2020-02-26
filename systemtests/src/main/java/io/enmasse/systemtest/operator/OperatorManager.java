@@ -260,11 +260,7 @@ public class OperatorManager {
         }
         KubeCMDClient.runOnCluster("delete", "clusterservicebrokers", "-l", "app=enmasse");
         if (!kube.getInfraNamespace().equals(kube.getOlmNamespace())) {
-            try {
-                kube.deleteNamespace(kube.getInfraNamespace());
-            } catch (Exception e) {
-                System.exit(1);
-            }
+            kube.deleteNamespace(kube.getInfraNamespace());
         }
         return true;
     }
