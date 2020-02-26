@@ -59,11 +59,13 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Set version
+      - name: Set version and tag
         id: version
         run: |
           echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
           echo "::set-output name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+          echo "::set-env name=TAG::$(grep "maven.version" pom.properties| cut -d'=' -f2)"
+          echo "::set-output name=TAG::$(grep "maven.version" pom.properties| cut -d'=' -f2)"
 
       - name: setup-docker
         run: ./.github/scripts/setup_docker.sh
