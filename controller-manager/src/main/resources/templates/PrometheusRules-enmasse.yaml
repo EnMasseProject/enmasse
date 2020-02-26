@@ -22,6 +22,9 @@ spec:
     - record: enmasse_component_health
       expr: up{job="console",namespace='{{ index .Params "Namespace" }}'} or on(namespace) (1- absent(up{job="console",namespace='{{ index .Params "Namespace" }}'}) )
 
+    - record: enmasse_component_health
+      expr: up{job="enmasse-operator-metrics"} or on(namespace) (1- absent(up{job="enmasse-operator-metrics"}) )
+
     - alert: ComponentHealth
       annotations:
         description: "{{ "{{" }} $labels.job {{ "}}" }} has been down for over 5 minutes"
