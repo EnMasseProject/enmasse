@@ -75,6 +75,7 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "babel-loader": "^8.0.6",
+    "handlebars": "4.5.3",
     "husky": ">=3.1.0",
     "lint-staged": ">=9.4.3",
     "prettier": "^1.19.1",
