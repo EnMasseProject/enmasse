@@ -112,7 +112,8 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
         return variable;
       };
       const variables = {
-        a: getVariables()
+        a: getVariables(),
+        as: addressSpace
       };
       setAddressQueryVariables(variables);
     }
