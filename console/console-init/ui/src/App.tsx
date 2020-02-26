@@ -9,7 +9,7 @@ import "@patternfly/react-core/dist/styles/base.css";
 import { AppLayout } from "use-patternfly";
 import { useHistory } from "react-router-dom";
 import { Brand, Avatar } from "@patternfly/react-core";
-import brandImg from "./brand_logo.svg";
+import brandImg from "./assets/images/logo.svg";
 import NavToolBar from "components/NavToolBar/NavToolBar";
 import { AppRoutes } from "AppRoutes";
 import ApolloClient from "apollo-boost";

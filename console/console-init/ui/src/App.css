@@ -7,6 +7,15 @@
   text-align: center;
 }
 
+img.pf-c-brand {
+  height: 33px;
+  max-width: 190px;
+}
+
+header.pf-c-page__header {
+  background-color: #151515;
+}
+
 .App-logo {
   height: 40vmin;
 }
