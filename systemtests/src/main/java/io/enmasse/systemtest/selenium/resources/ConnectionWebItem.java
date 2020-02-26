@@ -9,6 +9,7 @@ import org.openqa.selenium.WebElement;
 
 public class ConnectionWebItem extends WebItem implements Comparable<ConnectionWebItem> {
     private String host;
+    private WebElement hostRoute;
     private String containerId;
     private String protocol;
     private String timeCreated;
@@ -20,6 +21,7 @@ public class ConnectionWebItem extends WebItem implements Comparable<ConnectionW
     public ConnectionWebItem(WebElement item) {
         this.webItem = item;
         this.host = parseName(webItem.findElement(By.xpath("./td[@data-label='host']")));
+        this.hostRoute = webItem.findElement(By.xpath("./td[@data-label='host']"));
         this.containerId = webItem.findElement(By.xpath("./td[@data-label='Container ID']")).getText();
         this.protocol = webItem.findElement(By.xpath("./td[@data-label='Protocol']")).getText().split(" ")[0];
         this.timeCreated = webItem.findElement(By.xpath("./td[@data-label='Time created']")).getText();
@@ -60,6 +62,8 @@ public class ConnectionWebItem extends WebItem implements Comparable<ConnectionW
     public int getReceivers() {
         return receivers;
     }
+
+    public WebElement getHostRoute() { return hostRoute; }
 
     private String parseName(WebElement elem) {
         try {
