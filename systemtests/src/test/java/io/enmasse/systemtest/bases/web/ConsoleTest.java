@@ -116,6 +116,31 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.deleteAddressSpace(addressSpace);
     }
 
+    protected void doTestBlankPageAfterAddressSpaceDeletion() throws Exception {
+        AddressSpace addressSpace = generateAddressSpaceObject(AddressSpaceType.STANDARD);
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.createAddressSpace(addressSpace);
+        consolePage.openAddressList(addressSpace);
+        IsolatedResourcesManager.getInstance().deleteAddressSpace(addressSpace);
+        selenium.refreshPage();
+        //Need get blank page
+    }
+
+    protected void doTestBlankPageAfterAddressDeletion() throws Exception {
+        AddressSpace addressSpace = generateAddressSpaceObject(AddressSpaceType.STANDARD);
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.createAddressSpace(addressSpace);
+        consolePage.openAddressList(addressSpace);
+        Address address = generateAddressObject(addressSpace, DestinationPlan.STANDARD_SMALL_QUEUE);
+        consolePage.createAddress(address);
+        consolePage.openClientsList(address);
+        IsolatedResourcesManager.getInstance().deleteAddresses(address);
+        // Need assert blank page
+        IsolatedResourcesManager.getInstance().deleteAddressSpace(addressSpace);
+    }
+
     protected void doTestAddressSpaceSnippet(AddressSpaceType addressSpaceType) throws Exception {
         AddressSpace addressSpace = generateAddressSpaceObject(addressSpaceType);
 
