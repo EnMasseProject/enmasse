@@ -25,6 +25,7 @@ export const AddressDetailHead = () => (
       partitions={number("partition", 1)}
       onEdit={action("onEdit Clicked")}
       onDelete={action("onDelete Clicked")}
+      onPurge={action("onPurge Clicked")}
     />
   </MemoryRouter>
 );

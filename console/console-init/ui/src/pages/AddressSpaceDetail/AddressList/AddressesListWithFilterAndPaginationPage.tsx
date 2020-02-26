@@ -27,7 +27,6 @@ import {
 import { ISortBy } from "@patternfly/react-table";
 import { IAddress } from "components/AddressSpace/Address/AddressList";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
-import { ErrorBoundary } from "components/common/ErrorBoundary";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {

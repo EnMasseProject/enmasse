@@ -19,6 +19,7 @@ import {
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { AddressSpaceType } from "components/common/AddressSpaceListFormatter";
 import { FormatDistance } from "use-patternfly";
+import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
 
 const styles = StyleSheet.create({
   flex_right_border: {
@@ -51,6 +52,7 @@ export interface IAddressSpaceHeaderProps {
   type: string;
   onDownload: (data: { name: string; namespace: string }) => void;
   onDelete: (data: { name: string; namespace: string }) => void;
+  onEdit: () => void;
 }
 export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProps> = ({
   name,
@@ -58,7 +60,8 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
   createdOn,
   type,
   onDownload,
-  onDelete
+  onDelete,
+  onEdit
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const onSelect = (result: any) => {
@@ -76,6 +79,14 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
       style={{ paddingRight: 50 }}
     >
       Download Certificate
+    </DropdownItem>,
+    <DropdownItem
+      key="edit"
+      id="as-header-edit"
+      aria-label="edit"
+      onClick={() => onEdit()}
+    >
+      Edit
     </DropdownItem>,
     <DropdownItem
       key="delete"

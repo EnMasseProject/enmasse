@@ -23,6 +23,7 @@ export const addressSpaceHeader = () => (
       createdOn={text("Number of days before it is created", "2 days ago")}
       onDownload={action("On download clicked")}
       onDelete={action("on delete clicked")}
+      onEdit={action("on Edit clicked")}
     />
   </MemoryRouter>
 );

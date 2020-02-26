@@ -29,6 +29,7 @@ export interface IAddressDetailHeaderProps {
   storedMessages: number | string;
   onEdit: (name: string) => void;
   onDelete: (name: string) => void;
+  onPurge: (name: string) => void;
 }
 const styles = StyleSheet.create({
   flex_left_border: {
@@ -66,7 +67,8 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
   partitions,
   storedMessages,
   onEdit,
-  onDelete
+  onDelete,
+  onPurge
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const onSelect = (result: any) => {
@@ -93,6 +95,21 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
       Delete
     </DropdownItem>
   ];
+  if (
+    type &&
+    (type.toLowerCase() === "queue" || type.toLowerCase() === "subscription")
+  ) {
+    dropdownItems.push(
+      <DropdownItem
+        id="adheader-dropdown-item-purge"
+        key="purge"
+        aria-label="purge"
+        onClick={() => onPurge(name)}
+      >
+        Purge
+      </DropdownItem>
+    );
+  }
   return (
     <PageSection
       variant={PageSectionVariants.light}

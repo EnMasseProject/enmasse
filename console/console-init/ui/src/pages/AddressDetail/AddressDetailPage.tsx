@@ -22,7 +22,8 @@ import {
   DELETE_ADDRESS,
   RETURN_ADDRESS_DETAIL,
   EDIT_ADDRESS,
-  CURRENT_ADDRESS_SPACE_PLAN
+  CURRENT_ADDRESS_SPACE_PLAN,
+  PURGE_ADDRESS
 } from "queries";
 import { IObjectMeta_v1_Input } from "pages/AddressSpaceDetail/AddressSpaceDetailPage";
 import { AddressLinksWithFilterAndPagination } from "./AddressLinksWithFilterAndPaginationPage";
@@ -62,6 +63,7 @@ export default function AddressDetailPage() {
   const history = useHistory();
   const client = useApolloClient();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
+  const [isPurgeModalOpen, setIsPurgeModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [addressPlan, setAddressPlan] = React.useState<string | null>(null);
   const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(
@@ -120,6 +122,25 @@ export default function AddressDetailPage() {
       history.push(`/address-spaces/${namespace}/${name}/${type}/addresses`);
     }
   };
+
+  const purgeAddress = async (data: any) => {
+    const purgeData = await client.mutate({
+      mutation: PURGE_ADDRESS,
+      variables: {
+        a: {
+          name: data.name,
+          namespace: data.namespace
+        }
+      }
+    });
+    // if (purgeData.errors) {
+    //   purgeErrorData.push(purgeData);
+    // }
+    if (purgeData.data) {
+      return purgeData;
+    }
+  };
+
   const handleDelete = () => {
     deleteAddress({
       name: addressDetail.metadata.name,
@@ -146,6 +167,24 @@ export default function AddressDetailPage() {
     setIsEditModalOpen(!isEditModalOpen);
   };
 
+  const handleConfirmPurge = async () => {
+    if (
+      addressDetail.spec.plan.spec.addressType.toLowerCase() === "queue" ||
+      addressDetail.spec.plan.spec.addressType.toLowerCase() === "subscription"
+    ) {
+      await purgeAddress({
+        name: addressDetail.metadata.name,
+        namespace: addressDetail.metadata.namespace.toString()
+      });
+    }
+    refetch();
+    setIsPurgeModalOpen(false);
+  };
+
+  const handleCancelPurge = () => {
+    setIsPurgeModalOpen(false);
+  };
+
   return (
     <>
       {addressDetail && (
@@ -163,11 +202,11 @@ export default function AddressDetailPage() {
               ? addressDetail.status.planStatus.partitions
               : 0
           }
-          onEdit={() => setIsEditModalOpen(!isEditModalOpen)}
-          onDelete={() => setIsDeleteModalOpen(!isDeleteModalOpen)}
+          onEdit={() => setIsEditModalOpen(true)}
+          onDelete={() => setIsDeleteModalOpen(true)}
+          onPurge={() => setIsPurgeModalOpen(true)}
         />
       )}
-
       <Modal
         title="Edit"
         id="addr-detail-edit-modal"
@@ -210,6 +249,16 @@ export default function AddressDetailPage() {
           header="Delete this Address ?"
           handleCancelDialogue={handleCancelDelete}
           handleConfirmDialogue={handleDelete}
+        />
+      )}
+      {isPurgeModalOpen && (
+        <DialoguePrompt
+          option="Purge"
+          detail={`Are you sure you want to purge this address: ${addressDetail.spec.address} ?`}
+          names={[addressDetail.metadata.name]}
+          header="Purge this Address ?"
+          handleCancelDialogue={handleCancelPurge}
+          handleConfirmDialogue={handleConfirmPurge}
         />
       )}
       <AddressLinksWithFilterAndPagination

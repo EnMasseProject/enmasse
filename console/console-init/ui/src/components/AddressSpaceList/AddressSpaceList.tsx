@@ -49,6 +49,7 @@ interface IAddressListProps {
   onDelete: (rowData: IAddressSpace) => void;
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
+  onDownload: (data: { name: string; namespace: string }) => void;
 }
 
 export const StyleForTable = StyleSheet.create({
@@ -64,7 +65,8 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
   onEdit,
   onDelete,
   sortBy,
-  onSort
+  onSort,
+  onDownload
 }) => {
   //TODO: Add loading icon based on status
 
@@ -84,6 +86,14 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
           {
             title: "Delete",
             onClick: () => onDelete(originalData)
+          },
+          {
+            title: "Download Certificate",
+            onClick: () =>
+              onDownload({
+                name: originalData.name,
+                namespace: originalData.nameSpace
+              })
           }
         ];
     }

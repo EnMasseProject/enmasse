@@ -196,9 +196,13 @@ const RETURN_ADDRESS_SPACE_DETAIL = (name?: string, namespace?: string) => {
                   displayName
                 }   
               }
+              authenticationService{
+                name
+              }
             }
             status {
               isReady
+              phase
               messages
             }
           }
