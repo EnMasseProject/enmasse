@@ -72,7 +72,7 @@ var Operations = map[string]AuthorizationOperation{
 }
 
 type AuthorizationSpec struct {
-	Addresses  []string                 `json:"addresses"`
+	Addresses  []string                 `json:"addresses,omitempty"`
 	Operations []AuthorizationOperation `json:"operations"`
 }
 
