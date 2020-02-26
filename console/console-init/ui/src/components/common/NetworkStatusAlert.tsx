@@ -26,7 +26,6 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
 
   const redirectToLogin = () => {
     onCloseAlert();
-    history.push("oauth/sign_in");
   };
 
   if (alertVisible && hasNetworkError) {
@@ -36,7 +35,11 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
         title="Server disconnected..."
         action={<AlertActionCloseButton onClose={onClose} />}
       >
-        <a onClick={redirectToLogin} className="pf-c-nav__link">
+        <a
+          href="oauth/sign_in"
+          onClick={redirectToLogin}
+          className="pf-c-nav__link"
+        >
           Take me home
         </a>
       </Alert>
