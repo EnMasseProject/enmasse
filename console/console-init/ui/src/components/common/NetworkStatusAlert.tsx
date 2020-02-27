@@ -3,46 +3,42 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
-import { NavLink, useHistory } from "react-router-dom";
-import { Alert, AlertActionCloseButton } from "@patternfly/react-core";
+import React, { useState, useEffect } from "react";
+import {
+  Alert,
+  PageSection,
+  AlertActionCloseButton
+} from "@patternfly/react-core";
 
 import { useErrorContext, types } from "context-state-reducer";
 
 const NetworkStatusAlert: React.FunctionComponent = () => {
   const { state, dispatch } = useErrorContext();
-  const history = useHistory();
   const { hasNetworkError } = state;
   const [alertVisible, setAlertVisible] = useState(true);
 
-  const onCloseAlert = () => {
-    setAlertVisible(false);
-    dispatch({ type: types.SET_NETWORK_ERROR, payload: false });
-  };
-
   const onClose = () => {
-    onCloseAlert();
+    setAlertVisible(false);
+    dispatch({ type: types.RESET_NETWORK_ERROR });
   };
 
-  const redirectToLogin = () => {
-    onCloseAlert();
-  };
+  useEffect(() => {
+    hasNetworkError !== undefined && setAlertVisible(hasNetworkError);
+  }, [hasNetworkError]);
 
   if (alertVisible && hasNetworkError) {
     return (
-      <Alert
-        variant="warning"
-        title="Server disconnected..."
-        action={<AlertActionCloseButton onClose={onClose} />}
-      >
-        <a
-          href="oauth/sign_in"
-          onClick={redirectToLogin}
-          className="pf-c-nav__link"
-        >
+      <PageSection>
+        <Alert
+          variant="danger"
+          title="Server disconnected..."
+          action={<AlertActionCloseButton onClose={onClose} />}
+        ></Alert>
+        <br />
+        <a href="oauth/sign_in" className="pf-c-nav__link">
           Take me home
         </a>
-      </Alert>
+      </PageSection>
     );
   }
   return null;

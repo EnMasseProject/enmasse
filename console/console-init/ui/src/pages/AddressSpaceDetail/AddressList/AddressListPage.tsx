@@ -5,6 +5,7 @@
 
 import * as React from "react";
 import { useQuery } from "@apollo/react-hooks";
+import { Loading } from "use-patternfly";
 import { IAddressResponse } from "types/ResponseTypes";
 import {
   RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE,
@@ -127,7 +128,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
-  const { data, refetch } = useQuery<IAddressResponse>(
+  const { data, refetch, loading } = useQuery<IAddressResponse>(
     RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE(
       page,
       perPage,
@@ -145,6 +146,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     refetch();
     setOnCreationRefetch(false);
   }
+
+  if (loading) return <Loading />;
 
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }

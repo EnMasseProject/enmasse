@@ -10,7 +10,7 @@ export interface IActionType {
   type: string;
   payload?: any;
   hasServerError?: boolean;
-  hasNetworkError: boolean;
+  hasNetworkError?: boolean;
 }
 
 export const reducer = (state = initialState, action: IActionType) => {
@@ -23,6 +23,7 @@ export const reducer = (state = initialState, action: IActionType) => {
         errors
       };
     case types.RESET_SERVER_ERROR:
+    case types.RESET_NETWORK_ERROR:
       return initialState;
     case types.SET_NETWORK_ERROR:
       return {

@@ -8,7 +8,8 @@ import {
   Alert,
   AlertActionCloseButton,
   List,
-  ListItem
+  ListItem,
+  PageSection
 } from "@patternfly/react-core";
 
 import { useErrorContext, types } from "context-state-reducer";
@@ -55,13 +56,15 @@ export const ServerMessageAlert: React.FC = () => {
 
   if (hasServerError && alertVisible) {
     return (
-      <Alert
-        variant="danger"
-        title="Server Error"
-        action={<AlertActionCloseButton onClose={onClose} />}
-      >
-        {getErrorMessage()}
-      </Alert>
+      <PageSection>
+        <Alert
+          variant="danger"
+          title="Server Error"
+          action={<AlertActionCloseButton onClose={onClose} />}
+        >
+          {getErrorMessage()}
+        </Alert>
+      </PageSection>
     );
   }
   return null;
