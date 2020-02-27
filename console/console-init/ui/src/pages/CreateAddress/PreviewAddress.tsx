@@ -49,6 +49,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   namespace,
   addressspace
 }) => {
+  const [isCopied, setIsCopied] = React.useState<boolean>(false);
   const { data, loading, error } = useQuery(ADDRESS_COMMAND_PREVIEW_DETAIL, {
     variables: {
       a: {
@@ -133,20 +134,38 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
           <Title size={"lg"} className={css(Style.bottom_padding)}>
             {`Configuration details  `}
             <Tooltip
+              id="preview-addr-feedback-tooltip"
               position={TooltipPosition.top}
               enableFlip={false}
-              content={<div>Copy the configuration details on clipboard</div>}
+              trigger={"manual"}
+              content={<div>Succesfully copied to the clipboard</div>}
+              isVisible={isCopied}
             >
-              <Button
-                id="preview-addr-copy-configuration-button"
-                variant={ButtonVariant.link}
-                aria-label="copy-configuration"
-                onClick={() => {
-                  navigator.clipboard.writeText(data.addressCommand);
-                }}
-              >
-                <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
-              </Button>
+              <span>
+                <Tooltip
+                  id="preview-addr-copy-tooltip"
+                  position={TooltipPosition.top}
+                  enableFlip={false}
+                  content={
+                    <div>Copy the configuration details to the clipboard</div>
+                  }
+                >
+                  <Button
+                    id="preview-addr-copy-configuration-button"
+                    variant={ButtonVariant.link}
+                    aria-label="copy-configuration"
+                    onClick={() => {
+                      navigator.clipboard.writeText(data.addressCommand);
+                      setIsCopied(true);
+                    }}
+                    onMouseLeave={() => {
+                      setIsCopied(false);
+                    }}
+                  >
+                    <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
+                  </Button>
+                </Tooltip>
+              </span>
             </Tooltip>
           </Title>
           <AceEditor
