@@ -29,7 +29,9 @@ func (l *sessionCountingListener) Added(string) {
 
 func (l *sessionCountingListener) Removed(string) {
 	curr := atomic.AddInt32(&l.sessionCount, -1)
-	l.noSessionsPresent()
+	if curr == 0 {
+		l.noSessionsPresent()
+	}
 	l.metric.Set(float64(curr))
 }
 

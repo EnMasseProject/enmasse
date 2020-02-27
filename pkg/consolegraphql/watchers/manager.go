@@ -118,9 +118,15 @@ func (rm *resourceManager) Start() {
 	go func() {
 		defer close(rm.stopped)
 		var watching = false
+		var cancelTask func()
 		for {
 			select {
 			case event, chok := <-rm.command:
+				if cancelTask != nil {
+					cancelTask()
+					cancelTask = nil
+				}
+
 				if !chok {
 					// command channel closed
 					if watching {
@@ -135,7 +141,7 @@ func (rm *resourceManager) Start() {
 						err := rm.beginAllWatchers()
 						if err != nil {
 							log.Printf("failed to begin watchers (will retry in 1m): %s", err)
-							server.RunAfter(time.Minute*1, func() {
+							cancelTask = server.RunAfter(time.Minute*1, func() {
 								rm.BeginWatching()
 							})
 						} else {

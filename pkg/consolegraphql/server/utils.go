@@ -6,13 +6,22 @@
 
 package server
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
-func Schedule(f func(), delay time.Duration) chan<- bool {
+func Schedule(f func(), delay time.Duration) (doCancel func()) {
 	cancel := make(chan bool)
-	defer close(cancel)
+	closeOnce := sync.Once{}
+	doCancel = func() {
+		closeOnce.Do(func() {
+			close(cancel)
+		})
+	}
 
 	go func() {
+		defer doCancel()
 		for {
 			f()
 			select {
@@ -22,15 +31,20 @@ func Schedule(f func(), delay time.Duration) chan<- bool {
 			}
 		}
 	}()
-
-	return cancel
+	return
 }
 
-func RunAfter(delay time.Duration, f func()) chan<- bool {
+func RunAfter(delay time.Duration, f func()) (doCancel func()) {
 	cancel := make(chan bool)
-	defer close(cancel)
+	closeOnce := sync.Once{}
+	doCancel = func() {
+		closeOnce.Do(func() {
+			close(cancel)
+		})
+	}
 
 	go func() {
+		defer doCancel()
 		select {
 		case <-time.After(delay):
 			f()
@@ -38,6 +52,5 @@ func RunAfter(delay time.Duration, f func()) chan<- bool {
 			return
 		}
 	}()
-
-	return cancel
+	return
 }
