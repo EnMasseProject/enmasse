@@ -55,8 +55,17 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList<
         try {
             Instant now = Instant.now(clock);
             if (now.isAfter(nextResync)) {
-                resync();
-                nextResync = Instant.now(clock).plus(resyncInterval);
+                while (true) {
+                    try {
+                        resync();
+                        nextResync = Instant.now(clock).plus(resyncInterval);
+                        break;
+                    } catch (KubernetesClientException e) {
+                        log.warn("KubernetesClientException when triggering resync. Pausing for a few seconds before retrying.",
+                                e);
+                        Thread.sleep(5000);
+                    }
+                }
             }
             long sleepTime = Math.max(1, nextResync.toEpochMilli() - now.toEpochMilli());
             log.debug("Waiting on event queue for {} ms unless notified", sleepTime);
