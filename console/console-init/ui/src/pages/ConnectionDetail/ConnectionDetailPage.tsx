@@ -102,6 +102,7 @@ export default function ConnectionDetailPage() {
   const connection = connections.connections[0];
   //Change this logic
   const jvmObject =
+    connection &&
     connection.spec &&
     connection.spec.properties &&
     connection.spec.properties.length > 0
@@ -111,19 +112,26 @@ export default function ConnectionDetailPage() {
       : { jvm: "-", os: "-" };
 
   const connectionDetail: IConnectionHeaderDetailProps = {
-    hostname: connection.spec.hostname,
-    containerId: connection.spec.containerId,
-    version: getProductFilteredValue(connection.spec.properties, "version"),
-    protocol: connection.spec.protocol.toUpperCase(),
-    encrypted: connection.spec.encrypted || false,
-    creationTimestamp: connection.metadata.creationTimestamp,
-    messageIn: getFilteredValue(connection.metrics, "enmasse_messages_in"),
-    messageOut: getFilteredValue(connection.metrics, "enmasse_messages_out"),
+    hostname: connection && connection.spec.hostname,
+    containerId: connection && connection.spec.containerId,
+    version:
+      connection &&
+      getProductFilteredValue(connection.spec.properties, "version"),
+    protocol: connection && connection.spec.protocol.toUpperCase(),
+    encrypted: (connection && connection.spec.encrypted) || false,
+    creationTimestamp: connection && connection.metadata.creationTimestamp,
+    messageIn:
+      connection && getFilteredValue(connection.metrics, "enmasse_messages_in"),
+    messageOut:
+      connection &&
+      getFilteredValue(connection.metrics, "enmasse_messages_out"),
     //Change this logic
     platform: jvmObject && jvmObject.jvm,
     os: jvmObject && jvmObject.os,
     product:
-      connection.spec.properties && connection.spec.properties.length > 0
+      connection &&
+      connection.spec.properties &&
+      connection.spec.properties.length > 0
         ? getProductFilteredValue(connection.spec.properties, "product")
         : "-"
   };

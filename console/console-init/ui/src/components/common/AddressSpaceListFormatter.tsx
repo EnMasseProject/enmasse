@@ -19,7 +19,7 @@ interface AddressSpaceStatusProps {
   messages: Array<string>;
 }
 const typeToDisplay = (type: string) => {
-  switch (type.toLowerCase()) {
+  switch (type && type.toLowerCase()) {
     case "standard":
       return " Standard";
     case "brokered":

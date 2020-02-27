@@ -10,7 +10,13 @@ export class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false };
+    this.updateState=this.updateState.bind(this);
   }
+
+  updateState(hasError){
+      this.setState({hasError});
+  }
+
   static getDerivedStateFromError(error) {
     return { hasError: true };
   }
@@ -20,7 +26,7 @@ export class ErrorBoundary extends React.Component {
   }
   render() {
     if (this.state.hasError) {
-      return <NotFound />;
+      return <NotFound updateState={this.updateState}/>;
     }
 
     return this.props.children;

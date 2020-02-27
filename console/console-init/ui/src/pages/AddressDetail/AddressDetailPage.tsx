@@ -14,7 +14,7 @@ import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
 import { Link, useHistory } from "react-router-dom";
 import { useParams } from "react-router";
 import { AddressDetailHeader } from "components/AddressDetail/AddressDetailHeader";
-import { useQuery, useApolloClient } from "@apollo/react-hooks";
+import { useQuery } from "@apollo/react-hooks";
 import { IAddressDetailResponse } from "types/ResponseTypes";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
@@ -30,8 +30,8 @@ import { AddressLinksWithFilterAndPagination } from "./AddressLinksWithFilterAnd
 import { EditAddress } from "pages/EditAddressPage";
 import { IAddressSpacePlanResponse } from "pages/AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
-import { ErrorAlert } from "components/common/ErrorAlert";
 import { NoDataFound } from "components/common/NoDataFound";
+import { useMutationQuery } from "hooks";
 
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();
@@ -61,7 +61,7 @@ export default function AddressDetailPage() {
   useA11yRouteChange();
   useBreadcrumb(breadcrumb);
   const history = useHistory();
-  const client = useApolloClient();
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isPurgeModalOpen, setIsPurgeModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
@@ -84,8 +84,41 @@ export default function AddressDetailPage() {
     );
   }
 
+  const resetEditAdressFormState = () => {
+    refetch();
+    setIsEditModalOpen(!isEditModalOpen);
+  };
+
+  const resetDeleteFormState = (data: any) => {
+    setIsDeleteModalOpen(!isDeleteModalOpen);
+    if (data && data.deleteAddress) {
+      history.push(`/address-spaces/${namespace}/${name}/${type}/addresses`);
+    }
+  };
+
+  const resetPurgeFormState = () => {
+    refetch();
+  };
+
+  const [setPurgeAddressQueryVariables] = useMutationQuery(
+    PURGE_ADDRESS,
+    resetPurgeFormState,
+    resetPurgeFormState
+  );
+
+  const [setDeleteAddressQueryVariables] = useMutationQuery(
+    DELETE_ADDRESS,
+    resetDeleteFormState,
+    resetDeleteFormState
+  );
+
+  const [setEditAddressQueryVariables] = useMutationQuery(
+    EDIT_ADDRESS,
+    resetEditAdressFormState,
+    resetEditAdressFormState
+  );
+
   if (loading) return <Loading />;
-  if (error) return <ErrorAlert error={error} />;
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }
   };
@@ -105,39 +138,29 @@ export default function AddressDetailPage() {
   const handleCancelDelete = () => {
     setIsDeleteModalOpen(!isDeleteModalOpen);
   };
-  // async function to delete a address space
-  const deleteAddress = async (data: IObjectMeta_v1_Input) => {
-    const deletedData = await client.mutate({
-      mutation: DELETE_ADDRESS,
-      variables: {
-        a: {
-          name: data.name,
-          namespace: data.namespace
-        }
+
+  /**
+   * delete address
+   * @param data
+   */
+  const deleteAddress = (data: IObjectMeta_v1_Input) => {
+    const variables = {
+      a: {
+        name: data.name,
+        namespace: data.namespace
       }
-    });
-    if (deletedData.data && deletedData.data.deleteAddress) {
-      setIsDeleteModalOpen(!isDeleteModalOpen);
-      history.push(`/address-spaces/${namespace}/${name}/${type}/addresses`);
-    }
+    };
+    setDeleteAddressQueryVariables(variables);
   };
 
-  const purgeAddress = async (data: any) => {
-    const purgeData = await client.mutate({
-      mutation: PURGE_ADDRESS,
-      variables: {
-        a: {
-          name: data.name,
-          namespace: data.namespace
-        }
+  const purgeAddress = (data: any) => {
+    const variables = {
+      a: {
+        name: data.name,
+        namespace: data.namespace
       }
-    });
-    // if (purgeData.errors) {
-    //   purgeErrorData.push(purgeData);
-    // }
-    if (purgeData.data) {
-      return purgeData;
-    }
+    };
+    setPurgeAddressQueryVariables(variables);
   };
 
   const handleDelete = () => {
@@ -147,25 +170,21 @@ export default function AddressDetailPage() {
     });
   };
 
-  const handleSaving = async () => {
+  const handleSaving = () => {
     if (addressDetail && type) {
-      await client.mutate({
-        mutation: EDIT_ADDRESS,
-        variables: {
-          a: {
-            name: addressDetail.metadata.name,
-            namespace: addressDetail.metadata.namespace
-          },
-          jsonPatch:
-            '[{"op":"replace","path":"/spec/plan","value":"' +
-            addressPlan +
-            '"}]',
-          patchType: "application/json-patch+json"
-        }
-      });
+      const variables = {
+        a: {
+          name: addressDetail.metadata.name,
+          namespace: addressDetail.metadata.namespace
+        },
+        jsonPatch:
+          '[{"op":"replace","path":"/spec/plan","value":"' +
+          addressPlan +
+          '"}]',
+        patchType: "application/json-patch+json"
+      };
+      setEditAddressQueryVariables(variables);
     }
-    refetch();
-    setIsEditModalOpen(!isEditModalOpen);
   };
 
   const handleConfirmPurge = async () => {
@@ -234,13 +253,15 @@ export default function AddressDetailPage() {
         ]}
         isFooterLeftAligned
       >
-        <EditAddress
-          name={addressDetail.metadata.name}
-          type={addressDetail.spec.plan.spec.addressType}
-          plan={addressPlan || ""}
-          addressSpacePlan={addressSpacePlan}
-          onChange={setAddressPlan}
-        />
+        {addressDetail && (
+          <EditAddress
+            name={addressDetail.metadata.name}
+            type={addressDetail.spec.plan.spec.addressType}
+            plan={addressPlan || ""}
+            addressSpacePlan={addressSpacePlan}
+            onChange={setAddressPlan}
+          />
+        )}
       </Modal>
       {isDeleteModalOpen && (
         <DialoguePrompt

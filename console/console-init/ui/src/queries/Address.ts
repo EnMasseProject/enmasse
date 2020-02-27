@@ -432,7 +432,6 @@ const RETURN_ADDRESS_LINKS = (
     filterRole
   );
   const orderBy = ADDRESS_LINKS_SORT(sortBy);
-
   const query = gql`
     query single_address_with_links_and_metrics {
       addresses(

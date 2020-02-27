@@ -85,9 +85,13 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
             />
           </FlexItem>
           <FlexItem id="cd-header-protocol">
-            Created about &nbsp;
+            Created &nbsp;
             <b>
-              <FormatDistance date={creationTimestamp} /> ago
+              {creationTimestamp && (
+                <>
+                  <FormatDistance date={creationTimestamp} /> ago
+                </>
+              )}
             </b>
           </FlexItem>
           {width > 992 && (

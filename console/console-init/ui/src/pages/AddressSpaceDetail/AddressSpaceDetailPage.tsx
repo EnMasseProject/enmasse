@@ -37,10 +37,11 @@ import {
 } from "queries";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
-import { ErrorAlert } from "components/common/ErrorAlert";
 import { NoDataFound } from "components/common/NoDataFound";
 import { EditAddressSpace } from "pages/EditAddressSpace";
 import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
+import { useMutationQuery } from "hooks";
+
 const styles = StyleSheet.create({
   no_bottom_padding: {
     paddingBottom: 0
@@ -106,19 +107,29 @@ export default function AddressSpaceDetailPage() {
   ] = React.useState<IAddressSpace | null>();
   const history = useHistory();
 
-  const { loading, error, data, refetch } = useQuery<
-    IAddressSpaceDetailResponse
-  >(RETURN_ADDRESS_SPACE_DETAIL(name, namespace), {
-    fetchPolicy: FetchPolicy.NETWORK_ONLY,
-    pollInterval: POLL_INTERVAL
-  });
+  const { loading, data, refetch } = useQuery<IAddressSpaceDetailResponse>(
+    RETURN_ADDRESS_SPACE_DETAIL(name, namespace),
+    {
+      fetchPolicy: FetchPolicy.NETWORK_ONLY,
+      pollInterval: POLL_INTERVAL
+    }
+  );
 
   const client = useApolloClient();
+
+  const resetFormState = (data: any) => {
+    if (data) {
+      setIsDeleteModalOpen(!isDeleteModalOpen);
+      history.push("/");
+    }
+  };
+  const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
+    DELETE_ADDRESS_SPACE,
+    resetFormState
+  );
+
   if (loading) return <Loading />;
 
-  if (error) {
-    return <ErrorAlert error={error} />;
-  }
   const { addressSpaces } = data || {
     addressSpaces: { total: 0, addressSpaces: [] }
   };
@@ -175,21 +186,19 @@ export default function AddressSpaceDetailPage() {
   const handleCancelDelete = () => {
     setIsDeleteModalOpen(!isDeleteModalOpen);
   };
-  // async function to delete a address space
-  const deleteAddressSpace = async (data: IObjectMeta_v1_Input) => {
-    const deletedData = await client.mutate({
-      mutation: DELETE_ADDRESS_SPACE,
-      variables: {
-        a: {
-          name: data.name,
-          namespace: data.namespace
-        }
+
+  /**
+   * delete address space
+   * @param data
+   */
+  const deleteAddressSpace = (data: IObjectMeta_v1_Input) => {
+    const variables = {
+      a: {
+        name: data.name,
+        namespace: data.namespace
       }
-    });
-    if (deletedData.data && deletedData.data.deleteAddressSpace) {
-      setIsDeleteModalOpen(!isDeleteModalOpen);
-      history.push("/");
-    }
+    };
+    setDeleteAddressSpaceQueryVariables(variables);
   };
 
   const handleDelete = () => {
@@ -199,11 +208,19 @@ export default function AddressSpaceDetailPage() {
     });
   };
 
+  const metadata =
+    addressSpaces &&
+    addressSpaces.addressSpaces[0] &&
+    addressSpaces.addressSpaces[0].metadata;
   const addressSpaceDetails: IAddressSpaceHeaderProps = {
-    name: addressSpaces.addressSpaces[0].metadata.name,
-    namespace: addressSpaces.addressSpaces[0].metadata.namespace,
-    createdOn: addressSpaces.addressSpaces[0].metadata.creationTimestamp,
-    type: addressSpaces.addressSpaces[0].spec.type,
+    name: metadata && metadata.name,
+    namespace: metadata && metadata.namespace,
+    createdOn: metadata && metadata.creationTimestamp,
+    type:
+      addressSpaces &&
+      addressSpaces.addressSpaces[0] &&
+      addressSpaces.addressSpaces[0].spec &&
+      addressSpaces.addressSpaces[0].spec.type,
     onDownload: data => {
       downloadCertificate(data);
     },
