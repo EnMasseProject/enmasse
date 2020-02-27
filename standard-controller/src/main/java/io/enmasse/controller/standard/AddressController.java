@@ -818,7 +818,7 @@ public class AddressController implements Watcher<Address> {
                     clusterOk.put(clusterId, 0);
                 } else {
                     if (!clusterAddresses.containsKey(clusterId)) {
-                        clusterAddresses.put(clusterId, brokerStatusCollector.getAddressNames(brokerStatus.getClusterId()));
+                        clusterAddresses.put(clusterId, brokerStatusCollector.getAddressNames(clusterId));
                     }
 
                     Set<String> addressNames = clusterAddresses.get(clusterId);
