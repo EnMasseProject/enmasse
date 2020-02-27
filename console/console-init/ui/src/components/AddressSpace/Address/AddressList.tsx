@@ -22,6 +22,7 @@ import { AddressSpaceStatus } from "components/common/AddressSpaceListFormatter"
 import { AddressStatus } from "components/common/AddressFormatter";
 import { css } from "@patternfly/react-styles";
 import { StyleForTable } from "components/AddressSpaceList/AddressSpaceList";
+import { FormatDistance } from "use-patternfly";
 
 export interface IAddress {
   name: string;
@@ -37,6 +38,7 @@ export interface IAddress {
   receivers: number | string;
   partitions: number | null;
   isReady: boolean;
+  creationTimestamp: string;
   errorMessages?: string[];
   status?: string;
   selected?: boolean;
@@ -117,6 +119,13 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
           },
           {
             title: (
+              <>
+                <FormatDistance date={row.creationTimestamp} /> ago
+              </>
+            )
+          },
+          {
+            title: (
               <Messages
                 count={row.messageIn}
                 column="MessageIn"
@@ -169,6 +178,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     { title: "Address", transforms: [sortable] },
     "Type/Plan",
     "Status",
+    { title: "Time created", transforms: [sortable] },
     {
       title:
         width > 769 ? (

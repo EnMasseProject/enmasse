@@ -76,11 +76,12 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
   };
   const sortMenuItems = [
     { key: "name", value: "Address", index: 1 },
-    { key: "messageIn", value: "Message In", index: 4 },
-    { key: "messageOut", value: "Message Out", index: 5 },
-    { key: "storedMessage", value: "Stored Messages", index: 6 },
-    { key: "senders", value: "Senders", index: 7 },
-    { key: "receivers", value: "Receivers", index: 8 }
+    { key: "creationTimestamp", value: "Time Created", index: 4 },
+    { key: "messageIn", value: "Message In", index: 5 },
+    { key: "messageOut", value: "Message Out", index: 6 },
+    { key: "storedMessage", value: "Stored Messages", index: 7 },
+    { key: "senders", value: "Senders", index: 8 },
+    { key: "receivers", value: "Receivers", index: 9 }
   ];
 
   const createAddressOnClick = async () => {

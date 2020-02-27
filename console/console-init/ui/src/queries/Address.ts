@@ -102,18 +102,21 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_SORT = (sortBy?: ISortBy) => {
         orderBy = "`$.metadata.name` ";
         break;
       case 4:
-        orderBy = "`$.metrics[?(@.name=='enmasse_messages_in')].value` ";
+        orderBy = "`$.metadata.creationTimestamp`";
         break;
       case 5:
-        orderBy = "`$.metrics[?(@.name=='enmasse_messages_out')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_in')].value` ";
         break;
       case 6:
-        orderBy = "`$.metrics[?(@.name=='enmasse_messages_stored')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_out')].value` ";
         break;
       case 7:
-        orderBy = "`$.metrics[?(@.name=='enmasse_senders')].value` ";
+        orderBy = "`$.metrics[?(@.name=='enmasse_messages_stored')].value` ";
         break;
       case 8:
+        orderBy = "`$.metrics[?(@.name=='enmasse_senders')].value` ";
+        break;
+      case 9:
         orderBy = "`$.metrics[?(@.name=='enmasse_receivers')].value` ";
         break;
       default:
@@ -156,6 +159,7 @@ const RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE = (
           metadata {
             namespace
             name
+            creationTimestamp
           }
           spec {
             address
