@@ -11,7 +11,9 @@ import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 class BrokerStatusCollector {
     private static final Logger log = LoggerFactory.getLogger(BrokerStatusCollector.class);
@@ -24,6 +26,50 @@ class BrokerStatusCollector {
         this.kubernetes = kubernetes;
         this.brokerClientFactory = brokerClientFactory;
         this.options = options;
+    }
+
+    Set<String> getAddressNames(String clusterId) throws Exception {
+        Set<String> addressNames = new HashSet<>();
+        List<Pod> pods = kubernetes.listBrokers(clusterId);
+        for (Pod broker : pods) {
+            if (Readiness.isPodReady(broker)) {
+                try (
+                        SyncRequestClient brokerClient = brokerClientFactory.connectBrokerManagementClient(broker.getStatus().getPodIP(), 5673);
+                        Artemis artemis = new Artemis(brokerClient, options.getManagementQueryTimeout().toMillis());
+                        ) {
+                    addressNames.addAll(artemis.getAddressNames());
+                }
+            } else {
+                throw new IllegalStateException(String.format("Broker pod '%s' in cluster '%s' is not ready (%s), cannot get address names at this time.",
+                        broker.getMetadata().getName(),
+                        clusterId,
+                        broker.getStatus()));
+            }
+        }
+        log.debug("Cluster '{}' ({} replica(s)) has the following addresses: {}", clusterId, pods.size(), addressNames);
+        return addressNames;
+    }
+
+    Set<String> getQueueNames(String clusterId) throws Exception {
+        Set<String> queueNames = new HashSet<>();
+        List<Pod> pods = kubernetes.listBrokers(clusterId);
+        for (Pod broker : pods) {
+            if (Readiness.isPodReady(broker)) {
+                try (
+                        SyncRequestClient brokerClient = brokerClientFactory.connectBrokerManagementClient(broker.getStatus().getPodIP(), 5673);
+                        Artemis artemis = new Artemis(brokerClient, options.getManagementQueryTimeout().toMillis());
+                ) {
+                    queueNames.addAll(artemis.getQueueNames());
+                }
+            } else {
+                throw new IllegalStateException(String.format("Broker pod '%s' in cluster '%s' is not ready (%s), cannot get queue names at this time.",
+                        broker.getMetadata().getName(),
+                        clusterId,
+                        broker.getStatus()));
+            }
+        }
+        log.debug("Cluster '{}' ({} replica(s)) has the following queues: {}", clusterId, pods.size(), queueNames);
+        return queueNames;
     }
 
     long getQueueMessageCount(String queue, String clusterId) throws Exception {

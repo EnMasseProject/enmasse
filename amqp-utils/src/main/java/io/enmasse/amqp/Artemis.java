@@ -140,6 +140,24 @@ public class Artemis implements AutoCloseable {
         doRequestResponse(10, TimeUnit.SECONDS, request);
     }
 
+    public Set<String> getAddressNames() throws TimeoutException {
+        log.info("Retrieving address names for broker {}", syncRequestClient.getRemoteContainer());
+        Message response = doOperation("broker", "getAddressNames");
+
+        Set<String> addressNames = new LinkedHashSet<>();
+        JsonArray payload = new JsonArray((String)((AmqpValue)response.getBody()).getValue());
+        for (int i = 0; i < payload.size(); i++) {
+            JsonArray inner = payload.getJsonArray(i);
+            for (int j = 0; j < inner.size(); j++) {
+                String addressName = inner.getString(j);
+                if (!addressName.equals(syncRequestClient.getReplyTo())) {
+                    addressNames.add(addressName);
+                }
+            }
+        }
+        return addressNames;
+    }
+
     public Set<String> getQueueNames() throws TimeoutException {
         log.info("Retrieving queue names for broker {}", syncRequestClient.getRemoteContainer());
         Message response = doOperation("broker", "getQueueNames");
