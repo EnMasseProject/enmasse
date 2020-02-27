@@ -4,7 +4,7 @@
 
 :context: {context}-iot
 
-[id='iot-device-developers-{context}]
+[id='iot-device-developers-{context}']
 = IoT for device developers
 
 Device developers are typically responsible for either connecting existing devices to the cloud platform or writing software for devices.

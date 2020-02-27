@@ -4,7 +4,7 @@
 
 :context: {context}-iot
 
-[id='iot-getting-started-{context}]
+[id='iot-getting-started-{context}']
 = Getting started using IoT
 
 The following information describes how to set up and manage {ProductName} IoT features.

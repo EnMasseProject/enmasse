@@ -4,7 +4,7 @@
 
 :context: {context}-iot
 
-[id='iot-guide-{context}]
+[id='iot-guide-{context}']
 = Internet of Things (IoT) guide
 
 The IoT guide provides resources on how to set up and manage {ProductName} IoT features.

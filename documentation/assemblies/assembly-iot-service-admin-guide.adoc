@@ -4,7 +4,7 @@
 
 :context: {context}-iot
 
-[id='iot-service-admin-{context}]
+[id='iot-service-admin-{context}']
 = IoT for service administrators
 
 Service administrators typically install and configure the Internet of Things (IoT) services for {ProductName}.

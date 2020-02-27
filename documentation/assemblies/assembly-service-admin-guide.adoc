@@ -3,7 +3,7 @@
 // master-kubernetes.adoc
 // master-openshift.adoc
 
-[id='service-admin-guide-{context}]
+[id='service-admin-guide-{context}']
 = Service admin guide
 
 The service administrator guide provides resources on how to set up and manage {ProductName},
