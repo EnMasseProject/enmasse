@@ -227,7 +227,7 @@ public abstract class AbstractClient {
     private ArrayList<String> prepareCommand() {
         ArrayList<String> command = new ArrayList<>(arguments);
         ArrayList<String> executableCommand = new ArrayList<>();
-        executableCommand.addAll(Arrays.asList(KubeCMDClient.getCMD(), "exec", podName, "-n", podNamespace, "--"));
+        executableCommand.addAll(Arrays.asList(KubeCMDClient.getCMD(), "rsh", "-n", podNamespace, podName));
         executableCommand.addAll(executable);
         executableCommand.addAll(command);
         return executableCommand;
