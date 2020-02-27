@@ -106,6 +106,9 @@ export interface IAddressDetailResponse {
             displayName: string;
             addressType: string;
           };
+          metadata: {
+            name: string;
+          };
         };
       };
       status: {

@@ -241,6 +241,9 @@ const RETURN_ADDRESS_DETAIL = (
                 displayName
                 addressType
               }
+              metadata{
+                name
+              }
             }
           }
           status {
