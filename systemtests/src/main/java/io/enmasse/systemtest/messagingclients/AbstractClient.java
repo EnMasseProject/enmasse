@@ -212,11 +212,9 @@ public abstract class AbstractClient {
                     }
                 }
             }
-            asyncClient = null;
             return ret == 0;
         } catch (Exception ex) {
             ex.printStackTrace();
-            asyncClient = null;
             return false;
         }
     }
@@ -306,10 +304,10 @@ public abstract class AbstractClient {
      */
     public void stop() {
         try {
-            if (asyncClient != null) {
+            executor.stop();
+            if (asyncClient != null && !asyncClient.isCancelled()) {
                 asyncClient.cancel(true);
             }
-            executor.stop();
         } catch (Exception ex) {
             log.warn("Client stop raise exception: " + ex.getMessage());
         }
