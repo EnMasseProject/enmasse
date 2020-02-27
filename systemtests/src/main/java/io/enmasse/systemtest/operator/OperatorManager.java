@@ -267,7 +267,7 @@ public class OperatorManager {
 
     private void cleanCRDs() {
         KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse,enmasse-component=iot");
-        KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse");
+        KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse", "--timeout=600s");
     }
 
     public void waitUntilOperatorReadyOlm() throws Exception {

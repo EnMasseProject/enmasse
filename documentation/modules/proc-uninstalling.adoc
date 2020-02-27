@@ -24,7 +24,7 @@ ifeval::["{cmdcli}" == "oc"]
 [options="nowrap",subs="attributes"]
 ----
 {cmdcli} delete crd -l app=enmasse,enmasse-component=iot
-{cmdcli} delete crd -l app=enmasse
+{cmdcli} delete crd -l app=enmasse --timeout=600s
 {cmdcli} delete clusterrolebindings -l app=enmasse
 {cmdcli} delete clusterroles -l app=enmasse
 {cmdcli} delete apiservices -l app=enmasse
