@@ -387,7 +387,7 @@ public class AddressController implements Watcher<Address> {
 
         long provisionResources = System.nanoTime();
 
-        Set<Address> liveAddresses = filterByPhases(addressSet, EnumSet.of(Configuring, Active));
+        Set<Address> liveAddresses = filterByPhases(addressSet, EnumSet.of(Configuring, Active, Terminating));
         boolean checkRouterLinks = liveAddresses.stream()
                 .anyMatch(a -> Arrays.asList("queue", "subscription").contains(a.getSpec().getType()) &&
                         a.getSpec().getForwarders() != null && !a.getSpec().getForwarders().isEmpty());
@@ -402,8 +402,13 @@ public class AddressController implements Watcher<Address> {
 
         long checkStatuses = System.nanoTime();
         for (Address address : liveAddresses) {
-            if (address.getStatus().isReady()) {
-                address.getStatus().setPhase(Active);
+            if (!isDeleted(address)) {
+                ensureFinalizer(address);
+                if (address.getStatus().isReady()) {
+                    address.getStatus().setPhase(Active);
+                }
+            } else {
+                address.getStatus().setPhase(Phase.Terminating);
             }
         }
 
@@ -421,6 +426,8 @@ public class AddressController implements Watcher<Address> {
         upgradeClusters(desiredConfig, addressResolver, usedClusters, notTerminating);
 
         long upgradeClusters = System.nanoTime();
+        garbageCollectTerminating(liveAddresses.stream().filter(AddressController::isDeleted).collect(Collectors.toSet()), addressResolver, routerStatusList, subserveTopics, withMqtt);
+        long gcTerminating = System.nanoTime();
 
         int staleCount = 0;
         for (Address address : addressList) {
@@ -454,10 +461,8 @@ public class AddressController implements Watcher<Address> {
         }
 
         long replaceAddresses = System.nanoTime();
-        garbageCollectTerminating(filterByPhases(addressSet, EnumSet.of(Terminating)), addressResolver, routerStatusList, subserveTopics, withMqtt);
-        long gcTerminating = System.nanoTime();
 
-        log.info("Time spent: Total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan, checkedQuota - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
+        log.info("Time spent: Total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, gcTerminating: {} ns, replaceAddresses: {} ns", replaceAddresses - start, resolvedPlan - start, calculatedUsage - resolvedPlan, checkedQuota - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, gcTerminating - upgradeClusters, replaceAddresses - gcTerminating);
 
         if (routerStatusList.isEmpty()) {
             readyAddressCount = null;
@@ -672,12 +677,19 @@ public class AddressController implements Watcher<Address> {
                 .collect(Collectors.toSet());
     }
 
+    private static final String STANDARD_CONTROLLER_FINALIZER = "standard-controller";
     private void garbageCollectTerminating(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList, Set<String> subserveTopics, boolean withMqtt) throws Exception {
         Map<Address, Integer> okMap = checkAddressStatuses(addresses, addressResolver, routerStatusList, subserveTopics, withMqtt);
         for (Map.Entry<Address, Integer> entry : okMap.entrySet()) {
-            if (entry.getValue() == 0) {
-                log.info("Garbage collecting {}", entry.getKey());
-                addressApi.deleteAddress(entry.getKey());
+            Address address = entry.getKey();
+            if (address.getMetadata().getFinalizers() != null && address.getMetadata().getFinalizers().contains(STANDARD_CONTROLLER_FINALIZER)) {
+                // All status checks failed, remove finalizer
+                if (entry.getValue() == 0) {
+                    log.info("Garbage collecting {}", entry.getKey());
+                    List<String> newFinalizers = new ArrayList<>(address.getMetadata().getFinalizers());
+                    newFinalizers.remove(STANDARD_CONTROLLER_FINALIZER);
+                    address.getMetadata().setFinalizers(newFinalizers);
+                }
             }
         }
     }
@@ -745,6 +757,8 @@ public class AddressController implements Watcher<Address> {
             return numOk;
         }
         Map<String, Integer> clusterOk = new HashMap<>();
+        Map<String, Set<String>> clusterAddresses = new HashMap<>();
+        BrokerStatusCollector brokerStatusCollector = new BrokerStatusCollector(kubernetes, brokerClientFactory, options);
         for (Address address : addresses) {
             AddressType addressType = addressResolver.getType(address);
             AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
@@ -752,7 +766,7 @@ public class AddressController implements Watcher<Address> {
             int ok = 0;
             switch (addressType.getName()) {
                 case "queue":
-                    ok += checkBrokerStatus(address, clusterOk);
+                    ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses);
                     for (RouterStatus routerStatus : routerStatusList) {
                         ok += routerStatus.checkAddress(address);
                         ok += routerStatus.checkAutoLinks(address);
@@ -761,10 +775,11 @@ public class AddressController implements Watcher<Address> {
                     ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
                     break;
                 case "subscription":
+                    ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses);
                     ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
                     break;
                 case "topic":
-                    ok += checkBrokerStatus(address, clusterOk);
+                    ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses);
                     for (RouterStatus routerStatus : routerStatusList) {
                         ok += routerStatus.checkLinkRoutes(address);
                     }
@@ -790,10 +805,11 @@ public class AddressController implements Watcher<Address> {
         return numOk;
     }
 
-    private int checkBrokerStatus(Address address, Map<String, Integer> clusterOk) {
+    private int checkBrokerStatus(BrokerStatusCollector brokerStatusCollector, Address address, Map<String, Integer> clusterOk, Map<String, Set<String>> clusterAddresses) {
         Set<String> clusterIds = address.getStatus().getBrokerStatuses().stream()
                 .map(BrokerStatus::getClusterId)
                 .collect(Collectors.toSet());
+
         int numOk = 0;
         for (String clusterId : clusterIds) {
             if (!clusterOk.containsKey(clusterId)) {
@@ -801,7 +817,24 @@ public class AddressController implements Watcher<Address> {
                     address.getStatus().setReady(false).appendMessage("Cluster " + clusterId + " is unavailable");
                     clusterOk.put(clusterId, 0);
                 } else {
-                    clusterOk.put(clusterId, 1);
+                    if (!clusterAddresses.containsKey(clusterId)) {
+                        clusterAddresses.put(clusterId, brokerStatusCollector.getAddressNames(brokerStatus.getClusterId()));
+                    }
+
+                    Set<String> addressNames = clusterAddresses.get(clusterId);
+                    String addressName = address.getSpec().getAddress();
+
+                    if ("subscription".equals(address.getSpec().getType())) {
+                        addressName = address.getSpec().getTopic()  + "::" + address.getSpec().getAddress();
+                    }
+                            
+                    if (!addressNames.contains(addressName)) {
+                        address.getStatus().setReady(false);
+                        address.getStatus().appendMessage("Address " + addressName + " is not configured on broker cluster " + clusterId);
+                        clusterOk.put(clusterId, 0);
+                    } else {
+                        clusterOk.put(clusterId, 1);
+                    }
                 }
             }
             numOk += clusterOk.get(clusterId);
@@ -863,6 +896,19 @@ public class AddressController implements Watcher<Address> {
             }
         }
         return false;
+    }
+
+    static void ensureFinalizer(Address address) {
+        if (address.getMetadata().getFinalizers() != null && !address.getMetadata().getFinalizers().contains(STANDARD_CONTROLLER_FINALIZER)) {
+            List<String> newFinalizers = new ArrayList<>(address.getMetadata().getFinalizers());
+            newFinalizers.add(STANDARD_CONTROLLER_FINALIZER);
+            address.getMetadata().setFinalizers(newFinalizers);
+        }
+    }
+
+    static boolean isDeleted(Address address) {
+        return address.getMetadata().getDeletionTimestamp() != null
+                && !address.getMetadata().getDeletionTimestamp().isBlank();
     }
 
     private class ProvisionState {
