@@ -4,18 +4,26 @@
  */
 
 import * as React from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { Alert, PageSection } from "@patternfly/react-core";
 
-const NotFound: React.FunctionComponent = () => (
+interface INotFoundProps {
+  updateState: (error: boolean) => void;
+}
+
+const NotFound: React.FunctionComponent<INotFoundProps> = ({ updateState }) => (
   <PageSection>
-    <Alert variant="danger" title="Connection Error">
-      You have been disconnected from the server. Please login again.
+    <Alert variant="danger" title="Unexpected Error">
+      Something went wrong. Please try again!
     </Alert>
     <br />
-    <a href="oauth/sign_in" className="pf-c-nav__link">
+    <NavLink
+      to="/"
+      className="pf-c-nav__link"
+      onClick={() => updateState(false)}
+    >
       Take me home
-    </a>
+    </NavLink>
   </PageSection>
 );
 

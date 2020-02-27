@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import * as React from "react";
 import {
   AboutModal,
@@ -17,21 +22,16 @@ export const About: React.FunctionComponent<IAboutProps> = ({
 }) => {
   const createPropsWithLogoAndBgImages = (productName: string) => {
     var imagePrefix = productName.toLowerCase().split(" ")[0];
-    var productIconName = imagePrefix + "_about_logo.svg";
-    var modalImgProps = {
-      backgroundImageSrc: "",
-      brandImageSrc: "",
-      brandImageAlt: ""
-    };    
 
-    modalImgProps = {
+    var modalImgProps = {
       brandImageSrc: "",
       brandImageAlt: productName,
       backgroundImageSrc: ""
     };
     try {
-      let img = require("assets/images/" + imagePrefix + "_about_logo.svg");
-      modalImgProps.brandImageSrc=img;
+      modalImgProps.brandImageSrc = require("assets/images/" +
+        imagePrefix +
+        "_about_logo.svg");
       modalImgProps.backgroundImageSrc = require("assets/images/" +
         imagePrefix +
         "_about_bg.svg");

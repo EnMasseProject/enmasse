@@ -30,7 +30,6 @@ import { AddressLinksWithFilterAndPagination } from "./AddressLinksWithFilterAnd
 import { EditAddress } from "pages/EditAddressPage";
 import { IAddressSpacePlanResponse } from "pages/AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
-import { ErrorAlert } from "components/common/ErrorAlert";
 import { NoDataFound } from "components/common/NoDataFound";
 import { useMutationQuery } from "hooks";
 
@@ -97,11 +96,22 @@ export default function AddressDetailPage() {
     }
   };
 
+  const resetPurgeFormState = () => {
+    refetch();
+  };
+
+  const [setPurgeAddressQueryVariables] = useMutationQuery(
+    PURGE_ADDRESS,
+    resetPurgeFormState,
+    resetPurgeFormState
+  );
+
   const [setDeleteAddressQueryVariables] = useMutationQuery(
     DELETE_ADDRESS,
     resetDeleteFormState,
     resetDeleteFormState
   );
+
   const [setEditAddressQueryVariables] = useMutationQuery(
     EDIT_ADDRESS,
     resetEditAdressFormState,
@@ -143,22 +153,14 @@ export default function AddressDetailPage() {
     setDeleteAddressQueryVariables(variables);
   };
 
-  const purgeAddress = async (data: any) => {
-    const purgeData = await client.mutate({
-      mutation: PURGE_ADDRESS,
-      variables: {
-        a: {
-          name: data.name,
-          namespace: data.namespace
-        }
+  const purgeAddress = (data: any) => {
+    const variables = {
+      a: {
+        name: data.name,
+        namespace: data.namespace
       }
-    });
-    // if (purgeData.errors) {
-    //   purgeErrorData.push(purgeData);
-    // }
-    if (purgeData.data) {
-      return purgeData;
-    }
+    };
+    setPurgeAddressQueryVariables(variables);
   };
 
   const handleDelete = () => {

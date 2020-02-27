@@ -15,9 +15,9 @@ const App: React.FC<{}> = () => {
 
   return (
     <ErrorProvider value={contextValue}>
-      {/* <ErrorBoundary> */}
-      <AppLayout />
-      {/* </ErrorBoundary> */}
+      <ErrorBoundary>
+        <AppLayout />
+      </ErrorBoundary>
     </ErrorProvider>
   );
 };
