@@ -4,7 +4,7 @@
 
 :context: {context}-iot
 
-[id='iot-device-managers-{context}]
+[id='iot-device-managers-{context}']
 = IoT for device managers
 
 Device managers are typically responsible for creating and managing device identities and credentials in the system.
