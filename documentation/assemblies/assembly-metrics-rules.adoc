@@ -4,7 +4,7 @@
 
 :parent-context: {context}
 
-[id='assembly-metrics-rules-{context}]
+[id='assembly-metrics-rules-{context}']
 = Metrics and rules
 
 include::../modules/ref-metrics-common.adoc[leveloffset=+1]
