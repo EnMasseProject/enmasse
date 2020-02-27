@@ -677,7 +677,7 @@ public class AddressController implements Watcher<Address> {
                 .collect(Collectors.toSet());
     }
 
-    private static final String STANDARD_CONTROLLER_FINALIZER = "standard-controller";
+    static final String STANDARD_CONTROLLER_FINALIZER = "standard-controller";
     private void garbageCollectTerminating(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList, Set<String> subserveTopics, boolean withMqtt) throws Exception {
         Map<Address, Integer> okMap = checkAddressStatuses(addresses, addressResolver, routerStatusList, subserveTopics, withMqtt);
         for (Map.Entry<Address, Integer> entry : okMap.entrySet()) {

@@ -9,9 +9,7 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -21,6 +19,9 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -82,15 +83,17 @@ public class AddressControllerTest {
 
     @Test
     public void testAddressGarbageCollection() throws Exception {
-        Address alive = new AddressBuilder()
+        Address terminating = new AddressBuilder()
                 .withNewMetadata()
-                .withName("myspace.q1")
+                .withName("myspace.q2")
                 .withNamespace("ns")
                 .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "small-queue")
+                .withDeletionTimestamp(Instant.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                .addToFinalizers(AddressController.STANDARD_CONTROLLER_FINALIZER)
                 .endMetadata()
 
                 .withNewSpec()
-                .withAddress("q1")
+                .withAddress("q2")
                 .withAddressSpace("myspace")
                 .withType("queue")
                 .withPlan("small-queue")
@@ -110,37 +113,13 @@ public class AddressControllerTest {
                 .endStatus()
 
                 .build();
-
-        Address terminating = new AddressBuilder()
-                .withNewMetadata()
-                .withName("myspace.q2")
-                .withNamespace("ns")
-                .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "small-queue")
-                .endMetadata()
-
-                .withNewSpec()
-                .withAddress("q2")
-                .withAddressSpace("myspace")
-                .withType("queue")
-                .withPlan("small-queue")
-                .endSpec()
-
-                .withNewStatus()
-                .withReady(false)
-                .withPhase(Phase.Terminating)
-                .addNewBrokerStatus()
-                .withClusterId("broker-infra-0")
-                .withContainerId("broker-infra-0-0")
-                .endBrokerStatus()
-                .withPlanStatus(AddressPlanStatus.fromAddressPlan(standardControllerSchema.getType().findAddressType("queue").get().findAddressPlan("small-queue").get()))
-
-                .endStatus()
-
-                .build();
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(new BrokerCluster("broker-infra-0", new KubernetesList())));
-        controller.onUpdate(Arrays.asList(alive, terminating));
-        verify(mockApi).deleteAddress(any());
-        verify(mockApi).deleteAddress(eq(terminating));
+        controller.onUpdate(Arrays.asList(terminating));
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi).replaceAddress(captor.capture());
+        Address captured = captor.getValue();
+        assertNotNull(captured);
+        assertEquals(0, captured.getMetadata().getFinalizers().size());
     }
 
     @Test
