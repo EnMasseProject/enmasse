@@ -11,7 +11,9 @@ import {
   PageSection,
   PageSectionVariants,
   TooltipPosition,
-  Tooltip
+  Tooltip,
+  Button,
+  ButtonVariant
 } from "@patternfly/react-core";
 import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
@@ -45,6 +47,7 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
   namespace,
   authenticationService
 }) => {
+  const [isCopied, setIsCopied] = React.useState<boolean>(false);
   const { data, loading, error } = useQuery(
     ADDRESS_SPACE_COMMAND_REVIEW_DETAIL,
     {
@@ -142,19 +145,38 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
           <Title size={"lg"} className={css(Style.bottom_padding)}>
             {`Configuration details  `}
             <Tooltip
-              id="preview-addr-copy-tooltip"
+              id="preview-as-feedback-tooltip"
               position={TooltipPosition.top}
               enableFlip={false}
-              content={<div>Copy the configuration details on clipboard</div>}
+              trigger={"manual"}
+              content={<div>Succesfully copied to the clipboard</div>}
+              isVisible={isCopied}
             >
-              <OutlinedCopyIcon
-                id="preview-addr-copy-btn"
-                size="md"
-                color="blue"
-                onClick={() => {
-                  navigator.clipboard.writeText(data.addressSpaceCommand);
-                }}
-              />
+              <span>
+                <Tooltip
+                  id="preview-as-copy-tooltip"
+                  position={TooltipPosition.top}
+                  enableFlip={false}
+                  content={
+                    <div>Copy the configuration details to the clipboard</div>
+                  }
+                >
+                  <Button
+                    id="preview-addr-copy-configuration-button"
+                    variant={ButtonVariant.link}
+                    aria-label="copy-configuration"
+                    onClick={() => {
+                      navigator.clipboard.writeText(data.addressCommand);
+                      setIsCopied(true);
+                    }}
+                    onMouseLeave={() => {
+                      setIsCopied(false);
+                    }}
+                  >
+                    <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
+                  </Button>
+                </Tooltip>
+              </span>
             </Tooltip>
           </Title>
           <AceEditor
