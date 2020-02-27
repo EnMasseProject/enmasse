@@ -15,10 +15,6 @@
  */
 'use strict';
 
-var log = require("./log.js").logger();
-var util = require('util');
-var events = require('events');
-var rhea = require('rhea');
 var create_podgroup = require('./podgroup.js');
 var pod_watcher = require('./pod_watcher.js');
 
@@ -65,6 +61,8 @@ BrokerStats.prototype.retrieve = function(addresses) {
         for (var s in stats) {
             addresses.update_stats(s, stats[s]);
         }
+    }).catch(function (error) {
+        console.error('Failed to retrieve broker stats: %s', error);
     });
 };
 
