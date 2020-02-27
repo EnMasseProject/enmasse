@@ -107,12 +107,13 @@ export default function AddressSpaceDetailPage() {
   ] = React.useState<IAddressSpace | null>();
   const history = useHistory();
 
-  const { loading, error, data, refetch } = useQuery<
-    IAddressSpaceDetailResponse
-  >(RETURN_ADDRESS_SPACE_DETAIL(name, namespace), {
-    fetchPolicy: FetchPolicy.NETWORK_ONLY,
-    pollInterval: POLL_INTERVAL
-  });
+  const { loading, data, refetch } = useQuery<IAddressSpaceDetailResponse>(
+    RETURN_ADDRESS_SPACE_DETAIL(name, namespace),
+    {
+      fetchPolicy: FetchPolicy.NETWORK_ONLY,
+      pollInterval: POLL_INTERVAL
+    }
+  );
 
   const client = useApolloClient();
 

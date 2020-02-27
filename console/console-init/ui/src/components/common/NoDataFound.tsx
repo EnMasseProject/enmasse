@@ -13,7 +13,7 @@ import {
   PageSection
 } from "@patternfly/react-core";
 import { Link } from "react-router-dom";
-import { CubesIcon, GlobeRouteIcon } from "@patternfly/react-icons";
+import { GlobeRouteIcon } from "@patternfly/react-icons";
 
 interface INoDataFoundProps {
   type: string;

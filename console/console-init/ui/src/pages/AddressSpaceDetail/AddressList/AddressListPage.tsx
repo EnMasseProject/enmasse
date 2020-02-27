@@ -240,8 +240,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     if (addressBeingPurged) {
       const variables = {
         a: {
-          Name: addressBeingPurged.name,
-          Namespace: addressBeingPurged.namespace
+          name: addressBeingPurged.name,
+          namespace: addressBeingPurged.namespace
         }
       };
       setPurgeAddressQueryVariables(variables);
