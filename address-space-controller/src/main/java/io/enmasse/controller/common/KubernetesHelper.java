@@ -29,6 +29,7 @@ import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -131,22 +132,30 @@ public class KubernetesHelper implements Kubernetes {
         }
         podsLeft = client.pods().withLabels(labels).list().getItems().size();
         if (podsLeft > 0) {
-            String message = String.format("Failed to delete infra with uuid %s: %d pods still exists", infraUuid, podsLeft);
+            String message = String.format("Timed out finalizing infra with uuid %s: %d pods still exists", infraUuid, podsLeft);
             throw new RuntimeException(message);
         }
     }
 
     @Override
     public void deleteResources(String infraUuid) throws InterruptedException {
-        // Delete and await deployments to be deleted so that the per-address space controllers are not re-creating any resources
+        // Delete and await deployments to be deleted so that the per-address space controllers are not re-creating any resources.
+        // Parallelize deletiong by triggering delete of all deployments and then wait for pods
+        Set<Map<String, String>> labelSet = new HashSet<>();
         for (Deployment deployment : client.apps().deployments().withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems()) {
             if (!client.apps().deployments().inNamespace(deployment.getMetadata().getNamespace()).withName(deployment.getMetadata().getName()).withPropagationPolicy("Background").delete()) {
                 throw new RuntimeException("Failed to delete infra with uuid " + infraUuid + ": failed to delete deployment " + deployment.getMetadata().getName());
             }
-            waitForZeroPods(infraUuid, deployment.getSpec().getTemplate().getMetadata().getLabels(), 300_000);
+            labelSet.add(deployment.getSpec().getTemplate().getMetadata().getLabels());
         }
-        client.apps().statefulSets().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
 
+        // If 5 minutes pass, the address space may not be finalized due to issues garbage collecting the pods. At this point it is
+        // outside the scope of EnMasse to clean up.
+        for (Map<String, String> labels : labelSet) {
+            waitForZeroPods(infraUuid, labels, 300_000);
+        }
+
+        client.apps().statefulSets().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         client.secrets().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         client.configMaps().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();
         client.network().networkPolicies().withLabel(LabelKeys.INFRA_UUID, infraUuid).withPropagationPolicy("Background").delete();

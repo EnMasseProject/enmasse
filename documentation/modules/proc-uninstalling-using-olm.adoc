@@ -23,7 +23,7 @@ endif::[]
 [options="nowrap",subs="+quotes,attributes"]
 ----
 {cmdcli} delete iotprojects -A --all
-{cmdcli} delete addressspaces -A --all
+{cmdcli} delete addressspaces -A --all --timeout=600s
 ----
 
 . Remove the Subscription (replace the name with the name of the subscription used in the install):
