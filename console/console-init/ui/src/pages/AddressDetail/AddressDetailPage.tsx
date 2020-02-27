@@ -29,7 +29,7 @@ import { IObjectMeta_v1_Input } from "pages/AddressSpaceDetail/AddressSpaceDetai
 import { AddressLinksWithFilterAndPagination } from "./AddressLinksWithFilterAndPaginationPage";
 import { EditAddress } from "pages/EditAddressPage";
 import { IAddressSpacePlanResponse } from "pages/AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
-import { POLL_INTERVAL } from "constants/constants";
+import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { ErrorAlert } from "components/common/ErrorAlert";
 import { NoDataFound } from "components/common/NoDataFound";
 
@@ -71,7 +71,7 @@ export default function AddressDetailPage() {
   );
   const { loading, error, data, refetch } = useQuery<IAddressDetailResponse>(
     RETURN_ADDRESS_DETAIL(name, namespace, addressname),
-    { pollInterval: POLL_INTERVAL }
+    { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
 
   const addressSpaces = useQuery<IAddressSpacePlanResponse>(
@@ -100,9 +100,9 @@ export default function AddressDetailPage() {
   }
   const addressDetail = addresses && addresses.addresses[0];
   if (addressPlan === null) {
-    setAddressPlan(addressDetail.spec.plan.spec.displayName);
+    setAddressPlan(addressDetail.spec.plan.metadata.name);
   }
-
+  console.log(addressPlan);
   const handleCancelDelete = () => {
     setIsDeleteModalOpen(!isDeleteModalOpen);
   };
@@ -155,10 +155,12 @@ export default function AddressDetailPage() {
         variables: {
           a: {
             name: addressDetail.metadata.name,
-            namespace: addressDetail.metadata.namespace.toString()
+            namespace: addressDetail.metadata.namespace
           },
           jsonPatch:
-            '[{"op":"replace","path":"/Plan","value":"' + addressPlan + '"}]',
+            '[{"op":"replace","path":"/spec/plan","value":"' +
+            addressPlan +
+            '"}]',
           patchType: "application/json-patch+json"
         }
       });
@@ -174,7 +176,7 @@ export default function AddressDetailPage() {
     ) {
       await purgeAddress({
         name: addressDetail.metadata.name,
-        namespace: addressDetail.metadata.namespace.toString()
+        namespace: addressDetail.metadata.namespace
       });
     }
     refetch();
