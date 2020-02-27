@@ -42,7 +42,7 @@ public abstract class AbstractClient {
     private List<String> executable;
     private String podName;
     private String podNamespace;
-    private Future<Boolean> asyncClient;
+    private CompletableFuture<Boolean> asyncClient;
     /**
      * Important: this is not any container_id nor nothing related with amqp, this is just an identifier for logging in our tests
      */
@@ -257,8 +257,9 @@ public abstract class AbstractClient {
      * @param logToOutput enable logging of stdOut and stdErr on output
      * @return future of exit status of client
      */
-    public Future<Boolean> runAsync(boolean logToOutput) {
-        asyncClient = CompletableFuture.supplyAsync(() -> {
+    public CompletableFuture<Boolean> runAsync(boolean logToOutput) {
+        asyncClient = new CompletableFuture<>();
+        asyncClient.completeAsync(() -> {
             try {
                 return runClient(DEFAULT_ASYNC_TIMEOUT, logToOutput);
             } catch (Exception e) {
