@@ -23,17 +23,13 @@ type sessionCountingListener struct {
 
 func (l *sessionCountingListener) Added(string) {
 	curr := atomic.AddInt32(&l.sessionCount, 1)
-	if curr == 1 {
-		l.sessionPresent()
-	}
+	l.sessionPresent()
 	l.metric.Set(float64(curr))
 }
 
 func (l *sessionCountingListener) Removed(string) {
 	curr := atomic.AddInt32(&l.sessionCount, -1)
-	if curr == 0 {
-		l.noSessionsPresent()
-	}
+	l.noSessionsPresent()
 	l.metric.Set(float64(curr))
 }
 

@@ -10,15 +10,21 @@ import (
 	"crypto/tls"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"k8s.io/client-go/rest"
+	"log"
 	"sync"
 	"time"
 )
 
 type WatcherManager interface {
+	// starts the watcher manager but does not begin watching.  must not called more than once.
 	Start()
+	// initiates watching if not currently watching (idempotent).
 	BeginWatching()
+	// ceases watching if currently watching (idempotent).
 	EndWatching()
+	// shuts down the watcher manager.  If watchers are watching they will be stopped.  must not called more than once.
 	Shutdown()
 	GetCollector(infra string) agent.Delegate
 }
@@ -111,19 +117,36 @@ func (rm *resourceManager) Start() {
 
 	go func() {
 		defer close(rm.stopped)
+		var watching = false
 		for {
 			select {
 			case event, chok := <-rm.command:
 				if !chok {
 					// command channel closed
-					rm.endAllWatchers()
+					if watching {
+						rm.endAllWatchers()
+						watching = false
+					}
 					return
 				}
 				switch event {
 				case beginWatching:
-					rm.beginAllWatchers()
+					if !watching {
+						err := rm.beginAllWatchers()
+						if err != nil {
+							log.Printf("failed to begin watchers (will retry in 1m): %s", err)
+							server.RunAfter(time.Minute*1, func() {
+								rm.BeginWatching()
+							})
+						} else {
+							watching = true
+						}
+					}
 				case endWatching:
-					rm.endAllWatchers()
+					if watching {
+						rm.endAllWatchers()
+						watching = false
+					}
 				}
 			}
 		}

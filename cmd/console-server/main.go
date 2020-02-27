@@ -106,13 +106,13 @@ http://localhost:` + port + `/graphql
 	}
 
 	if dumpCachePeriod > 0 {
-		schedule(func() {
+		server.Schedule(func() {
 			_ = objectCache.Dump()
 		}, dumpCachePeriod)
 	}
 
 	if updateMetricsPeriod.Nanoseconds() > 0 {
-		schedule(func() {
+		server.Schedule(func() {
 			err, updated := metric.UpdateAllMetrics(objectCache, promQLRateMetricExpression)
 			if err != nil {
 				log.Printf("failed to update metrics, %s", err)
@@ -202,21 +202,3 @@ http://localhost:` + port + `/graphql
 
 }
 
-func schedule(f func(), delay time.Duration) (chan bool, chan bool) {
-	stop := make(chan bool)
-	bump := make(chan bool)
-
-	go func() {
-		for {
-			f()
-			select {
-			case <-time.After(delay):
-			case <-bump:
-			case <-stop:
-				return
-			}
-		}
-	}()
-
-	return stop, bump
-}
