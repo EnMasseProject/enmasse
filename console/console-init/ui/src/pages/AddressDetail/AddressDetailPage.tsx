@@ -102,7 +102,6 @@ export default function AddressDetailPage() {
   if (addressPlan === null) {
     setAddressPlan(addressDetail.spec.plan.metadata.name);
   }
-  console.log(addressPlan);
   const handleCancelDelete = () => {
     setIsDeleteModalOpen(!isDeleteModalOpen);
   };
