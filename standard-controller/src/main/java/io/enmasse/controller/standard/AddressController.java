@@ -805,7 +805,7 @@ public class AddressController implements Watcher<Address> {
         return numOk;
     }
 
-    private int checkBrokerStatus(BrokerStatusCollector brokerStatusCollector, Address address, Map<String, Integer> clusterOk, Map<String, Set<String>> clusterAddresses) {
+    private int checkBrokerStatus(BrokerStatusCollector brokerStatusCollector, Address address, Map<String, Integer> clusterOk, Map<String, Set<String>> clusterAddresses) throws Exception {
         Set<String> clusterIds = address.getStatus().getBrokerStatuses().stream()
                 .map(BrokerStatus::getClusterId)
                 .collect(Collectors.toSet());
