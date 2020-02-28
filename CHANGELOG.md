@@ -20,6 +20,7 @@
   indefinitely.
 * Change default behavior of responding with MODIFIED outcome for transient delivery errors.
 * Change the service admin example role so it can modify authenticationservices custom resources.
+* #4005: Perform additional checks on broker to ensure addresses and queues are present
 
 * #3673: Add support for pod disruption budgets
 * #3764: validate the topic refenced by a subscription actually exists
