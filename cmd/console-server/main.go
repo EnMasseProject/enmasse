@@ -132,7 +132,7 @@ http://localhost:` + port + `/graphql
 		Help: "Number of queries that have ended in error",
 	}, []string{"operationName"})
 	sessionCountMetric := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "console_active_session_count",
+		Name: "console_active_sessions",
 		Help: "Number of active HTTP sessions",
 	})
 	prometheus.MustRegister(queryTimeMetric, queryErrorCountMetric, sessionCountMetric)
