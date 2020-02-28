@@ -12,5 +12,5 @@ git commit -a -m "Update version to ${VERSION}"
 git tag ${VERSION}
 echo "Press ENTER to push the ${VERSION} branch and tag to GitHub"
 read
-git push -u origin release-${RELEASE_BRANCH}
-git push -u origin ${VERSION}
+git push -u upstream release-${RELEASE_BRANCH}
+git push -u upstream ${VERSION}
