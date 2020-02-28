@@ -39,6 +39,11 @@ import {
   ISearchAddressLinkNameResponse,
   ISearchAddressLinkContainerResponse
 } from "types/ResponseTypes";
+import {
+  TypeAheadMessage,
+  TYPEAHEAD_REQUIRED_LENGTH,
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+} from "constants/constants";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -72,7 +77,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   addressSpaceName,
   namespace
 }) => {
-  const TYPEAHEAD_REQUIRED_LENGTH: number = 5;
   const { width } = useWindowDimensions();
   const client = useApolloClient();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState<boolean>(
@@ -94,6 +98,13 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   >();
   const [nameInput, setNameInput] = React.useState<string>("");
   const [containerInput, setContainerInput] = React.useState<string>("");
+  const [hasMoreRecordsForName, setHasMoreRecordsForName] = React.useState<
+    boolean
+  >(false);
+  const [
+    hasMoreRecordsForContainer,
+    setHasMoreRecordsForContainer
+  ] = React.useState<boolean>(false);
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
     { key: "filterContainers", value: "Container" },
@@ -174,6 +185,9 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   };
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
+    if (hasMoreRecordsForName) {
+      setHasMoreRecordsForName(false);
+    }
     if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
       return;
@@ -195,8 +209,18 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       response.data.addresses.addresses[0].links.links &&
       response.data.addresses.addresses[0].links.links.length > 0
     ) {
-      if (response.data.addresses.addresses[0].links.total > 100) {
-        setNameOptions([]);
+      if (
+        response.data.addresses.addresses[0].links.total >
+        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+      ) {
+        let list = [];
+        for (let i = 0; i < 10; i++) {
+          list.push(
+            response.data.addresses.addresses[0].links.links[i].metadata.name
+          );
+        }
+        setHasMoreRecordsForName(true);
+        setNameOptions(Array.from(new Set(list)));
       } else {
         const obtainedList = response.data.addresses.addresses[0].links.links.map(
           (link: any) => {
@@ -220,7 +244,11 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
 
   const onChangeContainerData = async (value: string) => {
     setContainerOptions(undefined);
-    if (value.trim().length < 6) {
+    if (hasMoreRecordsForContainer) {
+      setHasMoreRecordsForContainer(false);
+    }
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
+      setHasMoreRecordsForName(false);
       setContainerOptions([]);
       return;
     }
@@ -241,8 +269,20 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       response.data.addresses.addresses[0].links.links &&
       response.data.addresses.addresses[0].links.links.length > 0
     ) {
-      if (response.data.addresses.addresses[0].links.total > 100) {
-        setContainerOptions([]);
+      if (
+        response.data.addresses.addresses[0].links.total >
+        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+      ) {
+        let list = [];
+        for (let i = 0; i < 10; i++) {
+          if (response.data.addresses.addresses[0].links.links[i])
+            list.push(
+              response.data.addresses.addresses[0].links.links[i].spec
+                .connection.spec.containerId
+            );
+        }
+        setHasMoreRecordsForContainer(true);
+        setContainerOptions(Array.from(new Set(list)));
       } else {
         const obtainedList = response.data.addresses.addresses[0].links.links.map(
           (link: any) => {
@@ -382,6 +422,13 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                     isDisabled={false}
                     isCreatable={false}
                   >
+                    {hasMoreRecordsForName && (
+                      <SelectOption
+                        key={"more records available"}
+                        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                        disabled={true}
+                      />
+                    )}
                     {nameOptions && nameOptions.length > 0 ? (
                       nameOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
@@ -440,6 +487,13 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                     isDisabled={false}
                     isCreatable={false}
                   >
+                    {hasMoreRecordsForContainer && (
+                      <SelectOption
+                        key={"more records available"}
+                        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                        disabled={true}
+                      />
+                    )}
                     {containerOptions && containerOptions.length > 0 ? (
                       containerOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
@@ -448,13 +502,13 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                       TYPEAHEAD_REQUIRED_LENGTH ? (
                       <SelectOption
                         key={"invalid-input-length"}
-                        value={"Enter more characters"}
+                        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                         disabled={true}
                       />
                     ) : (
                       <SelectOption
                         key={"no-results-found"}
-                        value={"No results found"}
+                        value={TypeAheadMessage.NO_RESULT_FOUND}
                         disabled={true}
                       />
                     )}

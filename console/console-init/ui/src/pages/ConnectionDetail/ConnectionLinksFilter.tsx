@@ -39,6 +39,11 @@ import {
   RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH,
   RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH
 } from "queries";
+import {
+  TypeAheadMessage,
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
+  TYPEAHEAD_REQUIRED_LENGTH
+} from "constants/constants";
 
 interface IConnectionLinksFilterProps {
   filterValue: string;
@@ -89,6 +94,13 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
   const [addressInput, setAddressInput] = React.useState<string>("");
   const [nameOptions, setNameOptions] = React.useState<Array<string>>();
   const [addressOptions, setAddressOptions] = React.useState<Array<string>>();
+  const [hasMoreRecordsForName, setHasMoreRecordsForName] = React.useState<
+    boolean
+  >(false);
+  const [
+    hasMoreRecordsForAddress,
+    setHasMoreRecordsForAddress
+  ] = React.useState<boolean>(false);
 
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
@@ -179,7 +191,10 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if (value.trim().length < 5) {
+    if (setHasMoreRecordsForName) {
+      setHasMoreRecordsForName(false);
+    }
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
       return;
     }
@@ -200,8 +215,21 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       response.data.connections.connections[0].links.links &&
       response.data.connections.connections[0].links.links.length > 0
     ) {
-      if (response.data.connections.connections[0].links.total > 100) {
-        setNameOptions([]);
+      if (
+        response.data.connections.connections[0].links.total >
+        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+      ) {
+        let list = [];
+        for (let i = 0; i < 10; i++) {
+          if (response.data.connections.connections[0].links.links[i]) {
+            list.push(
+              response.data.connections.connections[0].links.links[i].metadata
+                .name
+            );
+          }
+        }
+        setHasMoreRecordsForName(true);
+        setNameOptions(Array.from(new Set(list)));
       } else {
         const obtainedList = response.data.connections.connections[0].links.links.map(
           (link: any) => {
@@ -226,7 +254,10 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
 
   const onChangeAddressData = async (value: string) => {
     setAddressOptions(undefined);
-    if (value.trim().length < 6) {
+    if (setHasMoreRecordsForAddress) {
+      setHasMoreRecordsForAddress(false);
+    }
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setAddressOptions([]);
       return;
     }
@@ -247,8 +278,21 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
       response.data.connections.connections[0].links.links &&
       response.data.connections.connections[0].links.links.length > 0
     ) {
-      if (response.data.connections.connections[0].links.total > 100) {
-        setAddressOptions([]);
+      if (
+        response.data.connections.connections[0].links.total >
+        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+      ) {
+        let list = [];
+        for (let i = 0; i < 10; i++) {
+          if (response.data.connections.connections[0].links.links[i]) {
+            list.push(
+              response.data.connections.connections[0].links.links[i].spec
+                .address
+            );
+          }
+        }
+        setHasMoreRecordsForAddress(true);
+        setAddressOptions(Array.from(new Set(list)));
       } else {
         const obtainedList = response.data.connections.connections[0].links.links.map(
           (link: any) => {
@@ -386,20 +430,27 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     isDisabled={false}
                     isCreatable={false}
                   >
+                    {hasMoreRecordsForName && (
+                      <SelectOption
+                        key={"more records available"}
+                        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                        disabled={true}
+                      />
+                    )}
                     {nameOptions && nameOptions.length > 0 ? (
                       nameOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
                       ))
-                    ) : nameInput.trim().length < 5 ? (
+                    ) : nameInput.trim().length < TYPEAHEAD_REQUIRED_LENGTH ? (
                       <SelectOption
                         key={"invalid-input-length"}
-                        value={"Enter more characters"}
+                        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                         disabled={true}
                       />
                     ) : (
                       <SelectOption
                         key={"no-results-found"}
-                        value={"No results found"}
+                        value={TypeAheadMessage.NO_RESULT_FOUND}
                         disabled={true}
                       />
                     )}
@@ -444,20 +495,28 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     isDisabled={false}
                     isCreatable={false}
                   >
+                    {hasMoreRecordsForAddress && (
+                      <SelectOption
+                        key={"more records available"}
+                        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                        disabled={true}
+                      />
+                    )}
                     {addressOptions && addressOptions.length > 0 ? (
                       addressOptions.map((option, index) => (
                         <SelectOption key={index} value={option} />
                       ))
-                    ) : addressInput.trim().length < 5 ? (
+                    ) : addressInput.trim().length <
+                      TYPEAHEAD_REQUIRED_LENGTH ? (
                       <SelectOption
                         key={"invalid-input-length"}
-                        value={"Enter more characters"}
+                        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                         disabled={true}
                       />
                     ) : (
                       <SelectOption
                         key={"no-results-found"}
-                        value={"No results found"}
+                        value={TypeAheadMessage.NO_RESULT_FOUND}
                         disabled={true}
                       />
                     )}

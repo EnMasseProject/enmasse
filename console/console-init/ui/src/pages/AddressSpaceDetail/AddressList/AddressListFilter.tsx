@@ -34,6 +34,11 @@ import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { useApolloClient } from "@apollo/react-hooks";
 import { IAddressListNameSearchResponse } from "types/ResponseTypes";
 import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "queries";
+import {
+  TypeAheadMessage,
+  TYPEAHEAD_REQUIRED_LENGTH,
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+} from "constants/constants";
 
 interface IAddressListFilterProps {
   filterValue: string | null;
@@ -79,6 +84,9 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   const [nameSelected, setNameSelected] = React.useState<string>();
   const [nameOptions, setNameOptions] = React.useState<Array<string>>();
   const [nameInput, setNameInput] = React.useState<string>("");
+  const [hasMoreRecordsForName, setHasMoreRecordsForName] = React.useState<
+    boolean
+  >(false);
   const filterMenuItems = [
     { key: "filterAddress", value: "Address" },
     { key: "filterType", value: "Type" },
@@ -141,7 +149,10 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if (value.trim().length < 5) {
+    if (hasMoreRecordsForName) {
+      setHasMoreRecordsForName(false);
+    }
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
       return;
     }
@@ -156,11 +167,21 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
       response &&
       response.data &&
       response.data.addresses &&
-      response.data.addresses.addresses
+      response.data.addresses.addresses &&
+      response.data.addresses.addresses.length > 0
     ) {
       //To display dropdown if fetched records are less than 100 in count.
-      if (response.data.addresses.total > 100) {
-        setNameOptions([]);
+      if (
+        response.data.addresses.total >
+        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+      ) {
+        let list = [];
+        for (let i = 0; i < 10; i++) {
+          if (response.data.addresses.addresses[i])
+            list.push(response.data.addresses.addresses[i].spec.address);
+        }
+        setHasMoreRecordsForName(true);
+        setNameOptions(Array.from(new Set(list)));
       } else {
         const obtainedList = response.data.addresses.addresses.map(
           (address: any) => {
@@ -282,20 +303,28 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                       isDisabled={false}
                       isCreatable={false}
                     >
+                      {hasMoreRecordsForName && (
+                        <SelectOption
+                          key={"more records available"}
+                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                          disabled={true}
+                        />
+                      )}
                       {nameOptions && nameOptions.length > 0 ? (
                         nameOptions.map((option, index) => (
                           <SelectOption key={index} value={option} />
                         ))
-                      ) : nameInput.trim().length < 5 ? (
+                      ) : nameInput.trim().length <
+                        TYPEAHEAD_REQUIRED_LENGTH ? (
                         <SelectOption
                           key={"invalid-input-length"}
-                          value={"Enter more characters"}
+                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                           disabled={true}
                         />
                       ) : (
                         <SelectOption
                           key={"no-results-found"}
-                          value={"No results found"}
+                          value={TypeAheadMessage.NO_RESULT_FOUND}
                           disabled={true}
                         />
                       )}

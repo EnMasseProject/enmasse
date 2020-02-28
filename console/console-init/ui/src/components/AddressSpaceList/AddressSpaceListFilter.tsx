@@ -34,6 +34,11 @@ import {
 import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "queries";
 import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "types/ResponseTypes";
 import { useApolloClient } from "@apollo/react-hooks";
+import {
+  TypeAheadMessage,
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
+  TYPEAHEAD_REQUIRED_LENGTH
+} from "constants/constants";
 
 interface IAddressSpaceListFilterProps {
   filterValue?: string;
@@ -85,6 +90,14 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const [namespaceOptions, setNamespaceOptions] = React.useState<
     Array<string>
   >();
+
+  const [hasMoreRecordsForName, setHasMoreRecordsForName] = React.useState<
+    boolean
+  >(false);
+  const [
+    hasMoreRecordsForNamespace,
+    setHasMoreRecordsForNamespace
+  ] = React.useState<boolean>(false);
 
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
@@ -196,7 +209,11 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if (value.trim().length < 5) {
+    if (hasMoreRecordsForName) {
+      setHasMoreRecordsForName(false);
+    }
+
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
       return;
     }
@@ -212,8 +229,20 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       response.data.addressSpaces.addressSpaces &&
       response.data.addressSpaces.addressSpaces.length > 0
     ) {
-      if (response.data.addressSpaces.total > 100) {
-        setNameOptions([]);
+      if (
+        response.data.addressSpaces.total >
+        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+      ) {
+        let list = [];
+        for (let i = 0; i < 10; i++) {
+          if (response.data.addressSpaces.addressSpaces[i]) {
+            list.push(
+              response.data.addressSpaces.addressSpaces[i].metadata.name
+            );
+          }
+        }
+        setHasMoreRecordsForName(true);
+        setNameOptions(Array.from(new Set(list)));
       } else {
         const obtainedList = response.data.addressSpaces.addressSpaces.map(
           (link: any) => {
@@ -239,7 +268,10 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const onChangeNamespaceData = async (value: string) => {
     setNamespaceOptions(undefined);
     setNameOptions(undefined);
-    if (value.trim().length < 5) {
+    if (hasMoreRecordsForNamespace) {
+      setHasMoreRecordsForNamespace(false);
+    }
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
       return;
     }
@@ -258,8 +290,20 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       response.data.addressSpaces.addressSpaces &&
       response.data.addressSpaces.addressSpaces.length > 0
     ) {
-      if (response.data.addressSpaces.total > 100) {
-        setNamespaceOptions([]);
+      if (
+        response.data.addressSpaces.total >
+        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+      ) {
+        let list = [];
+        for (let i = 0; i < 10; i++) {
+          if (response.data.addressSpaces.addressSpaces[i]) {
+            list.push(
+              response.data.addressSpaces.addressSpaces[i].metadata.namespace
+            );
+          }
+        }
+        setHasMoreRecordsForNamespace(true);
+        setNamespaceOptions(Array.from(new Set(list)));
       } else {
         const obtainedList = response.data.addressSpaces.addressSpaces.map(
           (link: any) => {
@@ -367,20 +411,28 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       isDisabled={false}
                       isCreatable={false}
                     >
+                      {hasMoreRecordsForName && (
+                        <SelectOption
+                          key={"more records available"}
+                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                          disabled={true}
+                        />
+                      )}
                       {nameOptions && nameOptions.length > 0 ? (
                         nameOptions.map((option, index) => (
                           <SelectOption key={index} value={option} />
                         ))
-                      ) : nameInput.trim().length < 5 ? (
+                      ) : nameInput.trim().length <
+                        TYPEAHEAD_REQUIRED_LENGTH ? (
                         <SelectOption
                           key={"invalid-input-length"}
-                          value={"Enter more characters"}
+                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                           disabled={true}
                         />
                       ) : (
                         <SelectOption
                           key={"no-results-found"}
-                          value={"No results found"}
+                          value={TypeAheadMessage.NO_RESULT_FOUND}
                           disabled={true}
                         />
                       )}
@@ -425,20 +477,28 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       isDisabled={false}
                       isCreatable={false}
                     >
+                      {hasMoreRecordsForNamespace && (
+                        <SelectOption
+                          key={"more records available"}
+                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                          disabled={true}
+                        />
+                      )}
                       {namespaceOptions && namespaceOptions.length > 0 ? (
                         namespaceOptions.map((option, index) => (
                           <SelectOption key={index} value={option} />
                         ))
-                      ) : nameSpaceInput.trim().length < 5 ? (
+                      ) : nameSpaceInput.trim().length <
+                        TYPEAHEAD_REQUIRED_LENGTH ? (
                         <SelectOption
                           key={"invalid-input-length"}
-                          value={"Enter more characters"}
+                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                           disabled={true}
                         />
                       ) : (
                         <SelectOption
                           key={"no-results-found"}
-                          value={"No results found"}
+                          value={TypeAheadMessage.NO_RESULT_FOUND}
                           disabled={true}
                         />
                       )}

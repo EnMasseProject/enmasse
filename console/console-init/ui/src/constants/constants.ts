@@ -7,6 +7,8 @@ const UNKNOWN: string = "unknown";
 const POLL_INTERVAL: number = 5000;
 const POLL_INTERVAL_USER: number = 20000;
 const QUERY: string = "query";
+const MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN = 100;
+const TYPEAHEAD_REQUIRED_LENGTH: number = 5;
 enum FetchPolicy {
   NETWORK_ONLY = "network-only",
   CACHE_FIRST = "cache-first",
@@ -16,4 +18,18 @@ enum FetchPolicy {
   CACHE_AND_NETWORK = "cache-and-network"
 }
 
-export { UNKNOWN, POLL_INTERVAL, POLL_INTERVAL_USER, FetchPolicy, QUERY };
+enum TypeAheadMessage {
+  NO_RESULT_FOUND = "No Results Found",
+  MORE_CHAR_REQUIRED = "Enter more characters"
+}
+
+export {
+  UNKNOWN,
+  POLL_INTERVAL,
+  POLL_INTERVAL_USER,
+  FetchPolicy,
+  QUERY,
+  TYPEAHEAD_REQUIRED_LENGTH,
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
+  TypeAheadMessage
+};

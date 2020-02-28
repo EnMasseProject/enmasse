@@ -33,6 +33,11 @@ import { SortForMobileView } from "components/common/SortForMobileView";
 import { useApolloClient } from "@apollo/react-hooks";
 import { RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "queries";
 import { IConnectionListNameSearchResponse } from "types/ResponseTypes";
+import {
+  TypeAheadMessage,
+  TYPEAHEAD_REQUIRED_LENGTH,
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+} from "constants/constants";
 
 interface IConnectionListFilterProps {
   filterValue?: string | null;
@@ -83,6 +88,14 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   const [containerOptions, setContainerOptions] = React.useState<
     Array<string>
   >();
+  const [
+    hasMoreRecordsForHostname,
+    setHasMoreRecordsForHostname
+  ] = React.useState<boolean>(false);
+  const [
+    hasMoreRecordsForContainer,
+    setHasMoreRecordsForContainer
+  ] = React.useState<boolean>(false);
 
   const filterMenuItems = [
     { key: "filterHostName", value: "Hostname" },
@@ -169,7 +182,10 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeHostnameData = async (value: string) => {
     setHostnameOptions(undefined);
-    if (value.trim().length < 5) {
+    if (hasMoreRecordsForHostname) {
+      setHasMoreRecordsForHostname(false);
+    }
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setHostnameOptions([]);
       return;
     }
@@ -189,8 +205,18 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       response.data.connections.connections.length > 0
     ) {
       //To display dropdown if fetched records are less than 100 in count.
-      if (response.data.connections.total > 100) {
-        setHostnameOptions([]);
+      if (
+        response.data.connections.total >
+        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+      ) {
+        let list = [];
+        for (let i = 0; i < 10; i++) {
+          if (response.data.connections.connections[i]) {
+            list.push(response.data.connections.connections[i].spec.hostname);
+          }
+        }
+        setHasMoreRecordsForHostname(true);
+        setHostnameOptions(Array.from(new Set(list)));
       } else {
         const obtainedList = response.data.connections.connections.map(
           (connection: any) => {
@@ -217,7 +243,10 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeContainerData = async (value: string) => {
     setContainerOptions(undefined);
-    if (value.trim().length < 5) {
+    if (hasMoreRecordsForHostname) {
+      setHasMoreRecordsForHostname(false);
+    }
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setContainerOptions([]);
       return;
     }
@@ -237,8 +266,20 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       response.data.connections.connections.length > 0
     ) {
       //To display dropdown if fetched records are less than 100 in count.
-      if (response.data.connections.total > 100) {
-        setContainerOptions([]);
+      if (
+        response.data.connections.total >
+        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+      ) {
+        let list = [];
+        for (let i = 0; i < 10; i++) {
+          if (response.data.connections.connections[i]) {
+            list.push(
+              response.data.connections.connections[i].spec.containerId
+            );
+          }
+        }
+        setHasMoreRecordsForContainer(true);
+        setContainerOptions(Array.from(new Set(list)));
       } else {
         const obtainedList = response.data.connections.connections.map(
           (connection: any) => {
@@ -377,20 +418,28 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   isDisabled={false}
                   isCreatable={false}
                 >
+                  {hasMoreRecordsForHostname && (
+                    <SelectOption
+                      key={"more records available"}
+                      value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                      disabled={true}
+                    />
+                  )}
                   {hostnameOptions && hostnameOptions.length > 0 ? (
                     hostnameOptions.map((option, index) => (
                       <SelectOption key={index} value={option} />
                     ))
-                  ) : hostNameInput.trim().length < 5 ? (
+                  ) : hostNameInput.trim().length <
+                    TYPEAHEAD_REQUIRED_LENGTH ? (
                     <SelectOption
                       key={"invalid-input-length"}
-                      value={"Enter more characters"}
+                      value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                       disabled={true}
                     />
                   ) : (
                     <SelectOption
                       key={"no-results-found"}
-                      value={"No results found"}
+                      value={TypeAheadMessage.NO_RESULT_FOUND}
                       disabled={true}
                     />
                   )}
@@ -435,20 +484,28 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   isDisabled={false}
                   isCreatable={false}
                 >
+                  {hasMoreRecordsForContainer && (
+                    <SelectOption
+                      key={"more records available"}
+                      value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                      disabled={true}
+                    />
+                  )}
                   {containerOptions && containerOptions.length > 0 ? (
                     containerOptions.map((option, index) => (
                       <SelectOption key={index} value={option} />
                     ))
-                  ) : containerInput.trim().length < 5 ? (
+                  ) : containerInput.trim().length <
+                    TYPEAHEAD_REQUIRED_LENGTH ? (
                     <SelectOption
                       key={"invalid-input-length"}
-                      value={"Enter more characters"}
+                      value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                       disabled={true}
                     />
                   ) : (
                     <SelectOption
                       key={"no-results-found"}
-                      value={"No results found"}
+                      value={TypeAheadMessage.NO_RESULT_FOUND}
                       disabled={true}
                     />
                   )}
