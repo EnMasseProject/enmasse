@@ -1,0 +1,8 @@
+apiVersion: enmasse.io/v1beta1
+kind: Address
+metadata:
+    name: myspace.mytopic
+spec:
+    address: mytopic
+    type: topic
+    plan: standard-small-topic

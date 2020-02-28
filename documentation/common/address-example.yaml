@@ -6,4 +6,3 @@ spec:
     address: myqueue <2>
     type: queue <3>
     plan: standard-small-queue <4>
-    topic: topic-address <5>

@@ -1,0 +1,20 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-addresses.adoc
+
+[id='ref-address-example-topic-and-sub-{context}']
+== Topic and Subscription Address Example
+
+When using topics and subscriptions, the subscription references the topic to which it belongs using the `topic:` field, as illustrated below.
+
+[source,yaml,options="nowrap"]
+----
+include::../common/address-example-topic.yaml[]
+----
+
+[source,yaml,options="nowrap"]
+----
+include::../common/address-example-sub.yaml[]
+----
+<1> The address of topic that this subscription refers to.
+
