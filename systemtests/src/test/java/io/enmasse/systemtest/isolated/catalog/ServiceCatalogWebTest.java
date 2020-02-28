@@ -305,13 +305,13 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         consolePage.openConsolePage();
         consolePage.createAddress(queue);
 
-        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+            ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(new ProtonJMSClientSender())
                 .withMessagingRoute(String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()))
                 .withAddress(queue)
                 .withCredentials(credentials.getUsername(), credentials.getPassword())
                 .withCount(10)
-                .withMessageBody("msg no. %d")
+                .withMessageBody("body")
                 .withTimeout(30);
 
         assertTrue(senderClient.run());
