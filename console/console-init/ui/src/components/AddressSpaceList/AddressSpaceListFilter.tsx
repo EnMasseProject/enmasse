@@ -171,7 +171,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
         }
         setFilterNamespaces([...filterNamespaces]);
         break;
-      case "type":
+      case "Type":
         setFilterType(null);
         break;
     }
