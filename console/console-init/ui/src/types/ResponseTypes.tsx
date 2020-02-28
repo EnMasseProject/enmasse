@@ -41,6 +41,7 @@ export interface IAddressResponse {
       metadata: {
         namespace: string;
         name: string;
+        creationTimestamp: string;
       };
       spec: {
         address: string;

@@ -28,7 +28,8 @@ describe("Address List", () => {
         receivers: 12,
         partitions: 13,
         status: "running",
-        isReady: true
+        isReady: true,
+        creationTimestamp: "2020-02-28T14:32:39.985Z"
       },
       {
         name: "newqueue",
@@ -44,7 +45,8 @@ describe("Address List", () => {
         receivers: 6,
         partitions: 7,
         status: "creating",
-        isReady: true
+        isReady: true,
+        creationTimestamp: "2020-02-28T14:32:39.985Z"
       }
     ];
     const handleEdit = (data: IAddress) => void 0;

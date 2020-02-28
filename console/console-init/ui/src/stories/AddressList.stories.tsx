@@ -33,7 +33,8 @@ const rows: IAddress[] = [
     receivers: 123,
     partitions: 123,
     isReady: true,
-    status: "running"
+    status: "running",
+    creationTimestamp: "2020-02-28T14:32:39.985Z"
   },
   {
     name: "foo.hui",
@@ -49,7 +50,8 @@ const rows: IAddress[] = [
     receivers: 123,
     partitions: 123,
     isReady: true,
-    status: "creating"
+    status: "creating",
+    creationTimestamp: "2020-02-26T14:32:39.985Z"
   },
   {
     name: "foo.ganymede",
@@ -65,7 +67,8 @@ const rows: IAddress[] = [
     receivers: 123,
     partitions: 123,
     isReady: true,
-    status: "deleting"
+    status: "deleting",
+    creationTimestamp: "2020-02-27T14:32:39.985Z"
   }
 ];
 

@@ -173,6 +173,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
         ? address.status.planStatus.partitions
         : null,
     isReady: address.status && address.status.isReady,
+    creationTimestamp: address.metadata.creationTimestamp,
     status: address.status && address.status.phase ? address.status.phase : "",
     errorMessages:
       address.status && address.status.messages ? address.status.messages : [],
