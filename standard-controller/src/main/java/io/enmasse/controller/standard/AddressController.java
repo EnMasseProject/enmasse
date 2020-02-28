@@ -745,6 +745,10 @@ public class AddressController implements Watcher<Address> {
             return numOk;
         }
         Map<String, Integer> clusterOk = new HashMap<>();
+        Map<String, Set<String>> clusterAddresses = new HashMap<>();
+        Map<String, Set<String>> clusterQueues = new HashMap<>();
+
+        BrokerStatusCollector brokerStatusCollector = new BrokerStatusCollector(kubernetes, brokerClientFactory, options);
         for (Address address : addresses) {
             AddressType addressType = addressResolver.getType(address);
             AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
@@ -752,23 +756,65 @@ public class AddressController implements Watcher<Address> {
             int ok = 0;
             switch (addressType.getName()) {
                 case "queue":
-                    ok += checkBrokerStatus(address, clusterOk);
+                    ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses, clusterQueues);
                     for (RouterStatus routerStatus : routerStatusList) {
                         ok += routerStatus.checkAddress(address);
                         ok += routerStatus.checkAutoLinks(address);
+                    }
+                    for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                        Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
+                        Set<String> queueNames = clusterQueues.get(brokerStatus.getClusterId());
+                        if (!addressNames.contains(address.getSpec().getAddress())) {
+                            address.getStatus().setReady(false);
+                            address.getStatus().appendMessage("Address " + address.getSpec().getAddress() + " is not configured on broker " + brokerStatus.getContainerId());
+                        } else {
+                            ok++;
+                        }
+                        if (!queueNames.contains(address.getSpec().getAddress())) {
+                            address.getStatus().setReady(false);
+                            address.getStatus().appendMessage("Queue " + address.getSpec().getAddress() + " is not configured on broker " + brokerStatus.getContainerId());
+                        } else {
+                            ok++;
+                        }
                     }
                     ok += RouterStatus.checkActiveAutoLink(address, routerStatusList);
                     ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
                     break;
                 case "subscription":
+                    ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses, clusterQueues);
+                    for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                        Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
+                        Set<String> queueNames = clusterQueues.get(brokerStatus.getClusterId());
+                        if (!addressNames.contains(address.getSpec().getTopic())) {
+                            address.getStatus().setReady(false);
+                            address.getStatus().appendMessage("Address " + address.getSpec().getTopic() + " is not configured on broker " + brokerStatus.getContainerId());
+                        } else {
+                            ok++;
+                        }
+                        if (!queueNames.contains(address.getSpec().getAddress())) {
+                            address.getStatus().setReady(false);
+                            address.getStatus().appendMessage("Queue " + address.getSpec().getAddress() + " is not configured on broker " + brokerStatus.getContainerId());
+                        } else {
+                            ok++;
+                        }
+                    }
                     ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
                     break;
                 case "topic":
-                    ok += checkBrokerStatus(address, clusterOk);
+                    ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses, clusterQueues);
                     for (RouterStatus routerStatus : routerStatusList) {
                         ok += routerStatus.checkLinkRoutes(address);
                     }
                     if (isPooled(addressPlan)) {
+                        for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                            Set<String> addressNames = clusterAddresses.get(brokerStatus.getClusterId());
+                            if (!addressNames.contains(address.getSpec().getAddress())) {
+                                address.getStatus().setReady(false);
+                                address.getStatus().appendMessage("Address " + address.getSpec().getAddress() + " is not configured on broker " + brokerStatus.getContainerId());
+                            } else {
+                                ok++;
+                            }
+                        }
                         ok += RouterStatus.checkActiveLinkRoute(address, routerStatusList);
                     } else {
                         ok += RouterStatus.checkConnection(address, routerStatusList);
@@ -790,10 +836,11 @@ public class AddressController implements Watcher<Address> {
         return numOk;
     }
 
-    private int checkBrokerStatus(Address address, Map<String, Integer> clusterOk) {
+    private int checkBrokerStatus(BrokerStatusCollector brokerStatusCollector, Address address, Map<String, Integer> clusterOk, Map<String, Set<String>> clusterAddresses, Map<String, Set<String>> clusterQueues) throws Exception {
         Set<String> clusterIds = address.getStatus().getBrokerStatuses().stream()
                 .map(BrokerStatus::getClusterId)
                 .collect(Collectors.toSet());
+
         int numOk = 0;
         for (String clusterId : clusterIds) {
             if (!clusterOk.containsKey(clusterId)) {
@@ -802,7 +849,28 @@ public class AddressController implements Watcher<Address> {
                     clusterOk.put(clusterId, 0);
                 } else {
                     clusterOk.put(clusterId, 1);
+                    if (!clusterAddresses.containsKey(clusterId)) {
+                        try {
+                            clusterAddresses.put(clusterId, brokerStatusCollector.getAddressNames(clusterId));
+                        } catch (Exception e) {
+                            log.warn("Error retrieving address names for cluster {}: {}", clusterId, e.getMessage());
+                        }
+                    }
+
+                    if (!clusterQueues.containsKey(clusterId)) {
+                        try {
+                            clusterQueues.put(clusterId, brokerStatusCollector.getQueueNames(clusterId));
+                        } catch (Exception e) {
+                            log.warn("Error retrieving queue names for cluster {}: {}", clusterId, e.getMessage());
+                        }
+                    }
                 }
+            }
+            if (!clusterAddresses.containsKey(clusterId)) {
+                clusterAddresses.put(clusterId, Collections.emptySet());
+            }
+            if (!clusterQueues.containsKey(clusterId)) {
+                clusterQueues.put(clusterId, Collections.emptySet());
             }
             numOk += clusterOk.get(clusterId);
         }
