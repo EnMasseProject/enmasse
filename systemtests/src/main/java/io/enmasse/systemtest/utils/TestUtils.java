@@ -34,10 +34,8 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.URL;
-import java.net.UnknownHostException;
+import java.io.IOException;
+import java.net.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -394,24 +392,32 @@ public class TestUtils {
         int attempts = 60;
         URL hubUrl = new URL(String.format("http://%s:%s/wd/hub", host, port));
         for (int i = 0; i < attempts; i++) {
-            if (isReachable(hubUrl)) {
+            try {
+                testReachable(hubUrl);
                 return new RemoteWebDriver(hubUrl, options);
+            } catch (IOException e) {
+                if (i == attempts - 1) {
+                    log.warn("Cannot connect to hub", e);
+                } else {
+                    log.warn("Cannot connect to hub: {}", e.getMessage());
+                }
             }
             Thread.sleep(2000);
         }
         throw new IllegalStateException("Selenium webdriver cannot connect to selenium container");
     }
 
-    public static boolean isReachable(URL url) {
+    private static void testReachable(URL url) throws IOException {
         log.info("Trying to connect to {}", url.toString());
+        HttpURLConnection urlConnection = null;
         try {
-            url.openConnection();
-            url.getContent();
+            urlConnection = ((HttpURLConnection) url.openConnection());
+            urlConnection.getContent();
             log.info("Client is able to connect to the selenium hub");
-            return true;
-        } catch (Exception ex) {
-            log.warn("Cannot connect to hub: {}", ex.getMessage());
-            return false;
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
         }
     }
 
