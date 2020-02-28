@@ -22,7 +22,7 @@ const NotFound: React.FunctionComponent<INotFoundProps> = ({ updateState }) => (
       className="pf-c-nav__link"
       onClick={() => updateState(false)}
     >
-      Take me home
+      Sign in
     </NavLink>
   </PageSection>
 );

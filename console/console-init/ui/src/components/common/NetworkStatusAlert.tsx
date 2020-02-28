@@ -31,14 +31,16 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
       <PageSection>
         <Alert
           variant="danger"
-          title="Disconnected from server"
+          title="Server Disconnected"
           action={<AlertActionCloseButton onClose={onClose} />}
         >
-          <span>We're having trouble connecting to our server!</span>
+          <span>
+            You're disconnected from the server, please sign in again.
+          </span>
         </Alert>
         <br />
         <a href="oauth/sign_in" className="pf-c-nav__link">
-          Take me home
+          Sign in
         </a>
       </PageSection>
     );
