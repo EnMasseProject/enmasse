@@ -194,6 +194,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := monitoringv1.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "Failed to register monitoring schema")
+		os.Exit(1)
+	}
+
 	if err := controller.CheckUpgrade(mgr); err != nil {
 		log.Error(err, "Failed to upgrade")
 		os.Exit(1)
