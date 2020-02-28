@@ -15,6 +15,7 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
     private String address;
     private String plan;
     private WebElement clientsRoute;
+    private String timestamp;
     private double messagesIn;
     private double messagesOut;
     private int messagesStored;
@@ -35,8 +36,9 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         this.type = webItem.findElement(By.xpath("./td[@data-label='Type/Plan']")).getText().substring(0, 1);
         this.status = webItem.findElement(By.xpath("./td[@data-label='Status']")).getText().replace(" ", "");
         try {
-            this.messagesIn =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-4']")).getText());
-            this.messagesOut =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-5']")).getText());
+            this.timestamp = webItem.findElement(By.xpath("./td[@data-label='Time created']")).getText();
+            this.messagesIn =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-5']")).getText());
+            this.messagesOut =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-6']")).getText());
 
             this.messagesStored = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Stored Messages']")).getText());
             this.senders =  defaultInt(webItem.findElement(By.xpath("./td[@data-label='Senders']")).getText());
@@ -44,7 +46,7 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
 
             this.partitions =  defaultInt(webItem.findElement(By.xpath("./td[@data-label='Partitions']")).getText());
         } catch (Exception ex) {
-            this.statusString = webItem.findElement(By.xpath("./td[@data-label='column-4']")).getText();
+            this.statusString = webItem.findElement(By.xpath("./td[@data-label='Time created']")).getText();
         }
         this.actionDropDown = webItem.findElement(By.className("pf-c-dropdown"));
     }
@@ -87,6 +89,10 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
 
     public int getPartitions() {
         return partitions;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
     }
 
     public AddressStatus getStatus() {
@@ -155,10 +161,11 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
 
     @Override
     public String toString() {
-        return String.format("name: %s, type: %s, plan: %s, messagesIn: %f, messagesOut: %f, stored: %d, senders: %d, receivers: %d, partitions: %d, status: %s, statusMessage: %s",
+        return String.format("name: %s, type: %s, plan: %s, timestamp: %s, messagesIn: %f, messagesOut: %f, stored: %d, senders: %d, receivers: %d, partitions: %d, status: %s, statusMessage: %s",
                 this.address,
                 getType(),
                 this.plan,
+                this.timestamp,
                 this.messagesIn,
                 this.messagesOut,
                 this.messagesStored,
