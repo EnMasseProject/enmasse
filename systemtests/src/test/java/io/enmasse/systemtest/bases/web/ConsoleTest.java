@@ -47,6 +47,8 @@ import org.apache.qpid.proton.message.Message;
 import org.eclipse.hono.util.Strings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -354,6 +356,10 @@ public abstract class ConsoleTest extends TestBase {
 
         consolePage.deleteSelectedAddressSpaces(brokered, standard);
         assertThat("Console should show empty list", consolePage.getAddressSpaceItems().size(), is(0));
+
+        WebElement emptyAddessSpace = selenium.getWebElement(() ->
+                selenium.getDriver().findElement(By.id("empty-ad-space")));
+        assertTrue(emptyAddessSpace.isDisplayed());
     }
 
     protected void doTestHelpLink() throws Exception {
