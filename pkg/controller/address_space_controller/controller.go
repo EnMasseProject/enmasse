@@ -86,7 +86,10 @@ func add(mgr manager.Manager, r *ReconcileAddressSpaceController) error {
 			if err != nil {
 				return err
 			}
-			return r.client.Create(context.TODO(), deployment)
+			err = r.client.Create(context.TODO(), deployment)
+			if err != nil {
+				return err
+			}
 		} else {
 			return err
 		}
@@ -106,7 +109,10 @@ func add(mgr manager.Manager, r *ReconcileAddressSpaceController) error {
 			if err != nil {
 				return err
 			}
-			return r.client.Create(context.TODO(), service)
+			err = r.client.Create(context.TODO(), service)
+			if err != nil {
+				return err
+			}
 		} else {
 			return err
 		}
