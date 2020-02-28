@@ -18,6 +18,7 @@ type RequestState struct {
 	AccessController     accesscontroller.AccessController
 	User                 string
 	UserAccessToken      string
+	UseSession           bool
 }
 
 func ContextWithRequestState(requestState *RequestState, ctx context.Context) context.Context {
