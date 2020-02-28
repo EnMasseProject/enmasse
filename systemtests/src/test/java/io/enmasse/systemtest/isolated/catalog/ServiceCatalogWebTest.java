@@ -359,16 +359,8 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         isolatedResourcesManager.deleteAddressSpaceCreatedBySC(addressSpace);
 
         WebElement errorLog = selenium.getWebElement(() ->
-                selenium.getDriver().findElement(By.id("peerLostErrorDialogLabel")));
+                selenium.getDriver().findElement(By.id("empty-no-longer-exists")));
         assertTrue(errorLog.isDisplayed());
         log.info("error banner is displayed showing addr space is deleted");
-
-        //refresh page, console is no longer available
-        selenium.refreshPage();
-        WebElement errorPageText = selenium.getWebElement(() ->
-                selenium.getDriver().findElement(By.className("alert-info")));
-        assertTrue(errorPageText.isDisplayed());
-        log.info("application is not available page is displayed");
-
     }
 }
