@@ -6,6 +6,7 @@ package io.enmasse.systemtest.shared.standard.web;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import io.enmasse.systemtest.info.TestInfo;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.address.model.AddressBuilder;
@@ -280,6 +281,12 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     @ExternalClients
     void testClientsMetrics() throws Exception {
         doTestClientsMetrics(getSharedAddressSpace());
+    }
+
+    @Test
+    @ExternalClients
+    void testEmptyLinkPage() throws Exception {
+        doTestEmptyLinkPage(getSharedAddressSpace(), TestInfo.getInstance().getActualTest());
     }
 
     @Test()

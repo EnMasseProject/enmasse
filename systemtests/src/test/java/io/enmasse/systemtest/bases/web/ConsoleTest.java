@@ -16,6 +16,7 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.clients.ClientUtils.ClientAttacher;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
@@ -36,6 +37,7 @@ import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
 import io.enmasse.systemtest.selenium.resources.FilterType;
 import io.enmasse.systemtest.selenium.resources.SortType;
+import io.enmasse.systemtest.selenium.resources.WebItem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -43,12 +45,14 @@ import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.Count;
 import io.enmasse.systemtest.utils.TestUtils;
 
+import io.fabric8.kubernetes.api.model.Pod;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.hono.util.Strings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -68,6 +72,7 @@ import java.util.stream.IntStream;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.either;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -802,6 +807,29 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.removeAllFilters();
         assertThat(String.format("Console failed, does not contain %d connections", connectionCount),
                 consolePage.getConnectionItems().size(), is(connectionCount));
+    }
+
+    protected void doTestEmptyLinkPage(AddressSpace addressSpace, ExtensionContext context) throws Exception {
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        Address address = generateAddressObject(addressSpace, DestinationPlan.STANDARD_LARGE_QUEUE);
+        consolePage.openAddressList(addressSpace);
+        consolePage.createAddress(address);
+        clientsList = attachClients(addressSpace,
+                Collections.singletonList(address), defaultCredentials);
+        consolePage.switchToConnectionTab();
+        selenium.waitUntilPropertyPresent(30, 3, () -> consolePage.getConnectionItems().size());
+        consolePage.openConnection(consolePage.getConnectionItems().get(0).getHost());
+        Pod pod = kubernetes.getClient().pods()
+                .inNamespace(SystemtestsKubernetesApps.MESSAGING_CLIENTS).list().getItems().get(0);
+        kubernetes.deletePod(SystemtestsKubernetesApps.MESSAGING_CLIENTS, pod.getMetadata().getName());
+        waitForPodsToTerminate(Collections.singletonList(pod.getMetadata().getUid()));
+
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
+                .until(ExpectedConditions.invisibilityOf(consolePage.getLinkContainerId()));
+
+        assertNotNull(consolePage.getConnectionNotFound());
+
     }
 
     protected void doTestSortConnectionsByContainerId(AddressSpace addressSpace) throws Exception {

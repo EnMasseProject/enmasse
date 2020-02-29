@@ -432,6 +432,14 @@ public class ConsoleWebPage implements IWebPage {
         }
         return null;
     }
+    public WebElement getLinkContainerId() {
+        return selenium.getDriver().findElement(By.id("cd-header-container-id"));
+    }
+
+    public WebElement getConnectionNotFound() {
+        return selenium.getDriver().findElement(By.className("pf-c-empty-state"));
+    }
+
     //==================================================================
 
 
@@ -493,6 +501,12 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(item.getConsoleRoute());
         switchToConnectionTab();
         selenium.getWebElement(this::getConnectionTable);
+    }
+
+    public void openConnection(String hostname) throws Exception {
+        ConnectionWebItem item = selenium.waitUntilItemPresent(30, () -> getConnectionItem(hostname));
+        selenium.clickOnItem(item.getHostRoute());
+
     }
 
     public void openClientsList(Address address) throws Exception {
