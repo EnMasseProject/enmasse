@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -193,6 +194,12 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
     @ExternalClients
     void testClientsMetrics() throws Exception {
         doTestClientsMetrics(getSharedAddressSpace());
+    }
+
+    @Test
+    @ExternalClients
+    void testEmptyLinkPage() throws Exception {
+        doTestEmptyLinkPage(getSharedAddressSpace(), TestInfo.getInstance().getActualTest());
     }
 
     @Test()
