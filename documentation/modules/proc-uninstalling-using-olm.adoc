@@ -52,7 +52,7 @@ endif::[]
 {cmdcli} delete crd -l app=enmasse
 ----
 
-. (Optional. Skip this step if {ProductName} is installed in the {OperatorNamespace} namespace) Delete the namespace where {ProductName} was installed:
+. (Optional. Skip this step if {ProductName} is installed in the {OperatorName} namespace) Delete the namespace where {ProductName} was installed:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
