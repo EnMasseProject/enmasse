@@ -5,7 +5,7 @@
     <parent>
         <artifactId>enmasse</artifactId>
         <groupId>io.enmasse</groupId>
-        <version>0.31.0-rc3</version>
+        <version>0.31.0-rc4</version>
     </parent>
     <packaging>pom</packaging>
     <name>EnMasse Bundles</name>
