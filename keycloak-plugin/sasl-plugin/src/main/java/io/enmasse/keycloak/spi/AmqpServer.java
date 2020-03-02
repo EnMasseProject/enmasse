@@ -100,7 +100,7 @@ public class AmqpServer extends AbstractVerticle {
                 LOG.info("Responding with user data " + userData);
                 Map<Symbol, Object> props = new HashMap<>();
                 Map<String, Object> authUserMap = new HashMap<>();
-                authUserMap.put("sub", userData.getId());
+                authUserMap.put("sub", userData.getUsername());
                 authUserMap.put("preferred_username", userData.getUsername());
                 props.put(Symbol.valueOf("authenticated-identity"), authUserMap);
                 props.put(Symbol.valueOf("groups"), new ArrayList<>(userData.getGroups()));
