@@ -14,7 +14,7 @@ import { useErrorContext, types } from "context-state-reducer";
 
 const NetworkStatusAlert: React.FunctionComponent = () => {
   const { state, dispatch } = useErrorContext();
-  const { hasNetworkError } = state;
+  const { hasNetworkError, statusCode } = state;
   const [alertVisible, setAlertVisible] = useState(true);
 
   const onClose = () => {
@@ -26,6 +26,11 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
     hasNetworkError !== undefined && setAlertVisible(hasNetworkError);
   }, [hasNetworkError]);
 
+  const errorMessage =
+    statusCode && statusCode === 403
+      ? "You're disconnected from the server, please sign in again."
+      : "We're having trouble connecting to our server.";
+
   if (alertVisible && hasNetworkError) {
     return (
       <PageSection>
@@ -34,7 +39,7 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
           title="Disconnected from server"
           action={<AlertActionCloseButton onClose={onClose} />}
         >
-          <span>We're having trouble connecting to our server!</span>
+          <span>{errorMessage}</span>
         </Alert>
         <br />
         <a href="oauth/sign_in" className="pf-c-nav__link">
