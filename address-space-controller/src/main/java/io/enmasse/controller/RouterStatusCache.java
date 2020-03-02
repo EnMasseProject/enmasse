@@ -73,8 +73,10 @@ public class RouterStatusCache implements Runnable, Controller {
     @Override
     public void reconcileAll(List<AddressSpace> addressSpaces) {
         // Is this thread safe?
+
         routerStatusMap.entrySet().removeIf(e -> !addressSpaces.contains(e.getKey()));
         this.currentAddressSpaces = addressSpaces;
+        log.info("RouterStatusCache Address Spaces: {}", currentAddressSpaces.stream().map(a -> a.getMetadata().getName()).collect(Collectors.toList()));
         wakeup();
     }
 
