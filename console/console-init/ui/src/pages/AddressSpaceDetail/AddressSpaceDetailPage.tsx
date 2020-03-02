@@ -151,9 +151,19 @@ export default function AddressSpaceDetailPage() {
           displayName:
             addressSpaces.addressSpaces[0].spec.plan.spec.displayName,
           planValue: addressSpaces.addressSpaces[0].spec.plan.metadata.name,
-          isReady: addressSpaces.addressSpaces[0].status.isReady,
-          phase: addressSpaces.addressSpaces[0].status.phase,
-          messages: addressSpaces.addressSpaces[0].status.messages,
+          isReady:
+            addressSpaces.addressSpaces[0] &&
+            addressSpaces.addressSpaces[0].status &&
+            addressSpaces.addressSpaces[0].status.isReady,
+          phase:
+            addressSpaces.addressSpaces[0] &&
+            addressSpaces.addressSpaces[0].status &&
+            addressSpaces.addressSpaces[0].status.phase,
+          messages:
+            addressSpaces.addressSpaces[0] &&
+            addressSpaces.addressSpaces[0].status
+              ? addressSpaces.addressSpaces[0].status.messages
+              : [],
           authenticationService:
             addressSpaces.addressSpaces[0].spec.authenticationService.name
         }

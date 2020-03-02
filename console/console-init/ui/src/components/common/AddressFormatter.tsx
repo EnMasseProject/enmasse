@@ -1,3 +1,4 @@
+import * as React from "react";
 import { statusToDisplay } from "./AddressSpaceListFormatter";
 
 /*
@@ -37,4 +38,22 @@ export const AddressStatus: React.FunctionComponent<IAddressStatusProps> = ({
   phase
 }) => {
   return statusToDisplay(phase);
+};
+const formatErrorMessage = () => {
+  return <span>Ji</span>;
+};
+export const AddressErrorMessage: React.FunctionComponent<IAddressErrorMessageProps> = ({
+  messages
+}) => {
+  return (
+    <>
+      {messages &&
+        messages.map(message => (
+          <>
+            {message}
+            <br />
+          </>
+        ))}
+    </>
+  );
 };
