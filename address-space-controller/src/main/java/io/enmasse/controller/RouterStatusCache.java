@@ -5,6 +5,7 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.amqp.RouterEntity;
 import io.enmasse.amqp.RouterManagement;
@@ -26,9 +27,9 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
@@ -53,8 +54,9 @@ public class RouterStatusCache implements Runnable, Controller {
     private final Duration connectTimeout;
     private final Duration queryTimeout;
 
-    private volatile List<AddressSpace> currentAddressSpaces = new ArrayList<>();
-    private final ConcurrentHashMap<AddressSpace, List<RouterStatus>> routerStatusMap = new ConcurrentHashMap<>();
+    private final Object lock = new Object();
+    private final List<AddressSpace> currentAddressSpaces = new ArrayList<>();
+    private final Map<AddressSpace, List<RouterStatus>> routerStatusMap = new HashMap<>();
 
     RouterStatusCache(EventLogger eventLogger, Duration checkInterval, NamespacedKubernetesClient client, String namespace, Duration connectTimeout, Duration queryTimeout)
     {
@@ -67,14 +69,23 @@ public class RouterStatusCache implements Runnable, Controller {
     }
 
     List<RouterStatus> getLatestResult(AddressSpace addressSpace) {
-        return routerStatusMap.get(addressSpace);
+        synchronized (lock) {
+            return routerStatusMap.get(addressSpace);
+        }
     }
 
     @Override
     public void reconcileAll(List<AddressSpace> addressSpaces) {
-        // Is this thread safe?
-        routerStatusMap.entrySet().removeIf(e -> !addressSpaces.contains(e.getKey()));
-        this.currentAddressSpaces = addressSpaces;
+        synchronized (lock) {
+            // Clear stale entries to prevent old status data to be present
+            routerStatusMap.entrySet().removeIf(e -> !addressSpaces.contains(e.getKey()));
+            currentAddressSpaces.clear();
+            // Take a deep copy of address spaces to ensure stable data
+            currentAddressSpaces.addAll(addressSpaces.stream()
+                    .filter(addressSpace -> "standard".equals(addressSpace.getSpec().getType()))
+                    .map(addressSpace -> new AddressSpaceBuilder(addressSpace).build())
+                    .collect(Collectors.toList()));
+        }
         wakeup();
     }
 
@@ -99,9 +110,10 @@ public class RouterStatusCache implements Runnable, Controller {
 
     @Override
     public void run() {
+        KubeRouterStatusChecker routerStatusChecker = new KubeRouterStatusChecker();
         while (running) {
             try {
-                checkRouterStatus();
+                checkRouterStatus(routerStatusChecker);
                 synchronized (monitor) {
                     if (!needCheck) {
                         monitor.wait(checkInterval.toMillis());
@@ -123,13 +135,27 @@ public class RouterStatusCache implements Runnable, Controller {
         }
     }
 
-    void checkRouterStatus() {
-        for (AddressSpace addressSpace : currentAddressSpaces) {
-            if ("standard".equals(addressSpace.getSpec().getType())) {
-                List<RouterStatus> routerStatusList = checkRouterStatus(addressSpace);
-                if (routerStatusList != null) {
-                    routerStatusMap.put(addressSpace, routerStatusList);
-                }
+    void checkRouterStatus(RouterStatusChecker routerStatusChecker) {
+        // First grab a copy of address spaces to check
+        List<AddressSpace> toCheck = null;
+        synchronized (lock) {
+            toCheck = new ArrayList<>(currentAddressSpaces);
+        }
+
+        Map<AddressSpace, List<RouterStatus>> checked = new HashMap<>();
+        for (AddressSpace addressSpace : toCheck) {
+            List<RouterStatus> routerStatusList = routerStatusChecker.collectRouterStatuses(addressSpace);
+            if (routerStatusList != null) {
+                checked.put(addressSpace, routerStatusList);
+            }
+        }
+
+        // Update the status map based on current set of address spaces, in case it changed
+        // while we were querying for the router status and to prevent stale entries.
+        synchronized (lock) {
+            routerStatusMap.clear();
+            for (AddressSpace addressSpace : currentAddressSpaces) {
+                routerStatusMap.put(addressSpace, checked.get(addressSpace));
             }
         }
     }
@@ -140,120 +166,133 @@ public class RouterStatusCache implements Runnable, Controller {
     private static final RouterEntity link = new RouterEntity("org.apache.qpid.dispatch.router.link", "linkType", "undeliveredCount");
     private static final RouterEntity[] entities = new RouterEntity[]{connection, node, link};
 
-    private List<RouterStatus> checkRouterStatus(AddressSpace addressSpace) {
-        String addressSpaceCaSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace);
-        Secret addressSpaceCa = client.secrets().inNamespace(namespace).withName(addressSpaceCaSecretName).get();
-        if (addressSpaceCa == null) {
-            log.warn("Unable to check router status, missing address space CA secret for {}!", addressSpace);
-            return null;
+    @Override
+    public String toString() {
+        return "RouterStatusCache";
+    }
+
+    interface RouterStatusChecker {
+        List<RouterStatus> collectRouterStatuses(AddressSpace addressSpace);
+    }
+
+    private class KubeRouterStatusChecker implements RouterStatusChecker {
+
+        @Override
+        public List<RouterStatus> collectRouterStatuses(AddressSpace addressSpace) {
+            String addressSpaceCaSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace);
+            Secret addressSpaceCa = client.secrets().inNamespace(namespace).withName(addressSpaceCaSecretName).get();
+            if (addressSpaceCa == null) {
+                log.warn("Unable to check router status, missing address space CA secret for {}!", addressSpace);
+                return null;
+            }
+
+            Base64.Decoder decoder = Base64.getDecoder();
+            byte[] key = decoder.decode(addressSpaceCa.getData().get("tls.key"));
+            byte[] cert = decoder.decode(addressSpaceCa.getData().get("tls.crt"));
+            if (key == null) {
+                log.warn("Unable to check router status, missing address space CA key for {}!", addressSpace);
+                return null;
+            }
+
+            if (cert == null) {
+                log.warn("Unable to check router status, missing address space CA cert for {}!", addressSpace);
+                return null;
+            }
+
+            RouterManagement routerManagement = RouterManagement.withCerts(vertx, "address-space-controller", connectTimeout, queryTimeout, cert, cert, key);
+
+            String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+
+            List<Pod> routerPods = client.pods().withLabel(LabelKeys.CAPABILITY, "router").withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().stream()
+                    .filter(Readiness::isPodReady)
+                    .collect(Collectors.toList());
+
+            ExecutorCompletionService<RouterStatus> service = new ExecutorCompletionService<>(ForkJoinPool.commonPool());
+            for (Pod router : routerPods) {
+                service.submit(() -> collectStatus(routerManagement, router));
+            }
+
+            List<RouterStatus> routerStatusList = new ArrayList<>();
+            for (int i = 0; i < routerPods.size(); i++) {
+                try {
+                    RouterStatus status = service.take().get();
+                    if (status != null) {
+                        routerStatusList.add(status);
+                    }
+                } catch (Exception e) {
+                    log.info("Error requesting router status. Ignoring", e);
+                    eventLogger.log(RouterCheckFailed, e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
+                }
+            }
+            return routerStatusList;
         }
 
-        Base64.Decoder decoder = Base64.getDecoder();
-        byte[] key = decoder.decode(addressSpaceCa.getData().get("tls.key"));
-        byte[] cert = decoder.decode(addressSpaceCa.getData().get("tls.crt"));
-        if (key == null) {
-            log.warn("Unable to check router status, missing address space CA key for {}!", addressSpace);
-            return null;
-        }
-
-        if (cert == null) {
-            log.warn("Unable to check router status, missing address space CA cert for {}!", addressSpace);
-            return null;
-        }
-
-        RouterManagement routerManagement = RouterManagement.withCerts(vertx, "address-space-controller", connectTimeout, queryTimeout, cert, cert, key);
-
-        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
-
-        List<Pod> routerPods = client.pods().withLabel(LabelKeys.CAPABILITY, "router").withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems().stream()
-                .filter(Readiness::isPodReady)
-                .collect(Collectors.toList());
-
-        ExecutorCompletionService<RouterStatus> service = new ExecutorCompletionService<>(ForkJoinPool.commonPool());
-        for (Pod router : routerPods) {
-            service.submit(() -> collectStatus(routerManagement, router));
-        }
-
-        List<RouterStatus> routerStatusList = new ArrayList<>();
-        for (int i = 0; i < routerPods.size(); i++) {
+        private RouterStatus collectStatus(RouterManagement routerManagement, Pod router) {
             try {
-                RouterStatus status = service.take().get();
-                if (status != null) {
-                    routerStatusList.add(status);
+
+                int port = 0;
+                for (Container container : router.getSpec().getContainers()) {
+                    if (container.getName().equals("router")) {
+                        for (ContainerPort containerPort : container.getPorts()) {
+                            if (containerPort.getName().equals("amqps-normal")) {
+                                port = containerPort.getContainerPort();
+                            }
+                        }
+                    }
+                }
+
+                if (port != 0) {
+                    // Until the connector entity allows querying for the status, we have to list
+                    // all connections and match with the connector host.
+                    Map<RouterEntity, List<List<?>>> response = routerManagement.query(router.getStatus().getPodIP(), port, entities);
+
+                    RouterConnections connections = null;
+                    if (response.containsKey(connection)) {
+                        connections = collectConnectionInfo(response.get(connection));
+                    }
+
+                    List<String> neighbors = null;
+                    if (response.containsKey(node)) {
+                        // Remove this router from the neighbour list
+                        neighbors = filterOnAttribute(String.class, 0, response.get(node)).stream()
+                                .filter(n -> !n.equals(router.getMetadata().getName()))
+                                .collect(Collectors.toList());
+                    }
+
+                    long undeliveredTotal = 0;
+                    if (response.containsKey(link)) {
+
+                        List<String> linkTypes = filterOnAttribute(String.class, 0, response.get(link));
+                        List<UnsignedLong> undelivered = filterOnAttribute(UnsignedLong.class, 1, response.get(link));
+                        for (int i = 0; i < linkTypes.size(); i++) {
+                            if ("inter-router".equals(linkTypes.get(i))) {
+                                undeliveredTotal += undelivered.get(i) != null ? undelivered.get(i).longValue() : 0;
+                            }
+                        }
+                    }
+                    return new RouterStatus(router.getMetadata().getName(), connections, neighbors, undeliveredTotal);
                 }
             } catch (Exception e) {
-                log.info("Error requesting router status. Ignoring", e);
-                eventLogger.log(RouterCheckFailed, e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
+                log.info("Error requesting registered topics from {}. Ignoring", router.getMetadata().getName(), e);
             }
+            return null;
         }
-        return routerStatusList;
-    }
 
-    private RouterStatus collectStatus(RouterManagement routerManagement, Pod router) {
-        try {
+        /*
+         * Until the connector entity allows querying for the status, we have to go through all connections and
+         * see if we can find our connector host in there.
+         */
+        private RouterConnections collectConnectionInfo(List<List<?>> response) {
+            int hostIdx = connection.getAttributeIndex("host");
+            int openedIdx = connection.getAttributeIndex("opened");
+            int operStatusIdx = connection.getAttributeIndex("operStatus");
 
-            int port = 0;
-            for (Container container : router.getSpec().getContainers()) {
-                if (container.getName().equals("router")) {
-                    for (ContainerPort containerPort : container.getPorts()) {
-                        if (containerPort.getName().equals("amqps-normal")) {
-                            port = containerPort.getContainerPort();
-                        }
-                    }
-                }
-            }
+            List<String> hosts = filterOnAttribute(String.class, hostIdx, response);
+            List<Boolean> opened = filterOnAttribute(Boolean.class, openedIdx, response);
+            List<String> operStatus = filterOnAttribute(String.class, operStatusIdx, response);
 
-            if (port != 0) {
-                // Until the connector entity allows querying for the status, we have to list
-                // all connections and match with the connector host.
-                Map<RouterEntity, List<List<?>>> response = routerManagement.query(router.getStatus().getPodIP(), port, entities);
-
-                RouterConnections connections = null;
-                if (response.containsKey(connection)) {
-                    connections = collectConnectionInfo(response.get(connection));
-                }
-
-                List<String> neighbors = null;
-                if (response.containsKey(node)) {
-                    // Remove this router from the neighbour list
-                    neighbors = filterOnAttribute(String.class, 0, response.get(node)).stream()
-                            .filter(n -> !n.equals(router.getMetadata().getName()))
-                            .collect(Collectors.toList());
-                }
-
-                long undeliveredTotal = 0;
-                if (response.containsKey(link)) {
-
-                    List<String> linkTypes = filterOnAttribute(String.class, 0, response.get(link));
-                    List<UnsignedLong> undelivered = filterOnAttribute(UnsignedLong.class, 1, response.get(link));
-                    for (int i = 0; i < linkTypes.size(); i++) {
-                        if ("inter-router".equals(linkTypes.get(i))) {
-                            undeliveredTotal += undelivered.get(i) != null ? undelivered.get(i).longValue() : 0;
-                        }
-                    }
-                }
-                return new RouterStatus(router.getMetadata().getName(), connections, neighbors, undeliveredTotal);
-            }
-        } catch (Exception e) {
-            log.info("Error requesting registered topics from {}. Ignoring", router.getMetadata().getName(), e);
+            return new RouterConnections(hosts, opened, operStatus);
         }
-        return null;
-    }
-
-    /*
-     * Until the connector entity allows querying for the status, we have to go through all connections and
-     * see if we can find our connector host in there.
-     */
-    private RouterConnections collectConnectionInfo(List<List<?>> response) {
-        int hostIdx = connection.getAttributeIndex("host");
-        int openedIdx = connection.getAttributeIndex("opened");
-        int operStatusIdx = connection.getAttributeIndex("operStatus");
-
-        List<String> hosts = filterOnAttribute(String.class, hostIdx, response);
-        List<Boolean> opened = filterOnAttribute(Boolean.class, openedIdx, response);
-        List<String> operStatus = filterOnAttribute(String.class, operStatusIdx, response);
-
-        return new RouterConnections(hosts, opened, operStatus);
     }
 
     private static <T> List<T> filterOnAttribute(Class<T> type, int attrNum, List<List<?>> list) {
@@ -267,8 +306,4 @@ public class RouterStatusCache implements Runnable, Controller {
         return filtered;
     }
 
-    @Override
-    public String toString() {
-        return "RouterStatusCache";
-    }
 }
