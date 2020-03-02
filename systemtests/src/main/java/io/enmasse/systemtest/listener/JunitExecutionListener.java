@@ -24,6 +24,7 @@ public class JunitExecutionListener implements TestExecutionListener {
 
     @Override
     public void testPlanExecutionStarted(TestPlan testPlan) {
+        java.security.Security.setProperty("networkaddress.cache.ttl" , "0");
         TestInfo.getInstance().setTestPlan(testPlan);
         TestInfo.getInstance().printTestClasses();
     }
