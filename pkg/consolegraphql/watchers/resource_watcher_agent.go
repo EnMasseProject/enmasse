@@ -616,6 +616,7 @@ func toConnectionObject(connection *agent.AgentConnection) *consolegraphql.Conne
 			Protocol:     "amqp",
 			Encrypted:    connection.Encrypted,
 			Properties:   connection.Properties,
+			Principal:    connection.User,
 		},
 	}
 	if connection.Encrypted {

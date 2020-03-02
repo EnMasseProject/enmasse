@@ -116,6 +116,7 @@ const typeDefs = gql`
         protocol: Protocol!
         encrypted: Boolean!
         properties: [KeyValue!]!
+        principal: String!
     }
 
     type Link_consoleapi_enmasse_io_v1beta1 {
