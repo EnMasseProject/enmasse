@@ -20,7 +20,7 @@ The new API will consist of the following types at the infrastructure level:
 
 * `AddressPlan`: Defines resources requested for an address using this plan. Referencing an AddressPlan may be optional but can be enforced. Resources are specified in terms of queue memory usage and depth, number of paritions, and type-specific settings such as DLQ and expiry queue.
 
-* `AuthenticationService`: No significant changes.
+* `AuthenticationService`: Gaining ability to use selectors to configure to which namespaces it should be applied.
 
 
 At the tenant level, the API will change to simplify the user experience:
@@ -66,7 +66,7 @@ With shared infrastructure, tenants will share resources with other tenants, and
 
 === IoT
 
-IoT design is covered in a separate proposal.
+IoT design will be covered in a separate proposal.
 
 === Resources
 
@@ -82,10 +82,10 @@ kind: MessagingInfra
 metadata:
   name: infra1
 spec:
-  namespaces:
-  - "*" # Which namespaces this infra should serve based on list
-  namespaceSelector: # Or selector
-    type: messaging
+  # Allows specifying a selector for namespaces that should use this infra by default.
+  namespaceSelector:
+    matchLabels:
+      type: messaging
   router:
     image: # Optional. Allows overriding router image
 
@@ -105,6 +105,7 @@ spec:
 
   broker:
     image: # Optional. Allows overriding broker image
+    # Broker pool size is dynamically changing based on load
     poolSize:
       min: 1 # Can be > 0 to pre-create brokers
       max: 5 # Will never create more brokers than this
@@ -154,10 +155,10 @@ kind: MessagingPlan
 metadata:
   name: small
 spec:
-  namespaces: # A set of namespaces that should be restricted by this plan
-    - foo
-  namespaceSelector: # Allows specifying a selector for namespaces that should be restriced by this plan
-    type: messaging
+  # Allows specifying a selector for namespaces that should be configured using this plan.
+  namespaceSelector: 
+    matchLabels:
+      type: messaging
   capabilities:
     - transactions
   resources:
