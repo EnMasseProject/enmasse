@@ -131,7 +131,9 @@ When deployed, the above would have the minimum impact of creating 2 routers and
 
 ==== MessagingPlan
 
-The `MessagingPlan` defines limits that map to the routers per vhost policies:
+The `MessagingPlan` defines limits that map to a particular namespaces' share of the infrastructure:
+
+For instance, routers per vhost policies:
 
 * connections
 * links per connection
@@ -183,29 +185,36 @@ NOTE: If no `MessagingPlan` instances are defined, the system will still work. H
 
 ==== MessagingTenant
 
-The messaging tenant will create a singleton instance of `MessagingTenant` in a namespace to configure messaging. Creating the MessagingTenant may be optional: the operator can create it with defaults if addresses are created. Defaults are selected based finding infras, plans and authentication services that are configured to serve the namespace.
+The messaging tenant will create a singleton instance of `MessagingTenant` in a namespace to
+configure messaging. The MessagingTenant is created by the EnMasse operator when the initial Address
+is created. If the MessagingTenant already exists, the infra, plan and authentication services that
+are specified will be used _only if_ those have selectors for that namespace.
 
 ```
 kind: MessagingTenant
 metadata:
   name: default # Singletons can be enforced using openapi validation!
 spec:
-  infra: # 
+  infra:
     name: shared
-    namespace: enmasse-infra
+    namespace: custom
   plan:
     name: myplan
     namespace: custom
   authenticationService:
     name: myservice
     namespace: custom
-status:
-  message: "Unknown authenticationservice 'myservice'
 ```
 
 ==== MessagingEndpoint
 
-A MessagingEndpoint configures access to the messaging infrastructure via different mechanisms. It is also the place where tenants put any custom certificates that should be used, or configure how an endpoint should be exposed. An endpoint can either be exposed internally (as a ClusterIP service), as a loadbalancer service (LoadBalancer service) or as an OpenShift route. Multiple endpoints may be created to expose service in multiple ways. All addresses in a namespace are exposed through all endpoints.
+A MessagingEndpoint configures access to the messaging infrastructure via different mechanisms. It
+is also the place where tenants can explicitly configure certificates to be used, or configure how an endpoint should be exposed.
+
+An endpoint can either be exposed internally (as a ClusterIP service), as a loadbalancer service
+(LoadBalancer service) or as an OpenShift route. Multiple endpoints may be created per namespace.
+
+All addresses in a namespace are exposed through all endpoints.
 
 ```
 kind: MessagingEndpoint
@@ -213,14 +222,15 @@ metadata:
   name: myendpoint
   namespace: myapp
 spec:
-  cert:
-    selfsigned: {}
+  certificate:
+    selfsigned: {} # Default
     openshift: {}
     provided:
       secret:
         name: mycert # Get cert from secret
+        namespace: myapp
   
-  # Optional approach to grant admin access to an endpoint using mTLS
+  # Approach to grant admin access to an endpoint using mTLS
   authentication:
     clientCaSecret:
       name: clientsecret
@@ -238,6 +248,9 @@ spec:
 
   route: # Expose as route
     host: example.com
+    ports:
+    - name: amqps
+    - name: amqpwss
 
   loadbalancer:
     annotations: {}
@@ -255,20 +268,6 @@ status:
     port: 5672
 ```
 
-==== MessagingConnector
-
-For phase 2, but to configure connectors:
-
-```
-kind: MessagingConnector
-matadata:
-  name: connector
-spec:
-  # Same options as under address space .spec.connectors[]
-status:
-  # Same options as under address space .spec.connectors[]
-```
-
 ==== AddressPlan
 
 Address plans allow properties to indicate the desired guarantees of a queue. An example address plan would be:
@@ -279,16 +278,17 @@ kind: AddressPlan
 metadata:
   name: small-queue
 spec:
-  namespaces: # Which namespaces this plan is available
-  - "*"
-  namespaceSelector: # Or using label selector
-    type: messaging
+  namespaceSelector:
+    matchLabels:
+     type: messaging
   resources:
     requests:
       queueMemory: 3Mi
     limits:
       queueMemory: 4Mi
+
   allowOverrides: true # true means addresses are allowed to override plan settings
+
   queue: # Settings related to queue types
     partitions: # Specifying a min and max allow the operator to make a decisions to split queue across multiple brokers to fit it. Setting max >= 1 may cause message affects message ordering
       min: 1
@@ -297,7 +297,6 @@ spec:
     # Create these addresses on the same broker (requirements same as for this address)
     expiryQueue: exp1
     deadLetterQueue: dlq1
-    
 ```
 
 For instance, the resources spec will be used when scheduling the queue to ensure it is placed on a broker that meets the memory requirements for the queue.
@@ -317,15 +316,27 @@ spec:
   address: addr1 # Optional. Defaults to .metadata.name
   type: queue
   plan: small-queue # Optional. Defaults to no limits and can be placed on any broker
-  queue: # Queue settings
+  queue: # Queue settings overriding plan settings
     ttl: 1200s
 ```
 
-The set of properties for a given address will drive the placement of that queue, either on a link-routed broker, or across a set of brokers.
+The set of properties for a given address will drive the placement of that queue.
 
 This can be translated to limits that can be enforced in the broker, and that can be reasoned about from a sizing perspective. Properties specified on an `Address` may also be specified on an `AddressPlan`, and the plan may restrict if properties can be overridden or not.
 
-NOTE: Plans for existing address types would continue to use the existing schema.
+==== MessagingConnector
+
+For phase 2, but to configure connectors:
+
+```
+kind: MessagingConnector
+matadata:
+  name: connector
+spec:
+  # Same options as under address space .spec.connectors[]
+status:
+  # Same options as under address space .spec.connectors[]
+```
 
 ==== Other considerations and removed components
 
