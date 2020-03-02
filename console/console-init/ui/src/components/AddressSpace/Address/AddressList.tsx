@@ -18,8 +18,10 @@ import { Link } from "react-router-dom";
 import { TypePlan } from "components/common/TypePlan";
 import { Messages } from "components/common/Messages";
 import useWindowDimensions from "components/common/WindowDimension";
-import { AddressSpaceStatus } from "components/common/AddressSpaceListFormatter";
-import { AddressStatus } from "components/common/AddressFormatter";
+import {
+  AddressStatus,
+  AddressErrorMessage
+} from "components/common/AddressFormatter";
 import { css } from "@patternfly/react-styles";
 import { StyleForTable } from "components/AddressSpaceList/AddressSpaceList";
 import { FormatDistance } from "use-patternfly";
@@ -110,12 +112,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
           },
           { title: <TypePlan type={row.type} plan={row.planLabel} /> },
           {
-            title: (
-              <AddressSpaceStatus
-                messages={row.errorMessages || []}
-                phase={row.status || ""}
-              />
-            )
+            title: <AddressStatus phase={row.status || ""} />
           },
           {
             title: (
@@ -164,7 +161,18 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
             title: <AddressStatus phase={row.status || ""} />
           },
           {
-            title: row.errorMessages ? row.errorMessages : "",
+            title: (
+              <>
+                <FormatDistance date={row.creationTimestamp} /> ago
+              </>
+            )
+          },
+          {
+            title: row.errorMessages ? (
+              <AddressErrorMessage messages={row.errorMessages} />
+            ) : (
+              ""
+            ),
             props: { colSpan: 6 }
           }
         ],
