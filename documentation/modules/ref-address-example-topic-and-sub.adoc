@@ -5,7 +5,7 @@
 [id='ref-address-example-topic-and-sub-{context}']
 == Topic and subscription address example
 
-When using topics and subscriptions, the subscription references the topic to which it belongs using the `topic:` field, as illustrated below.
+When using topics and subscriptions, the subscription references the topic to which it belongs using the `topic:` field, as shown in the following example.
 
 [source,yaml,options="nowrap"]
 ----
