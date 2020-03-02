@@ -11,6 +11,7 @@ import {
 } from "@patternfly/react-core";
 
 import { useErrorContext, types } from "context-state-reducer";
+import { ErrorCodes } from "constants/constants";
 
 const NetworkStatusAlert: React.FunctionComponent = () => {
   const { state, dispatch } = useErrorContext();
@@ -27,7 +28,7 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
   }, [hasNetworkError]);
 
   const errorMessage =
-    statusCode && statusCode === 403
+    statusCode && statusCode === ErrorCodes.FORBIDDEN
       ? "You're disconnected from the server, please sign in again."
       : "We're having trouble connecting to our server.";
 
