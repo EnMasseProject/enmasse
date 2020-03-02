@@ -19,7 +19,7 @@ const onServerError = (error: any, dispactAction: any, states: any) => {
       hasNetworkError !== true &&
       dispactAction({
         type: types.SET_NETWORK_ERROR,
-        payload: { statusCode: networkError.statusCode }
+        payload: { statusCode: networkError && networkError.statusCode }
       });
   }
   //catch the server error for queries
