@@ -37,8 +37,10 @@ import { useApolloClient } from "@apollo/react-hooks";
 import {
   TypeAheadMessage,
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
+  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   TYPEAHEAD_REQUIRED_LENGTH
 } from "constants/constants";
+import { ISelectOption, getSelectOptionList } from "utils";
 
 interface IAddressSpaceListFilterProps {
   filterValue?: string;
@@ -57,6 +59,7 @@ interface IAddressSpaceListKebabProps {
   isDeleteAllDisabled: boolean;
   onDeleteAll: () => void;
 }
+
 export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFilterProps> = ({
   filterValue,
   setFilterValue,
@@ -84,16 +87,12 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   ] = React.useState<boolean>(false);
   const [nameSelected, setNameSelected] = React.useState<string>();
   const [namespaceSelected, setNamespaceSelected] = React.useState<string>();
-  const [nameOptions, setNameOptions] = React.useState<Array<string>>();
+  const [nameOptions, setNameOptions] = React.useState<Array<ISelectOption>>();
   const [nameInput, setNameInput] = React.useState<string>("");
   const [nameSpaceInput, setNameSpaceInput] = React.useState<string>("");
   const [namespaceOptions, setNamespaceOptions] = React.useState<
-    Array<string>
+    Array<ISelectOption>
   >();
-
-  const [hasMoreRecordsForName, setHasMoreRecordsForName] = React.useState<
-    boolean
-  >(false);
   const [
     hasMoreRecordsForNamespace,
     setHasMoreRecordsForNamespace
@@ -207,11 +206,13 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     setIsSelectNamespaceExpanded(!isSelectNamespaceExpanded);
   };
 
+  const createSelectOptionObject = (value: string) => {
+    const data: ISelectOption = { value: value, isDisabled: false };
+    return data;
+  };
+
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if (hasMoreRecordsForName) {
-      setHasMoreRecordsForName(false);
-    }
 
     if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
@@ -229,28 +230,17 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       response.data.addressSpaces.addressSpaces &&
       response.data.addressSpaces.addressSpaces.length > 0
     ) {
-      if (
-        response.data.addressSpaces.total >
-        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
-      ) {
-        let list = [];
-        for (let i = 0; i < 10; i++) {
-          if (response.data.addressSpaces.addressSpaces[i]) {
-            list.push(
-              response.data.addressSpaces.addressSpaces[i].metadata.name
-            );
-          }
+      let obtainedList = response.data.addressSpaces.addressSpaces.map(
+        (link: any) => {
+          return link.metadata.name;
         }
-        setHasMoreRecordsForName(true);
-        setNameOptions(Array.from(new Set(list)));
-      } else {
-        const obtainedList = response.data.addressSpaces.addressSpaces.map(
-          (link: any) => {
-            return link.metadata.name;
-          }
-        );
-        setNameOptions(Array.from(new Set(obtainedList)));
-      }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const filteredNameOptions = getSelectOptionList(
+        obtainedList,
+        response.data.addressSpaces.total
+      );
+      if (filteredNameOptions.length > 0) setNameOptions(filteredNameOptions);
     }
   };
 
@@ -290,28 +280,17 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       response.data.addressSpaces.addressSpaces &&
       response.data.addressSpaces.addressSpaces.length > 0
     ) {
-      if (
-        response.data.addressSpaces.total >
-        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
-      ) {
-        let list = [];
-        for (let i = 0; i < 10; i++) {
-          if (response.data.addressSpaces.addressSpaces[i]) {
-            list.push(
-              response.data.addressSpaces.addressSpaces[i].metadata.namespace
-            );
-          }
+      let obtainedList = response.data.addressSpaces.addressSpaces.map(
+        (link: any) => {
+          return link.metadata.namespace;
         }
-        setHasMoreRecordsForNamespace(true);
-        setNamespaceOptions(Array.from(new Set(list)));
-      } else {
-        const obtainedList = response.data.addressSpaces.addressSpaces.map(
-          (link: any) => {
-            return link.metadata.namespace;
-          }
-        );
-        setNamespaceOptions(Array.from(new Set(obtainedList)));
-      }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.addressSpaces.total
+      );
+      if (uniqueList.length > 0) setNamespaceOptions(uniqueList);
     }
   };
 
@@ -411,16 +390,13 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       isDisabled={false}
                       isCreatable={false}
                     >
-                      {hasMoreRecordsForName && (
-                        <SelectOption
-                          key={"more records available"}
-                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-                          disabled={true}
-                        />
-                      )}
                       {nameOptions && nameOptions.length > 0 ? (
                         nameOptions.map((option, index) => (
-                          <SelectOption key={index} value={option} />
+                          <SelectOption
+                            key={index}
+                            value={option.value}
+                            isDisabled={option.isDisabled}
+                          />
                         ))
                       ) : nameInput.trim().length <
                         TYPEAHEAD_REQUIRED_LENGTH ? (
@@ -486,7 +462,11 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       )}
                       {namespaceOptions && namespaceOptions.length > 0 ? (
                         namespaceOptions.map((option, index) => (
-                          <SelectOption key={index} value={option} />
+                          <SelectOption
+                            key={index}
+                            value={option.value}
+                            isDisabled={option.isDisabled}
+                          />
                         ))
                       ) : nameSpaceInput.trim().length <
                         TYPEAHEAD_REQUIRED_LENGTH ? (

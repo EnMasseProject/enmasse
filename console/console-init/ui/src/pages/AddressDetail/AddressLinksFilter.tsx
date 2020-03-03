@@ -42,8 +42,10 @@ import {
 import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH,
-  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
+  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
 } from "constants/constants";
+import { getSelectOptionList, ISelectOption } from "utils";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -92,19 +94,12 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   ] = React.useState<boolean>(false);
   const [nameSelected, setNameSelected] = React.useState<string>();
   const [containerSelected, setContainerSelected] = React.useState<string>();
-  const [nameOptions, setNameOptions] = React.useState<Array<string>>();
+  const [nameOptions, setNameOptions] = React.useState<Array<ISelectOption>>();
   const [containerOptions, setContainerOptions] = React.useState<
-    Array<string>
+    Array<ISelectOption>
   >();
   const [nameInput, setNameInput] = React.useState<string>("");
   const [containerInput, setContainerInput] = React.useState<string>("");
-  const [hasMoreRecordsForName, setHasMoreRecordsForName] = React.useState<
-    boolean
-  >(false);
-  const [
-    hasMoreRecordsForContainer,
-    setHasMoreRecordsForContainer
-  ] = React.useState<boolean>(false);
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
     { key: "filterContainers", value: "Container" },
@@ -185,9 +180,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   };
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if (hasMoreRecordsForName) {
-      setHasMoreRecordsForName(false);
-    }
     if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
       return;
@@ -209,26 +201,18 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       response.data.addresses.addresses[0].links.links &&
       response.data.addresses.addresses[0].links.links.length > 0
     ) {
-      if (
-        response.data.addresses.addresses[0].links.total >
-        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
-      ) {
-        let list = [];
-        for (let i = 0; i < 10; i++) {
-          list.push(
-            response.data.addresses.addresses[0].links.links[i].metadata.name
-          );
+      let obtainedList = [];
+      obtainedList = response.data.addresses.addresses[0].links.links.map(
+        (link: any) => {
+          return link.metadata.name;
         }
-        setHasMoreRecordsForName(true);
-        setNameOptions(Array.from(new Set(list)));
-      } else {
-        const obtainedList = response.data.addresses.addresses[0].links.links.map(
-          (link: any) => {
-            return link.metadata.name;
-          }
-        );
-        setNameOptions(Array.from(new Set(obtainedList)));
-      }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.addresses.addresses[0].links.total
+      );
+      if (uniqueList.length > 0) setNameOptions(uniqueList);
     }
   };
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -244,11 +228,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
 
   const onChangeContainerData = async (value: string) => {
     setContainerOptions(undefined);
-    if (hasMoreRecordsForContainer) {
-      setHasMoreRecordsForContainer(false);
-    }
     if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
-      setHasMoreRecordsForName(false);
       setContainerOptions([]);
       return;
     }
@@ -269,28 +249,18 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       response.data.addresses.addresses[0].links.links &&
       response.data.addresses.addresses[0].links.links.length > 0
     ) {
-      if (
-        response.data.addresses.addresses[0].links.total >
-        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
-      ) {
-        let list = [];
-        for (let i = 0; i < 10; i++) {
-          if (response.data.addresses.addresses[0].links.links[i])
-            list.push(
-              response.data.addresses.addresses[0].links.links[i].spec
-                .connection.spec.containerId
-            );
+      let obtainedList = [];
+      obtainedList = response.data.addresses.addresses[0].links.links.map(
+        (link: any) => {
+          return link.spec.connection.spec.containerId;
         }
-        setHasMoreRecordsForContainer(true);
-        setContainerOptions(Array.from(new Set(list)));
-      } else {
-        const obtainedList = response.data.addresses.addresses[0].links.links.map(
-          (link: any) => {
-            return link.spec.connection.spec.containerId;
-          }
-        );
-        setContainerOptions(Array.from(new Set(obtainedList)));
-      }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.addresses.addresses[0].links.total
+      );
+      if (uniqueList.length > 0) setContainerOptions(uniqueList);
     }
   };
 
@@ -422,16 +392,13 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                     isDisabled={false}
                     isCreatable={false}
                   >
-                    {hasMoreRecordsForName && (
-                      <SelectOption
-                        key={"more records available"}
-                        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-                        disabled={true}
-                      />
-                    )}
                     {nameOptions && nameOptions.length > 0 ? (
                       nameOptions.map((option, index) => (
-                        <SelectOption key={index} value={option} />
+                        <SelectOption
+                          key={index}
+                          value={option.value}
+                          isDisabled={option.isDisabled}
+                        />
                       ))
                     ) : nameInput.trim().length < TYPEAHEAD_REQUIRED_LENGTH ? (
                       <SelectOption
@@ -487,16 +454,13 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                     isDisabled={false}
                     isCreatable={false}
                   >
-                    {hasMoreRecordsForContainer && (
-                      <SelectOption
-                        key={"more records available"}
-                        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-                        disabled={true}
-                      />
-                    )}
                     {containerOptions && containerOptions.length > 0 ? (
                       containerOptions.map((option, index) => (
-                        <SelectOption key={index} value={option} />
+                        <SelectOption
+                          key={index}
+                          value={option.value}
+                          isDisabled={option.isDisabled}
+                        />
                       ))
                     ) : containerInput.trim().length <
                       TYPEAHEAD_REQUIRED_LENGTH ? (

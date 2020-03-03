@@ -36,8 +36,10 @@ import { IConnectionListNameSearchResponse } from "types/ResponseTypes";
 import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH,
-  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
+  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
 } from "constants/constants";
+import { getSelectOptionList, ISelectOption } from "utils";
 
 interface IConnectionListFilterProps {
   filterValue?: string | null;
@@ -84,18 +86,12 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   const [containerSelected, setContainerSelected] = React.useState<string>();
   const [hostNameInput, setHostNameInput] = React.useState<string>("");
   const [containerInput, setContainerInput] = React.useState<string>("");
-  const [hostnameOptions, setHostnameOptions] = React.useState<Array<string>>();
-  const [containerOptions, setContainerOptions] = React.useState<
-    Array<string>
+  const [hostnameOptions, setHostnameOptions] = React.useState<
+    Array<ISelectOption>
   >();
-  const [
-    hasMoreRecordsForHostname,
-    setHasMoreRecordsForHostname
-  ] = React.useState<boolean>(false);
-  const [
-    hasMoreRecordsForContainer,
-    setHasMoreRecordsForContainer
-  ] = React.useState<boolean>(false);
+  const [containerOptions, setContainerOptions] = React.useState<
+    Array<ISelectOption>
+  >();
 
   const filterMenuItems = [
     { key: "filterHostName", value: "Hostname" },
@@ -182,9 +178,6 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeHostnameData = async (value: string) => {
     setHostnameOptions(undefined);
-    if (hasMoreRecordsForHostname) {
-      setHasMoreRecordsForHostname(false);
-    }
     if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setHostnameOptions([]);
       return;
@@ -204,27 +197,17 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       response.data.connections.connections &&
       response.data.connections.connections.length > 0
     ) {
-      //To display dropdown if fetched records are less than 100 in count.
-      if (
-        response.data.connections.total >
-        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
-      ) {
-        let list = [];
-        for (let i = 0; i < 10; i++) {
-          if (response.data.connections.connections[i]) {
-            list.push(response.data.connections.connections[i].spec.hostname);
-          }
+      const obtainedList = response.data.connections.connections.map(
+        (connection: any) => {
+          return connection.spec.hostname;
         }
-        setHasMoreRecordsForHostname(true);
-        setHostnameOptions(Array.from(new Set(list)));
-      } else {
-        const obtainedList = response.data.connections.connections.map(
-          (connection: any) => {
-            return connection.spec.hostname;
-          }
-        );
-        setHostnameOptions(Array.from(new Set(obtainedList)));
-      }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.connections.total
+      );
+      if (uniqueList.length > 0) setHostnameOptions(uniqueList);
     }
   };
 
@@ -243,9 +226,6 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeContainerData = async (value: string) => {
     setContainerOptions(undefined);
-    if (hasMoreRecordsForHostname) {
-      setHasMoreRecordsForHostname(false);
-    }
     if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setContainerOptions([]);
       return;
@@ -265,29 +245,17 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       response.data.connections.connections &&
       response.data.connections.connections.length > 0
     ) {
-      //To display dropdown if fetched records are less than 100 in count.
-      if (
-        response.data.connections.total >
-        MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN
-      ) {
-        let list = [];
-        for (let i = 0; i < 10; i++) {
-          if (response.data.connections.connections[i]) {
-            list.push(
-              response.data.connections.connections[i].spec.containerId
-            );
-          }
+      const obtainedList = response.data.connections.connections.map(
+        (connection: any) => {
+          return connection.spec.containerId;
         }
-        setHasMoreRecordsForContainer(true);
-        setContainerOptions(Array.from(new Set(list)));
-      } else {
-        const obtainedList = response.data.connections.connections.map(
-          (connection: any) => {
-            return connection.spec.containerId;
-          }
-        );
-        setContainerOptions(Array.from(new Set(obtainedList)));
-      }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.connections.total
+      );
+      if (uniqueList.length > 0) setContainerOptions(uniqueList);
     }
   };
   const onContainerSelectFilterChange = (
@@ -418,16 +386,13 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   isDisabled={false}
                   isCreatable={false}
                 >
-                  {hasMoreRecordsForHostname && (
-                    <SelectOption
-                      key={"more records available"}
-                      value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-                      disabled={true}
-                    />
-                  )}
                   {hostnameOptions && hostnameOptions.length > 0 ? (
                     hostnameOptions.map((option, index) => (
-                      <SelectOption key={index} value={option} />
+                      <SelectOption
+                        key={index}
+                        value={option.value}
+                        isDisabled={option.isDisabled}
+                      />
                     ))
                   ) : hostNameInput.trim().length <
                     TYPEAHEAD_REQUIRED_LENGTH ? (
@@ -484,16 +449,13 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   isDisabled={false}
                   isCreatable={false}
                 >
-                  {hasMoreRecordsForContainer && (
-                    <SelectOption
-                      key={"more records available"}
-                      value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-                      disabled={true}
-                    />
-                  )}
                   {containerOptions && containerOptions.length > 0 ? (
                     containerOptions.map((option, index) => (
-                      <SelectOption key={index} value={option} />
+                      <SelectOption
+                        key={index}
+                        value={option.value}
+                        isDisabled={option.isDisabled}
+                      />
                     ))
                   ) : containerInput.trim().length <
                     TYPEAHEAD_REQUIRED_LENGTH ? (
