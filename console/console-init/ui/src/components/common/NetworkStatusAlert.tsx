@@ -27,10 +27,15 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
     hasNetworkError !== undefined && setAlertVisible(hasNetworkError);
   }, [hasNetworkError]);
 
-  const errorMessage =
-    statusCode && statusCode === ErrorCodes.FORBIDDEN
-      ? "You're disconnected from the server, please sign in again."
-      : "We're having trouble connecting to our server.";
+  let errorMessage = "We're having trouble connecting to our server.";
+  let redirectLink = "/";
+  let redirectText = "Take me Home";
+
+  if (statusCode && statusCode === ErrorCodes.FORBIDDEN) {
+    errorMessage = "Your session has expired. Please login again.";
+    redirectLink = "oauth/sign_in";
+    redirectText = "Sign in";
+  }
 
   if (alertVisible && hasNetworkError) {
     return (
@@ -43,8 +48,8 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
           <span>{errorMessage}</span>
         </Alert>
         <br />
-        <a href="oauth/sign_in" className="pf-c-nav__link">
-          Take me home
+        <a href={redirectLink} className="pf-c-nav__link">
+          {redirectText}
         </a>
       </PageSection>
     );
