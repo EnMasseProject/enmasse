@@ -37,11 +37,10 @@ type AgentWatcher struct {
 	watchingAgentsStarted bool
 	stopchan              chan struct{}
 	stoppedchan           chan struct{}
-
-	developmentMode      bool
-	RouteClientInterface *routev1.RouteV1Client
-	restartCounter       int32
-	resyncInterval       *time.Duration
+	developmentMode       bool
+	RouteClientInterface  *routev1.RouteV1Client
+	restartCounter        int32
+	resyncInterval        *time.Duration
 }
 
 func NewAgentWatcher(c cache.Cache, resyncInterval *time.Duration, namespace string, creator AgentCollectorCreator, developmentMode bool, options ...WatcherOption) (*AgentWatcher, error) {
@@ -52,6 +51,7 @@ func NewAgentWatcher(c cache.Cache, resyncInterval *time.Duration, namespace str
 		watching:              make(chan struct{}),
 		stopchan:              make(chan struct{}),
 		stoppedchan:           make(chan struct{}),
+		resyncInterval:        resyncInterval,
 		AgentCollectorCreator: creator,
 		collectors:            make(map[string]agent.Delegate),
 		developmentMode:       developmentMode,
