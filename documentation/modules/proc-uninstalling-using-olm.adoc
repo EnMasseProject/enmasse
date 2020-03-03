@@ -2,6 +2,14 @@
 //
 // assembly-uninstalling.adoc
 
+ifeval::["{cmdcli}" == "oc"]
+:OperatorNamespace: openshift-operators
+endif::[]
+
+ifeval::["{cmdcli}" == "kube"]
+:OperatorNamespace: operators
+endif::[]
+
 [id='uninstalling-olm-{context}']
 = Uninstalling {ProductName} using the Operator Lifecycle Manager (OLM)
 
