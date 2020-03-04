@@ -1,0 +1,10 @@
+
+apiVersion: enmasse.io/v1beta1
+kind: Address
+metadata:
+    name: myspace.mysub
+spec:
+    address: mysub
+    type: subscription
+    plan: standard-small-subscription
+    topic: mytopic <1>

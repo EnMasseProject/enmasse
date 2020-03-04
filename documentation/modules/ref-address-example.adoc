@@ -7,7 +7,7 @@
 
 [source,yaml,options="nowrap"]
 ----
-include::../common/address-example1.yaml[]
+include::../common/address-example.yaml[]
 ----
 <1> The address name must be prefixed with the address space name and a dot. Address names can only include alphanumeric characters.
 <2> The address is the messaging address this address resource represents.
