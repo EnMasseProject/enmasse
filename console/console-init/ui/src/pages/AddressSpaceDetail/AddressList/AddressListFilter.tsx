@@ -34,6 +34,13 @@ import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { useApolloClient } from "@apollo/react-hooks";
 import { IAddressListNameSearchResponse } from "types/ResponseTypes";
 import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "queries";
+import {
+  TypeAheadMessage,
+  TYPEAHEAD_REQUIRED_LENGTH,
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
+  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
+} from "constants/constants";
+import { getSelectOptionList, ISelectOption } from "utils";
 
 interface IAddressListFilterProps {
   filterValue: string | null;
@@ -77,7 +84,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
     boolean
   >(false);
   const [nameSelected, setNameSelected] = React.useState<string>();
-  const [nameOptions, setNameOptions] = React.useState<Array<string>>();
+  const [nameOptions, setNameOptions] = React.useState<Array<ISelectOption>>();
   const [nameInput, setNameInput] = React.useState<string>("");
   const filterMenuItems = [
     { key: "filterAddress", value: "Address" },
@@ -141,7 +148,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
 
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if (value.trim().length < 5) {
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
       return;
     }
@@ -156,19 +163,20 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
       response &&
       response.data &&
       response.data.addresses &&
-      response.data.addresses.addresses
+      response.data.addresses.addresses &&
+      response.data.addresses.addresses.length > 0
     ) {
-      //To display dropdown if fetched records are less than 100 in count.
-      if (response.data.addresses.total > 100) {
-        setNameOptions([]);
-      } else {
-        const obtainedList = response.data.addresses.addresses.map(
-          (address: any) => {
-            return address.spec.address;
-          }
-        );
-        setNameOptions(Array.from(new Set(obtainedList)));
-      }
+      const obtainedList = response.data.addresses.addresses.map(
+        (address: any) => {
+          return address.spec.address;
+        }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.addresses.total
+      );
+      if (uniqueList.length > 0) setNameOptions(uniqueList);
     }
   };
 
@@ -284,18 +292,23 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                     >
                       {nameOptions && nameOptions.length > 0 ? (
                         nameOptions.map((option, index) => (
-                          <SelectOption key={index} value={option} />
+                          <SelectOption
+                            key={index}
+                            value={option.value}
+                            isDisabled={option.isDisabled}
+                          />
                         ))
-                      ) : nameInput.trim().length < 5 ? (
+                      ) : nameInput.trim().length <
+                        TYPEAHEAD_REQUIRED_LENGTH ? (
                         <SelectOption
                           key={"invalid-input-length"}
-                          value={"Enter more characters"}
+                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                           disabled={true}
                         />
                       ) : (
                         <SelectOption
                           key={"no-results-found"}
-                          value={"No results found"}
+                          value={TypeAheadMessage.NO_RESULT_FOUND}
                           disabled={true}
                         />
                       )}

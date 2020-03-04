@@ -41,16 +41,13 @@ import { NoDataFound } from "components/common/NoDataFound";
 import { EditAddressSpace } from "pages/EditAddressSpace";
 import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
 import { useMutationQuery } from "hooks";
+import { AddressSpaceRoutes } from "Routes";
 
 const styles = StyleSheet.create({
   no_bottom_padding: {
     paddingBottom: 0
   }
 });
-const getConnectionsList = () =>
-  import("./ConnectionList/ConnectionListWithFilterAndPaginationPage");
-const getAddressesList = () =>
-  import("./AddressList/AddressesListWithFilterAndPaginationPage");
 
 interface IAddressSpaceDetailResponse {
   addressSpaces: {
@@ -343,19 +340,7 @@ export default function AddressSpaceDetailPage() {
         </Modal>
       )}
       <PageSection>
-        <SwitchWith404>
-          <Redirect path="/" to="/address-spaces" exact={true} />
-          <LazyRoute
-            path="/address-spaces/:namespace/:name/:type/addresses/"
-            getComponent={getAddressesList}
-            exact={true}
-          />
-          <LazyRoute
-            path="/address-spaces/:namespace/:name/:type/connections/"
-            getComponent={getConnectionsList}
-            exact={true}
-          />
-        </SwitchWith404>
+        <AddressSpaceRoutes />
       </PageSection>
     </>
   );

@@ -39,6 +39,13 @@ import {
   ISearchAddressLinkNameResponse,
   ISearchAddressLinkContainerResponse
 } from "types/ResponseTypes";
+import {
+  TypeAheadMessage,
+  TYPEAHEAD_REQUIRED_LENGTH,
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
+  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
+} from "constants/constants";
+import { getSelectOptionList, ISelectOption } from "utils";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -72,7 +79,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   addressSpaceName,
   namespace
 }) => {
-  const TYPEAHEAD_REQUIRED_LENGTH: number = 5;
   const { width } = useWindowDimensions();
   const client = useApolloClient();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState<boolean>(
@@ -88,9 +94,9 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   ] = React.useState<boolean>(false);
   const [nameSelected, setNameSelected] = React.useState<string>();
   const [containerSelected, setContainerSelected] = React.useState<string>();
-  const [nameOptions, setNameOptions] = React.useState<Array<string>>();
+  const [nameOptions, setNameOptions] = React.useState<Array<ISelectOption>>();
   const [containerOptions, setContainerOptions] = React.useState<
-    Array<string>
+    Array<ISelectOption>
   >();
   const [nameInput, setNameInput] = React.useState<string>("");
   const [containerInput, setContainerInput] = React.useState<string>("");
@@ -195,16 +201,18 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       response.data.addresses.addresses[0].links.links &&
       response.data.addresses.addresses[0].links.links.length > 0
     ) {
-      if (response.data.addresses.addresses[0].links.total > 100) {
-        setNameOptions([]);
-      } else {
-        const obtainedList = response.data.addresses.addresses[0].links.links.map(
-          (link: any) => {
-            return link.metadata.name;
-          }
-        );
-        setNameOptions(Array.from(new Set(obtainedList)));
-      }
+      let obtainedList = [];
+      obtainedList = response.data.addresses.addresses[0].links.links.map(
+        (link: any) => {
+          return link.metadata.name;
+        }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.addresses.addresses[0].links.total
+      );
+      if (uniqueList.length > 0) setNameOptions(uniqueList);
     }
   };
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,7 +228,7 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
 
   const onChangeContainerData = async (value: string) => {
     setContainerOptions(undefined);
-    if (value.trim().length < 6) {
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setContainerOptions([]);
       return;
     }
@@ -241,16 +249,18 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
       response.data.addresses.addresses[0].links.links &&
       response.data.addresses.addresses[0].links.links.length > 0
     ) {
-      if (response.data.addresses.addresses[0].links.total > 100) {
-        setContainerOptions([]);
-      } else {
-        const obtainedList = response.data.addresses.addresses[0].links.links.map(
-          (link: any) => {
-            return link.spec.connection.spec.containerId;
-          }
-        );
-        setContainerOptions(Array.from(new Set(obtainedList)));
-      }
+      let obtainedList = [];
+      obtainedList = response.data.addresses.addresses[0].links.links.map(
+        (link: any) => {
+          return link.spec.connection.spec.containerId;
+        }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.addresses.addresses[0].links.total
+      );
+      if (uniqueList.length > 0) setContainerOptions(uniqueList);
     }
   };
 
@@ -384,7 +394,11 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                   >
                     {nameOptions && nameOptions.length > 0 ? (
                       nameOptions.map((option, index) => (
-                        <SelectOption key={index} value={option} />
+                        <SelectOption
+                          key={index}
+                          value={option.value}
+                          isDisabled={option.isDisabled}
+                        />
                       ))
                     ) : nameInput.trim().length < TYPEAHEAD_REQUIRED_LENGTH ? (
                       <SelectOption
@@ -442,19 +456,23 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
                   >
                     {containerOptions && containerOptions.length > 0 ? (
                       containerOptions.map((option, index) => (
-                        <SelectOption key={index} value={option} />
+                        <SelectOption
+                          key={index}
+                          value={option.value}
+                          isDisabled={option.isDisabled}
+                        />
                       ))
                     ) : containerInput.trim().length <
                       TYPEAHEAD_REQUIRED_LENGTH ? (
                       <SelectOption
                         key={"invalid-input-length"}
-                        value={"Enter more characters"}
+                        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                         disabled={true}
                       />
                     ) : (
                       <SelectOption
                         key={"no-results-found"}
-                        value={"No results found"}
+                        value={TypeAheadMessage.NO_RESULT_FOUND}
                         disabled={true}
                       />
                     )}
