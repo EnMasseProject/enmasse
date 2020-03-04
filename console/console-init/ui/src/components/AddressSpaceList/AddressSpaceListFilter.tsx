@@ -93,10 +93,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const [namespaceOptions, setNamespaceOptions] = React.useState<
     Array<ISelectOption>
   >();
-  const [
-    hasMoreRecordsForNamespace,
-    setHasMoreRecordsForNamespace
-  ] = React.useState<boolean>(false);
 
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
@@ -258,9 +254,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const onChangeNamespaceData = async (value: string) => {
     setNamespaceOptions(undefined);
     setNameOptions(undefined);
-    if (hasMoreRecordsForNamespace) {
-      setHasMoreRecordsForNamespace(false);
-    }
     if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
       return;
@@ -453,13 +446,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       isDisabled={false}
                       isCreatable={false}
                     >
-                      {hasMoreRecordsForNamespace && (
-                        <SelectOption
-                          key={"more records available"}
-                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-                          disabled={true}
-                        />
-                      )}
                       {namespaceOptions && namespaceOptions.length > 0 ? (
                         namespaceOptions.map((option, index) => (
                           <SelectOption

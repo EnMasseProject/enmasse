@@ -11,7 +11,7 @@ import { Brand, Avatar } from "@patternfly/react-core";
 import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
 import NavToolBar from "components/NavToolBar/NavToolBar";
-import { AppRoutes } from "AppRoutes";
+import { AppRoutes } from "Routes";
 import brandImg from "./assets/images/logo.svg";
 import avatarImg from "./img_avatar.svg";
 import "./App.css";
