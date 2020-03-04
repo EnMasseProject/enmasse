@@ -51,7 +51,7 @@ public class MetricsReporterController implements Controller {
         }
 
         for (AddressSpace addressSpace : addressSpaces) {
-            MetricLabel[] labels = new MetricLabel[]{new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())};
+            MetricLabel[] labels = new MetricLabel[]{new MetricLabel("address_space_name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())};
             readyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 1 : 0, labels));
             notReadyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 0 : 1, labels));
             numConnectors.add(new MetricValue(addressSpace.getStatus().getConnectors().size(), labels));
@@ -59,7 +59,7 @@ public class MetricsReporterController implements Controller {
 
             for (AddressSpaceStatusConnector connectorStatus : addressSpace.getStatus().getConnectors()) {
 
-                MetricLabel[] connectorLabels = new MetricLabel[]{new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())};
+                MetricLabel[] connectorLabels = new MetricLabel[]{new MetricLabel("address_space_name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())};
                 readyConnectorValues.add(new MetricValue(connectorStatus.isReady() ? 1 : 0, connectorLabels));
                 notReadyConnectorValues.add(new MetricValue(connectorStatus.isReady() ? 0 : 1, connectorLabels));
             }
@@ -78,19 +78,19 @@ public class MetricsReporterController implements Controller {
                     // Verify that this router can reach all neighbors
                     Set<String> neighborIds = new HashSet<>(routerStatus.getNeighbors());
                     if (!neighborIds.containsAll(knownRouters)) {
-                        routerMeshNotConnected.add(new MetricValue(1, new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace()), new MetricLabel("router", routerStatus.getId())));
+                        routerMeshNotConnected.add(new MetricValue(1, new MetricLabel("address_space_name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace()), new MetricLabel("router", routerStatus.getId())));
                         totalNotConnected++;
                     }
 
                     // Calculate the sum of undelivered messages in inter-router links
                     if (routerStatus.getUndelivered() != null) {
                         totalUndelivered += routerStatus.getUndelivered();
-                        routerMeshUndelivered.add(new MetricValue(routerStatus.getUndelivered(), new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace()), new MetricLabel("router", routerStatus.getId())));
+                        routerMeshUndelivered.add(new MetricValue(routerStatus.getUndelivered(), new MetricLabel("address_space_name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace()), new MetricLabel("router", routerStatus.getId())));
                     }
                 }
 
-                routerMeshNotConnected.add(new MetricValue(totalNotConnected, new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())));
-                routerMeshUndelivered.add(new MetricValue(totalUndelivered, new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())));
+                routerMeshNotConnected.add(new MetricValue(totalNotConnected, new MetricLabel("address_space_name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())));
+                routerMeshUndelivered.add(new MetricValue(totalUndelivered, new MetricLabel("address_space_name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())));
             }
         }
 
