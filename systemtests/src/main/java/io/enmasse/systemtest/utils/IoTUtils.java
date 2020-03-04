@@ -177,7 +177,15 @@ public class IoTUtils {
         assertThat(project.getStatus().getDownstreamEndpoint().getPort(), not(is(0)));
     }
 
-    private static void waitForIoTProjectDeleted(Kubernetes kubernetes, IoTProject project) throws Exception {
+    public static boolean isIoTInstalled(Kubernetes kubernetes) {
+        return kubernetes.getCRD(IoTCrd.project().getMetadata().getName()) != null;
+    }
+
+    public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {
+
+        log.info("Deleting IoTProject: {}", project.getMetadata().getName());
+
+        final String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
 
         var projectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         var asClient = kubernetes.getAddressSpaceClient(project.getMetadata().getNamespace());
@@ -187,26 +195,33 @@ public class IoTUtils {
         var initialAddressSpaces = projectClient
                 .list().getItems().stream()
                 .flatMap(p -> {
-            var managed = p.getSpec().getDownstreamStrategy().getManagedStrategy();
-            if ( managed == null )  {
-                return Stream.empty();
-            } else {
-                return Stream.ofNullable(managed.getAddressSpace().getName());
-            }
-        })
+                    var managed = p.getSpec().getDownstreamStrategy().getManagedStrategy();
+                    if (managed == null) {
+                        return Stream.empty();
+                    } else {
+                        return Stream.ofNullable(managed.getAddressSpace().getName());
+                    }
+                })
                 .collect(Collectors.toSet());
 
         // pre-fetch address spaces for later use
 
         var deletedAddressSpaces = initialAddressSpaces.stream()
                 .<AddressSpace>map(asName -> asClient.withName(asName).get())
-                .collect(Collectors.<AddressSpace, String,AddressSpace>toMap(
+                .collect(Collectors.<AddressSpace, String, AddressSpace>toMap(
                         e -> e.getMetadata().getName(),
                         e -> e));
 
+        // delete the IoTProject
+
+        kubernetes.getIoTProjectClient(project.getMetadata().getNamespace())
+                .withName(project.getMetadata().getName())
+                .cascading(true)
+                .delete();
+
         // wait until the IoTProject is deleted
 
-        var projectName = project.getMetadata().getNamespace() + "/"+ project.getMetadata().getName();
+        var projectName = project.getMetadata().getNamespace() + "/" + project.getMetadata().getName();
         TestUtils.waitUntilConditionOrFail(() -> {
             var updated = projectClient.withName(project.getMetadata().getName()).get();
             if (updated != null) {
@@ -221,13 +236,13 @@ public class IoTUtils {
         var expectedAddressSpaces = projectClient
                 .list().getItems().stream()
                 .flatMap(p -> {
-            var managed = p.getSpec().getDownstreamStrategy().getManagedStrategy();
-            if ( managed == null )  {
-                return Stream.empty();
-            } else {
-                return Stream.ofNullable(managed.getAddressSpace().getName());
-            }
-        })
+                    var managed = p.getSpec().getDownstreamStrategy().getManagedStrategy();
+                    if (managed == null) {
+                        return Stream.empty();
+                    } else {
+                        return Stream.ofNullable(managed.getAddressSpace().getName());
+                    }
+                })
                 .collect(Collectors.toSet());
 
         // retain only the addresses spaces which are expected to be deleted
@@ -236,7 +251,7 @@ public class IoTUtils {
 
         // verify the destruction of the address spaces
 
-        for (final Map.Entry<String,AddressSpace> deleted : deletedAddressSpaces.entrySet()) {
+        for (final Map.Entry<String, AddressSpace> deleted : deletedAddressSpaces.entrySet()) {
             log.info("Verify destruction of address space: {}", deleted.getKey());
             AddressSpaceUtils.waitForAddressSpaceDeleted(deleted.getValue());
         }
@@ -248,19 +263,11 @@ public class IoTUtils {
 
         // verify that we only have expected address spaces remaining
 
+        log.info("Address Spaces - expected: {}, actual: {}", expectedAddressSpaces, actualAddressSpaces);
         assertEquals(expectedAddressSpaces, actualAddressSpaces);
 
-    }
+        // stop measuring time
 
-    public static boolean isIoTInstalled(Kubernetes kubernetes) {
-        return kubernetes.getCRD(IoTCrd.project().getMetadata().getName()) != null;
-    }
-
-    public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {
-        log.info("Deleting IoTProject: {}", project.getMetadata().getName());
-        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
-        kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).cascading(true).delete();
-        IoTUtils.waitForIoTProjectDeleted(kubernetes, project);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 

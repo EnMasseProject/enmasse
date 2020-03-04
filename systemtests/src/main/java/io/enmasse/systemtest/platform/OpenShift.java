@@ -4,6 +4,10 @@
  */
 package io.enmasse.systemtest.platform;
 
+import java.util.Collections;
+
+import org.slf4j.Logger;
+
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -20,15 +24,12 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfig;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
-import org.slf4j.Logger;
-
-import java.util.Collections;
 
 /**
  * Handles interaction with openshift cluster
  */
 public class OpenShift extends Kubernetes {
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
 
     private static final String OLM_NAMESPACE = "openshift-operators";
 
@@ -91,8 +92,11 @@ public class OpenShift extends Kubernetes {
     public Endpoint getExternalEndpoint(String endpointName, String namespace) {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
         Route route = openShift.routes().inNamespace(namespace).withName(endpointName).get();
+        if (route == null) {
+            throw new IllegalStateException(String.format("Route '%s'/'%s' does not exist", namespace, endpointName));
+        }
         Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
-        log.info("Testing endpoint : " + endpoint);
+        log.info("Testing endpoint: {}", endpoint);
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
         } else {
