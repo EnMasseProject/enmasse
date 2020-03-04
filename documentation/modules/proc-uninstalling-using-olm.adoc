@@ -13,7 +13,7 @@ endif::[]
 [id='uninstalling-olm-{context}']
 = Uninstalling {ProductName} using the Operator Lifecycle Manager (OLM)
 
-This method uninstalls {ProductName} that was installed using the OLM.
+This method uninstalls {ProductName} that was installed using the Operator Lifecycle Manager (OLM).
 
 .Procedure
 
@@ -26,7 +26,7 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 endif::[]
 
-. Remove all IoTProject and AddressSpace instances:
+. Remove all `IoTProject` and `AddressSpace` instances:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
@@ -34,21 +34,21 @@ endif::[]
 {cmdcli} delete addressspaces -A --all --timeout=600s
 ----
 
-. Remove the Subscription (replace the name with the name of the subscription used in the install):
+. Delete the subscription (replace `{OperatorName}` with the name of the subscription used in the installation):
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
 {cmdcli} delete subscription _{OperatorName}_ -n _{ProductNamespace}_
 ----
 
-. Remove the CSV for the operator:
+. Remove the CSV for the Operator:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
 {cmdcli} delete csv -l app=enmasse -n _{ProductNamespace}_
 ----
 
-. Remove additional resources:
+. Remove any remaining resources (replace `{ProductNamespace}` with the project where you installed {ProductName}):
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
@@ -60,9 +60,10 @@ endif::[]
 {cmdcli} delete crd -l app=enmasse
 ----
 
-. (Optional. Skip this step if {ProductName} is installed in the {OperatorNamespace} namespace) Delete the namespace where {ProductName} was installed:
+. (Optional: Skip this step if {ProductName} is installed in the `{OperatorNamespace}` namespace) Delete the namespace where {ProductName} was installed:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
 {cmdcli} delete namespace _{ProductNamespace}_
 ----
+
