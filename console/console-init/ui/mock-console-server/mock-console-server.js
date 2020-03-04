@@ -602,6 +602,7 @@ createAddressSpace(
 
 var connections = [];
 
+var users = ["guest", "bob", "alice"];
 function createConnection(addressSpace, hostname) {
   var port = Math.floor(Math.random() * 25536) + 40000;
   var hostport = hostname + ":" + port;
@@ -638,6 +639,7 @@ function createConnection(addressSpace, hostname) {
       protocol: encrypted ? "amqps" : "amqp",
       encrypted: encrypted,
       properties: properties,
+      principal: users[Math.floor(Math.random() * users.length)],
       metrics: []
     }
   };

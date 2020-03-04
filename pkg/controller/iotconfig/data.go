@@ -17,5 +17,7 @@ const DefaultLogbackConfig = `<?xml version="1.0" encoding="UTF-8"?>
 		<appender-ref ref="STDOUT" />
 	</root>
 	<logger name="org.eclipse.hono" level="INFO"/>
+	<!-- remove when https://github.com/eclipse-vertx/vert.x/pull/3316 is sorted -->
+	<logger name="io.netty.channel.DefaultChannelPipeline" level="ERROR"/>
 </configuration>
 `

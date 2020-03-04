@@ -305,13 +305,13 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         consolePage.openConsolePage();
         consolePage.createAddress(queue);
 
-        ExternalMessagingClient senderClient = new ExternalMessagingClient()
+            ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(new ProtonJMSClientSender())
                 .withMessagingRoute(String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()))
                 .withAddress(queue)
                 .withCredentials(credentials.getUsername(), credentials.getPassword())
                 .withCount(10)
-                .withMessageBody("msg no. %d")
+                .withMessageBody("body")
                 .withTimeout(30);
 
         assertTrue(senderClient.run());
@@ -359,16 +359,8 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         isolatedResourcesManager.deleteAddressSpaceCreatedBySC(addressSpace);
 
         WebElement errorLog = selenium.getWebElement(() ->
-                selenium.getDriver().findElement(By.id("peerLostErrorDialogLabel")));
+                selenium.getDriver().findElement(By.id("empty-no-longer-exists")));
         assertTrue(errorLog.isDisplayed());
         log.info("error banner is displayed showing addr space is deleted");
-
-        //refresh page, console is no longer available
-        selenium.refreshPage();
-        WebElement errorPageText = selenium.getWebElement(() ->
-                selenium.getDriver().findElement(By.className("alert-info")));
-        assertTrue(errorPageText.isDisplayed());
-        log.info("application is not available page is displayed");
-
     }
 }

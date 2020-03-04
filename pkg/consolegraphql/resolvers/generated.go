@@ -214,6 +214,7 @@ type ComplexityRoot struct {
 		ContainerId  func(childComplexity int) int
 		Encrypted    func(childComplexity int) int
 		Hostname     func(childComplexity int) int
+		Principal    func(childComplexity int) int
 		Properties   func(childComplexity int) int
 		Protocol     func(childComplexity int) int
 	}
@@ -351,6 +352,7 @@ type ConnectionSpec_consoleapi_enmasse_io_v1beta1Resolver interface {
 	Protocol(ctx context.Context, obj *consolegraphql.ConnectionSpec) (Protocol, error)
 
 	Properties(ctx context.Context, obj *consolegraphql.ConnectionSpec) ([]*KeyValue, error)
+	Principal(ctx context.Context, obj *consolegraphql.ConnectionSpec) (string, error)
 }
 type Connection_consoleapi_enmasse_io_v1beta1Resolver interface {
 	Links(ctx context.Context, obj *consolegraphql.Connection, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error)
@@ -986,6 +988,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ConnectionSpecConsoleapiEnmasseIoV1beta1.Hostname(childComplexity), true
+
+	case "ConnectionSpec_consoleapi_enmasse_io_v1beta1.principal":
+		if e.complexity.ConnectionSpecConsoleapiEnmasseIoV1beta1.Principal == nil {
+			break
+		}
+
+		return e.complexity.ConnectionSpecConsoleapiEnmasseIoV1beta1.Principal(childComplexity), true
 
 	case "ConnectionSpec_consoleapi_enmasse_io_v1beta1.properties":
 		if e.complexity.ConnectionSpecConsoleapiEnmasseIoV1beta1.Properties == nil {
@@ -1659,6 +1668,7 @@ type ConnectionSpec_consoleapi_enmasse_io_v1beta1 {
   protocol: Protocol!
   encrypted: Boolean!
   properties: [KeyValue!]!
+  principal: String!
 }
 
 type Link_consoleapi_enmasse_io_v1beta1 {
@@ -5543,6 +5553,43 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_proper
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValueᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_principal(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.ConnectionSpec) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "ConnectionSpec_consoleapi_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ConnectionSpec_consoleapi_enmasse_io_v1beta1().Principal(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Connection) (ret graphql.Marshaler) {
@@ -10376,6 +10423,20 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1(ctx co
 					}
 				}()
 				res = ec._ConnectionSpec_consoleapi_enmasse_io_v1beta1_properties(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "principal":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ConnectionSpec_consoleapi_enmasse_io_v1beta1_principal(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

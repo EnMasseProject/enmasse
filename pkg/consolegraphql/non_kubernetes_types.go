@@ -49,6 +49,7 @@ type ConnectionSpec struct {
 	Protocol     string            `json:"protocol,omitempty"`
 	Encrypted    bool              `json:"encrypted,omitempty"`
 	Properties   map[string]string `json:"properties,omitempty"`
+	Principal    string            `json:"principal,omitempty"`
 }
 
 type Link struct {

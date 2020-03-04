@@ -23,6 +23,9 @@ enum TypeAheadMessage {
   NO_RESULT_FOUND = "No Results Found",
   MORE_CHAR_REQUIRED = "Enter more characters"
 }
+enum ErrorCodes {
+  FORBIDDEN = 403
+}
 
 export {
   UNKNOWN,
@@ -33,5 +36,6 @@ export {
   TYPEAHEAD_REQUIRED_LENGTH,
   MAX_ITEM_TO_FETCH_IN_TYPEAHEAD_DROPDOWN as MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
-  TypeAheadMessage
+  TypeAheadMessage,
+  ErrorCodes
 };

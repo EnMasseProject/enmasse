@@ -98,6 +98,13 @@ func (cs connectionSpecK8sResolver) Protocol(ctx context.Context, obj *consolegr
 	return ProtocolAmqp, nil
 }
 
+func (cs connectionSpecK8sResolver) Principal(ctx context.Context, obj *consolegraphql.ConnectionSpec) (string, error) {
+	if obj != nil {
+		return obj.Principal, nil
+	}
+	return "", nil
+}
+
 func (cs connectionSpecK8sResolver) Properties(ctx context.Context, obj *consolegraphql.ConnectionSpec) ([]*KeyValue, error) {
 	if obj != nil && len(obj.Properties) > 0 {
 		kvs := make([]*KeyValue, len(obj.Properties))

@@ -27,7 +27,7 @@ export const EmptyAddressSpace: React.FunctionComponent<IEmptyAddressSpaceProps>
     setIsWizardOpen(true);
   };
   return (
-    <EmptyState variant={EmptyStateVariant.full}>
+    <EmptyState variant={EmptyStateVariant.full} id="empty-ad-space">
       <EmptyStateIcon icon={PlusCircleIcon} />
       <Title id="empty-ad-space-title" size="lg">
         Create an address space
