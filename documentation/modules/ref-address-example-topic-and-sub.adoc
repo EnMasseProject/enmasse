@@ -3,7 +3,7 @@
 // assembly-managing-addresses.adoc
 
 [id='ref-address-example-topic-and-sub-{context}']
-== Topic and subscription address example
+= Topic and subscription address example
 
 When using topics and subscriptions, the subscription references the topic to which it belongs using the `topic:` field, as shown in the following example.
 
