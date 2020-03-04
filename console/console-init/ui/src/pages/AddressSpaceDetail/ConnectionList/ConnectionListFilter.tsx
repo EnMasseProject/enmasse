@@ -33,6 +33,13 @@ import { SortForMobileView } from "components/common/SortForMobileView";
 import { useApolloClient } from "@apollo/react-hooks";
 import { RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "queries";
 import { IConnectionListNameSearchResponse } from "types/ResponseTypes";
+import {
+  TypeAheadMessage,
+  TYPEAHEAD_REQUIRED_LENGTH,
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
+  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
+} from "constants/constants";
+import { getSelectOptionList, ISelectOption } from "utils";
 
 interface IConnectionListFilterProps {
   filterValue?: string | null;
@@ -79,9 +86,11 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   const [containerSelected, setContainerSelected] = React.useState<string>();
   const [hostNameInput, setHostNameInput] = React.useState<string>("");
   const [containerInput, setContainerInput] = React.useState<string>("");
-  const [hostnameOptions, setHostnameOptions] = React.useState<Array<string>>();
+  const [hostnameOptions, setHostnameOptions] = React.useState<
+    Array<ISelectOption>
+  >();
   const [containerOptions, setContainerOptions] = React.useState<
-    Array<string>
+    Array<ISelectOption>
   >();
 
   const filterMenuItems = [
@@ -169,7 +178,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeHostnameData = async (value: string) => {
     setHostnameOptions(undefined);
-    if (value.trim().length < 5) {
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setHostnameOptions([]);
       return;
     }
@@ -188,17 +197,17 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       response.data.connections.connections &&
       response.data.connections.connections.length > 0
     ) {
-      //To display dropdown if fetched records are less than 100 in count.
-      if (response.data.connections.total > 100) {
-        setHostnameOptions([]);
-      } else {
-        const obtainedList = response.data.connections.connections.map(
-          (connection: any) => {
-            return connection.spec.hostname;
-          }
-        );
-        setHostnameOptions(Array.from(new Set(obtainedList)));
-      }
+      const obtainedList = response.data.connections.connections.map(
+        (connection: any) => {
+          return connection.spec.hostname;
+        }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.connections.total
+      );
+      if (uniqueList.length > 0) setHostnameOptions(uniqueList);
     }
   };
 
@@ -217,7 +226,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
 
   const onChangeContainerData = async (value: string) => {
     setContainerOptions(undefined);
-    if (value.trim().length < 5) {
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setContainerOptions([]);
       return;
     }
@@ -236,17 +245,17 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
       response.data.connections.connections &&
       response.data.connections.connections.length > 0
     ) {
-      //To display dropdown if fetched records are less than 100 in count.
-      if (response.data.connections.total > 100) {
-        setContainerOptions([]);
-      } else {
-        const obtainedList = response.data.connections.connections.map(
-          (connection: any) => {
-            return connection.spec.containerId;
-          }
-        );
-        setContainerOptions(Array.from(new Set(obtainedList)));
-      }
+      const obtainedList = response.data.connections.connections.map(
+        (connection: any) => {
+          return connection.spec.containerId;
+        }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.connections.total
+      );
+      if (uniqueList.length > 0) setContainerOptions(uniqueList);
     }
   };
   const onContainerSelectFilterChange = (
@@ -379,18 +388,23 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                 >
                   {hostnameOptions && hostnameOptions.length > 0 ? (
                     hostnameOptions.map((option, index) => (
-                      <SelectOption key={index} value={option} />
+                      <SelectOption
+                        key={index}
+                        value={option.value}
+                        isDisabled={option.isDisabled}
+                      />
                     ))
-                  ) : hostNameInput.trim().length < 5 ? (
+                  ) : hostNameInput.trim().length <
+                    TYPEAHEAD_REQUIRED_LENGTH ? (
                     <SelectOption
                       key={"invalid-input-length"}
-                      value={"Enter more characters"}
+                      value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                       disabled={true}
                     />
                   ) : (
                     <SelectOption
                       key={"no-results-found"}
-                      value={"No results found"}
+                      value={TypeAheadMessage.NO_RESULT_FOUND}
                       disabled={true}
                     />
                   )}
@@ -437,18 +451,23 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                 >
                   {containerOptions && containerOptions.length > 0 ? (
                     containerOptions.map((option, index) => (
-                      <SelectOption key={index} value={option} />
+                      <SelectOption
+                        key={index}
+                        value={option.value}
+                        isDisabled={option.isDisabled}
+                      />
                     ))
-                  ) : containerInput.trim().length < 5 ? (
+                  ) : containerInput.trim().length <
+                    TYPEAHEAD_REQUIRED_LENGTH ? (
                     <SelectOption
                       key={"invalid-input-length"}
-                      value={"Enter more characters"}
+                      value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                       disabled={true}
                     />
                   ) : (
                     <SelectOption
                       key={"no-results-found"}
-                      value={"No results found"}
+                      value={TypeAheadMessage.NO_RESULT_FOUND}
                       disabled={true}
                     />
                   )}

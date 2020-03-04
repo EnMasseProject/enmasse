@@ -461,6 +461,7 @@ const RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH = (
         connections {
           links(first:10 offset:0
                 filter:"\`$.spec.address\` LIKE '${address}%'") {
+            total
             links {
               spec {
                 address

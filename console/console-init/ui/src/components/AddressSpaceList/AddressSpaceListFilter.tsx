@@ -34,6 +34,13 @@ import {
 import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "queries";
 import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "types/ResponseTypes";
 import { useApolloClient } from "@apollo/react-hooks";
+import {
+  TypeAheadMessage,
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
+  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
+  TYPEAHEAD_REQUIRED_LENGTH
+} from "constants/constants";
+import { ISelectOption, getSelectOptionList } from "utils";
 
 interface IAddressSpaceListFilterProps {
   filterValue?: string;
@@ -52,6 +59,7 @@ interface IAddressSpaceListKebabProps {
   isDeleteAllDisabled: boolean;
   onDeleteAll: () => void;
 }
+
 export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFilterProps> = ({
   filterValue,
   setFilterValue,
@@ -79,11 +87,11 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   ] = React.useState<boolean>(false);
   const [nameSelected, setNameSelected] = React.useState<string>();
   const [namespaceSelected, setNamespaceSelected] = React.useState<string>();
-  const [nameOptions, setNameOptions] = React.useState<Array<string>>();
+  const [nameOptions, setNameOptions] = React.useState<Array<ISelectOption>>();
   const [nameInput, setNameInput] = React.useState<string>("");
   const [nameSpaceInput, setNameSpaceInput] = React.useState<string>("");
   const [namespaceOptions, setNamespaceOptions] = React.useState<
-    Array<string>
+    Array<ISelectOption>
   >();
 
   const filterMenuItems = [
@@ -194,9 +202,15 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     setIsSelectNamespaceExpanded(!isSelectNamespaceExpanded);
   };
 
+  const createSelectOptionObject = (value: string) => {
+    const data: ISelectOption = { value: value, isDisabled: false };
+    return data;
+  };
+
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
-    if (value.trim().length < 5) {
+
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
       return;
     }
@@ -212,16 +226,17 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       response.data.addressSpaces.addressSpaces &&
       response.data.addressSpaces.addressSpaces.length > 0
     ) {
-      if (response.data.addressSpaces.total > 100) {
-        setNameOptions([]);
-      } else {
-        const obtainedList = response.data.addressSpaces.addressSpaces.map(
-          (link: any) => {
-            return link.metadata.name;
-          }
-        );
-        setNameOptions(Array.from(new Set(obtainedList)));
-      }
+      let obtainedList = response.data.addressSpaces.addressSpaces.map(
+        (link: any) => {
+          return link.metadata.name;
+        }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const filteredNameOptions = getSelectOptionList(
+        obtainedList,
+        response.data.addressSpaces.total
+      );
+      if (filteredNameOptions.length > 0) setNameOptions(filteredNameOptions);
     }
   };
 
@@ -239,7 +254,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const onChangeNamespaceData = async (value: string) => {
     setNamespaceOptions(undefined);
     setNameOptions(undefined);
-    if (value.trim().length < 5) {
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
       setNameOptions([]);
       return;
     }
@@ -258,16 +273,17 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
       response.data.addressSpaces.addressSpaces &&
       response.data.addressSpaces.addressSpaces.length > 0
     ) {
-      if (response.data.addressSpaces.total > 100) {
-        setNamespaceOptions([]);
-      } else {
-        const obtainedList = response.data.addressSpaces.addressSpaces.map(
-          (link: any) => {
-            return link.metadata.namespace;
-          }
-        );
-        setNamespaceOptions(Array.from(new Set(obtainedList)));
-      }
+      let obtainedList = response.data.addressSpaces.addressSpaces.map(
+        (link: any) => {
+          return link.metadata.namespace;
+        }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.addressSpaces.total
+      );
+      if (uniqueList.length > 0) setNamespaceOptions(uniqueList);
     }
   };
 
@@ -369,18 +385,23 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                     >
                       {nameOptions && nameOptions.length > 0 ? (
                         nameOptions.map((option, index) => (
-                          <SelectOption key={index} value={option} />
+                          <SelectOption
+                            key={index}
+                            value={option.value}
+                            isDisabled={option.isDisabled}
+                          />
                         ))
-                      ) : nameInput.trim().length < 5 ? (
+                      ) : nameInput.trim().length <
+                        TYPEAHEAD_REQUIRED_LENGTH ? (
                         <SelectOption
                           key={"invalid-input-length"}
-                          value={"Enter more characters"}
+                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                           disabled={true}
                         />
                       ) : (
                         <SelectOption
                           key={"no-results-found"}
-                          value={"No results found"}
+                          value={TypeAheadMessage.NO_RESULT_FOUND}
                           disabled={true}
                         />
                       )}
@@ -427,18 +448,23 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                     >
                       {namespaceOptions && namespaceOptions.length > 0 ? (
                         namespaceOptions.map((option, index) => (
-                          <SelectOption key={index} value={option} />
+                          <SelectOption
+                            key={index}
+                            value={option.value}
+                            isDisabled={option.isDisabled}
+                          />
                         ))
-                      ) : nameSpaceInput.trim().length < 5 ? (
+                      ) : nameSpaceInput.trim().length <
+                        TYPEAHEAD_REQUIRED_LENGTH ? (
                         <SelectOption
                           key={"invalid-input-length"}
-                          value={"Enter more characters"}
+                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
                           disabled={true}
                         />
                       ) : (
                         <SelectOption
                           key={"no-results-found"}
-                          value={"No results found"}
+                          value={TypeAheadMessage.NO_RESULT_FOUND}
                           disabled={true}
                         />
                       )}
