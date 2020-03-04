@@ -7,6 +7,7 @@ package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.fabric8.kubernetes.client.Config;
+import org.eclipse.hono.util.Strings;
 import org.slf4j.Logger;
 
 import java.net.URL;
@@ -47,7 +48,7 @@ public class Environment {
     private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
     private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
     private final String enmasseDocs = System.getProperty(ENMASSE_DOCS_SYSTEM_PROPERTY);
-    private String kubernetesDomain = System.getenv().getOrDefault(K8S_DOMAIN_ENV, "nip.io");
+    private String kubernetesDomain = System.getenv(K8S_DOMAIN_ENV);
     private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String upgradeTemplates = System.getenv().getOrDefault(UPGRADE_TEPLATES_ENV,
@@ -95,11 +96,18 @@ public class Environment {
         if (installType == EnmasseInstallType.OLM) {
             log.info(debugFormat, OLM_INSTALL_TYPE, olmInstallType.name());
         }
-        if (url.startsWith("https://api")) {
-            try {
-                this.kubernetesDomain = new URL(url).getHost().replace("api", "apps");
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
+        if (Strings.isNullOrEmpty(this.kubernetesDomain)) {
+            if (url.equals("https://api.crc.testing:6443")) {
+                this.kubernetesDomain = "apps-crc.testing";
+            }
+            else if (url.startsWith("https://api")) { //is api url for openshift4
+                try {
+                    this.kubernetesDomain = new URL(url).getHost().replace("api", "apps");
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            } else {
+                this.kubernetesDomain = "nip.io";
             }
         }
         log.info(debugFormat, TEST_LOG_DIR_ENV, testLogDir);
