@@ -4,6 +4,44 @@
  */
 package io.enmasse.systemtest.iot.shared.control;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.apiclients.Predicates.is;
+import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
+import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.net.HttpURLConnection.HTTP_OK;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
+
+import java.nio.ByteBuffer;
+import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import org.apache.qpid.proton.amqp.Binary;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.amqp.messaging.Released;
+import org.apache.qpid.proton.message.Message;
+import org.hamcrest.core.Is;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
@@ -19,43 +57,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.proton.ProtonDelivery;
-import org.apache.qpid.proton.amqp.Binary;
-import org.apache.qpid.proton.amqp.messaging.Accepted;
-import org.apache.qpid.proton.amqp.messaging.Data;
-import org.apache.qpid.proton.amqp.messaging.Released;
-import org.apache.qpid.proton.message.Message;
-import org.hamcrest.core.Is;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
-import java.nio.ByteBuffer;
-import java.time.Duration;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.apiclients.Predicates.is;
-import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
-import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static java.net.HttpURLConnection.HTTP_OK;
-import static org.hamcrest.CoreMatchers.anyOf;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
 
 class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
@@ -77,22 +78,19 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     private int ttd;
 
     @BeforeEach
-    void initClient() {
+    void init() throws Exception {
+
         this.deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         this.httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
         this.registryClient = new DeviceRegistryClient(this.deviceRegistryEndpoint);
         this.credentialsClient = new CredentialsRegistryClient(this.deviceRegistryEndpoint);
-    }
-
-    @BeforeEach
-    void initDevice() throws Exception {
 
         // setup device information
         this.deviceId = UUID.randomUUID().toString();
         this.authId = UUID.randomUUID().toString();
         this.password = UUID.randomUUID().toString();
         this.httpClient = new HttpAdapterClient(this.httpAdapterEndpoint, this.authId, sharedIoTResourceManager.getTenantId(), this.password);
-        
+
         // set up new random device
         this.registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), this.deviceId);
         this.credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), this.deviceId, this.authId, this.password);
