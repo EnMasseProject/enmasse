@@ -61,6 +61,7 @@ func GetTemplateList() []string {
 		"GrafanaDashboard-brokers.yaml",
 		"GrafanaDashboard-components.yaml",
 		"GrafanaDashboard-routers.yaml",
+		"GrafanaDashboard-console.yaml",
 	}
 	return templateList
 }

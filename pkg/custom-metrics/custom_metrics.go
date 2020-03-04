@@ -11,9 +11,9 @@ import (
 var (
 	versionInfo = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "version_info",
+			Name:        "version",
 			Help:        "Enmasse Operator version and product version",
-			ConstLabels: prometheus.Labels{"operator_version": version.Version, "version": os.Getenv("VERSION")},
+			ConstLabels: prometheus.Labels{"name": "enmasse-operator", "operator_version": version.Version, "version": os.Getenv("VERSION")},
 		},
 	)
 )

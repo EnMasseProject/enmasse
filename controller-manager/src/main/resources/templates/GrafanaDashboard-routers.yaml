@@ -163,7 +163,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "connections{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_connections{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -247,7 +247,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "links{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_links{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -331,7 +331,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "addresses{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_addresses{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -415,7 +415,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "auto_links{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_auto_links{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -499,7 +499,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "link_routes{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_link_routes{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -583,7 +583,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "presettled_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_presettled_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -667,7 +667,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "dropped_presettled_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_dropped_presettled_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -751,7 +751,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "accepted_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_accepted_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -835,7 +835,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "released_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_released_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -919,7 +919,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rejected_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_rejected_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -1003,7 +1003,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "modified_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_modified_deliveries{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -1087,7 +1087,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "deliveries_ingress{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_deliveries_ingress{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -1171,7 +1171,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "deliveries_egress{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_deliveries_egress{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -1255,7 +1255,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "deliveries_transit{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_deliveries_transit{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -1339,7 +1339,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "deliveries_ingress_route_container{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_deliveries_ingress_route_container{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -1423,7 +1423,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "deliveries_egress_route_container{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
+              "expr": "enmasse_deliveries_egress_route_container{job=~\"[[router_set]]\",pod=~\"[[router]]\"}",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -1557,7 +1557,7 @@ spec:
         ]
       },
       "timezone": "",
-      "title": "Routers",
+      "title": "EnMasse Routers",
       "uid": "ThjTOL6ik",
       "version": 2
     }

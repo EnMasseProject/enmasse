@@ -4,10 +4,10 @@ metadata:
   labels:
     app: enmasse
     monitoring-key: middleware
-  name: enmasse-brokers
+  name: enmasse-console
   namespace: {{ index .Params "Namespace" }}
 spec:
-  name: enmasse-brokers.json
+  name: enmasse-console.json
   json: |
     {
       "annotations": {
@@ -26,174 +26,59 @@ spec:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 0,
-      "id": 2,
-      "iteration": 1554326761704,
+      "id": 14,
       "links": [],
       "panels": [
         {
-          "collapsed": false,
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
           "gridPos": {
-            "h": 1,
-            "w": 24,
+            "h": 11,
+            "w": 8,
             "x": 0,
             "y": 0
           },
-          "id": 14,
-          "panels": [],
-          "title": "Number of Brokers",
-          "type": "row"
-        },
-        {
-          "cacheTimeout": null,
-          "colorBackground": false,
-          "colorValue": false,
-          "colors": [
-            "#299c46",
-            "rgba(237, 129, 40, 0.89)",
-            "#d44a3a"
-          ],
-          "datasource": "Prometheus",
-          "format": "none",
-          "gauge": {
-            "maxValue": 100,
-            "minValue": 0,
-            "show": false,
-            "thresholdLabels": false,
-            "thresholdMarkers": true
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 7,
-            "x": 0,
-            "y": 1
-          },
-          "id": 6,
-          "interval": null,
-          "links": [],
-          "mappingType": 1,
-          "mappingTypes": [
-            {
-              "name": "value to text",
-              "value": 1
-            },
-            {
-              "name": "range to text",
-              "value": 2
-            }
-          ],
-          "maxDataPoints": 100,
-          "nullPointMode": "connected",
-          "nullText": null,
-          "postfix": "",
-          "postfixFontSize": "50%",
-          "prefix": "",
-          "prefixFontSize": "50%",
-          "rangeMaps": [
-            {
-              "from": "null",
-              "text": "N/A",
-              "to": "null"
-            }
-          ],
-          "sparkline": {
-            "fillColor": "rgba(31, 118, 189, 0.18)",
-            "full": false,
-            "lineColor": "rgb(31, 120, 193)",
-            "show": false
-          },
-          "tableColumn": "",
-          "targets": [
-            {
-              "expr": "sum(up{pod=~\"broker.+\"})",
-              "format": "time_series",
-              "instant": true,
-              "intervalFactor": 1,
-              "refId": "A"
-            }
-          ],
-          "thresholds": "",
-          "title": "Brokers",
-          "type": "singlestat",
-          "valueFontSize": "80%",
-          "valueMaps": [
-            {
-              "op": "=",
-              "text": "N/A",
-              "value": "null"
-            }
-          ],
-          "valueName": "current"
-        },
-        {
-          "collapsed": false,
-          "gridPos": {
-            "h": 1,
-            "w": 24,
-            "x": 0,
-            "y": 5
-          },
-          "id": 10,
-          "panels": [],
-          "title": "Metrics",
-          "type": "row"
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "Prometheus",
-          "fill": 1,
-          "gridPos": {
-            "h": 9,
-            "w": 8,
-            "x": 0,
-            "y": 6
-          },
-          "id": 16,
+          "id": 4,
           "legend": {
             "avg": false,
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
-          "minSpan": 8,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
-          "repeat": "broker_metrics",
-          "repeatDirection": "h",
-          "scopedVars": {
-            "broker_metrics": {
-              "selected": true,
-              "text": "artemis_connection_count",
-              "value": "artemis_connection_count"
-            }
-          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "$broker_metrics{pod=~\"[[broker]]\"}",
+              "expr": "enmasse_console_active_sessions",
               "format": "time_series",
               "intervalFactor": 1,
+              "legendFormat": "Sessions",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "$broker_metrics",
+          "title": "Active Console Sessions",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -238,57 +123,48 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 9,
+            "h": 11,
             "w": 8,
             "x": 8,
-            "y": 6
+            "y": 0
           },
-          "id": 17,
+          "id": 8,
           "legend": {
             "avg": false,
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
-          "minSpan": 8,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
-          "repeat": null,
-          "repeatDirection": "h",
-          "repeatIteration": 1554326761704,
-          "repeatPanelId": 16,
-          "scopedVars": {
-            "broker_metrics": {
-              "selected": true,
-              "text": "artemis_consumer_count",
-              "value": "artemis_consumer_count"
-            }
-          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "$broker_metrics{pod=~\"[[broker]]\"}",
+              "expr": "enmasse_console_query_time_seconds_sum",
               "format": "time_series",
               "intervalFactor": 1,
+              "legendFormat": "Query Sum(operation={{"{{"}}operationName{{"}}"}}))",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "$broker_metrics",
+          "title": "Console Query Sum",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -333,57 +209,48 @@ spec:
           "datasource": "Prometheus",
           "fill": 1,
           "gridPos": {
-            "h": 9,
+            "h": 11,
             "w": 8,
             "x": 16,
-            "y": 6
+            "y": 0
           },
-          "id": 18,
+          "id": 6,
           "legend": {
             "avg": false,
             "current": false,
             "max": false,
             "min": false,
-            "show": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
-          "minSpan": 8,
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
-          "repeat": null,
-          "repeatDirection": "h",
-          "repeatIteration": 1554326761704,
-          "repeatPanelId": 16,
-          "scopedVars": {
-            "broker_metrics": {
-              "selected": true,
-              "text": "artemis_message_count",
-              "value": "artemis_message_count"
-            }
-          },
           "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "$broker_metrics{pod=~\"[[broker]]\"}",
+              "expr": "enmasse_console_query_time_seconds_count",
               "format": "time_series",
               "intervalFactor": 1,
+              "legendFormat": "Query Count(operation={{"{{"}}operationName{{"}}"}}))",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "$broker_metrics",
+          "title": "Console Query Count",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -401,6 +268,94 @@ spec:
             {
               "format": "short",
               "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "description": "",
+          "fill": 1,
+          "gridPos": {
+            "h": 11,
+            "w": 24,
+            "x": 0,
+            "y": 11
+          },
+          "id": 2,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pluginVersion": "6.2.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(enmasse_console_query_time_seconds_bucket[5m])) by (le,operationName))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "Query time 99p(operation={{"{{"}}operationName{{"}}"}}))",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Console Query Time (99th Percentiles)",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": "Seconds",
               "logBase": 1,
               "max": null,
               "min": null,
@@ -421,65 +376,11 @@ spec:
           }
         }
       ],
-      "refresh": "1m",
-      "schemaVersion": 16,
+      "schemaVersion": 18,
       "style": "dark",
       "tags": [],
       "templating": {
-        "list": [
-          {
-            "allValue": null,
-            "current": {
-              "text": "All",
-              "value": "$__all"
-            },
-            "datasource": "Prometheus",
-            "hide": 0,
-            "includeAll": true,
-            "label": "broker",
-            "multi": false,
-            "name": "broker",
-            "options": [],
-            "query": "label_values(pod)",
-            "refresh": 2,
-            "regex": "broker.+",
-            "skipUrlSync": false,
-            "sort": 0,
-            "tagValuesQuery": "",
-            "tags": [],
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
-          },
-          {
-            "allValue": null,
-            "current": {
-              "text": "artemis_connection_count + artemis_consumer_count + artemis_message_count",
-              "value": [
-                "artemis_connection_count",
-                "artemis_consumer_count",
-                "artemis_message_count"
-              ]
-            },
-            "datasource": "Prometheus",
-            "hide": 0,
-            "includeAll": true,
-            "label": "broker_metrics",
-            "multi": true,
-            "name": "broker_metrics",
-            "options": [],
-            "query": "metrics(artemis.*)",
-            "refresh": 1,
-            "regex": "",
-            "skipUrlSync": false,
-            "sort": 0,
-            "tagValuesQuery": "",
-            "tags": [],
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
-          }
-        ]
+        "list": []
       },
       "time": {
         "from": "now-1h",
@@ -511,7 +412,7 @@ spec:
         ]
       },
       "timezone": "",
-      "title": "EnMasse Brokers",
-      "uid": "CfCWuJ6mz",
-      "version": 7
+      "title": "EnMasse Console",
+      "uid": "zH6wHL_Zk",
+      "version": 2
     }

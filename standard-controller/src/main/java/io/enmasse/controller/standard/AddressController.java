@@ -134,7 +134,7 @@ public class AddressController implements Watcher<Address> {
                 MetricType.gauge,
                 () -> Collections.singletonList(new MetricValue(0, new MetricLabel("name", componentName), new MetricLabel("version", options.getVersion())))));
 
-        MetricLabel[] metricLabels = new MetricLabel[]{new MetricLabel("addressspace", options.getAddressSpace()), new MetricLabel("namespace", options.getAddressSpaceNamespace())};
+        MetricLabel[] metricLabels = new MetricLabel[]{new MetricLabel("address_space_name", options.getAddressSpace()), new MetricLabel("namespace", options.getAddressSpaceNamespace())};
         metrics.registerMetric(new ScalarMetric(
                 "addresses_ready_total",
                 "Total number of addresses in ready state",
