@@ -4,14 +4,22 @@
 
 def NODE_LABEL = null
 
+def isCRC() {
+    if (env.ghprbCommentBody.contains('ocp4')
+            || env.ghprbCommentBody.contains('OLM')
+            || env.ghprbCommentBody.contains('olm')
+            || env.ghprbCommentBody.contains('OCP4')
+            || env.ghprbCommentBody.contains('crc')
+            || env.ghprbCommentBody.contains('CRC')) {
+        return true
+    }
+    return false
+}
+
 node('master') {
     stage('Set agent label') {
         echo "Github PR comment: ${env.ghprbCommentBody}"
-        if (env.ghprbCommentBody.contains('ocp4')
-                || env.ghprbCommentBody.contains('OLM')
-                || env.ghprbCommentBody.contains('olm')
-                || env.ghprbCommentBody.contains('OCP4')
-                || env.ghprbCommentBody.contains('crc')) {
+        if (isCRC()) {
             NODE_LABEL = "enmasse-crc"
         } else {
             NODE_LABEL = params.AGENT_LABEL
@@ -72,7 +80,7 @@ pipeline {
                     } else {
                         env.UPGRADE_FROM = params.UPGRADE_FROM
                     }
-                    if (env.ghprbCommentBody.contains('ocp4') || env.ghprbCommentBody.contains('OLM')) {
+                    if (isCRC()) {
                         env.OC_VERSION = "4"
                     } else {
                         env.OC_VERSION = "3.11"
