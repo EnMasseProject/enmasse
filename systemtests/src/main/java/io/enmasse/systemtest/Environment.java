@@ -97,7 +97,10 @@ public class Environment {
             log.info(debugFormat, OLM_INSTALL_TYPE, olmInstallType.name());
         }
         if (Strings.isNullOrEmpty(this.kubernetesDomain)) {
-            if (url.startsWith("https://api")) {
+            if (url.equals("https://api.crc.testing:6443")) {
+                this.kubernetesDomain = "apps-crc.testing";
+            }
+            else if (url.startsWith("https://api")) { //is api url for openshift4
                 try {
                     this.kubernetesDomain = new URL(url).getHost().replace("api", "apps");
                 } catch (Exception ex) {
