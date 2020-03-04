@@ -15,13 +15,13 @@
 |Address status |The first column (the symbol preceding the address name)
 |Address type |The third column
 |Address plan |The fourth column
-|Message ingress rate (during the last 5 minutes) |*Messages In*
-|Message egress rate (during the last 5 minutes) |*Messages Out*
+|Messages per second (computed over the last 5 minutes) |*Messages In*
+|Messages per second (computed over the last 5 minutes) |*Messages Out*
 |Number of senders attached |*Senders*
 |Number of receivers attached |*Receivers*
 |Queue and topic address types only: Number of stored messages on the broker or brokers |*Stored*
 |Standard address space only: Message deliveries per second |For the desired address, expand the twisty on the left to show the *Senders* table; see the *Delivery Rate* column.
-|Standard address space and queue address type only: Number of rejected messages stored in the global dead-letter queue (DLQ) |*Global DLQ*
+// |Standard address space and queue address type only: Number of rejected messages stored in the global dead-letter queue (DLQ) |*Global DLQ*
 |===
 
 
