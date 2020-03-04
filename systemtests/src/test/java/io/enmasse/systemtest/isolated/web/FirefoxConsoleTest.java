@@ -77,11 +77,6 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     }
 
     @Test
-    void testBlankPageAfterAddressSpaceDeletion() {
-
-    }
-
-    @Test
     void testCreateAddrSpaceWithCustomAuthService() throws Exception {
         doTestCreateAddrSpaceWithCustomAuthService();
     }
@@ -115,6 +110,16 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     @Test
     void testHelpLink() throws Exception {
         doTestHelpLink();
+    }
+
+    @Test
+    void testBlankPageAfterAddressSpaceDeletion() throws Exception {
+        doTestBlankPageAfterAddressSpaceDeletion();
+    }
+
+    @Test
+    void testBlankPageAfterAddressDeletion() throws Exception {
+        doTestBlankPageAfterAddressDeletion();
     }
 }
 

@@ -123,8 +123,9 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.createAddressSpace(addressSpace);
         consolePage.openAddressList(addressSpace);
         IsolatedResourcesManager.getInstance().deleteAddressSpace(addressSpace);
-        selenium.refreshPage();
-        //Need get blank page
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
+                .until(ExpectedConditions.invisibilityOf(consolePage.getAddressSpaceItem(addressSpace).getEditMenuItem()));
+        assertNotNull(consolePage.getConnectionNotFound());
     }
 
     protected void doTestBlankPageAfterAddressDeletion() throws Exception {
@@ -137,7 +138,8 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.createAddress(address);
         consolePage.openClientsList(address);
         IsolatedResourcesManager.getInstance().deleteAddresses(address);
-        // Need assert blank page
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
+                .until(ExpectedConditions.invisibilityOf(consolePage.getAddressItem(address).getEditMenuItem()));
         IsolatedResourcesManager.getInstance().deleteAddressSpace(addressSpace);
     }
 
