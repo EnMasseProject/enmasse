@@ -14,7 +14,7 @@ export interface IActionType {
 }
 
 export const reducer = (state = initialState, action: IActionType) => {
-  const { errors } = action.payload || {};
+  const { errors, statusCode } = action.payload || {};
   switch (action.type) {
     case types.SET_SERVER_ERROR:
       return {
@@ -28,7 +28,8 @@ export const reducer = (state = initialState, action: IActionType) => {
     case types.SET_NETWORK_ERROR:
       return {
         ...state,
-        hasNetworkError: action.payload
+        hasNetworkError: true,
+        statusCode
       };
     default:
       return state;

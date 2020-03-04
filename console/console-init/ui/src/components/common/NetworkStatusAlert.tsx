@@ -11,10 +11,11 @@ import {
 } from "@patternfly/react-core";
 
 import { useErrorContext, types } from "context-state-reducer";
+import { ErrorCodes } from "constants/constants";
 
 const NetworkStatusAlert: React.FunctionComponent = () => {
   const { state, dispatch } = useErrorContext();
-  const { hasNetworkError } = state;
+  const { hasNetworkError, statusCode } = state;
   const [alertVisible, setAlertVisible] = useState(true);
 
   const onClose = () => {
@@ -26,6 +27,16 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
     hasNetworkError !== undefined && setAlertVisible(hasNetworkError);
   }, [hasNetworkError]);
 
+  let errorMessage = "We're having trouble connecting to our server.";
+  let redirectLink = "/";
+  let redirectText = "Take me Home";
+
+  if (statusCode && statusCode === ErrorCodes.FORBIDDEN) {
+    errorMessage = "Your session has expired. Please login again.";
+    redirectLink = "oauth/sign_in";
+    redirectText = "Sign in";
+  }
+
   if (alertVisible && hasNetworkError) {
     return (
       <PageSection>
@@ -34,11 +45,11 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
           title="Disconnected from server"
           action={<AlertActionCloseButton onClose={onClose} />}
         >
-          <span>We're having trouble connecting to our server!</span>
+          <span>{errorMessage}</span>
         </Alert>
         <br />
-        <a href="oauth/sign_in" className="pf-c-nav__link">
-          Take me home
+        <a href={redirectLink} className="pf-c-nav__link">
+          {redirectText}
         </a>
       </PageSection>
     );
