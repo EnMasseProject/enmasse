@@ -16,4 +16,15 @@ enum FetchPolicy {
   CACHE_AND_NETWORK = "cache-and-network"
 }
 
-export { UNKNOWN, POLL_INTERVAL, POLL_INTERVAL_USER, FetchPolicy, QUERY };
+enum ErrorCodes {
+  FORBIDDEN = 403
+}
+
+export {
+  UNKNOWN,
+  POLL_INTERVAL,
+  POLL_INTERVAL_USER,
+  FetchPolicy,
+  QUERY,
+  ErrorCodes
+};
