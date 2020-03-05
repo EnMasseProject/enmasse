@@ -59,7 +59,11 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
 }) => {
   const [isHidden, setIsHidden] = React.useState(true);
   const { width } = useWindowDimensions();
-  console.log("addressSpaceType", addressSpaceType);
+
+  const toggleDetails = () => {
+    setIsHidden(!isHidden);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -97,9 +101,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
           {width > 992 && (
             <FlexItem
               id="cd-header-see-hide-more"
-              onClick={() => {
-                setIsHidden(!isHidden);
-              }}
+              onClick={toggleDetails}
               className={css(styles.expandable)}
             >
               {isHidden ? (

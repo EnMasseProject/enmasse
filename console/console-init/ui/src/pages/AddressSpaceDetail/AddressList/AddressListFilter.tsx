@@ -139,6 +139,11 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
     setIsSelectNameExpanded(!isSelectNameExpanded);
   };
 
+  const onNameSelectClear = () => {
+    setNameSelected(undefined);
+    setIsSelectNameExpanded(false);
+  };
+
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
     if (value.trim().length < 5) {
@@ -269,10 +274,7 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
                       aria-label="Select a Address"
                       onToggle={onNameSelectToggle}
                       onSelect={onNameSelect}
-                      onClear={() => {
-                        setNameSelected(undefined);
-                        setIsSelectNameExpanded(false);
-                      }}
+                      onClear={onNameSelectClear}
                       maxHeight="200px"
                       selections={nameSelected}
                       onFilter={onNameSelectFilterChange}

@@ -93,6 +93,11 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
     return false;
   };
 
+  const onCreateWizardClose = () => {
+    setIsCreateWizardOpen(!isCreateWizardOpen);
+    setAddressName("");
+  };
+
   const handleSave = async () => {
     if (addressSpace && isFinishEnabled()) {
       const getVariables = () => {
@@ -170,10 +175,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
       isOpen={isCreateWizardOpen}
       isFullHeight={true}
       isFullWidth={true}
-      onClose={() => {
-        setIsCreateWizardOpen(!isCreateWizardOpen);
-        setAddressName("");
-      }}
+      onClose={onCreateWizardClose}
       title="Create new Address"
       steps={steps}
       onNext={() => {}}

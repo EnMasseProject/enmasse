@@ -278,6 +278,16 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
     setIsSelectContainerExpanded(false);
   };
 
+  const onHostNameClear = () => {
+    setHostnameSelected(undefined);
+    setIsSelectHostnameExpanded(false);
+  };
+
+  const onContainerSelectClear = () => {
+    setContainerSelected(undefined);
+    setIsSelectContainerExpanded(false);
+  };
+
   const onDelete = (
     type: string | DataToolbarChip,
     id: string | DataToolbarChip
@@ -364,10 +374,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   aria-label="Select a hostname"
                   onToggle={onHostnameSelectToggle}
                   onSelect={onHostnameSelect}
-                  onClear={() => {
-                    setHostnameSelected(undefined);
-                    setIsSelectHostnameExpanded(false);
-                  }}
+                  onClear={onHostNameClear}
                   maxHeight="200px"
                   selections={hostnameSelected}
                   onFilter={onHostnameSelectFilterChange}
@@ -422,10 +429,7 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
                   aria-label="Select a Address"
                   onToggle={onContainerSelectToggle}
                   onSelect={onContainerSelect}
-                  onClear={() => {
-                    setContainerSelected(undefined);
-                    setIsSelectContainerExpanded(false);
-                  }}
+                  onClear={onContainerSelectClear}
                   maxHeight="200px"
                   selections={containerSelected}
                   onFilter={onContainerSelectFilterChange}

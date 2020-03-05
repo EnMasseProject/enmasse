@@ -297,6 +297,16 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     setIsSelectNamespaceExpanded(false);
   };
 
+  const onNameClear = () => {
+    setNameSelected(undefined);
+    setIsSelectNameExpanded(false);
+  };
+
+  const onNamespaceClear = () => {
+    setNamespaceSelected(undefined);
+    setIsSelectNamespaceExpanded(false);
+  };
+
   const checkIsFilterApplied = () => {
     if (
       (filterNames && filterNames.length > 0) ||
@@ -354,10 +364,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       aria-label="Select a Name"
                       onToggle={onNameSelectToggle}
                       onSelect={onNameSelect}
-                      onClear={() => {
-                        setNameSelected(undefined);
-                        setIsSelectNameExpanded(false);
-                      }}
+                      onClear={onNameClear}
                       maxHeight="200px"
                       selections={nameSelected}
                       onFilter={onNameSelectFilterChange}
@@ -412,10 +419,7 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
                       aria-label="Select a Namespace"
                       onToggle={onNamespaceSelectToggle}
                       onSelect={onNamespaceSelect}
-                      onClear={() => {
-                        setNamespaceSelected(undefined);
-                        setIsSelectNamespaceExpanded(false);
-                      }}
+                      onClear={onNamespaceClear}
                       maxHeight="200px"
                       selections={namespaceSelected}
                       onFilter={onNamespaceSelectFilterChange}
