@@ -16,7 +16,6 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.clients.ClientUtils.ClientAttacher;
-import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
@@ -37,7 +36,6 @@ import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
 import io.enmasse.systemtest.selenium.resources.FilterType;
 import io.enmasse.systemtest.selenium.resources.SortType;
-import io.enmasse.systemtest.selenium.resources.WebItem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -49,6 +47,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.hono.util.Strings;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -122,10 +121,10 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openConsolePage();
         consolePage.createAddressSpace(addressSpace);
         consolePage.openAddressList(addressSpace);
-        IsolatedResourcesManager.getInstance().deleteAddressSpace(addressSpace);
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
-                .until(ExpectedConditions.invisibilityOf(consolePage.getAddressSpaceItem(addressSpace).getEditMenuItem()));
-        assertNotNull(consolePage.getConnectionNotFound());
+        AddressSpaceUtils.deleteAddressSpace(addressSpace, logCollector);
+        selenium.getDriverWait().withTimeout(Duration.ofMinutes(22))
+                .until(ExpectedConditions.invisibilityOf(consolePage.getAddressSpaceTitle()));
+        assertNotNull(consolePage.getNotFoundPage());
     }
 
     protected void doTestBlankPageAfterAddressDeletion() throws Exception {
@@ -139,7 +138,8 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openClientsList(address);
         IsolatedResourcesManager.getInstance().deleteAddresses(address);
         selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
-                .until(ExpectedConditions.invisibilityOf(consolePage.getAddressItem(address).getEditMenuItem()));
+                .until(ExpectedConditions.invisibilityOf(consolePage.getAddressTitle()));
+        assertNotNull(consolePage.getNotFoundPage());
         IsolatedResourcesManager.getInstance().deleteAddressSpace(addressSpace);
     }
 
@@ -855,7 +855,7 @@ public abstract class ConsoleTest extends TestBase {
         selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
                 .until(ExpectedConditions.invisibilityOf(consolePage.getLinkContainerId()));
 
-        assertNotNull(consolePage.getConnectionNotFound());
+        assertNotNull(consolePage.getNotFoundPage());
 
     }
 
