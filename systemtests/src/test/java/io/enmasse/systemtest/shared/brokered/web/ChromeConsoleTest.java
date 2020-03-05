@@ -12,7 +12,6 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.selenium.SeleniumChrome;
 import io.enmasse.systemtest.utils.AddressUtils;
-
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 

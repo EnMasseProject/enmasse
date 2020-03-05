@@ -4,39 +4,6 @@
  */
 package io.enmasse.systemtest.iot.isolated;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.TestTag.SMOKE;
-import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
-import static io.enmasse.user.model.v1.Operation.recv;
-import static io.enmasse.user.model.v1.Operation.send;
-import static java.time.Duration.ofMinutes;
-import static java.util.Arrays.asList;
-import static java.util.EnumSet.of;
-import static java.util.Optional.ofNullable;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.hamcrest.core.AllOf.allOf;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.hamcrest.Matcher;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceStatus;
@@ -69,6 +36,38 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import org.hamcrest.Matcher;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.SMOKE;
+import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
+import static io.enmasse.user.model.v1.Operation.recv;
+import static io.enmasse.user.model.v1.Operation.send;
+import static java.time.Duration.ofMinutes;
+import static java.util.Arrays.asList;
+import static java.util.EnumSet.of;
+import static java.util.Optional.ofNullable;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+import static org.hamcrest.core.AllOf.allOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
     private final static Logger log = CustomLogger.getLogger();

@@ -42,12 +42,10 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.Count;
 import io.enmasse.systemtest.utils.TestUtils;
-
 import io.fabric8.kubernetes.api.model.Pod;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.hono.util.Strings;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -71,13 +69,11 @@ import java.util.stream.IntStream;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.either;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -121,7 +117,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openConsolePage();
         consolePage.createAddressSpace(addressSpace);
         consolePage.openAddressList(addressSpace);
-        AddressSpaceUtils.deleteAddressSpace(addressSpace, logCollector);
+        resourcesManager.deleteAddressSpaceWithoutWait(addressSpace);
         selenium.getDriverWait().withTimeout(Duration.ofMinutes(22))
                 .until(ExpectedConditions.invisibilityOf(consolePage.getAddressSpaceTitle()));
         assertNotNull(consolePage.getNotFoundPage());

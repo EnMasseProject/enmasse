@@ -4,15 +4,15 @@
  */
 package io.enmasse.systemtest.condition;
 
+import io.enmasse.systemtest.EnmasseInstallType;
+import io.enmasse.systemtest.OLMInstallationType;
+
+import java.lang.annotation.Annotation;
+
 import static io.enmasse.systemtest.EnmasseInstallType.BUNDLE;
 import static io.enmasse.systemtest.EnmasseInstallType.OLM;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.lang.annotation.Annotation;
-
-import io.enmasse.systemtest.EnmasseInstallType;
-import io.enmasse.systemtest.OLMInstallationType;
 
 public class SupportedInstallTypesConditionTest {
 

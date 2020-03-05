@@ -4,20 +4,19 @@
  */
 package io.enmasse.systemtest.shared.standard.web;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import io.enmasse.systemtest.info.TestInfo;
-import org.junit.jupiter.api.Test;
-
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SeleniumFirefox
 public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStandard {
