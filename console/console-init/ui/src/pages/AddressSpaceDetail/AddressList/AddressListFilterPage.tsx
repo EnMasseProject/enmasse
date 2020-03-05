@@ -22,6 +22,7 @@ import {
 import useWindowDimensions from "components/common/WindowDimension";
 import { SortForMobileView } from "components/common/SortForMobileView";
 import { ISortBy } from "@patternfly/react-table";
+import { FetchPolicy } from "constants/constants";
 
 interface AddressListFilterProps {
   filterValue: string | null;
@@ -88,7 +89,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
     setIsCreateWizardOpen(!isCreateWizardOpen);
     if (name && namespace) {
       const addressSpace = await client.query<IAddressSpacesResponse>({
-        query: RETURN_ADDRESS_SPACE_DETAIL(name, namespace)
+        query: RETURN_ADDRESS_SPACE_DETAIL(name, namespace),
+        fetchPolicy: FetchPolicy.NETWORK_ONLY
       });
       if (
         addressSpace.data &&

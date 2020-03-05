@@ -38,7 +38,8 @@ import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH,
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
+  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
+  FetchPolicy
 } from "constants/constants";
 import { getSelectOptionList, ISelectOption } from "utils";
 
@@ -157,7 +158,8 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
         addressspaceName,
         namespace,
         value.trim()
-      )
+      ),
+      fetchPolicy: FetchPolicy.NETWORK_ONLY
     });
     if (
       response &&

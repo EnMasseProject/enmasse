@@ -175,7 +175,8 @@ export default function AddressSpaceDetailPage() {
           name: data.name,
           namespace: data.namespace
         }
-      }
+      },
+      fetchPolicy: FetchPolicy.NETWORK_ONLY
     });
     if (dataToDownload.errors) {
       console.log("Error while download", dataToDownload.errors);

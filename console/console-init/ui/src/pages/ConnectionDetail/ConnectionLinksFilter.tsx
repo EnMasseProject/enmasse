@@ -43,7 +43,8 @@ import {
   TypeAheadMessage,
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   TYPEAHEAD_REQUIRED_LENGTH,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
+  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
+  FetchPolicy
 } from "constants/constants";
 import { getSelectOptionList, ISelectOption } from "utils";
 
@@ -197,7 +198,8 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
         connectionName,
         namespace,
         value.trim()
-      )
+      ),
+      fetchPolicy: FetchPolicy.NETWORK_ONLY
     });
     if (
       response &&
@@ -245,7 +247,8 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
         connectionName,
         namespace,
         value.trim()
-      )
+      ),
+      fetchPolicy: FetchPolicy.NETWORK_ONLY
     });
     if (
       response &&
