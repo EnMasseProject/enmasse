@@ -6,7 +6,7 @@ metadata:
   labels:
     app: enmasse
 spec:
-  name: enmasse
+  name: ${APP_BUNDLE_PREFIX}
   source: enmasse-source
   sourceNamespace: ${OPERATOR_NAMESPACE}
   startingCSV: ${APP_BUNDLE_PREFIX}.${OLM_VERSION}
