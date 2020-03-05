@@ -1,3 +1,9 @@
+
+## 1.0.0
+
+* #4044: Ensure agent uses bi-directional AMQP idle-time-out for all connections
+
+
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
 *  #3686: Add metrics endpoint to controller-managerxs
