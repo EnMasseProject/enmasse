@@ -203,7 +203,8 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           name: data.name,
           namespace: data.namespace
         }
-      }
+      },
+      fetchPolicy: FetchPolicy.NETWORK_ONLY
     });
     if (dataToDownload.errors) {
       console.log("Error while download", dataToDownload.errors);
