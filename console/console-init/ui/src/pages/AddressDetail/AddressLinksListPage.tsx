@@ -12,7 +12,7 @@ import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { EmptyLinks } from "components/common/EmptyLinks";
 import { ISortBy } from "@patternfly/react-table";
 import { Loading } from "use-patternfly";
-import { POLL_INTERVAL } from "constants/constants";
+import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 
 export interface IAddressLinksListProps {
   page: number;
@@ -58,7 +58,7 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
       sortBy,
       filterRole
     ),
-    { pollInterval: POLL_INTERVAL }
+    { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
   if (loading && !data) return <Loading />;
   if (error) console.log(error);
