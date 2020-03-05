@@ -49,7 +49,7 @@ function start(env) {
                     bind_event(bc, 'connection_stats_retrieved', console_server.connections, 'set');
                     bind_event(address_source, 'addresses_defined', bc);
                     bind_event(bc, 'address_stats_retrieved', address_source, 'check_status');
-                    bc.connect(tls_options.get_client_options({host:env.BROKER_SERVICE_HOST, port:env.BROKER_SERVICE_PORT,username:'console'}));
+                    bc.connect(tls_options.get_client_options({host:env.BROKER_SERVICE_HOST, port:env.BROKER_SERVICE_PORT,username:'console', idle_time_out: 8000}));
                 } else {
                     //assume standard address space for now
                     var StandardStats = require('../lib/standard_stats.js');

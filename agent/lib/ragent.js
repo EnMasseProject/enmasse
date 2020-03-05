@@ -334,6 +334,13 @@ Ragent.prototype.configure_handlers = function () {
     var self = this;
     this.container.on('connection_open', function(context) {
         var product = get_product(context.connection);
+
+        var idleTimeout = 8000;
+        if ('idle_time_out' in context.connection.remote.open && context.connection.remote.open.idle_time_out > 0) {
+            idleTimeout = context.connection.remote.open.idle_time_out;
+        }
+        context.connection.local.open.idle_time_out = idleTimeout;
+
         if (product === 'qpid-dispatch-router') {
             var r = rtr.connected(context.connection);
             log.info('Router connected from ' + r.container_id);
