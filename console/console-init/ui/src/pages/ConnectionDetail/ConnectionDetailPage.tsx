@@ -26,7 +26,7 @@ import { IConnectionDetailResponse } from "types/ResponseTypes";
 import { Link } from "react-router-dom";
 import { RETURN_CONNECTION_DETAIL } from "queries";
 import { ConnectionLinksWithFilterAndPaginationPage } from "./ConnectionLinksWithFilterAndPaginationPage";
-import { POLL_INTERVAL } from "constants/constants";
+import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
 
 const getProductFilteredValue = (object: any[], value: string) => {
@@ -81,7 +81,7 @@ export default function ConnectionDetailPage() {
   useA11yRouteChange();
   const { loading, error, data } = useQuery<IConnectionDetailResponse>(
     RETURN_CONNECTION_DETAIL(name || "", namespace || "", connectionname || ""),
-    { pollInterval: POLL_INTERVAL }
+    { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
   if (loading) return <Loading />;
   if (error) {

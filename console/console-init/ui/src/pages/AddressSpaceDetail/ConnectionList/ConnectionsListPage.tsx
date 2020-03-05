@@ -14,7 +14,7 @@ import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { IConnectionListResponse } from "types/ResponseTypes";
 import { RETURN_ALL_CONECTION_LIST } from "queries";
 import { ISortBy } from "@patternfly/react-table";
-import { POLL_INTERVAL } from "constants/constants";
+import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 
 export interface IConnectionListPageProps {
   name?: string;
@@ -55,7 +55,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
       namespace,
       sortBy
     ),
-    { pollInterval: POLL_INTERVAL }
+    { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
 
   if (error) {

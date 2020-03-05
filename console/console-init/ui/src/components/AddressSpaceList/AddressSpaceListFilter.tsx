@@ -38,7 +38,8 @@ import {
   TypeAheadMessage,
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
-  TYPEAHEAD_REQUIRED_LENGTH
+  TYPEAHEAD_REQUIRED_LENGTH,
+  FetchPolicy
 } from "constants/constants";
 import { ISelectOption, getSelectOptionList } from "utils";
 
@@ -217,7 +218,11 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     const response = await client.query<
       ISearchNameOrNameSpaceAddressSpaceListResponse
     >({
-      query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(true, value.trim())
+      query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(
+        true,
+        value.trim()
+      ),
+      fetchPolicy: FetchPolicy.NETWORK_ONLY
     });
     if (
       response &&

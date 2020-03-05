@@ -11,7 +11,7 @@ import { Loading } from "use-patternfly";
 import { ILink, LinkList } from "components/ConnectionDetail/LinkList";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { ISortBy } from "@patternfly/react-table";
-import { POLL_INTERVAL } from "constants/constants";
+import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { EmptyLinks } from "components/common/EmptyLinks";
 
 interface IConnectionLinksListPageProps {
@@ -56,7 +56,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
       sortBy,
       filterRole
     ),
-    { pollInterval: POLL_INTERVAL }
+    { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
   if (loading && !data) return <Loading />;
   if (error) {
