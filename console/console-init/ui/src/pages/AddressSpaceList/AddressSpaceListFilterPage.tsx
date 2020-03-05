@@ -64,7 +64,10 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
   const createAddressSpaceOnClick = async () => {
     setIsCreateWizardOpen(!isCreateWizardOpen);
   };
-  const sortMenuItems = [{ key: "name", value: "Name", index: 1 }];
+  const sortMenuItems = [
+    { key: "name", value: "Name", index: 1 },
+    { key: "creationTimestamp", value: "Time Created", index: 4 }
+  ];
   const toolbarItems = (
     <>
       <AddressSpaceListFilter

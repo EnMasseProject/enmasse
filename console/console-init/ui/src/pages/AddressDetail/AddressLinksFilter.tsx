@@ -190,7 +190,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
         addressName,
         namespace,
         value.trim()
-      )
+      ),
+      fetchPolicy: FetchPolicy.NETWORK_ONLY
     });
     if (
       response &&
