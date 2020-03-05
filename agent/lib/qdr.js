@@ -145,7 +145,11 @@ Router.prototype.closed = function (context) {
 Router.prototype._abort_requests = function (error) {
     log.info('[%s] aborting pending requests: %s', this.get_id(), error);
     for (var h in this.handlers) {
-        this.handlers[h](error);
+        try {
+            this.handlers[h](error);
+        } catch (e) {
+            log.warn("[%s] ignoring handler error while aborting requests: %s", this.get_id(), e)
+        }
         delete this.handlers[h];
     }
     while (this.requests.length > 0) { this.requests.shift(); };
@@ -180,16 +184,30 @@ function extract_records(body) {
 
 function as_handler(resolve, reject) {
     return function (context) {
-        var message = context.message === undefined ? context : context.message;
-        if (message.application_properties) {
-            if (message.application_properties.statusCode >= 200 && message.application_properties.statusCode < 300) {
-                if (message.body) resolve(extract_records(message.body));
-                else resolve({code:message.application_properties.statusCode, description:message.application_properties.statusDescription});
+        if (context == null) {
+            reject(null);
+            return;
+        }
+        try {
+            var message = context.message === undefined ? context : context.message;
+            if (message.application_properties) {
+                if (message.application_properties.statusCode >= 200 && message.application_properties.statusCode < 300) {
+                    if (message.body) resolve(extract_records(message.body));
+                    else resolve({
+                        code: message.application_properties.statusCode,
+                        description: message.application_properties.statusDescription
+                    });
+                } else {
+                    reject({
+                        code: message.application_properties.statusCode,
+                        description: message.application_properties.statusDescription
+                    });
+                }
             } else {
-                reject({code:message.application_properties.statusCode, description:message.application_properties.statusDescription});
+                reject(message.toString());
             }
-        } else {
-            reject(message.toString());
+        } catch (e) {
+            reject(e);
         }
     };
 }
