@@ -370,10 +370,10 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         assertReceive("before replace", numReceiveBeforeDraining, before, client);
 
 
-        resourcesManager.replaceAddress(after);
         CustomLogger.getLogger().info(String.format("Now scaling from '%s' to '%s'", before.getSpec().getPlan(), after.getSpec().getPlan()));
-        logCollector.collectLogsOfPodsByLabels(kubernetes.getInfraNamespace(), before.getSpec().getPlan(), Collections.singletonMap("role", "broker"));
         resourcesManager.replaceAddress(after);
+        logCollector.collectLogsOfPodsByLabels(kubernetes.getInfraNamespace(), before.getSpec().getPlan(), Collections.singletonMap("role", "broker"));
+
         // Receive messages sent before address was replaced
         assertReceive("after replace", numReceivedAfterScaledPhase1, after, client);
 
