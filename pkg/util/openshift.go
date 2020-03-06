@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	userapiv1 "github.com/openshift/api/user/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -19,7 +20,6 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	routeapiv1 "github.com/openshift/api/route/v1"
 	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
@@ -31,12 +31,9 @@ var (
 )
 
 const ConnectsTo = "app.openshift.io/connects-to"
+const EnMasseOpenshiftEnvVar = "ENMASSE_OPENSHIFT"
 
-var UserGVK = schema.GroupVersionKind{
-	Group:   "user.openshift.io",
-	Version: "v1",
-	Kind:    "User",
-}
+var UserGVK = userapiv1.GroupVersion.WithKind("User")
 
 func IsOpenshift() bool {
 
@@ -144,13 +141,13 @@ func detectOpenshift() bool {
 
 	log.Info("Detect if openshift is running")
 
-	value, ok := os.LookupEnv("ENMASSE_OPENSHIFT")
+	value, ok := os.LookupEnv(EnMasseOpenshiftEnvVar)
 	if ok {
-		log.Info("Set by env-var 'ENMASSE_OPENSHIFT': " + value)
+		log.Info("Set by env-var '" + EnMasseOpenshiftEnvVar + "': " + value)
 		return strings.ToLower(value) == "true"
 	}
 
-	return HasApi(routeapiv1.GroupVersion.WithKind("Route"))
+	return HasApi(UserGVK)
 }
 
 func OpenshiftUri() (*url.URL, bool, error) {
