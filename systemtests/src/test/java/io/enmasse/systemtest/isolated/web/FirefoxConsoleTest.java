@@ -111,5 +111,15 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     void testHelpLink() throws Exception {
         doTestHelpLink();
     }
+
+    @Test
+    void testBlankPageAfterAddressSpaceDeletion() throws Exception {
+        doTestBlankPageAfterAddressSpaceDeletion();
+    }
+
+    @Test
+    void testBlankPageAfterAddressDeletion() throws Exception {
+        doTestBlankPageAfterAddressDeletion();
+    }
 }
 

@@ -11,7 +11,6 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
 
 class BrokeredSoakTest extends SoakTestBase implements ITestIsolatedBrokered {
 

@@ -6,15 +6,12 @@ package io.enmasse.systemtest.bases.web;
 
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestBaseShared;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.RheaWebPage;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;

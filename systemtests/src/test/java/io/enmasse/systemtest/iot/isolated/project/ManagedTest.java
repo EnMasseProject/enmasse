@@ -4,25 +4,6 @@
  */
 package io.enmasse.systemtest.iot.isolated.project;
 
-import static io.enmasse.systemtest.utils.AddressSpaceUtils.addressSpaceExists;
-import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
-import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
-import static org.junit.Assert.assertThat;
-
-import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.BiConsumer;
-
-import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
@@ -56,6 +37,24 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserList;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import org.apache.qpid.proton.message.Message;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+
+import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.BiConsumer;
+
+import static io.enmasse.systemtest.utils.AddressSpaceUtils.addressSpaceExists;
+import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
+import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
+import static org.junit.Assert.assertThat;
 
 public class ManagedTest extends TestBase implements ITestIoTIsolated {
 

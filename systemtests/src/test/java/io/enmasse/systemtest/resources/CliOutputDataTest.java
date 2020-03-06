@@ -4,14 +4,13 @@
  */
 package io.enmasse.systemtest.resources;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import io.enmasse.systemtest.resources.CliOutputData.CliOutputDataType;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-import org.junit.jupiter.api.Test;
-
-import io.enmasse.systemtest.resources.CliOutputData.CliOutputDataType;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 public class CliOutputDataTest {
 

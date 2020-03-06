@@ -5,21 +5,6 @@
 
 package io.enmasse.systemtest.isolated.api;
 
-import static io.enmasse.systemtest.platform.KubeCMDClient.createCR;
-import static io.enmasse.systemtest.platform.KubeCMDClient.patchCR;
-import static io.enmasse.systemtest.platform.KubeCMDClient.updateCR;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.Collections;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import org.junit.jupiter.api.Test;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
@@ -46,6 +31,20 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.enmasse.user.model.v1.UserBuilder;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import static io.enmasse.systemtest.platform.KubeCMDClient.createCR;
+import static io.enmasse.systemtest.platform.KubeCMDClient.patchCR;
+import static io.enmasse.systemtest.platform.KubeCMDClient.updateCR;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITestIsolatedStandard {
 

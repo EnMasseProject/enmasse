@@ -300,6 +300,14 @@ public abstract class ResourceManager {
         }
     }
 
+    public void deleteAddressSpaceWithoutWait(AddressSpace addressSpace) throws Exception {
+        if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
+            AddressSpaceUtils.deleteAddressSpace(addressSpace, logCollector);
+        } else {
+            LOGGER.info("Address space '" + addressSpace.getMetadata().getName() + "' doesn't exists!");
+        }
+    }
+
     protected void createAddressSpaces(List<AddressSpace> addressSpaces, String operationID) throws Exception {
         addressSpaces.forEach(addressSpace ->
                 kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace));

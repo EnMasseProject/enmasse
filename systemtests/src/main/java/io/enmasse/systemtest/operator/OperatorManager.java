@@ -306,7 +306,8 @@ public class OperatorManager {
                 }
                 TestUtils.waitForPodReady("console", namespace);
                 final ConsoleServiceSpec spec = console.getSpec();
-                final boolean ready = spec != null && spec.getOauthClientSecret() != null && spec.getSsoCookieSecret() != null;
+                final boolean ready = spec != null && spec.getOauthClientSecret() != null
+                        && spec.getSsoCookieSecret() != null && console.getStatus().getHost() != null;
                 if (!ready) {
                     LOGGER.info("ConsoleService {} not yet fully ready: {}", serviceName, spec);
                 }

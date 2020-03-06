@@ -436,7 +436,15 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.id("cd-header-container-id"));
     }
 
-    public WebElement getConnectionNotFound() {
+    public WebElement getAddressSpaceTitle() {
+        return selenium.getDriver().findElement(By.id("as-header-title"));
+    }
+
+    public WebElement getAddressTitle() {
+        return selenium.getDriver().findElement(By.id("adheader-name"));
+    }
+
+    public WebElement getNotFoundPage() {
         return selenium.getDriver().findElement(By.className("pf-c-empty-state"));
     }
 

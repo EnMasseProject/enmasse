@@ -154,7 +154,7 @@ public class AddressSpaceUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static void deleteAddressSpace(AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
+    public static void deleteAddressSpace(AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
         logCollector.collectEvents();
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();

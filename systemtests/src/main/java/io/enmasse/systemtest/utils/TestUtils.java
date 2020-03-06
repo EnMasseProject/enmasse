@@ -582,8 +582,9 @@ public class TestUtils {
         }, budget);
     }
 
-    public static String getGlobalConsoleRoute() throws Exception {
+    public static String getGlobalConsoleRoute() {
         return Kubernetes.getInstance().getConsoleServiceClient().withName("console").get().getStatus().getUrl();
+
     }
 
     /**
