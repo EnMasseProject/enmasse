@@ -31,7 +31,7 @@ import {
   Select,
   SelectVariant
 } from "@patternfly/react-core";
-import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "queries";
+import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
 import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "types/ResponseTypes";
 import { useApolloClient } from "@apollo/react-hooks";
 import {

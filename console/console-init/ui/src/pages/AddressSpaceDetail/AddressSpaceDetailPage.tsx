@@ -34,7 +34,7 @@ import {
   DELETE_ADDRESS_SPACE,
   RETURN_ADDRESS_SPACE_DETAIL,
   EDIT_ADDRESS_SPACE
-} from "queries";
+} from "graphql-module/queries";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";

@@ -17,7 +17,7 @@ import { AddressSpaceListPage } from "./AddressSpaceListPage";
 import { AddressSpaceListFilterPage } from "./AddressSpaceListFilterPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
-import { DELETE_ADDRESS_SPACE } from "queries";
+import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
 import { useMutation } from "@apollo/react-hooks";
 import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
 import { compareTwoAddress } from "pages/AddressSpaceDetail/AddressList/AddressListPage";

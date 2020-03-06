@@ -18,7 +18,7 @@ import {
   RETURN_ALL_ADDRESS_SPACES,
   EDIT_ADDRESS_SPACE,
   DOWNLOAD_CERTIFICATE
-} from "queries";
+} from "graphql-module/queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
 import { EditAddressSpace } from "pages/EditAddressSpace";
 import { ISortBy } from "@patternfly/react-table";

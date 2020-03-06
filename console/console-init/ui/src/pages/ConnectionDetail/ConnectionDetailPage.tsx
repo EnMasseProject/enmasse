@@ -24,7 +24,7 @@ import {
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { IConnectionDetailResponse } from "types/ResponseTypes";
 import { Link } from "react-router-dom";
-import { RETURN_CONNECTION_DETAIL } from "queries";
+import { RETURN_CONNECTION_DETAIL } from "graphql-module/queries";
 import { ConnectionLinksWithFilterAndPaginationPage } from "./ConnectionLinksWithFilterAndPaginationPage";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";

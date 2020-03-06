@@ -8,7 +8,7 @@ import { useQuery } from "@apollo/react-hooks";
 import {
   RETURN_ADDRESS_SPACE_PLANS,
   RETURN_FILTERED_AUTHENTICATION_SERVICES
-} from "queries";
+} from "graphql-module/queries";
 import {
   Form,
   TextContent,
