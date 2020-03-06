@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
 	"reflect"
 	"strconv"
 
@@ -31,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	rest "k8s.io/client-go/rest"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -798,6 +799,11 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			install.ApplyEnv(container, "NAMESPACE", func(envvar *corev1.EnvVar) {
 				envvar.Value = namespace
 			})
+		}
+
+		value, ok := os.LookupEnv(util.EnMasseOpenshiftEnvVar)
+		if ok {
+			install.ApplyEnvSimple(container, util.EnMasseOpenshiftEnvVar, value)
 		}
 
 		// TODO use https
