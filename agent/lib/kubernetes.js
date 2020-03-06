@@ -57,7 +57,6 @@ function get_options(options, path) {
     return {
         hostname: options.host || process.env.KUBERNETES_SERVICE_HOST,
         port: options.port || process.env.KUBERNETES_SERVICE_PORT,
-        resyncInterval: options.resyncInterval || process.env.RESYNC_INTERVAL,
         rejectUnauthorized: false,
         path: options.path || path,
         headers: {
@@ -77,16 +76,26 @@ function get_path(base, resource, options) {
     return path;
 }
 
-function list_options(resource, options) {
+function list_options(resource, baseOptions) {
     var base = resource.startsWith("address") ? '/apis/enmasse.io/v1beta1/namespaces/' : '/api/v1/namespaces/';
-    let path = get_path(base, resource, options);
-    return get_options(options, path);
-
+    let path = get_path(base, resource, baseOptions);
+    var options = get_options(baseOptions, path);
+    return myutils.merge({requestTimeout: options.requestTimeout || process.env.REQUEST_TIMEOUT || 120}, options);
 }
 
-function watch_options(resource, options) {
+function watch_options(resource, baseOptions) {
     var base = resource.startsWith("address") ? '/apis/enmasse.io/v1beta1/watch/namespaces/' : '/api/v1/watch/namespaces/';
-    return get_options(options, get_path(base, resource, options));
+    var options = get_options(baseOptions, get_path(base, resource, baseOptions));
+    return myutils.merge({requestTimeout: options.requestTimeout || process.env.RESYNC_INTERVAL}, options);
+}
+
+function apply_timeout(opts, request) {
+    if (opts.requestTimeout !== undefined) {
+        request.setTimeout(opts.requestTimeout * 1000, function () {
+            log.info('response %s timeout (%ds)', opts.path, opts.requestTimeout);
+            request.abort();
+        });
+    }
 }
 
 function do_get_with_options(opts) {
@@ -111,6 +120,7 @@ function do_get_with_options(opts) {
 	    });
         });
         request.on('error', reject);
+        apply_timeout(opts, request);
     });
 };
 
@@ -147,6 +157,7 @@ function do_request(method, input, opts, return_data = false) {
             });
         });
         request.on('error', reject);
+        apply_timeout(opts, request);
         if (input) request.write(input);
         request.end();
     });
@@ -242,12 +253,7 @@ Watcher.prototype.watch = function () {
     request.on('error', function(e) {
         log.error('error on watch %s: %s', opts.path, e);
     });
-    if (opts.resyncInterval !== undefined) {
-        request.setTimeout(opts.resyncInterval * 1000, function () {
-            log.info('response %s timeout', opts.path);
-            request.abort();
-        });
-    }
+    apply_timeout(opts, request);
 };
 
 function matcher(object) {
