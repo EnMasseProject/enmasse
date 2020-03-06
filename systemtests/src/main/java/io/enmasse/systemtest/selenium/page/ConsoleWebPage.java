@@ -349,6 +349,10 @@ public class ConsoleWebPage implements IWebPage {
         return getToolBarMenu().findElement(By.id("cl-filter-dropdown"));
     }
 
+    private WebElement getClientFilterDropDown() throws Exception {
+        return getToolBarMenu().findElement(By.id("ad-links-filter-dropdown"));
+    }
+
     private WebElement getSelectNameTextBox() throws Exception {
         return getToolBarMenu().findElement(By.tagName("input"));
     }
@@ -403,6 +407,26 @@ public class ConsoleWebPage implements IWebPage {
 
     private WebElement getConnectionsContainerFilterDropDownItem() throws Exception {
         return getConnectionFilterDropDown().findElement(By.id("cl-filter-dropdown-itemfilterContainer"));
+    }
+
+    private WebElement getClientsContainerFilterDropDownItem() throws Exception {
+        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemfilterContainers"));
+    }
+
+    private WebElement getClientsNameFilterDropDownItem() throws Exception {
+        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemfilterName"));
+    }
+
+    private WebElement getClientsRoleFilterDropDownItem() throws Exception {
+        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemfilterRole"));
+    }
+
+    private WebElement getClientsContainerSearchButton() throws Exception {
+        return getToolBarMenu().findElement(By.id("ad-links-filter-search-container"));
+    }
+
+    private WebElement getClientsNameSearchButton() throws Exception {
+        return getToolBarMenu().findElement(By.id("ad-links-filter-search-name"));
     }
 
     private WebElement getConnectionsHostnameSearchButton() throws Exception {
@@ -716,6 +740,23 @@ public class ConsoleWebPage implements IWebPage {
                 selenium.clickOnItem(getConnectionsContainerFilterDropDownItem());
                 selenium.fillInputItem(getSelectNameTextBox(), filterValue);
                 selenium.clickOnItem(getConnectionsContainerSearchButton(), "Search");
+                break;
+        }
+    }
+
+
+    public void addClientsFilter(FilterType filterType, String filterValue) throws Exception {
+        selenium.clickOnItem(getClientFilterDropDown(), "Connections filter dropdown");
+        switch (filterType) {
+            case NAME:
+                selenium.clickOnItem(getClientsNameFilterDropDownItem());
+                selenium.fillInputItem(getSelectNameTextBox(), filterValue);
+                selenium.clickOnItem(getClientsNameSearchButton(), "Search");
+                break;
+            case CONTAINER:
+                selenium.clickOnItem(getClientsContainerFilterDropDownItem());
+                selenium.fillInputItem(getSelectNameTextBox(), filterValue);
+                selenium.clickOnItem(getClientsContainerSearchButton(), "Search");
                 break;
         }
     }

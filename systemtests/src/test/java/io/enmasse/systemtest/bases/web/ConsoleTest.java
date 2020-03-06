@@ -832,6 +832,57 @@ public abstract class ConsoleTest extends TestBase {
                 consolePage.getConnectionItems().size(), is(connectionCount));
     }
 
+    protected void doTestFilterClientsByContainerId(AddressSpace addressSpace) throws Exception {
+        Address address = generateAddressObject(addressSpace, DestinationPlan.STANDARD_SMALL_QUEUE);
+        getResourceManager().setAddresses(address);
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
+        consolePage.openClientsList(address);
+
+        int connectionCount = 2;
+        clientsList = new ArrayList<>();
+        clientsList.add(getClientUtils().attachConnector(addressSpace, address, connectionCount, 1, 1, defaultCredentials, 360));
+        selenium.waitUntilPropertyPresent(60, connectionCount * 2, () -> consolePage.getClientItems().size());
+
+        String containerId = consolePage.getClientItems().get(0).getContainerId();
+
+        consolePage.addClientsFilter(FilterType.CONTAINER, containerId);
+        assertThat(String.format("Console failed, does not contain %d clients", 1),
+                consolePage.getClientItems().size(), is(2));
+
+        consolePage.removeAllFilters();
+
+        assertThat(String.format("Console failed, does not contain %d clients", connectionCount),
+                consolePage.getClientItems().size(), is(connectionCount * 2));
+    }
+
+
+    protected void doTestFilterClientsByName(AddressSpace addressSpace) throws Exception {
+        Address address = generateAddressObject(addressSpace, DestinationPlan.STANDARD_SMALL_QUEUE);
+        getResourceManager().setAddresses(address);
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
+        consolePage.openClientsList(address);
+
+        int connectionCount = 2;
+        clientsList = new ArrayList<>();
+        clientsList.add(getClientUtils().attachConnector(addressSpace, address, connectionCount, 1, 1, defaultCredentials, 360));
+        selenium.waitUntilPropertyPresent(60, connectionCount * 2, () -> consolePage.getClientItems().size());
+
+        String containerId = consolePage.getClientItems().get(0).getName();
+
+        consolePage.addClientsFilter(FilterType.NAME, containerId);
+        assertThat(String.format("Console failed, does not contain %d clients", 1),
+                consolePage.getClientItems().size(), is(1));
+
+        consolePage.removeAllFilters();
+
+        assertThat(String.format("Console failed, does not contain %d clients", connectionCount),
+                consolePage.getClientItems().size(), is(connectionCount * 2));
+    }
+
     protected void doTestEmptyLinkPage(AddressSpace addressSpace, ExtensionContext context) throws Exception {
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
