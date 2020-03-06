@@ -14,6 +14,7 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -264,6 +265,20 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     void testFilterConnectionsByContainerId() throws Exception {
         doTestFilterConnectionsByContainerId(getSharedAddressSpace());
     }
+
+    @Disabled("Filtering based on ID is not supported now.") // Todo: Enable after filtering by Id will be supported
+    @Test
+    @ExternalClients
+    void testFilterLinksByContainerId() throws Exception {
+        doTestFilterClientsByContainerId(getSharedAddressSpace());
+    }
+
+    @Test
+    @ExternalClients
+    void testFilterLinksByName() throws Exception {
+        doTestFilterClientsByName(getSharedAddressSpace());
+    }
+
 
     @Test
     @ExternalClients
