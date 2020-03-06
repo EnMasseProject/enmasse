@@ -19,11 +19,9 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.service.management.credentials.PasswordCredential;
 import org.eclipse.hono.service.management.device.Device;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 
-import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -35,6 +33,7 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @Tag(SMOKE)
 abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
