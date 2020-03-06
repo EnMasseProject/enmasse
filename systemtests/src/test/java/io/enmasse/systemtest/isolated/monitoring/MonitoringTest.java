@@ -12,6 +12,7 @@ import io.enmasse.systemtest.apiclients.PrometheusApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -81,6 +82,8 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private void waitUntilPrometheusReady() throws Exception {
+        log.info("Waiting for monitoring pods to settle");
+        Thread.sleep(120_000);
         TestUtils.waitUntilCondition("Prometheus ready", phase -> {
             try {
                 JsonObject rules = prometheusApiClient.getRules();
@@ -104,6 +107,8 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                     log.error("Waiting for prometheus to be ready", e);
                 }
             }
+            KubeCMDClient.runOnCluster("get", "pods", "-n", "enmasse-monitoring");
+            KubeCMDClient.runOnCluster("get", "prometheusrules", "-n", kubernetes.getInfraNamespace());
             return false;
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
 
@@ -130,11 +135,6 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanadatasources.integreatly.org");
         KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanas.integreatly.org");
         KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "applicationmonitorings.applicationmonitoring.integreatly.org");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "alertmanagers.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "podmonitors.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "prometheuses.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "prometheusrules.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "servicemonitors.monitoring.coreos.com");
     }
 
     @Test
