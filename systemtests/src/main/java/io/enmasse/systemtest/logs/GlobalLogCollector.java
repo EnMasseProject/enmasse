@@ -32,15 +32,21 @@ public class GlobalLogCollector {
     private final Kubernetes kubernetes;
     private final Path logDir;
     private final String namespace;
+    private boolean appendNamespaceToLogDir;
 
     public GlobalLogCollector(Kubernetes kubernetes, Path logDir) {
         this(kubernetes, logDir, kubernetes.getInfraNamespace());
     }
 
     public GlobalLogCollector(Kubernetes kubernetes, Path logDir, String namespace) {
+        this(kubernetes, logDir, namespace, true);
+    }
+
+    public GlobalLogCollector(Kubernetes kubernetes, Path logDir, String namespace, boolean appendNamespaceToLogDir) {
         this.kubernetes = kubernetes;
         this.logDir = logDir;
         this.namespace = namespace;
+        this.appendNamespaceToLogDir = appendNamespaceToLogDir;
     }
 
     public void collectConfigMaps() {
@@ -88,6 +94,7 @@ public class GlobalLogCollector {
             try {
                 String filename = discriminator == null ? String.format("%s.%s.log", namespace, podName) : String.format("%s.%s.%s.log", namespace, discriminator, podName);
                 Path podLog = resolveLogFile(filename);
+
                 log.info("log of '{}' pod will be archived with path: '{}'", podName, podLog);
                 try (BufferedWriter bf = Files.newBufferedWriter(podLog)) {
                     bf.write(podLogs);
@@ -234,9 +241,11 @@ public class GlobalLogCollector {
      * @throws IOException In case of any IO error
      */
     private Path resolveLogFile(final String other) throws IOException {
-        return Files
-                .createDirectories(logDir.resolve(namespace))
-                .resolve(other);
+        Path path = logDir;
+        if (appendNamespaceToLogDir) {
+            path = path.resolve(namespace);
+        }
+        return Files.createDirectories(path).resolve(other);
     }
 
 }

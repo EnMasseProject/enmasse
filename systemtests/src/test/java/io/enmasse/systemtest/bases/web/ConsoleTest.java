@@ -11,13 +11,16 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.clients.ClientUtils.ClientAttacher;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
@@ -52,6 +55,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -203,11 +207,13 @@ public abstract class ConsoleTest extends TestBase {
         UserCredentials user = Credentials.userCredentials();
         UserCredentials messagingUser = new UserCredentials("pepa", "zdepa");
         KubeCMDClient.runOnCluster("create", "rolebinding", "clients-admin", "--clusterrole", "admin", "--user", user.getUsername(), "--namespace", SystemtestsKubernetesApps.MESSAGING_PROJECT);
+        boolean success = false;
+        AddressSpace addressSpace = null;
         try {
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
 
-            AddressSpace addressSpace = new AddressSpaceBuilder()
+            addressSpace = new AddressSpaceBuilder()
                     .withNewMetadata()
                     .withName("test-addr-space-api")
                     .withNamespace(namespace)
@@ -253,11 +259,20 @@ public abstract class ConsoleTest extends TestBase {
                     () -> "Failed to wait for clients count");
 
             consolePage.openConsolePage();
-            consolePage.deleteAddressSpace(addressSpace);
+            success = true;
         } finally {
-            KubeCMDClient.loginUser(environment.getApiToken());
-            KubeCMDClient.switchProject(environment.namespace());
-            kubernetes.deleteNamespace(namespace);
+            try {
+                if (!success) {
+                    GlobalLogCollector testDirLogCollector = new GlobalLogCollector(kubernetes, TestUtils.getFailedTestLogsPath(TestInfo.getInstance().getActualTest()), environment.namespace(), false);
+                    testDirLogCollector.collectLogsOfPodsByLabels(environment.namespace(), null,
+                            Collections.singletonMap(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)));
+                }
+                consolePage.deleteAddressSpace(addressSpace);
+            } finally {
+                KubeCMDClient.loginUser(environment.getApiToken());
+                KubeCMDClient.switchProject(environment.namespace());
+                kubernetes.deleteNamespace(namespace);
+            }
         }
     }
 
