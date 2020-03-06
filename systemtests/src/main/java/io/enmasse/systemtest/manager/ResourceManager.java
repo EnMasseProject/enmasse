@@ -395,7 +395,7 @@ public abstract class ResourceManager {
     }
 
     public void replaceAddress(Address destination) throws Exception {
-        AddressUtils.replaceAddress(destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
+        AddressUtils.replaceAddress(destination, true, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
     public Address getAddress(String namespace, Address destination) {
