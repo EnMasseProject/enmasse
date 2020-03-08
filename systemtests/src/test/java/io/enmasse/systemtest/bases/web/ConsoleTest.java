@@ -149,7 +149,7 @@ public abstract class ConsoleTest extends TestBase {
         getAndExecAddressSpaceDeploymentSnippet(addressSpace);
         assertTrue(AddressSpaceUtils.addressSpaceExists(Kubernetes.getInstance().getInfraNamespace(),
                 addressSpace.getMetadata().getName()));
-        resourcesManager.deleteAddressSpace(addressSpace);
+        resourcesManager.waitForAddressSpaceReady(addressSpace);
     }
 
 
