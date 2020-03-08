@@ -136,11 +136,11 @@ public abstract class ConsoleTest extends TestBase {
         Address address = generateAddressObject(addressSpace, DestinationPlan.STANDARD_SMALL_QUEUE);
         consolePage.createAddress(address);
         consolePage.openClientsList(address);
-        IsolatedResourcesManager.getInstance().deleteAddresses(address);
+        resourcesManager.deleteAddresses(address);
         selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
                 .until(ExpectedConditions.invisibilityOf(consolePage.getAddressTitle()));
         assertNotNull(consolePage.getNotFoundPage());
-        IsolatedResourcesManager.getInstance().deleteAddressSpace(addressSpace);
+        resourcesManager.deleteAddressSpace(addressSpace);
     }
 
     protected void doTestAddressSpaceSnippet(AddressSpaceType addressSpaceType) throws Exception {
@@ -149,7 +149,7 @@ public abstract class ConsoleTest extends TestBase {
         getAndExecAddressSpaceDeploymentSnippet(addressSpace);
         assertTrue(AddressSpaceUtils.addressSpaceExists(Kubernetes.getInstance().getInfraNamespace(),
                 addressSpace.getMetadata().getName()));
-        IsolatedResourcesManager.getInstance().deleteAddressSpace(addressSpace);
+        resourcesManager.deleteAddressSpace(addressSpace);
     }
 
 
@@ -421,16 +421,15 @@ public abstract class ConsoleTest extends TestBase {
     //============================================================================================
 
     protected void doTestAddressSnippet(AddressSpaceType addressSpaceType, String destinationPlan) throws Exception {
-        IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
         AddressSpace addressSpace = generateAddressSpaceObject(addressSpaceType);
-        isolatedResourcesManager.createAddressSpace(addressSpace);
+        resourcesManager.createAddressSpace(addressSpace);
 
         Address address = generateAddressObject(addressSpace, destinationPlan);
         getAndExecAddressDeploymentSnippet(addressSpace, address);
         AddressUtils.waitForDestinationsReady(address);
         AddressUtils.isAddressReady(addressSpace, address);
-        isolatedResourcesManager.deleteAddresses(address);
-        isolatedResourcesManager.deleteAddressSpace(addressSpace);
+        resourcesManager.deleteAddresses(address);
+        resourcesManager.deleteAddressSpace(addressSpace);
     }
 
     protected void doTestCreateDeleteAddress(AddressSpace addressSpace, Address... destinations) throws Exception {
