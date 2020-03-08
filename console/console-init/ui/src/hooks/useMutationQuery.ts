@@ -7,15 +7,16 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@apollo/react-hooks";
 import { ApolloError, OperationVariables } from "apollo-client";
 import { DocumentNode } from "graphql";
-import { useErrorContext, types } from "context-state-reducer";
+import { useStoreContext, types } from "context-state-reducer";
 
 export const useMutationQuery = <TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
+  refetchQueries?: any,
   callbackOnError?: Function,
   callbackOnCompleted?: Function
 ) => {
   const [variables, setVariables] = useState<TVariables>();
-  const { dispatch } = useErrorContext();
+  const { dispatch } = useStoreContext();
 
   const [addVariables] = useMutation<TData>(query, {
     onError(errors: ApolloError) {
@@ -28,7 +29,9 @@ export const useMutationQuery = <TData = any, TVariables = OperationVariables>(
     },
     onCompleted(data: TData) {
       callbackOnCompleted && callbackOnCompleted(data);
-    }
+    },
+    refetchQueries,
+    awaitRefetchQueries: true
   });
 
   useEffect(() => {

@@ -17,7 +17,6 @@ import { AddressDetailHeader } from "components/AddressDetail/AddressDetailHeade
 import { useQuery } from "@apollo/react-hooks";
 import { IAddressDetailResponse } from "types/ResponseTypes";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
-import { DialoguePrompt } from "components/common/DialoguePrompt";
 import {
   DELETE_ADDRESS,
   RETURN_ADDRESS_DETAIL,
@@ -32,9 +31,12 @@ import { IAddressSpacePlanResponse } from "pages/AddressSpaceDetail/AddressList/
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
 import { useMutationQuery } from "hooks";
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();
+  const { dispatch } = useStoreContext();
+
   const breadcrumb = React.useMemo(
     () => (
       <Breadcrumb>
@@ -90,20 +92,16 @@ export default function AddressDetailPage() {
   };
 
   const resetDeleteFormState = (data: any) => {
-    setIsDeleteModalOpen(!isDeleteModalOpen);
-    if (data && data.deleteAddress) {
+    const deleteAddress = data && data.data && data.data.deleteAddress;
+    if (deleteAddress) {
       history.push(`/address-spaces/${namespace}/${name}/${type}/addresses`);
     }
   };
 
-  const resetPurgeFormState = () => {
-    refetch();
-  };
-
+  const refetchQueries: any[] = ["single_addresses"];
   const [setPurgeAddressQueryVariables] = useMutationQuery(
     PURGE_ADDRESS,
-    resetPurgeFormState,
-    resetPurgeFormState
+    refetchQueries
   );
 
   const [setDeleteAddressQueryVariables] = useMutationQuery(
@@ -135,15 +133,9 @@ export default function AddressDetailPage() {
   if (addressPlan === null) {
     setAddressPlan(addressDetail.spec.plan.metadata.name);
   }
-  const handleCancelDelete = () => {
-    setIsDeleteModalOpen(!isDeleteModalOpen);
-  };
 
-  /**
-   * delete address
-   * @param data
-   */
-  const deleteAddress = (data: IObjectMeta_v1_Input) => {
+  const onDelete = () => {
+    const data = addressDetail.metadata;
     const variables = {
       a: {
         name: data.name,
@@ -163,10 +155,18 @@ export default function AddressDetailPage() {
     setPurgeAddressQueryVariables(variables);
   };
 
-  const handleDelete = () => {
-    deleteAddress({
-      name: addressDetail.metadata.name,
-      namespace: addressDetail.metadata.namespace.toString()
+  const onChangeDelete = () => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.DELETE_ADDRESS,
+      modalProps: {
+        selectedItems: [addressDetail.metadata.name],
+        data: addressDetail,
+        onConfirm: onDelete,
+        option: "Delete",
+        detail: `Are you sure you want to delete this address: ${addressDetail.spec.address} ?`,
+        header: "Delete this Address ?"
+      }
     });
   };
 
@@ -187,7 +187,7 @@ export default function AddressDetailPage() {
     }
   };
 
-  const handleConfirmPurge = async () => {
+  const onConfirmPurge = async () => {
     if (
       addressDetail.spec.plan.spec.addressType.toLowerCase() === "queue" ||
       addressDetail.spec.plan.spec.addressType.toLowerCase() === "subscription"
@@ -197,12 +197,21 @@ export default function AddressDetailPage() {
         namespace: addressDetail.metadata.namespace
       });
     }
-    refetch();
-    setIsPurgeModalOpen(false);
   };
 
-  const handleCancelPurge = () => {
-    setIsPurgeModalOpen(false);
+  const onChangePurge = () => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.PURGE_ADDRESS,
+      modalProps: {
+        selectedItems: [addressDetail.metadata.name],
+        data: addressDetail,
+        onConfirm: onConfirmPurge,
+        option: "Purge",
+        detail: `Are you sure you want to purge this address: ${addressDetail.spec.address} ?`,
+        header: "Purge this Address ?"
+      }
+    });
   };
 
   return (
@@ -223,8 +232,8 @@ export default function AddressDetailPage() {
               : 0
           }
           onEdit={() => setIsEditModalOpen(true)}
-          onDelete={() => setIsDeleteModalOpen(true)}
-          onPurge={() => setIsPurgeModalOpen(true)}
+          onDelete={onChangeDelete}
+          onPurge={onChangePurge}
         />
       )}
       <Modal
@@ -263,26 +272,6 @@ export default function AddressDetailPage() {
           />
         )}
       </Modal>
-      {isDeleteModalOpen && (
-        <DialoguePrompt
-          option="Delete"
-          detail={`Are you sure you want to delete this address: ${addressDetail.spec.address} ?`}
-          names={[addressDetail.metadata.name]}
-          header="Delete this Address ?"
-          handleCancelDialogue={handleCancelDelete}
-          handleConfirmDialogue={handleDelete}
-        />
-      )}
-      {isPurgeModalOpen && (
-        <DialoguePrompt
-          option="Purge"
-          detail={`Are you sure you want to purge this address: ${addressDetail.spec.address} ?`}
-          names={[addressDetail.metadata.name]}
-          header="Purge this Address ?"
-          handleCancelDialogue={handleCancelPurge}
-          handleConfirmDialogue={handleConfirmPurge}
-        />
-      )}
       <AddressLinksWithFilterAndPagination
         addressspace_name={name || ""}
         addressspace_namespace={namespace || ""}
