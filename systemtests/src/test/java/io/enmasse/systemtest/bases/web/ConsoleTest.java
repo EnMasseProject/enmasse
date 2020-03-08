@@ -10,8 +10,12 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.admin.model.v1.ResourceAllowance;
+import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -21,7 +25,6 @@ import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
@@ -44,6 +47,7 @@ import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.Count;
+import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.apache.qpid.proton.message.Message;
@@ -55,7 +59,6 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -331,16 +334,89 @@ public abstract class ConsoleTest extends TestBase {
         assertEquals(AddressSpacePlans.STANDARD_MEDIUM,
                 resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
         String currentConfig = resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan();
-        consolePage.switchAddressSpacePlan(addressSpace, AddressSpacePlans.STANDARD_UNLIMITED);
+        consolePage.changeAddressSpacePlan(addressSpace, AddressSpacePlans.STANDARD_UNLIMITED);
         AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(addressSpace, currentConfig);
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
         assertEquals(AddressSpacePlans.STANDARD_UNLIMITED,
                 resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
 
-        consolePage.switchAuthService(addressSpace, "none-authservice", AuthenticationServiceType.NONE);
+        consolePage.changeAuthService(addressSpace, "none-authservice", AuthenticationServiceType.NONE);
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
         assertEquals("none-authservice",
                 resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getAuthenticationService().getName());
+    }
+
+    protected void doTestViewCustomPlans() throws Exception {
+        final String queuePlanName1 = "web-custom-plan-queue-1";
+        final String queuePlanName2 = "web-custom-plan-queue-2";
+        final String addressSpacePlanName = "web-addressspace-plan";
+        //Custom address plans
+        AddressPlan testQueuePlan1 = PlanUtils.createAddressPlanObject(queuePlanName1,
+                AddressType.QUEUE,
+                Arrays.asList(
+                        new ResourceRequest("broker", 0.001),
+                        new ResourceRequest("router", 0.0002)));
+        AddressPlan testQueuePlan2 = PlanUtils.createAddressPlanObject(queuePlanName2,
+                AddressType.QUEUE,
+                Arrays.asList(
+                        new ResourceRequest("broker", 0.01),
+                        new ResourceRequest("router", 0.002)));
+
+        getResourceManager().createAddressPlan(testQueuePlan1);
+        getResourceManager().createAddressPlan(testQueuePlan2);
+
+        //Custom addressspace plan
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 10_000),
+                new ResourceAllowance("router", 10_000),
+                new ResourceAllowance("aggregate", 10_000));
+        List<AddressPlan> addressPlans = Arrays.asList(testQueuePlan1, testQueuePlan2);
+
+        AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject(addressSpacePlanName, "default", AddressSpaceType.STANDARD, resources, addressPlans);
+        getResourceManager().createAddressSpacePlan(addressSpacePlan);
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-api")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(addressSpacePlanName)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressType.QUEUE.toString())
+                .withAddress("test-queue")
+                .withPlan(queuePlanName1)
+                .endSpec()
+                .build();
+
+        getResourceManager().addToAddressSpaces(addressSpace);
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.createAddressSpace(addressSpace);
+        waitUntilAddressSpaceActive(addressSpace);
+        assertEquals(addressSpacePlanName,
+                getResourceManager().getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
+
+        consolePage.openAddressList(addressSpace);
+        consolePage.createAddress(queue);
+
+        AddressWebItem addressWebItem = consolePage.getAddressItem(queue);
+        selenium.clickOnItem(addressWebItem.getActionDropDown());
+        selenium.clickOnItem(addressWebItem.getEditMenuItem());
+        selenium.clickOnItem(selenium.getDriver().findElement(By.id("edit-addr-plan")), "Edit address plan");
+        assertTrue(selenium.getDriver().findElement(By.xpath("//option[@value='" + queuePlanName1 + "']")).getText().contains(queuePlanName1));
     }
 
     protected void doTestFilterAddrSpace() throws Exception {

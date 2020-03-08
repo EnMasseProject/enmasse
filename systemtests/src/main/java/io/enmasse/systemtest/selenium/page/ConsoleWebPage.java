@@ -590,7 +590,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.waitUntilItemNotPresent(30, () -> getAddressSpaceItem(addressSpace));
     }
 
-    public void switchAddressSpacePlan(AddressSpace addressSpace, String addressSpacePlan) throws Exception {
+    public void changeAddressSpacePlan(AddressSpace addressSpace, String addressSpacePlan) throws Exception {
         AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getActionDropDown(), "Address space dropdown");
         selenium.clickOnItem(item.getEditMenuItem());
@@ -602,7 +602,7 @@ public class ConsoleWebPage implements IWebPage {
         addressSpace.getSpec().setPlan(addressSpacePlan);
     }
 
-    public void switchAuthService(AddressSpace addressSpace, String authServiceName, AuthenticationServiceType type) throws Exception {
+    public void changeAuthService(AddressSpace addressSpace, String authServiceName, AuthenticationServiceType type) throws Exception {
         AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getActionDropDown(), "AddressSpaceDropdown");
         selenium.clickOnItem(item.getEditMenuItem());

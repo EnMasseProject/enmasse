@@ -195,7 +195,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     private void saveKubernetesState(String description, ExtensionContext extensionContext, Throwable throwable) throws Throwable {
-        LOGGER.warn("Test failed at {}: Saving pod logs and info...", description);
+        LOGGER.error("Test failed at {}: Saving pod logs and info...", description);
         logPodsInInfraNamespace();
         if (env.isSkipSaveState()) {
             throw throwable;
