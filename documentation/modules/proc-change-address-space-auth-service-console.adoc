@@ -18,5 +18,5 @@ You can change the authentication service that is associated with an address spa
 
 . In the far right column, click the vertical ellipsis icon and select *Edit*. The Edit window opens.
 
-. In the *Authentication Service* field, select a different authentication service from the list and click *Confirm*. The address space plan is changed for that address space.
+. In the *Authentication Service* field, select a different authentication service from the list and click *Confirm*. The authentication service is changed for that address space.
 
