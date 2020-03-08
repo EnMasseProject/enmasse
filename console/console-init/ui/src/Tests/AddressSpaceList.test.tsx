@@ -9,7 +9,7 @@ import { MemoryRouter } from "react-router";
 import {
   IAddressSpace,
   AddressSpaceList
-} from "components/AddressSpaceList/AddressSpaceList";
+} from "modules/address-space/components/AddressSpaceList";
 import { ISortBy } from "@patternfly/react-table";
 
 describe("Address space List", () => {

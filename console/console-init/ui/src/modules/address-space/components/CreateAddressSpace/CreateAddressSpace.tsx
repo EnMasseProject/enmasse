@@ -5,8 +5,8 @@
 
 import * as React from "react";
 import { Wizard } from "@patternfly/react-core";
-import { AddressSpaceConfiguration } from "pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
-import { ReviewAddressSpace } from "pages/CreateAddressSpace/ReviewAddressSpace";
+import { AddressSpaceConfiguration } from "modules/address-space/components/CreateAddressSpace/CreateAddressSpaceConfiguration";
+import { ReviewAddressSpace } from "modules/address-space/components/CreateAddressSpace/ReviewAddressSpace";
 import { CREATE_ADDRESS_SPACE } from "graphql-module/queries";
 import { useMutationQuery } from "hooks";
 

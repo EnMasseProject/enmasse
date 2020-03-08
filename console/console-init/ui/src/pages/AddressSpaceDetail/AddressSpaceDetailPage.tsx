@@ -39,7 +39,7 @@ import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
 import { EditAddressSpace } from "pages/EditAddressSpace";
-import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
+import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
 import { useMutationQuery } from "hooks";
 import { AddressSpaceRoutes } from "Routes";
 

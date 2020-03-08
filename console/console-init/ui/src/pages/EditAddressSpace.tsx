@@ -20,11 +20,11 @@ import {
   TextInput,
   Radio
 } from "@patternfly/react-core";
-import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
+import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
 import {
   IAddressSpacePlans,
   IAddressSpaceAuthServiceResponse
-} from "pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
+} from "modules/address-space/components/CreateAddressSpace/CreateAddressSpaceConfiguration";
 import { Loading } from "use-patternfly";
 
 interface IEditAddressSpaceProps {

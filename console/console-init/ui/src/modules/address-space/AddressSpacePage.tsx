@@ -4,8 +4,8 @@
  */
 
 import * as React from "react";
-import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import { useLocation, useHistory } from "react-router";
+import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import {
   Pagination,
   PageSection,
@@ -13,18 +13,18 @@ import {
   Grid,
   GridItem
 } from "@patternfly/react-core";
-import { AddressSpaceListPage } from "./AddressSpaceListPage";
-import { AddressSpaceListFilterPage } from "./AddressSpaceListFilterPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
-import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
 import { useMutation } from "@apollo/react-hooks";
-import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
-import { compareTwoAddress } from "pages/AddressSpaceDetail/AddressList/AddressListPage";
+import { AddressSpaceListPage } from "./components/AddressSpaceListPage";
+import { AddressSpaceListFilterPage } from "./components/AddressSpaceListFilterPage";
+import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
+import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
+import { compareObject } from "utils";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { useErrorContext, types } from "context-state-reducer";
 
-export default function AddressSpaceListWithFilterAndPagination() {
+export default function AddressSpacePage() {
   useDocumentTitle("Address Space List");
   useA11yRouteChange();
 
@@ -162,11 +162,15 @@ export default function AddressSpaceListWithFilterAndPagination() {
       setSelectedAddressSpaces(prevState =>
         prevState.filter(
           addressSpace =>
-            !compareTwoAddress(
-              addressSpace.name,
-              data.name,
-              addressSpace.nameSpace,
-              data.nameSpace
+            !compareObject(
+              {
+                name: addressSpace.name,
+                nameSpace: addressSpace.nameSpace
+              },
+              {
+                name: data.name,
+                nameSpace: data.nameSpace
+              }
             )
         )
       );
