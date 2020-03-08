@@ -2,10 +2,10 @@
 //
 // assembly-managing-address-spaces.adoc
 
-[id='proc-change-address-space-plan-console-{context}']
-= Changing the address space plan associated with an address space using the {ConsoleName}
+[id='proc-change-address-space-auth-service-console-{context}']
+= Changing the authentication service associated with an address space using the {ConsoleName}
 
-You can change the address space plan that is associated with an address space using the  {ConsoleName}.
+You can change the authentication service that is associated with an address space using the  {ConsoleName}.
 
 .Prerequisites
 * You must have already created an address space. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-address-space-console-messaging[Creating an address space using the {ConsoleName}].
@@ -18,6 +18,5 @@ You can change the address space plan that is associated with an address space u
 
 . In the far right column, click the vertical ellipsis icon and select *Edit*. The Edit window opens.
 
-. In the *Address space plan* field, select a different plan from the list and click *Confirm*. The address space plan is changed for that address space.
-
+. In the *Authentication Service* field, select a different authentication service from the list and click *Confirm*. The address space plan is changed for that address space.
 
