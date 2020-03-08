@@ -507,7 +507,7 @@ public class ConsoleWebPage implements IWebPage {
             List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
 
             for (WebElement currentElement : snippetElements) {
-                if (currentElement.getText().contains("kubectl")
+                if (currentElement.getText().contains("kubectl") || currentElement.getText().contains("oc")
                         || currentElement.getText().isEmpty() || currentElement.getText().equals("EOF")) {
                     continue;
                 } else if (addressSpaceDeployment.length() == 0) {
