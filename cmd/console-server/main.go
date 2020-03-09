@@ -61,7 +61,7 @@ func main() {
 		log.Printf("Running in DEVELOPMENT MODE.  This mode is not intended for use within the container.\n")
 		log.Printf(`Expose addressspace agents to the console server by *manually* running:
 
-oc create route passthrough  --service=console-4f5fcdf
+oc create route passthrough  --service=agent-<infrauuid>
 
 The GraphQL playground is available:
 http://localhost:` + port + `/graphql
