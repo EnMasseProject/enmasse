@@ -4,7 +4,8 @@
  */
 
 import { types } from "./actions";
-import { initialState } from "./initialState";
+import { initialState, initialStateModal } from "./initialState";
+import { combineReducers } from "./combineReducers";
 
 export interface IActionType {
   type: string;
@@ -13,7 +14,7 @@ export interface IActionType {
   hasNetworkError?: boolean;
 }
 
-export const reducer = (state = initialState, action: IActionType) => {
+export const errorReducer = (state = initialState, action: IActionType) => {
   const { errors, statusCode } = action.payload || {};
   switch (action.type) {
     case types.SET_SERVER_ERROR:
@@ -35,3 +36,31 @@ export const reducer = (state = initialState, action: IActionType) => {
       return state;
   }
 };
+
+export interface IModalActionType {
+  type: string;
+  modalType: string;
+  modalProps: any;
+}
+
+export const modalReducer = (
+  state = initialStateModal,
+  action: IModalActionType
+) => {
+  switch (action.type) {
+    case types.SHOW_MODAL:
+      return {
+        modalType: action.modalType,
+        modalProps: action.modalProps
+      };
+    case types.HIDE_MODAL:
+      return initialStateModal;
+    default:
+      return state;
+  }
+};
+
+export const rootReducer = combineReducers({
+  error: errorReducer,
+  modal: modalReducer
+});

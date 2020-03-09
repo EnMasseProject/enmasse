@@ -3,13 +3,13 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import { storiesOf } from "@storybook/react";
 import { withKnobs } from "@storybook/addon-knobs";
 import {
   IAddressSpace,
   AddressSpaceList
-} from "components/AddressSpaceList/AddressSpaceList";
+} from "modules/address-space/components/AddressSpaceList";
 import { MemoryRouter } from "react-router";
 import { action } from "@storybook/addon-actions";
 
@@ -69,13 +69,13 @@ const rows: IAddressSpace[] = [
 
 stories.add("Address Space List", () => (
   <MemoryRouter>
-    <AddressSpaceList
+    {/* <AddressSpaceList
       onSelectAddressSpace={action("select addressSpace")}
       onSelectAllAddressSpace={action("SelectAllAddressSpaces")}
       rows={rows}
       onEdit={action("onEdit")}
       onDelete={action("onDelete")}
       onDownload={action("download Certificate")}
-    />
+    /> */}
   </MemoryRouter>
 ));
