@@ -11,6 +11,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.AddressSpaceWebItem;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
@@ -499,6 +500,11 @@ public class ConsoleWebPage implements IWebPage {
         }
     }
 
+    public WebElement getFirstLineOfDeploymentSnippet() {
+        List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
+        return snippetElements.get(0);
+    }
+
     public String getDeploymentSnippet() throws InterruptedException {
         final int RETRY_COUNTER = 5;
 
@@ -507,7 +513,7 @@ public class ConsoleWebPage implements IWebPage {
             List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
 
             for (WebElement currentElement : snippetElements) {
-                if (currentElement.getText().contains("kubectl") || currentElement.getText().contains("oc")
+                if (currentElement.getText().contains(KubeCMDClient.getCMD())
                         || currentElement.getText().isEmpty() || currentElement.getText().equals("EOF")) {
                     continue;
                 } else if (addressSpaceDeployment.length() == 0) {

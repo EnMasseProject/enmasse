@@ -31,7 +31,9 @@ import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.OpenShift;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.platform.cluster.OpenShiftCluster;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
@@ -139,6 +141,14 @@ public abstract class ConsoleTest extends TestBase {
                 .until(ExpectedConditions.invisibilityOf(consolePage.getAddressTitle()));
         assertNotNull(consolePage.getNotFoundPage());
         resourcesManager.deleteAddressSpace(addressSpace);
+    }
+
+    protected void doTestSnippetClient(AddressSpaceType addressSpaceType) throws Exception {
+        AddressSpace addressSpace = generateAddressSpaceObject(addressSpaceType);
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        String firstLine = getSnippetFirstLine(addressSpace);
+        assertTrue(firstLine.startsWith(KubeCMDClient.getCMD()), "Snippet has right type of cmd client.");
     }
 
     protected void doTestAddressSpaceSnippet(AddressSpaceType addressSpaceType) throws Exception {
@@ -1168,6 +1178,13 @@ public abstract class ConsoleTest extends TestBase {
             consolePage.fillAddressName(name);
             assertFalse(consolePage.isAddressNameInvalid(), String.format("Address name %s is not marked as valid", name));
         }
+    }
+
+    protected String getSnippetFirstLine(AddressSpace addressSpace) throws Exception {
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.prepareAddressSpaceInstall(addressSpace);
+        return consolePage.getFirstLineOfDeploymentSnippet().getText();
     }
 
     protected void getAndExecAddressSpaceDeploymentSnippet(AddressSpace addressSpace) throws Exception {
