@@ -34,7 +34,7 @@ import { useApolloClient } from "@apollo/react-hooks";
 import {
   RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH,
   RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH
-} from "queries";
+} from "graphql-module/queries";
 import {
   ISearchAddressLinkNameResponse,
   ISearchAddressLinkContainerResponse

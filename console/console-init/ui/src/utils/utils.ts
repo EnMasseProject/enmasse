@@ -48,4 +48,19 @@ const getSelectOptionList = (list: string[], totalRecords: number) => {
   return records;
 };
 
-export { getSelectOptionList };
+const compareObject = (obj1: any, obj2: any) => {
+  if (obj1 && obj2) {
+    return JSON.stringify(obj1) === JSON.stringify(obj2);
+  }
+};
+
+const getType = (type: string) => {
+  switch (type && type.toLowerCase()) {
+    case "standard":
+      return " Standard";
+    case "brokered":
+      return " Brokered";
+  }
+};
+
+export { getSelectOptionList, compareObject, getType };

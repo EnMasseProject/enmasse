@@ -22,7 +22,7 @@ import {
   RETURN_ADDRESS_SPACE_PLANS,
   RETURN_NAMESPACES,
   RETURN_AUTHENTICATION_SERVICES
-} from "queries";
+} from "graphql-module/queries";
 import { Loading } from "use-patternfly";
 import { dnsSubDomainRfc1123NameRegexp } from "types/Configs";
 

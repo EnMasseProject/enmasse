@@ -21,7 +21,7 @@ import {
   RETURN_ADDRESS_PLANS,
   RETURN_ADDRESS_TYPES,
   RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION
-} from "queries";
+} from "graphql-module/queries";
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { IAddressResponse } from "types/ResponseTypes";
