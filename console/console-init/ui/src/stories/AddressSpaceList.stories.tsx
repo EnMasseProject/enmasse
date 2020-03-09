@@ -9,7 +9,7 @@ import { withKnobs } from "@storybook/addon-knobs";
 import {
   IAddressSpace,
   AddressSpaceList
-} from "components/AddressSpaceList/AddressSpaceList";
+} from "modules/address-space/components/AddressSpaceList";
 import { MemoryRouter } from "react-router";
 import { action } from "@storybook/addon-actions";
 

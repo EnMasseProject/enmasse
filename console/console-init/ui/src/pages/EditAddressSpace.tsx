@@ -8,7 +8,7 @@ import { useQuery } from "@apollo/react-hooks";
 import {
   RETURN_ADDRESS_SPACE_PLANS,
   RETURN_FILTERED_AUTHENTICATION_SERVICES
-} from "queries";
+} from "graphql-module/queries";
 import {
   Form,
   TextContent,
@@ -20,11 +20,11 @@ import {
   TextInput,
   Radio
 } from "@patternfly/react-core";
-import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
+import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
 import {
   IAddressSpacePlans,
   IAddressSpaceAuthServiceResponse
-} from "pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
+} from "modules/address-space/components/CreateAddressSpace/CreateAddressSpaceConfiguration";
 import { Loading } from "use-patternfly";
 
 interface IEditAddressSpaceProps {

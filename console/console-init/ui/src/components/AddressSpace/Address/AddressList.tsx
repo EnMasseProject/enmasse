@@ -23,7 +23,7 @@ import {
   AddressErrorMessage
 } from "components/common/AddressFormatter";
 import { css } from "@patternfly/react-styles";
-import { StyleForTable } from "components/AddressSpaceList/AddressSpaceList";
+import { StyleForTable } from "modules/address-space/components/AddressSpaceList";
 import { FormatDistance } from "use-patternfly";
 
 export interface IAddress {

@@ -8,7 +8,7 @@ import { Wizard } from "@patternfly/react-core";
 import { AddressDefinition } from "pages/CreateAddress/CreateAddressDefinition";
 import { PreviewAddress } from "./PreviewAddress";
 import { useApolloClient } from "@apollo/react-hooks";
-import { CREATE_ADDRESS } from "queries";
+import { CREATE_ADDRESS } from "graphql-module/queries";
 import { IDropdownOption } from "components/common/FilterDropdown";
 import { messagingAddressNameRegexp } from "types/Configs";
 import { useMutationQuery } from "hooks";

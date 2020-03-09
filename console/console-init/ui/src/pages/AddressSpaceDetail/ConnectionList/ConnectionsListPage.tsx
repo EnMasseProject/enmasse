@@ -12,7 +12,7 @@ import {
 import { EmptyConnection } from "components/AddressSpace/Connection/EmptyConnection";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { IConnectionListResponse } from "types/ResponseTypes";
-import { RETURN_ALL_CONECTION_LIST } from "queries";
+import { RETURN_ALL_CONECTION_LIST } from "graphql-module/queries";
 import { ISortBy } from "@patternfly/react-table";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 

@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { useQuery } from "@apollo/react-hooks";
-import { RETURN_ADDRESS_LINKS } from "queries";
+import { RETURN_ADDRESS_LINKS } from "graphql-module/queries";
 import { IAddressLinksResponse } from "types/ResponseTypes";
 import { IClient, ClientList } from "components/AddressDetail/ClientList";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
