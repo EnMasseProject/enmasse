@@ -943,7 +943,7 @@ public class ConsoleWebPage implements IWebPage {
     private boolean waitUntilLoginPage() {
         try {
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains("Log"));
-            if (!selenium.getDriver().getCurrentUrl().contains("oauth/authorize")) {
+            if (selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Log in with OpenShift')]")) != null) {
                 selenium.clickOnItem(selenium.getDriver().findElement(By.tagName("button")));
             }
             return true;
