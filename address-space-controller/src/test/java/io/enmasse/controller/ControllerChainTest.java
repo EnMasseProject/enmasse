@@ -64,8 +64,8 @@ public class ControllerChainTest {
                 .withNewStatus(false)
                 .build();
 
-        when(mockController.reconcileAnyState(eq(a1))).thenReturn(a1);
-        when(mockController.reconcileAnyState(eq(a2))).thenReturn(a2);
+        when(mockController.reconcileAnyState(eq(a1))).thenReturn(Controller.ReconcileResult.create(a1));
+        when(mockController.reconcileAnyState(eq(a2))).thenReturn(Controller.ReconcileResult.create(a2));
 
         controllerChain.onUpdate(Arrays.asList(a1, a2));
 
