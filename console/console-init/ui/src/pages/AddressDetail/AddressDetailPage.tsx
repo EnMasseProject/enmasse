@@ -211,7 +211,10 @@ export default function AddressDetailPage() {
         <AddressDetailHeader
           type={addressDetail.spec.plan.spec.addressType}
           name={addressDetail.spec.address}
-          plan={addressDetail.spec.plan.spec.displayName}
+          plan={
+            addressDetail.spec.plan.spec.displayName ||
+            addressDetail.spec.plan.metadata.name
+          }
           topic={addressDetail.spec.topic}
           storedMessages={getFilteredValue(
             addressDetail.metrics,
