@@ -21,7 +21,6 @@ import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
@@ -55,7 +54,6 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -414,7 +412,10 @@ public abstract class ConsoleTest extends TestBase {
 
         assertEquals(expectedUrl, actualLink);
 
-        consolePage.openHelpLink(expectedUrl);
+        if (expectedUrl.contains("enmasse.io")) {
+            consolePage.openHelpLink(expectedUrl);
+        }
+
     }
 
     //============================================================================================
