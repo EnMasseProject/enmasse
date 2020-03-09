@@ -22,7 +22,7 @@ import { StyleSheet, css } from "@patternfly/react-styles";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
-import { ADDRESS_COMMAND_PREVIEW_DETAIL } from "queries";
+import { ADDRESS_COMMAND_PREVIEW_DETAIL } from "graphql-module/queries";
 
 export interface IAddressPreview {
   name?: string;

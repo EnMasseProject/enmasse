@@ -24,7 +24,7 @@ import {
   EDIT_ADDRESS,
   CURRENT_ADDRESS_SPACE_PLAN,
   PURGE_ADDRESS
-} from "queries";
+} from "graphql-module/queries";
 import { IObjectMeta_v1_Input } from "pages/AddressSpaceDetail/AddressSpaceDetailPage";
 import { AddressLinksWithFilterAndPagination } from "./AddressLinksWithFilterAndPaginationPage";
 import { EditAddress } from "pages/EditAddressPage";

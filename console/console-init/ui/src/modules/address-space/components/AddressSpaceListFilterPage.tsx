@@ -9,11 +9,11 @@ import {
   DataToolbar,
   DataToolbarItem
 } from "@patternfly/react-core/dist/js/experimental";
-import { CreateAddressSpace } from "pages/CreateAddressSpace/CreateAddressSpacePage";
+import { CreateAddressSpace } from "./CreateAddressSpace/CreateAddressSpace";
 import {
   AddressSpaceListFilter,
   AddressSpaceListKebab
-} from "components/AddressSpaceList/AddressSpaceListFilter";
+} from "./AddressSpaceListFilter";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView } from "components/common/SortForMobileView";
 import useWindowDimensions from "components/common/WindowDimension";

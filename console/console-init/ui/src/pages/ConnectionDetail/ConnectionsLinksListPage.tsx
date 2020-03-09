@@ -6,7 +6,7 @@
 import * as React from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { IConnectionLinksResponse } from "types/ResponseTypes";
-import { RETURN_CONNECTION_LINKS } from "queries";
+import { RETURN_CONNECTION_LINKS } from "graphql-module/queries";
 import { Loading } from "use-patternfly";
 import { ILink, LinkList } from "components/ConnectionDetail/LinkList";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
