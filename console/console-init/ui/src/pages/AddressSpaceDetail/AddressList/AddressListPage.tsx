@@ -158,7 +158,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     displayName: address.spec.address,
     namespace: address.metadata.namespace,
     type: address.spec.type,
-    planLabel: address.spec.plan.spec.displayName,
+    planLabel:
+      address.spec.plan.spec.displayName || address.spec.plan.metadata.name,
     planValue: address.spec.plan.metadata.name,
     messageIn: getFilteredValue(address.metrics, "enmasse_messages_in"),
     messageOut: getFilteredValue(address.metrics, "enmasse_messages_out"),

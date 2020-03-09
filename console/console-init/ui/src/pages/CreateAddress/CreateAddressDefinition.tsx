@@ -115,7 +115,7 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
         const planOptions = addressPlans.data.addressPlans.map(plan => {
           return {
             value: plan.metadata.name,
-            label: plan.spec.displayName,
+            label: plan.spec.displayName || plan.metadata.name,
             description: plan.spec.shortDescription
           };
         });
