@@ -4,3 +4,4 @@
  */
 
 export * from "./error-helper";
+export * from "./queries";

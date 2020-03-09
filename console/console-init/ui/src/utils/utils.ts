@@ -53,6 +53,21 @@ const getSelectOptionList = (list: string[], totalRecords: number) => {
   return records;
 };
 
+const compareObject = (obj1: any, obj2: any) => {
+  if (obj1 && obj2) {
+    return JSON.stringify(obj1) === JSON.stringify(obj2);
+  }
+};
+
+const getType = (type: string) => {
+  switch (type && type.toLowerCase()) {
+    case "standard":
+      return " Standard";
+    case "brokered":
+      return " Brokered";
+  }
+};
+
 const removeForbiddenChars = (input: string) => {
   let escapedInput = input.replace(forbiddenBackslashRegexp, "\\\\");
   escapedInput = escapedInput.replace(forbiddenSingleQuoteRegexp, "''");
@@ -60,4 +75,4 @@ const removeForbiddenChars = (input: string) => {
   return escapedInput;
 };
 
-export { getSelectOptionList, removeForbiddenChars };
+export { getSelectOptionList, removeForbiddenChars,compareObject, getType};

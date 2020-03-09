@@ -15,16 +15,16 @@ import {
   DropdownItem,
   DropdownPosition
 } from "@patternfly/react-core";
-import { useApolloClient } from "@apollo/react-hooks";
+import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { IDropdownOption } from "components/common/FilterDropdown";
 import {
   RETURN_ADDRESS_PLANS,
   RETURN_ADDRESS_TYPES,
   RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION
-} from "queries";
+} from "graphql-module/queries";
+import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { IAddressResponse } from "types/ResponseTypes";
-import { dropdown_item_styles } from "pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
 import { FetchPolicy } from "constants/constants";
 
 const styles = StyleSheet.create({
@@ -290,9 +290,7 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
                   >
                     <b>{option.label}</b>
                     <br />
-                    <div className={css(dropdown_item_styles.format_item)}>
-                      {option.description}
-                    </div>
+                    {option.description}
                   </DropdownItem>
                 ))}
               />

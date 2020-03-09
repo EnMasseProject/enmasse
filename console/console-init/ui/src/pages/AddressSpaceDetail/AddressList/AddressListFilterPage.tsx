@@ -13,7 +13,7 @@ import {
 import { CreateAddressPage } from "pages/CreateAddress/CreateAddressPage";
 import { useParams } from "react-router";
 import { useApolloClient } from "@apollo/react-hooks";
-import { RETURN_ADDRESS_SPACE_DETAIL } from "queries";
+import { RETURN_ADDRESS_SPACE_DETAIL } from "graphql-module/queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
 import {
   AddressListFilter,

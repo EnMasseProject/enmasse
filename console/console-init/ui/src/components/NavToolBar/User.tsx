@@ -6,7 +6,7 @@
 import * as React from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { IUserDetail } from "types/ResponseTypes";
-import { RETURN_WHOAMI } from "queries";
+import { RETURN_WHOAMI } from "graphql-module/queries";
 import { FetchPolicy, UNKNOWN } from "constants/constants";
 
 export const UserDetail: React.FunctionComponent = () => {
