@@ -12,7 +12,7 @@ import {
   DELETE_ADDRESS,
   EDIT_ADDRESS,
   PURGE_ADDRESS
-} from "queries";
+} from "graphql-module/queries";
 import {
   IAddress,
   AddressList

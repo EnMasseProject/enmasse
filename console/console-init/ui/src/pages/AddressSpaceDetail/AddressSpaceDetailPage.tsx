@@ -34,12 +34,12 @@ import {
   DELETE_ADDRESS_SPACE,
   RETURN_ADDRESS_SPACE_DETAIL,
   EDIT_ADDRESS_SPACE
-} from "queries";
+} from "graphql-module/queries";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
 import { EditAddressSpace } from "pages/EditAddressSpace";
-import { IAddressSpace } from "components/AddressSpaceList/AddressSpaceList";
+import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
 import { useMutationQuery } from "hooks";
 import { AddressSpaceRoutes } from "Routes";
 

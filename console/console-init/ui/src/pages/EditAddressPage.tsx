@@ -12,7 +12,7 @@ import {
   FormSelectOption
 } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
-import { RETURN_ADDRESS_PLANS } from "queries";
+import { RETURN_ADDRESS_PLANS } from "graphql-module/queries";
 import { Loading } from "use-patternfly";
 
 interface IEditAddressProps {

@@ -31,15 +31,15 @@ import {
   Select,
   SelectVariant
 } from "@patternfly/react-core";
-import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "queries";
+import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
 import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "types/ResponseTypes";
 import { useApolloClient } from "@apollo/react-hooks";
 import {
   TypeAheadMessage,
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
-  TYPEAHEAD_REQUIRED_LENGTH,
-  FetchPolicy
+  FetchPolicy,
+  TYPEAHEAD_REQUIRED_LENGTH
 } from "constants/constants";
 import { ISelectOption, getSelectOptionList } from "utils";
 

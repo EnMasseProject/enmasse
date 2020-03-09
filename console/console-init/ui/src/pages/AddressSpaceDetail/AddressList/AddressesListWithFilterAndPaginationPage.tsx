@@ -23,7 +23,7 @@ import {
   CURRENT_ADDRESS_SPACE_PLAN,
   DELETE_ADDRESS,
   PURGE_ADDRESS
-} from "queries";
+} from "graphql-module/queries";
 import { ISortBy } from "@patternfly/react-table";
 import { IAddress } from "components/AddressSpace/Address/AddressList";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
