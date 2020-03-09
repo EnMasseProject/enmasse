@@ -34,6 +34,7 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
+import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBindingBuilder;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
@@ -382,9 +383,14 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             resourcesManager.createOrUpdateUser(brokered, cred);
             resourcesManager.createOrUpdateUser(standard, cred);
 
-            assertThat("Get all users does not contain 2 password users",
-                    (int) kubernetes.getUserClient().inAnyNamespace().list().getItems()
-                            .stream().filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password)).count(),
+            List<User> users = kubernetes.getUserClient().inAnyNamespace().list().getItems();
+            List<String> namespacedUser = users.stream()
+                    .filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password))
+                    .map(user -> user.getMetadata().getNamespace() + "/" + user.getMetadata().getName())
+                    .collect(Collectors.toList());
+            assertNotNull(users);
+            assertThat("Unexpected number of password users. Found: " + namespacedUser,
+                    (int) users.stream().filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password)).count(),
                     is(2));
 
         } finally {
