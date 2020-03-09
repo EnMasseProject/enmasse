@@ -21,6 +21,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 )
 
@@ -28,12 +29,17 @@ const accessControllerStateCookieName = "accessControllerState"
 const sessionOwnerSessionAttribute = "sessionOwnerSessionAttribute"
 const loggedOnUserSessionAttribute = "loggedOnUserSessionAttribute"
 
+var bearerRegexp = regexp.MustCompile(`^Bearer +(.*)$`)
+
+const forwardedHeader = "X-Forwarded-Access-Token"
+const authHeader = "Authorization"
+
 func AuthHandler(next http.Handler, sessionManager *scs.SessionManager) http.Handler {
 
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		var state *RequestState
 
-		accessToken := req.Header.Get("X-Forwarded-Access-Token")
+		accessToken := getAccessToken(req)
 		useSession := true
 		if healthProbe, _ := strconv.ParseBool(req.Header.Get("X-Health")); healthProbe {
 			useSession = false
@@ -212,4 +218,13 @@ func getLoggedOnUser(useSession bool, sessionManager *scs.SessionManager, req *h
 func getShaSum(accessToken string) []byte {
 	accessTokenSha := sha256.Sum256([]byte(accessToken))
 	return accessTokenSha[:]
+}
+
+func getAccessToken(req *http.Request) string {
+	accessToken := req.Header.Get(forwardedHeader)
+	if accessToken == "" {
+		accessToken = req.Header.Get(authHeader)
+		accessToken = bearerRegexp.ReplaceAllString(accessToken, "$1")
+	}
+	return accessToken
 }
