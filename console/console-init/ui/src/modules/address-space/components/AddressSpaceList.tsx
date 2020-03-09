@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   Table,
   TableVariant,
@@ -14,14 +15,13 @@ import {
   IExtraData,
   ISortBy
 } from "@patternfly/react-table";
-import { Link } from "react-router-dom";
-import {
-  AddressSpaceType,
-  AddressSpaceStatus,
-  AddressSpaceIcon
-} from "components/common/AddressSpaceListFormatter";
 import { FormatDistance } from "use-patternfly";
 import { StyleSheet, css } from "@patternfly/react-styles";
+import {
+  AddressSpaceStatus,
+  AddressSpaceIcon
+} from "./AddressSpaceListFormatter";
+import { getType } from "utils";
 
 export interface IAddressSpace {
   name: string;
@@ -123,7 +123,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressListProps> = ({
           title: (
             <>
               <AddressSpaceIcon />
-              <AddressSpaceType type={row.type} />
+              {getType(row.type)}
             </>
           )
         },

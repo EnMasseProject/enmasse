@@ -10,15 +10,15 @@ import { Button, Modal } from "@patternfly/react-core";
 import {
   AddressSpaceList,
   IAddressSpace
-} from "components/AddressSpaceList/AddressSpaceList";
-import { EmptyAddressSpace } from "components/AddressSpaceList/EmptyAddressSpace";
+} from "modules/address-space/components/AddressSpaceList";
+import { EmptyAddressSpace } from "modules/address-space/components/EmptyAddressSpace";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import {
   DELETE_ADDRESS_SPACE,
   RETURN_ALL_ADDRESS_SPACES,
   EDIT_ADDRESS_SPACE,
   DOWNLOAD_CERTIFICATE
-} from "queries";
+} from "graphql-module/queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
 import { EditAddressSpace } from "pages/EditAddressSpace";
 import { ISortBy } from "@patternfly/react-table";

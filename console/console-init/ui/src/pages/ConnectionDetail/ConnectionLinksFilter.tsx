@@ -38,7 +38,7 @@ import {
 import {
   RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH,
   RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH
-} from "queries";
+} from "graphql-module/queries";
 import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH,

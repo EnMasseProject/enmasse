@@ -16,7 +16,7 @@ import {
 import { ExternalLinkAltIcon } from "@patternfly/react-icons";
 import { Link } from "react-router-dom";
 import { Tooltip, TooltipPosition } from "@patternfly/react-core";
-import { StyleForTable } from "components/AddressSpaceList/AddressSpaceList";
+import { StyleForTable } from "modules/address-space/components/AddressSpaceList";
 import { css } from "emotion";
 
 interface IClientListProps {

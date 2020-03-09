@@ -33,7 +33,7 @@ import {
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { useApolloClient } from "@apollo/react-hooks";
 import { IAddressListNameSearchResponse } from "types/ResponseTypes";
-import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "queries";
+import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "graphql-module/queries";
 import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH,
