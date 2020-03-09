@@ -63,6 +63,7 @@ interface IAddressPlans {
       addressType: string;
       displayName: string;
       shortDescription: string;
+      longDescription: string;
     };
   }>;
 }
@@ -116,7 +117,7 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
           return {
             value: plan.metadata.name,
             label: plan.spec.displayName || plan.metadata.name,
-            description: plan.spec.shortDescription
+            description: plan.spec.shortDescription || plan.spec.longDescription
           };
         });
         setPlan(" ");
