@@ -26,7 +26,7 @@ object. A JSON-path operand in the expression are enclosed in backticks.
 e.g.
 
 ```
- `$.Spec.AddressSpace` = 'jupiter_as1' AND `$.ObjectMeta.Namespace` = 'app1_ns'
+ `$.metadata.name` = 'jupiter_as1' AND `$.ObjectMeta.Namespace` = 'app1_ns'
 ```
 
 # Sorting
@@ -38,7 +38,7 @@ result that is to be subjected to the sort. Sort order can be `ASC` (ascending -
 An ascending sort:
 
 ```
-"`$.ObjectMeta.Name`"
+"`$.metadata.name`"
 ```
 
 Multiple sort clauses are supported. Separate each clause with a comma.
@@ -46,7 +46,7 @@ Multiple sort clauses are supported. Separate each clause with a comma.
 A two clause sort:
 
 ```
-"`$.Spec.Type` ,`$.ObjectMeta.Name` desc"
+"`$.spec.type` ,`$.metadata.name` desc"
 ```
 
 # Paging
@@ -136,7 +136,7 @@ query all_address_spaces {
 ```
 query all_addresses_for_addressspace_view {
   addresses(
-    filter: "`$.spec.addressSpace` = 'jupiter_as1' AND `$.metadata.namespace` = 'app1_ns'"
+    filter: "`$.metadata.name` LIKE 'jupiter_as1.%' AND `$.metadata.namespace` = 'app1_ns'"
   ) {
     total
     addresses {

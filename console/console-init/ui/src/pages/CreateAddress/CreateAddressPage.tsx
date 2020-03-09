@@ -103,8 +103,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
           spec: {
             type: addressType.toLowerCase(),
             plan: plan,
-            address: addressName,
-            addressSpace: addressSpace
+            address: addressName
           }
         };
         if (addressType && addressType.trim().toLowerCase() === "subscription")
