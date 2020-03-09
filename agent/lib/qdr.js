@@ -137,7 +137,7 @@ Router.prototype.closed = function (context) {
     if (context.connection.error) {
         log.error('[%s] ERROR: router closed connection with %s', this.get_id(), context.connection.error.description);
     }
-    log.info('[%s] router closed ', this.get_id(), this.target);
+    log.info('[%s] router closed %s, abort_idle: %s', this.get_id(), this.target, context.connection.abort_idle);
     this.address = undefined;
     this._abort_requests('closed');
 };
@@ -161,6 +161,7 @@ Router.prototype.on_sender_error = function (context) {
 
 Router.prototype.disconnected = function (context) {
     this.address = undefined;
+    log.info('[%s] router disconnected %s, abort_idle: %s', this.get_id(), this.target, context.connection.abort_idle);
     this._abort_requests('disconnected');
 }
 
