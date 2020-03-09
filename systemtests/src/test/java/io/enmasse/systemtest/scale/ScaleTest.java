@@ -22,6 +22,7 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -31,6 +32,7 @@ import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -38,6 +40,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.nio.file.Files;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,6 +54,7 @@ import java.util.stream.IntStream;
 import static io.enmasse.systemtest.TestTag.SCALE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 
 @Tag(SCALE)
 class ScaleTest extends TestBase implements ITestBaseIsolated {
@@ -98,6 +105,54 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 break;
             }
             iterator++;
+        }
+    }
+
+    @Test
+    void testTimeToCreateNewAddresses() throws Exception {
+        int iterator = 0;
+        int operableAddresses = 0;
+        var failureThresholdTime = Duration.ofSeconds(105); //1 min 45 seconds
+
+        List<CreationTimeItem> times = new ArrayList<>();
+        try {
+            while (true) {
+                log.info("Total operable addresses: {}", operableAddresses);
+                try {
+                    Address[] addresses = getAddressArray(addressSpace).toArray(new Address[0]);
+                    long startCreate = System.currentTimeMillis();
+                    getResourceManager().appendAddresses(false, addresses);
+                    long endCreate = System.currentTimeMillis();
+                    AddressUtils.waitForDestinationsReady(addresses);
+                    long endReady = System.currentTimeMillis();
+
+                    CreationTimeItem item = new CreationTimeItem(iterator, (endCreate - startCreate) / 1000 , (endReady - endCreate) / 1000);
+                    times.add(item);
+
+                    operableAddresses += addresses.length;
+
+                    assertThat(Duration.ofSeconds(endReady - endCreate), lessThanOrEqualTo(failureThresholdTime));
+                } catch (IllegalStateException ex) {
+                    //already exceeded threshold
+                    log.error("Failed to wait for addresses");
+                    operableAddresses = (int) kubernetes.getAddressClient().inNamespace(namespace).list().getItems().stream()
+                            .filter(address -> address.getStatus().getPhase().equals(Phase.Active)).count();
+                    break;
+                }
+                iterator++;
+            }
+        } finally {
+            log.info("----------------------------------------------------------");
+            log.info("Total operable addresses {}", operableAddresses);
+            log.info("----------------------------------------------------------");
+            log.info("----------------------------------------------------------");
+            log.info("Address creation and readiness time:");
+            for (var time : times) {
+                log.info(time.toString());
+            }
+            log.info("----------------------------------------------------------");
+            Files.writeString(TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()).resolve("creation-times-test-results.txt"),
+                    new ObjectMapper().writeValueAsString(times));
         }
     }
 
