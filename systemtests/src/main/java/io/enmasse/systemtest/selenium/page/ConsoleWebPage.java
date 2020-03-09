@@ -943,7 +943,9 @@ public class ConsoleWebPage implements IWebPage {
     private boolean waitUntilLoginPage() {
         try {
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains("Log"));
-            selenium.clickOnItem(selenium.getDriver().findElement(By.tagName("button")));
+            if (!selenium.getDriver().getCurrentUrl().contains("oauth/authorize")) {
+                selenium.clickOnItem(selenium.getDriver().findElement(By.tagName("button")));
+            }
             return true;
         } catch (Exception ex) {
             selenium.takeScreenShot();
