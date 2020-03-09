@@ -56,7 +56,7 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
     .map(plan => {
       return {
         value: plan.metadata.name,
-        label: plan.spec.displayName,
+        label: plan.spec.displayName || plan.metadata.name,
         disabled: false
       };
     })
