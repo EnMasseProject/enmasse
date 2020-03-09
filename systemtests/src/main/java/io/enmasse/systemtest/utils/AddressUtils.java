@@ -149,7 +149,7 @@ public class AddressUtils {
 
     public static boolean isAddressReady(AddressSpace addressSpace, Address address) {
         for (Address currentAdd : getAddresses(addressSpace)) {
-            if(currentAdd.getMetadata().getName().equals(address.getMetadata().getName())
+            if (currentAdd.getMetadata().getName().equals(address.getMetadata().getName())
                     && currentAdd.getStatus().isReady()) {
                 return true;
             }
@@ -231,7 +231,7 @@ public class AddressUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static void waitForAddressesMatched(TimeoutBudget timeoutBudget, int totalDestinations, FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> addressClient, AddressListMatcher addressListMatcher) throws Exception {
+    private static void waitForAddressesMatched(TimeoutBudget timeoutBudget, int totalDestinations, FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> addressClient, AddressListMatcher addressListMatcher) {
         TestUtils.waitUntilCondition(totalDestinations + " match", phase -> {
             try {
                 List<Address> addressList = addressClient.list().getItems();
