@@ -146,6 +146,7 @@ public abstract class ConsoleTest extends TestBase {
         assertTrue(AddressSpaceUtils.addressSpaceExists(Kubernetes.getInstance().getInfraNamespace(),
                 addressSpace.getMetadata().getName()));
         resourcesManager.waitForAddressSpaceReady(addressSpace);
+        resourcesManager.deleteAddressSpace(addressSpace);
     }
 
 
