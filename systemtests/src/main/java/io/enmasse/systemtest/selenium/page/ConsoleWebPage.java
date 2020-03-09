@@ -499,6 +499,11 @@ public class ConsoleWebPage implements IWebPage {
         }
     }
 
+    public WebElement getFirstLineOfDeploymentSnippet() {
+        List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
+        return snippetElements.get(0);
+    }
+
     public String getDeploymentSnippet() throws InterruptedException {
         final int RETRY_COUNTER = 5;
 
