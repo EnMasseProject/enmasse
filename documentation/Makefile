@@ -4,6 +4,10 @@ include ../Makefile.env.mk
 ASCIIDOCTOR_EXTRA_FLAGS ?= --failure-level WARN
 ASCIIDOCTOR_FLAGS       ?= -v -a EnMasseVersion=$(VERSION) -t -dbook $(ASCIIDOCTOR_EXTRA_FLAGS)
 
+# first target, default target
+.PHONY: all
+all: build
+
 .PHONY: swagger
 swagger: build/swagger2markup.jar
 	mvn process-resources
@@ -40,4 +44,4 @@ clean:
 
 .PHONY: check
 check:
-	$(TOPDIR)/scripts/check_docs.sh
+	cd $(TOPDIR) && $(TOPDIR)/scripts/check_docs.sh
