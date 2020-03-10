@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -86,6 +87,53 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         log.info("Start receiving with " + timeoutMs + " ms timeout");
         Future<List<Message>> received = client.recvMessages(dest.getSpec().getAddress(), predicate);
         actual = 0;
+        try {
+            actual = received.get(timeoutMs, TimeUnit.MILLISECONDS).size();
+        } catch (TimeoutException t) {
+            logCollector.collectRouterState("runQueueTestRecv");
+            fail("Receiving messages timed out after " + predicate.actual() + " msgs received");
+        }
+
+        assertThat("Wrong count of messages received", actual, is(msgs.size()));
+    }
+
+    public static void runQueueTestRetrying(AmqpClient client, Address dest, int countMessages, Duration retryTimeout) throws InterruptedException, TimeoutException, ExecutionException, IOException {
+        List<String> msgs = TestUtils.generateMessages(countMessages);
+        long timeoutMs = countMessages * ClientUtils.ESTIMATE_MAX_MS_PER_MESSAGE;
+
+        TestUtils.waitUntilConditionOrFail(() -> {
+            log.info("Start sending with " + timeoutMs + " ms timeout");
+            Count<Message> predicate = new Count<>(msgs.size());
+            Future<Integer> numSent = client.sendMessages(dest.getSpec().getAddress(), msgs, predicate);
+
+            assertNotNull(numSent, "Sending messages didn't start");
+            int actual = 0;
+            try {
+                actual = numSent.get(timeoutMs, TimeUnit.MILLISECONDS);
+            } catch (Exception t) {
+                if (t.getMessage()!=null && t.getMessage().contains("Message not accepted")) {
+                    log.info("Send failed, retrying {}", t.getMessage());
+                    return false;
+                } else {
+                    actual = predicate.actual();
+                    log.info("Send failed because of exception {}", t.getMessage());
+                }
+            }
+            if (actual != msgs.size()) {
+                log.info("only {} out of {} messages sent, retrying with remaining {} messages", actual, msgs.size(), msgs.size() - actual);
+                for (int i = 0; i<actual; i++) {
+                    msgs.remove(0);
+                }
+                return false;
+            }
+            log.info("Successfully sent {} of {} messages", actual, msgs.size());
+            return true;
+        }, retryTimeout, Duration.ofSeconds(2), () -> "Send messages failed");
+
+        Count<Message> predicate = new Count<>(msgs.size());
+        log.info("Start receiving with " + timeoutMs + " ms timeout");
+        Future<List<Message>> received = client.recvMessages(dest.getSpec().getAddress(), predicate);
+        int actual = 0;
         try {
             actual = received.get(timeoutMs, TimeUnit.MILLISECONDS).size();
         } catch (TimeoutException t) {
