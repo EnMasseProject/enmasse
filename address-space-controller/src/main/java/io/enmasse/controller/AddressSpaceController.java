@@ -139,7 +139,7 @@ public class AddressSpaceController {
         controllerChain.addController(new RealmFinalizerController(keycloakRealmApi, authenticationServiceRegistry));
         controllerChain.addController(new StatusInitializer());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi, authenticationServiceResolver));
-        controllerChain.addController(new RouterConfigController(controllerClient, controllerClient.getNamespace(), authenticationServiceResolver));
+        controllerChain.addController(new RouterConfigController(controllerClient, controllerClient.getNamespace(), authenticationServiceResolver, routerStatusCache));
         controllerChain.addController(new PodDisruptionBudgetController(controllerClient, controllerClient.getNamespace()));
         controllerChain.addController(new RealmController(keycloakRealmApi, authenticationServiceRegistry));
         controllerChain.addController(new NetworkPolicyController(controllerClient));

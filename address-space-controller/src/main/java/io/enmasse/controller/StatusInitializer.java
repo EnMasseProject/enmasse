@@ -13,4 +13,9 @@ public class StatusInitializer implements Controller {
             addressSpace.getStatus().clearMessages();
             return addressSpace;
     }
+
+    @Override
+    public String toString() {
+        return "StatusInitializer";
+    }
 }
