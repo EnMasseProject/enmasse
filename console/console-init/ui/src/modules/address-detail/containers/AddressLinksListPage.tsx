@@ -12,21 +12,23 @@ import {
   Grid,
   GridItem
 } from "@patternfly/react-core";
-import { GridStylesForTableHeader } from "pages/AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
-import { AddressLinksListPage } from "./AddressLinksListPage";
+import { GridStylesForTableHeader } from "modules/address/AddressListPage";
+import { AddressLinksContainer } from "./AddressLinksContainer";
 import { useHistory, useLocation } from "react-router";
 import { css } from "emotion";
-import { AddressLinksFilter } from "pages/AddressDetail/AddressLinksFilter";
+import { AddressLinksToolbar } from "modules/address-detail/containers/AddressLinksToolbar";
 import { ISortBy } from "@patternfly/react-table";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
-interface IAddressLinksWithFilterAndPaginationProps {
+
+interface IAddressLinksListPageProps {
   addressspace_name: string;
   addressspace_namespace: string;
   addressspace_type: string;
   addressName: string;
   addressDisplayName: string;
 }
-export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddressLinksWithFilterAndPaginationProps> = ({
+
+const AddressLinksListPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
   addressspace_name,
   addressspace_namespace,
   addressspace_type,
@@ -99,7 +101,7 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
         </Title>
         <Grid>
           <GridItem span={7}>
-            <AddressLinksFilter
+            <AddressLinksToolbar
               filterValue={filterValue}
               setFilterValue={setFilterValue}
               filterNames={filterNames}
@@ -113,7 +115,6 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
               setSortValue={setSortDropdownValue}
               namespace={addressspace_namespace}
               addressName={addressName}
-              addressSpaceName={addressspace_name}
             />
           </GridItem>
           <GridItem span={5}>
@@ -121,7 +122,7 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
           </GridItem>
         </Grid>
         <Divider />
-        <AddressLinksListPage
+        <AddressLinksContainer
           page={page}
           perPage={perPage}
           name={addressspace_name}
@@ -140,3 +141,5 @@ export const AddressLinksWithFilterAndPagination: React.FunctionComponent<IAddre
     </PageSection>
   );
 };
+
+export { AddressLinksListPage };

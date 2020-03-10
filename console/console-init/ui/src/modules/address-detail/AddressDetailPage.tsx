@@ -13,7 +13,7 @@ import {
 import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
 import { Link, useHistory } from "react-router-dom";
 import { useParams } from "react-router";
-import { AddressDetailHeader } from "components/AddressDetail/AddressDetailHeader";
+import { AddressDetailHeader } from "modules/address-detail/components/AddressDetailHeader";
 import { useQuery } from "@apollo/react-hooks";
 import { IAddressDetailResponse } from "types/ResponseTypes";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
@@ -24,10 +24,9 @@ import {
   CURRENT_ADDRESS_SPACE_PLAN,
   PURGE_ADDRESS
 } from "graphql-module/queries";
-import { IObjectMeta_v1_Input } from "pages/AddressSpaceDetail/AddressSpaceDetailPage";
-import { AddressLinksWithFilterAndPagination } from "./AddressLinksWithFilterAndPaginationPage";
-import { EditAddress } from "pages/EditAddressPage";
-import { IAddressSpacePlanResponse } from "pages/AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage";
+import { AddressLinksListPage } from "./containers/AddressLinksListPage";
+import { EditAddress } from "modules/address/containers/EditAddressPage";
+import { IAddressSpacePlanResponse } from "modules/address/AddressListPage";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
 import { useMutationQuery } from "hooks";
@@ -63,9 +62,6 @@ export default function AddressDetailPage() {
   useA11yRouteChange();
   useBreadcrumb(breadcrumb);
   const history = useHistory();
-
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
-  const [isPurgeModalOpen, setIsPurgeModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [addressPlan, setAddressPlan] = React.useState<string | null>(null);
   const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(
@@ -274,7 +270,7 @@ export default function AddressDetailPage() {
           />
         )}
       </Modal>
-      <AddressLinksWithFilterAndPagination
+      <AddressLinksListPage
         addressspace_name={name || ""}
         addressspace_namespace={namespace || ""}
         addressspace_type={type || " "}

@@ -15,8 +15,8 @@ import {
 } from "@patternfly/react-core";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import { StyleSheet } from "@patternfly/react-styles";
-import { AddressListFilterPage } from "./AddressListFilterPage";
-import { AddressListPage, compareTwoAddress } from "./AddressListPage";
+import { AddressListToolbar } from "./containers/AddressListToolbar";
+import { AddressListContainer } from "./containers/AddressListContainer";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { useQuery, useMutation } from "@apollo/react-hooks";
 import {
@@ -25,7 +25,8 @@ import {
   PURGE_ADDRESS
 } from "graphql-module/queries";
 import { ISortBy } from "@patternfly/react-table";
-import { IAddress } from "components/AddressSpace/Address/AddressList";
+import { compareTwoAddress } from "./utils";
+import { IAddress } from "./components/AddressList";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import {
   getFilteredAdressNames,
@@ -321,7 +322,7 @@ export default function AddressesList() {
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
         <GridItem span={7}>
-          <AddressListFilterPage
+          <AddressListToolbar
             filterValue={filterValue}
             setFilterValue={setFilterValue}
             filterNames={filterNames}
@@ -347,7 +348,7 @@ export default function AddressesList() {
         </GridItem>
       </Grid>
       <Divider />
-      <AddressListPage
+      <AddressListContainer
         name={name}
         namespace={namespace}
         addressSpacePlan={addressSpacePlan}

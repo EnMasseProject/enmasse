@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { Wizard } from "@patternfly/react-core";
-import { AddressDefinition } from "pages/CreateAddress/CreateAddressDefinition";
+import { AddressDefinition } from "modules/address/containers/CreateAddress/CreateAddressDefinition";
 import { PreviewAddress } from "./PreviewAddress";
 import { useApolloClient } from "@apollo/react-hooks";
 import { CREATE_ADDRESS } from "graphql-module/queries";

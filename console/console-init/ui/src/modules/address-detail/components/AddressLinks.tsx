@@ -16,16 +16,16 @@ import {
 import { ExternalLinkAltIcon } from "@patternfly/react-icons";
 import { Link } from "react-router-dom";
 import { Tooltip, TooltipPosition } from "@patternfly/react-core";
-import { StyleForTable } from "modules/address-space/components/AddressSpaceList";
+import { StyleForTable } from "modules/address-space/components/AddressSpaceList/AddressSpaceList";
 import { css } from "emotion";
 
-interface IClientListProps {
-  rows: IClient[];
+interface IAddressLinksProps {
+  rows: IAddressLink[];
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
 }
 
-export interface IClient {
+export interface IAddressLink {
   role: string;
   containerId: string;
   name: string;
@@ -37,12 +37,12 @@ export interface IClient {
   addressSpaceType?: string;
 }
 
-export const ClientList: React.FunctionComponent<IClientListProps> = ({
+export const AddressLinks: React.FunctionComponent<IAddressLinksProps> = ({
   rows,
   onSort,
   sortBy
 }) => {
-  const toTableCells = (row: IClient) => {
+  const toTableCells = (row: IAddressLink) => {
     const tableRow: IRowData = {
       cells: [
         row.role,
@@ -71,7 +71,9 @@ export const ClientList: React.FunctionComponent<IClientListProps> = ({
     };
     return tableRow;
   };
+
   const tableRows = rows.map(toTableCells);
+
   const tableColumns = [
     "Role",
     "Container ID",

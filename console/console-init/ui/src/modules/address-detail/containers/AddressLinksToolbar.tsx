@@ -42,8 +42,6 @@ import {
 import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH,
-  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   FetchPolicy
 } from "constants/constants";
 import { getSelectOptionList, ISelectOption } from "utils";
@@ -61,10 +59,9 @@ interface IAddressLinksFilterProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   addressName: string;
-  addressSpaceName: string;
   namespace: string;
 }
-export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProps> = ({
+const AddressLinksToolbar: React.FunctionComponent<IAddressLinksFilterProps> = ({
   filterValue,
   setFilterValue,
   filterNames,
@@ -77,7 +74,6 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   sortValue,
   setSortValue,
   addressName,
-  addressSpaceName,
   namespace
 }) => {
   const { width } = useWindowDimensions();
@@ -567,3 +563,5 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     </DataToolbar>
   );
 };
+
+export { AddressLinksToolbar };

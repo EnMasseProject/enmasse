@@ -10,7 +10,7 @@ import {
   DataToolbarItem,
   DataToolbarContent
 } from "@patternfly/react-core/dist/js/experimental";
-import { CreateAddressPage } from "pages/CreateAddress/CreateAddressPage";
+import { CreateAddressPage } from "modules/address/containers/CreateAddress/CreateAddressPage";
 import { useParams } from "react-router";
 import { useApolloClient } from "@apollo/react-hooks";
 import { RETURN_ADDRESS_SPACE_DETAIL } from "graphql-module/queries";
@@ -18,13 +18,13 @@ import { IAddressSpacesResponse } from "types/ResponseTypes";
 import {
   AddressListFilter,
   AddressListKebab
-} from "pages/AddressSpaceDetail/AddressList/AddressListFilter";
+} from "modules/address/containers/AddressListFilter";
 import useWindowDimensions from "components/common/WindowDimension";
 import { SortForMobileView } from "components/common/SortForMobileView";
 import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy } from "constants/constants";
 
-interface AddressListFilterProps {
+export interface AddressListFilterProps {
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;
   filterNames: any[];
@@ -44,7 +44,8 @@ interface AddressListFilterProps {
   isDeleteAllDisabled: boolean;
   isPurgeAllDisabled: boolean;
 }
-export const AddressListFilterPage: React.FunctionComponent<AddressListFilterProps> = ({
+
+export const AddressListToolbar: React.FunctionComponent<AddressListFilterProps> = ({
   filterValue,
   setFilterValue,
   filterNames,

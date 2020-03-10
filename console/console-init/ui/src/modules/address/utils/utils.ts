@@ -1,7 +1,13 @@
+import { statusToDisplay } from "modules/address-space";
+
 /*
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
+interface IAddressStatusProps {
+  phase: string;
+}
 
 const getFilteredAddressesByType = (addresses: any[]) => {
   if (addresses && addresses.length > 0) {
@@ -74,6 +80,43 @@ const getDetailTextForDeleteAll = (addresses: any[]) => {
       )} ?`
     : `Are you sure you want to delete this address: ${addresses[0].displayName} ?`;
 };
+const compareTwoAddress = (
+  addressName1: string,
+  addressName2: string,
+  namespace1: string,
+  namespace2: string
+) => {
+  return addressName1 === addressName2 && namespace1 === namespace2;
+};
+
+export const getPlanAndTypeForAddress = (
+  plan: string,
+  addressType: string,
+  type: string
+) => {
+  return (
+    type.toLowerCase() +
+    "-" +
+    plan.toLowerCase() +
+    "-" +
+    addressType.toLowerCase()
+  );
+};
+
+const getPlanAndTypeForAddressEdit = (
+  plan: string,
+  addressSpaceType: string
+) => {
+  return (
+    addressSpaceType.toLowerCase() + "-" + plan.toLowerCase().replace(" ", "-")
+  );
+};
+
+const AddressStatus: React.FunctionComponent<IAddressStatusProps> = ({
+  phase
+}) => {
+  return statusToDisplay(phase);
+};
 
 export {
   getFilteredAddressesByType,
@@ -82,5 +125,8 @@ export {
   getFilteredAddressDisplayName,
   getFilteredAdressNames,
   getHeaderTextForDelateAll,
-  getDetailTextForDeleteAll
+  getDetailTextForDeleteAll,
+  compareTwoAddress,
+  AddressStatus,
+  getPlanAndTypeForAddressEdit
 };

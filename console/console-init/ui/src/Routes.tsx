@@ -11,7 +11,8 @@ const getAddressSpaceListPage = () =>
   import("modules/address-space/AddressSpacePage");
 const getAddressSpaceDetail = () =>
   import("pages/AddressSpaceDetail/AddressSpaceDetailPage");
-const getAddressDetail = () => import("pages/AddressDetail/AddressDetailPage");
+const getAddressDetail = () =>
+  import("modules/address-detail/AddressDetailPage");
 const getConnectionDetail = () =>
   import("pages/ConnectionDetail/ConnectionDetailPage");
 
@@ -19,10 +20,7 @@ const getConnectionsList = () =>
   import(
     "pages/AddressSpaceDetail/ConnectionList/ConnectionListWithFilterAndPaginationPage"
   );
-const getAddressesList = () =>
-  import(
-    "pages/AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage"
-  );
+const getAddressesList = () => import("modules/address/AddressListPage");
 
 export const AppRoutes = () => (
   <SwitchWith404>

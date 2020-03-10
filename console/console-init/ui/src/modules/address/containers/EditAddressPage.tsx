@@ -62,9 +62,7 @@ export const EditAddress: React.FunctionComponent<IEditAddressProps> = ({
     })
     .filter(plan => plan !== undefined);
 
-  const onPlanChanged = (plan: string) => {
-    onChange(plan);
-  };
+  const onPlanChanged = (plan: string) => onChange(plan);
 
   return (
     <Form>

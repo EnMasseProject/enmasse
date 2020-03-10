@@ -7,39 +7,42 @@ import * as React from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { RETURN_ADDRESS_LINKS } from "graphql-module/queries";
 import { IAddressLinksResponse } from "types/ResponseTypes";
-import { IClient, ClientList } from "components/AddressDetail/ClientList";
+import {
+  IAddressLink,
+  AddressLinks
+} from "modules/address-detail/components/AddressLinks";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
-import { EmptyLinks } from "components/common/EmptyLinks";
 import { ISortBy } from "@patternfly/react-table";
 import { Loading } from "use-patternfly";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
+import { EmptyAddressLinks } from "modules/address-detail/components/EmptyAddressLinks";
 
-export interface IAddressLinksListProps {
+interface IAddressLinksListProps {
   page: number;
   perPage: number;
+  setAddressLinksTotal: (total: number) => void;
+  setSortValue: (value?: ISortBy) => void;
+  filterNames: string[];
+  filterContainers: string[];
   name?: string;
   namespace?: string;
   addressName?: string;
   type?: string;
-  setAddressLinksTotal: (total: number) => void;
-  filterNames: string[];
-  filterContainers: string[];
   sortValue?: ISortBy;
-  setSortValue: (value?: ISortBy) => void;
   filterRole?: string;
 }
-export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProps> = ({
+const AddressLinksContainer: React.FunctionComponent<IAddressLinksListProps> = ({
   page,
   perPage,
+  setAddressLinksTotal,
+  setSortValue,
+  filterNames,
+  filterContainers,
   name,
   namespace,
   addressName,
   type,
-  setAddressLinksTotal,
-  filterNames,
-  filterContainers,
   sortValue,
-  setSortValue,
   filterRole
 }) => {
   const [sortBy, setSortBy] = React.useState<ISortBy>();
@@ -78,30 +81,34 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
     addresses.addresses[0].links.total > 0 &&
     addresses.addresses[0].links;
 
-  let clientRows: IClient[] = addresses.addresses[0].links.links.map(link => ({
-    role: link.spec.role.toString(),
-    containerId: link.spec.connection.spec.containerId,
-    name: link.metadata.name,
-    deliveryRate: getFilteredValue(
-      link.metrics,
-      link.spec.role === "sender"
-        ? "enmasse_messages_in"
-        : "enmasse_messages_out"
-    ),
-    backlog: getFilteredValue(link.metrics, "enmasse_messages_backlog"),
-    connectionName: link.spec.connection.metadata.name,
-    addressSpaceName: name,
-    addressSpaceNamespace: namespace,
-    addressSpaceType: type
-  }));
+  let clientRows: IAddressLink[] = addresses.addresses[0].links.links.map(
+    link => ({
+      role: link.spec.role.toString(),
+      containerId: link.spec.connection.spec.containerId,
+      name: link.metadata.name,
+      deliveryRate: getFilteredValue(
+        link.metrics,
+        link.spec.role === "sender"
+          ? "enmasse_messages_in"
+          : "enmasse_messages_out"
+      ),
+      backlog: getFilteredValue(link.metrics, "enmasse_messages_backlog"),
+      connectionName: link.spec.connection.metadata.name,
+      addressSpaceName: name,
+      addressSpaceNamespace: namespace,
+      addressSpaceType: type
+    })
+  );
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
   };
   return (
     <>
-      <ClientList rows={clientRows} onSort={onSort} sortBy={sortBy} />
-      {links && links.total > 0 ? <></> : <EmptyLinks />}
+      <AddressLinks rows={clientRows} onSort={onSort} sortBy={sortBy} />
+      {links && links.total > 0 ? <></> : <EmptyAddressLinks />}
     </>
   );
 };
+
+export { AddressLinksContainer };
