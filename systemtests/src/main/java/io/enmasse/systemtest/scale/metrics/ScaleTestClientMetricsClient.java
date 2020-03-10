@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.scale.metrics;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,17 +64,21 @@ public class ScaleTestClientMetricsClient {
         return new IllegalStateException("Metric " + name + " not found");
     }
 
-    protected Counter getCounter(String name) throws IOException {
-        return (Counter) getMetrics()
-                .stream()
-                .filter(m -> m.getName().equals(name))
-                .findFirst()
-                .orElseThrow(() -> metricNotFound(name))
-                .getMetrics()
-                .stream()
-                .filter(m -> m.getName().equals(name))
-                .findFirst()
-                .orElseThrow(() -> metricNotFound(name));
+    protected Counter getCounter(String name) {
+        try {
+            return (Counter) getMetrics()
+                    .stream()
+                    .filter(m -> m.getName().equals(name))
+                    .findFirst()
+                    .orElseThrow(() -> metricNotFound(name))
+                    .getMetrics()
+                    .stream()
+                    .filter(m -> m.getName().equals(name))
+                    .findFirst()
+                    .orElseThrow(() -> metricNotFound(name));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
 }

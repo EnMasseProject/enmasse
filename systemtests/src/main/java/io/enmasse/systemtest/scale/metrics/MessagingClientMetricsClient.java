@@ -30,51 +30,51 @@ public class MessagingClientMetricsClient extends ScaleTestClientMetricsClient {
         super(metricsEndpoint);
     }
 
-    public Counter getConnectSuccess() throws IOException {
+    public Counter getConnectSuccess() {
         return getCounter(TEST_CONNECT_SUCCESS_TOTAL_METRIC);
     }
 
-    public Counter getConnectFailure() throws IOException {
+    public Counter getConnectFailure() {
         return getCounter(TEST_CONNECT_FAILURE_TOTAL_METRIC);
     }
 
-    public Counter getDisconnects() throws IOException {
+    public Counter getDisconnects() {
         return getCounter(TEST_DISCONNECTS_TOTAL_METRIC);
     }
 
-    public Counter getReconnects() throws IOException {
+    public Counter getReconnects() {
         return getCounter(TEST_RECONNECTS_TOTAL_METRIC);
     }
 
-    public Counter getAttaches() throws IOException {
+    public Counter getAttaches() {
         return getCounter(TEST_ATTACHES_TOTAL_METRIC);
     }
 
-    public Counter getDetaches() throws IOException {
+    public Counter getDetaches() {
         return getCounter(TEST_DETACHES_TOTAL_METRIC);
     }
 
-    public Counter getReattaches() throws IOException {
+    public Counter getReattaches() {
         return getCounter(TEST_REATTACHES_TOTAL_METRIC);
     }
 
-    public Counter getReceivedDeliveries() throws IOException {
+    public Counter getReceivedDeliveries() {
         return getCounter(TEST_RECEIVED_TOTAL_METRIC);
     }
 
-    public Counter getAcceptedDeliveries() throws IOException {
+    public Counter getAcceptedDeliveries() {
         return getCounter(TEST_ACCEPTED_TOTAL_METRIC);
     }
 
-    public Counter getRejectedDeliveries() throws IOException {
+    public Counter getRejectedDeliveries() {
         return getCounter(TEST_REJECTED_TOTAL_METRIC);
     }
 
-    public Counter getReleasedDeliveries() throws IOException {
+    public Counter getReleasedDeliveries() {
         return getCounter(TEST_RELEASED_TOTAL_METRIC);
     }
 
-    public Counter getModifiedDeliveries() throws IOException {
+    public Counter getModifiedDeliveries() {
         return getCounter(TEST_MODIFIED_TOTAL_METRIC);
     }
 

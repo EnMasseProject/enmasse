@@ -44,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -95,42 +96,43 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             client.setPassword(userCredentials.getPassword());
             return client;
         };
+        {
+            ScaleTestClientConfiguration client = clientProvider.get();
+            client.setAddresses(addresses.toArray(new String[0]));
 
-        ScaleTestClientConfiguration client = clientProvider.get();
-        client.setAddresses(addresses.toArray(new String[0]));
+            SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, client);
 
-        SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, client);
+            var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
+            ProbeClientMetricsClient probeClientMetrics = new ProbeClientMetricsClient(metricsEndpoint);
 
-        Thread.sleep(20000);
+            TestUtils.waitUntilConditionOrFail(() -> {
+                return probeClientMetrics.getSuccessTotal().getValue()>0;
+            }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
 
-        var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
+            assertTrue(probeClientMetrics.getSuccessTotal().getValue()>0);
+            assertTrue(probeClientMetrics.getFailureTotal().getValue()==0);
 
-        ProbeClientMetricsClient probeClientMetrics = new ProbeClientMetricsClient(metricsEndpoint);
+            SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
+        }
+        {
+            ScaleTestClientConfiguration client = clientProvider.get();
+            client.setClientType(ScaleTestClientType.messaging);
+            client.setAddresses(addresses.toArray(new String[0]));
 
-        assertTrue(probeClientMetrics.getSuccessTotal().getValue()>0);
-        assertTrue(probeClientMetrics.getFailureTotal().getValue()==0);
+            SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, client);
 
-        SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
+            var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
+            MessagingClientMetricsClient msgClientMetrics = new MessagingClientMetricsClient(metricsEndpoint);
 
-        probeClientMetrics = null;
+            TestUtils.waitUntilConditionOrFail(() -> {
+                return msgClientMetrics.getConnectSuccess().getValue()>0;
+            }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
 
-        client = clientProvider.get();
-        client.setClientType(ScaleTestClientType.messaging);
-        client.setAddresses(addresses.toArray(new String[0]));
+            assertTrue(msgClientMetrics.getConnectSuccess().getValue()>0);
+            assertTrue(msgClientMetrics.getConnectFailure().getValue()==0);
 
-        SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, client);
-
-        Thread.sleep(20000);
-
-        metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
-
-        MessagingClientMetricsClient msgClientMetrics = new MessagingClientMetricsClient(metricsEndpoint);
-
-        assertTrue(msgClientMetrics.getConnectSuccess().getValue()>0);
-        assertTrue(msgClientMetrics.getConnectFailure().getValue()==0);
-
-        SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
-
+            SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
+        }
     }
 
 

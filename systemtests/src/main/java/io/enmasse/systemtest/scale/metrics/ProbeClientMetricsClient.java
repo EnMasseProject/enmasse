@@ -19,11 +19,11 @@ public class ProbeClientMetricsClient extends ScaleTestClientMetricsClient {
         super(metricsEndpoint);
     }
 
-    public Counter getSuccessTotal() throws IOException {
+    public Counter getSuccessTotal() {
         return getCounter(TEST_PROBE_SUCCESS_TOTAL_METRIC);
     }
 
-    public Counter getFailureTotal() throws IOException {
+    public Counter getFailureTotal() {
         return getCounter(TEST_PROBE_FAILURE_TOTAL_METRIC);
     }
 
