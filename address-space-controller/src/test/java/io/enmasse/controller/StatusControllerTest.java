@@ -4,29 +4,28 @@
  */
 package io.enmasse.controller;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.AuthenticationService;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.controller.common.Kubernetes;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
+import io.enmasse.k8s.api.LogEventLogger;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Optional;
 
-import io.enmasse.address.model.AuthenticationService;
-import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.k8s.api.AuthenticationServiceRegistry;
-import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.k8s.api.LogEventLogger;
-import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
-import org.junit.jupiter.api.Test;
-
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.config.AnnotationKeys;
-import io.enmasse.controller.common.Kubernetes;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class StatusControllerTest {
 

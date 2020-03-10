@@ -156,7 +156,7 @@ public class CreateControllerTest {
 
         CreateController createController = new CreateController(kubernetes, testSchema, null, eventLogger, null, "1.0", addressSpaceApi, mock(AuthenticationServiceResolver.class));
 
-        addressSpace = createController.reconcileAnyState(addressSpace);
+        addressSpace = createController.reconcileAnyState(addressSpace).getAddressSpace();
 
         assertThat(addressSpace.getStatus().getMessages().size(), is(1));
         assertTrue(addressSpace.getStatus().getMessages().iterator().next().contains("quota exceeded for resource broker"));
