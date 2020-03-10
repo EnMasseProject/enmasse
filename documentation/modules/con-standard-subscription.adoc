@@ -13,6 +13,6 @@ topic `mytopic` the consumer consumes from the address `mytopic::mysub`. By defa
 consumer is allowed per subscription. This can be specified using `maxConsumers` setting of
 the subscription address.
 
-NOTE: The `maxConsumers` setting can not be modified for existing subscriptions at present.
+NOTE: The `maxConsumers` setting cannot be modified for existing subscriptions at present.
 // !standard.address.subscription.longDescription:stop
 
