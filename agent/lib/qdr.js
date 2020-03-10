@@ -140,6 +140,7 @@ Router.prototype.closed = function (context) {
     log.info('[%s] router closed ', this.get_id(), this.target);
     this.address = undefined;
     this._abort_requests('closed');
+    this._clear_timer();
 };
 
 Router.prototype._abort_requests = function (error) {
@@ -317,10 +318,17 @@ Router.prototype.incoming = function (context) {
     this._send_pending_requests();
 };
 
+Router.prototype._clear_timer  = function () {
+    if (this.timer) {
+        clearInterval(this.timer);
+        this.timer = null;
+    }
+};
+
 Router.prototype.close = function () {
     if (this.connection) this.connection.close();
-    if (this.timer) clearInterval(this.timer);
-}
+    this._clear_timer();
+};
 
 function add_resource_type (name, typename, plural) {
     var resource_type = typename || name;
