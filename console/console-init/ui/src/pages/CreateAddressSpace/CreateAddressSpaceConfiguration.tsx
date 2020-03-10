@@ -49,6 +49,9 @@ export interface IAddressSpacePlans {
     };
     spec: {
       addressSpaceType: string;
+      displayName: string;
+      longDescription: string;
+      shortDescription: string;
     };
   }>;
 }
@@ -159,7 +162,9 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
           if (plan.spec.addressSpaceType === type) {
             return {
               value: plan.metadata.name,
-              label: plan.metadata.name
+              label: plan.spec.displayName || plan.metadata.name,
+              description:
+                plan.spec.shortDescription || plan.spec.longDescription
             };
           }
         })
