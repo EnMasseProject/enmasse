@@ -98,7 +98,7 @@ export default function AddressDetailPage() {
     }
   };
 
-  const refetchQueries: any[] = ["single_addresses"];
+  const refetchQueries: string[] = ["single_addresses"];
   const [setPurgeAddressQueryVariables] = useMutationQuery(
     PURGE_ADDRESS,
     refetchQueries
@@ -106,12 +106,14 @@ export default function AddressDetailPage() {
 
   const [setDeleteAddressQueryVariables] = useMutationQuery(
     DELETE_ADDRESS,
+    undefined,
     resetDeleteFormState,
     resetDeleteFormState
   );
 
   const [setEditAddressQueryVariables] = useMutationQuery(
     EDIT_ADDRESS,
+    undefined,
     resetEditAdressFormState,
     resetEditAdressFormState
   );

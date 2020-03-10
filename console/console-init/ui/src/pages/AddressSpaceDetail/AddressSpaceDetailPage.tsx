@@ -110,6 +110,7 @@ export default function AddressSpaceDetailPage() {
   };
   const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
     DELETE_ADDRESS_SPACE,
+    undefined,
     resetFormState,
     resetFormState
   );

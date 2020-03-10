@@ -66,7 +66,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   const client = useApolloClient();
   const [sortBy, setSortBy] = React.useState<ISortBy>();
   const { dispatch } = useStoreContext();
-  const refetchQueries: any[] = ["all_address_spaces"];
+  const refetchQueries: string[] = ["all_address_spaces"];
   const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
     DELETE_ADDRESS_SPACE,
     refetchQueries

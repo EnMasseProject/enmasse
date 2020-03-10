@@ -94,6 +94,7 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
 
   const [setEditAddressQueryVariables] = useMutationQuery(
     EDIT_ADDRESS,
+    undefined,
     resetEditFormState,
     resetEditFormState
   );

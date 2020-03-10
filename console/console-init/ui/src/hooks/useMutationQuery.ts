@@ -11,7 +11,7 @@ import { useStoreContext, types } from "context-state-reducer";
 
 export const useMutationQuery = <TData = any, TVariables = OperationVariables>(
   query: DocumentNode,
-  refetchQueries?: any,
+  refetchQueries?: string[],
   callbackOnError?: Function,
   callbackOnCompleted?: Function
 ) => {
