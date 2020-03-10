@@ -9,10 +9,12 @@ import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryMode;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -95,6 +97,10 @@ class H2DeviceRegistryTest extends DeviceRegistryTest {
     void testTenantDeletionTriggersDevicesDeletion() throws Exception {
         super.doTestTenantDeletionTriggersDevicesDeletion();
 
+        // dump content, just in case
+
+        dumpH2Database();
+
         // ensure that the database is still present, but has zero entries
 
         final List<String> command = new ArrayList<>(Arrays.asList(SystemtestsKubernetesApps.H2_SHELL_COMMAND));
@@ -116,5 +122,18 @@ class H2DeviceRegistryTest extends DeviceRegistryTest {
         assertEquals("0", result[1]);
         // third: the execution statistics, which we ignore
 
+    }
+
+    private void dumpH2Database() throws IOException, InterruptedException, TimeoutException {
+        final List<String> command = new ArrayList<>(Arrays.asList(SystemtestsKubernetesApps.H2_SHELL_COMMAND));
+        command.addAll(Arrays.asList("-sql", "select * from device_registrations"));
+
+        var pod = SystemtestsKubernetesApps
+                .getH2ServerPod()
+                .orElseThrow(() -> new IllegalStateException("Unable to find H2 server pod"));
+        final String result = Kubernetes.executeWithInput(pod, null, null, Duration.ofSeconds(10),
+                command.toArray(String[]::new));
+
+        log.info("Current H2 database:\n{}", result);
     }
 }
