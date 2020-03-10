@@ -4,28 +4,10 @@
  */
 package io.enmasse.controller;
 
-import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import io.enmasse.address.model.AddressSpaceSpecConnector;
-import io.enmasse.address.model.AddressSpaceSpecConnectorEndpoint;
-import io.enmasse.address.model.AddressSpaceStatusConnector;
-import io.enmasse.address.model.AddressSpaceStatusRouter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceResolver;
 import io.enmasse.address.model.AddressSpaceSpec;
+import io.enmasse.address.model.AddressSpaceStatusRouter;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.address.model.ExposeType;
@@ -41,6 +23,20 @@ import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.user.api.RealmApi;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
 
 public class StatusController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(StatusController.class.getName());
@@ -207,83 +203,8 @@ public class StatusController implements Controller {
                 addressSpace.getStatus().setReady(false);
                 addressSpace.getStatus().appendMessage("No router status found.");
             } else {
-                if (!addressSpace.getSpec().getConnectors().isEmpty()) {
-                    checkRouterConnectorStatus(addressSpace, routerStatusList);
-                } else {
-                    checkRouterMesh(addressSpace, routerStatusList);
-                }
+                checkRouterMesh(addressSpace, routerStatusList);
             }
-        }
-    }
-
-    void checkRouterConnectorStatus(AddressSpace addressSpace, List<RouterStatus> routerStatusList) {
-        Map<String, AddressSpaceSpecConnector> connectorMap = new HashMap<>();
-        for (AddressSpaceSpecConnector connector : addressSpace.getSpec().getConnectors()) {
-            connectorMap.put(connector.getName(), connector);
-        }
-
-        for (AddressSpaceStatusConnector connector : addressSpace.getStatus().getConnectors()) {
-            checkConnectorStatus(connector, connectorMap.get(connector.getName()), routerStatusList);
-        }
-    }
-
-    /*
-     * Until the connector entity allows querying for the status, we have to go through all connections and
-     * see if we can find our connector host in there.
-     */
-    private void checkConnectorStatus(AddressSpaceStatusConnector connectorStatus, AddressSpaceSpecConnector connector, List<RouterStatus> response) {
-        Map<String, ConnectionStatus> connectionStatuses = new HashMap<>();
-        for (AddressSpaceSpecConnectorEndpoint endpoint : connector.getEndpointHosts()) {
-            String host = String.format("%s:%d", endpoint.getHost(), connector.getPort(endpoint.getPort()));
-            connectionStatuses.put(host, new ConnectionStatus());
-        }
-
-        for (RouterStatus routerStatus : response) {
-            List<String> hosts = routerStatus.getConnections().getHosts();
-            List<Boolean> opened = routerStatus.getConnections().getOpened();
-            List<String> operStatus = routerStatus.getConnections().getOperStatus();
-
-            for (int i = 0; i < hosts.size(); i++) {
-                ConnectionStatus status = connectionStatuses.get(hosts.get(i));
-                if (status != null) {
-                    status.setFound(true);
-                    if (operStatus.get(i).equals("up")) {
-                        status.setConnected(true);
-                    }
-                    if (opened.get(i)) {
-                        status.setOpened(true);
-                    }
-                }
-            }
-        }
-
-        // Assumption/decision: If the primary or failover for any connector is up, we are ok
-        List<ConnectionStatus> found = connectionStatuses.values().stream()
-                .filter(ConnectionStatus::isFound)
-                .collect(Collectors.toList());
-
-        List<ConnectionStatus> isConnected = found.stream()
-                .filter(ConnectionStatus::isConnected)
-                .collect(Collectors.toList());
-
-        List<ConnectionStatus> isOpened = isConnected.stream()
-                .filter(ConnectionStatus::isOpened)
-                .collect(Collectors.toList());
-
-        if (found.isEmpty()) {
-            connectorStatus.setReady(false);
-            connectorStatus.appendMessage("Unable to find active connection for connector '" + connector.getName() + "'");
-            return;
-        }
-
-        if (isConnected.isEmpty()) {
-            connectorStatus.setReady(false);
-            connectorStatus.appendMessage("Unable to find connection in the connected state for connector '" + connector.getName() + "'");
-        }
-
-        if (isOpened.isEmpty()) {
-            connectorStatus.setReady(false);
-            connectorStatus.appendMessage("Unable to find connection in the opened state for connector '" + connector.getName() + "'");
         }
     }
 
@@ -315,36 +236,6 @@ public class StatusController implements Controller {
             routers.add(addressSpaceStatusRouter);
         }
         addressSpace.getStatus().setRouters(routers);
-    }
-
-    private static class ConnectionStatus {
-        private boolean isFound = false;
-        private boolean isConnected = false;
-        private boolean isOpened = false;
-
-        boolean isConnected() {
-            return isConnected;
-        }
-
-        void setConnected(boolean connected) {
-            isConnected = connected;
-        }
-
-        boolean isOpened() {
-            return isOpened;
-        }
-
-        void setOpened(boolean opened) {
-            isOpened = opened;
-        }
-
-        boolean isFound() {
-            return isFound;
-        }
-
-        void setFound(boolean found) {
-            isFound = found;
-        }
     }
 
     @Override

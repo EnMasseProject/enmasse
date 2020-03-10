@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 
+import java.util.Objects;
+
 /**
  * Abstract base class for finalizer controllers.
  */
@@ -68,7 +70,7 @@ public abstract class AbstractFinalizerController implements Controller {
     protected abstract Result processFinalizer(AddressSpace addressSpace);
 
     @Override
-    public AddressSpace reconcileAnyState(final AddressSpace addressSpace) throws Exception {
+    public ReconcileResult reconcileAnyState(final AddressSpace addressSpace) throws Exception {
 
         log.debug("Reconcile finalizer - id: {}, addressSpace: {}/{} -> {} ({})",
                 this.id, addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), addressSpace.getMetadata().getDeletionTimestamp(),
@@ -77,7 +79,14 @@ public abstract class AbstractFinalizerController implements Controller {
         // if we are not deleted ...
         if (!Controller.isDeleted(addressSpace)) {
             // ... we ensure we are added to the list of finalizers.
-            return ensureFinalizer(addressSpace);
+            AddressSpace modified = ensureFinalizer(addressSpace);
+
+            // Persist finalizer state so that we are sure to be cleaned up if it is deleted
+            if (!Objects.equals(modified.getMetadata().getFinalizers(), addressSpace.getMetadata().getFinalizers())) {
+                return ReconcileResult.createRequeued(modified, true);
+            } else {
+                return ReconcileResult.create(modified);
+            }
         }
 
         // if we are deleted, set phase to Terminating
@@ -86,7 +95,7 @@ public abstract class AbstractFinalizerController implements Controller {
         // if we are deleted, and no longer have the finalizer ...
         if (!addressSpace.getMetadata().getFinalizers().contains(this.id)) {
             // ... we have nothing to do.
-            return addressSpace;
+            return ReconcileResult.create(addressSpace);
         }
 
         // process the finalizer
@@ -95,11 +104,11 @@ public abstract class AbstractFinalizerController implements Controller {
         // if we finished finalizing ...
         if (result == null || result.isFinalized()) {
             // ... remove ourselves from the list.
-            return removeFinalizer(result.getAddressSpace());
+            return ReconcileResult.create(removeFinalizer(result.getAddressSpace()));
         }
 
         // we still need to wait and will try again.
-        return result.getAddressSpace();
+        return ReconcileResult.create(result.getAddressSpace());
 
     }
 
@@ -141,5 +150,4 @@ public abstract class AbstractFinalizerController implements Controller {
                 .build();
 
     }
-
 }

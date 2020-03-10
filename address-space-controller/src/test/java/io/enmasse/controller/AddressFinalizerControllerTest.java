@@ -7,7 +7,9 @@ package io.enmasse.controller;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -60,7 +62,9 @@ public class AddressFinalizerControllerTest {
 
         // when calling the reconcile method of the finalizer controller
 
-        addressSpace = controller.reconcileAnyState(addressSpace);
+        Controller.ReconcileResult result = controller.reconcileAnyState(addressSpace);
+        assertTrue(result.isPersistAndRequeue());
+        addressSpace = result.getAddressSpace();
 
         // it should add the finalizer, but not remove existing finalizers
 
@@ -131,7 +135,9 @@ public class AddressFinalizerControllerTest {
 
         // when running the reconcile method
 
-        addressSpace = controller.reconcileAnyState(addressSpace);
+        Controller.ReconcileResult result = controller.reconcileAnyState(addressSpace);
+        assertFalse(result.isPersistAndRequeue());
+        addressSpace = result.getAddressSpace();
 
         // then the finalizer of this controller should be removed, and the address should be deleted
 
