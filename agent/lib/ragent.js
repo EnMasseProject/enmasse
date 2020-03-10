@@ -335,12 +335,6 @@ Ragent.prototype.configure_handlers = function () {
     this.container.on('connection_open', function(context) {
         var product = get_product(context.connection);
 
-        var idleTimeout = 8000;
-        if ('idle_time_out' in context.connection.remote.open && context.connection.remote.open.idle_time_out > 0) {
-            idleTimeout = context.connection.remote.open.idle_time_out;
-        }
-        context.connection.local.open.idle_time_out = idleTimeout;
-
         if (product === 'qpid-dispatch-router') {
             var r = rtr.connected(context.connection);
             log.info('Router connected from ' + r.container_id);
@@ -426,7 +420,10 @@ Ragent.prototype.listen_health = function (env) {
 };
 
 Ragent.prototype.start_listening = function (env, callback) {
-    var options = {properties:connection_properties};
+    var options = {
+        properties: connection_properties,
+        idle_time_out: 'AMQP_IDLE_TIMEOUT' in process.env ? process.env.AMQP_IDLE_TIMEOUT : 300000
+    };
     try {
         options = tls_options.get_server_options(options, env);
         options.port = env.AMQP_PORT === undefined ? 55671 : env.AMQP_PORT;
