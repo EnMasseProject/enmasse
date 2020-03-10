@@ -1,0 +1,29 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-service-admin-guide.adoc
+
+[id='con-iot-service-registry-{context}']
+= Device registry
+
+The IoT components of {ProductName} store all device related information in a service called
+"device registry". This makes the device registry an important component of the overall IoT
+functionality, so it might be necessary to tweak the configuration of the device registry.
+
+[WARNING]
+====
+Although the device registry storage backend can be configured in different ways, once the
+configuration has been made, and IoT tenants have been created, the storage configuration
+must not be change. Otherwise this may result in the loss of data, in data inconsistencies,
+or other kinds of unexpected behavior.
+====
+
+The configuration of the device registry can be changed by editing the global `IoTConfig`
+custom resource object. Any changes made to this custom resource, will be applied by the
+{ProductName} operator.
+
+The database backed device registry, named "JDBC", can be configured to either use an
+existing, "external", database.
+
+By default only PostgreSQL is supported. However it is possible to extend the installation,
+by providing custom JDBC drivers and custom SQL statements to the configuration. This allows
+to integrate with database, other than PostgreSQL.
