@@ -1,4 +1,4 @@
-FROM quay.io/enmasse/java-base:11-4
+FROM quay.io/enmasse/java-base:11-5
 
 ARG version
 ARG maven_version
@@ -8,4 +8,4 @@ ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 ADD target/iot-mqtt-adapter-${maven_version}.jar /iot-mqtt-adapter.jar
 
 ENV JAVA_LAUNCH_PROFILE=openjdk-11
-CMD ["/opt/run-java/launch_java.sh", "/iot-mqtt-adapter.jar"]
+CMD ["/opt/run-java/launch_java.sh", "-jar", "/iot-mqtt-adapter.jar"]
