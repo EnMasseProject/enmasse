@@ -28,6 +28,8 @@ import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
+import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
@@ -35,10 +37,6 @@ import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 
-import org.hawkular.agent.prometheus.PrometheusDataFormat;
-import org.hawkular.agent.prometheus.PrometheusScraper;
-import org.hawkular.agent.prometheus.types.Metric;
-import org.hawkular.agent.prometheus.types.MetricFamily;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -46,7 +44,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,7 +54,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.SCALE;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(SCALE)
 class ScaleTest extends TestBase implements ITestBaseIsolated {
@@ -104,21 +101,36 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
         SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, client);
 
-        Thread.sleep(30000);
+        Thread.sleep(20000);
 
         var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
 
-        var url = new URL("http", metricsEndpoint.getHost(), metricsEndpoint.getPort(), "/metrics");
-        log.info("Scrapping from {}", url);
-        var scraper = new PrometheusScraper(url, PrometheusDataFormat.TEXT);
-        List<MetricFamily> metrics = scraper.scrape();
-        assertFalse(metrics.isEmpty());
-        log.info("Metrics name: {}", metrics.get(0).getName());
-        for (Metric m : metrics.get(0).getMetrics()) {
-            log.info("Metric: {} , labels: {}", m.getName(), m.getLabels().toString());
-        }
+        ProbeClientMetricsClient probeClientMetrics = new ProbeClientMetricsClient(metricsEndpoint);
+
+        assertTrue(probeClientMetrics.getSuccessTotal().getValue()>0);
+        assertTrue(probeClientMetrics.getFailureTotal().getValue()==0);
 
         SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
+
+        probeClientMetrics = null;
+
+        client = clientProvider.get();
+        client.setClientType(ScaleTestClientType.messaging);
+        client.setAddresses(addresses.toArray(new String[0]));
+
+        SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, client);
+
+        Thread.sleep(20000);
+
+        metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
+
+        MessagingClientMetricsClient msgClientMetrics = new MessagingClientMetricsClient(metricsEndpoint);
+
+        assertTrue(msgClientMetrics.getConnectSuccess().getValue()>0);
+        assertTrue(msgClientMetrics.getConnectFailure().getValue()==0);
+
+        SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
+
     }
 
 
@@ -258,12 +270,12 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                     operableAddresses = currentAddresses.size();
                 }
             } catch (IllegalStateException ex) {
-                log.error("Failed to wait for addresses");
+                LOGGER.error("Failed to wait for addresses");
                 operableAddresses = (int) kubernetes.getAddressClient().inNamespace(namespace).list().getItems().stream()
                         .filter(address -> address.getStatus().getPhase().equals(Phase.Active)).count();
-                log.info("----------------------------------------------------------");
-                log.info("Total operable addresses {}", operableAddresses);
-                log.info("----------------------------------------------------------");
+                LOGGER.info("----------------------------------------------------------");
+                LOGGER.info("Total operable addresses {}", operableAddresses);
+                LOGGER.info("----------------------------------------------------------");
                 if (operableAddresses >= addresses) {
                     break;
                 }
