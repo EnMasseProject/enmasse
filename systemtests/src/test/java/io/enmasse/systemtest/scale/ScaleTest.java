@@ -19,6 +19,7 @@ import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecAdminBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
@@ -72,7 +73,10 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     final String anycastPlanName = "test-anycast-plan";
     final String authServiceName = "scale-authservice";
     AddressSpace addressSpace = null;
+    Endpoint messagingEndpoint;
     final UserCredentials userCredentials = new UserCredentials("scale-test-user", "password");
+    List<ScaleTestClientConfiguration> clients;
+    Supplier<ScaleTestClientConfiguration> clientProvider;
 
     @BeforeEach
     void init() throws Exception {
@@ -92,18 +96,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         int operableAddresses;
         int iterator = 0;
         int failureThreshold = 15_000;
-        var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
         List<Address> addressBatch = new LinkedList<>();
-
-        Supplier<ScaleTestClientConfiguration> clientProvider = () -> {
-            ScaleTestClientConfiguration client = new ScaleTestClientConfiguration();
-            client.setClientType(ScaleTestClientType.probe);
-            client.setHostname(endpoint.getHost());
-            client.setPort(endpoint.getPort());
-            client.setUsername(userCredentials.getUsername());
-            client.setPassword(userCredentials.getPassword());
-            return client;
-        };
 
         while (true) {
             try {
@@ -114,15 +107,13 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                     List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
                     AddressUtils.waitForDestinationsReady(new TimeoutBudget(30, TimeUnit.MINUTES), currentAddresses.toArray(new Address[0]));
 
-                    ScaleTestClientConfiguration client = clientProvider.get();
-                    client.setAddresses(addressBatch.stream().map(address -> address.getSpec().getAddress()).toArray(String[]::new));
+                    ScaleTestClientConfiguration client = connectProbeClient(addressBatch.toArray(Address[]::new));
                     addressBatch.clear();
-
-                    SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, client);
-                    Thread.sleep(20_000);
 
                     var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
                     ProbeClientMetricsClient probeClientMetrics = new ProbeClientMetricsClient(metricsEndpoint);
+
+                    Thread.sleep(20_000);
                     assertTrue(probeClientMetrics.getSuccessTotal().getValue() > 0);
                     assertEquals(0, probeClientMetrics.getFailureTotal().getValue());
                 }
@@ -143,7 +134,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     @Test
     void testScaleTestToolsWork() throws Exception {
         int initialAddresses = 5;
-        var addresses = createInitialAddresses(initialAddresses).stream().map(a->a.getSpec().getAddress()).collect(Collectors.toList());
+        var addresses = createInitialAddresses(initialAddresses).stream().map(a -> a.getSpec().getAddress()).collect(Collectors.toList());
 
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
         Supplier<ScaleTestClientConfiguration> clientProvider = () -> {
@@ -165,11 +156,11 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             ProbeClientMetricsClient probeClientMetrics = new ProbeClientMetricsClient(metricsEndpoint);
 
             TestUtils.waitUntilConditionOrFail(() -> {
-                return probeClientMetrics.getSuccessTotal().getValue()>0;
+                return probeClientMetrics.getSuccessTotal().getValue() > 0;
             }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
 
-            assertTrue(probeClientMetrics.getSuccessTotal().getValue()>0);
-            assertTrue(probeClientMetrics.getFailureTotal().getValue()==0);
+            assertTrue(probeClientMetrics.getSuccessTotal().getValue() > 0);
+            assertTrue(probeClientMetrics.getFailureTotal().getValue() == 0);
 
             SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
         }
@@ -184,11 +175,11 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             MessagingClientMetricsClient msgClientMetrics = new MessagingClientMetricsClient(metricsEndpoint);
 
             TestUtils.waitUntilConditionOrFail(() -> {
-                return msgClientMetrics.getConnectSuccess().getValue()>0;
+                return msgClientMetrics.getConnectSuccess().getValue() > 0;
             }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
 
-            assertTrue(msgClientMetrics.getConnectSuccess().getValue()>0);
-            assertTrue(msgClientMetrics.getConnectFailure().getValue()==0);
+            assertTrue(msgClientMetrics.getConnectSuccess().getValue() > 0);
+            assertTrue(msgClientMetrics.getConnectFailure().getValue() == 0);
 
             SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
         }
@@ -316,6 +307,17 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 .build();
         getResourceManager().createAddressSpace(addressSpace);
         getResourceManager().createOrUpdateUser(addressSpace, userCredentials);
+
+        messagingEndpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
+        Supplier<ScaleTestClientConfiguration> clientProvider = () -> {
+            ScaleTestClientConfiguration client = new ScaleTestClientConfiguration();
+            client.setClientType(ScaleTestClientType.probe);
+            client.setHostname(messagingEndpoint.getHost());
+            client.setPort(messagingEndpoint.getPort());
+            client.setUsername(userCredentials.getUsername());
+            client.setPassword(userCredentials.getPassword());
+            return client;
+        };
     }
 
     List<Address> createInitialAddresses(int addresses) throws Exception {
@@ -346,6 +348,14 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
         AddressUtils.waitForDestinationsReady(currentAddresses.toArray(new Address[0]));
         return kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
+    }
+
+    private ScaleTestClientConfiguration connectProbeClient(Address... addresses) throws Exception {
+        ScaleTestClientConfiguration client = clientProvider.get();
+        client.setAddresses(Arrays.stream(addresses).map(address -> address.getSpec().getAddress()).toArray(String[]::new));
+        SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, client);
+        Thread.sleep(20_000);
+        return client;
     }
 
 }
