@@ -30,6 +30,7 @@ import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
 import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
@@ -48,13 +49,18 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.SCALE;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(SCALE)
@@ -79,6 +85,59 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         GlobalLogCollector.saveInfraState(TestUtils.getScaleTestLogsPath(extensionContext));
         kubernetes.deleteNamespace(namespace);
         SystemtestsKubernetesApps.cleanScaleTestEnv(kubernetes);
+    }
+
+    @Test
+    void testNumberOfSupportedAddresses() throws Exception {
+        int operableAddresses;
+        int iterator = 0;
+        int failureThreshold = 15_000;
+        var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
+        List<Address> addressBatch = new LinkedList<>();
+
+        Supplier<ScaleTestClientConfiguration> clientProvider = () -> {
+            ScaleTestClientConfiguration client = new ScaleTestClientConfiguration();
+            client.setClientType(ScaleTestClientType.probe);
+            client.setHostname(endpoint.getHost());
+            client.setPort(endpoint.getPort());
+            client.setUsername(userCredentials.getUsername());
+            client.setPassword(userCredentials.getPassword());
+            return client;
+        };
+
+        while (true) {
+            try {
+                List<Address> addr = getTenantAddressBatch(addressSpace);
+                addressBatch.addAll(addr);
+                getResourceManager().appendAddresses(false, addr.toArray(new Address[0]));
+                if (iterator % 100 == 0) {
+                    List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
+                    AddressUtils.waitForDestinationsReady(new TimeoutBudget(30, TimeUnit.MINUTES), currentAddresses.toArray(new Address[0]));
+
+                    ScaleTestClientConfiguration client = clientProvider.get();
+                    client.setAddresses(addressBatch.stream().map(address -> address.getSpec().getAddress()).toArray(String[]::new));
+                    addressBatch.clear();
+
+                    SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, client);
+                    Thread.sleep(20_000);
+
+                    var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
+                    ProbeClientMetricsClient probeClientMetrics = new ProbeClientMetricsClient(metricsEndpoint);
+                    assertTrue(probeClientMetrics.getSuccessTotal().getValue() > 0);
+                    assertEquals(0, probeClientMetrics.getFailureTotal().getValue());
+                }
+            } catch (IllegalStateException ex) {
+                log.error("Failed to wait for addresses");
+                operableAddresses = (int) kubernetes.getAddressClient().inNamespace(namespace).list().getItems().stream()
+                        .filter(address -> address.getStatus().getPhase().equals(Phase.Active)).count();
+                log.info("----------------------------------------------------------");
+                log.info("Total operable addresses {}", operableAddresses);
+                log.info("----------------------------------------------------------");
+                assertThat(operableAddresses, greaterThan(failureThreshold));
+                break;
+            }
+            iterator++;
+        }
     }
 
     @Test
