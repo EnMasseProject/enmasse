@@ -19,6 +19,9 @@ jobs:
         run: |
           echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
 
+      - name: Install dependencies
+        run: ./.github/scripts/install_dep.sh
+
       - name: setup-docker
         run: ./.github/scripts/setup_docker.sh
 
@@ -34,9 +37,6 @@ jobs:
 
       - name: Setup Ruby environment with ruby-build
         uses: clupprich/ruby-build-action@v1.0.0
-
-      - name: Install dependencies
-        run: ./.github/scripts/install_dep.sh
 
       - name: Setup OLM
         run: ./.github/scripts/setup-olm.sh
