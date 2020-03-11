@@ -796,8 +796,10 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getAddressSpacesTableDropDown(), "Main dropdown");
         selenium.clickOnItem(getAddressSpacesDeleteAllButton());
         selenium.clickOnItem(getConfirmButton());
+
+        int timeAllowed = 30*addressSpaces.length;
         for (AddressSpace space : addressSpaces) {
-            selenium.waitUntilItemNotPresent(30, () -> getAddressSpaceItem(space));
+            selenium.waitUntilItemNotPresent(timeAllowed, () -> getAddressSpaceItem(space));
         }
     }
 
