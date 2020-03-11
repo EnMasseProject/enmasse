@@ -7,18 +7,18 @@ import React from "react";
 import "@patternfly/react-core/dist/styles/base.css";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 import "./App.css";
-import { ErrorProvider, useErrorReducer } from "context-state-reducer";
+import { StoreProvider, useStore, rootReducer } from "context-state-reducer";
 import AppLayout from "AppLayout";
 
 const App: React.FC<{}> = () => {
-  const [contextValue] = useErrorReducer();
+  const [store] = useStore(rootReducer);
 
   return (
-    <ErrorProvider value={contextValue}>
+    <StoreProvider value={store}>
       <ErrorBoundary>
         <AppLayout />
       </ErrorBoundary>
-    </ErrorProvider>
+    </StoreProvider>
   );
 };
 

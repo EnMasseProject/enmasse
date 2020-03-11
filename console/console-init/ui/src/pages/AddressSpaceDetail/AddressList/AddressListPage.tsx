@@ -21,10 +21,10 @@ import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "components/AddressSpace/Address/EmptyAddress";
 import { EditAddress } from "pages/EditAddressPage";
-import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 import { useMutationQuery } from "hooks";
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
 export interface IAddressListPageProps {
   name?: string;
@@ -77,19 +77,10 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
   onSelectAddress,
   onSelectAllAddress
 }) => {
+  const { dispatch } = useStoreContext();
   const [
     addressBeingEdited,
     setAddressBeingEdited
-  ] = React.useState<IAddress | null>();
-
-  const [
-    addressBeingDeleted,
-    setAddressBeingDeleted
-  ] = React.useState<IAddress | null>();
-
-  const [
-    addressBeingPurged,
-    setAddressBeingPurged
   ] = React.useState<IAddress | null>();
 
   const [sortBy, setSortBy] = React.useState<ISortBy>();
@@ -99,30 +90,21 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
     setAddressBeingEdited(null);
   };
 
-  const resetDeleteFormState = () => {
-    refetch();
-    setAddressBeingDeleted(null);
-  };
-
-  const resetPurgeFormState = () => {
-    refetch();
-    setAddressBeingPurged(null);
-  };
+  const refetchQueries: string[] = ["all_addresses_for_addressspace_view"];
 
   const [setEditAddressQueryVariables] = useMutationQuery(
     EDIT_ADDRESS,
+    undefined,
     resetEditFormState,
     resetEditFormState
   );
   const [setDeleteAddressQueryVariablse] = useMutationQuery(
     DELETE_ADDRESS,
-    resetDeleteFormState,
-    resetDeleteFormState
+    refetchQueries
   );
   const [setPurgeAddressQueryVariables] = useMutationQuery(
     PURGE_ADDRESS,
-    resetPurgeFormState,
-    resetPurgeFormState
+    refetchQueries
   );
 
   if (sortValue && sortBy !== sortValue) {
@@ -194,10 +176,32 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       setAddressBeingEdited(data);
     }
   };
-  const handlePurge = (data: IAddress) => {
-    if (!addressBeingPurged) {
-      setAddressBeingPurged(data);
+
+  const onPurge = async (address: IAddress) => {
+    if (address) {
+      const variables = {
+        a: {
+          name: address.name,
+          namespace: address.namespace
+        }
+      };
+      setPurgeAddressQueryVariables(variables);
     }
+  };
+
+  const onChangePurge = (address: IAddress) => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.PURGE_ADDRESS,
+      modalProps: {
+        data: address,
+        onConfirm: onPurge,
+        selectedItems: [address.name],
+        option: "Purge",
+        detail: `Are you sure you want to purge this address: ${address.displayName} ?`,
+        header: "Purge this Address  ?"
+      }
+    });
   };
   const handleCancelEdit = () => setAddressBeingEdited(null);
 
@@ -224,34 +228,34 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       setAddressBeingEdited({ ...addressBeingEdited });
     }
   };
-  const handleCancelDelete = () => setAddressBeingDeleted(null);
-  const handleCancelPurge = () => setAddressBeingPurged(null);
-  const handleDelete = async () => {
-    if (addressBeingDeleted) {
+
+  const onDelete = async (address: IAddress) => {
+    if (address) {
       const variables = {
         a: {
-          name: addressBeingDeleted.name,
-          namespace: addressBeingDeleted.namespace
+          name: address.name,
+          namespace: address.namespace
         }
       };
       setDeleteAddressQueryVariablse(variables);
     }
   };
 
-  const handlePurgeChange = async () => {
-    if (addressBeingPurged) {
-      const variables = {
-        a: {
-          name: addressBeingPurged.name,
-          namespace: addressBeingPurged.namespace
-        }
-      };
-      setPurgeAddressQueryVariables(variables);
-    }
+  const onChangeDelete = (address: IAddress) => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.DELETE_ADDRESS,
+      modalProps: {
+        data: address,
+        onConfirm: onDelete,
+        selectedItems: [address.name],
+        option: "Delete",
+        detail: `Are you sure you want to delete this address: ${address.displayName} ?`,
+        header: "Delete this Address  ?"
+      }
+    });
   };
-  const handleDeleteChange = (address: IAddress) => {
-    setAddressBeingDeleted(address);
-  };
+
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
@@ -262,8 +266,8 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
       <AddressList
         rowsData={addressesList ? addressesList : []}
         onEdit={handleEdit}
-        onDelete={handleDeleteChange}
-        onPurge={handlePurge}
+        onDelete={onChangeDelete}
+        onPurge={onChangePurge}
         sortBy={sortBy}
         onSort={onSort}
         onSelectAddress={onSelectAddress}
@@ -312,26 +316,6 @@ export const AddressListPage: React.FunctionComponent<IAddressListPageProps> = (
             onChange={handlePlanChange}
           />
         </Modal>
-      )}
-      {addressBeingDeleted && (
-        <DialoguePrompt
-          option="Delete"
-          detail={`Are you sure you want to delete this address: ${addressBeingDeleted.displayName} ?`}
-          names={[addressBeingDeleted.name]}
-          header="Delete this Address  ?"
-          handleCancelDialogue={handleCancelDelete}
-          handleConfirmDialogue={handleDelete}
-        />
-      )}
-      {addressBeingPurged && (
-        <DialoguePrompt
-          option="Purge"
-          detail={`Are you sure you want to purge this address: ${addressBeingPurged.displayName} ?`}
-          names={[addressBeingPurged.name]}
-          header="Purge this Address  ?"
-          handleCancelDialogue={handleCancelPurge}
-          handleConfirmDialogue={handlePurgeChange}
-        />
       )}
     </>
   );

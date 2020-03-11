@@ -16,8 +16,9 @@ import brandImg from "./assets/images/logo.svg";
 import avatarImg from "./img_avatar.svg";
 import "./App.css";
 import { ServerMessageAlert, NetworkStatusAlert } from "./components/common";
-import { useErrorContext } from "./context-state-reducer";
+import { useStoreContext } from "./context-state-reducer";
 import { onServerError } from "./graphql-module";
+import { RootModal } from "./components/RootModal";
 
 let history: any, dispactAction: any, states: any;
 
@@ -42,7 +43,7 @@ const logo = <Brand src={brandImg} alt="Console Logo" />;
 
 const AppLayout: React.FC = () => {
   history = useHistory();
-  const { dispatch, state } = useErrorContext();
+  const { dispatch, state } = useStoreContext();
   states = state;
   dispactAction = dispatch;
   const logoProps = React.useMemo(
@@ -54,6 +55,7 @@ const AppLayout: React.FC = () => {
 
   return (
     <ApolloProvider client={client}>
+      <RootModal />
       <Layout
         logoProps={logoProps}
         logo={logo}
