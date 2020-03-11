@@ -8,6 +8,7 @@ package finalizer
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"k8s.io/client-go/tools/record"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
@@ -109,7 +110,8 @@ func ProcessFinalizers(ctx context.Context, client client.Client, reader client.
 			// the list of finalizers has changed, update and return
 			object.SetFinalizers(current)
 			log.Info("Re-queue: added finalizer")
-			return reconcile.Result{Requeue: true}, client.Update(ctx, obj)
+			return reconcile.Result{Requeue: true},
+				errors.Wrap(client.Update(ctx, obj), "Failed adding finalizers")
 		}
 
 	} else {
@@ -141,7 +143,7 @@ func ProcessFinalizers(ctx context.Context, client client.Client, reader client.
 				// process the result
 
 				if err != nil {
-					return reconcile.Result{}, err
+					return reconcile.Result{}, errors.Wrap(err, "Failed processing finalizers")
 				}
 
 				if !result.Requeue && result.RequeueAfter <= 0 {
@@ -153,7 +155,8 @@ func ProcessFinalizers(ctx context.Context, client client.Client, reader client.
 					object.SetFinalizers(removeFinalizer(f.Name, c))
 					// persist, and re-schedule for the next finalizer
 					log.Info("Re-queue: removed finalizer")
-					return reconcile.Result{Requeue: true}, client.Update(ctx, obj)
+					return reconcile.Result{Requeue: true},
+						errors.Wrap(client.Update(ctx, obj), "Failed updating finalizers")
 
 				} else {
 

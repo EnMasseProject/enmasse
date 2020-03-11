@@ -8,6 +8,7 @@ package finalizer
 import (
 	"context"
 	"fmt"
+	"k8s.io/client-go/tools/record"
 	"os"
 	"reflect"
 	"testing"
@@ -60,8 +61,9 @@ func TestAdd(t *testing.T) {
 	objs := []runtime.Object{project}
 
 	client := fake.NewFakeClientWithScheme(scheme.Scheme, objs...)
+	recorder := record.NewFakeRecorder(10)
 
-	result, err := ProcessFinalizers(context.TODO(), client, client, project, []Finalizer{
+	result, err := ProcessFinalizers(context.TODO(), client, client, recorder, project, []Finalizer{
 		{Name: "foo"},
 	})
 
@@ -96,10 +98,11 @@ func TestRemove1(t *testing.T) {
 	objs := []runtime.Object{project}
 
 	client := fake.NewFakeClientWithScheme(scheme.Scheme, objs...)
+	recorder := record.NewFakeRecorder(10)
 
 	i := 0
 
-	result, err := ProcessFinalizers(context.TODO(), client, client, project, []Finalizer{
+	result, err := ProcessFinalizers(context.TODO(), client, client, recorder, project, []Finalizer{
 		{
 			Name: "foo", Deconstruct: func(ctx DeconstructorContext) (result reconcile.Result, e error) {
 				i++
@@ -124,7 +127,7 @@ func TestRemove1(t *testing.T) {
 		t.Fatal("Must have one element")
 	}
 
-	result, err = ProcessFinalizers(context.TODO(), client, client, project, []Finalizer{
+	result, err = ProcessFinalizers(context.TODO(), client, client, recorder, project, []Finalizer{
 		{
 			Name: "foo", Deconstruct: func(ctx DeconstructorContext) (result reconcile.Result, e error) {
 				i++
@@ -149,7 +152,7 @@ func TestRemove1(t *testing.T) {
 		t.Fatal("Must have no element")
 	}
 
-	result, err = ProcessFinalizers(context.TODO(), client, client, project, []Finalizer{
+	result, err = ProcessFinalizers(context.TODO(), client, client, recorder, project, []Finalizer{
 		{
 			Name: "foo", Deconstruct: func(ctx DeconstructorContext) (result reconcile.Result, e error) {
 				i++
@@ -189,6 +192,7 @@ func RunFinalizerSteps(t *testing.T, project *v1alpha1.IoTProject, finalizers []
 	objs := []runtime.Object{project}
 
 	client := fake.NewFakeClientWithScheme(scheme.Scheme, objs...)
+	recorder := record.NewFakeRecorder(10)
 
 	i := 0
 
@@ -210,7 +214,7 @@ func RunFinalizerSteps(t *testing.T, project *v1alpha1.IoTProject, finalizers []
 				})
 			}
 
-			result, err := ProcessFinalizers(context.TODO(), client, client, project, mockFinalizers)
+			result, err := ProcessFinalizers(context.TODO(), client, client, recorder, project, mockFinalizers)
 
 			if (err != nil) != (s.Error != nil) {
 				t.Errorf("Error state mismatch - expected: %v, found: %v", s.Error, err)

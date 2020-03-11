@@ -181,8 +181,10 @@ func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result
 
 	// check for device registry type
 
-	if config.Spec.ServicesConfig.DeviceRegistry.Infinispan == nil {
-		// not required ... complete
+	switch config.EvalDeviceRegistryImplementation() {
+	case iotv1alpha1.DeviceRegistryFileBased:
+		// nothing to do
+		ctx.Recorder.Event(project, corev1.EventTypeNormal, EventReasonProjectTermination, "No need for special tenant cleanup")
 		return reconcile.Result{}, nil
 	}
 

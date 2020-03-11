@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/controller/iotconfig"
 	"github.com/enmasseproject/enmasse/pkg/util/ext"
+	"github.com/pkg/errors"
 	"strconv"
 	"time"
 
@@ -66,12 +67,16 @@ func createIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, project *iot
 	// create a non-caching client to reduce required permissions
 	client := altclient.NewForwarding(ctx.Reader, ctx.Client, ctx.Client)
 
-	_, err := controllerutil.CreateOrUpdate(ctx.Context, client, job, func() error {
-		if err := ctx.Client.Create(ctx.Context, &corev1.Event{}); err != nil {
-			return err
-		}
-		return reconcileIoTTenantCleanerJob(ctx, job, tenantId, config, project)
+	res, err := controllerutil.CreateOrUpdate(ctx.Context, client, job, func() error {
+		return errors.Wrap(
+			reconcileIoTTenantCleanerJob(ctx, job, tenantId, config, project),
+			"Failed calling CreateOrUpdate for Job")
 	})
+
+	switch res {
+	case controllerutil.OperationResultCreated:
+		ctx.Recorder.Eventf(project, corev1.EventTypeNormal, EventReasonProjectTermination, "Created tenant cleanup job: %s", jobName)
+	}
 
 	return job, err
 }
@@ -95,7 +100,7 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 	err := install.ApplyJobContainerWithError(job, "cleanup", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-tenant-cleaner", config); err != nil {
-			return err
+			return errors.Wrap(err, "Failed to evaluate container image")
 		}
 
 		// reset or init env vars
@@ -128,8 +133,6 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 					install.ApplyEnvSimple(container, "deletionChunkSize", strconv.FormatUint(uint64(external.DeletionChunkSize), 10))
 				}
 
-				ctx.Recorder.Event(project, corev1.EventTypeNormal, EventReasonProjectTermination, "Creating tenant cleanup job")
-
 			} else {
 
 				ctx.Recorder.Event(project, corev1.EventTypeWarning, EventReasonProjectTermination, "Unknown Infinispan configuration")
@@ -160,10 +163,10 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 
 				// extension containers
 
-				ext.MapExtensionVolume(container)
 				extensions = config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Extensions
-
-				ctx.Recorder.Event(project, corev1.EventTypeNormal, EventReasonProjectTermination, "Creating tenant cleanup job")
+				if extensions != nil && len(extensions) > 0 {
+					ext.MapExtensionVolume(container)
+				}
 
 			} else {
 
@@ -173,12 +176,15 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 			}
 
 		case iotv1alpha1.DeviceRegistryFileBased:
-			// nothing to do
-			ctx.Recorder.Event(project, corev1.EventTypeNormal, EventReasonProjectTermination, "No need for special tenant cleanup")
+			// nothing to do ... this is already checked by the caller,
+			// and we should never get called in this case
+			return fmt.Errorf("implementation issue, this should never get called")
 
 		default:
 			return fmt.Errorf("unknown device registry configuration")
 		}
+
+		// add standard hono options
 
 		iotconfig.AppendStandardHonoJavaOptions(container)
 
@@ -188,17 +194,19 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 	})
 
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to create job spec")
 	}
 
 	// add extension volume
 
 	if extensions != nil {
 		if err := ext.AddExtensionContainers(extensions, &job.Spec.Template.Spec); err != nil {
-			return err
+			return errors.Wrap(err, "Failed adding extension containers")
 		}
 		ext.AddExtensionVolume(&job.Spec.Template.Spec)
 	}
+
+	log.Info("Creating job", "jobSpec", job.Spec.Template.Spec)
 
 	// done
 
