@@ -230,12 +230,6 @@ spec:
         name: mycert # Get cert from secret
         namespace: myapp
   
-  # Approach to grant admin access to an endpoint using mTLS
-  authentication:
-    clientCaSecret:
-      name: clientsecret
-      namespace: myapp
-
   # Only one of 'internal', 'route' and 'loadbalancer' may be specified for each endpoint
   internal: # Expose as a ClusterIP service for applications on cluster
     ports:
@@ -382,9 +376,9 @@ The following would NOT be supported:
 
 The tasks of managing brokers and routers should be offloaded to standalone components as much as possible.
 
-For router deployments, the https://github.com/interconnectedcloud/qdr-operator[qdr-operator] will be used and it supports all features required by EnMasse.
+For router deployments, the builtin mesh-forming support of the router image will be used. All router configuration except basic static config is applied using AMQP management, as the router does not have a mechanism to distinguish between static and dynamic configuration.
 
-For broker deployments, the https://github.com/rh-messaging/activemq-artemis-operator[activemq-artemis-operator] will be used, (and modified to work with our requirements). The resulting changes should be submitted upstream, although short term there may exist a temporary fork in order to make progress.
+For broker deployments, a standard upstream broker image will be used (once provided, in the meantime use existing image). All broker configuration defined in MessagingInfra is applied statically to the broker.xml and makes use of the auto-reload feature of the broker config.
 
 Router - Broker connections are maintained by having the operator create and maintain the router -> broker connectors. The advantage is that we no longer rely on custom plugin code for connections, and that we get more flexibility in choosing topology of connections (i.e. multiple routers can connect to the same broker for better HA). 
 
@@ -397,7 +391,7 @@ Important design considerations:
 
 * Minimize management traffic with router and broker
 * Add safeguards for getting out of bad states (with proper error reporting to be able to investigate bugs later)
-* Shared infras should be able to operate independently
+* Shared infra/MessagingInfra instances should be able to operate independently in isolation
 
 ===== Configuration
 
@@ -409,13 +403,13 @@ The configuration can be broken down into different lifecycle 'levels':
 
 For the routers, each level will involve the following configuration:
 
-* Infra: Connectors to broker. Global router settings such as threads, internal certs. Pod template settings. Changes modify the router CR and require a rolling router restart (until DISPATCH-1519 is implemented)
+* Infra: Connectors to broker. Global router settings such as threads, internal certs. Pod template settings. Changes modify the router using AMQP management.
 * Namespace: Vhost policies, endpoints, external connectors. Changes are applied using AMQP management to avoid router restart.
 * Address: Address waypoints, autolinks, linkroutes. Changes are applied using AMQP management to avoid router restart
 
 For the brokers:
 
-* Infra: Global broker settings such as JVM size, global max size, storage size, global policies. Changes modify a Broker CR and requires a broker restart.
+* Infra: Global broker settings such as JVM size, global max size, storage size, global policies. Changes modify the generated broker.xml and requires a broker restart.
 * Address level: queues and topics, per address limits. Configured using AMQP management to avoid broker restart.
 
 The operator will maintain open connections to all routers and brokers. The connection will be periodically closed to enforce a resync so that configuration does not drift.
@@ -430,9 +424,10 @@ Routers will be periodically queried (by independent goroutines) for:
 
 * Autolink states
 * Linkroute states
+* Connection states
 * Link states
 
-The data will be stored in memory available to the messaging config and address controller loops.
+The data will be stored in memory available to the messaging config and address controller loops as well.
 
 ===== Controllers
 
@@ -440,11 +435,11 @@ The following controllers and components must be implemented:
 
 * Messaging-infra controller - Managing the shared infra
 ** State representation model - Used by other controllers to apply configuration to shared infra
-* Messaging-config controller - Managing messaging configuration of namespaces
-* Messaging-endpoint controller - Managing messaging endpoints of namespaces
-* (Phase 2) Messaging-connector controller - Managing external connectors of namespaces
+* Messaging-tenant controller - Managing messaging configuration of namespaces
 * Address controller - Managing addresses of namespaces
 ** Address scheduler - Used for placing queues on a set of brokers with different properties/capabilities
+* Messaging-endpoint controller - Managing messaging endpoints of namespaces
+* (Phase 2) Messaging-connector controller - Managing external connectors of namespaces
 
 ==== Tasks
 
@@ -452,28 +447,15 @@ The following controllers and components must be implemented:
 
 * Create the MessaginInfra, MessagingTenant, MessagingEndpoint CRD + OpenAPI.
 
-==== Task 2: Import router operator definitions (small)
-
-* Add bundle for installing qdrouterd operator in bundle install.
-* Add dependency on qdrouterd operator CRDs in OLM manifest.
-* (Optional phase 2) Add support for missing podtemplate capabilities.
-
-==== Task 3: Import artemis operator (small/medium)
-
-* Add bundle for installing the broker operator in bundle install
-* Add dependency on broker operator CRDs in OLM manifest
-* Add support for using init containers to configure broker if needed (if we don't need plugins, we could avoid this step)
-
-==== Task 4: Implement messaging-infra controller in controller-manager (large)
+==== Task 2: Implement messaging-infra controller in controller-manager (large)
 
 The messaging-infra controller is responsible for managing router and broker deployments and ensure they have the configuration as requested in the config.
 
 The controller should:
 
 * Watch MessagingInfra CR
-* Creates router CR to deploy routers based on infra config
-* Creates broker CRs to deploy brokers based on infra config and scale on-demand
-* Apply to router CR: router <-> broker connectors
+* Creates router statefulset to deploy routers based on infra config and using input from system metrics to adjust the number of replicas
+* Creates broker statefulset to deploy brokers based on infra config and using input from system metrics to adjust the number of replicas
 * Creates interal state representation for each router and broker in the CR status. This state should be shared with other controllers (details below)
 * Expose metrics about connections and links which is used by the console, either through HTTP or AMQP
 
@@ -483,18 +465,18 @@ A components state encapsulates the configuration state of a broker or router in
 
 The state object has methods to apply configuration (i.e. applyAddress, applyMessagingEndpoint, applyMessagingTenant etc.). These methods compare the actual configuration of the underlying component to the desired configuration (transformed into autolinks etc.). If the applied configuration is different to the internal state, the underlying component is updated using AMQP management.
 
-In addition ,each state object has a goroutine which periodically polls its underlying router/broker for all status information and caches it for use by controllers to update the status of their respective resources.
+In addition, each state object has a goroutine which periodically polls its underlying router/broker for all status information and caches it for use by controllers to update the status of their respective resources.
 
 ===== Certificate management
 
-Communication between components in the shared infrastructure should be secured using TLS. At present, self-signed certificates are issued by the address-space-controller per address space. The messaging-infra-controller needs to create a CA per messaging-infra instance, as well as handle certificate rotation for the internal certificates.
+Communication between components in the shared infrastructure should be secured using TLS. The messaging-infra-controller needs to create a CA per messaging-infra instance, as well as handle certificate rotation for the internal certificates on expiry.
 
-==== Task 5: Implement messaging-config controller in controller-manager (medium)
+==== Task 3: Implement messaging-tenant controller in controller-manager (medium)
 
-The messaging-config controller manages the MessagingTenant CR
+The messaging-tenant controller manages the MessagingTenant CR
 
-* Watch MessagingTenant CR
-* Find MessagingInfra where this is placed (based on referenced MessagingPlan)
+* Watch MessagingTenant CRs
+* Use label selectors of MessagingInfra to locate the infra for namespace
 * Lookup infra state representation
 * For each router:
 ** Apply vhost settings+limits, authentication service information
@@ -502,7 +484,7 @@ The messaging-config controller manages the MessagingTenant CR
 * Expose metrics of connections and linke based on router status.
 * Requeue for processing at configurable interval
 
-==== Task 6: Implement address controller in controller-manager (medium)
+==== Task 4: Implement address controller in controller-manager (medium)
 
 * Watch Address CR
 * if new address:
@@ -519,7 +501,7 @@ The messaging-config controller manages the MessagingTenant CR
 * Requeue address for processing at configurable interval
 
 
-==== Task 7: Implement queue/topic/subscription scheduling (medium)
+==== Task 5: Implement queue/topic/subscription scheduling (medium)
 
 The initial version of the queue scheduler should be similar to what we have in the standard address space. It should:
 
@@ -528,7 +510,7 @@ The initial version of the queue scheduler should be similar to what we have in 
 * (Optional phase 2): Take broker anti-affinity into consideration during placement
 * (Optional phase 2): Take available broker memory for queue into account during placement
 
-==== Task 8: Implement messaging-endpoint controller in controller-manager (medium)
+==== Task 6: Implement messaging-endpoint controller in controller-manager (medium)
 
 * Watch MessagingEndpoint CR
 * Find MessagingInfra where this is placed (based on referenced MessagingPlan)
