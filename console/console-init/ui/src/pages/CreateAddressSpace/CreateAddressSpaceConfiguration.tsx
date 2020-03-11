@@ -25,7 +25,11 @@ import {
 } from "queries";
 import { Loading } from "use-patternfly";
 import { dnsSubDomainRfc1123NameRegexp } from "types/Configs";
+import { StyleSheet, css } from "@patternfly/react-styles";
 
+export const dropdown_item_styles = StyleSheet.create({
+  format_item: { whiteSpace: "normal", textAlign: "justify" }
+});
 export interface IAddressSpaceConfiguration {
   name: string;
   setName: (name: string) => void;
@@ -239,8 +243,6 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                     component={"button"}
                   >
                     <b>{option.label}</b>
-                    <br />
-                    {option.description ? option.description : ""}
                   </DropdownItem>
                 ))}
               />
@@ -299,7 +301,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
               <br />
               <Dropdown
                 id="cas-dropdown-plan"
-                position={DropdownPosition.right}
+                position={DropdownPosition.left}
                 onSelect={onPlanSelect}
                 isOpen={isPlanOpen}
                 style={{ display: "flex" }}
@@ -322,7 +324,9 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                   >
                     <b>{option.label}</b>
                     <br />
-                    {option.description}
+                    <div className={css(dropdown_item_styles.format_item)}>
+                      {option.description}
+                    </div>
                   </DropdownItem>
                 ))}
               />
@@ -335,7 +339,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
               <br />
               <Dropdown
                 id="cas-dropdown-auth-service"
-                position={DropdownPosition.right}
+                position={DropdownPosition.left}
                 onSelect={onAuthenticationServiceSelect}
                 isOpen={isAuthenticationServiceOpen}
                 style={{ display: "flex" }}
