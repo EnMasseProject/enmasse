@@ -556,9 +556,6 @@ const RETURN_ADDRESS_SPACE_PLANS = gql`
       }
       spec {
         addressSpaceType
-        displayName
-        longDescription
-        shortDescription
       }
     }
   }
