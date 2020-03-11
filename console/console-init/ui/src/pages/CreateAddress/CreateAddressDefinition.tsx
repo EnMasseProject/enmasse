@@ -25,6 +25,7 @@ import {
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { IAddressResponse } from "types/ResponseTypes";
+import { dropdown_item_styles } from "pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
 
 const styles = StyleSheet.create({
   capitalize_labels: {
@@ -277,7 +278,9 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
                   >
                     <b>{option.label}</b>
                     <br />
-                    {option.description}
+                    <div className={css(dropdown_item_styles.format_item)}>
+                      {option.description}
+                    </div>
                   </DropdownItem>
                 ))}
               />
