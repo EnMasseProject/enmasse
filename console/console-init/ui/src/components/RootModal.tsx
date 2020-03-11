@@ -1,0 +1,26 @@
+import React from "react";
+import { useStoreContext, MODAL_TYPES } from "context-state-reducer";
+import { DialogPrompt } from "components/common/DialogPrompt";
+import {
+  EditAddressSpace,
+  CreateAddressSpace
+} from "modules/address-space/dialogs";
+
+const MODAL_COMPONENTS: any = {
+  [MODAL_TYPES.CREATE_ADDRESS_SPACE]: CreateAddressSpace,
+  [MODAL_TYPES.EDIT_ADDRESS_SPACE]: EditAddressSpace,
+  [MODAL_TYPES.DELETE_ADDRESS_SPACE]: DialogPrompt,
+  [MODAL_TYPES.DELETE_ADDRESS]: DialogPrompt,
+  [MODAL_TYPES.PURGE_ADDRESS]: DialogPrompt
+};
+
+export const RootModal: React.FC<{}> = () => {
+  const { state } = useStoreContext();
+  const { modalType, modalProps } = (state && state.modal) || {};
+  const ModalComponent = MODAL_COMPONENTS[modalType];
+  if (!modalType || !ModalComponent) {
+    return null;
+  }
+
+  return <ModalComponent {...modalProps} />;
+};

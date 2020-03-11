@@ -4,13 +4,30 @@
  */
 
 export interface IInitialState {
-  hasServerError: boolean;
-  hasNetworkError: boolean;
-  errors: any[];
+  error: {
+    hasServerError: boolean;
+    hasNetworkError: boolean;
+    errors: any[];
+  };
 }
 
 export const initialState: IInitialState = {
-  hasServerError: false,
-  hasNetworkError: false,
-  errors: []
+  error: {
+    hasServerError: false,
+    hasNetworkError: false,
+    errors: []
+  }
+};
+export interface IInitialStateModal {
+  modal: {
+    modalType: string | null;
+    modalProps: any;
+  };
+}
+
+export const initialStateModal: IInitialStateModal = {
+  modal: {
+    modalType: null,
+    modalProps: {}
+  }
 };

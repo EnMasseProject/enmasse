@@ -21,12 +21,15 @@ import { AddressSpaceListFilterPage } from "./components/AddressSpaceListFilterP
 import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
 import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
 import { compareObject } from "utils";
-import { DialoguePrompt } from "components/common/DialoguePrompt";
-import { useErrorContext, types } from "context-state-reducer";
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
+import { getHeaderForDeleteDialog, getDetailForDeleteDialog } from "./utils";
 
 export default function AddressSpacePage() {
+  const { dispatch } = useStoreContext();
   useDocumentTitle("Address Space List");
   useA11yRouteChange();
+
+  let deleteAddressSpaceErrors: any = [];
 
   const [filterValue, setFilterValue] = React.useState<string>("Name");
   const [filterNames, setFilterNames] = React.useState<string[]>([]);
@@ -46,18 +49,14 @@ export default function AddressSpacePage() {
   const [selectedAddressSpaces, setSelectedAddressSpaces] = React.useState<
     IAddressSpace[]
   >([]);
-  const [isDisplayDeleteDailogue, setIsDisplayDeleteDailogue] = React.useState<
-    boolean
-  >(false);
-  const [isDeleteAllDisabled, setIsDeleteAllDisabled] = React.useState<boolean>(
-    true
-  );
 
-  const { dispatch } = useErrorContext();
-
-  const [setDeleteAddressSpaceQueryVariables] = useMutation(
-    DELETE_ADDRESS_SPACE
-  );
+  const refetchQueries: string[] = ["all_address_spaces"];
+  const [
+    setDeleteAddressSpaceQueryVariables
+  ] = useMutation(DELETE_ADDRESS_SPACE, {
+    refetchQueries,
+    awaitRefetchQueries: true
+  });
 
   const setSearchParam = React.useCallback(
     (name: string, value: string) => {
@@ -65,13 +64,7 @@ export default function AddressSpacePage() {
     },
     [searchParams]
   );
-  React.useEffect(() => {
-    if (selectedAddressSpaces.length === 0 && !isDeleteAllDisabled) {
-      setIsDeleteAllDisabled(true);
-    } else if (selectedAddressSpaces.length > 0 && isDeleteAllDisabled) {
-      setIsDeleteAllDisabled(false);
-    }
-  }, [selectedAddressSpaces]);
+
   const handlePageChange = React.useCallback(
     (_: any, newPage: number) => {
       setSearchParam("page", newPage.toString());
@@ -105,7 +98,7 @@ export default function AddressSpacePage() {
       />
     );
   };
-  let deleteAddressSpaceErrors: any = [];
+
   const deleteAddressSpace = async (
     addressSpace: IAddressSpace,
     index: number
@@ -135,14 +128,22 @@ export default function AddressSpacePage() {
       });
     }
   };
+
   const onDeleteAll = () => {
-    setIsDisplayDeleteDailogue(true);
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.DELETE_ADDRESS_SPACE,
+      modalProps: {
+        onConfirm: onConfirmDeleteAll,
+        selectedItems: selectedAddressSpaces.map(as => as.name),
+        option: "Delete",
+        detail: getDetailForDeleteDialog(selectedAddressSpaces),
+        header: getHeaderForDeleteDialog(selectedAddressSpaces)
+      }
+    });
   };
 
-  const handleCancelDelete = () => {
-    setIsDisplayDeleteDailogue(false);
-  };
-  const handleConfirmDelete = async () => {
+  const onConfirmDeleteAll = async () => {
     if (selectedAddressSpaces && selectedAddressSpaces.length > 0) {
       const data = selectedAddressSpaces;
       await Promise.all(
@@ -152,8 +153,6 @@ export default function AddressSpacePage() {
       );
       setSelectedAddressSpaces([]);
     }
-    setOnCreationRefetch(true);
-    setIsDisplayDeleteDailogue(false);
   };
   const onSelectAddressSpace = (data: IAddressSpace, isSelected: boolean) => {
     if (isSelected === true && selectedAddressSpaces.indexOf(data) === -1) {
@@ -188,6 +187,13 @@ export default function AddressSpacePage() {
     }
   };
 
+  const isDeleteAllOptionDisabled = () => {
+    if (selectedAddressSpaces && selectedAddressSpaces.length > 0) {
+      return false;
+    }
+    return true;
+  };
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
@@ -202,13 +208,10 @@ export default function AddressSpacePage() {
             filterType={filterType}
             setFilterType={setFilterType}
             totalAddressSpaces={totalAddressSpaces}
-            setOnCreationRefetch={setOnCreationRefetch}
             sortValue={sortDropDownValue}
             setSortValue={setSortDropdownValue}
-            isCreateWizardOpen={isCreateWizardOpen}
-            setIsCreateWizardOpen={setIsCreateWizardOpen}
             onDeleteAll={onDeleteAll}
-            isDeleteAllDisabled={isDeleteAllDisabled}
+            isDeleteAllDisabled={isDeleteAllOptionDisabled()}
           />
         </GridItem>
         <GridItem span={5}>
@@ -235,26 +238,6 @@ export default function AddressSpacePage() {
         onSelectAllAddressSpace={onSelectAllAddressSpace}
       />
       {totalAddressSpaces > 0 && renderPagination(page, perPage)}
-      {isDisplayDeleteDailogue && selectedAddressSpaces.length > 0 && (
-        <DialoguePrompt
-          option="Delete"
-          detail={
-            selectedAddressSpaces.length > 1
-              ? `Are you sure you want to delete all of these address spaces: ${selectedAddressSpaces.map(
-                  as => " " + as.name
-                )} ?`
-              : `Are you sure you want to delete this address space: ${selectedAddressSpaces[0].name} ?`
-          }
-          names={selectedAddressSpaces.map(as => as.name)}
-          header={
-            selectedAddressSpaces.length > 1
-              ? "Delete these Address Spaces ?"
-              : "Delete this Address Space ?"
-          }
-          handleCancelDialogue={handleCancelDelete}
-          handleConfirmDialogue={handleConfirmDelete}
-        />
-      )}
     </PageSection>
   );
 }

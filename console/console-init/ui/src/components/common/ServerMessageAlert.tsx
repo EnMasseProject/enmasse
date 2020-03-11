@@ -12,11 +12,11 @@ import {
   PageSection
 } from "@patternfly/react-core";
 
-import { useErrorContext, types } from "context-state-reducer";
+import { useStoreContext, types } from "context-state-reducer";
 
 export const ServerMessageAlert: React.FC = () => {
-  const { state, dispatch } = useErrorContext();
-  const { hasServerError, errors } = state;
+  const { state, dispatch } = useStoreContext();
+  const { hasServerError, errors } = state && state.error;
   const [alertVisible, setAlertVisible] = useState(true);
 
   const onClose = () => {

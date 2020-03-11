@@ -14,18 +14,18 @@ import {
   ButtonVariant
 } from "@patternfly/react-core";
 import { PlusCircleIcon } from "@patternfly/react-icons";
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
-interface IEmptyAddressSpaceProps {
-  isWizardOpen: boolean;
-  setIsWizardOpen: (value: boolean) => void;
-}
-export const EmptyAddressSpace: React.FunctionComponent<IEmptyAddressSpaceProps> = ({
-  isWizardOpen,
-  setIsWizardOpen
-}) => {
-  const createAddressSpaceOnClick = async () => {
-    setIsWizardOpen(true);
+export const EmptyAddressSpace: React.FunctionComponent<{}> = () => {
+  const { dispatch } = useStoreContext();
+
+  const onCreateAddressSpace = () => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.CREATE_ADDRESS_SPACE
+    });
   };
+
   return (
     <EmptyState variant={EmptyStateVariant.full} id="empty-ad-space">
       <EmptyStateIcon icon={PlusCircleIcon} />
@@ -40,7 +40,7 @@ export const EmptyAddressSpace: React.FunctionComponent<IEmptyAddressSpaceProps>
       <Button
         id="empty-ad-space-create-button"
         variant={ButtonVariant.primary}
-        onClick={createAddressSpaceOnClick}
+        onClick={onCreateAddressSpace}
       >
         Create Address Space
       </Button>
