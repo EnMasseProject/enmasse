@@ -54,6 +54,7 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
 
   const [setAddressQueryVariables] = useMutationQuery(
     CREATE_ADDRESS,
+    undefined,
     resetFormState,
     resetFormState
   );

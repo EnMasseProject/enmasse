@@ -7,7 +7,7 @@ export * from "./About";
 export * from "./AddressFormatter";
 export * from "./AddressSpaceListFormatter";
 export * from "./ConnectionListFormatter";
-export * from "./DialoguePrompt";
+export * from "./DialogPrompt";
 export * from "./EmptyLinks";
 export * from "./Error";
 export * from "./ErrorBoundary";

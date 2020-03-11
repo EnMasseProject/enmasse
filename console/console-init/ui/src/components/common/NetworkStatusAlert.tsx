@@ -10,12 +10,12 @@ import {
   AlertActionCloseButton
 } from "@patternfly/react-core";
 
-import { useErrorContext, types } from "context-state-reducer";
+import { useStoreContext, types } from "context-state-reducer";
 import { ErrorCodes } from "constants/constants";
 
 const NetworkStatusAlert: React.FunctionComponent = () => {
-  const { state, dispatch } = useErrorContext();
-  const { hasNetworkError, statusCode } = state;
+  const { state, dispatch } = useStoreContext();
+  const { hasNetworkError, statusCode } = state && state.error;
   const [alertVisible, setAlertVisible] = useState(true);
 
   const onClose = () => {
