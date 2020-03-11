@@ -8,8 +8,6 @@ import { AddressSpaceNavigation } from "components/AddressSpace/AddressSpaceNavi
 import {
   useA11yRouteChange,
   useDocumentTitle,
-  SwitchWith404,
-  LazyRoute,
   Loading,
   useBreadcrumb
 } from "use-patternfly";
@@ -17,11 +15,9 @@ import {
   PageSection,
   PageSectionVariants,
   Breadcrumb,
-  BreadcrumbItem,
-  Modal,
-  Button
+  BreadcrumbItem
 } from "@patternfly/react-core";
-import { Redirect, useParams, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import {
   IAddressSpaceHeaderProps,
   AddressSpaceHeader
@@ -32,16 +28,14 @@ import { useHistory } from "react-router";
 import {
   DOWNLOAD_CERTIFICATE,
   DELETE_ADDRESS_SPACE,
-  RETURN_ADDRESS_SPACE_DETAIL,
-  EDIT_ADDRESS_SPACE
+  RETURN_ADDRESS_SPACE_DETAIL
 } from "graphql-module/queries";
-import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
-import { EditAddressSpace } from "pages/EditAddressSpace";
 import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
 import { useMutationQuery } from "hooks";
 import { AddressSpaceRoutes } from "Routes";
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
 const styles = StyleSheet.create({
   no_bottom_padding: {
@@ -93,17 +87,13 @@ const breadcrumb = (
 );
 export default function AddressSpaceDetailPage() {
   const { name, namespace, subList } = useParams();
+  const { dispatch } = useStoreContext();
+  const history = useHistory();
+  const client = useApolloClient();
   useA11yRouteChange();
   useBreadcrumb(breadcrumb);
   useDocumentTitle("Address Space Detail");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  const [
-    addressSpaceBeingEdited,
-    setAddressSpaceBeingEdited
-  ] = React.useState<IAddressSpace | null>();
-  const history = useHistory();
-
   const { loading, data, refetch } = useQuery<IAddressSpaceDetailResponse>(
     RETURN_ADDRESS_SPACE_DETAIL(name, namespace),
     {
@@ -111,8 +101,6 @@ export default function AddressSpaceDetailPage() {
       pollInterval: POLL_INTERVAL
     }
   );
-
-  const client = useApolloClient();
 
   const resetFormState = (data: any) => {
     if (data) {
@@ -122,6 +110,7 @@ export default function AddressSpaceDetailPage() {
   };
   const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
     DELETE_ADDRESS_SPACE,
+    undefined,
     resetFormState,
     resetFormState
   );
@@ -192,28 +181,38 @@ export default function AddressSpaceDetailPage() {
     if (link.parentNode) link.parentNode.removeChild(link);
   };
 
-  const handleCancelDelete = () => {
-    setIsDeleteModalOpen(!isDeleteModalOpen);
-  };
-
-  /**
-   * delete address space
-   * @param data
-   */
-  const deleteAddressSpace = (data: IObjectMeta_v1_Input) => {
+  const onDelete = () => {
     const variables = {
       a: {
-        name: data.name,
-        namespace: data.namespace
+        name: addressSpaceDetails.name,
+        namespace: addressSpaceDetails.namespace
       }
     };
     setDeleteAddressSpaceQueryVariables(variables);
   };
 
-  const handleDelete = () => {
-    deleteAddressSpace({
-      name: addressSpaceDetails.name,
-      namespace: addressSpaceDetails.namespace
+  const onChangeDelete = () => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.DELETE_ADDRESS_SPACE,
+      modalProps: {
+        selectedItems: [addressSpaceDetails.name],
+        data: addressSpace,
+        onConfirm: onDelete,
+        option: "Delete",
+        detail: `Are you sure you want to delete this addressspace: ${addressSpaceDetails.name} ?`,
+        header: "Delete this Address Space ?"
+      }
+    });
+  };
+
+  const onChangeEdit = () => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.EDIT_ADDRESS_SPACE,
+      modalProps: {
+        addressSpace
+      }
     });
   };
 
@@ -221,6 +220,7 @@ export default function AddressSpaceDetailPage() {
     addressSpaces &&
     addressSpaces.addressSpaces[0] &&
     addressSpaces.addressSpaces[0].metadata;
+
   const addressSpaceDetails: IAddressSpaceHeaderProps = {
     name: metadata && metadata.name,
     namespace: metadata && metadata.namespace,
@@ -233,56 +233,8 @@ export default function AddressSpaceDetailPage() {
     onDownload: data => {
       downloadCertificate(data);
     },
-    onDelete: data => {
-      setIsDeleteModalOpen(!isDeleteModalOpen);
-    },
-    onEdit: () => {
-      setIsEditModalOpen(true);
-      setAddressSpaceBeingEdited(addressSpace);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditModalOpen(false);
-    setAddressSpaceBeingEdited(null);
-  };
-  const handleSaving = async () => {
-    addressSpaceBeingEdited &&
-      (await client.mutate({
-        mutation: EDIT_ADDRESS_SPACE,
-        variables: {
-          a: {
-            name: addressSpaceBeingEdited.name,
-            namespace: addressSpaceBeingEdited.nameSpace
-          },
-          jsonPatch:
-            '[{"op":"replace","path":"/spec/plan","value":"' +
-            addressSpaceBeingEdited.planValue +
-            '"},' +
-            '{"op":"replace","path":"/spec/authenticationService/name","value":"' +
-            addressSpaceBeingEdited.authenticationService +
-            '"}' +
-            "]",
-          patchType: "application/json-patch+json"
-        }
-      }));
-    setIsEditModalOpen(false);
-    setAddressSpaceBeingEdited(null);
-    refetch();
-  };
-
-  const handlePlanChange = (plan: string) => {
-    if (addressSpaceBeingEdited) {
-      addressSpaceBeingEdited.planValue = plan;
-      setAddressSpaceBeingEdited({ ...addressSpaceBeingEdited });
-    }
-  };
-
-  const handleAuthServiceChanged = (authService: string) => {
-    if (addressSpaceBeingEdited) {
-      addressSpaceBeingEdited.authenticationService = authService;
-      setAddressSpaceBeingEdited({ ...addressSpaceBeingEdited });
-    }
+    onDelete: onChangeDelete,
+    onEdit: onChangeEdit
   };
 
   return (
@@ -295,51 +247,7 @@ export default function AddressSpaceDetailPage() {
         <AddressSpaceNavigation
           activeItem={subList || "addresses"}
         ></AddressSpaceNavigation>
-        {isDeleteModalOpen && (
-          <DialoguePrompt
-            option="Delete"
-            detail={`Are you sure you want to delete this addressspace: ${addressSpaceDetails.name} ?`}
-            names={[addressSpaceDetails.name]}
-            header="Delete this Address Space ?"
-            handleCancelDialogue={handleCancelDelete}
-            handleConfirmDialogue={handleDelete}
-          />
-        )}
       </PageSection>
-      {isEditModalOpen && addressSpaceBeingEdited && (
-        <Modal
-          isLarge
-          id="as-list-edit-modal"
-          title="Edit"
-          isOpen={true}
-          onClose={handleCancelEdit}
-          actions={[
-            <Button
-              key="confirm"
-              id="as-list-edit-confirm"
-              variant="primary"
-              onClick={handleSaving}
-            >
-              Confirm
-            </Button>,
-            <Button
-              key="cancel"
-              id="as-list-edit-cancel"
-              variant="link"
-              onClick={handleCancelEdit}
-            >
-              Cancel
-            </Button>
-          ]}
-          isFooterLeftAligned={true}
-        >
-          <EditAddressSpace
-            addressSpace={addressSpaceBeingEdited}
-            onAuthServiceChanged={handleAuthServiceChanged}
-            onPlanChange={handlePlanChange}
-          />
-        </Modal>
-      )}
       <PageSection>
         <AddressSpaceRoutes />
       </PageSection>
