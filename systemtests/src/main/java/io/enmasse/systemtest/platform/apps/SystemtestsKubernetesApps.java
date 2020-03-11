@@ -506,7 +506,7 @@ public class SystemtestsKubernetesApps {
         kubeClient.createDeploymentFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientDeployment(clientId, clientConfiguration, labels));
         kubeClient.createIngressFromResource(SCALE_TEST_CLIENTS_PROJECT, getSystemtestsIngressResource(SCALE_TEST_CLIENT+"-"+clientId, 8080));
         clientConfiguration.setClientId(clientId);
-        TestUtils.waitForNReplicas(1, labels, new TimeoutBudget(30, TimeUnit.SECONDS));
+        TestUtils.waitForNReplicas(1, SCALE_TEST_CLIENTS_PROJECT, labels, new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
     public static Endpoint getScaleTestClientEndpoint(Kubernetes kubeClient, String clientId) {

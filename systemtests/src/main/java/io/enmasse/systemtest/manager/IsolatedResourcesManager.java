@@ -122,7 +122,7 @@ public class IsolatedResourcesManager extends ResourceManager {
 
             for (AuthenticationService authService : authServices) {
                 Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService.getMetadata().getName()).cascading(true).delete();
-                TestUtils.waitForNReplicas(0, false, Map.of("name", authService.getMetadata().getName()), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
+                TestUtils.waitForNReplicas(0, false, authService.getMetadata().getNamespace(), Map.of("name", authService.getMetadata().getName()), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
                 LOGGER.info("AuthService {} deleted", authService.getMetadata().getName());
             }
             authServices.clear();

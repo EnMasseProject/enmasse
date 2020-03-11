@@ -88,19 +88,15 @@ public class IoTUtils {
         String[] expectedDeployments = getExpectedDeploymentsNames(config);
 
         TestUtils.waitUntilCondition("IoT Config to deploy", (phase) -> allDeploymentsPresent(kubernetes, expectedDeployments), budget);
-        TestUtils.waitForNReplicas(expectedDeployments.length, IOT_LABELS, budget);
+        TestUtils.waitForNReplicas(expectedDeployments.length, config.getMetadata().getNamespace(), IOT_LABELS, budget);
     }
 
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception {
         log.info("Deleting IoTConfig: {} in namespace: {}", config.getMetadata().getName(), config.getMetadata().getNamespace());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
         kubernetes.getIoTConfigClient(config.getMetadata().getNamespace()).withName(config.getMetadata().getName()).cascading(true).delete();
-        waitForIoTConfigDeleted(kubernetes);
+        TestUtils.waitForNReplicas(0, false, config.getMetadata().getNamespace(), IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
         TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    private static void waitForIoTConfigDeleted(Kubernetes kubernetes) throws Exception {
-        TestUtils.waitForNReplicas(0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
     }
 
     private static boolean allDeploymentsPresent(Kubernetes kubernetes, String[] expectedDeployments) {
