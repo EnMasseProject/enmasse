@@ -25,6 +25,11 @@ import {
 } from "queries";
 import { Loading } from "use-patternfly";
 import { dnsSubDomainRfc1123NameRegexp } from "types/Configs";
+import { StyleSheet, css } from "@patternfly/react-styles";
+
+export const dropdown_item_styles = StyleSheet.create({
+  format_item: { whiteSpace: "normal", textAlign: "justify" }
+});
 export interface IAddressSpaceConfiguration {
   name: string;
   setName: (name: string) => void;
@@ -319,7 +324,9 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
                   >
                     <b>{option.label}</b>
                     <br />
-                    {option.description}
+                    <div className={css(dropdown_item_styles.format_item)}>
+                      {option.description}
+                    </div>
                   </DropdownItem>
                 ))}
               />
