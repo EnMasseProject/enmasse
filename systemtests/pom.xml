@@ -144,6 +144,11 @@
             <groupId>org.eclipse.hono</groupId>
             <artifactId>hono-service-base</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.hawkular.agent</groupId>
+            <artifactId>prometheus-scraper</artifactId>
+            <version>0.23.0.Final</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

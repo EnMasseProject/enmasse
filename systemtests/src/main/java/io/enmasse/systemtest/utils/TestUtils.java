@@ -69,8 +69,8 @@ public class TestUtils {
     private static final Random R = new Random();
     private static Logger log = CustomLogger.getLogger();
 
-    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
-        waitForNReplicas(expectedReplicas, labelSelector, Collections.emptyMap(), budget);
+    public static void waitForNReplicas(int expectedReplicas, String namespace, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(expectedReplicas, namespace, labelSelector, Collections.emptyMap(), budget);
     }
 
     /**
@@ -88,6 +88,7 @@ public class TestUtils {
                 waitForNReplicas(
                         expectedReplicas,
                         readyRequired,
+                        Kubernetes.getInstance().getInfraNamespace(),
                         labels,
                         Collections.singletonMap("cluster_id", brokerStatus.getClusterId()),
                         budget,
@@ -110,15 +111,15 @@ public class TestUtils {
      * @param budget             timeout budget - throws Exception when timeout is reached
      * @throws InterruptedException
      */
-    public static void waitForNReplicas(int expectedReplicas, boolean readyRequired,
+    public static void waitForNReplicas(int expectedReplicas, boolean readyRequired, String namespace,
                                         Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
         int actualReplicas;
         do {
             final List<Pod> pods;
             if (annotationSelector.isEmpty()) {
-                pods = Kubernetes.getInstance().listPods(labelSelector);
+                pods = Kubernetes.getInstance().listPods(namespace, labelSelector);
             } else {
-                pods = Kubernetes.getInstance().listPods(labelSelector, annotationSelector);
+                pods = Kubernetes.getInstance().listPods(namespace, labelSelector, annotationSelector);
             }
             if (!readyRequired) {
                 actualReplicas = pods.size();
@@ -139,12 +140,12 @@ public class TestUtils {
         // finished successfully
     }
 
-    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
-        waitForNReplicas(expectedReplicas, true, labelSelector, annotationSelector, budget, checkInterval);
+    public static void waitForNReplicas(int expectedReplicas, String namespace, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+        waitForNReplicas(expectedReplicas, true, namespace, labelSelector, annotationSelector, budget, checkInterval);
     }
 
-    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
-        waitForNReplicas(expectedReplicas, labelSelector, annotationSelector, budget, 5000);
+    public static void waitForNReplicas(int expectedReplicas, String namespace, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(expectedReplicas, namespace, labelSelector, annotationSelector, budget, 5000);
     }
 
     /**

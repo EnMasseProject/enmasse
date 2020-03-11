@@ -141,7 +141,7 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
     static void cleanup() throws Exception {
         KubeCMDClient.deleteIoTConfig(NAMESPACE, "default");
         log.info("Waiting for IoT components to be removed");
-        TestUtils.waitForNReplicas(0, singletonMap("component", "iot"), ofDuration(ofMinutes(5)));
+        TestUtils.waitForNReplicas(0, NAMESPACE, singletonMap("component", "iot"), ofDuration(ofMinutes(5)));
     }
 
     @Test

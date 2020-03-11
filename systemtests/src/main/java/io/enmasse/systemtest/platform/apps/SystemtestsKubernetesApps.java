@@ -13,6 +13,8 @@ import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.Minikube;
+import io.enmasse.systemtest.scale.ScaleTestClientConfiguration;
+import io.enmasse.systemtest.scale.ScaleTestClientType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -20,6 +22,7 @@ import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Namespace;
@@ -66,9 +69,12 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class SystemtestsKubernetesApps {
     private static final Logger log = CustomLogger.getLogger();
@@ -78,6 +84,8 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_CHROME = "selenium-chrome";
     public static final String SELENIUM_PROJECT = "systemtests-selenium";
     public static final String MESSAGING_PROJECT = "systemtests-clients";
+    public static final String SCALE_TEST_CLIENTS_PROJECT = "systemtests-scale-test-clients";
+    public static final String SCALE_TEST_CLIENT = "scale-test-client";
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
     public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
@@ -490,6 +498,41 @@ public class SystemtestsKubernetesApps {
 
     }
 
+    public static void deployScaleTestClient(Kubernetes kubeClient, ScaleTestClientConfiguration clientConfiguration) throws Exception {
+        String clientId = UUID.randomUUID().toString();
+        kubeClient.createNamespace(SCALE_TEST_CLIENTS_PROJECT);
+        var labels = getScaleTestClientLabels(clientConfiguration.getClientType(), clientId);
+        kubeClient.createServiceFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientServiceResource(clientConfiguration.getClientType(), clientId, labels));
+        kubeClient.createDeploymentFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientDeployment(clientId, clientConfiguration, labels));
+        kubeClient.createIngressFromResource(SCALE_TEST_CLIENTS_PROJECT, getSystemtestsIngressResource(SCALE_TEST_CLIENT+"-"+clientId, 8080));
+        clientConfiguration.setClientId(clientId);
+        TestUtils.waitForNReplicas(1, SCALE_TEST_CLIENTS_PROJECT, labels, new TimeoutBudget(30, TimeUnit.SECONDS));
+    }
+
+    public static Endpoint getScaleTestClientEndpoint(Kubernetes kubeClient, String clientId) {
+        return new Endpoint(kubeClient.getIngressHost(SCALE_TEST_CLIENTS_PROJECT, SCALE_TEST_CLIENT+"-"+clientId), 80);
+    }
+
+    public static void deleteScaleTestClient(Kubernetes kubeClient, ScaleTestClientConfiguration client, Path logsPath) {
+        String resourcesName = SCALE_TEST_CLIENT+"-"+client.getClientId();
+        if (kubeClient.deploymentExists(SCALE_TEST_CLIENTS_PROJECT, resourcesName)) {
+            try {
+                Files.createDirectories(logsPath);
+                GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), logsPath, SCALE_TEST_CLIENTS_PROJECT);
+                collector.collectLogsOfPodsByLabels(SCALE_TEST_CLIENTS_PROJECT, client.getClientId(), getScaleTestClientLabels(client.getClientType(), client.getClientId()));
+            } catch (Exception e) {
+                log.error("Failed to collect client {} logs", client.getClientId(), e);
+            }
+            kubeClient.deleteDeployment(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
+            kubeClient.deleteService(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
+            kubeClient.deleteIngress(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
+        }
+    }
+
+    public static void cleanScaleTestEnv(Kubernetes kubeClient) throws Exception {
+        kubeClient.deleteNamespace(SCALE_TEST_CLIENTS_PROJECT);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////
     // Resources
     ////////////////////////////////////////////////////////////////////////////////////////////
@@ -895,6 +938,86 @@ public class SystemtestsKubernetesApps {
                                 .build())
                 .endSpec()
                 .endTemplate()
+                .endSpec()
+                .build();
+    }
+
+    private static Map<String, String> getScaleTestClientLabels(ScaleTestClientType clientType, String clientId) {
+        return Map.of("app", SCALE_TEST_CLIENT,
+                "client", clientType.getValue(),
+                "id", clientId);
+    }
+
+    private static Deployment getScaleTestClientDeployment(String clientId, ScaleTestClientConfiguration c, Map<String, String> labels) {
+        var env = Arrays.asList(new EnvVarBuilder().withName("amqp-hostname").withValue(c.getHostname()).build(),
+                new EnvVarBuilder().withName("amqp-port").withValue(Integer.toString(c.getPort())).build(),
+                new EnvVarBuilder().withName("amqp-username").withValue(c.getUsername()).build(),
+                new EnvVarBuilder().withName("amqp-password").withValue(c.getPassword()).build(),
+                new EnvVarBuilder().withName("amqp-addresses").withValue(Stream.of(c.getAddresses()).collect(Collectors.joining(","))).build());
+        if (c.getLinksPerConnection()!=null) {
+            env.add(new EnvVarBuilder().withName("amqp-links-per-conn").withValue(Integer.toString(c.getLinksPerConnection())).build());
+        }
+
+        return new DeploymentBuilder()
+                .withNewMetadata()
+                .withName(SCALE_TEST_CLIENT+"-"+clientId)
+                .endMetadata()
+                .withNewSpec()
+                .withNewSelector()
+                .addToMatchLabels(labels)
+//                .addToMatchLabels("app", SCALE_TEST_CLIENT)
+//                .addToMatchLabels("client", c.getClientType().getValue())
+//                .addToMatchLabels("id", clientId)
+                .endSelector()
+                .withReplicas(1)
+                .withNewTemplate()
+                .withNewMetadata()
+                .addToLabels(labels)
+//                .addToLabels("app", SCALE_TEST_CLIENT)
+//                .addToLabels("client", c.getClientType().getValue())
+//                .addToLabels("id", clientId)
+                .endMetadata()
+                .withNewSpec()
+                .addNewContainer()
+                .withName(SCALE_TEST_CLIENT)
+                .withImage("quay.io/enmasse/systemtests-external-client:latest")
+                .withCommand("/bin/sh")
+                .withArgs("-c", "java -jar /"+c.getClientType().getValue()+".jar")
+                .withEnv(env)
+                .addNewPort()
+                .withContainerPort(8080)
+                .endPort()
+                .withNewLivenessProbe()
+                .withNewTcpSocket()
+                .withNewPort(8080)
+                .endTcpSocket()
+                .withInitialDelaySeconds(10)
+                .withPeriodSeconds(5)
+                .endLivenessProbe()
+                .endContainer()
+                .endSpec()
+                .endTemplate()
+                .endSpec()
+                .build();
+    }
+
+    private static Service getScaleTestClientServiceResource(ScaleTestClientType clientType, String clientId, Map<String, String> labels) {
+        return new ServiceBuilder()
+                .withNewMetadata()
+                .withName(SCALE_TEST_CLIENT+"-"+clientId)
+                .addToLabels("app", SCALE_TEST_CLIENT)
+                .addToLabels("client", clientType.getValue())
+                .addToLabels("id", clientId)
+                .endMetadata()
+                .withNewSpec()
+                .addToSelector("app", SCALE_TEST_CLIENT)
+                .addToSelector("client", clientType.getValue())
+                .addToSelector("id", clientId)
+                .addNewPort()
+                .withName("http")
+                .withPort(8080)
+                .withProtocol("TCP")
+                .endPort()
                 .endSpec()
                 .build();
     }

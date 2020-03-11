@@ -8,6 +8,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.Phase;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
@@ -21,29 +22,40 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
+import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.SCALE;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(SCALE)
 class ScaleTest extends TestBase implements ITestBaseIsolated {
@@ -66,6 +78,61 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     void tearDown(ExtensionContext extensionContext) throws Exception {
         GlobalLogCollector.saveInfraState(TestUtils.getScaleTestLogsPath(extensionContext));
         kubernetes.deleteNamespace(namespace);
+        SystemtestsKubernetesApps.cleanScaleTestEnv(kubernetes);
+    }
+
+    @Test
+    void testScaleTestToolsWork() throws Exception {
+        int initialAddresses = 5;
+        var addresses = createInitialAddresses(initialAddresses).stream().map(a->a.getSpec().getAddress()).collect(Collectors.toList());
+
+        var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
+        Supplier<ScaleTestClientConfiguration> clientProvider = () -> {
+            ScaleTestClientConfiguration client = new ScaleTestClientConfiguration();
+            client.setClientType(ScaleTestClientType.probe);
+            client.setHostname(endpoint.getHost());
+            client.setPort(endpoint.getPort());
+            client.setUsername(userCredentials.getUsername());
+            client.setPassword(userCredentials.getPassword());
+            return client;
+        };
+        {
+            ScaleTestClientConfiguration client = clientProvider.get();
+            client.setAddresses(addresses.toArray(new String[0]));
+
+            SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, client);
+
+            var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
+            ProbeClientMetricsClient probeClientMetrics = new ProbeClientMetricsClient(metricsEndpoint);
+
+            TestUtils.waitUntilConditionOrFail(() -> {
+                return probeClientMetrics.getSuccessTotal().getValue()>0;
+            }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
+
+            assertTrue(probeClientMetrics.getSuccessTotal().getValue()>0);
+            assertTrue(probeClientMetrics.getFailureTotal().getValue()==0);
+
+            SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
+        }
+        {
+            ScaleTestClientConfiguration client = clientProvider.get();
+            client.setClientType(ScaleTestClientType.messaging);
+            client.setAddresses(addresses.toArray(new String[0]));
+
+            SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, client);
+
+            var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
+            MessagingClientMetricsClient msgClientMetrics = new MessagingClientMetricsClient(metricsEndpoint);
+
+            TestUtils.waitUntilConditionOrFail(() -> {
+                return msgClientMetrics.getConnectSuccess().getValue()>0;
+            }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
+
+            assertTrue(msgClientMetrics.getConnectSuccess().getValue()>0);
+            assertTrue(msgClientMetrics.getConnectFailure().getValue()==0);
+
+            SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
+        }
     }
 
 
@@ -191,5 +258,36 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         getResourceManager().createAddressSpace(addressSpace);
         getResourceManager().createOrUpdateUser(addressSpace, userCredentials);
     }
+
+    List<Address> createInitialAddresses(int addresses) throws Exception {
+        int operableAddresses = 0;
+        int iterator = 0;
+
+        while (operableAddresses < addresses) {
+            try {
+                getResourceManager().appendAddresses(false, getTenantAddressBatch(addressSpace).toArray(new Address[0]));
+                if (iterator % 200 == 0) {
+                    List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
+                    AddressUtils.waitForDestinationsReady(currentAddresses.toArray(new Address[0]));
+                    operableAddresses = currentAddresses.size();
+                }
+            } catch (IllegalStateException ex) {
+                LOGGER.error("Failed to wait for addresses");
+                operableAddresses = (int) kubernetes.getAddressClient().inNamespace(namespace).list().getItems().stream()
+                        .filter(address -> address.getStatus().getPhase().equals(Phase.Active)).count();
+                LOGGER.info("----------------------------------------------------------");
+                LOGGER.info("Total operable addresses {}", operableAddresses);
+                LOGGER.info("----------------------------------------------------------");
+                if (operableAddresses >= addresses) {
+                    break;
+                }
+            }
+            iterator++;
+        }
+        List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
+        AddressUtils.waitForDestinationsReady(currentAddresses.toArray(new Address[0]));
+        return kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
+    }
+
 }
 

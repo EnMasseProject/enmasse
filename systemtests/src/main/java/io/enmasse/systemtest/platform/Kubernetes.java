@@ -434,8 +434,8 @@ public abstract class Kubernetes {
         return client.pods().inNamespace(namespace).withLabels(labelSelector).list().getItems();
     }
 
-    public List<Pod> listPods(Map<String, String> labelSelector, Map<String, String> annotationSelector) {
-        return client.pods().withLabels(labelSelector).list().getItems().stream().filter(pod -> {
+    public List<Pod> listPods(String namespace, Map<String, String> labelSelector, Map<String, String> annotationSelector) {
+        return client.pods().inNamespace(namespace).withLabels(labelSelector).list().getItems().stream().filter(pod -> {
             for (Map.Entry<String, String> entry : annotationSelector.entrySet()) {
                 return pod.getMetadata().getAnnotations() != null
                         && pod.getMetadata().getAnnotations().get(entry.getKey()) != null
