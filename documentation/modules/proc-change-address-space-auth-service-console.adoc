@@ -14,9 +14,8 @@ You can change the authentication service that is associated with an address spa
 
 . Log in to the {ConsoleName}. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ConsoleName}].
 
-. Locate the address space for which you want to change the address space plan.
+. Locate the address space for which you want to change the authentication service.
 
 . In the far right column, click the vertical ellipsis icon and select *Edit*. The Edit window opens.
 
 . In the *Authentication Service* field, select a different authentication service from the list and click *Confirm*. The authentication service is changed for that address space.
-
