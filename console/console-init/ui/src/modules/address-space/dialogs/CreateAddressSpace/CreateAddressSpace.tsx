@@ -5,21 +5,13 @@
 
 import * as React from "react";
 import { Wizard } from "@patternfly/react-core";
-import { AddressSpaceConfiguration } from "modules/address-space/components/CreateAddressSpace/CreateAddressSpaceConfiguration";
-import { ReviewAddressSpace } from "modules/address-space/components/CreateAddressSpace/ReviewAddressSpace";
+import { AddressSpaceConfiguration } from "modules/address-space/dialogs/CreateAddressSpace/CreateAddressSpaceConfiguration";
+import { ReviewAddressSpace } from "modules/address-space/dialogs/CreateAddressSpace/ReviewAddressSpace";
 import { CREATE_ADDRESS_SPACE } from "graphql-module/queries";
 import { useMutationQuery } from "hooks";
+import { useStoreContext, types } from "context-state-reducer";
 
-interface ICreateAddressSpaceProps {
-  isCreateWizardOpen: boolean;
-  setIsCreateWizardOpen: (value: boolean) => void;
-  setOnCreationRefetch?: (value: boolean) => void;
-}
-export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProps> = ({
-  isCreateWizardOpen,
-  setIsCreateWizardOpen,
-  setOnCreationRefetch
-}) => {
+export const CreateAddressSpace: React.FunctionComponent<{}> = () => {
   const [addressSpaceName, setAddressSpaceName] = React.useState("");
   // State has been initialized to " " instead of null string
   // due to dropdown arrow positioning issues
@@ -29,21 +21,32 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
   const [authenticationService, setAuthenticationService] = React.useState(" ");
   const [isNameValid, setIsNameValid] = React.useState(true);
 
+  const { state, dispatch } = useStoreContext();
+  const { modalProps } = (state && state.modal) || {};
+  const { onConfirm, onClose } = modalProps || {};
+
   const resetFormState = () => {
-    setIsCreateWizardOpen(false);
     setAddressSpaceType("");
     setAddressSpacePlan("");
     setAddressSpaceName("");
     setNamespace("");
     setAuthenticationService("");
-    if (setOnCreationRefetch) setOnCreationRefetch(true);
   };
 
+  const refetchQueries: string[] = ["all_address_spaces"];
   const [setQueryVariables] = useMutationQuery(
     CREATE_ADDRESS_SPACE,
+    refetchQueries,
     resetFormState,
     resetFormState
   );
+
+  const onCloseDialog = () => {
+    dispatch({ type: types.HIDE_MODAL });
+    if (onClose) {
+      onClose();
+    }
+  };
 
   const isReviewEnabled = () => {
     if (
@@ -92,7 +95,12 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
           }
         }
       };
-      setQueryVariables(variables);
+      await setQueryVariables(variables);
+
+      onCloseDialog();
+      if (onConfirm) {
+        onConfirm();
+      }
     }
   };
 
@@ -135,9 +143,6 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
       nextButtonText: "Finish"
     }
   ];
-  const onClose = () => {
-    setIsCreateWizardOpen(!isCreateWizardOpen);
-  };
 
   return (
     <React.Fragment>
@@ -146,7 +151,7 @@ export const CreateAddressSpace: React.FunctionComponent<ICreateAddressSpaceProp
         isOpen={true}
         isFullHeight={true}
         isFullWidth={true}
-        onClose={onClose}
+        onClose={onCloseDialog}
         title="Create an Instance"
         steps={steps}
         onNext={() => {}}

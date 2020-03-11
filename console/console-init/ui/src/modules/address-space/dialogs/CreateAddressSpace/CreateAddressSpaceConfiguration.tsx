@@ -129,7 +129,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
     else if (type === "brokered") setIsBrokeredChecked(true);
   }, []);
 
-  const { loading, error, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
+  const { loading, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
 
   const { data: authenticationServices } = useQuery<
     IAddressSpaceAuthServiceResponse
@@ -142,7 +142,7 @@ export const AddressSpaceConfiguration: React.FunctionComponent<IAddressSpaceCon
   };
 
   if (loading) return <Loading />;
-  if (error) return <Loading />;
+
   const { namespaces } = data || {
     namespaces: []
   };

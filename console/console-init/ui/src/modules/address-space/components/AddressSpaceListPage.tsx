@@ -6,26 +6,23 @@
 import React from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
-import { Button, Modal } from "@patternfly/react-core";
 import {
   AddressSpaceList,
   IAddressSpace
 } from "modules/address-space/components/AddressSpaceList";
 import { EmptyAddressSpace } from "modules/address-space/components/EmptyAddressSpace";
-import { DialoguePrompt } from "components/common/DialoguePrompt";
 import {
   DELETE_ADDRESS_SPACE,
   RETURN_ALL_ADDRESS_SPACES,
-  EDIT_ADDRESS_SPACE,
   DOWNLOAD_CERTIFICATE
 } from "graphql-module/queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
-import { EditAddressSpace } from "pages/EditAddressSpace";
 import { ISortBy } from "@patternfly/react-table";
 import { compareTwoAddress } from "pages/AddressSpaceDetail/AddressList/AddressListPage";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 import { IObjectMeta_v1_Input } from "pages/AddressSpaceDetail/AddressSpaceDetailPage";
 import { useMutationQuery } from "hooks";
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
 interface AddressSpaceListPageProps {
   page: number;
@@ -60,8 +57,6 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   setOnCreationRefetch,
   sortValue,
   setSortValue,
-  isCreateWizardOpen,
-  setIsCreateWizardOpen,
   onSelectAddressSpace,
   onSelectAllAddressSpace,
   selectedAddressSpaces
@@ -69,103 +64,15 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
   const client = useApolloClient();
-  const [
-    addressSpaceBeingEdited,
-    setAddressSpaceBeingEdited
-  ] = React.useState<IAddressSpace | null>();
-
-  const [
-    addressSpaceBeingDeleted,
-    setAddressSpaceBeingDeleted
-  ] = React.useState<IAddressSpace | null>();
-
   const [sortBy, setSortBy] = React.useState<ISortBy>();
-  if (sortValue && sortBy !== sortValue) {
-    setSortBy(sortValue);
-  }
-
-  const resetEditFormState = () => {
-    setAddressSpaceBeingEdited(null);
-    refetch();
-  };
-
-  /**
-   * calling useMutationQuery hook for edit address space
-   * passing cal back function resetFormState which will call on onError and onCompleted query respectively
-   */
-  const [setEditAddressSpaceQueryVariables] = useMutationQuery(
-    EDIT_ADDRESS_SPACE,
-    resetEditFormState,
-    resetEditFormState
-  );
-
-  const resetDeleteFormState = (data: any) => {
-    if (data && data.deleteAddressSpace === true) {
-      setAddressSpaceBeingDeleted(null);
-      refetch();
-    }
-  };
+  const { dispatch } = useStoreContext();
+  const refetchQueries: string[] = ["all_address_spaces"];
   const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
     DELETE_ADDRESS_SPACE,
-    resetDeleteFormState,
-    resetDeleteFormState
+    refetchQueries
   );
 
-  const handleCancelEdit = () => setAddressSpaceBeingEdited(null);
-  const handleSaving = () => {
-    if (addressSpaceBeingEdited) {
-      const variables = {
-        a: {
-          name: addressSpaceBeingEdited.name,
-          namespace: addressSpaceBeingEdited.nameSpace
-        },
-        jsonPatch:
-          '[{"op":"replace","path":"/spec/plan","value":"' +
-          addressSpaceBeingEdited.planValue +
-          '"},' +
-          '{"op":"replace","path":"/spec/authenticationService/name","value":"' +
-          addressSpaceBeingEdited.authenticationService +
-          '"}' +
-          "]",
-        patchType: "application/json-patch+json"
-      };
-      setEditAddressSpaceQueryVariables(variables);
-    }
-  };
-
-  const handleEditChange = (addressSpace: IAddressSpace) =>
-    setAddressSpaceBeingEdited(addressSpace);
-
-  const handleCancelDelete = () => setAddressSpaceBeingDeleted(null);
-  const handleDelete = () => {
-    if (addressSpaceBeingDeleted) {
-      const variables = {
-        a: {
-          name: addressSpaceBeingDeleted.name,
-          namespace: addressSpaceBeingDeleted.nameSpace
-        }
-      };
-      setDeleteAddressSpaceQueryVariables(variables);
-    }
-  };
-  const handleDeleteChange = (addressSpace: IAddressSpace) =>
-    setAddressSpaceBeingDeleted(addressSpace);
-
-  const handlePlanChange = (plan: string) => {
-    if (addressSpaceBeingEdited) {
-      addressSpaceBeingEdited.planValue = plan;
-      setAddressSpaceBeingEdited({ ...addressSpaceBeingEdited });
-    }
-  };
-
-  const handleAuthServiceChanged = (authService: string) => {
-    if (addressSpaceBeingEdited) {
-      addressSpaceBeingEdited.authenticationService = authService;
-      setAddressSpaceBeingEdited({ ...addressSpaceBeingEdited });
-    }
-  };
-
-  const { loading, error, data, refetch } = useQuery<IAddressSpacesResponse>(
+  const { loading, data, refetch } = useQuery<IAddressSpacesResponse>(
     RETURN_ALL_ADDRESS_SPACES(
       page,
       perPage,
@@ -190,6 +97,47 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     addressSpaces: { total: 0, addressSpaces: [] }
   };
   setTotalAddressSpaces(addressSpaces.total);
+
+  if (sortValue && sortBy !== sortValue) {
+    setSortBy(sortValue);
+  }
+
+  const onChangeEdit = (addressSpace: IAddressSpace) => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.EDIT_ADDRESS_SPACE,
+      modalProps: {
+        addressSpace
+      }
+    });
+  };
+
+  const onDeleteAddressSpace = (addressSpace: IAddressSpace) => {
+    if (addressSpace) {
+      const variables = {
+        a: {
+          name: addressSpace.name,
+          namespace: addressSpace.nameSpace
+        }
+      };
+      setDeleteAddressSpaceQueryVariables(variables);
+    }
+  };
+
+  const onChangeDelete = (addressSpace: IAddressSpace) => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.DELETE_ADDRESS_SPACE,
+      modalProps: {
+        selectedItems: [addressSpace.name],
+        data: addressSpace,
+        onConfirm: onDeleteAddressSpace,
+        option: "Delete",
+        detail: `Are you sure you want to delete this addressspace: ${addressSpace.name} ?`,
+        header: "Delete this Address Space ?"
+      }
+    });
+  };
 
   //Download the certificate function
   const downloadCertificate = async (data: IObjectMeta_v1_Input) => {
@@ -247,10 +195,12 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
         ).length === 1
     })
   );
+
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
   };
+
   return (
     <>
       {totalAddressSpaces > 0 ? (
@@ -258,61 +208,14 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
           rows={addressSpacesList}
           onSelectAddressSpace={onSelectAddressSpace}
           onSelectAllAddressSpace={onSelectAllAddressSpace}
-          onEdit={handleEditChange}
-          onDelete={handleDeleteChange}
+          onEdit={onChangeEdit}
+          onDelete={onChangeDelete}
           onSort={onSort}
           sortBy={sortBy}
           onDownload={downloadCertificate}
         />
       ) : (
-        <EmptyAddressSpace
-          isWizardOpen={isCreateWizardOpen}
-          setIsWizardOpen={setIsCreateWizardOpen}
-        />
-      )}
-      {addressSpaceBeingEdited && (
-        <Modal
-          isLarge
-          id="as-list-edit-modal"
-          title="Edit"
-          isOpen={true}
-          onClose={handleCancelEdit}
-          actions={[
-            <Button
-              key="confirm"
-              id="as-list-edit-confirm"
-              variant="primary"
-              onClick={handleSaving}
-            >
-              Confirm
-            </Button>,
-            <Button
-              key="cancel"
-              id="as-list-edit-cancel"
-              variant="link"
-              onClick={handleCancelEdit}
-            >
-              Cancel
-            </Button>
-          ]}
-          isFooterLeftAligned={true}
-        >
-          <EditAddressSpace
-            addressSpace={addressSpaceBeingEdited}
-            onAuthServiceChanged={handleAuthServiceChanged}
-            onPlanChange={handlePlanChange}
-          ></EditAddressSpace>
-        </Modal>
-      )}
-      {addressSpaceBeingDeleted && (
-        <DialoguePrompt
-          option="Delete"
-          detail={`Are you sure you want to delete this addressspace: ${addressSpaceBeingDeleted.name} ?`}
-          names={[addressSpaceBeingDeleted.name]}
-          header="Delete this Address Space ?"
-          handleCancelDialogue={handleCancelDelete}
-          handleConfirmDialogue={handleDelete}
-        />
+        <EmptyAddressSpace />
       )}
     </>
   );
