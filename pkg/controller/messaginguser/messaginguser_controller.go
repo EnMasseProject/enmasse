@@ -8,6 +8,7 @@ package messaginguser
 import (
 	"context"
 	"fmt"
+	"k8s.io/client-go/tools/record"
 	"strings"
 
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
@@ -45,6 +46,7 @@ const (
 type ReconcileMessagingUser struct {
 	client                client.Client
 	reader                client.Reader
+	recorder              record.EventRecorder
 	scheme                *runtime.Scheme
 	namespace             string
 	keycloakCache         keycloakCache
@@ -213,7 +215,7 @@ func (r *ReconcileMessagingUser) createOrUpdateUser(ctx context.Context, logger 
 }
 
 func (r *ReconcileMessagingUser) checkFinalizer(ctx context.Context, logger logr.Logger, user *userv1beta1.MessagingUser) (reconcile.Result, error) {
-	return finalizer.ProcessFinalizers(ctx, r.client, r.reader, user, []finalizer.Finalizer{
+	return finalizer.ProcessFinalizers(ctx, r.client, r.reader, r.recorder, user, []finalizer.Finalizer{
 		finalizer.Finalizer{
 			Name: FINALIZER_NAME,
 			Deconstruct: func(c finalizer.DeconstructorContext) (reconcile.Result, error) {
