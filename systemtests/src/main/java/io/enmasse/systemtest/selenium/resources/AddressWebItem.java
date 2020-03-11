@@ -32,7 +32,11 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         this.checkBox = webItem.findElement(By.xpath("./td[@data-key='0']")).findElement(By.tagName("input"));
         this.address = parseName(webItem.findElement(By.xpath("./td[@data-label='Address']")));
         this.clientsRoute = parseRoute(webItem.findElement(By.xpath("./td[@data-label='Address']")));
-        this.plan = webItem.findElement(By.xpath("./td[@data-label='Type/Plan']")).getText().toLowerCase().substring(2);
+        try {
+            this.plan = webItem.findElement(By.xpath("./td[@data-label='Type/Plan']")).getText().toLowerCase().substring(2);
+        } catch (Exception ex) {
+            this.plan = "";
+        }
         this.type = webItem.findElement(By.xpath("./td[@data-label='Type/Plan']")).getText().substring(0, 1);
         this.status = webItem.findElement(By.xpath("./td[@data-label='Status']")).getText().replace(" ", "");
         try {
