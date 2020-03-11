@@ -5,6 +5,9 @@ metadata:
   labels:
     app: enmasse
 rules:
+  - apiGroups: [ "" ]
+    resources: [ "events" ]
+    verbs: [ "create", "update", "patch", "get", "list" ]
   - apiGroups: [ "oauth.openshift.io" ]
     resources: [ "oauthclients" ]
     verbs: [ "create", "get", "update", "list", "watch" ]
