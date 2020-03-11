@@ -40,7 +40,7 @@ OLM_MANIFEST_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/olm-manifest:$(IMAG
 PROMETHEUS_IMAGE ?= prom/prometheus:v2.4.3
 ALERTMANAGER_IMAGE ?= prom/alertmanager:v0.15.2
 GRAFANA_IMAGE ?= grafana/grafana:5.3.1
-APPLICATION_MONITORING_OPERATOR_IMAGE ?= quay.io/integreatly/application-monitoring-operator:0.0.27
+APPLICATION_MONITORING_OPERATOR_IMAGE ?= quay.io/integreatly/application-monitoring-operator:v1.1.4
 KUBE_STATE_METRICS_IMAGE ?= quay.io/coreos/kube-state-metrics:v1.4.0
 BROKER_IMAGE ?= quay.io/enmasse/artemis-base:2.11.0
 

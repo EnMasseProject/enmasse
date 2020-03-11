@@ -9,6 +9,7 @@ rules:
   resources:
   - pods
   - services
+  - services/finalizers
   - endpoints
   - persistentvolumeclaims
   - events
@@ -21,6 +22,7 @@ rules:
   - apps
   resources:
   - deployments
+  - deployments/finalizers
   - daemonsets
   - replicasets
   - statefulsets
@@ -34,8 +36,7 @@ rules:
   - prometheusrules
   - servicemonitors
   verbs:
-  - get
-  - create
+  - '*'
 - apiGroups:
   - applicationmonitoring.integreatly.org
   resources:
@@ -49,8 +50,11 @@ rules:
   - integreatly.org
   resources:
   - grafanadatasources
+  - grafanadatasources/status
   - grafanadashboards
+  - grafanadashboards/status
   - grafanas
+  - grafanas/status
   - grafanas/finalizers
   - grafanadatasources/finalizers
   - grafanadashboards/finalizers

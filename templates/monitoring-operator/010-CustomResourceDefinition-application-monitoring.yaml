@@ -34,3 +34,9 @@ spec:
             prometheusStorageRequest:
               type: string
               description: How much storage to assign to a volume claim for persisting Prometheus data. See https://github.com/coreos/prometheus-operator/blob/ca400fdc3edd0af0df896a338eca270e115b74d7/Documentation/api.md#storagespec
+            prometheusInstanceNamespaces:
+              type: string
+              description: The list of namespaces to watch for prometheus custom resources
+            alertmanagerInstanceNamespaces:
+              type: string
+              description: The list of namespaces to watch for alertmanager custom resources
