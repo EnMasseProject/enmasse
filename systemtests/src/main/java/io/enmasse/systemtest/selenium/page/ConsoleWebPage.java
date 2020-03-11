@@ -854,7 +854,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.takeScreenShot();
         try {
             selenium.clickOnItem(getApplicationsElem().findElement(By.xpath("//a[contains(text(), 'Help')]")));
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.urlToBe(expectedUrl));
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.urlContains(expectedUrl));
         } finally {
             selenium.takeScreenShot();
         }
