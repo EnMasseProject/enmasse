@@ -16,10 +16,12 @@ import {
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
 import { useMutation } from "@apollo/react-hooks";
-import { AddressSpaceListPage } from "./components/AddressSpaceListPage";
-import { AddressSpaceListFilterPage } from "./components/AddressSpaceListFilterPage";
+import {
+  AddressSpaceList,
+  IAddressSpace,
+  AddressSpaceFilter
+} from "./components";
 import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
-import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
 import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { getHeaderForDeleteDialog, getDetailForDeleteDialog } from "./utils";
@@ -51,12 +53,13 @@ export default function AddressSpacePage() {
   >([]);
 
   const refetchQueries: string[] = ["all_address_spaces"];
-  const [
-    setDeleteAddressSpaceQueryVariables
-  ] = useMutation(DELETE_ADDRESS_SPACE, {
-    refetchQueries,
-    awaitRefetchQueries: true
-  });
+  const [setDeleteAddressSpaceQueryVariables] = useMutation(
+    DELETE_ADDRESS_SPACE,
+    {
+      refetchQueries,
+      awaitRefetchQueries: true
+    }
+  );
 
   const setSearchParam = React.useCallback(
     (name: string, value: string) => {
@@ -154,6 +157,7 @@ export default function AddressSpacePage() {
       setSelectedAddressSpaces([]);
     }
   };
+
   const onSelectAddressSpace = (data: IAddressSpace, isSelected: boolean) => {
     if (isSelected === true && selectedAddressSpaces.indexOf(data) === -1) {
       setSelectedAddressSpaces(prevState => [...prevState, data]);
@@ -198,7 +202,7 @@ export default function AddressSpacePage() {
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
         <GridItem span={7}>
-          <AddressSpaceListFilterPage
+          <AddressSpaceFilter
             filterValue={filterValue}
             setFilterValue={setFilterValue}
             filterNames={filterNames}
@@ -219,7 +223,7 @@ export default function AddressSpacePage() {
         </GridItem>
       </Grid>
       <Divider />
-      <AddressSpaceListPage
+      <AddressSpaceList
         page={page}
         perPage={perPage}
         totalAddressSpaces={totalAddressSpaces}

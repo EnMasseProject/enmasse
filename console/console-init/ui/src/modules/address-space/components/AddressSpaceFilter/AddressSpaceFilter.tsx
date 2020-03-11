@@ -10,15 +10,15 @@ import {
   DataToolbarItem
 } from "@patternfly/react-core/dist/js/experimental";
 import {
-  AddressSpaceListFilter,
+  AddressSpaceToolbar,
   AddressSpaceListKebab
-} from "./AddressSpaceListFilter";
+} from "../AddressSpaceToolbar/AddressSpaceToolbar";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView } from "components/common/SortForMobileView";
 import useWindowDimensions from "components/common/WindowDimension";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
-interface IAddressSpaceListFilterPageProps {
+interface IAddressSpaceFilterProps {
   filterValue?: string;
   setFilterValue: (value: string) => void;
   filterNames: any[];
@@ -33,7 +33,7 @@ interface IAddressSpaceListFilterPageProps {
   onDeleteAll: () => void;
   isDeleteAllDisabled: boolean;
 }
-export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceListFilterPageProps> = ({
+export const AddressSpaceFilter: React.FunctionComponent<IAddressSpaceFilterProps> = ({
   filterValue,
   setFilterValue,
   filterNames,
@@ -71,7 +71,7 @@ export const AddressSpaceListFilterPage: React.FunctionComponent<IAddressSpaceLi
   ];
   const toolbarItems = (
     <>
-      <AddressSpaceListFilter
+      <AddressSpaceToolbar
         filterValue={filterValue}
         setFilterValue={setFilterValue}
         filterNames={filterNames}
