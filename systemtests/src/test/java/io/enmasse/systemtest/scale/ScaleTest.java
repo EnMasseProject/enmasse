@@ -4,6 +4,30 @@
  */
 package io.enmasse.systemtest.scale;
 
+import static io.enmasse.systemtest.TestTag.SCALE;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import org.hawkular.agent.prometheus.types.Counter;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
@@ -37,26 +61,6 @@ import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import static io.enmasse.systemtest.TestTag.SCALE;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 @Tag(SCALE)
 class ScaleTest extends TestBase implements ITestBaseIsolated {
     private final static Logger LOGGER = CustomLogger.getLogger();
@@ -67,18 +71,21 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     final String authServiceName = "scale-authservice";
     AddressSpace addressSpace = null;
     final UserCredentials userCredentials = new UserCredentials("scale-test-user", "password");
+    private final int uuidSize = 36;
 
     @BeforeEach
     void init() throws Exception {
         kubernetes.createNamespace(namespace);
         setupEnv();
+        SystemtestsKubernetesApps.setupScaleTestEnv(kubernetes);
     }
 
     @AfterEach
     void tearDown(ExtensionContext extensionContext) throws Exception {
-        GlobalLogCollector.saveInfraState(TestUtils.getScaleTestLogsPath(extensionContext));
+        Path logsPath = TestUtils.getScaleTestLogsPath(extensionContext);
+        GlobalLogCollector.saveInfraState(logsPath);
+        SystemtestsKubernetesApps.cleanScaleTestEnv(kubernetes, logsPath);
         kubernetes.deleteNamespace(namespace);
-        SystemtestsKubernetesApps.cleanScaleTestEnv(kubernetes);
     }
 
     @Test
@@ -125,16 +132,142 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             MessagingClientMetricsClient msgClientMetrics = new MessagingClientMetricsClient(metricsEndpoint);
 
             TestUtils.waitUntilConditionOrFail(() -> {
-                return msgClientMetrics.getConnectSuccess().getValue()>0;
-            }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
-
+                var counter = msgClientMetrics.getAcceptedDeliveries(AddressType.QUEUE);
+                return counter.isPresent() && counter.get().getValue() >= 0;
+            }, Duration.ofSeconds(35), Duration.ofSeconds(5), () -> "Client is not reporting accepted deliveries");
+            Thread.sleep(30000);
             assertTrue(msgClientMetrics.getConnectSuccess().getValue()>0);
             assertTrue(msgClientMetrics.getConnectFailure().getValue()==0);
-
-            SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
+            metricAssertTrue(msgClientMetrics.getRejectedDeliveries(AddressType.QUEUE), c -> c == null || c.getValue() == 0);
+            metricAssertTrue(msgClientMetrics.getAcceptedDeliveries(AddressType.QUEUE), c -> c != null && c.getValue() >= 0);
+            metricAssertTrue(msgClientMetrics.getReceivedDeliveries(AddressType.QUEUE), c -> c != null && c.getValue() >= 0);
         }
     }
 
+    @Test
+    void testMessagingPerformance() throws Exception {
+        int initialAddresses = 12000;
+//        int initialAddresses = 50;
+        var addresses = createInitialAddresses(initialAddresses);
+        Collections.sort(addresses, (a1, a2) -> {
+            var address1 = a1.getSpec().getAddress();
+            var address2 = a2.getSpec().getAddress();
+            return address1.substring(address1.length()-uuidSize).compareTo(address2.substring(address2.length()-uuidSize));
+        });
+
+//        LOGGER.info("#######################################");
+//        LOGGER.info("#######################################");
+//        LOGGER.info("Addresses are {}", addresses.stream().map(a -> a.getSpec().getAddress()).collect(Collectors.toList()).toString());
+//        LOGGER.info("#######################################");
+//        LOGGER.info("#######################################");
+
+
+        var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
+        Supplier<ScaleTestClientConfiguration<MessagingClientMetricsClient>> clientProvider = () -> {
+            ScaleTestClientConfiguration<MessagingClientMetricsClient> client = new ScaleTestClientConfiguration<>();
+            client.setClientType(ScaleTestClientType.messaging);
+            client.setHostname(endpoint.getHost());
+            client.setPort(endpoint.getPort());
+            client.setUsername(userCredentials.getUsername());
+            client.setPassword(userCredentials.getPassword());
+            return client;
+        };
+
+        int totalConnections = 0;
+
+        List<ScaleTestClientConfiguration<MessagingClientMetricsClient>> clients = new ArrayList<>();
+        int anycastLinksPerConnection = 1;
+        int queueLinksPerConnection = 1;
+        int addressesPerGroup = 200;
+
+        try {
+
+        while (true) {
+            //determine load
+            List<List<Address>> addressesGroups = new ArrayList<>();
+            for (int i = 0; i < addresses.size() / addressesPerGroup; i++) {
+                addressesGroups.add(addresses.subList(i * addressesPerGroup, (i + 1) * addressesPerGroup));
+            }
+
+            //deploy clients and start messaging
+            for (var group : addressesGroups) {
+                var anycasts = group.stream().filter(a -> a.getSpec().getType().equals(AddressType.ANYCAST.toString())).collect(Collectors.toList());
+                var queues = group.stream().filter(a -> a.getSpec().getType().equals(AddressType.QUEUE.toString())).collect(Collectors.toList());
+
+                var clientAnycasts = clientProvider.get();
+                clientAnycasts.setAddressesType(AddressType.ANYCAST);
+                clientAnycasts.setAddresses(anycasts.stream().map(a -> a.getSpec().getAddress()).toArray(String[]::new));
+                clientAnycasts.setLinksPerConnection(anycastLinksPerConnection);
+                clients.add(clientAnycasts);
+                SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, clientAnycasts);
+                int newAnycastConnections = (anycasts.size()/anycastLinksPerConnection) * 2; // *2 because of sender and receiver
+                totalConnections += newAnycastConnections;
+
+                var clientQueues = clientProvider.get();
+                clientQueues.setAddressesType(AddressType.QUEUE);
+                clientQueues.setAddresses(queues.stream().map(a -> a.getSpec().getAddress()).toArray(String[]::new));
+                clientQueues.setLinksPerConnection(queueLinksPerConnection);
+                clients.add(clientQueues);
+                SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, clientQueues);
+                int newQueuesConnections = (queues.size()/queueLinksPerConnection) * 2; // *2 because of sender and receiver
+                totalConnections += newQueuesConnections;
+            }
+
+            long sleepMs = 4 * totalConnections;
+
+            LOGGER.info("#######################################");
+            LOGGER.info("Created total {} connections, waiting {} s for system to react", totalConnections, sleepMs/1000);
+            LOGGER.info("#######################################");
+
+            Thread.sleep(sleepMs);
+
+            //check system status
+            for (ScaleTestClientConfiguration<MessagingClientMetricsClient> client : clients) {
+                MessagingClientMetricsClient metricsClient;
+                if (client.getMetricsClient() == null) {
+                    var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
+                    client.setMetricsClient(new MessagingClientMetricsClient(metricsEndpoint));
+                }
+                metricsClient = client.getMetricsClient();
+
+                TestUtils.waitUntilConditionOrFail(() -> {
+                    var counter = metricsClient.getAcceptedDeliveries(client.getAddressesType());
+                    return counter.isPresent() && counter.get().getValue() >= 0;
+                }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting accepted deliveries");
+
+                assertTrue(metricsClient.getConnectFailure().getValue() == 0);
+                assertTrue(metricsClient.getConnectSuccess().getValue() > 0);
+                assertTrue(metricsClient.getDisconnects().getValue() == 0);
+
+                metricAssertTrue(metricsClient.getRejectedDeliveries(client.getAddressesType()), c -> c == null || c.getValue() == 0);
+                metricAssertTrue(metricsClient.getAcceptedDeliveries(client.getAddressesType()), c -> c != null && c.getValue() >= 0);
+                metricAssertTrue(metricsClient.getReceivedDeliveries(client.getAddressesType()), c -> c != null && c.getValue() >= 0);
+            }
+
+            //increase load
+//            linksPerConnection = linksPerConnection * 2;
+//            addressesPerGroup = addressesPerGroup * 2;
+            anycastLinksPerConnection = anycastLinksPerConnection + 1;
+            if (addressesPerGroup%400 == 0) {
+                queueLinksPerConnection = queueLinksPerConnection + 1;
+            }
+            addressesPerGroup = addressesPerGroup + 200;
+
+            LOGGER.info("#######################################");
+            LOGGER.info("Increasing load, creating groups of {} addresses, anycast addresses links per connection {} , queues links per connection {}", addressesPerGroup, anycastLinksPerConnection, queueLinksPerConnection);
+            LOGGER.info("#######################################");
+
+        }
+
+        } finally {
+          LOGGER.info("#######################################");
+          LOGGER.info("Total connections created {}", totalConnections);
+          LOGGER.info("Final addresses per group {}", addressesPerGroup);
+          LOGGER.info("Final anycast links per connection {}", anycastLinksPerConnection);
+          LOGGER.info("Final queue links per connection {}", queueLinksPerConnection);
+          LOGGER.info("#######################################");
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////
     // Help methods
@@ -259,26 +392,29 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         getResourceManager().createOrUpdateUser(addressSpace, userCredentials);
     }
 
-    List<Address> createInitialAddresses(int addresses) throws Exception {
-        int operableAddresses = 0;
+    List<Address> createInitialAddresses(int totalAddresses) throws Exception {
+        if (totalAddresses % 5 != 0) {
+            throw new IllegalArgumentException("Addresses must by multiple of 5");
+        }
+        int addresses = 0;
         int iterator = 0;
 
-        while (operableAddresses < addresses) {
+        while (addresses < totalAddresses) {
             try {
                 getResourceManager().appendAddresses(false, getTenantAddressBatch(addressSpace).toArray(new Address[0]));
+                addresses += 5;
                 if (iterator % 200 == 0) {
                     List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
                     AddressUtils.waitForDestinationsReady(currentAddresses.toArray(new Address[0]));
-                    operableAddresses = currentAddresses.size();
                 }
             } catch (IllegalStateException ex) {
                 LOGGER.error("Failed to wait for addresses");
-                operableAddresses = (int) kubernetes.getAddressClient().inNamespace(namespace).list().getItems().stream()
+                int operableAddresses = (int) kubernetes.getAddressClient().inNamespace(namespace).list().getItems().stream()
                         .filter(address -> address.getStatus().getPhase().equals(Phase.Active)).count();
                 LOGGER.info("----------------------------------------------------------");
                 LOGGER.info("Total operable addresses {}", operableAddresses);
                 LOGGER.info("----------------------------------------------------------");
-                if (operableAddresses >= addresses) {
+                if (operableAddresses >= totalAddresses) {
                     break;
                 }
             }
@@ -286,7 +422,11 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         }
         List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
         AddressUtils.waitForDestinationsReady(currentAddresses.toArray(new Address[0]));
-        return kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
+        return currentAddresses;
+    }
+
+    private void metricAssertTrue(Optional<Counter> counter, Predicate<Counter> predicate) {
+        assertTrue(predicate.test(counter.orElse(null)));
     }
 
 }

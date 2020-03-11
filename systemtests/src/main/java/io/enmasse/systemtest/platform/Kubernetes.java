@@ -483,7 +483,11 @@ public abstract class Kubernetes {
     }
 
     public List<Deployment> listDeployments(Map<String, String> labels) {
-        return client.apps().deployments().inNamespace(infraNamespace).withLabels(labels).list().getItems();
+        return listDeployments(infraNamespace, labels);
+    }
+
+    public List<Deployment> listDeployments(String namespace, Map<String, String> labels) {
+        return client.apps().deployments().inNamespace(namespace).withLabels(labels).list().getItems();
     }
 
     public List<StatefulSet> listStatefulSets(Map<String, String> labels) {
@@ -564,10 +568,14 @@ public abstract class Kubernetes {
      * @throws Exception whe deployment failed
      */
     public void createDeploymentFromResource(String namespace, Deployment resources) throws Exception {
+        createDeploymentFromResource(namespace, resources, 2, TimeUnit.MINUTES);
+    }
+
+    public void createDeploymentFromResource(String namespace, Deployment resources, long time, TimeUnit unit) throws Exception {
         if (!deploymentExists(namespace, resources.getMetadata().getName())) {
             Deployment depRes = client.apps().deployments().inNamespace(namespace).create(resources);
             Deployment result = client.apps().deployments().inNamespace(namespace)
-                    .withName(depRes.getMetadata().getName()).waitUntilReady(2, TimeUnit.MINUTES);
+                    .withName(depRes.getMetadata().getName()).waitUntilReady(time, unit);
             log.info("Deployment {} created", result.getMetadata().getName());
         } else {
             log.info("Deployment {} already exists", resources.getMetadata().getName());
