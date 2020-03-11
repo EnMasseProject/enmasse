@@ -139,8 +139,7 @@ Artemis.prototype.on_connection_close = function (context) {
 };
 
 Artemis.prototype.on_error = function (error) {
-    var err = this.connection.container_id + ' socket error ' + JSON.stringify(error);
-    log.info('[' + this.connection.container_id + '] socket error: ' + JSON.stringify(error));
+    log.error('[%s] socket error: %s', this.connection.container_id, JSON.stringify(error));
 };
 
 Artemis.prototype._send_pending_requests = function () {
