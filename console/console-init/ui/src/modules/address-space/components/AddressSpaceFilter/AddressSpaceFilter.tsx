@@ -5,18 +5,41 @@
 
 import * as React from "react";
 import {
-  DataToolbarContent,
-  DataToolbar,
-  DataToolbarItem
+  DataToolbarChip,
+  DataToolbarToggleGroup,
+  DataToolbarGroup,
+  DataToolbarFilter,
+  DataToolbarItem,
+  OverflowMenu,
+  OverflowMenuContent,
+  OverflowMenuGroup,
+  OverflowMenuItem,
+  OverflowMenuControl
 } from "@patternfly/react-core/dist/js/experimental";
+import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import {
-  AddressSpaceToolbar,
-  AddressSpaceListKebab
-} from "../AddressSpaceToolbar/AddressSpaceToolbar";
-import { ISortBy } from "@patternfly/react-table";
-import { SortForMobileView } from "components/common/SortForMobileView";
-import useWindowDimensions from "components/common/WindowDimension";
-import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
+  Dropdown,
+  DropdownToggle,
+  DropdownItem,
+  InputGroup,
+  Button,
+  ButtonVariant,
+  Badge,
+  KebabToggle,
+  SelectOption,
+  SelectOptionObject,
+  Select,
+  SelectVariant
+} from "@patternfly/react-core";
+import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
+import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "types/ResponseTypes";
+import { useApolloClient } from "@apollo/react-hooks";
+import {
+  TypeAheadMessage,
+  FetchPolicy,
+  TYPEAHEAD_REQUIRED_LENGTH
+} from "constants/constants";
+import { ISelectOption, getSelectOptionList } from "utils";
 
 interface IAddressSpaceFilterProps {
   filterValue?: string;
@@ -28,11 +51,14 @@ interface IAddressSpaceFilterProps {
   filterType?: string | null;
   setFilterType: (value: string | null) => void;
   totalAddressSpaces: number;
-  sortValue?: ISortBy;
-  setSortValue: (value: ISortBy) => void;
-  onDeleteAll: () => void;
-  isDeleteAllDisabled: boolean;
 }
+
+interface IAddressSpaceListKebabProps {
+  createAddressSpaceOnClick: () => void;
+  isDeleteAllDisabled: boolean;
+  onDeleteAll: () => void;
+}
+
 export const AddressSpaceFilter: React.FunctionComponent<IAddressSpaceFilterProps> = ({
   filterValue,
   setFilterValue,
@@ -42,70 +68,550 @@ export const AddressSpaceFilter: React.FunctionComponent<IAddressSpaceFilterProp
   setFilterNamespaces,
   filterType,
   setFilterType,
-  totalAddressSpaces,
-  sortValue,
-  setSortValue,
-  onDeleteAll,
-  isDeleteAllDisabled
+  totalAddressSpaces
 }) => {
-  const { width } = useWindowDimensions();
-  const { dispatch } = useStoreContext();
+  const client = useApolloClient();
+  const [filterIsExpanded, setFilterIsExpanded] = React.useState<boolean>(
+    false
+  );
+  const [typeFilterIsExpanded, setTypeFilterIsExpanded] = React.useState<
+    boolean
+  >(false);
+  const [isSelectNameExpanded, setIsSelectNameExpanded] = React.useState<
+    boolean
+  >(false);
+  const [
+    isSelectNamespaceExpanded,
+    setIsSelectNamespaceExpanded
+  ] = React.useState<boolean>(false);
+  const [nameSelected, setNameSelected] = React.useState<string>();
+  const [namespaceSelected, setNamespaceSelected] = React.useState<string>();
+  const [nameOptions, setNameOptions] = React.useState<Array<ISelectOption>>();
+  const [nameInput, setNameInput] = React.useState<string>("");
+  const [nameSpaceInput, setNameSpaceInput] = React.useState<string>("");
+  const [namespaceOptions, setNamespaceOptions] = React.useState<
+    Array<ISelectOption>
+  >();
 
-  const onClearAllFilters = () => {
-    setFilterValue("Name");
-    setFilterNamespaces([]);
-    setFilterNames([]);
-    setFilterType(null);
-  };
-
-  const onCreateAddressSpace = () => {
-    dispatch({
-      type: types.SHOW_MODAL,
-      modalType: MODAL_TYPES.CREATE_ADDRESS_SPACE
-    });
-  };
-
-  const sortMenuItems = [
-    { key: "name", value: "Name", index: 1 },
-    { key: "creationTimestamp", value: "Time Created", index: 4 }
+  const filterMenuItems = [
+    { key: "filterName", value: "Name" },
+    { key: "filterNamespace", value: "Namespace" },
+    { key: "filterType", value: "Type" }
   ];
-  const toolbarItems = (
+  const typeFilterMenuItems = [
+    { key: "typeStandard", value: "Standard" },
+    { key: "typeBrokered", value: "Brokered" }
+  ];
+
+  const onClickSearchIcon = (event: any) => {
+    if (filterValue) {
+      if (filterValue === "Name") {
+        if (nameSelected && nameSelected.trim() !== "" && filterNames)
+          if (filterNames.map(filter => filter.value).indexOf(nameSelected) < 0)
+            setFilterNames([
+              ...filterNames,
+              { value: nameSelected.trim(), isExact: true }
+            ]);
+        if (!nameSelected && nameInput && nameInput.trim() !== "")
+          if (
+            filterNames.map(filter => filter.value).indexOf(nameInput.trim()) <
+            0
+          )
+            setFilterNames([
+              ...filterNames,
+              { value: nameInput.trim(), isExact: false }
+            ]);
+        setNameSelected(undefined);
+      } else if (filterValue === "Namespace") {
+        if (namespaceSelected && namespaceSelected.trim() !== "" && filterNames)
+          if (
+            filterNamespaces
+              .map(filter => filter.value)
+              .indexOf(namespaceSelected) < 0
+          ) {
+            setFilterNamespaces([
+              ...filterNamespaces,
+              { value: namespaceSelected.trim(), isExact: true }
+            ]);
+          }
+        if (
+          !namespaceSelected &&
+          nameSpaceInput &&
+          nameSpaceInput.trim() !== ""
+        )
+          if (
+            filterNamespaces
+              .map(filter => filter.value)
+              .indexOf(nameSpaceInput.trim()) < 0
+          )
+            setFilterNamespaces([
+              ...filterNamespaces,
+              { value: nameSpaceInput.trim(), isExact: false }
+            ]);
+        setNamespaceSelected(undefined);
+      }
+    }
+  };
+
+  const onDelete = (
+    type: string | DataToolbarChip,
+    id: string | DataToolbarChip
+  ) => {
+    let index;
+    switch (type) {
+      case "Name":
+        if (filterNames && id) {
+          index = filterNames
+            .map(filter => filter.value)
+            .indexOf(id.toString());
+          if (index >= 0) filterNames.splice(index, 1);
+          setFilterNames([...filterNames]);
+        }
+        break;
+      case "Namespace":
+        if (filterNamespaces && id) {
+          index = filterNamespaces
+            .map(filter => filter.value)
+            .indexOf(id.toString());
+          if (index >= 0) filterNamespaces.splice(index, 1);
+          setFilterNamespaces([...filterNamespaces]);
+        }
+        setFilterNamespaces([...filterNamespaces]);
+        break;
+      case "Type":
+        setFilterType(null);
+        break;
+    }
+  };
+  const onFilterSelect = (event: any) => {
+    setFilterValue(event.target.value);
+    setFilterIsExpanded(!filterIsExpanded);
+  };
+
+  const onTypeFilterSelect = (event: any) => {
+    setFilterType(event.target.value);
+    setTypeFilterIsExpanded(!typeFilterIsExpanded);
+  };
+
+  const onNameSelectToggle = () => {
+    setIsSelectNameExpanded(!isSelectNameExpanded);
+  };
+
+  const onNamespaceSelectToggle = () => {
+    setIsSelectNamespaceExpanded(!isSelectNamespaceExpanded);
+  };
+
+  const createSelectOptionObject = (value: string) => {
+    const data: ISelectOption = { value: value, isDisabled: false };
+    return data;
+  };
+
+  const onChangeNameData = async (value: string) => {
+    setNameOptions(undefined);
+
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
+      setNameOptions([]);
+      return;
+    }
+    const response = await client.query<
+      ISearchNameOrNameSpaceAddressSpaceListResponse
+    >({
+      query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(
+        true,
+        value.trim()
+      ),
+      fetchPolicy: FetchPolicy.NETWORK_ONLY
+    });
+    if (
+      response &&
+      response.data &&
+      response.data.addressSpaces &&
+      response.data.addressSpaces.addressSpaces &&
+      response.data.addressSpaces.addressSpaces.length > 0
+    ) {
+      let obtainedList = response.data.addressSpaces.addressSpaces.map(
+        (link: any) => {
+          return link.metadata.name;
+        }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const filteredNameOptions = getSelectOptionList(
+        obtainedList,
+        response.data.addressSpaces.total
+      );
+      if (filteredNameOptions.length > 0) setNameOptions(filteredNameOptions);
+    }
+  };
+
+  const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNameInput(e.target.value);
+    onChangeNameData(e.target.value);
+    const options: React.ReactElement[] = nameOptions
+      ? nameOptions.map((option, index) => (
+          <SelectOption key={index} value={option} />
+        ))
+      : [];
+    return options;
+  };
+
+  const onChangeNamespaceData = async (value: string) => {
+    setNamespaceOptions(undefined);
+    setNameOptions(undefined);
+    if (value.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
+      setNameOptions([]);
+      return;
+    }
+    const response = await client.query<
+      ISearchNameOrNameSpaceAddressSpaceListResponse
+    >({
+      query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(
+        false,
+        value.trim()
+      )
+    });
+    if (
+      response &&
+      response.data &&
+      response.data.addressSpaces &&
+      response.data.addressSpaces.addressSpaces &&
+      response.data.addressSpaces.addressSpaces.length > 0
+    ) {
+      let obtainedList = response.data.addressSpaces.addressSpaces.map(
+        (link: any) => {
+          return link.metadata.namespace;
+        }
+      );
+      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
+      const uniqueList = getSelectOptionList(
+        obtainedList,
+        response.data.addressSpaces.total
+      );
+      if (uniqueList.length > 0) setNamespaceOptions(uniqueList);
+    }
+  };
+
+  const onNamespaceSelectFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setNameSpaceInput(e.target.value);
+    onChangeNamespaceData(e.target.value);
+    const options: React.ReactElement[] = namespaceOptions
+      ? namespaceOptions.map((option, index) => (
+          <SelectOption key={index} value={option} />
+        ))
+      : [];
+    return options;
+  };
+
+  const onNameSelect = (event: any, selection: string | SelectOptionObject) => {
+    setNameSelected(selection.toString());
+    setIsSelectNameExpanded(false);
+  };
+
+  const onNamespaceSelect = (
+    event: any,
+    selection: string | SelectOptionObject
+  ) => {
+    setNamespaceSelected(selection.toString());
+    setIsSelectNamespaceExpanded(false);
+  };
+
+  const checkIsFilterApplied = () => {
+    if (
+      (filterNames && filterNames.length > 0) ||
+      (filterNamespaces && filterNamespaces.length > 0) ||
+      (filterType && filterType.trim() !== "")
+    ) {
+      return true;
+    }
+    return false;
+  };
+  const toggleGroupItems = (
     <>
-      <AddressSpaceToolbar
-        filterValue={filterValue}
-        setFilterValue={setFilterValue}
-        filterNames={filterNames}
-        setFilterNames={setFilterNames}
-        filterNamespaces={filterNamespaces}
-        setFilterNamespaces={setFilterNamespaces}
-        filterType={filterType}
-        setFilterType={setFilterType}
-        totalAddressSpaces={totalAddressSpaces}
-      />
-      {width < 769 && (
-        <SortForMobileView
-          sortMenu={sortMenuItems}
-          sortValue={sortValue}
-          setSortValue={setSortValue}
-        />
-      )}
-      <DataToolbarItem>
-        <AddressSpaceListKebab
-          createAddressSpaceOnClick={onCreateAddressSpace}
-          onDeleteAll={onDeleteAll}
-          isDeleteAllDisabled={isDeleteAllDisabled}
-        />
-      </DataToolbarItem>
+      <DataToolbarGroup variant="filter-group">
+        <DataToolbarFilter categoryName="Filter">
+          <Dropdown
+            id="al-filter-dropdown"
+            position="left"
+            onSelect={onFilterSelect}
+            isOpen={filterIsExpanded}
+            toggle={
+              <DropdownToggle onToggle={setFilterIsExpanded}>
+                <FilterIcon />
+                &nbsp;
+                {filterValue && filterValue.trim() !== ""
+                  ? filterValue
+                  : "Filter"}
+              </DropdownToggle>
+            }
+            dropdownItems={filterMenuItems.map(option => (
+              <DropdownItem
+                id={`al-filter-dropdown${option.key}`}
+                key={option.key}
+                value={option.value}
+                itemID={option.key}
+                component={"button"}
+              >
+                {option.value}
+              </DropdownItem>
+            ))}
+          />
+        </DataToolbarFilter>
+        {filterValue && filterValue.trim() !== "" && (
+          <>
+            <DataToolbarItem>
+              <DataToolbarFilter
+                chips={filterNames.map(filter => filter.value)}
+                deleteChip={onDelete}
+                categoryName="Name"
+              >
+                {filterValue && filterValue === "Name" && (
+                  <InputGroup>
+                    <Select
+                      id="al-filter-input-name"
+                      variant={SelectVariant.typeahead}
+                      aria-label="Select a Name"
+                      onToggle={onNameSelectToggle}
+                      onSelect={onNameSelect}
+                      onClear={() => {
+                        setNameSelected(undefined);
+                        setIsSelectNameExpanded(false);
+                      }}
+                      maxHeight="200px"
+                      selections={nameSelected}
+                      onFilter={onNameSelectFilterChange}
+                      isExpanded={isSelectNameExpanded}
+                      ariaLabelledBy={"typeahead-select-id"}
+                      placeholderText="Select name"
+                      isDisabled={false}
+                      isCreatable={false}
+                    >
+                      {nameOptions && nameOptions.length > 0 ? (
+                        nameOptions.map((option, index) => (
+                          <SelectOption
+                            key={index}
+                            value={option.value}
+                            isDisabled={option.isDisabled}
+                          />
+                        ))
+                      ) : nameInput.trim().length <
+                        TYPEAHEAD_REQUIRED_LENGTH ? (
+                        <SelectOption
+                          key={"invalid-input-length"}
+                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                          disabled={true}
+                        />
+                      ) : (
+                        <SelectOption
+                          key={"no-results-found"}
+                          value={TypeAheadMessage.NO_RESULT_FOUND}
+                          disabled={true}
+                        />
+                      )}
+                      {/* {} */}
+                    </Select>
+                    <Button
+                      id="al-filter-search-name"
+                      variant={ButtonVariant.control}
+                      aria-label="search button for search input"
+                      onClick={onClickSearchIcon}
+                    >
+                      <SearchIcon />
+                    </Button>
+                  </InputGroup>
+                )}
+              </DataToolbarFilter>
+            </DataToolbarItem>
+            <DataToolbarItem>
+              <DataToolbarFilter
+                chips={filterNamespaces.map(filter => filter.value)}
+                deleteChip={onDelete}
+                categoryName="Namespace"
+              >
+                {filterValue && filterValue === "Namespace" && (
+                  <InputGroup>
+                    <Select
+                      id="al-filter-input-namespace"
+                      variant={SelectVariant.typeahead}
+                      aria-label="Select a Namespace"
+                      onToggle={onNamespaceSelectToggle}
+                      onSelect={onNamespaceSelect}
+                      onClear={() => {
+                        setNamespaceSelected(undefined);
+                        setIsSelectNamespaceExpanded(false);
+                      }}
+                      maxHeight="200px"
+                      selections={namespaceSelected}
+                      onFilter={onNamespaceSelectFilterChange}
+                      isExpanded={isSelectNamespaceExpanded}
+                      ariaLabelledBy={"typeahead-select-id"}
+                      placeholderText="Select Namespace"
+                      isDisabled={false}
+                      isCreatable={false}
+                    >
+                      {namespaceOptions && namespaceOptions.length > 0 ? (
+                        namespaceOptions.map((option, index) => (
+                          <SelectOption
+                            key={index}
+                            value={option.value}
+                            isDisabled={option.isDisabled}
+                          />
+                        ))
+                      ) : nameSpaceInput.trim().length <
+                        TYPEAHEAD_REQUIRED_LENGTH ? (
+                        <SelectOption
+                          key={"invalid-input-length"}
+                          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                          disabled={true}
+                        />
+                      ) : (
+                        <SelectOption
+                          key={"no-results-found"}
+                          value={TypeAheadMessage.NO_RESULT_FOUND}
+                          disabled={true}
+                        />
+                      )}
+                      {/* {} */}
+                    </Select>
+                    <Button
+                      id="al-filter-search-namespace"
+                      variant={ButtonVariant.control}
+                      aria-label="search button for search input"
+                      onClick={onClickSearchIcon}
+                    >
+                      <SearchIcon />
+                    </Button>
+                  </InputGroup>
+                )}
+              </DataToolbarFilter>
+            </DataToolbarItem>
+            <DataToolbarItem>
+              <DataToolbarFilter
+                chips={filterType ? [filterType] : []}
+                deleteChip={onDelete}
+                categoryName="Type"
+              >
+                {filterValue && filterValue === "Type" && (
+                  <InputGroup>
+                    <Dropdown
+                      id="al-filter-dropdown-type"
+                      position="left"
+                      onSelect={onTypeFilterSelect}
+                      isOpen={typeFilterIsExpanded}
+                      toggle={
+                        <DropdownToggle onToggle={setTypeFilterIsExpanded}>
+                          {filterType && filterType.trim() !== ""
+                            ? filterType
+                            : "Select Type"}
+                        </DropdownToggle>
+                      }
+                      dropdownItems={typeFilterMenuItems.map(option => (
+                        <DropdownItem
+                          id={`al-filter-dropdown-item-type${option.key}`}
+                          key={option.key}
+                          value={option.value}
+                          itemID={option.key}
+                          component={"button"}
+                        >
+                          {option.value}
+                        </DropdownItem>
+                      ))}
+                    />
+                  </InputGroup>
+                )}
+              </DataToolbarFilter>
+            </DataToolbarItem>
+          </>
+        )}
+      </DataToolbarGroup>
     </>
   );
   return (
-    <DataToolbar
-      id="data-toolbar-with-filter"
-      className="pf-m-toggle-group-container"
-      collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onClearAllFilters}
+    <DataToolbarToggleGroup
+      toggleIcon={
+        <>
+          <FilterIcon />
+          {checkIsFilterApplied() && (
+            <Badge key={1} isRead>
+              {totalAddressSpaces}
+            </Badge>
+          )}
+        </>
+      }
+      breakpoint="xl"
     >
-      <DataToolbarContent>{toolbarItems}</DataToolbarContent>
-    </DataToolbar>
+      {toggleGroupItems}
+    </DataToolbarToggleGroup>
+  );
+};
+
+export const AddressSpaceListKebab: React.FunctionComponent<IAddressSpaceListKebabProps> = ({
+  createAddressSpaceOnClick,
+  onDeleteAll,
+  isDeleteAllDisabled
+}) => {
+  const [isKebabOpen, setIsKebabOpen] = React.useState(false);
+
+  const dropdownItems = [
+    <DropdownItem
+      id="as-list-delete-all"
+      key="delete-all"
+      component="button"
+      value="deleteAll"
+      isDisabled={isDeleteAllDisabled}
+    >
+      Delete Selected
+    </DropdownItem>
+    // <OverflowMenuDropdownItem key="secondary" isShared={true}>
+    //   Create Address
+    // </OverflowMenuDropdownItem>,
+    // <OverflowMenuDropdownItem key="delete-all">
+    //   Delete All
+    // </OverflowMenuDropdownItem>
+  ];
+  const onKebabToggle = (isOpen: boolean) => {
+    setIsKebabOpen(isOpen);
+  };
+
+  const onKebabSelect = async (event: any) => {
+    if (event.target.value === "deleteAll") {
+      await onDeleteAll();
+    }
+    setIsKebabOpen(!isKebabOpen);
+  };
+  return (
+    <>
+      <OverflowMenu breakpoint="lg">
+        <OverflowMenuContent isPersistent>
+          <OverflowMenuGroup groupType="button" isPersistent>
+            {/* Remove is Persistent after fixing dropdown items for overflow menu */}
+            <OverflowMenuItem isPersistent>
+              <Button
+                id="al-filter-overflow-button"
+                variant={ButtonVariant.primary}
+                onClick={createAddressSpaceOnClick}
+              >
+                Create Address Space
+              </Button>
+            </OverflowMenuItem>
+          </OverflowMenuGroup>
+        </OverflowMenuContent>
+        <OverflowMenuControl hasAdditionalOptions>
+          <Dropdown
+            id="al-filter-overflow-dropdown"
+            onSelect={onKebabSelect}
+            toggle={
+              <KebabToggle
+                id="al-filter-overflow-kebab"
+                onToggle={onKebabToggle}
+              />
+            }
+            isOpen={isKebabOpen}
+            isPlain
+            dropdownItems={dropdownItems}
+          />
+        </OverflowMenuControl>
+      </OverflowMenu>
+    </>
   );
 };

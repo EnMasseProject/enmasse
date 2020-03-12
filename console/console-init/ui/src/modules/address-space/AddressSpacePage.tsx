@@ -19,7 +19,7 @@ import { useMutation } from "@apollo/react-hooks";
 import {
   AddressSpaceList,
   IAddressSpace,
-  AddressSpaceFilter
+  AddressSpaceToolbar
 } from "./components";
 import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
 import { compareObject } from "utils";
@@ -202,7 +202,7 @@ export default function AddressSpacePage() {
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
         <GridItem span={7}>
-          <AddressSpaceFilter
+          <AddressSpaceToolbar
             filterValue={filterValue}
             setFilterValue={setFilterValue}
             filterNames={filterNames}
