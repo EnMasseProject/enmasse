@@ -7,7 +7,6 @@ import * as React from "react";
 import { useLocation, useHistory } from "react-router";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import {
-  Pagination,
   PageSection,
   PageSectionVariants,
   Grid,
@@ -16,13 +15,16 @@ import {
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
 import { useMutation } from "@apollo/react-hooks";
-import { AddressSpaceListPage } from "./components/AddressSpaceListPage";
-import { AddressSpaceListFilterPage } from "./components/AddressSpaceListFilterPage";
+import {
+  AddressSpaceList,
+  IAddressSpace,
+  AddressSpaceToolbar
+} from "./components";
 import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
-import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
 import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { getHeaderForDeleteDialog, getDetailForDeleteDialog } from "./utils";
+import { Pagination } from "components";
 
 export default function AddressSpacePage() {
   const { dispatch } = useStoreContext();
@@ -42,7 +44,6 @@ export default function AddressSpacePage() {
   const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
   const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
   const location = useLocation();
-  const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
@@ -51,53 +52,13 @@ export default function AddressSpacePage() {
   >([]);
 
   const refetchQueries: string[] = ["all_address_spaces"];
-  const [
-    setDeleteAddressSpaceQueryVariables
-  ] = useMutation(DELETE_ADDRESS_SPACE, {
-    refetchQueries,
-    awaitRefetchQueries: true
-  });
-
-  const setSearchParam = React.useCallback(
-    (name: string, value: string) => {
-      searchParams.set(name, value.toString());
-    },
-    [searchParams]
+  const [setDeleteAddressSpaceQueryVariables] = useMutation(
+    DELETE_ADDRESS_SPACE,
+    {
+      refetchQueries,
+      awaitRefetchQueries: true
+    }
   );
-
-  const handlePageChange = React.useCallback(
-    (_: any, newPage: number) => {
-      setSearchParam("page", newPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
-
-  const handlePerPageChange = React.useCallback(
-    (_: any, newPerPage: number) => {
-      setSearchParam("page", "1");
-      setSearchParam("perPage", newPerPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
-
-  const renderPagination = (page: number, perPage: number) => {
-    return (
-      <Pagination
-        itemCount={totalAddressSpaces}
-        perPage={perPage}
-        page={page}
-        onSetPage={handlePageChange}
-        variant="top"
-        onPerPageSelect={handlePerPageChange}
-      />
-    );
-  };
 
   const deleteAddressSpace = async (
     addressSpace: IAddressSpace,
@@ -154,6 +115,7 @@ export default function AddressSpacePage() {
       setSelectedAddressSpaces([]);
     }
   };
+
   const onSelectAddressSpace = (data: IAddressSpace, isSelected: boolean) => {
     if (isSelected === true && selectedAddressSpaces.indexOf(data) === -1) {
       setSelectedAddressSpaces(prevState => [...prevState, data]);
@@ -198,7 +160,7 @@ export default function AddressSpacePage() {
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
         <GridItem span={7}>
-          <AddressSpaceListFilterPage
+          <AddressSpaceToolbar
             filterValue={filterValue}
             setFilterValue={setFilterValue}
             filterNames={filterNames}
@@ -215,11 +177,16 @@ export default function AddressSpacePage() {
           />
         </GridItem>
         <GridItem span={5}>
-          {totalAddressSpaces > 0 && renderPagination(page, perPage)}
+          <Pagination
+            itemCount={totalAddressSpaces}
+            variant={"top"}
+            page={page}
+            perPage={perPage}
+          />
         </GridItem>
       </Grid>
       <Divider />
-      <AddressSpaceListPage
+      <AddressSpaceList
         page={page}
         perPage={perPage}
         totalAddressSpaces={totalAddressSpaces}
@@ -237,7 +204,12 @@ export default function AddressSpacePage() {
         onSelectAddressSpace={onSelectAddressSpace}
         onSelectAllAddressSpace={onSelectAllAddressSpace}
       />
-      {totalAddressSpaces > 0 && renderPagination(page, perPage)}
+      <Pagination
+        itemCount={totalAddressSpaces}
+        variant={"top"}
+        page={page}
+        perPage={perPage}
+      />
     </PageSection>
   );
 }
