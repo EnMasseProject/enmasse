@@ -10,23 +10,18 @@ import {
   ExclamationCircleIcon
 } from "@patternfly/react-icons";
 import { Badge } from "@patternfly/react-core";
+import { getType } from "utils";
 
 interface AddressSpaceTypeProps {
   type: string;
 }
+
 interface AddressSpaceStatusProps {
   phase: string;
   messages: Array<string>;
 }
-const typeToDisplay = (type: string) => {
-  switch (type && type.toLowerCase()) {
-    case "standard":
-      return " Standard";
-    case "brokered":
-      return " Brokered";
-  }
-};
-export const AddressSpaceIcon = () => {
+
+const AddressSpaceIcon = () => {
   return (
     <Badge
       style={{
@@ -38,7 +33,8 @@ export const AddressSpaceIcon = () => {
     </Badge>
   );
 };
-export const statusToDisplay = (phase: string) => {
+
+const statusToDisplay = (phase: string) => {
   let icon;
   switch (phase.toLowerCase()) {
     case "active":
@@ -60,13 +56,14 @@ export const statusToDisplay = (phase: string) => {
     </span>
   );
 };
-export const AddressSpaceType: React.FunctionComponent<AddressSpaceTypeProps> = ({
+
+const AddressSpaceType: React.FunctionComponent<AddressSpaceTypeProps> = ({
   type
 }) => {
-  return <>{typeToDisplay(type)}</>;
+  return <>{getType(type)}</>;
 };
 
-export const AddressSpaceStatus: React.FunctionComponent<AddressSpaceStatusProps> = ({
+const AddressSpaceStatus: React.FunctionComponent<AddressSpaceStatusProps> = ({
   phase,
   messages
 }) => {
@@ -81,4 +78,11 @@ export const AddressSpaceStatus: React.FunctionComponent<AddressSpaceStatusProps
       ))}
     </>
   );
+};
+
+export {
+  AddressSpaceStatus,
+  AddressSpaceType,
+  statusToDisplay,
+  AddressSpaceIcon
 };

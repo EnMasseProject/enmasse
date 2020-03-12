@@ -4,3 +4,5 @@
  */
 
 export * from "./utils";
+export * from "./AddressSpaceFormatter";
+export * from "./TableFormatter";
