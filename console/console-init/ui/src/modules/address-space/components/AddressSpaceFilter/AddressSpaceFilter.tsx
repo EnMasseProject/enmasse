@@ -36,14 +36,12 @@ import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "types/ResponseTy
 import { useApolloClient } from "@apollo/react-hooks";
 import {
   TypeAheadMessage,
-  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   FetchPolicy,
   TYPEAHEAD_REQUIRED_LENGTH
 } from "constants/constants";
 import { ISelectOption, getSelectOptionList } from "utils";
 
-interface IAddressSpaceListFilterProps {
+interface IAddressSpaceFilterProps {
   filterValue?: string;
   setFilterValue: (value: string) => void;
   filterNames: any[];
@@ -61,7 +59,7 @@ interface IAddressSpaceListKebabProps {
   onDeleteAll: () => void;
 }
 
-export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFilterProps> = ({
+export const AddressSpaceFilter: React.FunctionComponent<IAddressSpaceFilterProps> = ({
   filterValue,
   setFilterValue,
   filterNames,
