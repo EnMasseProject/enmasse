@@ -568,17 +568,21 @@ public abstract class Kubernetes {
      * @throws Exception whe deployment failed
      */
     public void createDeploymentFromResource(String namespace, Deployment resources) throws Exception {
-        createDeploymentFromResource(namespace, resources, 2, TimeUnit.MINUTES);
+        createDeploymentFromResource(namespace, resources, 2, TimeUnit.MINUTES, true);
     }
 
-    public void createDeploymentFromResource(String namespace, Deployment resources, long time, TimeUnit unit) throws Exception {
+    public void createDeploymentFromResource(String namespace, Deployment resources, long time, TimeUnit unit, boolean doLog) throws Exception {
         if (!deploymentExists(namespace, resources.getMetadata().getName())) {
             Deployment depRes = client.apps().deployments().inNamespace(namespace).create(resources);
             Deployment result = client.apps().deployments().inNamespace(namespace)
                     .withName(depRes.getMetadata().getName()).waitUntilReady(time, unit);
-            log.info("Deployment {} created", result.getMetadata().getName());
+            if (doLog) {
+                log.info("Deployment {} created", result.getMetadata().getName());
+            }
         } else {
-            log.info("Deployment {} already exists", resources.getMetadata().getName());
+            if (doLog) {
+                log.info("Deployment {} already exists", resources.getMetadata().getName());
+            }
         }
     }
 
@@ -590,11 +594,19 @@ public abstract class Kubernetes {
      * @return endpoint of new service
      */
     public void createServiceFromResource(String namespace, Service resources) {
+        createServiceFromResource(namespace, resources, true);
+    }
+
+    public void createServiceFromResource(String namespace, Service resources, boolean doLog) {
         if (!serviceExists(namespace, resources.getMetadata().getName())) {
             Service serRes = client.services().inNamespace(namespace).create(resources);
-            log.info("Service {} created", serRes.getMetadata().getName());
+            if (doLog) {
+                log.info("Service {} created", serRes.getMetadata().getName());
+            }
         } else {
-            log.info("Service {} already exists", resources.getMetadata().getName());
+            if (doLog) {
+                log.info("Service {} already exists", resources.getMetadata().getName());
+            }
         }
     }
 
@@ -605,11 +617,19 @@ public abstract class Kubernetes {
      * @param resources resources
      */
     public void createIngressFromResource(String namespace, Ingress resources) {
+        createIngressFromResource(namespace, resources, true);
+    }
+
+    public void createIngressFromResource(String namespace, Ingress resources, boolean doLog) {
         if (!ingressExists(namespace, resources.getMetadata().getName())) {
             Ingress serRes = client.extensions().ingresses().inNamespace(namespace).create(resources);
-            log.info("Ingress {} created", serRes.getMetadata().getName());
+            if (doLog) {
+                log.info("Ingress {} created", serRes.getMetadata().getName());
+            }
         } else {
-            log.info("Ingress {} already exists", resources.getMetadata().getName());
+            if (doLog) {
+                log.info("Ingress {} already exists", resources.getMetadata().getName());
+            }
         }
     }
 
@@ -620,8 +640,14 @@ public abstract class Kubernetes {
      * @param ingressName ingress name
      */
     public void deleteIngress(String namespace, String ingressName) {
+        deleteIngress(namespace, ingressName, true);
+    }
+
+    public void deleteIngress(String namespace, String ingressName, boolean doLog) {
         client.extensions().ingresses().inNamespace(namespace).withName(ingressName).cascading(true).delete();
-        log.info("Ingress {} deleted", ingressName);
+        if (doLog) {
+            log.info("Ingress {} deleted", ingressName);
+        }
     }
 
     /**
@@ -691,8 +717,14 @@ public abstract class Kubernetes {
      * @param appName
      */
     public void deleteDeployment(String namespace, String appName) {
+        deleteDeployment(namespace, appName, true);
+    }
+
+    public void deleteDeployment(String namespace, String appName, boolean doLog) {
         client.apps().deployments().inNamespace(namespace).withName(appName).cascading(true).delete();
-        log.info("Deployment {} removed", appName);
+        if (doLog) {
+            log.info("Deployment {} removed", appName);
+        }
     }
 
     /***
@@ -712,8 +744,14 @@ public abstract class Kubernetes {
      * @param serviceName service name
      */
     public void deleteService(String namespace, String serviceName) {
+        deleteService(namespace, serviceName, true);
+    }
+
+    public void deleteService(String namespace, String serviceName, boolean doLog) {
         client.services().inNamespace(namespace).withName(serviceName).cascading(true).delete();
-        log.info("Service {} removed", serviceName);
+        if (doLog) {
+            log.info("Service {} removed", serviceName);
+        }
     }
 
     /**

@@ -5,12 +5,11 @@
 package io.enmasse.systemtest.scale;
 
 import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.scale.metrics.ScaleTestClientMetricsClient;
 
 /**
  * Framework assumes that all addresses passed to a messaging-client are of the same type
  */
-public class ScaleTestClientConfiguration <X extends ScaleTestClientMetricsClient> {
+public class ScaleTestClientConfiguration {
 
     private ScaleTestClientType clientType;
     private String clientId;
@@ -23,16 +22,6 @@ public class ScaleTestClientConfiguration <X extends ScaleTestClientMetricsClien
     private String[] addresses;
 
     private Integer linksPerConnection;
-
-    private X metricsClient;
-
-    public X getMetricsClient() {
-        return metricsClient;
-    }
-
-    public void setMetricsClient(X metricsClient) {
-        this.metricsClient = metricsClient;
-    }
 
     public ScaleTestClientConfiguration() {
 		// empty

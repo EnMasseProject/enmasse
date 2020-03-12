@@ -34,7 +34,7 @@ public class ScaleTestClientMetricsClient {
 
     protected ScaleTestClientMetricsClient(Endpoint metricsEndpoint) throws IOException {
         var url = new URL("http", metricsEndpoint.getHost(), metricsEndpoint.getPort(), "/metrics");
-        log.info("Scrapping from {}", url);
+        log.debug("Scrapping from {}", url);
         scraper = new PrometheusScraper(url, PrometheusDataFormat.TEXT);
     }
 

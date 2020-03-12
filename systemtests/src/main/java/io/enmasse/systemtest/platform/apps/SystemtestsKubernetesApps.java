@@ -778,10 +778,11 @@ public class SystemtestsKubernetesApps {
 
     public static void deployScaleTestClient(Kubernetes kubeClient, ScaleTestClientConfiguration clientConfiguration) throws Exception {
         String clientId = UUID.randomUUID().toString();
+        log.info("Deploying scale test client {}", clientId);
         var labels = getScaleTestClientLabels(clientConfiguration.getClientType(), clientId);
-        kubeClient.createServiceFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientServiceResource(clientId, labels));
-        kubeClient.createDeploymentFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientDeployment(clientId, clientConfiguration, labels), 4, TimeUnit.MINUTES);
-        kubeClient.createIngressFromResource(SCALE_TEST_CLIENTS_PROJECT, getSystemtestsIngressResource(SCALE_TEST_CLIENT+"-"+clientId, 8080));
+        kubeClient.createServiceFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientServiceResource(clientId, labels), false);
+        kubeClient.createDeploymentFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientDeployment(clientId, clientConfiguration, labels), 4, TimeUnit.MINUTES, false);
+        kubeClient.createIngressFromResource(SCALE_TEST_CLIENTS_PROJECT, getSystemtestsIngressResource(SCALE_TEST_CLIENT+"-"+clientId, 8080), false);
         clientConfiguration.setClientId(clientId);
         TestUtils.waitForNReplicas(1, SCALE_TEST_CLIENTS_PROJECT, labels, new TimeoutBudget(30, TimeUnit.SECONDS));
     }
@@ -790,6 +791,7 @@ public class SystemtestsKubernetesApps {
         return new Endpoint(kubeClient.getIngressHost(SCALE_TEST_CLIENTS_PROJECT, SCALE_TEST_CLIENT+"-"+clientId), 80);
     }
 
+    //TODO maybe remove
     public static void deleteScaleTestClient(Kubernetes kubeClient, ScaleTestClientConfiguration client, Path logsPath) {
         String resourcesName = SCALE_TEST_CLIENT + "-" + client.getClientId();
         if (kubeClient.deploymentExists(SCALE_TEST_CLIENTS_PROJECT, resourcesName)) {
@@ -819,9 +821,9 @@ public class SystemtestsKubernetesApps {
             var clientType = deployment.getMetadata().getLabels().get(SCALE_TEST_CLIENT_TYPE_LABEL);
             collectLogsScaleTestClient(clientId, logsPath, getScaleTestClientLabels(ScaleTestClientType.fromValue(clientType), clientId));
             String resourcesName = SCALE_TEST_CLIENT + "-" + clientId;
-            kubeClient.deleteDeployment(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
-            kubeClient.deleteService(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
-            kubeClient.deleteIngress(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
+            kubeClient.deleteDeployment(SCALE_TEST_CLIENTS_PROJECT, resourcesName, false);
+            kubeClient.deleteService(SCALE_TEST_CLIENTS_PROJECT, resourcesName, false);
+            kubeClient.deleteIngress(SCALE_TEST_CLIENTS_PROJECT, resourcesName, false);
         }
 
         kubeClient.deleteNamespace(SCALE_TEST_CLIENTS_PROJECT);

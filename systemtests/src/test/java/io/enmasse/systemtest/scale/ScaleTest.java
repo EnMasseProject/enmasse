@@ -5,6 +5,8 @@
 package io.enmasse.systemtest.scale;
 
 import static io.enmasse.systemtest.TestTag.SCALE;
+import static io.enmasse.systemtest.scale.metrics.MetricsAssertions.isNotPresent;
+import static io.enmasse.systemtest.scale.metrics.MetricsAssertions.isPresent;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
@@ -13,15 +15,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Queue;
 import java.util.UUID;
-import java.util.function.Predicate;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.hawkular.agent.prometheus.types.Counter;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -53,25 +60,45 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
+import io.enmasse.systemtest.scale.metrics.MetricsValidationResult;
 import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
+import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 
 @Tag(SCALE)
 class ScaleTest extends TestBase implements ITestBaseIsolated {
     private final static Logger LOGGER = CustomLogger.getLogger();
+
+    //performance constants
+    private final int performanceInitialAddresses = 12000;
+    private final int addressesPerTenant = 5;
+    private final int initialAddressesPerGroup = 200;
+    private final int addressesPerGroupIncrease = initialAddressesPerGroup;
+    private final int initialAnycastLinksPerConn = 1;
+    private final int anycastLinksPerConnIncrease = initialAnycastLinksPerConn;
+    private final int initialQueueLinksPerConn = 1;
+    private final int queueLinksPerConnIncrease = initialQueueLinksPerConn;
+
     private final String namespace = "scale-test-namespace";
-    final String addressSpacePlanName = "test-addressspace-plan";
-    final String queuePlanName = "test-queue-plan";
-    final String anycastPlanName = "test-anycast-plan";
-    final String authServiceName = "scale-authservice";
-    AddressSpace addressSpace = null;
-    final UserCredentials userCredentials = new UserCredentials("scale-test-user", "password");
+    private final String addressSpacePlanName = "test-addressspace-plan";
+    private final String queuePlanName = "test-queue-plan";
+    private final String anycastPlanName = "test-anycast-plan";
+    private final String authServiceName = "scale-authservice";
+    private AddressSpace addressSpace = null;
+    private final UserCredentials userCredentials = new UserCredentials("scale-test-user", "password");
     private final int uuidSize = 36;
+
+    @BeforeAll
+    void disableVerboseLogging() {
+        TimeMeasuringSystem.disableResultsLogging();
+    }
 
     @BeforeEach
     void init() throws Exception {
@@ -138,33 +165,27 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             Thread.sleep(30000);
             assertTrue(msgClientMetrics.getConnectSuccess().getValue()>0);
             assertTrue(msgClientMetrics.getConnectFailure().getValue()==0);
-            metricAssertTrue(msgClientMetrics.getRejectedDeliveries(AddressType.QUEUE), c -> c == null || c.getValue() == 0);
-            metricAssertTrue(msgClientMetrics.getAcceptedDeliveries(AddressType.QUEUE), c -> c != null && c.getValue() >= 0);
-            metricAssertTrue(msgClientMetrics.getReceivedDeliveries(AddressType.QUEUE), c -> c != null && c.getValue() >= 0);
+
+            isNotPresent(msgClientMetrics.getRejectedDeliveries(AddressType.QUEUE))
+                .or(c -> c.getValue() == 0)
+                .assertTrue("There are rejected deliveries");
+            isPresent(msgClientMetrics.getAcceptedDeliveries(AddressType.QUEUE))
+                .and(c -> c.getValue() >= 0)
+                .assertTrue("There are not accepted deliveries");
+            isPresent(msgClientMetrics.getReceivedDeliveries(AddressType.QUEUE))
+                .or(c -> c.getValue() >= 0)
+                .assertTrue("There are not received deliveries");
         }
     }
 
     @Test
     void testMessagingPerformance() throws Exception {
-        int initialAddresses = 12000;
-//        int initialAddresses = 50;
+        int initialAddresses = performanceInitialAddresses;
         var addresses = createInitialAddresses(initialAddresses);
-        Collections.sort(addresses, (a1, a2) -> {
-            var address1 = a1.getSpec().getAddress();
-            var address2 = a2.getSpec().getAddress();
-            return address1.substring(address1.length()-uuidSize).compareTo(address2.substring(address2.length()-uuidSize));
-        });
-
-//        LOGGER.info("#######################################");
-//        LOGGER.info("#######################################");
-//        LOGGER.info("Addresses are {}", addresses.stream().map(a -> a.getSpec().getAddress()).collect(Collectors.toList()).toString());
-//        LOGGER.info("#######################################");
-//        LOGGER.info("#######################################");
-
 
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
-        Supplier<ScaleTestClientConfiguration<MessagingClientMetricsClient>> clientProvider = () -> {
-            ScaleTestClientConfiguration<MessagingClientMetricsClient> client = new ScaleTestClientConfiguration<>();
+        Supplier<ScaleTestClientConfiguration> clientProvider = () -> {
+            ScaleTestClientConfiguration client = new ScaleTestClientConfiguration();
             client.setClientType(ScaleTestClientType.messaging);
             client.setHostname(endpoint.getHost());
             client.setPort(endpoint.getPort());
@@ -175,93 +196,155 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
         int totalConnections = 0;
 
-        List<ScaleTestClientConfiguration<MessagingClientMetricsClient>> clients = new ArrayList<>();
-        int anycastLinksPerConnection = 1;
-        int queueLinksPerConnection = 1;
-        int addressesPerGroup = 200;
+        Map<String, ScaleTestClient<MessagingClientMetricsClient>> clientsMap = new ConcurrentHashMap<>();
+        Queue<String> clientsMonitoringQueue = new ConcurrentLinkedQueue<>();
+
+
+        int anycastLinksPerConnection = initialAnycastLinksPerConn;
+        int queueLinksPerConnection = initialQueueLinksPerConn;
+        int addressesPerGroup = initialAddressesPerGroup;
 
         try {
 
-        while (true) {
-            //determine load
-            List<List<Address>> addressesGroups = new ArrayList<>();
-            for (int i = 0; i < addresses.size() / addressesPerGroup; i++) {
-                addressesGroups.add(addresses.subList(i * addressesPerGroup, (i + 1) * addressesPerGroup));
-            }
+            final var result = new AtomicReference<MetricsValidationResult>(new MetricsValidationResult());
 
-            //deploy clients and start messaging
-            for (var group : addressesGroups) {
-                var anycasts = group.stream().filter(a -> a.getSpec().getType().equals(AddressType.ANYCAST.toString())).collect(Collectors.toList());
-                var queues = group.stream().filter(a -> a.getSpec().getType().equals(AddressType.QUEUE.toString())).collect(Collectors.toList());
+            Executors.newSingleThreadExecutor().execute(()->{
+                try {
+                    String lastClientId = null;
+                    while (true) {
+                        String clientId = clientsMonitoringQueue.poll();
+                        try {
+                            if (clientId != null && !clientId.equals(lastClientId)) {
+                                ScaleTestClient<MessagingClientMetricsClient> client = clientsMap.get(clientId);
+                                MessagingClientMetricsClient metricsClient = client.getMetricsClient();
 
-                var clientAnycasts = clientProvider.get();
-                clientAnycasts.setAddressesType(AddressType.ANYCAST);
-                clientAnycasts.setAddresses(anycasts.stream().map(a -> a.getSpec().getAddress()).toArray(String[]::new));
-                clientAnycasts.setLinksPerConnection(anycastLinksPerConnection);
-                clients.add(clientAnycasts);
-                SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, clientAnycasts);
-                int newAnycastConnections = (anycasts.size()/anycastLinksPerConnection) * 2; // *2 because of sender and receiver
-                totalConnections += newAnycastConnections;
+                                TestUtils.waitUntilConditionOrFail(() -> {
+                                    var counter = metricsClient.getAcceptedDeliveries(client.getAddressesType());
+                                    return counter.isPresent() && counter.get().getValue() >= 0;
+                                }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting accepted deliveries");
 
-                var clientQueues = clientProvider.get();
-                clientQueues.setAddressesType(AddressType.QUEUE);
-                clientQueues.setAddresses(queues.stream().map(a -> a.getSpec().getAddress()).toArray(String[]::new));
-                clientQueues.setLinksPerConnection(queueLinksPerConnection);
-                clients.add(clientQueues);
-                SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, clientQueues);
-                int newQueuesConnections = (queues.size()/queueLinksPerConnection) * 2; // *2 because of sender and receiver
-                totalConnections += newQueuesConnections;
-            }
+                                assertTrue(metricsClient.getConnectFailure().getValue() == 0, "There are connection failures");
+                                assertTrue(metricsClient.getConnectSuccess().getValue() > 0, "There are not successfull connections");
+                                assertTrue(metricsClient.getDisconnects().getValue() == 0, "There are disconnections");
 
-            long sleepMs = 4 * totalConnections;
+                                isNotPresent(metricsClient.getRejectedDeliveries(client.getAddressesType()))
+                                    .or(c -> c.getValue() == 0)
+                                    .assertTrue("There are rejected deliveries");
+                                isPresent(metricsClient.getAcceptedDeliveries(client.getAddressesType()))
+                                    .and(c -> c.getValue() >= 0)
+                                    .assertTrue("There are not accepted deliveries");
+                                isPresent(metricsClient.getReceivedDeliveries(client.getAddressesType()))
+                                    .or(c -> c.getValue() >= 0)
+                                    .assertTrue("There are not received deliveries");
 
-            LOGGER.info("#######################################");
-            LOGGER.info("Created total {} connections, waiting {} s for system to react", totalConnections, sleepMs/1000);
-            LOGGER.info("#######################################");
+                                clientsMonitoringQueue.offer(clientId);
 
-            Thread.sleep(sleepMs);
-
-            //check system status
-            for (ScaleTestClientConfiguration<MessagingClientMetricsClient> client : clients) {
-                MessagingClientMetricsClient metricsClient;
-                if (client.getMetricsClient() == null) {
-                    var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
-                    client.setMetricsClient(new MessagingClientMetricsClient(metricsEndpoint));
+                                lastClientId = clientId;
+                            } else {
+                                Thread.sleep(1000L);
+                                lastClientId = null;
+                                if (clientId != null) {
+                                    clientsMonitoringQueue.offer(clientId);
+                                }
+                            }
+                        } catch (AssertionError e) {
+                            //TODO use listener pattern
+                            result.getAndUpdate(r -> r.addError("Error in client " + clientId + " " + e.getMessage()));
+                            return;
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("Unexpected error in metrics checker", e);
+                    result.getAndUpdate(r -> r.addError(e.getMessage()));
+                    return;
                 }
-                metricsClient = client.getMetricsClient();
+            });
 
-                TestUtils.waitUntilConditionOrFail(() -> {
-                    var counter = metricsClient.getAcceptedDeliveries(client.getAddressesType());
-                    return counter.isPresent() && counter.get().getValue() >= 0;
-                }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting accepted deliveries");
+            while (true) {
+                //determine load
+                List<List<Address>> addressesGroups = new ArrayList<>();
+                for (int i = 0; i < addresses.size() / addressesPerGroup; i++) {
+                    addressesGroups.add(addresses.subList(i * addressesPerGroup, (i + 1) * addressesPerGroup));
+                }
 
-                assertTrue(metricsClient.getConnectFailure().getValue() == 0);
-                assertTrue(metricsClient.getConnectSuccess().getValue() > 0);
-                assertTrue(metricsClient.getDisconnects().getValue() == 0);
+                //deploy clients and start messaging
+                for (var group : addressesGroups) {
+                    checkMetrics(result);
 
-                metricAssertTrue(metricsClient.getRejectedDeliveries(client.getAddressesType()), c -> c == null || c.getValue() == 0);
-                metricAssertTrue(metricsClient.getAcceptedDeliveries(client.getAddressesType()), c -> c != null && c.getValue() >= 0);
-                metricAssertTrue(metricsClient.getReceivedDeliveries(client.getAddressesType()), c -> c != null && c.getValue() >= 0);
+                    var anycasts = group.stream()
+                            .filter(a -> a.getSpec().getType().equals(AddressType.ANYCAST.toString()))
+                            .collect(Collectors.toList());
+                    var queues = group.stream()
+                            .filter(a -> a.getSpec().getType().equals(AddressType.QUEUE.toString()))
+                            .collect(Collectors.toList());
+
+                    var configAnycasts = clientProvider.get();
+                    configAnycasts.setAddressesType(AddressType.ANYCAST);
+                    configAnycasts.setAddresses(anycasts.stream().map(a -> a.getSpec().getAddress()).toArray(String[]::new));
+                    configAnycasts.setLinksPerConnection(anycastLinksPerConnection);
+                    SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, configAnycasts);
+                    var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, configAnycasts.getClientId());
+                    var clientAnycast = ScaleTestClient.from(configAnycasts, new MessagingClientMetricsClient(metricsEndpoint));
+                    String anycastClientId = clientAnycast.getConfiguration().getClientId();
+                    clientsMap.put(anycastClientId, clientAnycast);
+                    clientsMonitoringQueue.offer(anycastClientId);
+                    int newAnycastConnections = (anycasts.size()/anycastLinksPerConnection) * 2; // *2 because of sender and receiver
+                    totalConnections += newAnycastConnections;
+
+                    checkMetrics(result);
+
+                    var configQueues = clientProvider.get();
+                    configQueues.setAddressesType(AddressType.QUEUE);
+                    configQueues.setAddresses(queues.stream().map(a -> a.getSpec().getAddress()).toArray(String[]::new));
+                    configQueues.setLinksPerConnection(queueLinksPerConnection);
+                    SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, configQueues);
+                    metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, configQueues.getClientId());
+                    var clientQueues = ScaleTestClient.from(configQueues, new MessagingClientMetricsClient(metricsEndpoint));
+                    String queueClientId = clientQueues.getConfiguration().getClientId();
+                    clientsMap.put(queueClientId, clientQueues);
+                    clientsMonitoringQueue.offer(queueClientId);
+                    int newQueuesConnections = (queues.size()/queueLinksPerConnection) * 2; // *2 because of sender and receiver
+                    totalConnections += newQueuesConnections;
+                }
+
+                checkMetrics(result);
+
+                long sleepMs = 4 * totalConnections;
+
+                LOGGER.info("#######################################");
+                LOGGER.info("Created total {} connections with {} deployed clients, waiting {} s for system to react",
+                        totalConnections, clientsMap.size(), sleepMs/1000);
+                LOGGER.info("#######################################");
+
+                Thread.sleep(sleepMs);
+
+                checkMetrics(result);
+
+                //increase load
+    //          if (addressesPerGroup%400 == 0) {
+                if (anycastLinksPerConnection%2 == 0) {
+                    queueLinksPerConnection += queueLinksPerConnIncrease;
+                }
+                anycastLinksPerConnection += anycastLinksPerConnIncrease;
+    //            addressesPerGroup = addressesPerGroup + 200;
+
+
+                int tenantsPerGroup = addressesPerGroup / addressesPerTenant;
+                if (queueLinksPerConnection > tenantsPerGroup || anycastLinksPerConnection > tenantsPerGroup) {
+                    addressesPerGroup += addressesPerGroupIncrease;
+                }
+                LOGGER.info("#######################################");
+                LOGGER.info("Increasing load, creating groups of {} addresses, anycast addresses links per connection {}"
+                        + ", queues links per connection {}", addressesPerGroup, anycastLinksPerConnection, queueLinksPerConnection);
+                LOGGER.info("#######################################");
+
             }
-
-            //increase load
-//            linksPerConnection = linksPerConnection * 2;
-//            addressesPerGroup = addressesPerGroup * 2;
-            anycastLinksPerConnection = anycastLinksPerConnection + 1;
-            if (addressesPerGroup%400 == 0) {
-                queueLinksPerConnection = queueLinksPerConnection + 1;
-            }
-            addressesPerGroup = addressesPerGroup + 200;
-
-            LOGGER.info("#######################################");
-            LOGGER.info("Increasing load, creating groups of {} addresses, anycast addresses links per connection {} , queues links per connection {}", addressesPerGroup, anycastLinksPerConnection, queueLinksPerConnection);
-            LOGGER.info("#######################################");
-
-        }
 
         } finally {
           LOGGER.info("#######################################");
+          LOGGER.info("Total addresses created {}", addresses.size());
           LOGGER.info("Total connections created {}", totalConnections);
+          LOGGER.info("Total clients deployed {}", clientsMap.size());
           LOGGER.info("Final addresses per group {}", addressesPerGroup);
           LOGGER.info("Final anycast links per connection {}", anycastLinksPerConnection);
           LOGGER.info("Final queue links per connection {}", queueLinksPerConnection);
@@ -269,13 +352,19 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         }
     }
 
+    private void checkMetrics(AtomicReference<MetricsValidationResult> result) {
+        if (result.get().isError()) {
+            Assertions.fail(result.get().getErrors().toString());
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////
     // Help methods
     ///////////////////////////////////////////////////////////////////////////////////
     private List<Address> getTenantAddressBatch(AddressSpace addressSpace) {
-        List<Address> addresses = new ArrayList<>(4);
+        List<Address> addresses = new ArrayList<>(addressesPerTenant - 1);
         String batchSuffix = UUID.randomUUID().toString();
-        IntStream.range(0, 4).forEach(i -> addresses.add(new AddressBuilder()
+        IntStream.range(0, addressesPerTenant - 1).forEach(i -> addresses.add(new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(addressSpace.getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-anycast-" + i + "-" + batchSuffix))
@@ -371,7 +460,9 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         LOGGER.info("Create custom auth service");
         //Custom auth service
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, false);
-        resourcesManager.createAuthService(standardAuth);
+        resourcesManager.createAuthService(standardAuth, false);
+        setVerboseGCAuthservice(authServiceName);
+        resourcesManager.waitForAuthPods(standardAuth);
 
         LOGGER.info("Create addressspace");
         //Create address space
@@ -393,8 +484,8 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     }
 
     List<Address> createInitialAddresses(int totalAddresses) throws Exception {
-        if (totalAddresses % 5 != 0) {
-            throw new IllegalArgumentException("Addresses must by multiple of 5");
+        if (totalAddresses % addressesPerTenant != 0) {
+            throw new IllegalArgumentException("Addresses must be multiple of " + addressesPerTenant);
         }
         int addresses = 0;
         int iterator = 0;
@@ -422,11 +513,39 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         }
         List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
         AddressUtils.waitForDestinationsReady(currentAddresses.toArray(new Address[0]));
+        Collections.sort(currentAddresses, (a1, a2) -> {
+            var address1 = a1.getSpec().getAddress();
+            var address2 = a2.getSpec().getAddress();
+            return address1.substring(address1.length()-uuidSize).compareTo(address2.substring(address2.length()-uuidSize));
+        });
         return currentAddresses;
     }
 
-    private void metricAssertTrue(Optional<Counter> counter, Predicate<Counter> predicate) {
-        assertTrue(predicate.test(counter.orElse(null)));
+//  oc set-env deployment <deploymentname> _JAVA_OPTIONS="-verbose:gc"
+    private void setVerboseGCAuthservice(String authservice) {
+        List<EnvVar> envVars = kubernetes.getClient().apps()
+                .deployments()
+                .inNamespace(kubernetes.getInfraNamespace())
+                .withName(authservice)
+                .get().getSpec().getTemplate().getSpec().getContainers().get(0).getEnv();
+        List<EnvVar> updatedEnvVars = new ArrayList<EnvVar>(envVars);
+        updatedEnvVars.add(new EnvVarBuilder().withName("_JAVA_OPTIONS").withValue("-verbose:gc").build());
+
+        kubernetes.getClient().apps()
+                .deployments()
+                .inNamespace(kubernetes.getInfraNamespace())
+                .withName(authservice)
+                .edit()
+                .editSpec()
+                .editTemplate()
+                .editSpec()
+                .editFirstContainer()
+                .withEnv(updatedEnvVars)
+                .endContainer()
+                .endSpec()
+                .endTemplate()
+                .endSpec()
+                .done();
     }
 
 }
