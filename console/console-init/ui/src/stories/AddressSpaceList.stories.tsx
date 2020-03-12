@@ -69,13 +69,13 @@ const rows: IAddressSpace[] = [
 
 stories.add("Address Space List", () => (
   <MemoryRouter>
-    <AddressSpaceList
+    {/* <AddressSpaceList
       onSelectAddressSpace={action("select addressSpace")}
       onSelectAllAddressSpace={action("SelectAllAddressSpaces")}
       rows={rows}
       onEdit={action("onEdit")}
       onDelete={action("onDelete")}
       onDownload={action("download Certificate")}
-    />
+    /> */}
   </MemoryRouter>
 ));
