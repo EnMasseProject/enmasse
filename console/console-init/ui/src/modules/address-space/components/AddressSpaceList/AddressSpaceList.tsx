@@ -7,9 +7,15 @@ import React from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
 import {
-  AddressSpaceList,
-  IAddressSpace
-} from "modules/address-space/components/AddressSpaceList";
+  Table,
+  TableVariant,
+  TableHeader,
+  TableBody,
+  IRowData,
+  IExtraData,
+  ISortBy
+} from "@patternfly/react-table";
+import { StyleSheet, css } from "@patternfly/react-styles";
 import { EmptyAddressSpace } from "modules/address-space/components/EmptyAddressSpace";
 import {
   DELETE_ADDRESS_SPACE,
@@ -17,14 +23,40 @@ import {
   DOWNLOAD_CERTIFICATE
 } from "graphql-module/queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
-import { ISortBy } from "@patternfly/react-table";
-import { compareTwoAddress } from "pages/AddressSpaceDetail/AddressList/AddressListPage";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 import { IObjectMeta_v1_Input } from "pages/AddressSpaceDetail/AddressSpaceDetailPage";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
+import { compareObject } from "utils";
+import {
+  getTableCells,
+  getActionResolver,
+  getTableColumns
+} from "modules/address-space/utils";
 
-interface AddressSpaceListPageProps {
+export const StyleForTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto",
+    paddingBottom: 100
+  }
+});
+
+export interface IAddressSpace {
+  name: string;
+  nameSpace: string;
+  creationTimestamp: string;
+  type: string;
+  displayName: string;
+  planValue: string;
+  isReady: boolean;
+  phase: string;
+  status?: "creating" | "deleting" | "running";
+  selected?: boolean;
+  messages: Array<string>;
+  authenticationService: string;
+}
+
+interface AddressSpaceListProps {
   page: number;
   perPage: number;
   totalAddressSpaces: number;
@@ -45,7 +77,7 @@ interface AddressSpaceListPageProps {
   ) => void;
   selectedAddressSpaces: Array<IAddressSpace>;
 }
-export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageProps> = ({
+export const AddressSpaceList: React.FunctionComponent<AddressSpaceListProps> = ({
   page,
   perPage,
   totalAddressSpaces,
@@ -140,7 +172,7 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   };
 
   //Download the certificate function
-  const downloadCertificate = async (data: IObjectMeta_v1_Input) => {
+  const onDownloadCertificate = async (data: IObjectMeta_v1_Input) => {
     const dataToDownload = await client.query({
       query: DOWNLOAD_CERTIFICATE,
       variables: {
@@ -186,11 +218,9 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
         addSpace.spec.authenticationService.name,
       selected:
         selectedAddressSpaces.filter(({ name, nameSpace }) =>
-          compareTwoAddress(
-            name,
-            addSpace.metadata.name,
-            nameSpace,
-            addSpace.metadata.namespace
+          compareObject(
+            { name, nameSpace: addSpace.metadata.namespace },
+            { name: addSpace.metadata.name, nameSpace }
           )
         ).length === 1
     })
@@ -201,19 +231,60 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
     setSortValue({ index: index, direction: direction });
   };
 
+  const tableRows = addressSpacesList.map(row => getTableCells(row));
+
+  const onSelect = async (
+    event: React.MouseEvent,
+    isSelected: boolean,
+    rowIndex: number,
+    rowData: IRowData,
+    extraData: IExtraData
+  ) => {
+    let rows;
+    if (rowIndex === -1) {
+      rows = tableRows.map(a => {
+        const data = a;
+        data.selected = isSelected;
+        return data;
+      });
+      onSelectAllAddressSpace(
+        rows.map(row => row.originalData),
+        isSelected
+      );
+    } else {
+      rows = [...tableRows];
+      rows[rowIndex].selected = isSelected;
+      onSelectAddressSpace(rows[rowIndex].originalData, isSelected);
+    }
+  };
+
+  const actionResolver = (rowData: IRowData) => {
+    return getActionResolver(
+      rowData,
+      onChangeEdit,
+      onChangeDelete,
+      onDownloadCertificate
+    );
+  };
+
   return (
     <>
       {totalAddressSpaces > 0 ? (
-        <AddressSpaceList
-          rows={addressSpacesList}
-          onSelectAddressSpace={onSelectAddressSpace}
-          onSelectAllAddressSpace={onSelectAllAddressSpace}
-          onEdit={onChangeEdit}
-          onDelete={onChangeDelete}
-          onSort={onSort}
-          sortBy={sortBy}
-          onDownload={downloadCertificate}
-        />
+        <div className={css(StyleForTable.scroll_overflow)}>
+          <Table
+            variant={TableVariant.compact}
+            onSelect={onSelect}
+            cells={getTableColumns}
+            rows={tableRows}
+            actionResolver={actionResolver}
+            aria-label="address space list"
+            onSort={onSort}
+            sortBy={sortBy}
+          >
+            <TableHeader id="aslist-table-header" />
+            <TableBody />
+          </Table>
+        </div>
       ) : (
         <EmptyAddressSpace />
       )}
