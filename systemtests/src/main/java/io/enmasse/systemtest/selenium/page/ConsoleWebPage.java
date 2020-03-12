@@ -951,7 +951,11 @@ public class ConsoleWebPage implements IWebPage {
     private boolean waitUntilLoginPage() {
         try {
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains("Log"));
-            selenium.clickOnItem(selenium.getDriver().findElement(By.tagName("button")));
+            try {
+                selenium.clickOnItem(selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Log in with OpenShift')]")));
+            } catch (Exception ex) {
+                log.info("Only openshift auth provider is enabled");
+            }
             return true;
         } catch (Exception ex) {
             selenium.takeScreenShot();
