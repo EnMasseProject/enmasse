@@ -13,7 +13,7 @@ import {
   sortable,
   ISortBy
 } from "@patternfly/react-table";
-import { StyleForTable } from "modules/address-space/components/AddressSpaceList";
+import { StyleForTable } from "modules/address-space/components/AddressSpaceList/AddressSpaceList";
 import { css } from "@patternfly/react-styles";
 
 interface ILinkListProps {
