@@ -5,14 +5,10 @@
 
 import React from "react";
 import { MemoryRouter } from "react-router";
-import {
-  AddressList,
-  IAddress
-} from "components/AddressSpace/Address/AddressList";
+import { AddressList, IAddress } from "modules/address/components/AddressList";
 import { action } from "@storybook/addon-actions";
-import { select } from "@storybook/addon-knobs";
 // import { AddressListFilter } from "..//Components/AddressSpace/AddressListFilter";
-import { EmptyAddress } from "components/AddressSpace/Address/EmptyAddress";
+import { EmptyAddress } from "modules/address/components/EmptyAddress";
 
 export default {
   title: "Address list"

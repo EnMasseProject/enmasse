@@ -63,4 +63,31 @@ const getType = (type: string) => {
   }
 };
 
+export const getTypeColor = (type: string) => {
+  let iconColor = "";
+  switch (type.toUpperCase()) {
+    case "Q": {
+      iconColor = "#8A8D90";
+      break;
+    }
+    case "T": {
+      iconColor = "#8481DD";
+      break;
+    }
+    case "S": {
+      iconColor = "#EC7A08";
+      break;
+    }
+    case "M": {
+      iconColor = "#009596";
+      break;
+    }
+    case "A": {
+      iconColor = "#F4C145";
+      break;
+    }
+  }
+  return iconColor;
+};
+
 export { getSelectOptionList, compareObject, getType };
