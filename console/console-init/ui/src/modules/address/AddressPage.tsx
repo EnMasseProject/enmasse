@@ -60,7 +60,7 @@ export interface IAddressSpacePlanResponse {
   };
 }
 
-export default function AddressesList() {
+export default function AddressPage() {
   const { dispatch } = useStoreContext();
   useDocumentTitle("Address List");
   useA11yRouteChange();

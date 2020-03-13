@@ -5,7 +5,7 @@ import {
   EditAddressSpace,
   CreateAddressSpace
 } from "modules/address-space/dialogs";
-import { EditAddress } from "modules/address/containers";
+import { EditAddress } from "modules/address/dialogs/EditAddress";
 
 const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.CREATE_ADDRESS_SPACE]: CreateAddressSpace,

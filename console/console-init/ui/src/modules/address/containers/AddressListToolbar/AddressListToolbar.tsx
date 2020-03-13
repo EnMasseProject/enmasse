@@ -10,7 +10,7 @@ import {
   DataToolbarItem,
   DataToolbarContent
 } from "@patternfly/react-core/dist/js/experimental";
-import { CreateAddressPage } from "modules/address/containers/CreateAddress/CreateAddressPage";
+import { CreateAddressPage } from "modules/address/dialogs/CreateAddress/CreateAddressPage";
 import { useParams } from "react-router";
 import { useApolloClient } from "@apollo/react-hooks";
 import { RETURN_ADDRESS_SPACE_DETAIL } from "graphql-module/queries";

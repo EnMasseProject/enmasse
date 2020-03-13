@@ -12,7 +12,7 @@ import {
   GridItem,
   Grid
 } from "@patternfly/react-core";
-import { GridStylesForTableHeader } from "modules/address/AddressListPage";
+import { GridStylesForTableHeader } from "modules/address/AddressPage";
 import { ConnectionLinksListPage } from "./ConnectionsLinksListPage";
 import { useLocation, useHistory } from "react-router";
 import { css } from "@patternfly/react-styles";

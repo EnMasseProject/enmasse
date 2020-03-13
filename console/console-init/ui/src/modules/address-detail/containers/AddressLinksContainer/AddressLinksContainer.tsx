@@ -10,7 +10,7 @@ import { IAddressLinksResponse } from "types/ResponseTypes";
 import {
   IAddressLink,
   AddressLinks
-} from "modules/address-detail/components/AddressLinks";
+} from "modules/address-detail/components/AddressLinks/AddressLinks";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { ISortBy } from "@patternfly/react-table";
 import { Loading } from "use-patternfly";

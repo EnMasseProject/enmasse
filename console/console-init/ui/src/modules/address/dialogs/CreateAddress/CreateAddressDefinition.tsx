@@ -45,7 +45,6 @@ export interface IAddressDefinition {
   topic: string;
   addressSpaceType: string;
   setTopic: (value: string) => void;
-  planDisabled?: boolean;
   typeOptions: IDropdownOption[];
   setTypeOptions: (values: IDropdownOption[]) => void;
   planOptions: IDropdownOption[];
@@ -86,7 +85,6 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
   setType,
   plan,
   setPlan,
-  planDisabled,
   addressSpaceType,
   topic,
   setTopic,

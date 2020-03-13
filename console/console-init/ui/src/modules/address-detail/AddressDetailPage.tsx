@@ -4,34 +4,27 @@
  */
 
 import * as React from "react";
-import {
-  BreadcrumbItem,
-  Breadcrumb,
-  Modal,
-  Button
-} from "@patternfly/react-core";
+import { BreadcrumbItem, Breadcrumb } from "@patternfly/react-core";
 import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
 import { Link, useHistory } from "react-router-dom";
 import { useParams } from "react-router";
-import { AddressDetailHeader } from "modules/address-detail/components/AddressDetailHeader";
+import { AddressDetailHeader } from "modules/address-detail/components/AddressDetailHeader/AddressDetailHeader";
 import { useQuery } from "@apollo/react-hooks";
 import { IAddressDetailResponse } from "types/ResponseTypes";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import {
   DELETE_ADDRESS,
   RETURN_ADDRESS_DETAIL,
-  EDIT_ADDRESS,
   CURRENT_ADDRESS_SPACE_PLAN,
   PURGE_ADDRESS
 } from "graphql-module/queries";
-import { AddressLinksListPage } from "./containers/AddressLinksListPage";
-import { EditAddress } from "modules/address/containers/EditAddressPage";
-import { IAddressSpacePlanResponse } from "modules/address/AddressListPage";
+import { AddressLinksPage } from "./containers/AddressLinks";
+import { IAddressSpacePlanResponse } from "modules/address/AddressPage";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
-import { IAddress } from "modules/address/components";
+import { IAddress } from "modules/address/components/AddressList";
 
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();
@@ -231,7 +224,7 @@ export default function AddressDetailPage() {
           onPurge={onChangePurge}
         />
       )}
-      <AddressLinksListPage
+      <AddressLinksPage
         addressspace_name={name || ""}
         addressspace_namespace={namespace || ""}
         addressspace_type={type || " "}

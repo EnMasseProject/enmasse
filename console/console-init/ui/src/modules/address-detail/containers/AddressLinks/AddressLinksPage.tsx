@@ -12,11 +12,11 @@ import {
   Grid,
   GridItem
 } from "@patternfly/react-core";
-import { GridStylesForTableHeader } from "modules/address/AddressListPage";
-import { AddressLinksContainer } from "./AddressLinksContainer";
+import { GridStylesForTableHeader } from "modules/address/AddressPage";
+import { AddressLinksContainer } from "../AddressLinksContainer";
 import { useHistory, useLocation } from "react-router";
 import { css } from "emotion";
-import { AddressLinksToolbar } from "modules/address-detail/containers/AddressLinksToolbar";
+import { AddressLinksToolbar } from "modules/address-detail/containers/AddressLinksToolbar/AddressLinksToolbar";
 import { ISortBy } from "@patternfly/react-table";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 
@@ -28,7 +28,7 @@ interface IAddressLinksListPageProps {
   addressDisplayName: string;
 }
 
-const AddressLinksListPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
+const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
   addressspace_name,
   addressspace_namespace,
   addressspace_type,
@@ -142,4 +142,4 @@ const AddressLinksListPage: React.FunctionComponent<IAddressLinksListPageProps> 
   );
 };
 
-export { AddressLinksListPage };
+export { AddressLinksPage };

@@ -5,4 +5,4 @@
 
 export * from "./AddressLinksContainer";
 export * from "./AddressLinksToolbar";
-export * from "./AddressLinksListPage";
+export * from "./AddressLinks";

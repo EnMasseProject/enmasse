@@ -15,14 +15,14 @@ import {
   ISortBy
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
-import { TypePlan } from "modules/address/components/TypePlan";
-import { Messages } from "modules/address/components/Messages";
+import { TypePlan } from "modules/address/components/common";
+import { Messages } from "modules/address/components/common";
 import useWindowDimensions from "components/common/WindowDimension";
 import { css } from "@patternfly/react-styles";
 import { FormatDistance } from "use-patternfly";
-import { AddressStatus } from "../utils";
-import { AddressErrorMessage } from "./AddressErrorMessage";
 import { StyleForTable } from "modules/address-space/components";
+import { AddressStatus } from "modules/address/utils";
+import { AddressErrorMessage } from "../AddressErrorMessage";
 
 export interface IAddress {
   name: string;

@@ -10,14 +10,11 @@ import { IAddressResponse } from "types/ResponseTypes";
 import {
   RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE,
   DELETE_ADDRESS,
-  EDIT_ADDRESS,
   PURGE_ADDRESS
 } from "graphql-module/queries";
 import { AddressList, IAddress } from "modules/address/components/AddressList";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
-import { Modal, Button } from "@patternfly/react-core";
 import { EmptyAddress } from "modules/address/components/EmptyAddress";
-import { EditAddress } from "modules/address/containers/EditAddressPage";
 import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 import { useMutationQuery } from "hooks";

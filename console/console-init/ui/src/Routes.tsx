@@ -20,7 +20,7 @@ const getConnectionsList = () =>
   import(
     "pages/AddressSpaceDetail/ConnectionList/ConnectionListWithFilterAndPaginationPage"
   );
-const getAddressesList = () => import("modules/address/AddressListPage");
+const getAddressesList = () => import("modules/address/AddressPage");
 
 export const AppRoutes = () => (
   <SwitchWith404>
