@@ -77,6 +77,7 @@ interface AddressSpaceListProps {
   ) => void;
   selectedAddressSpaces: Array<IAddressSpace>;
 }
+
 export const AddressSpaceList: React.FunctionComponent<AddressSpaceListProps> = ({
   page,
   perPage,
