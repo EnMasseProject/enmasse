@@ -132,6 +132,11 @@ spec:
             oauthProxy:
               type: object
               properties:
+                extraArgs:
+                  description: "Extra arguments to pass to oauth-proxy"
+                  type: array
+                  items:
+                    type: string
                 resources:
                   type: object
                   properties:

@@ -914,8 +914,11 @@ func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1bet
 			},
 		},
 	}
-	if consoleservice.Spec.OauthProxy != nil && consoleservice.Spec.OauthProxy.Resources != nil {
-		container.Resources = *consoleservice.Spec.OauthProxy.Resources
+	if consoleservice.Spec.OauthProxy != nil {
+		if consoleservice.Spec.OauthProxy.Resources != nil {
+			container.Resources = *consoleservice.Spec.OauthProxy.Resources
+		}
+		container.Args = append(container.Args, consoleservice.Spec.OauthProxy.ExtraArgs...)
 	}
 }
 
