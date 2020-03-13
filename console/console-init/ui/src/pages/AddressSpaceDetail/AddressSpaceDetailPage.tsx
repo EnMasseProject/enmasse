@@ -32,7 +32,7 @@ import {
 } from "graphql-module/queries";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
-import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
+import { IAddressSpace } from "modules/address-space/components/AddressSpaceList/AddressSpaceList";
 import { useMutationQuery } from "hooks";
 import { AddressSpaceRoutes } from "Routes";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
