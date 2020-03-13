@@ -9,3 +9,4 @@ export * from "./AddressSpaceList";
 export * from "./AddressSpaceConfiguration";
 export * from "./EditAddressSpace";
 export * from "./AddressSpaceReview";
+export * from "./AddressSpaceListKebab";
