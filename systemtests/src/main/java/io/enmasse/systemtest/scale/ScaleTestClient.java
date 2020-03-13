@@ -7,29 +7,37 @@ package io.enmasse.systemtest.scale;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.scale.metrics.ScaleTestClientMetricsClient;
 
-public class ScaleTestClient <X extends ScaleTestClientMetricsClient>{
+public class ScaleTestClient <T extends ScaleTestClientMetricsClient>{
 
     private final ScaleTestClientConfiguration configuration;
-    private final X metricsClient;
+    private final T metricsClient;
 
-    public ScaleTestClient(ScaleTestClientConfiguration configuration, X metricsClient) {
+    private int connections;
+
+    public ScaleTestClient(ScaleTestClientConfiguration configuration, T metricsClient) {
         this.configuration = configuration;
         this.metricsClient = metricsClient;
     }
 
-    public static  <X extends ScaleTestClientMetricsClient> ScaleTestClient<X> from(ScaleTestClientConfiguration configuration, X metricsClient) {
-        return new ScaleTestClient<X>(configuration, metricsClient);
+    public static  <T extends ScaleTestClientMetricsClient> ScaleTestClient<T> from(ScaleTestClientConfiguration configuration, T metricsClient) {
+        return new ScaleTestClient<>(configuration, metricsClient);
     }
 
     public ScaleTestClientConfiguration getConfiguration() {
         return configuration;
     }
 
-    public X getMetricsClient() {
+    public T getMetricsClient() {
         return metricsClient;
     }
 
-    //help methods
+    public int getConnections() {
+        return connections;
+    }
+
+    public void setConnections(int connections) {
+        this.connections = connections;
+    }
 
     public AddressType getAddressesType() {
         return configuration.getAddressesType();

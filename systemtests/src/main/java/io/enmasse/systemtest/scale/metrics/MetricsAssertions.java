@@ -9,29 +9,29 @@ import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Assertions;
 
-public class MetricsAssertions<X> implements Predicate<X> {
+public class MetricsAssertions<T> implements Predicate<T> {
 
-    private X metric;
-    private Predicate<X> predicate;
+    private T metric;
+    private Predicate<T> predicate;
 
-    public MetricsAssertions(X metric, Predicate<X> predicate) {
+    public MetricsAssertions(T metric, Predicate<T> predicate) {
         this.metric = metric;
         this.predicate = predicate;
     }
 
     @Override
-    public boolean test(X t) {
+    public boolean test(T t) {
         return predicate.test(t);
     }
 
-    public static <X> MetricsAssertions<X> isPresent(Optional<X> t) {
-        Predicate<X> p = o -> {
+    public static <T> MetricsAssertions<T> isPresent(Optional<T> t) {
+        Predicate<T> p = o -> {
             return o != null;
         };
-        return new MetricsAssertions<X>(t.orElse(null), p);
+        return new MetricsAssertions<>(t.orElse(null), p);
     }
 
-    public static <X> MetricsAssertions<X> isNotPresent(Optional<X> t) {
+    public static <T> MetricsAssertions<T> isNotPresent(Optional<T> t) {
         return isPresent(t).negate();
     }
 
@@ -40,18 +40,18 @@ public class MetricsAssertions<X> implements Predicate<X> {
     }
 
     @Override
-    public MetricsAssertions<X> and(Predicate<? super X> other) {
-        return new MetricsAssertions<X>(metric, Predicate.super.and(other));
+    public MetricsAssertions<T> and(Predicate<? super T> other) {
+        return new MetricsAssertions<>(metric, Predicate.super.and(other));
     }
 
     @Override
-    public MetricsAssertions<X> negate() {
-        return new MetricsAssertions<X>(metric, Predicate.super.negate());
+    public MetricsAssertions<T> negate() {
+        return new MetricsAssertions<>(metric, Predicate.super.negate());
     }
 
     @Override
-    public MetricsAssertions<X> or(Predicate<? super X> other) {
-        return new MetricsAssertions<X>(metric, Predicate.super.or(other));
+    public MetricsAssertions<T> or(Predicate<? super T> other) {
+        return new MetricsAssertions<>(metric, Predicate.super.or(other));
     }
 
 }

@@ -4,18 +4,20 @@
  */
 package io.enmasse.systemtest.scale;
 
-import static io.enmasse.systemtest.scale.metrics.MetricsAssertions.isNotPresent;
 import static io.enmasse.systemtest.scale.metrics.MetricsAssertions.isPresent;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+
+import org.hawkular.agent.prometheus.types.Counter;
 import org.slf4j.Logger;
 
 import io.enmasse.address.model.Address;
@@ -36,11 +38,16 @@ public class MessagingPerformanceTestManager {
 
     private final Logger logger = CustomLogger.getLogger();
 
+    //metrics monitoring constants
+    private final double connectionFailureRatioThreshold = 0.3;
+    private final double reconnectFailureRatioThreshold = 0.3;
+    private final double notAcceptedDeliveriesRatioThreshold = 0.5;
+
     private final Kubernetes kubernetes;
 
     private Supplier<ScaleTestClientConfiguration> clientProvider;
 
-    private int totalConnections = 0;
+    private int totalExpectedConnections = 0;
     private final Map<String, ScaleTestClient<MessagingClientMetricsClient>> clientsMap = new ConcurrentHashMap<>();
     private final Queue<String> clientsMonitoringQueue = new ConcurrentLinkedQueue<>();
     private final AtomicReference<MetricsMonitoringResult> monitoringResult = new AtomicReference<MetricsMonitoringResult>(new MetricsMonitoringResult());
@@ -58,7 +65,7 @@ public class MessagingPerformanceTestManager {
     }
 
     public int getConnections() {
-        return totalConnections;
+        return totalExpectedConnections;
     }
 
     public int getClients() {
@@ -86,10 +93,11 @@ public class MessagingPerformanceTestManager {
         SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, clientConfig);
 
         int connectionsInThisClient = (addressesOfType.length/linksPerConnection) * 2; // *2 because client creates sender and receiver
-        totalConnections += connectionsInThisClient;
+        totalExpectedConnections += connectionsInThisClient;
 
         var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, clientConfig.getClientId());
         var client = ScaleTestClient.from(clientConfig, new MessagingClientMetricsClient(metricsEndpoint));
+        client.setConnections(connectionsInThisClient);
 
         String clientId = clientConfig.getClientId();
         clientsMap.put(clientId, client);
@@ -106,24 +114,30 @@ public class MessagingPerformanceTestManager {
                         ScaleTestClient<MessagingClientMetricsClient> client = clientsMap.get(clientId);
                         MessagingClientMetricsClient metricsClient = client.getMetricsClient();
 
-                        TestUtils.waitUntilConditionOrFail(() -> {
-                            var counter = metricsClient.getAcceptedDeliveries(client.getAddressesType());
-                            return counter.isPresent() && counter.get().getValue() >= 0;
-                        }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting accepted deliveries");
+                        waitUntilHasValue(() -> metricsClient.getAcceptedDeliveries(client.getAddressesType()), "Client is not reporting accepted deliveries");
 
-                        assertTrue(metricsClient.getConnectFailure().getValue() == 0, "There are connection failures");
-                        assertTrue(metricsClient.getConnectSuccess().getValue() > 0, "There are not successfull connections");
-                        assertTrue(metricsClient.getDisconnects().getValue() == 0, "There are disconnections");
+                        int totalMadeConnections = (int) (metricsClient.getReconnects().getValue() + client.getConnections());
 
-                        isNotPresent(metricsClient.getRejectedDeliveries(client.getAddressesType()))
-                            .or(c -> c.getValue() == 0)
-                            .assertTrue("There are rejected deliveries");
+                        double connectionFailuresRatio = metricsClient.getConnectFailure().getValue() / totalMadeConnections;
+
+                        assertTrue(connectionFailuresRatio < connectionFailureRatioThreshold, "Connection failures ratio is "+connectionFailuresRatio);
+
+                        if (metricsClient.getReconnects().getValue() > 0) {
+                            double reconnectFailuresRatio = metricsClient.getFailedReconnects().getValue() / metricsClient.getReconnects().getValue();
+                            assertTrue(reconnectFailuresRatio < reconnectFailureRatioThreshold, "Reconnects failures ratio is "+reconnectFailuresRatio);
+                        }
+
                         isPresent(metricsClient.getAcceptedDeliveries(client.getAddressesType()))
                             .and(c -> c.getValue() >= 0)
                             .assertTrue("There are not accepted deliveries");
-                        isPresent(metricsClient.getReceivedDeliveries(client.getAddressesType()))
-                            .or(c -> c.getValue() >= 0)
-                            .assertTrue("There are not received deliveries");
+
+                        Double rejected = metricsClient.getRejectedDeliveries(client.getAddressesType()).map(Counter::getValue).orElse(0d);
+                        Double modified = metricsClient.getModifiedDeliveries(client.getAddressesType()).map(Counter::getValue).orElse(0d);
+                        Double accepted = metricsClient.getAcceptedDeliveries(client.getAddressesType()).map(Counter::getValue).orElse(0d);
+                        int totalNoAcceptedDeliveries = (int) (rejected + modified);
+                        double noAcceptedDeliveriesRatio = totalNoAcceptedDeliveries / (totalNoAcceptedDeliveries + accepted);
+
+                        assertTrue(noAcceptedDeliveriesRatio < notAcceptedDeliveriesRatioThreshold, "deliveries: accepted:"+accepted+" rejected:"+rejected+" midified:"+modified);
 
                         clientsMonitoringQueue.offer(clientId);
 
@@ -145,6 +159,13 @@ public class MessagingPerformanceTestManager {
             monitoringResult.getAndUpdate(r -> r.addError(e.getMessage()));
             return;
         }
+    }
+
+    private void waitUntilHasValue(Supplier<Optional<Counter>> counterSupplier, String timeoutMessage) {
+        TestUtils.waitUntilConditionOrFail(() -> {
+            var counter = counterSupplier.get();
+            return counter.isPresent() && counter.get().getValue() >= 0;
+        }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> timeoutMessage);
     }
 
 }
