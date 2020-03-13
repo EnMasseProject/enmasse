@@ -8,7 +8,7 @@ import { render } from "@testing-library/react";
 import {
   IAddressDetailHeaderProps,
   AddressDetailHeader
-} from "components/AddressDetail/AddressDetailHeader";
+} from "modules/address-detail/components/AddressDetailHeader/AddressDetailHeader";
 
 describe("Address Detail Header", () => {
   test("it renders address space headers at top", () => {
@@ -20,7 +20,8 @@ describe("Address Detail Header", () => {
       storedMessages: 1,
       partitions: 2,
       onDelete: () => {},
-      onEdit: () => {}
+      onEdit: () => {},
+      onPurge: () => {}
     };
 
     const { getByText } = render(<AddressDetailHeader {...props} />);
