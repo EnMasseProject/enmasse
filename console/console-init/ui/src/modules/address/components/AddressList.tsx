@@ -42,6 +42,7 @@ export interface IAddress {
   errorMessages?: string[];
   status?: string;
   selected?: boolean;
+  topic?: string | null;
 }
 
 interface IAddressListProps {

@@ -25,7 +25,6 @@ import {
   PURGE_ADDRESS
 } from "graphql-module/queries";
 import { ISortBy } from "@patternfly/react-table";
-import { compareTwoAddress } from "./utils";
 import { IAddress } from "./components/AddressList";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import {
@@ -36,6 +35,7 @@ import {
   getDetailTextForDeleteAll,
   getFilteredAddressesByType
 } from "modules/address/utils";
+import { compareObject } from "utils";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -279,11 +279,9 @@ export default function AddressesList() {
       setSelectedAddresses(prevState =>
         prevState.filter(
           address =>
-            !compareTwoAddress(
-              address.name,
-              data.name,
-              address.namespace,
-              data.namespace
+            !compareObject(
+              { name: address.name, namespace: address.namespace },
+              { name: data.name, namespace: data.namespace }
             )
         )
       );
@@ -358,7 +356,6 @@ export default function AddressesList() {
         setTotalAddress={setTotalAddress}
         page={page}
         perPage={perPage}
-        addressSpaceType={type}
         sortValue={sortDropDownValue}
         setSortValue={setSortDropdownValue}
         isWizardOpen={isCreateWizardOpen}

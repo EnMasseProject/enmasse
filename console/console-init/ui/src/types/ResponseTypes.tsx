@@ -96,7 +96,7 @@ export interface IAddressDetailResponse {
     addresses: Array<{
       metadata: {
         name: string;
-        namespace: String;
+        namespace: string;
         creationTimestamp: string;
       };
       spec: {
@@ -113,7 +113,7 @@ export interface IAddressDetailResponse {
         };
       };
       status: {
-        isReady: string;
+        isReady: boolean;
         messages: string;
         phase: string;
         planStatus: {

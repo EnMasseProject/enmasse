@@ -80,14 +80,6 @@ const getDetailTextForDeleteAll = (addresses: any[]) => {
       )} ?`
     : `Are you sure you want to delete this address: ${addresses[0].displayName} ?`;
 };
-const compareTwoAddress = (
-  addressName1: string,
-  addressName2: string,
-  namespace1: string,
-  namespace2: string
-) => {
-  return addressName1 === addressName2 && namespace1 === namespace2;
-};
 
 export const getPlanAndTypeForAddress = (
   plan: string,
@@ -126,7 +118,6 @@ export {
   getFilteredAdressNames,
   getHeaderTextForDelateAll,
   getDetailTextForDeleteAll,
-  compareTwoAddress,
   AddressStatus,
   getPlanAndTypeForAddressEdit
 };

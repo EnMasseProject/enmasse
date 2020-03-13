@@ -22,7 +22,7 @@ import { TypeBadge } from "modules/address-detail/components/TypeBadge";
 
 export interface IAddressDetailHeaderProps {
   type: string;
-  topic: string | null;
+  topic?: string | null;
   name: string;
   plan: string;
   partitions: number | string;

@@ -21,13 +21,12 @@ import { EditAddress } from "modules/address/containers/EditAddressPage";
 import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 import { useMutationQuery } from "hooks";
-import { compareTwoAddress } from "../utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
+import { compareObject } from "utils";
 
 export interface IAddressListPageProps {
   name?: string;
   namespace?: string;
-  addressSpaceType?: string;
   filterNames?: any[];
   typeValue?: string | null;
   statusValue?: string | null;
@@ -49,7 +48,6 @@ export interface IAddressListPageProps {
 export const AddressListContainer: React.FunctionComponent<IAddressListPageProps> = ({
   name,
   namespace,
-  addressSpaceType,
   filterNames,
   typeValue,
   statusValue,
@@ -68,30 +66,16 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
   onSelectAllAddress
 }) => {
   const { dispatch } = useStoreContext();
-  const [
-    addressBeingEdited,
-    setAddressBeingEdited
-  ] = React.useState<IAddress | null>();
 
   const [sortBy, setSortBy] = React.useState<ISortBy>();
 
-  const resetEditFormState = () => {
-    refetch();
-    setAddressBeingEdited(null);
-  };
-
   const refetchQueries: string[] = ["all_addresses_for_addressspace_view"];
 
-  const [setEditAddressQueryVariables] = useMutationQuery(
-    EDIT_ADDRESS,
-    undefined,
-    resetEditFormState,
-    resetEditFormState
-  );
   const [setDeleteAddressQueryVariablse] = useMutationQuery(
     DELETE_ADDRESS,
     refetchQueries
   );
+
   const [setPurgeAddressQueryVariables] = useMutationQuery(
     PURGE_ADDRESS,
     refetchQueries
@@ -125,12 +109,14 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
     addresses: { total: 0, addresses: [] }
   };
   setTotalAddress(addresses.total);
+
   const addressesList: IAddress[] = addresses.addresses.map(address => ({
     name: address.metadata.name,
     displayName: address.spec.address,
     namespace: address.metadata.namespace,
     type: address.spec.type,
-    planLabel: address.spec.plan.spec.displayName,
+    planLabel:
+      address.spec.plan.spec.displayName || address.spec.plan.metadata.name,
     planValue: address.spec.plan.metadata.name,
     messageIn: getFilteredValue(address.metrics, "enmasse_messages_in"),
     messageOut: getFilteredValue(address.metrics, "enmasse_messages_out"),
@@ -151,20 +137,12 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
       address.status && address.status.messages ? address.status.messages : [],
     selected:
       selectedAddresses.filter(({ name, namespace }) =>
-        compareTwoAddress(
-          name,
-          address.metadata.name,
-          namespace,
-          address.metadata.namespace
+        compareObject(
+          { name, namespace },
+          { name: address.metadata.name, namespace: address.metadata.namespace }
         )
       ).length === 1
   }));
-
-  const handleEdit = (data: IAddress) => {
-    if (!addressBeingEdited) {
-      setAddressBeingEdited(data);
-    }
-  };
 
   const onPurge = async (address: IAddress) => {
     if (address) {
@@ -192,30 +170,15 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
       }
     });
   };
-  const handleCancelEdit = () => setAddressBeingEdited(null);
-
-  const handleSaving = () => {
-    if (addressBeingEdited && addressSpaceType) {
-      const variables = {
-        a: {
-          name: addressBeingEdited.name,
-          namespace: addressBeingEdited.namespace
-        },
-        jsonPatch:
-          '[{"op":"replace","path":"/spec/plan","value":"' +
-          addressBeingEdited.planValue +
-          '"}]',
-        patchType: "application/json-patch+json"
-      };
-      setEditAddressQueryVariables(variables);
-    }
-  };
-
-  const handlePlanChange = (plan: string) => {
-    if (addressBeingEdited) {
-      addressBeingEdited.planValue = plan;
-      setAddressBeingEdited({ ...addressBeingEdited });
-    }
+  const onChangeEdit = (address: IAddress) => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.EDIT_ADDRESS,
+      modalProps: {
+        address,
+        addressSpacePlan
+      }
+    });
   };
 
   const onDelete = async (address: IAddress) => {
@@ -254,7 +217,7 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
     <>
       <AddressList
         rowsData={addressesList ? addressesList : []}
-        onEdit={handleEdit}
+        onEdit={onChangeEdit}
         onDelete={onChangeDelete}
         onPurge={onChangePurge}
         sortBy={sortBy}
@@ -269,42 +232,6 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
           isWizardOpen={isWizardOpen}
           setIsWizardOpen={setIsWizardOpen}
         />
-      )}
-      {addressBeingEdited && (
-        <Modal
-          id="al-modal-edit-address"
-          title="Edit"
-          isSmall
-          isOpen={true}
-          onClose={handleCancelEdit}
-          actions={[
-            <Button
-              key="confirm"
-              id="al-edit-confirm"
-              variant="primary"
-              onClick={handleSaving}
-            >
-              Confirm
-            </Button>,
-            <Button
-              key="cancel"
-              id="al-edit-cancel"
-              variant="link"
-              onClick={handleCancelEdit}
-            >
-              Cancel
-            </Button>
-          ]}
-          isFooterLeftAligned
-        >
-          <EditAddress
-            name={addressBeingEdited.name}
-            type={addressBeingEdited.type}
-            plan={addressBeingEdited.planValue}
-            addressSpacePlan={addressSpacePlan}
-            onChange={handlePlanChange}
-          />
-        </Modal>
       )}
     </>
   );

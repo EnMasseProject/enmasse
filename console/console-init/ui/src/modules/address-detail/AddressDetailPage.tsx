@@ -31,6 +31,7 @@ import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
+import { IAddress } from "modules/address/components";
 
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();
@@ -62,12 +63,10 @@ export default function AddressDetailPage() {
   useA11yRouteChange();
   useBreadcrumb(breadcrumb);
   const history = useHistory();
-  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  const [addressPlan, setAddressPlan] = React.useState<string | null>(null);
   const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(
     null
   );
-  const { loading, error, data, refetch } = useQuery<IAddressDetailResponse>(
+  const { loading, data } = useQuery<IAddressDetailResponse>(
     RETURN_ADDRESS_DETAIL(name, namespace, addressname),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
@@ -81,11 +80,6 @@ export default function AddressDetailPage() {
       addressSpaces.addressSpaces.addressSpaces[0].spec.plan.metadata.name
     );
   }
-
-  const resetEditAdressFormState = () => {
-    refetch();
-    setIsEditModalOpen(!isEditModalOpen);
-  };
 
   const resetDeleteFormState = (data: any) => {
     const deleteAddress = data && data.data && data.data.deleteAddress;
@@ -107,13 +101,6 @@ export default function AddressDetailPage() {
     resetDeleteFormState
   );
 
-  const [setEditAddressQueryVariables] = useMutationQuery(
-    EDIT_ADDRESS,
-    undefined,
-    resetEditAdressFormState,
-    resetEditAdressFormState
-  );
-
   if (loading) return <Loading />;
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }
@@ -128,9 +115,32 @@ export default function AddressDetailPage() {
     );
   }
   const addressDetail = addresses && addresses.addresses[0];
-  if (addressPlan === null) {
-    setAddressPlan(addressDetail.spec.plan.metadata.name);
-  }
+
+  const address: IAddress = {
+    name: addressDetail.metadata.name,
+    displayName: addressDetail.spec.address,
+    namespace: addressDetail.metadata.namespace,
+    type: addressDetail.spec.plan.spec.addressType,
+    planLabel:
+      addressDetail.spec.plan.spec.displayName ||
+      addressDetail.spec.plan.metadata.name,
+    planValue: addressDetail.spec.plan.metadata.name,
+    topic: addressDetail.spec.topic,
+    messageIn: getFilteredValue(addressDetail.metrics, "enmasse_messages_in"),
+    messageOut: getFilteredValue(addressDetail.metrics, "enmasse_messages_out"),
+    storedMessages: getFilteredValue(
+      addressDetail.metrics,
+      "enmasse_messages_stored"
+    ),
+    senders: getFilteredValue(addressDetail.metrics, "enmasse_senders"),
+    receivers: getFilteredValue(addressDetail.metrics, "enmasse_receivers"),
+    partitions:
+      addressDetail.status && addressDetail.status.planStatus
+        ? addressDetail.status.planStatus.partitions
+        : 0,
+    isReady: addressDetail.status.isReady,
+    creationTimestamp: addressDetail.metadata.creationTimestamp
+  };
 
   const onDelete = () => {
     const data = addressDetail.metadata;
@@ -153,6 +163,17 @@ export default function AddressDetailPage() {
     setPurgeAddressQueryVariables(variables);
   };
 
+  const onChangeEdit = () => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.EDIT_ADDRESS,
+      modalProps: {
+        address,
+        addressSpacePlan
+      }
+    });
+  };
+
   const onChangeDelete = () => {
     dispatch({
       type: types.SHOW_MODAL,
@@ -166,23 +187,6 @@ export default function AddressDetailPage() {
         header: "Delete this Address ?"
       }
     });
-  };
-
-  const handleSaving = () => {
-    if (addressDetail && type) {
-      const variables = {
-        a: {
-          name: addressDetail.metadata.name,
-          namespace: addressDetail.metadata.namespace
-        },
-        jsonPatch:
-          '[{"op":"replace","path":"/spec/plan","value":"' +
-          addressPlan +
-          '"}]',
-        patchType: "application/json-patch+json"
-      };
-      setEditAddressQueryVariables(variables);
-    }
   };
 
   const onConfirmPurge = async () => {
@@ -216,60 +220,17 @@ export default function AddressDetailPage() {
     <>
       {addressDetail && (
         <AddressDetailHeader
-          type={addressDetail.spec.plan.spec.addressType}
-          name={addressDetail.spec.address}
-          plan={addressDetail.spec.plan.spec.displayName}
-          topic={addressDetail.spec.topic}
-          storedMessages={getFilteredValue(
-            addressDetail.metrics,
-            "enmasse_messages_stored"
-          )}
-          partitions={
-            addressDetail.status && addressDetail.status.planStatus
-              ? addressDetail.status.planStatus.partitions
-              : 0
-          }
-          onEdit={() => setIsEditModalOpen(true)}
+          type={address.type}
+          name={address.name}
+          plan={address.planLabel}
+          topic={address.topic}
+          storedMessages={address.storedMessages}
+          partitions={address.partitions || ""}
+          onEdit={onChangeEdit}
           onDelete={onChangeDelete}
           onPurge={onChangePurge}
         />
       )}
-      <Modal
-        title="Edit"
-        id="addr-detail-edit-modal"
-        isSmall
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(!isEditModalOpen)}
-        actions={[
-          <Button
-            key="confirm"
-            id="addr-detail-edit-confirm"
-            variant="primary"
-            onClick={handleSaving}
-          >
-            Confirm
-          </Button>,
-          <Button
-            key="cancel"
-            id="addr-detail-edit-cancel"
-            variant="link"
-            onClick={() => setIsEditModalOpen(!isEditModalOpen)}
-          >
-            Cancel
-          </Button>
-        ]}
-        isFooterLeftAligned
-      >
-        {addressDetail && (
-          <EditAddress
-            name={addressDetail.metadata.name}
-            type={addressDetail.spec.plan.spec.addressType}
-            plan={addressPlan || ""}
-            addressSpacePlan={addressSpacePlan}
-            onChange={setAddressPlan}
-          />
-        )}
-      </Modal>
       <AddressLinksListPage
         addressspace_name={name || ""}
         addressspace_namespace={namespace || ""}

@@ -26,7 +26,6 @@ import { IAddressSpacesResponse } from "types/ResponseTypes";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 import { IObjectMeta_v1_Input } from "pages/AddressSpaceDetail/AddressSpaceDetailPage";
 import { useMutationQuery } from "hooks";
-import { compareTwoAddress } from "modules/address/utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { compareObject } from "utils";
 import {
