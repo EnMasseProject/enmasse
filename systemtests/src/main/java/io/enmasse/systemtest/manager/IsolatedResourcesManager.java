@@ -255,6 +255,11 @@ public class IsolatedResourcesManager extends ResourceManager {
         super.createAuthService(authenticationService);
     }
 
+    @Override
+    public void createAuthService(AuthenticationService authenticationService, boolean wait) throws Exception {
+        authServices.add(authenticationService);
+        super.createAuthService(authenticationService, wait);
+    }
 
     @Override
     public void removeAuthService(AuthenticationService authService) throws Exception {

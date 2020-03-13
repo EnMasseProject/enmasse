@@ -37,6 +37,8 @@ public class TimeMeasuringSystem {
     private String testClass;
     private String testName;
 
+    private boolean logResults = true;
+
     //===============================================================
     // private instance methods
     //===============================================================
@@ -49,6 +51,13 @@ public class TimeMeasuringSystem {
             instance = new TimeMeasuringSystem();
         }
         return instance;
+    }
+
+    private void setLogResults(boolean logResults) {
+        if (!logResults) {
+            log.info("Disabling logging results of {}", this.getClass().getName());
+        }
+        this.logResults = logResults;
     }
 
     //===============================================================
@@ -77,6 +86,10 @@ public class TimeMeasuringSystem {
         TimeMeasuringSystem.getInstance().saveResults(TimeMeasuringSystem.getInstance().measuringMap, "duration_report");
         TimeMeasuringSystem.getInstance().saveResults(sumData, "duration_sum_report");
         TimeMeasuringSystem.getInstance().saveCsvResults(sumData, "duration_sum_report");
+    }
+
+    public static void disableResultsLogging() {
+        TimeMeasuringSystem.getInstance().setLogResults(false);
     }
 
     private String createOperationsID(SystemtestsOperation operation) {
@@ -135,22 +148,24 @@ public class TimeMeasuringSystem {
     }
 
     private void printResults() {
-        measuringMap.forEach((testClassID, testClassRecords) -> {
-            log.info("================================================");
-            log.info("================================================");
-            log.info(testClassID);
-            testClassRecords.forEach((testID, testRecord) -> {
-                log.info("---------------------------------------------");
-                log.info(testID);
-                testRecord.forEach((operationID, record) -> {
-                    log.info("Operation id: {} duration: {} started: {} ended: {}",
-                            operationID,
-                            record.getDurationReadable(),
-                            record.getStartTimeHumanReadable(),
-                            record.getEndTimeHumanReadable());
+        if (logResults) {
+            measuringMap.forEach((testClassID, testClassRecords) -> {
+                log.info("================================================");
+                log.info("================================================");
+                log.info(testClassID);
+                testClassRecords.forEach((testID, testRecord) -> {
+                    log.info("---------------------------------------------");
+                    log.info(testID);
+                    testRecord.forEach((operationID, record) -> {
+                        log.info("Operation id: {} duration: {} started: {} ended: {}",
+                                operationID,
+                                record.getDurationReadable(),
+                                record.getStartTimeHumanReadable(),
+                                record.getEndTimeHumanReadable());
+                    });
                 });
             });
-        });
+        }
     }
 
     private void saveResults(Map<?, ?> data, String name) {
