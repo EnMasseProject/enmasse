@@ -15,11 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -60,7 +56,7 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
-import io.enmasse.systemtest.scale.metrics.MetricsValidationResult;
+import io.enmasse.systemtest.scale.metrics.MetricsMonitoringResult;
 import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -181,84 +177,18 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     @Test
     void testMessagingPerformance() throws Exception {
         int initialAddresses = performanceInitialAddresses;
-        var addresses = createInitialAddresses(initialAddresses);
-
-        var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
-        Supplier<ScaleTestClientConfiguration> clientProvider = () -> {
-            ScaleTestClientConfiguration client = new ScaleTestClientConfiguration();
-            client.setClientType(ScaleTestClientType.messaging);
-            client.setHostname(endpoint.getHost());
-            client.setPort(endpoint.getPort());
-            client.setUsername(userCredentials.getUsername());
-            client.setPassword(userCredentials.getPassword());
-            return client;
-        };
-
-        int totalConnections = 0;
-
-        Map<String, ScaleTestClient<MessagingClientMetricsClient>> clientsMap = new ConcurrentHashMap<>();
-        Queue<String> clientsMonitoringQueue = new ConcurrentLinkedQueue<>();
-
-
         int anycastLinksPerConnection = initialAnycastLinksPerConn;
         int queueLinksPerConnection = initialQueueLinksPerConn;
         int addressesPerGroup = initialAddressesPerGroup;
 
+        var addresses = createInitialAddresses(initialAddresses);
+
+        var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
+        MessagingPerformanceTestManager manager = new MessagingPerformanceTestManager(endpoint, userCredentials);
+
         try {
 
-            final var result = new AtomicReference<MetricsValidationResult>(new MetricsValidationResult());
-
-            Executors.newSingleThreadExecutor().execute(()->{
-                try {
-                    String lastClientId = null;
-                    while (true) {
-                        String clientId = clientsMonitoringQueue.poll();
-                        try {
-                            if (clientId != null && !clientId.equals(lastClientId)) {
-                                ScaleTestClient<MessagingClientMetricsClient> client = clientsMap.get(clientId);
-                                MessagingClientMetricsClient metricsClient = client.getMetricsClient();
-
-                                TestUtils.waitUntilConditionOrFail(() -> {
-                                    var counter = metricsClient.getAcceptedDeliveries(client.getAddressesType());
-                                    return counter.isPresent() && counter.get().getValue() >= 0;
-                                }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting accepted deliveries");
-
-                                assertTrue(metricsClient.getConnectFailure().getValue() == 0, "There are connection failures");
-                                assertTrue(metricsClient.getConnectSuccess().getValue() > 0, "There are not successfull connections");
-                                assertTrue(metricsClient.getDisconnects().getValue() == 0, "There are disconnections");
-
-                                isNotPresent(metricsClient.getRejectedDeliveries(client.getAddressesType()))
-                                    .or(c -> c.getValue() == 0)
-                                    .assertTrue("There are rejected deliveries");
-                                isPresent(metricsClient.getAcceptedDeliveries(client.getAddressesType()))
-                                    .and(c -> c.getValue() >= 0)
-                                    .assertTrue("There are not accepted deliveries");
-                                isPresent(metricsClient.getReceivedDeliveries(client.getAddressesType()))
-                                    .or(c -> c.getValue() >= 0)
-                                    .assertTrue("There are not received deliveries");
-
-                                clientsMonitoringQueue.offer(clientId);
-
-                                lastClientId = clientId;
-                            } else {
-                                Thread.sleep(1000L);
-                                lastClientId = null;
-                                if (clientId != null) {
-                                    clientsMonitoringQueue.offer(clientId);
-                                }
-                            }
-                        } catch (AssertionError e) {
-                            //TODO use listener pattern
-                            result.getAndUpdate(r -> r.addError("Error in client " + clientId + " " + e.getMessage()));
-                            return;
-                        }
-                    }
-                } catch (Exception e) {
-                    log.error("Unexpected error in metrics checker", e);
-                    result.getAndUpdate(r -> r.addError(e.getMessage()));
-                    return;
-                }
-            });
+            Executors.newSingleThreadExecutor().execute(manager::monitorMetrics);
 
             while (true) {
                 //determine load
@@ -268,91 +198,61 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 }
 
                 //deploy clients and start messaging
-                for (var group : addressesGroups) {
-                    checkMetrics(result);
+                for (var groupOfAddresses : addressesGroups) {
+                    checkMetrics(manager.getMonitoringResult());
 
-                    var anycasts = group.stream()
-                            .filter(a -> a.getSpec().getType().equals(AddressType.ANYCAST.toString()))
-                            .collect(Collectors.toList());
-                    var queues = group.stream()
-                            .filter(a -> a.getSpec().getType().equals(AddressType.QUEUE.toString()))
-                            .collect(Collectors.toList());
+                    manager.deployClient(groupOfAddresses, AddressType.ANYCAST, anycastLinksPerConnection);
 
-                    var configAnycasts = clientProvider.get();
-                    configAnycasts.setAddressesType(AddressType.ANYCAST);
-                    configAnycasts.setAddresses(anycasts.stream().map(a -> a.getSpec().getAddress()).toArray(String[]::new));
-                    configAnycasts.setLinksPerConnection(anycastLinksPerConnection);
-                    SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, configAnycasts);
-                    var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, configAnycasts.getClientId());
-                    var clientAnycast = ScaleTestClient.from(configAnycasts, new MessagingClientMetricsClient(metricsEndpoint));
-                    String anycastClientId = clientAnycast.getConfiguration().getClientId();
-                    clientsMap.put(anycastClientId, clientAnycast);
-                    clientsMonitoringQueue.offer(anycastClientId);
-                    int newAnycastConnections = (anycasts.size()/anycastLinksPerConnection) * 2; // *2 because of sender and receiver
-                    totalConnections += newAnycastConnections;
+                    checkMetrics(manager.getMonitoringResult());
 
-                    checkMetrics(result);
-
-                    var configQueues = clientProvider.get();
-                    configQueues.setAddressesType(AddressType.QUEUE);
-                    configQueues.setAddresses(queues.stream().map(a -> a.getSpec().getAddress()).toArray(String[]::new));
-                    configQueues.setLinksPerConnection(queueLinksPerConnection);
-                    SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, configQueues);
-                    metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, configQueues.getClientId());
-                    var clientQueues = ScaleTestClient.from(configQueues, new MessagingClientMetricsClient(metricsEndpoint));
-                    String queueClientId = clientQueues.getConfiguration().getClientId();
-                    clientsMap.put(queueClientId, clientQueues);
-                    clientsMonitoringQueue.offer(queueClientId);
-                    int newQueuesConnections = (queues.size()/queueLinksPerConnection) * 2; // *2 because of sender and receiver
-                    totalConnections += newQueuesConnections;
+                    manager.deployClient(groupOfAddresses, AddressType.QUEUE, queueLinksPerConnection);
                 }
 
-                checkMetrics(result);
+                checkMetrics(manager.getMonitoringResult());
 
-                long sleepMs = 4 * totalConnections;
+                long sleepMs = 4 * manager.getConnections();
 
                 LOGGER.info("#######################################");
                 LOGGER.info("Created total {} connections with {} deployed clients, waiting {} s for system to react",
-                        totalConnections, clientsMap.size(), sleepMs/1000);
+                        manager.getConnections(), manager.getClients(), sleepMs/1000);
                 LOGGER.info("#######################################");
 
                 Thread.sleep(sleepMs);
 
-                checkMetrics(result);
+                checkMetrics(manager.getMonitoringResult());
 
                 //increase load
-    //          if (addressesPerGroup%400 == 0) {
                 if (anycastLinksPerConnection%2 == 0) {
                     queueLinksPerConnection += queueLinksPerConnIncrease;
                 }
                 anycastLinksPerConnection += anycastLinksPerConnIncrease;
-    //            addressesPerGroup = addressesPerGroup + 200;
-
 
                 int tenantsPerGroup = addressesPerGroup / addressesPerTenant;
-                if (queueLinksPerConnection > tenantsPerGroup || anycastLinksPerConnection > tenantsPerGroup) {
+                //because of messaging-client grouping algorithm linksPerConnection cannot be bigger than addresses passed to client
+                //and because one tenant has one queue, in every address group we will have the same number of tenants and queues
+                //this limit is likely to always apply before to queues than anycast addresses, because anycast addresses are 4 and queues only 1
+                if (queueLinksPerConnection > tenantsPerGroup) {
                     addressesPerGroup += addressesPerGroupIncrease;
                 }
                 LOGGER.info("#######################################");
                 LOGGER.info("Increasing load, creating groups of {} addresses, anycast addresses links per connection {}"
                         + ", queues links per connection {}", addressesPerGroup, anycastLinksPerConnection, queueLinksPerConnection);
                 LOGGER.info("#######################################");
-
             }
 
         } finally {
-          LOGGER.info("#######################################");
-          LOGGER.info("Total addresses created {}", addresses.size());
-          LOGGER.info("Total connections created {}", totalConnections);
-          LOGGER.info("Total clients deployed {}", clientsMap.size());
-          LOGGER.info("Final addresses per group {}", addressesPerGroup);
-          LOGGER.info("Final anycast links per connection {}", anycastLinksPerConnection);
-          LOGGER.info("Final queue links per connection {}", queueLinksPerConnection);
-          LOGGER.info("#######################################");
+            LOGGER.info("#######################################");
+            LOGGER.info("Total addresses created {}", addresses.size());
+            LOGGER.info("Total connections created {}", manager.getConnections());
+            LOGGER.info("Total clients deployed {}", manager.getClients());
+            LOGGER.info("Final addresses per group {}", addressesPerGroup);
+            LOGGER.info("Final anycast links per connection {}", anycastLinksPerConnection);
+            LOGGER.info("Final queue links per connection {}", queueLinksPerConnection);
+            LOGGER.info("#######################################");
         }
     }
 
-    private void checkMetrics(AtomicReference<MetricsValidationResult> result) {
+    private void checkMetrics(AtomicReference<MetricsMonitoringResult> result) {
         if (result.get().isError()) {
             Assertions.fail(result.get().getErrors().toString());
         }

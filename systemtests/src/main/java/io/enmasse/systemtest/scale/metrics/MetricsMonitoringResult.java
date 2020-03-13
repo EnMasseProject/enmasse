@@ -7,12 +7,12 @@ package io.enmasse.systemtest.scale.metrics;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MetricsValidationResult {
+public class MetricsMonitoringResult {
 
     private boolean result = true;
     private List<String> errors = new ArrayList<>();
 
-    public MetricsValidationResult addError(String error) {
+    public MetricsMonitoringResult addError(String error) {
         result = false;
         errors.add(error);
         return this;
