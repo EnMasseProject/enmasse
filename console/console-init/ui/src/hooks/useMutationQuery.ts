@@ -17,7 +17,6 @@ export const useMutationQuery = <TData = any, TVariables = OperationVariables>(
 ) => {
   const [variables, setVariables] = useState<TVariables>();
   const { dispatch } = useStoreContext();
-
   const [addVariables] = useMutation<TData>(query, {
     onError(errors: ApolloError) {
       dispatch &&
