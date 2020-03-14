@@ -75,7 +75,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     //performance constants
     private final int performanceInitialAddresses = 12000;
     private final int addressesPerTenant = 5;
-    private final int initialAddressesPerGroup = 200;
+    private final int initialAddressesPerGroup = 100;
     private final int addressesPerGroupIncrease = initialAddressesPerGroup;
     private final int initialAnycastLinksPerConn = 1;
     private final int anycastLinksPerConnIncrease = initialAnycastLinksPerConn;

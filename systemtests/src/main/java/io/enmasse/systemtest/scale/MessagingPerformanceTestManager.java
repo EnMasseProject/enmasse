@@ -39,8 +39,8 @@ public class MessagingPerformanceTestManager {
     private final Logger logger = CustomLogger.getLogger();
 
     //metrics monitoring constants
-    private final double connectionFailureRatioThreshold = 0.3;
-    private final double reconnectFailureRatioThreshold = 0.3;
+    private final double connectionFailureRatioThreshold = 0.45;
+    private final double reconnectFailureRatioThreshold = 0.45;
     private final double notAcceptedDeliveriesRatioThreshold = 0.5;
 
     private final Kubernetes kubernetes;
