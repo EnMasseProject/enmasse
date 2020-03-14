@@ -34,7 +34,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 /**
  * This class should be instantiated once per test
  */
-public class MessagingPerformanceTestManager {
+public class ScalePerformanceTestManager {
 
     private final Logger logger = CustomLogger.getLogger();
 
@@ -52,7 +52,7 @@ public class MessagingPerformanceTestManager {
     private final Queue<String> clientsMonitoringQueue = new ConcurrentLinkedQueue<>();
     private final AtomicReference<MetricsMonitoringResult> monitoringResult = new AtomicReference<MetricsMonitoringResult>(new MetricsMonitoringResult());
 
-    public MessagingPerformanceTestManager(Endpoint addressSpaceEndpoint, UserCredentials credentials) {
+    public ScalePerformanceTestManager(Endpoint addressSpaceEndpoint, UserCredentials credentials) {
         this.clientProvider = () -> {
             ScaleTestClientConfiguration client = new ScaleTestClientConfiguration();
             client.setHostname(addressSpaceEndpoint.getHost());
@@ -76,7 +76,7 @@ public class MessagingPerformanceTestManager {
         return monitoringResult;
     }
 
-    public void deployClient(List<Address> addresses, AddressType type, int linksPerConnection) throws Exception {
+    public void deployMessagingClient(List<Address> addresses, AddressType type, int linksPerConnection) throws Exception {
         if (addresses == null || addresses.isEmpty()) {
             throw new IllegalArgumentException("Addresses cannot be null or empty");
         }
@@ -93,6 +93,31 @@ public class MessagingPerformanceTestManager {
         SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, clientConfig);
 
         int connectionsInThisClient = (addressesOfType.length/linksPerConnection) * 2; // *2 because client creates sender and receiver
+        totalExpectedConnections += connectionsInThisClient;
+
+        var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, clientConfig.getClientId());
+        var client = ScaleTestClient.from(clientConfig, new MessagingClientMetricsClient(metricsEndpoint));
+        client.setConnections(connectionsInThisClient);
+
+        String clientId = clientConfig.getClientId();
+        clientsMap.put(clientId, client);
+        clientsMonitoringQueue.offer(clientId);
+    }
+
+    public void deployProbeClient(List<Address> addresses) throws Exception {
+        if (addresses == null || addresses.isEmpty()) {
+            throw new IllegalArgumentException("Addresses cannot be null or empty");
+        }
+        var addr = addresses.stream()
+                .map(a -> a.getSpec().getAddress())
+                .toArray(String[]::new);
+        var clientConfig = clientProvider.get();
+        clientConfig.setClientType(ScaleTestClientType.probe);
+        clientConfig.setAddresses(addr);
+
+        SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, clientConfig);
+
+        int connectionsInThisClient = (addr.length) * 2; // *2 because client creates sender and receiver
         totalExpectedConnections += connectionsInThisClient;
 
         var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, clientConfig.getClientId());
