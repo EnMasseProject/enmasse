@@ -5,7 +5,7 @@
 [id='retrieving-address-space-information-{context}']
 = Example commands for retrieving address space information
 
-The following table shows the commands for retrieving address space information, such as the {ConsoleName} host name.
+The following table shows the commands for retrieving address space information.
 
 .Retrieving address space information commands table
 [cols="25%a,75%a",options="header",subs="attributes"]
