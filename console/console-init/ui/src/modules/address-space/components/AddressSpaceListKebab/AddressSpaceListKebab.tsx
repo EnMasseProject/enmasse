@@ -22,13 +22,13 @@ import {
 export interface IAddressSpaceListKebabProps {
   onCreateAddressSpace: () => void;
   isDeleteAllDisabled: boolean;
-  onKebabSelect: (event: any) => void;
+  onSelectDeleteAll: (event: any) => void;
 }
 
 export const AddressSpaceListKebab: React.FC<IAddressSpaceListKebabProps> = ({
   isDeleteAllDisabled,
   onCreateAddressSpace,
-  onKebabSelect
+  onSelectDeleteAll
 }) => {
   const [isKebabOpen, setIsKebabOpen] = React.useState(false);
 
@@ -68,7 +68,7 @@ export const AddressSpaceListKebab: React.FC<IAddressSpaceListKebabProps> = ({
         <OverflowMenuControl hasAdditionalOptions>
           <Dropdown
             id="al-filter-overflow-dropdown"
-            onSelect={onKebabSelect}
+            onSelect={onSelectDeleteAll}
             toggle={
               <KebabToggle
                 id="al-filter-overflow-kebab"

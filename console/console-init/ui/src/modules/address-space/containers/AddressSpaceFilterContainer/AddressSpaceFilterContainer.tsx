@@ -11,10 +11,7 @@ import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "types/ResponseTy
 import { useApolloClient } from "@apollo/react-hooks";
 import { FetchPolicy, TYPEAHEAD_REQUIRED_LENGTH } from "constants/constants";
 import { ISelectOption, getSelectOptionList } from "utils";
-import {
-  AddressSpaceFilter,
-  AddressSpaceListKebab
-} from "modules/address-space/components";
+import { AddressSpaceFilter } from "modules/address-space/components";
 
 interface IAddressSpaceFilterContainerProps {
   filterValue?: string;

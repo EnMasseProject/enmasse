@@ -65,7 +65,7 @@ export const AddressSpaceToolbar: React.FunctionComponent<IAddressSpaceToolbarPr
     });
   };
 
-  const onSelectKebabDeleteAll = async (event: any) => {
+  const onSelectDeleteAll = async (event: any) => {
     if (event.target.value === "deleteAll") {
       await onDeleteAll();
     }
@@ -98,7 +98,7 @@ export const AddressSpaceToolbar: React.FunctionComponent<IAddressSpaceToolbarPr
       <DataToolbarItem>
         <AddressSpaceListKebab
           onCreateAddressSpace={onCreateAddressSpace}
-          onKebabSelect={onSelectKebabDeleteAll}
+          onSelectDeleteAll={onSelectDeleteAll}
           isDeleteAllDisabled={isDeleteAllDisabled}
         />
       </DataToolbarItem>

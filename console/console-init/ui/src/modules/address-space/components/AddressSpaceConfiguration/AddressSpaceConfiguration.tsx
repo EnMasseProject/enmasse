@@ -23,6 +23,17 @@ export const dropdown_item_styles = StyleSheet.create({
   format_item: { whiteSpace: "normal", textAlign: "justify" }
 });
 
+export interface IPlanOption {
+  label: string;
+  value: string;
+  description?: string;
+}
+
+export interface IAuthenticationServiceOptions {
+  value: string;
+  label: string;
+}
+
 export interface IAddressSpaceConfigurationProps {
   onNameSpaceSelect: (event: any) => void;
   setIsNameSpaceOpen: (isOpen: boolean) => void;
@@ -43,10 +54,10 @@ export interface IAddressSpaceConfigurationProps {
   isPlanOpen: boolean;
   type: string;
   plan: string;
-  planOptions: any[];
+  planOptions: IPlanOption[];
   isAuthenticationServiceOpen: boolean;
   authenticationService: string;
-  authenticationServiceOptions: any[];
+  authenticationServiceOptions: IAuthenticationServiceOptions[];
 }
 
 export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps> = ({
@@ -175,7 +186,7 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                     {plan}
                   </DropdownToggle>
                 }
-                dropdownItems={planOptions.map((option: any) => (
+                dropdownItems={planOptions.map((option: IPlanOption) => (
                   <DropdownItem
                     id={`cas-dropdown-item-plan${option.value}`}
                     key={option.value}
@@ -218,17 +229,19 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                     {authenticationService}
                   </DropdownToggle>
                 }
-                dropdownItems={authenticationServiceOptions.map(option => (
-                  <DropdownItem
-                    id={`cas-dropdown-item-auth-service${option.value}`}
-                    key={option.value}
-                    value={option.value}
-                    itemID={option.value}
-                    component={"button"}
-                  >
-                    <b>{option.label}</b>
-                  </DropdownItem>
-                ))}
+                dropdownItems={authenticationServiceOptions.map(
+                  (option: IAuthenticationServiceOptions) => (
+                    <DropdownItem
+                      id={`cas-dropdown-item-auth-service${option.value}`}
+                      key={option.value}
+                      value={option.value}
+                      itemID={option.value}
+                      component={"button"}
+                    >
+                      <b>{option.label}</b>
+                    </DropdownItem>
+                  )
+                )}
               />
             </FormGroup>
           </Form>

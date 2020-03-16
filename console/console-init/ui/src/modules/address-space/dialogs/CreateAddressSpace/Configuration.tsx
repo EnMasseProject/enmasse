@@ -13,7 +13,10 @@ import {
 } from "graphql-module/queries";
 import { Loading } from "use-patternfly";
 import { dnsSubDomainRfc1123NameRegexp } from "types/Configs";
-import { AddressSpaceConfiguration } from "modules/address-space/components";
+import {
+  AddressSpaceConfiguration,
+  IAuthenticationServiceOptions
+} from "modules/address-space/components";
 
 export interface IConfiguration {
   name: string;
@@ -82,7 +85,7 @@ export const Configuration: React.FunctionComponent<IConfiguration> = ({
 }) => {
   let namespaceOptions: IDropdownOption[];
   let planOptions: any[] = [];
-  let authenticationServiceOptions: any[] = [];
+  let authenticationServiceOptions: IAuthenticationServiceOptions[] = [];
 
   const [isNameSpaceOpen, setIsNameSpaceOpen] = useState(false);
   const [isStandardChecked, setIsStandardChecked] = useState(false);
