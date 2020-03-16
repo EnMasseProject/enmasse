@@ -289,6 +289,16 @@ const AddressLinksToolbar: React.FunctionComponent<IAddressLinksFilterProps> = (
     setIsSelectContainerExpanded(false);
   };
 
+  const onContainerClear = () => {
+    setContainerSelected(undefined);
+    setIsSelectContainerExpanded(false);
+  };
+
+  const onNameSelectClear = () => {
+    setNameSelected(undefined);
+    setIsSelectNameExpanded(false);
+  };
+
   const onDelete = (
     type: string | DataToolbarChip,
     id: string | DataToolbarChip
@@ -378,10 +388,7 @@ const AddressLinksToolbar: React.FunctionComponent<IAddressLinksFilterProps> = (
                     aria-label="Select a Name"
                     onToggle={onNameSelectToggle}
                     onSelect={onNameSelect}
-                    onClear={() => {
-                      setNameSelected(undefined);
-                      setIsSelectNameExpanded(false);
-                    }}
+                    onClear={onNameSelectClear}
                     maxHeight="200px"
                     selections={nameSelected}
                     onFilter={onNameSelectFilterChange}
@@ -440,10 +447,7 @@ const AddressLinksToolbar: React.FunctionComponent<IAddressLinksFilterProps> = (
                     aria-label="Select a Container"
                     onToggle={onContainerSelectToggle}
                     onSelect={onContainerSelect}
-                    onClear={() => {
-                      setContainerSelected(undefined);
-                      setIsSelectContainerExpanded(false);
-                    }}
+                    onClear={onContainerClear}
                     maxHeight="200px"
                     selections={containerSelected}
                     onFilter={onContainerSelectFilterChange}

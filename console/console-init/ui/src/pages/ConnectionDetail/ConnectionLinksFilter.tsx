@@ -299,6 +299,16 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
     setIsSelectAddressExpanded(false);
   };
 
+  const onNameSelectClear = () => {
+    setNameSelected(undefined);
+    setIsSelectNameExpanded(false);
+  };
+
+  const onAddressSelectClear = () => {
+    setAddressSelected(undefined);
+    setIsSelectAddressExpanded(false);
+  };
+
   const onDelete = (
     type: string | DataToolbarChip,
     id: string | DataToolbarChip
@@ -387,10 +397,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     aria-label="Select a Name"
                     onToggle={onNameSelectToggle}
                     onSelect={onNameSelect}
-                    onClear={() => {
-                      setNameSelected(undefined);
-                      setIsSelectNameExpanded(false);
-                    }}
+                    onClear={onNameSelectClear}
                     maxHeight="200px"
                     selections={nameSelected}
                     onFilter={onNameSelectFilterChange}
@@ -449,10 +456,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     aria-label="Select a Address"
                     onToggle={onAddressSelectToggle}
                     onSelect={onAddressSelect}
-                    onClear={() => {
-                      setAddressSelected(undefined);
-                      setIsSelectAddressExpanded(false);
-                    }}
+                    onClear={onAddressSelectClear}
                     maxHeight="200px"
                     selections={addressSelected}
                     onFilter={onAddressSelectFilterChange}

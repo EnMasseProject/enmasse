@@ -69,6 +69,15 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   if (loading) return <Loading />;
   if (error) console.log("Address Preview Query Error", error);
 
+  const hideClipboard = () => {
+    setIsCopied(false);
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(data.addressCommand);
+    setIsCopied(true);
+  };
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Title size="3xl" style={{ marginBottom: 32 }}>
@@ -154,13 +163,8 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                     id="preview-addr-copy-configuration-button"
                     variant={ButtonVariant.link}
                     aria-label="copy-configuration"
-                    onClick={() => {
-                      navigator.clipboard.writeText(data.addressCommand);
-                      setIsCopied(true);
-                    }}
-                    onMouseLeave={() => {
-                      setIsCopied(false);
-                    }}
+                    onClick={copyToClipboard}
+                    onMouseLeave={hideClipboard}
                   >
                     <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
                   </Button>
