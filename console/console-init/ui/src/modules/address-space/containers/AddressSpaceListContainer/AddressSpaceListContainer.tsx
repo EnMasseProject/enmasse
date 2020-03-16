@@ -6,7 +6,12 @@
 import React from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
-import { IRowData, IExtraData, ISortBy } from "@patternfly/react-table";
+import {
+  IRowData,
+  IExtraData,
+  ISortBy,
+  SortByDirection
+} from "@patternfly/react-table";
 import {
   DELETE_ADDRESS_SPACE,
   RETURN_ALL_ADDRESS_SPACES,
@@ -188,7 +193,7 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
     })
   );
 
-  const onSort = (_event: any, index: any, direction: any) => {
+  const onSort = (_event: any, index: number, direction: SortByDirection) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
   };

@@ -10,7 +10,8 @@ import {
   TableHeader,
   TableBody,
   IActionsResolver,
-  TableProps
+  TableProps,
+  SortByDirection
 } from "@patternfly/react-table";
 import { StyleSheet, css } from "@patternfly/react-styles";
 import { EmptyAddressSpace } from "modules/address-space/components/EmptyAddressSpace";
@@ -40,7 +41,7 @@ export interface IAddressSpace {
 export interface IAddressSpaceListProps extends TableProps {
   totalItemsCount: number;
   actionResolver?: IActionsResolver;
-  onSort?: (_event: any, index: number, direction: string) => void;
+  onSort?: (_event: any, index: number, direction: SortByDirection) => void;
 }
 
 export const AddressSpaceList: React.FunctionComponent<IAddressSpaceListProps> = ({

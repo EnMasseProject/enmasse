@@ -167,11 +167,6 @@ export const AddressSpaceFilterContainer: React.FunctionComponent<IAddressSpaceF
     setIsSelectNamespaceExpanded(!isSelectNamespaceExpanded);
   };
 
-  const createSelectOptionObject = (value: string) => {
-    const data: ISelectOption = { value: value, isDisabled: false };
-    return data;
-  };
-
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
 
