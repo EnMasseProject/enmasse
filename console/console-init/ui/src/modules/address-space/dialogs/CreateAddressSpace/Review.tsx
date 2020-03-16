@@ -11,7 +11,7 @@ import "ace-builds/src-noconflict/theme-github";
 import { ADDRESS_SPACE_COMMAND_REVIEW_DETAIL } from "graphql-module/queries";
 import { AddressSpaceReview } from "modules/address-space/components";
 
-export interface IAddressSpaceReview {
+export interface IReviewProps {
   name?: string;
   type?: string;
   plan?: string;
@@ -19,33 +19,30 @@ export interface IAddressSpaceReview {
   authenticationService: string;
 }
 
-export const Review: React.FunctionComponent<IAddressSpaceReview> = ({
+export const Review: React.FunctionComponent<IReviewProps> = ({
   name,
   type,
   plan,
   namespace,
   authenticationService
 }) => {
-  const { data, loading, error } = useQuery(
-    ADDRESS_SPACE_COMMAND_REVIEW_DETAIL,
-    {
-      variables: {
-        as: {
-          metadata: {
-            name: name,
-            namespace: namespace
-          },
-          spec: {
-            plan: plan ? plan.toLowerCase() : "",
-            type: type ? type.toLowerCase() : "",
-            authenticationService: {
-              name: authenticationService
-            }
+  const { data, loading } = useQuery(ADDRESS_SPACE_COMMAND_REVIEW_DETAIL, {
+    variables: {
+      as: {
+        metadata: {
+          name: name,
+          namespace: namespace
+        },
+        spec: {
+          plan: plan ? plan.toLowerCase() : "",
+          type: type ? type.toLowerCase() : "",
+          authenticationService: {
+            name: authenticationService
           }
         }
       }
     }
-  );
+  });
 
   if (loading) return <Loading />;
 

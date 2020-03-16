@@ -14,7 +14,7 @@ import {
 } from "graphql-module/queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
-import { IObjectMeta_v1_Input } from "pages/AddressSpaceDetail/AddressSpaceDetailPage";
+import { IObjectMeta_v1_Input } from "modules/address-space/AddressSpaceDetailPage";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { compareObject } from "utils";

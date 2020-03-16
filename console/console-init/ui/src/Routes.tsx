@@ -10,17 +10,11 @@ import { Redirect } from "react-router";
 const getAddressSpaceListPage = () =>
   import("modules/address-space/AddressSpacePage");
 const getAddressSpaceDetail = () =>
-  import("pages/AddressSpaceDetail/AddressSpaceDetailPage");
+  import("modules/address-space/AddressSpaceDetailPage");
 const getAddressDetail = () =>
   import("modules/address-detail/AddressDetailPage");
 const getConnectionDetail = () =>
   import("pages/ConnectionDetail/ConnectionDetailPage");
-
-const getConnectionsList = () =>
-  import(
-    "pages/AddressSpaceDetail/ConnectionList/ConnectionListWithFilterAndPaginationPage"
-  );
-const getAddressesList = () => import("modules/address/AddressPage");
 
 export const AppRoutes = () => (
   <SwitchWith404>
@@ -43,22 +37,6 @@ export const AppRoutes = () => (
     <LazyRoute
       path="/address-spaces/:namespace/:name/:type/connections/:connectionname"
       getComponent={getConnectionDetail}
-      exact={true}
-    />
-  </SwitchWith404>
-);
-
-export const AddressSpaceRoutes = () => (
-  <SwitchWith404>
-    <Redirect path="/" to="/address-spaces" exact={true} />
-    <LazyRoute
-      path="/address-spaces/:namespace/:name/:type/addresses/"
-      getComponent={getAddressesList}
-      exact={true}
-    />
-    <LazyRoute
-      path="/address-spaces/:namespace/:name/:type/connections/"
-      getComponent={getConnectionsList}
       exact={true}
     />
   </SwitchWith404>

@@ -25,7 +25,9 @@ export interface IAddressSpaceReviewProps {
   plan?: string;
   namespace: string;
   authenticationService: string;
-  data: any;
+  data: {
+    addressSpaceCommand: string;
+  };
 }
 
 const Style = StyleSheet.create({
@@ -142,7 +144,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                     variant={ButtonVariant.link}
                     aria-label="copy-configuration"
                     onClick={() => {
-                      navigator.clipboard.writeText(data.addressCommand);
+                      navigator.clipboard.writeText(data.addressSpaceCommand);
                       setIsCopied(true);
                     }}
                     onMouseLeave={() => {
