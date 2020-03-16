@@ -19,12 +19,24 @@ func (r *queryResolver) Whoami(ctx context.Context) (*v1.User, error) {
 		return requestState.UserInterface.Get("~", metav1.GetOptions{})
 	} else {
 		// The Kubernetes server has no API exposing the user's name
-		return &v1.User{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "unknown",
-			},
-			FullName:   "unknown",
-			Identities: []string{"unknown"},
-		}, nil
+		requestState := server.GetRequestStateFromContext(ctx)
+		if requestState.ImpersonateUser {
+			return &v1.User{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: requestState.User,
+				},
+				FullName:   requestState.User,
+				Identities: []string{requestState.User},
+			}, nil
+		} else {
+			// TODO: Use TokenReview's?
+			return &v1.User{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "unknown",
+				},
+				FullName:   "unknown",
+				Identities: []string{"unknown"},
+			}, nil
+		}
 	}
 }

@@ -60,6 +60,17 @@ spec:
               type: string
             host:
               type: string
+            impersonation:
+              type: object
+              description: "Enable impersonation as the mechanism for authorizing user actions. For impersonation to work, it is important to also grant the console-server permissions to impersonate users."
+              properties:
+                userHeader:
+                  description: "Headers to use for user impersonation."
+                  enum:
+                    - "X-Forwarded-User"
+                    - "X-Forwarded-Email"
+                    - "X-Forwarded-Preferred-Username"
+                  type: string
             consoleServer:
               type: object
               properties:

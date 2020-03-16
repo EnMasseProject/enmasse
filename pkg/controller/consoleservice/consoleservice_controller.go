@@ -866,6 +866,13 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			install.RemoveEnv(container, "HTTP_SESSION_IDLE_TIMEOUT")
 		}
 
+		if consoleservice.Spec.Impersonation != nil {
+			install.ApplyEnvSimple(container, "IMPERSONATION_ENABLE", "true")
+			if consoleservice.Spec.Impersonation.UserHeader != "" {
+				install.ApplyEnvSimple(container, "IMPERSONATION_USER_HEADER", consoleservice.Spec.Impersonation.UserHeader)
+			}
+		}
+
 		if value := util.GetBooleanEnvOrDefault("ENABLE_MONITORING_ANNOTATIONS", false); value {
 			deployment.ObjectMeta.Annotations["prometheus.io/scrape"] = "true"
 			deployment.ObjectMeta.Annotations["prometheus.io/path"] = "/metrics"
@@ -888,6 +895,10 @@ func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1bet
 	if consoleservice.Spec.OauthClientSecret != nil {
 		install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_ID", "client-id", consoleservice.Spec.OauthClientSecret.Name)
 		install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_SECRET", "client-secret", consoleservice.Spec.OauthClientSecret.Name)
+	}
+
+	if consoleservice.Spec.Impersonation != nil {
+		container.Args = append(container.Args, "-pass-basic-auth")
 	}
 
 	container.Ports = []corev1.ContainerPort{{

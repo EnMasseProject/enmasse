@@ -142,6 +142,7 @@ type ConsoleServiceSpec struct {
 	Replicas             *int32                           `json:"replicas,omitempty"`
 	DiscoveryMetadataURL *string                          `json:"discoveryMetadataURL,omitempty"`
 	Scope                *string                          `json:"scope,omitempty"`
+	Impersonation        *ConsoleServiceImpersonationSpec `json:"impersonation,omitempty"`
 	OauthClientSecret    *corev1.SecretReference          `json:"oauthClientSecret,omitempty"`
 	CertificateSecret    *corev1.SecretReference          `json:"certificateSecret,omitempty"`
 	SsoCookieSecret      *corev1.SecretReference          `json:"ssoCookieSecret,omitempty"`
@@ -149,6 +150,10 @@ type ConsoleServiceSpec struct {
 	Host                 *string                          `json:"host,omitempty"`
 	OauthProxy           *ConsoleServiceOauthProxySpec    `json:"oauthProxy,omitempty"`
 	ConsoleServer        *ConsoleServiceConsoleServerSpec `json:"consoleServer,omitempty"`
+}
+
+type ConsoleServiceImpersonationSpec struct {
+	UserHeader string `json:"userHeader"`
 }
 
 type ConsoleServiceOauthProxySpec struct {

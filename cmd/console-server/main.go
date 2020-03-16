@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -49,6 +50,16 @@ func main() {
 	infraNamespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
 	port := util.GetEnvOrDefault("PORT", "8080")
 	metricsPort := util.GetEnvOrDefault("METRICS_PORT", "8889")
+
+	var impersonationConfig *server.ImpersonationConfig
+	impersonationEnable := util.GetBooleanEnvOrDefault("IMPERSONATION_ENABLE", false)
+	if impersonationEnable {
+		impersonationConfig = &server.ImpersonationConfig{}
+		userHeader, ok := os.LookupEnv("IMPERSONATION_USER_HEADER")
+		if ok {
+			impersonationConfig.UserHeader = &userHeader
+		}
+	}
 
 	var developmentMode = flag.Bool("developmentMode", false,
 		"set to true to run console-server outside of the OpenShift container.  It will look for"+
@@ -193,7 +204,7 @@ http://localhost:` + port + `/graphql
 	if *developmentMode {
 		queryServer.Handle(queryEndpoint, server.DevelopmentHandler(gql, sessionManager, config.BearerToken))
 	} else {
-		queryServer.Handle(queryEndpoint, server.AuthHandler(gql, sessionManager))
+		queryServer.Handle(queryEndpoint, server.AuthHandler(gql, sessionManager, impersonationConfig))
 	}
 
 	go func() {

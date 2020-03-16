@@ -2,13 +2,10 @@
 //
 // assembly-configuring.adoc
 
-[id='config-openid-connect-for-kubernetes']
-= Configuring {ProductName} Console to use OpenID Connect
+[id='config-cluster-openid-connect-for-kubernetes']
+= Configuring {ProductName} Console to use cluster OpenID Connect
 
-To use the {ProductName} Console on Kubernetes, you must configure Kubernetes to use
-https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens[OpenID Connect (OIDC)]
-as an Authentication Strategy.  Then you must create a `consoleservice` resource refering to your OIDC Provider.
-
+To deploy the console you must create a `consoleservice` resource refering to your OIDC Provider.
 
 .Prerequestises
 * Before you begin you need to know the following details from your OpenID Connect provider:

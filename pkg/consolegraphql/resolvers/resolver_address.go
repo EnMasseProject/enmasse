@@ -253,7 +253,13 @@ func (r *mutationResolver) PurgeAddress(ctx context.Context, input metav1.Object
 		return &f, fmt.Errorf("cannot find collector for infraUuid '%s' (address space %s) at this time", infraUid, as.Name)
 	}
 
-	commandDelegate, e := collector.CommandDelegate(requestState.UserAccessToken)
+	token := requestState.UserAccessToken
+	impersonateUser := ""
+	if requestState.ImpersonateUser {
+		impersonateUser = requestState.User
+	}
+
+	commandDelegate, e := collector.CommandDelegate(token, impersonateUser)
 	if e != nil {
 		return nil, e
 	}

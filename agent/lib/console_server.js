@@ -195,11 +195,13 @@ ConsoleServer.prototype.close = function (callback) {
     }).then(callback);
 };
 
-function authorize(env, token) {
+function shouldImpersonate(user) {
+    return user !== undefined && user != null && user != "";
+}
+
+function authorize(options, namespace) {
     return new Promise((resolve, reject) => {
         try {
-            var options = {"token": token};
-            const namespace = env.ADDRESS_SPACE_NAMESPACE;
             kubernetes.self_subject_access_review(options, namespace,
                 "list", "enmasse.io", "addresses").then(({allowed: allowed_list, reason: reason_list}) => {
                 if (allowed_list) {
@@ -236,6 +238,7 @@ ConsoleServer.prototype.listen = function (env, callback) {
     return new Promise((resolve, reject) => {
         var port = env.port === undefined ? 56710 : env.port;
         var opts = tls_options.get_console_server_options({port: port}, env);
+        const namespace = env.ADDRESS_SPACE_NAMESPACE;
 
         self.amqp_container.sasl_server_mechanisms['XOAUTH2'] = function () {
             return {
@@ -248,10 +251,15 @@ ConsoleServer.prototype.listen = function (env, callback) {
 
                     var self = this;
                     function authenticate(token) {
-                        return kubernetes.whoami({"token": token}).then((user) => {
+                        return kubernetes.whois(token).then((user) => {
                             log.info("Authenticated as user : %s ", user.username);
-                            self.username = user.username;
-                            return true;
+                            if (shouldImpersonate(resp.user)) {
+                                log.info("Impersonating user " + resp.user);
+                                self.username = resp.user;
+                            } else {
+                                self.username = user.username;
+                            }
+                            return user.authenticated;
                         }).catch((e) => {
                             log.error("Failed to authenticate using token", e);
                             return false;
@@ -261,7 +269,11 @@ ConsoleServer.prototype.listen = function (env, callback) {
                     return Promise.resolve(authenticate(resp.token, hostname))
                         .then((result) => {
                             if (result) {
-                                return Promise.resolve(authorize(env, resp.token))
+                                var options = {"token": resp.token};
+                                if (shouldImpersonate(resp.user)) {
+                                    options.impersonateUser = resp.user;
+                                }
+                                return Promise.resolve(authorize(options, namespace))
                                     .then((results) => {
                                         self.outcome = true;
                                         self.admin = results.admin;
