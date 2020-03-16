@@ -670,7 +670,7 @@ const RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
   name?: string
 ) => {
   let filter = "";
-  if (addressspaceName && addressspaceName.trim() !== "") {
+  if (addressspaceName && addressspaceName.trim() !== "") {f
     filter += "`$.metadata.name` LIKE '" + addressspaceName + ".%' AND";
   }
   if (namespace && namespace.trim() !== "") {
