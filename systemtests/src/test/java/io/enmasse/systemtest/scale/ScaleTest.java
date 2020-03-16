@@ -78,9 +78,13 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 class ScaleTest extends TestBase implements ITestBaseIsolated {
     private final static Logger LOGGER = CustomLogger.getLogger();
 
-    //performance constants
-    private final int performanceInitialAddresses = 12000;
     private final int addressesPerTenant = 5;
+
+    //addresses and connections scaling constants
+    private final int scaleSendMessagesPeriod = 10000;
+
+    //performance test constants
+    private final int performanceInitialAddresses = 12000;
     private final int initialAddressesPerGroup = 100;
     private final int addressesPerGroupIncrease = initialAddressesPerGroup;
     private final int initialAnycastLinksPerConn = 1;
@@ -276,7 +280,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                     List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
                     AddressUtils.waitForDestinationsReady(new TimeoutBudget(30, TimeUnit.MINUTES), currentAddresses.toArray(new Address[0]));
 
-                    manager.deployProbeClient(addressBatch);
+                    manager.deployTenantClient(addressBatch, addressesPerTenant, scaleSendMessagesPeriod);
                     addressBatch.clear();
                 }
             } catch (IllegalStateException ex) {

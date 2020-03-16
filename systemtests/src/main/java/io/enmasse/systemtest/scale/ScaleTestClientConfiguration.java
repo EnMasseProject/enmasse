@@ -21,7 +21,12 @@ public class ScaleTestClientConfiguration {
     private String password;
     private String[] addresses;
 
+    //messaging-client
     private Integer linksPerConnection;
+
+    //tenant-client
+    private Integer addressesPerTenant;
+    private Integer sendMessagePeriod; //milliseconds
 
     public ScaleTestClientConfiguration() {
 		// empty
@@ -75,6 +80,14 @@ public class ScaleTestClientConfiguration {
     	return linksPerConnection;
     }
 
+    public Integer getAddressesPerTenant() {
+        return addressesPerTenant;
+    }
+
+    public Integer getSendMessagePeriod() {
+        return sendMessagePeriod;
+    }
+
     public void setHostname(String hostname) {
         this.hostname = hostname;
     }
@@ -100,6 +113,14 @@ public class ScaleTestClientConfiguration {
 
     public void setLinksPerConnection(Integer linksPerConnection) {
         this.linksPerConnection = linksPerConnection;
+    }
+
+    public void setAddressesPerTenant(Integer addressesPerTenant) {
+        this.addressesPerTenant = addressesPerTenant;
+    }
+
+    public void setSendMessagePeriod(Integer sendMessagePeriod) {
+        this.sendMessagePeriod = sendMessagePeriod;
     }
 
 }

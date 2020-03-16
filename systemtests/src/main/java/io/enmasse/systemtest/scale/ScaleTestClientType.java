@@ -9,7 +9,8 @@ import java.util.stream.Stream;
 public enum ScaleTestClientType {
 
     probe("probe-client"),
-    messaging("messaging-client");
+    messaging("messaging-client"),
+    tenant("tenant-client");
 
     private final String value;
 
