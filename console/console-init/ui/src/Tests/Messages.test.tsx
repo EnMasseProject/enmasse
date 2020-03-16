@@ -5,7 +5,7 @@
 
 import React from "react";
 import { render, getByTitle } from "@testing-library/react";
-import { Messages } from "modules/address/components/Messages";
+import { Messages } from "modules/address/components/common";
 
 describe("Messages", () => {
   test("it renders the message", () => {
