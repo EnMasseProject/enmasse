@@ -8,6 +8,14 @@
 .Prerequisites
 * You must be logged into the {ConsoleName}.
 
+ifdef::Asciidoctor[]
+image::console-screenshot-addr.png[{ConsoleName}]
+endif::Asciidoctor[]
+
+ifndef::Asciidoctor[]
+image::{imagesdir}/console-screenshot-addr.png[{ConsoleName}]
+endif::Asciidoctor[]
+
 .Message statistics reference table
 [cols="50%a,50%a",options="header"]
 |===
@@ -26,6 +34,15 @@
 
 
 .Application connection statistics reference table
+
+ifdef::Asciidoctor[]
+image::console-screenshot-conns.png[{ConsoleName}]
+endif::Asciidoctor[]
+
+ifndef::Asciidoctor[]
+image::{imagesdir}/console-screenshot-conns.png[{ConsoleName}]
+endif::Asciidoctor[]
+
 [cols="50%a,50%a",options="header"]
 |===
 |To view... |On the Connections page...
