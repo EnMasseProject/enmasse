@@ -2,6 +2,8 @@
 //
 // assembly-using-console.adoc
 
+:cmdcli: oc
+
 [id='logging-into-console-{context}']
 = Accessing the {ConsoleName}
 
@@ -34,3 +36,4 @@ endif::Asciidoctor[]
 ifndef::Asciidoctor[]
 image::{imagesdir}/console-screenshot.png[{ConsoleName}]
 endif::Asciidoctor[]
+
