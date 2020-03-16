@@ -18,6 +18,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.PreMatching;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@PreMatching
 public class RequestLogger implements ContainerRequestFilter, ContainerResponseFilter {
     private static final Logger log = LoggerFactory.getLogger(RequestLogger.class);
     private static final String PROP_NAME = "request.start";

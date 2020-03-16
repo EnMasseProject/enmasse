@@ -1,3 +1,6 @@
+## 0.30.3
+*  #4119: Use @PreMatching annotation of the api-server request log to ensure that 404 are processed without NPE.
+
 ## 0.30.2
 *  #2714: Allow setting security context of pods using persistent volumes
 *  #3547: Network policies not deleted when address space is deleted
