@@ -282,6 +282,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
                     manager.deployTenantClient(addressBatch, addressesPerTenant, scaleSendMessagesPeriod);
                     addressBatch.clear();
+                    checkMetrics(manager.getMonitoringResult());
                 }
             } catch (IllegalStateException ex) {
                 log.error("Failed to wait for addresses");
@@ -400,7 +401,8 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         List<AddressPlan> addressPlans = Arrays.asList(testQueuePlan, testAnycastPlan);
 
         AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject(addressSpacePlanName, testInfra.getMetadata().getName(), AddressSpaceType.STANDARD, resources, addressPlans);
-        getResourceManager().createAddressSpacePlan(addressSpacePlan);
+        getResourceManager().createAddressSpacePlan(addressSpacePlan, false);
+        Thread.sleep(120_000);
 
         LOGGER.info("Create custom auth service");
         //Custom auth service
@@ -425,7 +427,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 .endSpec()
                 .build();
         getResourceManager().createAddressSpace(addressSpace);
-        getResourceManager().createOrUpdateUser(addressSpace, userCredentials);
+        getResourceManager().createOrUpdateUser(addressSpace, userCredentials, false);
     }
 
     List<Address> createInitialAddresses(int totalAddresses) throws Exception {
