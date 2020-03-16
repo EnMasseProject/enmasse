@@ -14,6 +14,7 @@ import java.util.Optional;
 import org.hawkular.agent.prometheus.PrometheusDataFormat;
 import org.hawkular.agent.prometheus.PrometheusScraper;
 import org.hawkular.agent.prometheus.types.Counter;
+import org.hawkular.agent.prometheus.types.Histogram;
 import org.hawkular.agent.prometheus.types.MetricFamily;
 import org.slf4j.Logger;
 
@@ -47,20 +48,24 @@ public class ScaleTestClientMetricsClient {
         lastUpdate = System.currentTimeMillis();
     }
 
-    protected List<MetricFamily> getMetrics() throws IOException {
-        boolean scrape = false;
-        if (lastMetrics == null) {
-            log.debug("Initializing metrics");
-            scrape = true;
+    protected List<MetricFamily> getMetrics() {
+        try {
+            boolean scrape = false;
+            if (lastMetrics == null) {
+                log.debug("Initializing metrics");
+                scrape = true;
+            }
+            if (!scrape && (System.currentTimeMillis()-METRICS_UPDATE_PERIOD_MILLIS) > lastUpdate) {
+                log.debug("Metrics update period elapsed, scraping metrics");
+                scrape = true;
+            }
+            if (scrape) {
+                scrape();
+            }
+            return lastMetrics;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        if (!scrape && (System.currentTimeMillis()-METRICS_UPDATE_PERIOD_MILLIS) > lastUpdate) {
-            log.debug("Metrics update period elapsed, scraping metrics");
-            scrape = true;
-        }
-        if (scrape) {
-            scrape();
-        }
-        return lastMetrics;
     }
 
     protected IllegalStateException metricNotFound(String name) {
@@ -76,22 +81,32 @@ public class ScaleTestClientMetricsClient {
     }
 
     protected Optional<Counter> getCounter(String name, String label, String labelValue) {
-        try {
-            var stream = getMetrics()
-                    .stream()
-                    .filter(m -> m.getName().equals(name))
-                    .findFirst()
-                    .orElseThrow(() -> metricNotFound(name))
-                    .getMetrics()
-                    .stream()
-                    .filter(m -> m.getName().equals(name));
-            if (label != null && labelValue != null) {
-                stream = stream.filter(m -> m.getLabels().containsKey(label) && m.getLabels().containsValue(labelValue));
-            }
-            return stream.findFirst().map(m -> (Counter)m);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        var stream = getMetrics()
+                .stream()
+                .filter(m -> m.getName().equals(name))
+                .findFirst()
+                .orElseThrow(() -> metricNotFound(name))
+                .getMetrics()
+                .stream()
+                .filter(m -> m.getName().equals(name));
+        if (label != null && labelValue != null) {
+            stream = stream.filter(m -> m.getLabels().containsKey(label) && m.getLabels().containsValue(labelValue));
         }
+        return stream.findFirst().map(m -> (Counter)m);
+    }
+
+
+    protected Optional<Histogram> getHistogram(String name) {
+        return getMetrics()
+                .stream()
+                .filter(m -> m.getName().equals(name))
+                .findFirst()
+                .orElseThrow(() -> metricNotFound(name))
+                .getMetrics()
+                .stream()
+                .filter(m -> m.getName().equals(name))
+                .findFirst()
+                .map(h -> (Histogram)h);
     }
 
 }

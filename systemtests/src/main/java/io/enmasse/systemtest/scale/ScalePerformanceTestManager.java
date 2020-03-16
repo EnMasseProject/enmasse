@@ -8,6 +8,7 @@ import static io.enmasse.systemtest.scale.metrics.MetricsAssertions.isPresent;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,7 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-
+import org.HdrHistogram.DoubleHistogram;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.hawkular.agent.prometheus.types.Counter;
 import org.slf4j.Logger;
 
@@ -27,6 +29,8 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.scale.metrics.DowntimeData;
+import io.enmasse.systemtest.scale.metrics.DowntimeMonitoringResult;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
 import io.enmasse.systemtest.scale.metrics.MetricsMonitoringResult;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -50,7 +54,8 @@ public class ScalePerformanceTestManager {
     private int totalExpectedConnections = 0;
     private final Map<String, ScaleTestClient<MessagingClientMetricsClient>> clientsMap = new ConcurrentHashMap<>();
     private final Queue<String> clientsMonitoringQueue = new ConcurrentLinkedQueue<>();
-    private final AtomicReference<MetricsMonitoringResult> monitoringResult = new AtomicReference<MetricsMonitoringResult>(new MetricsMonitoringResult());
+    private final AtomicReference<MetricsMonitoringResult> monitoringResult = new AtomicReference<>(new MetricsMonitoringResult());
+    private final DowntimeMonitoringResult downtimeResult = new DowntimeMonitoringResult();
 
     public ScalePerformanceTestManager(Endpoint addressSpaceEndpoint, UserCredentials credentials) {
         this.clientProvider = () -> {
@@ -76,7 +81,10 @@ public class ScalePerformanceTestManager {
         return monitoringResult;
     }
 
-    //probably can be deleted
+    public DowntimeMonitoringResult getDowntimeResult() {
+        return downtimeResult;
+    }
+
     public void deployMessagingClient(List<Address> addresses, AddressType type, int linksPerConnection) throws Exception {
         if (addresses == null || addresses.isEmpty()) {
             throw new IllegalArgumentException("Addresses cannot be null or empty");
@@ -212,6 +220,66 @@ public class ScalePerformanceTestManager {
             monitoringResult.getAndUpdate(r -> r.addError(e.getMessage()));
             return;
         }
+    }
+
+    public void measureClientsDowntime(DowntimeData data) {
+        List<Double> averages = new ArrayList<>();
+        data.setReconnectTimes99p(new ArrayList<>());
+        data.setReconnectTimesMedian(new ArrayList<>());
+        List<Double> times99p = new ArrayList<>();
+        List<Double> timesMedian = new ArrayList<>();
+        for (var client : clientsMap.values()) {
+
+            TestUtils.waitUntilCondition(() -> {
+                var optional = client.getMetricsClient().getReconnectDurationHistogram();
+                return optional.isPresent() && optional.get().getSampleCount() > 0;
+            }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> {
+                logger.info("Client {} not reporting reconnections maybe it's ok because of used router still available");
+            });
+
+            client.getMetricsClient().getReconnectDurationHistogram().ifPresent(histogram -> {
+                DoubleHistogram dh = new DoubleHistogram(2);
+                histogram.getBuckets().forEach(b -> {
+                    if (!Double.isInfinite(b.getUpperBound())) {
+                        dh.recordValueWithCount(b.getUpperBound(), b.getCumulativeCount());
+                    }
+                });
+
+                double value99p = dh.getValueAtPercentile(0.99);
+                times99p.add(value99p);
+                data.getReconnectTimes99p().add(value99p+"s");
+
+                double valueMedian = dh.getValueAtPercentile(0.5);
+                timesMedian.add(valueMedian);
+                data.getReconnectTimesMedian().add(valueMedian+"s");
+
+                double average = histogram.getSampleSum() / histogram.getSampleCount();
+                averages.add(average);
+            });
+
+        }
+
+        Median median = new Median();
+        double global99pMedian = median.evaluate(times99p.stream().mapToDouble(d -> d).toArray());
+        data.setGlobalReconnectTimes99pMedian(global99pMedian+"s");
+
+        double globalMediansMedian = median.evaluate(timesMedian.stream().mapToDouble(d -> d).toArray());
+        data.setGlobalReconnectTimesMediansMedian(globalMediansMedian+"s");
+
+        double average = averages.stream().mapToDouble(d -> d).sum() / averages.size();
+        data.setReconnectTimeAverage(Duration.ofSeconds((long) average).toSeconds()+"s");
+
+    }
+
+    public void sleep() throws InterruptedException {
+        long sleepMs = 4 * getConnections();
+
+        logger.info("#######################################");
+        logger.info("Created total {} connections with {} deployed clients, waiting {} s for system to react",
+                getConnections(), getClients(), sleepMs/1000);
+        logger.info("#######################################");
+
+        Thread.sleep(sleepMs);
     }
 
     private void waitUntilHasValue(Supplier<Optional<Counter>> counterSupplier, String timeoutMessage) {

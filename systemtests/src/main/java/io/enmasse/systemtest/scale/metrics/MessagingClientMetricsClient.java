@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.hawkular.agent.prometheus.types.Counter;
+import org.hawkular.agent.prometheus.types.Histogram;
+
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.model.address.AddressType;
 
@@ -30,6 +32,9 @@ public class MessagingClientMetricsClient extends ScaleTestClientMetricsClient {
     private static final String TEST_REJECTED_TOTAL_METRIC = "test_rejected_total";
     private static final String TEST_RELEASED_TOTAL_METRIC = "test_released_total";
     private static final String TEST_MODIFIED_TOTAL_METRIC = "test_modified_total";
+    //histograms
+    private static final String TEST_RECONNECT_DURATION_HIST = "test_reconnect_duration";
+    private static final String TEST_REATTACH_DURATION_HIST = "test_reattach_duration";
 
     public MessagingClientMetricsClient(Endpoint metricsEndpoint) throws IOException {
         super(metricsEndpoint);
@@ -89,6 +94,14 @@ public class MessagingClientMetricsClient extends ScaleTestClientMetricsClient {
 
     public Optional<Counter> getModifiedDeliveries(AddressType addressType) {
         return getCounter(TEST_MODIFIED_TOTAL_METRIC, addressType);
+    }
+
+    public Optional<Histogram> getReconnectDurationHistogram() {
+        return getHistogram(TEST_RECONNECT_DURATION_HIST);
+    }
+
+    public Optional<Histogram> getReattachDurationHistogram() {
+        return getHistogram(TEST_REATTACH_DURATION_HIST);
     }
 
 }
