@@ -6,7 +6,21 @@
 = Accessing the {ConsoleName}
 
 .Prerequisites
-* You must have obtained the host name for the {ConsoleName}. For more information about how to obtain the host name, see  link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#retrieving-address-space-information-messaging[Example commands for retrieving address space information].
+ifeval::["{cmdcli}" == "oc"]
+* On OpenShift Container Platform 3.x, obtain the host name for the {ConsoleName} by running the following command:
+----
+{cmdcli} get routes console -o jsonpath={.spec.host}
+----
+
+* On OpenShift Container Platform 4.x, obtain the host name for the {ConsoleName} by running the following command:
+----
+{cmdcli} get consolelink -l app=enmasse -o jsonpath={.spec.href}
+----
+endif::[]
+
+// ifeval::["{cmdcli}" == "kubectl"]
+// * Need to raise an engineering issue to make this clearer for Kubernetes users, since at the moment there are multiple ways to configure this
+// endif::[]
 
 .Procedure
 . In a web browser, navigate to `https://_console-host-name_` where `_console-host-name_` is the {ConsoleName} host name.

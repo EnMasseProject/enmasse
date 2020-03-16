@@ -3,7 +3,7 @@
 // assembly-using-console.adoc
 
 [id='ref-view-message-connection-stats-table-{context}']
-= Viewing message and connection statistics using the {ConsoleName}
+= Viewing message and application connection statistics using the {ConsoleName}
 
 .Prerequisites
 * You must be logged into the {ConsoleName}.
@@ -11,28 +11,28 @@
 .Message statistics reference table
 [cols="50%a,50%a",options="header"]
 |===
-|To view... |On the Addresses page see...
-|Address status |The first column (the symbol preceding the address name)
-|Address type |The third column
-|Address plan |The fourth column
-|Message ingress rate (during the last 5 minutes) |*Messages In*
-|Message egress rate (during the last 5 minutes) |*Messages Out*
-|Number of senders attached |*Senders*
-|Number of receivers attached |*Receivers*
-|Queue and topic address types only: Number of stored messages on the broker or brokers |*Stored*
-|Standard address space only: Message deliveries per second |For the desired address, expand the twisty on the left to show the *Senders* table; see the *Delivery Rate* column.
-|Standard address space and queue address type only: Number of rejected messages stored in the global dead-letter queue (DLQ) |*Global DLQ*
+|To view... |On the Addresses page...
+|Address status | See the third column, *Status*
+|Address type |See the first icon in the second column, *Type/plan*
+|Address plan |See the string that follows the icon in the second column, *Type/plan*
+|Messages received per second (computed over the last 5 minutes) |See *Messages In/sec*
+|Messages sent per second (computed over the last 5 minutes) |See *Messages Out/sec*
+|Number of senders attached |See *Senders*
+|Number of receivers attached |See *Receivers*
+|Queue and topic address types only: Number of stored messages on the broker or brokers |*Stored Messages*
+|Standard address space only: Message deliveries per second |Click the desired address, which then shows the links page for that address; see the *Delivery Rate* column.
+// |Standard address space and queue address type only: Number of rejected messages stored in the global dead-letter queue (DLQ) |*Global DLQ*
 |===
 
 
-.Connection statistics reference table
+.Application connection statistics reference table
 [cols="50%a,50%a",options="header"]
 |===
-|To view... |On the Connections page see...
-|Total number of messages received as long the connection has existed |*Messages In*
-|Standard address space only: Total number of messages sent as long the connection has existed |*Messages Out*
-|Total number of messages delivered |For the desired connection, expand the twisty on the left to show the *Senders* and *Receivers* tables; see the *Deliveries* columns.
-|Standard address space only: Username used by the client to connect |The third column
+|To view... |On the Connections page...
+|Messages received per second (computed over the last 5 minutes) |See *Messages In*
+|Standard address space only: Messages sent per second (computed over the last 5 minutes) |See *Messages Out*
+|Total number of messages delivered |Click the desired host name to show the list of senders and receivers; see the *Deliveries* column.
+// |Standard address space only: Username used by the client to connect |See the third column
 |===
 NOTE: For the brokered address space only, on the Connections page, the number of senders is either `0` or `1`. As soon as one or more senders exist, `1` is displayed rather than reflecting the actual number of senders.
 
