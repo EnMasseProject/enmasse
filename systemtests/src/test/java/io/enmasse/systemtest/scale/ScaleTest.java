@@ -145,9 +145,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
             ProbeClientMetricsClient probeClientMetrics = new ProbeClientMetricsClient(metricsEndpoint);
 
-            TestUtils.waitUntilConditionOrFail(() -> {
-                return probeClientMetrics.getSuccessTotal().getValue()>0;
-            }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
+            TestUtils.waitUntilConditionOrFail(() -> probeClientMetrics.getSuccessTotal().getValue()>0, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
 
             assertTrue(probeClientMetrics.getSuccessTotal().getValue()>0);
             assertEquals(0, probeClientMetrics.getFailureTotal().getValue());
@@ -283,6 +281,9 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                     manager.deployTenantClient(addressBatch, addressesPerTenant, scaleSendMessagesPeriod);
                     addressBatch.clear();
                     checkMetrics(manager.getMonitoringResult());
+                    TestUtils.listRouterPods(kubernetes, addressSpace).forEach(
+                            pod -> assertEquals("Running", pod.getStatus().getPhase())
+                    );
                 }
             } catch (IllegalStateException ex) {
                 log.error("Failed to wait for addresses");
@@ -367,7 +368,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                         .withNewResources()
                         .withMemory("3Gi")
                         .endResources()
-                        .withMinReplicas(2)
+                        .withMinReplicas(3)
                         .withLinkCapacity(2000)
                         .build())
                 .withAdmin(new StandardInfraConfigSpecAdminBuilder()
@@ -388,7 +389,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         AddressPlan testAnycastPlan = PlanUtils.createAddressPlanObject(anycastPlanName,
                 AddressType.ANYCAST,
                 Collections.singletonList(
-                        new ResourceRequest("router", 0.0002)));
+                        new ResourceRequest("router", 0.0005)));
 
         getResourceManager().createAddressPlan(testQueuePlan);
         getResourceManager().createAddressPlan(testAnycastPlan);
@@ -406,7 +407,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
         LOGGER.info("Create custom auth service");
         //Custom auth service
-        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, false);
+        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, true, "5Gi", "3Gi", true, authServiceName);
         resourcesManager.createAuthService(standardAuth, false);
         setVerboseGCAuthservice(authServiceName);
         resourcesManager.waitForAuthPods(standardAuth);

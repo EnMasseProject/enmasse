@@ -50,6 +50,17 @@ public class AuthServiceUtils {
                 .done();
     }
 
+    public static AuthenticationService createStandardAuthServiceObject(String name, boolean persistent, String volumeSize, String memory, boolean deleteClaim, String claimName) {
+        return createAuthService(name, AuthenticationServiceType.standard)
+                .editSpec()
+                .withNewStandard()
+                .addToAdditionalProperties("storage", createStorage(persistent, volumeSize, deleteClaim, claimName))
+                .addToAdditionalProperties("resources", createResources(memory, memory))
+                .endStandard()
+                .endSpec()
+                .done();
+    }
+
     public static AuthenticationService createExternalAuthServiceObject(String name, String host, int port, String realm, SecretReference caCertSecret, SecretReference clientCertSecret) {
         return createAuthService(name, AuthenticationServiceType.external)
             .editSpec()
