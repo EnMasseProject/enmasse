@@ -109,6 +109,8 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import okhttp3.Response;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 public abstract class Kubernetes {
     private static final Logger log = CustomLogger.getLogger();
     private static Kubernetes instance;
@@ -944,6 +946,21 @@ public abstract class Kubernetes {
 
     public abstract String getOlmNamespace();
 
+    public void awaitPodsReady(TimeoutBudget budget) throws InterruptedException {
+        List<Pod> unready;
+        do {
+            unready = new ArrayList<>(listPods());
+            unready.removeIf(p -> TestUtils.isPodReady(p, true));
+
+            if (!unready.isEmpty()) {
+                Thread.sleep(1000L);
+            }
+        } while (!unready.isEmpty() && budget.timeLeft() > 0);
+
+        if (!unready.isEmpty()) {
+            fail(String.format(" %d pod(s) still unready", unready.size()));
+        }
+    }
 
     @FunctionalInterface
     public static interface AfterInput {
@@ -1041,5 +1058,4 @@ public abstract class Kubernetes {
         log.info("Output: {}", stdoutString);
         return stdoutString;
     }
-
 }
