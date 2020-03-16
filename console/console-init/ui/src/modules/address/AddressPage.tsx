@@ -9,7 +9,6 @@ import { useParams, useLocation, useHistory } from "react-router-dom";
 import {
   PageSection,
   PageSectionVariants,
-  Pagination,
   GridItem,
   Grid
 } from "@patternfly/react-core";
@@ -36,6 +35,7 @@ import {
   getFilteredAddressesByType
 } from "modules/address/utils";
 import { compareObject } from "utils";
+import { TablePagination } from "components/TablePagination";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -68,7 +68,9 @@ export default function AddressPage() {
   const [filterValue, setFilterValue] = React.useState<string | null>(
     "Address"
   );
-  const [filterNames, setFilterNames] = React.useState<any[]>([]);
+  const [filterNames, setFilterNames] = React.useState<
+    Array<{ value: string; isExact: boolean }>
+  >([]);
   const [typeValue, setTypeValue] = React.useState<string | null>(null);
   const [statusValue, setStatusValue] = React.useState<string | null>(null);
   const [totalAddresses, setTotalAddress] = React.useState<number>(0);
@@ -77,7 +79,6 @@ export default function AddressPage() {
   );
 
   const location = useLocation();
-  const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
@@ -118,47 +119,6 @@ export default function AddressPage() {
       addressSpaces.addressSpaces[0].spec.plan.metadata.name;
     setAddressSpacePlan(name);
   }
-
-  const setSearchParam = React.useCallback(
-    (name: string, value: string) => {
-      searchParams.set(name, value.toString());
-    },
-    [searchParams]
-  );
-
-  const handlePageChange = React.useCallback(
-    (_: any, newPage: number) => {
-      setSearchParam("page", newPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
-
-  const handlePerPageChange = React.useCallback(
-    (_: any, newPerPage: number) => {
-      setSearchParam("page", "1");
-      setSearchParam("perPage", newPerPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
-
-  const renderPagination = (page: number, perPage: number) => {
-    return (
-      <Pagination
-        itemCount={totalAddresses}
-        perPage={perPage}
-        page={page}
-        onSetPage={handlePageChange}
-        variant="top"
-        onPerPageSelect={handlePerPageChange}
-      />
-    );
-  };
 
   const purgeAddressErrors: any = [];
   const deleteAdressErrors: any = [];
@@ -342,7 +302,12 @@ export default function AddressPage() {
           />
         </GridItem>
         <GridItem span={5}>
-          {totalAddresses > 0 && renderPagination(page, perPage)}
+          <TablePagination
+            itemCount={totalAddresses}
+            variant={"top"}
+            page={page}
+            perPage={perPage}
+          />
         </GridItem>
       </Grid>
       <Divider />
@@ -366,7 +331,12 @@ export default function AddressPage() {
         onSelectAddress={onSelectAddress}
         onSelectAllAddress={onSelectAllAddress}
       />
-      {totalAddresses > 0 && renderPagination(page, perPage)}
+      <TablePagination
+        itemCount={totalAddresses}
+        variant={"bottom"}
+        page={page}
+        perPage={perPage}
+      />
     </PageSection>
   );
 }
