@@ -49,6 +49,11 @@
       <artifactId>api-common</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-jdbc-client</artifactId>
+    </dependency>
+
     <!-- tracing -->
     <dependency>
       <groupId>io.jaegertracing</groupId>
@@ -102,7 +107,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <mainClass>io.enmasse.iot.registry.jdbc.Application</mainClass>
+          <layout>ZIP</layout>
         </configuration>
       </plugin>
 

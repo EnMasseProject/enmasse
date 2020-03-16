@@ -28,8 +28,22 @@ public class Application {
 
         log.debug("config file: {}", configFile);
 
-        try (InfinispanTenantCleaner app = new InfinispanTenantCleaner(CleanerConfig.load(configFile))) {
-            app.run();
+        final String type = System.getenv("registry.type");
+        if (type == null) {
+            return;
+        }
+
+        switch (type) {
+            case "infinispan":
+                try (InfinispanTenantCleaner app = new InfinispanTenantCleaner(CleanerConfig.load(configFile))) {
+                    app.run();
+                }
+                break;
+            case "jdbc":
+                try (JdbcTenantCleaner app = new JdbcTenantCleaner()) {
+                    app.run();
+                }
+                break;
         }
 
     }

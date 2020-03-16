@@ -111,10 +111,10 @@ func applyInterServiceForServiceServiceCa(service *corev1.Service, serviceName s
 
 func applyInterServiceForDeploymentServiceCa(deployment *appsv1.Deployment, serviceName string) error {
 
-	install.DropVolume(deployment, "tls-service-ca")
+	install.DropVolume(&deployment.Spec.Template.Spec, "tls-service-ca")
 
 	if serviceName != "" {
-		install.ApplySecretVolume(deployment, "tls", serviceName+"-tls")
+		install.ApplySecretVolume(&deployment.Spec.Template.Spec, "tls", serviceName+"-tls")
 	}
 
 	return nil
@@ -146,7 +146,7 @@ func applyInterServiceForDeploymentSecretCertificates(deployment *appsv1.Deploym
 	if cfg.CASecretName == "" {
 		return fmt.Errorf("inter service secret CA name must not be empty")
 	}
-	install.ApplySecretVolume(deployment, "tls-service-ca", cfg.CASecretName)
+	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "tls-service-ca", cfg.CASecretName)
 
 	if serviceName != "" {
 		mappedSecretName := cfg.ServiceSecretNames[serviceName]
@@ -154,7 +154,7 @@ func applyInterServiceForDeploymentSecretCertificates(deployment *appsv1.Deploym
 			return fmt.Errorf("secret name %s mapped to an empty secret name", serviceName)
 		}
 
-		install.ApplySecretVolume(deployment, "tls", mappedSecretName)
+		install.ApplySecretVolume(&deployment.Spec.Template.Spec, "tls", mappedSecretName)
 
 	}
 

@@ -4,6 +4,26 @@
  */
 package io.enmasse.systemtest.iot.isolated.registry;
 
+import static io.enmasse.systemtest.TestTag.SMOKE;
+import static java.net.HttpURLConnection.HTTP_CONFLICT;
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.net.HttpURLConnection;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+import org.eclipse.hono.service.management.credentials.CommonCredential;
+import org.eclipse.hono.service.management.credentials.PasswordCredential;
+import org.eclipse.hono.service.management.device.Device;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
@@ -16,24 +36,6 @@ import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.utils.IoTUtils;
-import org.eclipse.hono.service.management.credentials.CommonCredential;
-import org.eclipse.hono.service.management.credentials.PasswordCredential;
-import org.eclipse.hono.service.management.device.Device;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-import static io.enmasse.systemtest.TestTag.SMOKE;
-import static java.net.HttpURLConnection.HTTP_CONFLICT;
-import static java.net.HttpURLConnection.HTTP_CREATED;
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 @Tag(SMOKE)
 abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
@@ -55,11 +57,13 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
     private AmqpClient amqpClient;
 
-    protected static int TENANT_DOESNT_EXISTS_CODE = HTTP_NOT_FOUND;
-
     protected abstract IoTConfigBuilder provideIoTConfig() throws Exception;
 
-    @BeforeEach
+    protected int tenantDoesNotExistCode() {
+        return HttpURLConnection.HTTP_UNAUTHORIZED;
+    }
+
+   @BeforeEach
     public void setAttributes() throws Exception {
         var iotConfigBuilder = provideIoTConfig();
         iotConfig = iotConfigBuilder
@@ -268,7 +272,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
     protected void doTestCreateForNonExistingTenantFails() throws Exception {
         var response = client.registerDeviceWithResponse("invalid-" + isolatedIoTManager.getTenantId(), randomDeviceId);
-        assertEquals(TENANT_DOESNT_EXISTS_CODE, response.statusCode());
+        assertEquals(tenantDoesNotExistCode(), response.statusCode());
     }
 
     protected void doTestTenantDeletionTriggersDevicesDeletion() throws Exception {
@@ -292,7 +296,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
             // second check, the credentials and device should be deleted
 
-            client.getDeviceRegistration(tenantId, randomDeviceId, TENANT_DOESNT_EXISTS_CODE);
+            client.getDeviceRegistration(tenantId, randomDeviceId, tenantDoesNotExistCode());
             IoTUtils.checkCredentials(authId, newPassword, true, httpAdapterEndpoint, amqpClient, iotProject);
         }
     }

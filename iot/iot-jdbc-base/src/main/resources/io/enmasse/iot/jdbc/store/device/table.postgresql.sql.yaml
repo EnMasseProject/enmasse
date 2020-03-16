@@ -1,0 +1,14 @@
+insertCredentialEntry: |
+   INSERT INTO %2$s (
+      tenant_id,
+      device_id,
+      type,
+      auth_id,
+      data
+   ) VALUES (
+      :tenant_id,
+      :device_id,
+      :type,
+      :auth_id,
+      :data::jsonb
+   )

@@ -15,6 +15,7 @@
   <properties>
     <hono.version>1.0.3</hono.version>
     <infinispan.version>9.4.16.Final</infinispan.version>
+    <postgresql-jdbc.version>42.2.9</postgresql-jdbc.version>
 
     <!-- align with Hono compatible versions -->
     <spring.boot.version>2.1.5.RELEASE</spring.boot.version>
@@ -149,6 +150,17 @@
         <groupId>io.opentracing</groupId>
         <artifactId>opentracing-api</artifactId>
         <version>${opentracing.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-jdbc-client</artifactId>
+        <version>${vertx.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${postgresql-jdbc.version}</version>
       </dependency>
 
       <dependency>

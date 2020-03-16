@@ -124,6 +124,7 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 			{Name: "HONO_SIGFOX_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(adapter.IsNativeTlsRequired(config))},
 		}
 
+		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)
 
 		if err := AppendHonoAdapterEnvs(config, container, findAdapter("sigfox")); err != nil {
@@ -154,13 +155,17 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 		return err
 	}
 
+	// reset init containers
+
+	deployment.Spec.Template.Spec.InitContainers = nil
+
 	// tracing
 
 	SetupTracing(config, deployment, tracingContainer)
 
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "config", nameSigfoxAdapter+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameSigfoxAdapter+"-config")
 
 	// inter service secrets
 

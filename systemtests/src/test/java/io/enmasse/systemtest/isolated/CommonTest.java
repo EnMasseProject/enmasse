@@ -668,6 +668,26 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
     }
 
+    @Test
+    void testCreateDeleteAddressSpace() throws Exception {
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-create-delete-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(addressSpace, false);
+        resourcesManager.deleteAddressSpace(addressSpace);
+    }
+
     /////////////////////////////////////////////////////////////////////
     // help methods
     /////////////////////////////////////////////////////////////////////
@@ -751,6 +771,5 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             return labelValue;
         }
     }
-
 }
 

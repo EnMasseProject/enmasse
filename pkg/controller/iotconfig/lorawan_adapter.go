@@ -123,6 +123,7 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 			{Name: "HONO_LORA_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(adapter.IsNativeTlsRequired(config))},
 		}
 
+		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)
 
 		if err := AppendHonoAdapterEnvs(config, container, findAdapter("lorawan")); err != nil {
@@ -153,13 +154,17 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 		return err
 	}
 
+	// reset init containers
+
+	deployment.Spec.Template.Spec.InitContainers = nil
+
 	// tracing
 
 	SetupTracing(config, deployment, tracingContainer)
 
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "config", nameLoraWanAdapter+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameLoraWanAdapter+"-config")
 
 	// inter service secrets
 

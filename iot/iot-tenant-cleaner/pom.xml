@@ -36,6 +36,10 @@
       <artifactId>iot-infinispan-base</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-jdbc-base</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>

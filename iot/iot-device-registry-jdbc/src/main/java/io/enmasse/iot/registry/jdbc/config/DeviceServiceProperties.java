@@ -18,13 +18,15 @@ public class DeviceServiceProperties {
 
     private static final int DEFAULT_TASK_EXECUTOR_QUEUE_SIZE = 1024;
     private static final Duration DEFAULT_CREDENTIALS_TTL = Duration.ofMinutes(1);
+    private static final Duration DEFAULT_REGISTRATION_TTL = Duration.ofMinutes(1);
     private static final int DEFAULT_MAX_BCRYPT_ITERATIONS = 10;
 
     private int taskExecutorQueueSize = DEFAULT_TASK_EXECUTOR_QUEUE_SIZE;
+
     private Duration credentialsTtl = DEFAULT_CREDENTIALS_TTL;
+    private Duration registrationTtl = DEFAULT_REGISTRATION_TTL;
 
     private int maxBcryptIterations = DEFAULT_MAX_BCRYPT_ITERATIONS;
-
 
     public int getTaskExecutorQueueSize() {
         return this.taskExecutorQueueSize;
@@ -39,10 +41,21 @@ public class DeviceServiceProperties {
     }
 
     public void setCredentialsTtl(final Duration credentialsTtl) {
-        if ( credentialsTtl.toSeconds() <= 0 ) {
+        if (credentialsTtl.toSeconds() <= 0) {
             throw new IllegalArgumentException("'credentialsTtl' must be a positive duration of at least one second");
         }
         this.credentialsTtl = credentialsTtl;
+    }
+
+    public Duration getRegistrationTtl() {
+        return registrationTtl;
+    }
+
+    public void setRegistrationTtl(final Duration registrationTtl) {
+        if (registrationTtl.toSeconds() <= 0) {
+            throw new IllegalArgumentException("'registrationTtl' must be a positive duration of at least one second");
+        }
+        this.registrationTtl = registrationTtl;
     }
 
     /**

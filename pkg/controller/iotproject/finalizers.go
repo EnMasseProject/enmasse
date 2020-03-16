@@ -8,6 +8,7 @@ package iotproject
 import (
 	"context"
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -180,14 +181,16 @@ func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result
 
 	// check for device registry type
 
-	if config.Spec.ServicesConfig.DeviceRegistry.Infinispan == nil {
-		// not required ... complete
+	switch config.EvalDeviceRegistryImplementation() {
+	case iotv1alpha1.DeviceRegistryFileBased:
+		// nothing to do
+		ctx.Recorder.Event(project, corev1.EventTypeNormal, EventReasonProjectTermination, "No need for special tenant cleanup")
 		return reconcile.Result{}, nil
 	}
 
 	// process
 
-	job, err := createIoTTenantCleanerJob(ctx, project, config)
+	job, err := createIoTTenantCleanerJob(&ctx, project, config)
 
 	// failed to create job
 
@@ -201,6 +204,7 @@ func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result
 		// done
 		err := deleteJob(ctx, job)
 		log.Info("Tenant cleanup job completed", "Delete job error", err)
+		ctx.Recorder.Event(project, corev1.EventTypeNormal, "TenantCleanupJobComplete", "Tenant cleanup job completed successfully")
 		// remove finalizer
 		return reconcile.Result{}, err
 	} else if isFailed(job) {
@@ -208,6 +212,7 @@ func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result
 		err := deleteJob(ctx, job)
 		// keep finalizer
 		log.Info("Re-queue: tenant cleanup job failed")
+		ctx.Recorder.Event(project, corev1.EventTypeNormal, "TenantCleanupJobFailed", "Tenant cleanup job completed failed")
 		return reconcile.Result{Requeue: true}, err
 	} else {
 		// wait

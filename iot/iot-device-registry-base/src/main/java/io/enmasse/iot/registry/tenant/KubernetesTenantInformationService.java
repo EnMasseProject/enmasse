@@ -6,12 +6,11 @@
 package io.enmasse.iot.registry.tenant;
 
 import static io.enmasse.iot.registry.tenant.TenantInformation.of;
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-import static java.util.concurrent.CompletableFuture.failedFuture;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.hono.client.ClientErrorException;
 import org.eclipse.hono.client.ServerErrorException;
@@ -23,7 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.service.base.AbstractProjectBasedService;
-import io.opentracing.Span;
+import io.opentracing.SpanContext;
+import io.vertx.core.Future;
 
 @Component
 public class KubernetesTenantInformationService extends AbstractProjectBasedService implements TenantInformationService {
@@ -31,14 +31,14 @@ public class KubernetesTenantInformationService extends AbstractProjectBasedServ
     private ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public CompletableFuture<TenantInformation> tenantExists(final String tenantName, final int notFoundStatusCode, final Span span) {
+    public Future<TenantInformation> tenantExists(final String tenantName, final int notFoundStatusCode, final SpanContext span) {
 
         return getProject(tenantName)
-                .thenCompose(project -> validateTenant(project, tenantName, notFoundStatusCode));
+                .flatMap(project -> validateTenant(project, tenantName, notFoundStatusCode));
 
     }
 
-    private CompletableFuture<TenantInformation> validateTenant(final Optional<IoTProject> projectResult, final String tenantName, final int notFoundStatusCode) {
+    private Future<TenantInformation> validateTenant(final Optional<IoTProject> projectResult, final String tenantName, final int notFoundStatusCode) {
 
         if (projectResult.isEmpty()) {
             return notFound(notFoundStatusCode, "Tenant does not exist");
@@ -62,7 +62,7 @@ public class KubernetesTenantInformationService extends AbstractProjectBasedServ
             return failedFuture(e);
         }
 
-        return completedFuture(of(project.getMetadata().getNamespace(), project.getMetadata().getName(), tenantName + "/" + project.getMetadata().getCreationTimestamp(), tenant));
+        return succeededFuture(of(project.getMetadata().getNamespace(), project.getMetadata().getName(), tenantName + "/" + project.getMetadata().getCreationTimestamp(), tenant));
     }
 
     /**
@@ -72,7 +72,7 @@ public class KubernetesTenantInformationService extends AbstractProjectBasedServ
      * @param message The message to use.
      * @return The completed future, never returns {@code null}.
      */
-    private static <T> CompletableFuture<T> notFound(final int notFoundStatusCode, final String message) {
+    private static <T> Future<T> notFound(final int notFoundStatusCode, final String message) {
         return failedFuture(new ClientErrorException(notFoundStatusCode, message));
     }
 

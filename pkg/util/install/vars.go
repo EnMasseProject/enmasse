@@ -28,6 +28,8 @@ var (
 	defaultPullPolicy corev1.PullPolicy
 )
 
+const JavaOptsEnvVarName = "JAVA_APP_OPTS"
+
 var log = logf.Log.WithName("install")
 
 func init() {

@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Configuration;
 
 import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler;
 import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthProvider;
+import io.opentracing.Tracer;
 import io.vertx.core.Vertx;
 import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.web.handler.AuthHandler;
@@ -80,14 +81,14 @@ public class DeviceServiceConfiguration {
      */
     @Bean
     @Autowired
-    public AuthHandler authHandler(final RestEndpointConfiguration restEndpointConfiguration) {
-        return new DeviceRegistryTokenAuthHandler(authProvider(restEndpointConfiguration));
+    public AuthHandler authHandler(final Tracer tracer, final RestEndpointConfiguration restEndpointConfiguration) {
+        return new DeviceRegistryTokenAuthHandler(tracer, authProvider(tracer, restEndpointConfiguration));
     }
 
     @Bean
     @Autowired
-    public AuthProvider authProvider(final RestEndpointConfiguration restEndpointConfiguration) {
-        return new DeviceRegistryTokenAuthProvider(restEndpointConfiguration.getAuthTokenCacheExpiration());
+    public AuthProvider authProvider(final Tracer tracer, final RestEndpointConfiguration restEndpointConfiguration) {
+        return new DeviceRegistryTokenAuthProvider(tracer, restEndpointConfiguration.getAuthTokenCacheExpiration());
     }
 
     /**

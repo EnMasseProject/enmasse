@@ -5,6 +5,40 @@
 
 package io.enmasse.systemtest.platform.apps;
 
+import static io.enmasse.systemtest.platform.Kubernetes.executeWithInput;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+
+import io.enmasse.iot.model.v1.Mode;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
@@ -21,7 +55,9 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.IntOrString;
@@ -29,6 +65,9 @@ import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodCondition;
+import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
@@ -51,32 +90,11 @@ import io.fabric8.kubernetes.api.model.rbac.RoleBuilder;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
+import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.utils.ReplaceValueStream;
-import org.slf4j.Logger;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SystemtestsKubernetesApps {
+
     private static final Logger log = CustomLogger.getLogger();
 
     public static final String MESSAGING_CLIENTS = "systemtests-clients";
@@ -84,27 +102,67 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_CHROME = "selenium-chrome";
     public static final String SELENIUM_PROJECT = "systemtests-selenium";
     public static final String MESSAGING_PROJECT = "systemtests-clients";
-    public static final String SCALE_TEST_CLIENTS_PROJECT = "systemtests-scale-test-clients";
-    public static final String SCALE_TEST_CLIENT = "scale-test-client";
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
     public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
+
+    private static final String SCALE_TEST_CLIENTS_PROJECT = "systemtests-scale-test-clients";
+    private static final String SCALE_TEST_CLIENT = "scale-test-client";
+    private static final String SCALE_TEST_CLIENT_ID_LABEL = "id";
+    private static final String SCALE_TEST_CLIENT_TYPE_LABEL = "client";
+
     public static final String INFINISPAN_PROJECT = Environment.getInstance().getInfinispanProject();
     public static final String INFINISPAN_SERVER = "infinispan";
     private static final Path INFINISPAN_EXAMPLE_BASE;
     private static final String[] INFINISPAN_OPENSHIFT;
     private static final String[] INFINISPAN_KUBERNETES;
 
+    public static final String POSTGRESQL_PROJECT = Environment.getInstance().getPostgresqlProject();
+    public static final String POSTGRESQL_SERVER = "postgresql";
+    private static final Path POSTGRESQL_EXAMPLE_BASE;
+    private static final Path[] POSTGRESQL_CREATE_FLAT_SQL;
+    private static final Path[] POSTGRESQL_CREATE_TREE_SQL;
+
+    public static final String H2_PROJECT = Environment.getInstance().getH2Project();
+    public static final String H2_SERVER = "h2";
+    private static final Path H2_EXAMPLE_BASE;
+    private static final Path H2_CREATE_SQL;
+    public static final String[] H2_SHELL_COMMAND = new String[] {
+                    "java",
+                    "-cp",
+                    "h2.jar",
+                    "org.h2.tools.Shell",
+                    "-user",
+                    "admin",
+                    "-password",
+                    "admin1234",
+                    "-url",
+                    "jdbc:h2:tcp://localhost:9092//data/device-registry"
+    };
+
     static {
         INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
-        INFINISPAN_OPENSHIFT = new String[]{
-                "common",
-                "openshift"
+        INFINISPAN_OPENSHIFT = new String[] {
+                        "common",
+                        "openshift"
         };
-        INFINISPAN_KUBERNETES = new String[]{
-                "common",
-                "kubernetes"
+        INFINISPAN_KUBERNETES = new String[] {
+                        "common",
+                        "kubernetes"
         };
+
+        POSTGRESQL_EXAMPLE_BASE = Paths.get("../templates/iot/examples/postgresql/deploy");
+        var pgBase = Paths.get("../templates/iot/examples/postgresql/create.sql");
+        POSTGRESQL_CREATE_FLAT_SQL = new Path[] {
+                        pgBase
+        };
+        POSTGRESQL_CREATE_TREE_SQL = new Path[] {
+                        pgBase,
+                        Paths.get("../templates/iot/examples/postgresql/create.tree.sql")
+        };
+
+        H2_EXAMPLE_BASE = Paths.get("../templates/iot/examples/h2/deploy");
+        H2_CREATE_SQL = Paths.get("../templates/iot/examples/h2/create.sql");
     }
 
     public static String getMessagingAppPodName() throws Exception {
@@ -112,8 +170,10 @@ public class SystemtestsKubernetesApps {
     }
 
     public static String getMessagingAppPodName(String namespace) throws Exception {
-        TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
-                pod.getStatus().getContainerStatuses().get(0).getReady()).count() == 1, new TimeoutBudget(1, TimeUnit.MINUTES));
+        TestUtils.waitUntilCondition("Pod is reachable",
+                waitPhase -> Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
+                        pod.getStatus().getContainerStatuses().get(0).getReady()).count() == 1,
+                new TimeoutBudget(1, TimeUnit.MINUTES));
 
         return Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
                 pod.getStatus().getContainerStatuses().get(0).getReady()).findAny().get().getMetadata().getName();
@@ -142,7 +202,6 @@ public class SystemtestsKubernetesApps {
         return getMessagingAppPodName(namespace);
     }
 
-
     public static void collectMessagingClientAppLogs(Path path) {
         try {
             Files.createDirectories(path);
@@ -153,7 +212,6 @@ public class SystemtestsKubernetesApps {
             log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.MESSAGING_PROJECT);
         }
     }
-
 
     public static void deleteMessagingClientApp() throws Exception {
         if (Kubernetes.getInstance().deploymentExists(MESSAGING_PROJECT, MESSAGING_CLIENTS)) {
@@ -334,6 +392,220 @@ public class SystemtestsKubernetesApps {
         }
     }
 
+    /**
+     * Deploy the PostgreSQL server for the JDBC device registry.
+     */
+    public static Endpoint deployPostgresqlServer(final Mode mode) throws Exception {
+
+        if (Environment.getInstance().isSkipDeployPostgresql()) {
+            return getPostgresqlEndpoint(POSTGRESQL_PROJECT);
+        }
+
+        Kubernetes.getInstance().createNamespace(POSTGRESQL_PROJECT);
+
+        final Kubernetes kubeCli = Kubernetes.getInstance();
+        final KubernetesClient client = kubeCli.getClient();
+
+        applyDirectories(POSTGRESQL_PROJECT, namespaceReplacer(POSTGRESQL_PROJECT), POSTGRESQL_EXAMPLE_BASE);
+
+        // wait for the deployment
+
+        client
+                .apps().deployments()
+                .inNamespace(POSTGRESQL_PROJECT)
+                .withName(POSTGRESQL_SERVER)
+                .waitUntilReady(5, TimeUnit.MINUTES);
+
+        // deploy the SQL schema
+
+        var pod = client
+                .pods()
+                .inNamespace(POSTGRESQL_PROJECT)
+                .withLabel("app", "postgresql")
+                .list().getItems().stream().findFirst().orElse(null);
+
+        if (pod == null) {
+            throw new IllegalStateException("No PostgreSQL pod found after deployment was ready");
+        }
+        var podAccess = client.pods().inNamespace(POSTGRESQL_PROJECT).withName(pod.getMetadata().getName());
+
+        // wait until all containers are ready as well
+
+        podAccess.waitUntilCondition(conditionIsTrue("ContainersReady"), 5, TimeUnit.MINUTES);
+
+        // deploy SQL schema
+
+        switch (mode) {
+            case JSON_FLAT:
+                deployPostgreSQLSchema(podAccess, POSTGRESQL_CREATE_FLAT_SQL);
+                break;
+            case JSON_TREE:
+                deployPostgreSQLSchema(podAccess, POSTGRESQL_CREATE_TREE_SQL);
+                break;
+            default:
+                throw new IllegalArgumentException(String.format("Unsupported test mode: %s", mode));
+        }
+
+        // return endpoint
+
+        return getPostgresqlEndpoint(POSTGRESQL_PROJECT);
+    }
+
+    private static void deployPostgreSQLSchema(final PodResource<Pod, DoneablePod> podAccess, final Path... sql) throws IOException, InterruptedException, TimeoutException {
+        log.info("Deploying SQL schemas: {}", new Object[] {sql});
+
+        for (Path path : sql) {
+            try (InputStream sqlFile = Files.newInputStream(path)) {
+                executeWithInput(
+                        podAccess, sqlFile,
+                        input -> input.write("\n\\q\n".getBytes(UTF_8)),
+                        Duration.ofSeconds(10),
+                        "bash", "-c", "PGPASSWORD=user12 psql device-registry registry");
+            }
+        }
+    }
+
+    /**
+     * Get the endpoint of the PostgreSQL server for the JDBC device registry.
+     */
+    private static Endpoint getPostgresqlEndpoint(final String namespace) {
+        return Kubernetes.getInstance().getEndpoint(POSTGRESQL_SERVER, namespace, "postgresql");
+    }
+
+    /**
+     * Delete the PostgreSQL server for the JDBC device registry.
+     */
+    public static void deletePostgresqlServer() throws Exception {
+
+        if (Environment.getInstance().isSkipDeployPostgresql()) {
+            return;
+        }
+
+        final Kubernetes kubeCli = Kubernetes.getInstance();
+        final KubernetesClient client = kubeCli.getClient();
+
+        if (client.apps()
+                .deployments()
+                .inNamespace(POSTGRESQL_PROJECT)
+                .withName(POSTGRESQL_SERVER)
+                .get() != null) {
+
+            log.info("Postgresql server will be removed");
+
+            KubeCMDClient.deleteFromFile(POSTGRESQL_PROJECT, POSTGRESQL_EXAMPLE_BASE);
+        }
+    }
+
+    // h2
+
+    /**
+     * Deploy the H2 server for the JDBC device registry.
+     */
+    public static Endpoint deployH2Server() throws Exception {
+
+        if (Environment.getInstance().isSkipDeployH2()) {
+            return getH2Endpoint(H2_PROJECT);
+        }
+
+        Kubernetes.getInstance().createNamespace(H2_PROJECT);
+
+        final KubernetesClient client = Kubernetes.getInstance().getClient();
+
+        applyDirectories(H2_PROJECT, namespaceReplacer(H2_PROJECT), H2_EXAMPLE_BASE);
+
+        // wait for the deployment
+
+        client
+                .apps().deployments()
+                .inNamespace(H2_PROJECT)
+                .withName(H2_SERVER)
+                .waitUntilReady(5, TimeUnit.MINUTES);
+
+        // deploy the SQL schema
+
+        var pod = getH2ServerPod().orElseThrow(() -> new IllegalStateException("No H2 pod found after deployment was ready"));
+
+        // wait until all containers are ready as well
+
+        pod.waitUntilCondition(conditionIsTrue("ContainersReady"), 5, TimeUnit.MINUTES);
+
+        // deploy SQL schema
+
+        deployH2SQLSchema(pod, H2_CREATE_SQL);
+
+        // return endpoint
+
+        return getH2Endpoint(H2_PROJECT);
+    }
+
+    public static Optional<PodResource<Pod, DoneablePod>> getH2ServerPod() {
+        final var client = Kubernetes.getInstance().getClient();
+        return Kubernetes.getInstance().getClient()
+                .pods()
+                .inNamespace(H2_PROJECT)
+                .withLabel("app", "h2")
+                .list().getItems().stream().findFirst()
+                .map(pod -> client.pods()
+                        .inNamespace(pod.getMetadata().getNamespace())
+                        .withName(pod.getMetadata().getName()));
+    }
+
+    private static void deployH2SQLSchema(final PodResource<Pod, DoneablePod> podAccess, final Path sql) throws IOException, InterruptedException, TimeoutException {
+        log.info("Deploying SQL schema: {}", sql);
+
+        try (InputStream sqlFile = Files.newInputStream(sql)) {
+            executeWithInput(
+                    podAccess, sqlFile,
+                    input -> input.write("\nexit\n".getBytes(UTF_8)),
+                    Duration.ofSeconds(10),
+                    H2_SHELL_COMMAND);
+        }
+
+    }
+
+    /**
+     * Get the endpoint of the H2 server for the JDBC device registry.
+     */
+    private static Endpoint getH2Endpoint(final String namespace) {
+        return Kubernetes.getInstance().getEndpoint(H2_SERVER, namespace, "h2");
+    }
+
+    /**
+     * Delete the PostgreSQL server for the JDBC device registry.
+     */
+    public static void deleteH2Server() throws Exception {
+
+        if (Environment.getInstance().isSkipDeployH2()) {
+            return;
+        }
+
+        final Kubernetes kubeCli = Kubernetes.getInstance();
+        final KubernetesClient client = kubeCli.getClient();
+
+        if (client.apps()
+                .deployments()
+                .inNamespace(H2_PROJECT)
+                .withName(H2_SERVER)
+                .get() != null) {
+
+            log.info("H2 server will be removed");
+
+            KubeCMDClient.deleteFromFile(H2_PROJECT, H2_EXAMPLE_BASE);
+        }
+    }
+
+    private static Predicate<Pod> conditionIsTrue(final String type) {
+        return p -> {
+            return Optional.ofNullable(p)
+                    .map(Pod::getStatus)
+                    .map(PodStatus::getConditions)
+                    .flatMap(o -> o.stream().filter(c -> type.equals(c.getType())).findFirst())
+                    .map(PodCondition::getStatus)
+                    .map("True"::equals)
+                    .orElse(false);
+        };
+    }
+
     public static void deployAMQBroker(String namespace, String name, String user, String password, BrokerCertBundle certBundle) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
         kubeCli.createNamespace(namespace);
@@ -380,10 +652,10 @@ public class SystemtestsKubernetesApps {
                 .build();
 
         Service service = getSystemtestsServiceResource(name, name, new ServicePortBuilder()
-                        .withName("amqp")
-                        .withPort(5672)
-                        .withTargetPort(new IntOrString(5672))
-                        .build(),
+                .withName("amqp")
+                .withPort(5672)
+                .withTargetPort(new IntOrString(5672))
+                .build(),
                 tlsPort,
                 mutualTlsPort);
 
@@ -448,13 +720,15 @@ public class SystemtestsKubernetesApps {
         }, paths);
     }
 
-    public static void loadDirectories(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
+    public static void loadDirectories(final Function<InputStream, InputStream> streamManipulator,
+            Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
         for (Path path : paths) {
             loadDirectory(streamManipulator, consumer, path);
         }
     }
 
-    public static void loadDirectory(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path path) throws Exception {
+    public static void loadDirectory(final Function<InputStream, InputStream> streamManipulator,
+            Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path path) throws Exception {
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
@@ -498,13 +772,17 @@ public class SystemtestsKubernetesApps {
 
     }
 
+    public static void setupScaleTestEnv(Kubernetes kubeClient) {
+        kubeClient.createNamespace(SCALE_TEST_CLIENTS_PROJECT);
+    }
+
     public static void deployScaleTestClient(Kubernetes kubeClient, ScaleTestClientConfiguration clientConfiguration) throws Exception {
         String clientId = UUID.randomUUID().toString();
-        kubeClient.createNamespace(SCALE_TEST_CLIENTS_PROJECT);
+        log.info("Deploying scale test client {}", clientId);
         var labels = getScaleTestClientLabels(clientConfiguration.getClientType(), clientId);
-        kubeClient.createServiceFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientServiceResource(clientConfiguration.getClientType(), clientId, labels));
-        kubeClient.createDeploymentFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientDeployment(clientId, clientConfiguration, labels));
-        kubeClient.createIngressFromResource(SCALE_TEST_CLIENTS_PROJECT, getSystemtestsIngressResource(SCALE_TEST_CLIENT+"-"+clientId, 8080));
+        kubeClient.createServiceFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientServiceResource(clientId, labels), false);
+        kubeClient.createDeploymentFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientDeployment(clientId, clientConfiguration, labels), 4, TimeUnit.MINUTES, false);
+        kubeClient.createIngressFromResource(SCALE_TEST_CLIENTS_PROJECT, getSystemtestsIngressResource(SCALE_TEST_CLIENT+"-"+clientId, 8080), false);
         clientConfiguration.setClientId(clientId);
         TestUtils.waitForNReplicas(1, SCALE_TEST_CLIENTS_PROJECT, labels, new TimeoutBudget(30, TimeUnit.SECONDS));
     }
@@ -513,23 +791,41 @@ public class SystemtestsKubernetesApps {
         return new Endpoint(kubeClient.getIngressHost(SCALE_TEST_CLIENTS_PROJECT, SCALE_TEST_CLIENT+"-"+clientId), 80);
     }
 
+    //TODO maybe remove
     public static void deleteScaleTestClient(Kubernetes kubeClient, ScaleTestClientConfiguration client, Path logsPath) {
-        String resourcesName = SCALE_TEST_CLIENT+"-"+client.getClientId();
+        String resourcesName = SCALE_TEST_CLIENT + "-" + client.getClientId();
         if (kubeClient.deploymentExists(SCALE_TEST_CLIENTS_PROJECT, resourcesName)) {
-            try {
-                Files.createDirectories(logsPath);
-                GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), logsPath, SCALE_TEST_CLIENTS_PROJECT);
-                collector.collectLogsOfPodsByLabels(SCALE_TEST_CLIENTS_PROJECT, client.getClientId(), getScaleTestClientLabels(client.getClientType(), client.getClientId()));
-            } catch (Exception e) {
-                log.error("Failed to collect client {} logs", client.getClientId(), e);
-            }
+            var labels = getScaleTestClientLabels(client.getClientType(), client.getClientId());
+            collectLogsScaleTestClient(client.getClientId(), logsPath, labels);
             kubeClient.deleteDeployment(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
             kubeClient.deleteService(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
             kubeClient.deleteIngress(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
         }
     }
 
-    public static void cleanScaleTestEnv(Kubernetes kubeClient) throws Exception {
+    private static void collectLogsScaleTestClient(String clientId, Path logsPath, Map<String, String> labels) {
+        try {
+            Files.createDirectories(logsPath);
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), logsPath, SCALE_TEST_CLIENTS_PROJECT);
+            collector.collectLogsOfPodsByLabels(SCALE_TEST_CLIENTS_PROJECT, clientId, labels);
+        } catch (Exception e) {
+            log.error("Failed to collect client {} logs", clientId, e);
+        }
+    }
+
+    public static void cleanScaleTestEnv(Kubernetes kubeClient, Path logsPath) throws Exception {
+        log.info("Cleaning scale test env");
+        var deployments = kubeClient.getClient().apps().deployments().inNamespace(SCALE_TEST_CLIENTS_PROJECT).list().getItems();
+        for (var deployment : deployments) {
+            var clientId = deployment.getMetadata().getLabels().get(SCALE_TEST_CLIENT_ID_LABEL);
+            var clientType = deployment.getMetadata().getLabels().get(SCALE_TEST_CLIENT_TYPE_LABEL);
+            collectLogsScaleTestClient(clientId, logsPath, getScaleTestClientLabels(ScaleTestClientType.fromValue(clientType), clientId));
+            String resourcesName = SCALE_TEST_CLIENT + "-" + clientId;
+            kubeClient.deleteDeployment(SCALE_TEST_CLIENTS_PROJECT, resourcesName, false);
+            kubeClient.deleteService(SCALE_TEST_CLIENTS_PROJECT, resourcesName, false);
+            kubeClient.deleteIngress(SCALE_TEST_CLIENTS_PROJECT, resourcesName, false);
+        }
+
         kubeClient.deleteNamespace(SCALE_TEST_CLIENTS_PROJECT);
     }
 
@@ -629,21 +925,23 @@ public class SystemtestsKubernetesApps {
                 .endSpec()
                 .build();
 
-       /* return new DoneableDeployment(getMessagingAppDeploymentResource())
-            .editMetadata()
-                .withName(namespace)
-            .endMetadata()
-            .editSpec()
-             .withNewSelector()
-             .addToMatchLabels("app", namespace)
-             .endSelector()
-             .editTemplate()
-             .withNewMetadata()
-             .addToLabels("app", namespace)
-             .endMetadata()
-             .endTemplate()
-             .endSpec()
-             .done();*/
+        /*
+         * return new DoneableDeployment(getMessagingAppDeploymentResource())
+         * .editMetadata()
+         * .withName(namespace)
+         * .endMetadata()
+         * .editSpec()
+         * .withNewSelector()
+         * .addToMatchLabels("app", namespace)
+         * .endSelector()
+         * .editTemplate()
+         * .withNewMetadata()
+         * .addToLabels("app", namespace)
+         * .endMetadata()
+         * .endTemplate()
+         * .endSpec()
+         * .done();
+         */
     }
 
     private static Service getSystemtestsServiceResource(String appName, int port) {
@@ -692,7 +990,8 @@ public class SystemtestsKubernetesApps {
                 .endMetadata()
                 .withNewSpec()
                 .withRules(new IngressRuleBuilder()
-                        .withHost(appName + "." + (env.kubernetesDomain().equals("nip.io") ? new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io" : env.kubernetesDomain()))
+                        .withHost(appName + "."
+                                + (env.kubernetesDomain().equals("nip.io") ? new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io" : env.kubernetesDomain()))
                         .withNewHttp()
                         .withPaths(path)
                         .endHttp()
@@ -871,28 +1170,29 @@ public class SystemtestsKubernetesApps {
                 .endMetadata()
                 .withNewSpec()
                 .addToInitContainers(new ContainerBuilder()
-                                .withName("artemis-init")
-                                .withImage("quay.io/enmasse/artemis-base:2.10.0")
-                                .withCommand("/bin/sh")
-                                .withArgs("-c", "/opt/apache-artemis/bin/artemis create /var/run/artemis --allow-anonymous --force --user " + user + " --password " + password + " --role admin")
-                                .withVolumeMounts(new VolumeMountBuilder()
-                                                .withName("data")
-                                                .withMountPath("/var/run/artemis")
-                                                .build(),
-                                        new VolumeMountBuilder()
-                                                .withName(name)
-                                                .withMountPath("/etc/amq-secret-volume")
-                                                .build())
+                        .withName("artemis-init")
+                        .withImage("quay.io/enmasse/artemis-base:2.10.0")
+                        .withCommand("/bin/sh")
+                        .withArgs("-c",
+                                "/opt/apache-artemis/bin/artemis create /var/run/artemis --allow-anonymous --force --user " + user + " --password " + password + " --role admin")
+                        .withVolumeMounts(new VolumeMountBuilder()
+                                .withName("data")
+                                .withMountPath("/var/run/artemis")
                                 .build(),
+                                new VolumeMountBuilder()
+                                        .withName(name)
+                                        .withMountPath("/etc/amq-secret-volume")
+                                        .build())
+                        .build(),
                         new ContainerBuilder()
                                 .withName("replace-broker-xml")
                                 .withImage("quay.io/enmasse/artemis-base:2.10.0")
                                 .withCommand("/bin/sh")
                                 .withArgs("-c", "cp /etc/amq-secret-volume/broker.xml /var/run/artemis/etc/broker.xml")
                                 .withVolumeMounts(new VolumeMountBuilder()
-                                                .withName("data")
-                                                .withMountPath("/var/run/artemis")
-                                                .build(),
+                                        .withName("data")
+                                        .withMountPath("/var/run/artemis")
+                                        .build(),
                                         new VolumeMountBuilder()
                                                 .withName(name)
                                                 .withMountPath("/etc/amq-secret-volume")
@@ -905,9 +1205,9 @@ public class SystemtestsKubernetesApps {
                 .withCommand("/bin/sh")
                 .withArgs("-c", "/var/run/artemis/bin/artemis run")
                 .addToPorts(new ContainerPortBuilder()
-                                .withContainerPort(5672)
-                                .withName("amqp")
-                                .build(),
+                        .withContainerPort(5672)
+                        .withName("amqp")
+                        .build(),
                         new ContainerPortBuilder()
                                 .withContainerPort(5671)
                                 .withName("amqps")
@@ -917,19 +1217,19 @@ public class SystemtestsKubernetesApps {
                                 .withName("amqpsmutual")
                                 .build())
                 .withVolumeMounts(new VolumeMountBuilder()
-                                .withName("data")
-                                .withMountPath("/var/run/artemis")
-                                .build(),
+                        .withName("data")
+                        .withMountPath("/var/run/artemis")
+                        .build(),
                         new VolumeMountBuilder()
                                 .withName(name)
                                 .withMountPath("/etc/amq-secret-volume")
                                 .build())
                 .endContainer()
                 .addToVolumes(new VolumeBuilder()
-                                .withName("data")
-                                .withNewEmptyDir()
-                                .endEmptyDir()
-                                .build(),
+                        .withName("data")
+                        .withNewEmptyDir()
+                        .endEmptyDir()
+                        .build(),
                         new VolumeBuilder()
                                 .withName(name)
                                 .withNewSecret()
@@ -944,16 +1244,17 @@ public class SystemtestsKubernetesApps {
 
     private static Map<String, String> getScaleTestClientLabels(ScaleTestClientType clientType, String clientId) {
         return Map.of("app", SCALE_TEST_CLIENT,
-                "client", clientType.getValue(),
-                "id", clientId);
+                SCALE_TEST_CLIENT_TYPE_LABEL, clientType.getValue(),
+                SCALE_TEST_CLIENT_ID_LABEL, clientId);
     }
 
     private static Deployment getScaleTestClientDeployment(String clientId, ScaleTestClientConfiguration c, Map<String, String> labels) {
-        var env = Arrays.asList(new EnvVarBuilder().withName("amqp-hostname").withValue(c.getHostname()).build(),
-                new EnvVarBuilder().withName("amqp-port").withValue(Integer.toString(c.getPort())).build(),
-                new EnvVarBuilder().withName("amqp-username").withValue(c.getUsername()).build(),
-                new EnvVarBuilder().withName("amqp-password").withValue(c.getPassword()).build(),
-                new EnvVarBuilder().withName("amqp-addresses").withValue(Stream.of(c.getAddresses()).collect(Collectors.joining(","))).build());
+        List<EnvVar> env = new ArrayList<>();
+        env.add(new EnvVarBuilder().withName("amqp-hostname").withValue(c.getHostname()).build());
+        env.add(new EnvVarBuilder().withName("amqp-port").withValue(Integer.toString(c.getPort())).build());
+        env.add(new EnvVarBuilder().withName("amqp-username").withValue(c.getUsername()).build());
+        env.add(new EnvVarBuilder().withName("amqp-password").withValue(c.getPassword()).build());
+        env.add(new EnvVarBuilder().withName("amqp-addresses").withValue(Stream.of(c.getAddresses()).collect(Collectors.joining(","))).build());
         if (c.getLinksPerConnection()!=null) {
             env.add(new EnvVarBuilder().withName("amqp-links-per-conn").withValue(Integer.toString(c.getLinksPerConnection())).build());
         }
@@ -961,21 +1262,16 @@ public class SystemtestsKubernetesApps {
         return new DeploymentBuilder()
                 .withNewMetadata()
                 .withName(SCALE_TEST_CLIENT+"-"+clientId)
+                .withLabels(labels)
                 .endMetadata()
                 .withNewSpec()
                 .withNewSelector()
                 .addToMatchLabels(labels)
-//                .addToMatchLabels("app", SCALE_TEST_CLIENT)
-//                .addToMatchLabels("client", c.getClientType().getValue())
-//                .addToMatchLabels("id", clientId)
                 .endSelector()
                 .withReplicas(1)
                 .withNewTemplate()
                 .withNewMetadata()
                 .addToLabels(labels)
-//                .addToLabels("app", SCALE_TEST_CLIENT)
-//                .addToLabels("client", c.getClientType().getValue())
-//                .addToLabels("id", clientId)
                 .endMetadata()
                 .withNewSpec()
                 .addNewContainer()
@@ -1001,18 +1297,14 @@ public class SystemtestsKubernetesApps {
                 .build();
     }
 
-    private static Service getScaleTestClientServiceResource(ScaleTestClientType clientType, String clientId, Map<String, String> labels) {
+    private static Service getScaleTestClientServiceResource(String clientId, Map<String, String> labels) {
         return new ServiceBuilder()
                 .withNewMetadata()
                 .withName(SCALE_TEST_CLIENT+"-"+clientId)
-                .addToLabels("app", SCALE_TEST_CLIENT)
-                .addToLabels("client", clientType.getValue())
-                .addToLabels("id", clientId)
+                .addToLabels(labels)
                 .endMetadata()
                 .withNewSpec()
-                .addToSelector("app", SCALE_TEST_CLIENT)
-                .addToSelector("client", clientType.getValue())
-                .addToSelector("id", clientId)
+                .addToSelector(labels)
                 .addNewPort()
                 .withName("http")
                 .withPort(8080)

@@ -1,17 +1,16 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.iot.service.base;
 
+import static io.vertx.core.Future.succeededFuture;
 import static java.util.Optional.ofNullable;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -120,8 +119,8 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
      * @param tenantName The name of the tenant to look up.
      * @return A future reporting the result.
      */
-    protected CompletableFuture<Optional<IoTProject>> getProject(final String tenantName) {
-        return completedFuture(ofNullable(this.projects.get(tenantName)));
+    protected Future<Optional<IoTProject>> getProject(final String tenantName) {
+        return succeededFuture(ofNullable(this.projects.get(tenantName)));
     }
 
 }

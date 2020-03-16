@@ -4,10 +4,16 @@
  */
 package io.enmasse.systemtest.scale;
 
+import io.enmasse.systemtest.model.address.AddressType;
+
+/**
+ * Framework assumes that all addresses passed to a messaging-client are of the same type
+ */
 public class ScaleTestClientConfiguration {
 
     private ScaleTestClientType clientType;
     private String clientId;
+    private AddressType addressesType;
 
     private String hostname;
     private int port;
@@ -35,6 +41,14 @@ public class ScaleTestClientConfiguration {
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
+
+    public AddressType getAddressesType() {
+        return addressesType;
+    }
+
+    public void setAddressesType(AddressType addressesType) {
+        this.addressesType = addressesType;
     }
 
     public String getHostname() {
@@ -77,7 +91,10 @@ public class ScaleTestClientConfiguration {
         this.password = password;
     }
 
-    public void setAddresses(String[] addresses) {
+    public void setAddresses(String... addresses) {
+        if (addresses == null || addresses.length == 0) {
+            throw new IllegalArgumentException("Addresses cannot be null or empty");
+        }
         this.addresses = addresses;
     }
 

@@ -1,0 +1,79 @@
+readForUpdate: |
+   SELECT
+      version
+   FROM
+      %1$s
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+   FOR UPDATE
+
+readForUpdateVersioned: |
+   SELECT
+      version
+   FROM
+      %1$s
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+   AND
+      version=:expected_version
+   FOR UPDATE
+
+readCredentials: |
+   SELECT
+      data
+   FROM
+      %2$s
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+
+findCredentials: |
+   SELECT
+      device_id,
+      data
+   FROM
+      %2$s
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      auth_id=:auth_id
+   AND
+      type=:type
+
+insertCredentialEntry: |
+   INSERT INTO %2$s (
+      tenant_id,
+      device_id,
+      type,
+      auth_id,
+      data
+   ) VALUES (
+      :tenant_id,
+      :device_id,
+      :type,
+      :auth_id,
+      :data
+   )
+
+deleteAllCredentials: |
+   DELETE FROM %2$s
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+
+updateDeviceVersion: |
+   UPDATE %1$s
+   SET
+      version=:next_version
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+   AND
+      version=:expected_version

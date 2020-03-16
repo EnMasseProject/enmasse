@@ -7,13 +7,13 @@ package io.enmasse.iot.registry.util;
 import static io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler.METHOD;
 import static io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler.TENANT;
 import static io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler.TOKEN;
-import static io.enmasse.iot.utils.MoreFutures.completeHandler;
+import static io.enmasse.iot.utils.MoreFutures.finishHandler;
 import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.hono.tracing.TracingHelper;
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
@@ -30,10 +30,16 @@ import io.enmasse.api.auth.TokenReview;
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.registry.tenant.TenantInformation;
 import io.enmasse.iot.registry.tenant.TenantInformationService;
+import io.enmasse.iot.utils.MoreFutures;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import io.opentracing.Span;
+import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
 import io.opentracing.noop.NoopSpan;
+import io.opentracing.tag.Tags;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -49,16 +55,18 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
 
     private static final String IOT_PROJECT_PLURAL = IoTCrd.project().getSpec().getNames().getPlural();
 
-    protected TenantInformationService tenantInformationService;
-
+    private final Tracer tracer;
     private final NamespacedKubernetesClient client;
     private final AuthApi authApi;
     private final EmbeddedCacheManager cacheManager = new DefaultCacheManager();
     private final Cache<String, TokenReview> tokens;
     private final Cache<String, Boolean> authorizations;
 
-    public DeviceRegistryTokenAuthProvider(final Duration tokenExpiration) {
+    protected TenantInformationService tenantInformationService;
+
+    public DeviceRegistryTokenAuthProvider(final Tracer tracer, final Duration tokenExpiration) {
         log.info("Using token cache expiration of {}", tokenExpiration);
+        this.tracer = tracer;
         this.client = new DefaultKubernetesClient();
         this.authApi = new KubeAuthApi(this.client, this.client.getConfiguration().getOauthToken());
         final ConfigurationBuilder config = new ConfigurationBuilder();
@@ -77,47 +85,99 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
 
     @Override
     public void authenticate(final JsonObject authInfo, final Handler<AsyncResult<User>> resultHandler) {
-        completeHandler(() -> processAuthenticate(authInfo), resultHandler);
+        finishHandler(() -> processAuthenticate(authInfo), resultHandler);
     }
 
-    protected CompletableFuture<User> processAuthenticate(final JsonObject authInfo) {
+    protected Future<User> processAuthenticate(final JsonObject authInfo) {
+
+        log.debug("Authenticating: {}", authInfo);
+
+        final Span span = extractSpan(authInfo, "authenticate");
 
         final String token = authInfo.getString(TOKEN);
-        return this.tokens
-                .computeIfAbsentAsync(token, review -> this.authApi.performTokenReview(token))
-                .thenCompose(tokenReview -> {
-                    if (tokenReview != null && tokenReview.isAuthenticated()) {
-                        return this.tenantInformationService
-                                .tenantExists(authInfo.getString(TENANT), HTTP_UNAUTHORIZED, NoopSpan.INSTANCE)
-                                .thenCompose(tenant -> authorize(authInfo, tokenReview, tenant));
-                    } else {
-                        log.debug("Bearer token not authenticated");
-                        return CompletableFuture.failedFuture(UNAUTHORIZED);
+        var f = this.tokens
+                .computeIfAbsentAsync(token, review -> {
+                    span.log("cache miss");
+                    final Span childSpan = TracingHelper.buildChildSpan(this.tracer, span.context(), "perform token review")
+                            .start();
+                    try {
+                        return this.authApi.performTokenReview(token);
+                    } finally {
+                        childSpan.finish();
                     }
                 });
+
+        var f1 = MoreFutures.map(f)
+                .flatMap(tokenReview -> {
+                    span.log("eval result");
+                    if (tokenReview != null && tokenReview.isAuthenticated()) {
+                        return this.tenantInformationService
+                                .tenantExists(authInfo.getString(TENANT), HTTP_UNAUTHORIZED, span.context())
+                                .flatMap(tenant -> authorize(authInfo, tokenReview, tenant, span));
+                    } else {
+                        log.debug("Bearer token not authenticated");
+                        TracingHelper.logError(span, "Bearer token not authenticated");
+                        return Future.failedFuture(UNAUTHORIZED);
+                    }
+                });
+
+        return MoreFutures
+                .whenComplete(f1, span::finish);
     }
 
-    private CompletableFuture<User> authorize(final JsonObject authInfo, final TokenReview tokenReview, final TenantInformation tenant) {
+    private Span extractSpan(final JsonObject authInfo, final String operationName) {
+        final Span span;
+        final SpanContext context = TracingHelper.extractSpanContext(this.tracer, authInfo);
+        if (context != null) {
+            span = TracingHelper
+                    .buildChildSpan(this.tracer, context, operationName)
+                    .start();
+        } else {
+            span = NoopSpan.INSTANCE;
+        }
+        return span;
+    }
+
+    private Future<User> authorize(final JsonObject authInfo, final TokenReview tokenReview, final TenantInformation tenant, final Span parentSpan) {
+
         final HttpMethod method = HttpMethod.valueOf(authInfo.getString(METHOD));
         ResourceVerb verb = ResourceVerb.update;
         if (method == HttpMethod.GET) {
             verb = ResourceVerb.get;
         }
-        String role = RbacSecurityContext.rbacToRole(tenant.getNamespace(), verb, IOT_PROJECT_PLURAL, tenant.getProjectName(), IoTCrd.GROUP);
-        RbacSecurityContext securityContext = new RbacSecurityContext(tokenReview, this.authApi, null);
-        return this.authorizations
-                .computeIfAbsentAsync(role, authorized -> securityContext.isUserInRole(role))
-                .exceptionally(t -> {
+
+        final Span span = TracingHelper.buildChildSpan(this.tracer, parentSpan.context(), "check user roles")
+                .withTag("namespace", tenant.getNamespace())
+                .withTag("name", tenant.getProjectName())
+                .withTag("tenant.name", tenant.getName())
+                .withTag(Tags.HTTP_METHOD.getKey(), method.name())
+                .start();
+
+        final String role = RbacSecurityContext.rbacToRole(tenant.getNamespace(), verb, IOT_PROJECT_PLURAL, tenant.getProjectName(), IoTCrd.GROUP);
+        final RbacSecurityContext securityContext = new RbacSecurityContext(tokenReview, this.authApi, null);
+        var f = this.authorizations
+                .computeIfAbsentAsync(role, authorized -> {
+                    span.log("cache miss");
+                    return securityContext.isUserInRole(role);
+                });
+
+        var f2 = MoreFutures.map(f)
+                .otherwise(t -> {
                     log.info("Error performing authorization", t);
+                    TracingHelper.logError(span, t);
                     return false;
                 })
-                .thenCompose(authResult -> {
+                .<User>flatMap(authResult -> {
                     if (authResult) {
-                        return CompletableFuture.completedFuture(null);
+                        return Future.succeededFuture();
                     } else {
                         log.debug("Bearer token not authorized");
-                        return CompletableFuture.failedFuture(UNAUTHORIZED);
+                        TracingHelper.logError(span, "Bearer token not authorized");
+                        return Future.failedFuture(UNAUTHORIZED);
                     }
                 });
+
+        return MoreFutures
+                .whenComplete(f2, span::finish);
     }
 }

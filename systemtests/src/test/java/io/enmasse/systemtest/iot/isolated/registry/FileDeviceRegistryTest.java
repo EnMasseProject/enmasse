@@ -4,14 +4,22 @@
  */
 package io.enmasse.systemtest.iot.isolated.registry;
 
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newFileBased;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
+import java.net.HttpURLConnection;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
+
 class FileDeviceRegistryTest extends DeviceRegistryTest {
+
+    @Override
+    protected int tenantDoesNotExistCode() {
+        return HttpURLConnection.HTTP_NOT_FOUND;
+    }
 
     @Override
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
