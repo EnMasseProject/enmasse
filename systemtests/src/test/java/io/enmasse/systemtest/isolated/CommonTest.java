@@ -79,20 +79,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .build();
         resourcesManager.setAddresses(dest);
 
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        List<Pod> unready;
-        do {
-            unready = new ArrayList<>(kubernetes.listPods());
-            unready.removeIf(p -> TestUtils.isPodReady(p, true));
-
-            if (!unready.isEmpty()) {
-                Thread.sleep(1000L);
-            }
-        } while (!unready.isEmpty() && budget.timeLeft() > 0);
-
-        if (!unready.isEmpty()) {
-            fail(String.format(" %d pod(s) still unready", unready.size()));
-        }
+        kubernetes.awaitPodsReady(new TimeoutBudget(5, TimeUnit.MINUTES));
 
         Multimap<String, String> podsContainersWithNoLog = HashMultimap.create();
 
