@@ -10,6 +10,8 @@ import static io.vertx.core.http.HttpHeaders.CACHE_CONTROL;
 import org.eclipse.hono.service.credentials.CredentialsService;
 import org.eclipse.hono.service.registration.RegistrationService;
 import org.eclipse.hono.util.RequestResponseResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -25,9 +27,11 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
 @Component
-@ConditionalOnProperty("debug")
+@ConditionalOnProperty(ConfigBase.CONFIG_BASE + ".registry.debug.enabled")
 @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".registry.debug")
 public class DebugEndpoint extends AbstractVerticle {
+
+    private static final Logger log = LoggerFactory.getLogger(DebugEndpoint.class);
 
     @Autowired
     private CredentialsService crendentialService;
@@ -85,7 +89,7 @@ public class DebugEndpoint extends AbstractVerticle {
                 .requestHandler(router)
                 .listen(this.port, ar -> {
                     if (ar.succeeded()) {
-                        System.err.format("Debug server listening on port %s", ar.result().actualPort());
+                        log.error("Debug server listening on port %s", ar.result().actualPort());
                         future.complete();
                     } else {
                         ar.cause().printStackTrace();
