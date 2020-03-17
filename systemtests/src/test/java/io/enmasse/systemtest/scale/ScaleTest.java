@@ -12,6 +12,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -27,7 +28,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import io.enmasse.systemtest.time.TimeoutBudget;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
@@ -61,10 +62,12 @@ import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.scale.metrics.DowntimeData;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
 import io.enmasse.systemtest.scale.metrics.MetricsMonitoringResult;
 import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
@@ -72,7 +75,9 @@ import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 
 @Tag(SCALE)
 class ScaleTest extends TestBase implements ITestBaseIsolated {
@@ -91,6 +96,11 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     private final int anycastLinksPerConnIncrease = initialAnycastLinksPerConn;
     private final int initialQueueLinksPerConn = 1;
     private final int queueLinksPerConnIncrease = initialQueueLinksPerConn;
+
+    //fault tolerance constants
+    private final int faultToleranceInitialAddresses = 8000;
+    private final int faultToleranceAddressesPerGroup = 100;
+    private final int faultToleranceSendMessagesPeriod = 20000;
 
     private final String namespace = "scale-test-namespace";
     private final String addressSpacePlanName = "test-addressspace-plan";
@@ -218,14 +228,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
                 checkMetrics(manager.getMonitoringResult());
 
-                long sleepMs = 4 * manager.getConnections();
-
-                LOGGER.info("#######################################");
-                LOGGER.info("Created total {} connections with {} deployed clients, waiting {} s for system to react",
-                        manager.getConnections(), manager.getClients(), sleepMs/1000);
-                LOGGER.info("#######################################");
-
-                Thread.sleep(sleepMs);
+                manager.sleep();
 
                 checkMetrics(manager.getMonitoringResult());
 
@@ -300,6 +303,83 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             }
             iterator++;
         }
+    }
+
+    @Test
+    public void testFailureRecovery() throws Exception {
+        int addressesToCreate = faultToleranceInitialAddresses;
+        int addressesPerGroup = faultToleranceAddressesPerGroup;
+
+        //create addresses
+        var addresses = createInitialAddresses(addressesToCreate);
+
+        var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
+        ScalePerformanceTestManager manager = new ScalePerformanceTestManager(endpoint, userCredentials);
+
+        manager.getDowntimeResult().setAddresses(addresses.size());
+
+        //measure time to create address in normal conditions
+        Duration normalTimeToAddAddress = addAddressAndMeasure();
+        manager.getDowntimeResult().setNormalTimeToCreateAddress(normalTimeToAddAddress.toSeconds()+"s");
+
+        //deploy clients and start messaging
+        List<List<Address>> addressesGroups = new ArrayList<>();
+        for (int i = 0; i < addresses.size() / addressesPerGroup; i++) {
+            addressesGroups.add(addresses.subList(i * addressesPerGroup, (i + 1) * addressesPerGroup));
+        }
+
+        //deploy clients and start messaging
+        for (var groupOfAddresses : addressesGroups) {
+            manager.deployTenantClient(groupOfAddresses, addressesPerTenant, faultToleranceSendMessagesPeriod);
+        }
+        manager.getDowntimeResult().setClientsDeployed(addressesGroups.size());
+
+        manager.sleep();
+
+        try {
+
+            //iterate over pods
+            List<Pod> enmassePods = kubernetes.listPods();
+            int runningPodsBefore = enmassePods.size();
+
+            for (var pod : enmassePods) {
+                kubernetes.deletePod(kubernetes.getInfraNamespace(), pod.getMetadata().getName());
+                Thread.sleep(5_000);
+
+                DowntimeData data = new DowntimeData();
+                data.setName(pod.getMetadata().getName());
+                manager.getDowntimeResult().getDowntimeData().add(data);
+                //time to create address
+                var createTime = addAddressAndMeasure();
+                data.setCreateAddressTime(createTime.toSeconds()+"s");
+                //clients downtime
+                manager.measureClientsDowntime(data);
+
+                TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+            }
+
+        } finally {
+            var logsPath = TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest());
+            var mapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
+            String results = mapper.writeValueAsString(manager.getDowntimeResult());
+            Files.createDirectories(logsPath);
+            LOGGER.info("Saving failure recovery results into {}", logsPath);
+            Files.writeString(logsPath.resolve("failure_recovery_results.json"), results);
+            LOGGER.info("#######################################");
+            LOGGER.info(results);
+            LOGGER.info("#######################################");
+        }
+
+    }
+
+    private Duration addAddressAndMeasure() throws Exception {
+        long start = System.currentTimeMillis();
+        var addresses = getTenantAddressBatch(addressSpace).toArray(new Address[0]);
+        getResourceManager().appendAddresses(false, addresses);
+        AddressUtils.waitForDestinationsReady(addresses);
+        long end = System.currentTimeMillis();
+        long duration = end - start;
+        return Duration.ofMillis(duration);
     }
 
     private void checkMetrics(AtomicReference<MetricsMonitoringResult> result) {
@@ -474,11 +554,22 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
 //  oc set-env deployment <deploymentname> _JAVA_OPTIONS="-verbose:gc"
     private void setVerboseGCAuthservice(String authservice) {
-        List<EnvVar> envVars = kubernetes.getClient().apps()
+        Supplier<Deployment> deploymentFinder = () -> kubernetes.getClient().apps()
                 .deployments()
                 .inNamespace(kubernetes.getInfraNamespace())
                 .withName(authservice)
-                .get().getSpec().getTemplate().getSpec().getContainers().get(0).getEnv();
+                .get();
+        TestUtils.waitUntilConditionOrFail(() -> deploymentFinder.get() != null,
+                Duration.ofSeconds(10),
+                Duration.ofSeconds(2),
+                () -> "scale authservice not created");
+        List<EnvVar> envVars = deploymentFinder.get()
+                .getSpec()
+                .getTemplate()
+                .getSpec()
+                .getContainers()
+                .get(0)
+                .getEnv();
         List<EnvVar> updatedEnvVars = new ArrayList<EnvVar>(envVars);
         updatedEnvVars.add(new EnvVarBuilder().withName("_JAVA_OPTIONS").withValue("-verbose:gc").build());
 
