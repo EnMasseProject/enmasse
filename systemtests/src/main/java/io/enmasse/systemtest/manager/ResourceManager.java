@@ -135,13 +135,19 @@ public abstract class ResourceManager {
     //------------------------------------------------------------------------------------------------
 
     public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
+        createAddressSpacePlan(addressSpacePlan, true);
+    }
+
+    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan, boolean wait) throws Exception {
         LOGGER.info("AddressSpace plan {} will be created {}", addressSpacePlan.getMetadata().getName(), addressSpacePlan);
         if (addressSpacePlan.getMetadata().getNamespace() == null || addressSpacePlan.getMetadata().getNamespace().equals("")) {
             addressSpacePlan.getMetadata().setNamespace(Kubernetes.getInstance().getInfraNamespace());
         }
         var client = Kubernetes.getInstance().getAddressSpacePlanClient();
         client.create(addressSpacePlan);
-        TestUtils.waitForSchemaInSync(addressSpacePlan.getMetadata().getName());
+        if (wait) {
+            TestUtils.waitForSchemaInSync(addressSpacePlan.getMetadata().getName());
+        }
         Thread.sleep(1000);
     }
 
@@ -415,6 +421,10 @@ public abstract class ResourceManager {
     //================================================================================================
 
     public User createOrUpdateUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
+        return createOrUpdateUser(addressSpace, credentials, true);
+    }
+
+    public User createOrUpdateUser(AddressSpace addressSpace, UserCredentials credentials, boolean wait) throws Exception {
         Objects.requireNonNull(addressSpace);
         Objects.requireNonNull(credentials);
         User user = new UserBuilder()
@@ -437,10 +447,14 @@ public abstract class ResourceManager {
                 .endAuthorization()
                 .endSpec()
                 .build();
-        return createOrUpdateUser(addressSpace, user);
+        return createOrUpdateUser(addressSpace, user, wait);
     }
 
     public User createOrUpdateUser(AddressSpace addressSpace, User user) throws Exception {
+        return createOrUpdateUser(addressSpace, user, true);
+    }
+
+    public User createOrUpdateUser(AddressSpace addressSpace, User user, boolean wait) throws Exception {
         if (user.getMetadata().getName() == null || !user.getMetadata().getName().contains(addressSpace.getMetadata().getName())) {
             user.getMetadata().setName(addressSpace.getMetadata().getName() + "." + user.getSpec().getUsername());
         }
@@ -454,9 +468,11 @@ public abstract class ResourceManager {
             user = existing;
         }
         kubernetes.getUserClient(user.getMetadata().getNamespace()).createOrReplace(user);
-        return UserUtils.waitForUserActive(user, new TimeoutBudget(1, TimeUnit.MINUTES));
+        if (wait) {
+            return UserUtils.waitForUserActive(user, new TimeoutBudget(1, TimeUnit.MINUTES));
+        }
+        return kubernetes.getUserClient(user.getMetadata().getNamespace()).withName(user.getMetadata().getName()).get();
     }
-
 
     public User createUserServiceAccount(AddressSpace addressSpace, UserCredentials cred) throws Exception {
         LOGGER.info("ServiceAccount user {} in address space {} will be created", cred.getUsername(), addressSpace.getMetadata().getName());

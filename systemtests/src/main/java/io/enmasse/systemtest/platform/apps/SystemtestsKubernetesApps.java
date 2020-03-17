@@ -1258,6 +1258,12 @@ public class SystemtestsKubernetesApps {
         if (c.getLinksPerConnection()!=null) {
             env.add(new EnvVarBuilder().withName("amqp-links-per-conn").withValue(Integer.toString(c.getLinksPerConnection())).build());
         }
+        if (c.getAddressesPerTenant()!=null) {
+            env.add(new EnvVarBuilder().withName("amqp-addr-per-tenant").withValue(Integer.toString(c.getAddressesPerTenant())).build());
+        }
+        if (c.getSendMessagePeriod()!=null) {
+            env.add(new EnvVarBuilder().withName("amqp-send-msg-period").withValue(Integer.toString(c.getSendMessagePeriod())).build());
+        }
 
         return new DeploymentBuilder()
                 .withNewMetadata()

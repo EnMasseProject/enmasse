@@ -11,6 +11,7 @@ import org.hawkular.agent.prometheus.types.Counter;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.model.address.AddressType;
 
+//works for messaging client and tenant client
 public class MessagingClientMetricsClient extends ScaleTestClientMetricsClient {
 
     //counters

@@ -44,7 +44,18 @@ public class AuthServiceUtils {
                 .editSpec()
                 .withNewStandard()
                 .addToAdditionalProperties("storage", createStorage(persistent, volumeSize, deleteClaim, claimName))
-                .addToAdditionalProperties("resources", createResources("1Gi", "2Gi"))
+                .addToAdditionalProperties("resources", createResources("3Gi", "3Gi"))
+                .endStandard()
+                .endSpec()
+                .done();
+    }
+
+    public static AuthenticationService createStandardAuthServiceObject(String name, boolean persistent, String volumeSize, String memory, boolean deleteClaim, String claimName) {
+        return createAuthService(name, AuthenticationServiceType.standard)
+                .editSpec()
+                .withNewStandard()
+                .addToAdditionalProperties("storage", createStorage(persistent, volumeSize, deleteClaim, claimName))
+                .addToAdditionalProperties("resources", createResources(memory, memory))
                 .endStandard()
                 .endSpec()
                 .done();

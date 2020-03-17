@@ -7,6 +7,9 @@ package io.enmasse.systemtest.scale;
 import static io.enmasse.systemtest.TestTag.SCALE;
 import static io.enmasse.systemtest.scale.metrics.MetricsAssertions.isNotPresent;
 import static io.enmasse.systemtest.scale.metrics.MetricsAssertions.isPresent;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
@@ -14,14 +17,17 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import io.enmasse.systemtest.time.TimeoutBudget;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -72,9 +78,13 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 class ScaleTest extends TestBase implements ITestBaseIsolated {
     private final static Logger LOGGER = CustomLogger.getLogger();
 
-    //performance constants
-    private final int performanceInitialAddresses = 12000;
     private final int addressesPerTenant = 5;
+
+    //addresses and connections scaling constants
+    private final int scaleSendMessagesPeriod = 10000;
+
+    //performance test constants
+    private final int performanceInitialAddresses = 12000;
     private final int initialAddressesPerGroup = 100;
     private final int addressesPerGroupIncrease = initialAddressesPerGroup;
     private final int initialAnycastLinksPerConn = 1;
@@ -135,12 +145,10 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
             ProbeClientMetricsClient probeClientMetrics = new ProbeClientMetricsClient(metricsEndpoint);
 
-            TestUtils.waitUntilConditionOrFail(() -> {
-                return probeClientMetrics.getSuccessTotal().getValue()>0;
-            }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
+            TestUtils.waitUntilConditionOrFail(() -> probeClientMetrics.getSuccessTotal().getValue()>0, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
 
             assertTrue(probeClientMetrics.getSuccessTotal().getValue()>0);
-            assertTrue(probeClientMetrics.getFailureTotal().getValue()==0);
+            assertEquals(0, probeClientMetrics.getFailureTotal().getValue());
 
             SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
         }
@@ -160,7 +168,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             }, Duration.ofSeconds(35), Duration.ofSeconds(5), () -> "Client is not reporting accepted deliveries");
             Thread.sleep(30000);
             assertTrue(msgClientMetrics.getConnectSuccess().getValue()>0);
-            assertTrue(msgClientMetrics.getConnectFailure().getValue()==0);
+            assertEquals(0, msgClientMetrics.getConnectFailure().getValue());
 
             isNotPresent(msgClientMetrics.getRejectedDeliveries(AddressType.QUEUE))
                 .or(c -> c.getValue() == 0)
@@ -184,7 +192,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         var addresses = createInitialAddresses(initialAddresses);
 
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
-        MessagingPerformanceTestManager manager = new MessagingPerformanceTestManager(endpoint, userCredentials);
+        ScalePerformanceTestManager manager = new ScalePerformanceTestManager(endpoint, userCredentials);
 
         try {
 
@@ -201,11 +209,11 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 for (var groupOfAddresses : addressesGroups) {
                     checkMetrics(manager.getMonitoringResult());
 
-                    manager.deployClient(groupOfAddresses, AddressType.ANYCAST, anycastLinksPerConnection);
+                    manager.deployMessagingClient(groupOfAddresses, AddressType.ANYCAST, anycastLinksPerConnection);
 
                     checkMetrics(manager.getMonitoringResult());
 
-                    manager.deployClient(groupOfAddresses, AddressType.QUEUE, queueLinksPerConnection);
+                    manager.deployMessagingClient(groupOfAddresses, AddressType.QUEUE, queueLinksPerConnection);
                 }
 
                 checkMetrics(manager.getMonitoringResult());
@@ -249,6 +257,48 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             LOGGER.info("Final anycast links per connection {}", anycastLinksPerConnection);
             LOGGER.info("Final queue links per connection {}", queueLinksPerConnection);
             LOGGER.info("#######################################");
+        }
+    }
+
+    @Test
+    void testNumberOfSupportedAddresses() throws Exception {
+        int operableAddresses;
+        int iterator = 0;
+        int failureThreshold = 15_000;
+        List<Address> addressBatch = new LinkedList<>();
+        var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
+        ScalePerformanceTestManager manager = new ScalePerformanceTestManager(endpoint, userCredentials);
+
+        Executors.newSingleThreadExecutor().execute(manager::monitorMetrics);
+        while (true) {
+            try {
+                List<Address> addr = getTenantAddressBatch(addressSpace);
+                addressBatch.addAll(addr);
+                getResourceManager().appendAddresses(false, addr.toArray(new Address[0]));
+                if (iterator % 200 == 0) {
+                    List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
+                    AddressUtils.waitForDestinationsReady(new TimeoutBudget(30, TimeUnit.MINUTES), currentAddresses.toArray(new Address[0]));
+
+                    manager.deployTenantClient(addressBatch, addressesPerTenant, scaleSendMessagesPeriod);
+                    addressBatch.clear();
+                    checkMetrics(manager.getMonitoringResult());
+                    TestUtils.listRouterPods(kubernetes, addressSpace).forEach(
+                            pod -> assertEquals("Running", pod.getStatus().getPhase())
+                    );
+                }
+            } catch (IllegalStateException ex) {
+                log.error("Failed to wait for addresses");
+                operableAddresses = (int) kubernetes.getAddressClient().inNamespace(namespace).list().getItems().stream()
+                        .filter(address -> address.getStatus().getPhase().equals(Phase.Active)).count();
+                LOGGER.info("#######################################");
+                LOGGER.info("Total addresses created {}", operableAddresses);
+                LOGGER.info("Total connections created {}", manager.getConnections());
+                LOGGER.info("Total clients deployed {}", manager.getClients());
+                LOGGER.info("#######################################");
+                assertThat(operableAddresses, greaterThan(failureThreshold));
+                break;
+            }
+            iterator++;
         }
     }
 
@@ -321,7 +371,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                         .withNewResources()
                         .withMemory("3Gi")
                         .endResources()
-                        .withMinReplicas(2)
+                        .withMinReplicas(3)
                         .withLinkCapacity(2000)
                         .build())
                 .withAdmin(new StandardInfraConfigSpecAdminBuilder()
@@ -355,11 +405,12 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         List<AddressPlan> addressPlans = Arrays.asList(testQueuePlan, testAnycastPlan);
 
         AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject(addressSpacePlanName, testInfra.getMetadata().getName(), AddressSpaceType.STANDARD, resources, addressPlans);
-        getResourceManager().createAddressSpacePlan(addressSpacePlan);
+        getResourceManager().createAddressSpacePlan(addressSpacePlan, false);
+        Thread.sleep(120_000);
 
         LOGGER.info("Create custom auth service");
         //Custom auth service
-        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, false);
+        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, true, "5Gi", "3Gi", true, authServiceName);
         resourcesManager.createAuthService(standardAuth, false);
         setVerboseGCAuthservice(authServiceName);
         resourcesManager.waitForAuthPods(standardAuth);
@@ -380,7 +431,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 .endSpec()
                 .build();
         getResourceManager().createAddressSpace(addressSpace);
-        getResourceManager().createOrUpdateUser(addressSpace, userCredentials);
+        getResourceManager().createOrUpdateUser(addressSpace, userCredentials, false);
     }
 
     List<Address> createInitialAddresses(int totalAddresses) throws Exception {
@@ -413,10 +464,10 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         }
         List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
         AddressUtils.waitForDestinationsReady(currentAddresses.toArray(new Address[0]));
-        Collections.sort(currentAddresses, (a1, a2) -> {
+        currentAddresses.sort((a1, a2) -> {
             var address1 = a1.getSpec().getAddress();
             var address2 = a2.getSpec().getAddress();
-            return address1.substring(address1.length()-uuidSize).compareTo(address2.substring(address2.length()-uuidSize));
+            return address1.substring(address1.length() - uuidSize).compareTo(address2.substring(address2.length() - uuidSize));
         });
         return currentAddresses;
     }
