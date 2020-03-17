@@ -71,15 +71,6 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
   };
   const dropdownItems = [
     <DropdownItem
-      key="download"
-      id="as-header-download"
-      aria-label="download"
-      onClick={() => onDownload({ name, namespace })}
-      style={{ paddingRight: 50 }}
-    >
-      Download Certificate
-    </DropdownItem>,
-    <DropdownItem
       key="edit"
       id="as-header-edit"
       aria-label="edit"
@@ -94,6 +85,15 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
       onClick={() => onDelete({ name, namespace })}
     >
       Delete
+    </DropdownItem>,
+    <DropdownItem
+      key="download"
+      id="as-header-download"
+      aria-label="download"
+      onClick={() => onDownload({ name, namespace })}
+      style={{ paddingRight: 50 }}
+    >
+      Download Certificate
     </DropdownItem>
   ];
   return (
