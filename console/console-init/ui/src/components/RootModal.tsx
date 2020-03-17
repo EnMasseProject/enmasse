@@ -2,14 +2,14 @@ import React from "react";
 import { useStoreContext, MODAL_TYPES } from "context-state-reducer";
 import { DialogPrompt } from "components/common/DialogPrompt";
 import {
-  EditAddressSpace,
+  EditAddressSpaceContainer,
   CreateAddressSpace
 } from "modules/address-space/dialogs";
 import { EditAddress } from "modules/address/dialogs/EditAddress";
 
 const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.CREATE_ADDRESS_SPACE]: CreateAddressSpace,
-  [MODAL_TYPES.EDIT_ADDRESS_SPACE]: EditAddressSpace,
+  [MODAL_TYPES.EDIT_ADDRESS_SPACE]: EditAddressSpaceContainer,
   [MODAL_TYPES.EDIT_ADDRESS]: EditAddress,
   [MODAL_TYPES.DELETE_ADDRESS_SPACE]: DialogPrompt,
   [MODAL_TYPES.DELETE_ADDRESS]: DialogPrompt,
