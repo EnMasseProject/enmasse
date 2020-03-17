@@ -392,7 +392,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         AddressPlan testAnycastPlan = PlanUtils.createAddressPlanObject(anycastPlanName,
                 AddressType.ANYCAST,
                 Collections.singletonList(
-                        new ResourceRequest("router", 0.0005)));
+                        new ResourceRequest("router", 0.0002)));
 
         getResourceManager().createAddressPlan(testQueuePlan);
         getResourceManager().createAddressPlan(testAnycastPlan);
