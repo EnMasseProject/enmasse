@@ -269,6 +269,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
         ScalePerformanceTestManager manager = new ScalePerformanceTestManager(endpoint, userCredentials);
 
+        Executors.newSingleThreadExecutor().execute(manager::monitorMetrics);
         while (true) {
             try {
                 List<Address> addr = getTenantAddressBatch(addressSpace);
