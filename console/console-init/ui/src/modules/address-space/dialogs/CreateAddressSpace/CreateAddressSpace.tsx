@@ -5,8 +5,8 @@
 
 import * as React from "react";
 import { Wizard } from "@patternfly/react-core";
-import { AddressSpaceConfiguration } from "modules/address-space/dialogs/CreateAddressSpace/CreateAddressSpaceConfiguration";
-import { ReviewAddressSpace } from "modules/address-space/dialogs/CreateAddressSpace/ReviewAddressSpace";
+import { Configuration } from "./Configuration";
+import { Review } from "./Review";
 import { CREATE_ADDRESS_SPACE } from "graphql-module/queries";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types } from "context-state-reducer";
@@ -108,7 +108,7 @@ export const CreateAddressSpace: React.FunctionComponent<{}> = () => {
     {
       name: "Configuration",
       component: (
-        <AddressSpaceConfiguration
+        <Configuration
           name={addressSpaceName}
           setName={setAddressSpaceName}
           namespace={namespace}
@@ -130,7 +130,7 @@ export const CreateAddressSpace: React.FunctionComponent<{}> = () => {
       name: "Review",
       isDisabled: true,
       component: (
-        <ReviewAddressSpace
+        <Review
           name={addressSpaceName}
           namespace={namespace}
           type={addressSpaceType}
@@ -145,19 +145,16 @@ export const CreateAddressSpace: React.FunctionComponent<{}> = () => {
   ];
 
   return (
-    <React.Fragment>
-      <Wizard
-        id="create-as-wizard"
-        isOpen={true}
-        isFullHeight={true}
-        isFullWidth={true}
-        onClose={onCloseDialog}
-        title="Create an Instance"
-        steps={steps}
-        onNext={() => {}}
-        onSave={handleSave}
-      />
-      )}
-    </React.Fragment>
+    <Wizard
+      id="create-as-wizard"
+      isOpen={true}
+      isFullHeight={true}
+      isFullWidth={true}
+      onClose={onCloseDialog}
+      title="Create an Instance"
+      steps={steps}
+      onNext={() => {}}
+      onSave={handleSave}
+    />
   );
 };

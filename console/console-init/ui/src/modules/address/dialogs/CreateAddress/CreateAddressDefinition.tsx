@@ -25,7 +25,11 @@ import {
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { IAddressResponse } from "types/ResponseTypes";
+<<<<<<< HEAD
 import { dropdown_item_styles } from "pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
+=======
+import { dropdown_item_styles } from "modules/address-space";
+>>>>>>> Refactor dialogs components (#4110)
 
 const styles = StyleSheet.create({
   capitalize_labels: {

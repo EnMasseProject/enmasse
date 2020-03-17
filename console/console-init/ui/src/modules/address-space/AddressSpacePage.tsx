@@ -4,7 +4,7 @@
  */
 
 import * as React from "react";
-import { useLocation, useHistory } from "react-router";
+import { useLocation } from "react-router";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import {
   PageSection,
@@ -15,34 +15,26 @@ import {
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
 import { useMutation } from "@apollo/react-hooks";
-import {
-  AddressSpaceList,
-  IAddressSpace,
-  AddressSpaceToolbar
-} from "./components";
+import { IAddressSpace, AddressSpaceToolbar } from "./components";
+import { AddressSpaceListContainer } from "./containers";
 import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
 import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { getHeaderForDeleteDialog, getDetailForDeleteDialog } from "./utils";
-import { Pagination } from "components";
+import { TablePagination } from "components";
 
 export default function AddressSpacePage() {
   const { dispatch } = useStoreContext();
   useDocumentTitle("Address Space List");
   useA11yRouteChange();
-
   let deleteAddressSpaceErrors: any = [];
 
   const [filterValue, setFilterValue] = React.useState<string>("Name");
   const [filterNames, setFilterNames] = React.useState<string[]>([]);
-  const [onCreationRefetch, setOnCreationRefetch] = React.useState<boolean>(
-    false
-  );
   const [filterNamespaces, setFilterNamespaces] = React.useState<string[]>([]);
   const [filterType, setFilterType] = React.useState<string | null>(null);
   const [totalAddressSpaces, setTotalAddressSpaces] = React.useState<number>(0);
   const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
-  const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
@@ -177,7 +169,7 @@ export default function AddressSpacePage() {
           />
         </GridItem>
         <GridItem span={5}>
-          <Pagination
+          <TablePagination
             itemCount={totalAddressSpaces}
             variant={"top"}
             page={page}
@@ -186,25 +178,21 @@ export default function AddressSpacePage() {
         </GridItem>
       </Grid>
       <Divider />
-      <AddressSpaceList
+      <AddressSpaceListContainer
         page={page}
         perPage={perPage}
-        totalAddressSpaces={totalAddressSpaces}
+        totalItemsCount={totalAddressSpaces}
         setTotalAddressSpaces={setTotalAddressSpaces}
-        filter_Names={filterNames}
-        filter_NameSpace={filterNamespaces}
-        filter_Type={filterType}
-        onCreationRefetch={onCreationRefetch}
-        setOnCreationRefetch={setOnCreationRefetch}
+        filterNames={filterNames}
+        filterNamespaces={filterNamespaces}
+        filterType={filterType}
         sortValue={sortDropDownValue}
         setSortValue={setSortDropdownValue}
-        isCreateWizardOpen={isCreateWizardOpen}
-        setIsCreateWizardOpen={setIsCreateWizardOpen}
         selectedAddressSpaces={selectedAddressSpaces}
         onSelectAddressSpace={onSelectAddressSpace}
         onSelectAllAddressSpace={onSelectAllAddressSpace}
       />
-      <Pagination
+      <TablePagination
         itemCount={totalAddressSpaces}
         variant={"top"}
         page={page}
