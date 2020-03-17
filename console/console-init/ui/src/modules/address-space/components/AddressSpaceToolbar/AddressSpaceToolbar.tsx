@@ -10,9 +10,9 @@ import {
   DataToolbarItem
 } from "@patternfly/react-core/dist/js/experimental";
 import {
-  AddressSpaceFilter,
+  AddressSpaceFilterContainer,
   AddressSpaceListKebab
-} from "../AddressSpaceFilter/AddressSpaceFilter";
+} from "modules/address-space";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView } from "components/common/SortForMobileView";
 import useWindowDimensions from "components/common/WindowDimension";
@@ -65,13 +65,19 @@ export const AddressSpaceToolbar: React.FunctionComponent<IAddressSpaceToolbarPr
     });
   };
 
+  const onSelectDeleteAll = async (event: any) => {
+    if (event.target.value === "deleteAll") {
+      await onDeleteAll();
+    }
+  };
+
   const sortMenuItems = [
     { key: "name", value: "Name", index: 1 },
     { key: "creationTimestamp", value: "Time Created", index: 4 }
   ];
   const toolbarItems = (
     <>
-      <AddressSpaceFilter
+      <AddressSpaceFilterContainer
         filterValue={filterValue}
         setFilterValue={setFilterValue}
         filterNames={filterNames}
@@ -91,8 +97,8 @@ export const AddressSpaceToolbar: React.FunctionComponent<IAddressSpaceToolbarPr
       )}
       <DataToolbarItem>
         <AddressSpaceListKebab
-          createAddressSpaceOnClick={onCreateAddressSpace}
-          onDeleteAll={onDeleteAll}
+          onCreateAddressSpace={onCreateAddressSpace}
+          onSelectDeleteAll={onSelectDeleteAll}
           isDeleteAllDisabled={isDeleteAllDisabled}
         />
       </DataToolbarItem>
