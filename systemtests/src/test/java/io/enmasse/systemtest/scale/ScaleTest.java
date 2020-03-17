@@ -18,8 +18,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -267,7 +269,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     void testNumberOfSupportedAddresses() throws Exception {
         int operableAddresses;
         int iterator = 0;
-        int failureThreshold = 15_000;
+        int failureThreshold = 12_000;
         List<Address> addressBatch = new LinkedList<>();
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
         ScalePerformanceTestManager manager = new ScalePerformanceTestManager(endpoint, userCredentials);
@@ -280,29 +282,40 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 getResourceManager().appendAddresses(false, addr.toArray(new Address[0]));
                 if (iterator % 200 == 0) {
                     List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
-                    AddressUtils.waitForDestinationsReady(new TimeoutBudget(30, TimeUnit.MINUTES), currentAddresses.toArray(new Address[0]));
+                    AddressUtils.waitForDestinationsReady(new TimeoutBudget(15, TimeUnit.MINUTES), currentAddresses.toArray(new Address[0]));
 
                     manager.deployTenantClient(addressBatch, addressesPerTenant, scaleSendMessagesPeriod);
                     addressBatch.clear();
-                    checkMetrics(manager.getMonitoringResult());
+                    manager.sleep();
                     TestUtils.listRouterPods(kubernetes, addressSpace).forEach(
                             pod -> assertEquals("Running", pod.getStatus().getPhase())
                     );
                 }
-            } catch (IllegalStateException ex) {
-                log.error("Failed to wait for addresses");
+                checkMetrics(manager.getMonitoringResult());
+            } catch (Exception | AssertionError ex) {
+                log.error("Failed to wait for addresses/connections");
+                log.error(ex.getMessage());
                 operableAddresses = (int) kubernetes.getAddressClient().inNamespace(namespace).list().getItems().stream()
                         .filter(address -> address.getStatus().getPhase().equals(Phase.Active)).count();
                 LOGGER.info("#######################################");
                 LOGGER.info("Total addresses created {}", operableAddresses);
                 LOGGER.info("Total connections created {}", manager.getConnections());
-                LOGGER.info("Total clients deployed {}", manager.getClients());
                 LOGGER.info("#######################################");
-                assertThat(operableAddresses, greaterThan(failureThreshold));
                 break;
             }
             iterator++;
         }
+        var logsPath = TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest());
+        var mapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
+        Map<String, Object> data = new HashMap<>();
+        data.put("operable_addresses", operableAddresses);
+        data.put("connection_count", manager.getConnections());
+        data.put("links", manager.getConnections() * 5);
+        String results = mapper.writeValueAsString(data);
+        Files.createDirectories(logsPath);
+        LOGGER.info("Saving results into {}", logsPath);
+        Files.writeString(logsPath.resolve("operable_addresses.json"), results);
+        assertThat(operableAddresses, greaterThan(failureThreshold));
     }
 
     @Test
