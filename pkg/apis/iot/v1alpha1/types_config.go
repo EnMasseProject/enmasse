@@ -33,7 +33,27 @@ type IoTConfigSpec struct {
 
 	ServicesConfig ServicesConfig `json:"services"`
 	AdaptersConfig AdaptersConfig `json:"adapters"`
+	Tracing        TracingConfig  `json:"tracing"`
 }
+
+//region Tracing
+
+type TracingConfig struct {
+	Strategy TracingStrategy `json:"strategy,omitempty"`
+}
+
+type TracingStrategy struct {
+	Sidecar   *SidecarTracingStrategy   `json:"sidecar,omitempty"`
+	DaemonSet *DaemonSetTracingStrategy `json:"daemonSet,omitempty"`
+}
+
+type SidecarTracingStrategy struct {
+}
+
+type DaemonSetTracingStrategy struct {
+}
+
+//endregion
 
 type JavaContainerDefaults struct {
 	RequireNativeTls *bool `json:"requireNativeTls,omitempty"`
@@ -108,6 +128,7 @@ type CommonAdapterContainers struct {
 	ProxyConfigurator *ContainerConfig `json:"proxyConfigurator,omitempty"`
 }
 
+// Deprecated: no longer used
 type CollectorConfig struct {
 	Container *ContainerConfig `json:"container,omitempty"`
 }
@@ -117,6 +138,49 @@ type DeviceRegistryServiceConfig struct {
 
 	File       *FileBasedDeviceRegistry  `json:"file,omitempty"`
 	Infinispan *InfinispanDeviceRegistry `json:"infinispan,omitempty"`
+	JDBC       *JdbcDeviceRegistry       `json:"jdbc,omitempty"`
+}
+
+type JdbcServer struct {
+	External *ExternalJdbcServer `json:"external,omitempty"`
+}
+
+type ExtensionImage struct {
+	Container corev1.Container `json:"container"`
+}
+
+type ExternalJdbcServer struct {
+	JdbcConnectionInformation `json:",inline"`
+
+	Devices           ExternalJdbcDevices           `json:"devices,omitempty"`
+	DeviceInformation ExternalJdbcDeviceInformation `json:"deviceInformation,omitempty"`
+
+	Extensions []ExtensionImage `json:"extensions,omitempty"`
+}
+
+type JdbcConnectionInformation struct {
+	URL         string `json:"url"`
+	DriverClass string `json:"driverClass"`
+	Username    string `json:"username,omitempty"`
+	Password    string `json:"password,omitempty"`
+
+	MaximumPoolSize uint32 `json:"maximumPoolSize,omitempty"`
+}
+
+type ExternalJdbcService struct {
+	JdbcConnectionInformation `json:",inline"`
+
+	TableName string `json:"tableName,omitempty"`
+}
+
+type ExternalJdbcDevices struct {
+	ExternalJdbcService `json:",inline"`
+
+	Mode string `json:"mode,omitempty"`
+}
+
+type ExternalJdbcDeviceInformation struct {
+	ExternalJdbcService `json:",inline"`
 }
 
 type InfinispanServer struct {
@@ -137,6 +201,10 @@ type ExternalInfinispanServer struct {
 }
 
 type InfinispanRegistryManagement struct {
+	AuthTokenCacheExpiration string `json:"authTokenCacheExpiration,omitempty"`
+}
+
+type JdbcRegistryManagement struct {
 	AuthTokenCacheExpiration string `json:"authTokenCacheExpiration,omitempty"`
 }
 
@@ -162,16 +230,33 @@ type AuthenticationServiceConfig struct {
 	CommonServiceConfig `json:",inline"`
 }
 
+type CommonDeviceRegistry struct {
+	// Disable configuration temporarily (use for development only)
+	Disabled bool `json:"disabled,omitempty"`
+}
+
 type FileBasedDeviceRegistry struct {
+	CommonDeviceRegistry `json:",inline"`
+
 	NumberOfDevicesPerTenant *uint32 `json:"numberOfDevicesPerTenant,omitempty"`
 	CommonServiceConfig      `json:",inline"`
 	SecurityContext          *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 }
 
 type InfinispanDeviceRegistry struct {
-	Server              InfinispanServer             `json:"server"`
-	Management          InfinispanRegistryManagement `json:"management"`
-	CommonServiceConfig `json:",inline"`
+	CommonDeviceRegistry `json:",inline"`
+	CommonServiceConfig  `json:",inline"`
+
+	Server     InfinispanServer             `json:"server"`
+	Management InfinispanRegistryManagement `json:"management"`
+}
+
+type JdbcDeviceRegistry struct {
+	CommonDeviceRegistry `json:",inline"`
+	CommonServiceConfig  `json:",inline"`
+
+	Server     JdbcServer             `json:"server"`
+	Management JdbcRegistryManagement `json:"management"`
 }
 
 // The adapter options should focus on functional configuration applicable to all adapters
@@ -206,6 +291,8 @@ type LoraWanAdapterConfig struct {
 type MqttAdapterConfig struct {
 	CommonAdapterConfig `json:",inline"`
 }
+
+//region Status
 
 type IoTConfigStatus struct {
 	Phase       ConfigPhaseType `json:"phase"`
@@ -256,6 +343,8 @@ type ServiceStatus struct {
 type EndpointStatus struct {
 	URI string `json:"uri,omitempty"`
 }
+
+//endregion
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 

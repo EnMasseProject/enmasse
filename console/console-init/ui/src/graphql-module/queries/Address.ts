@@ -556,6 +556,9 @@ const RETURN_ADDRESS_SPACE_PLANS = gql`
       }
       spec {
         addressSpaceType
+        displayName
+        longDescription
+        shortDescription
       }
     }
   }
@@ -668,7 +671,7 @@ const RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
 ) => {
   let filter = "";
   if (addressspaceName && addressspaceName.trim() !== "") {
-    filter += "`$.spec.addressSpace` = '" + addressspaceName + "' AND";
+    filter += "`$.metadata.name` LIKE '" + addressspaceName + ".%' AND";
   }
   if (namespace && namespace.trim() !== "") {
     filter += "`$.metadata.namespace` = '" + namespace + "'";

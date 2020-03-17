@@ -54,7 +54,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
         resourcesManager.createAuthService(standardAuth);
         resourcesManager.removeAuthService(standardAuth);
-        TestUtils.waitForNReplicas(0, false, Map.of("name", "test-standard-authservice"), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
+        TestUtils.waitForNReplicas(0, false, standardAuth.getMetadata().getNamespace(), Map.of("name", "test-standard-authservice"), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
     }
 
     @Test

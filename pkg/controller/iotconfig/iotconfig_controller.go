@@ -39,17 +39,9 @@ import (
 )
 
 const RegistryTypeAnnotation = "iot.enmasse.io/registry.type"
+const RegistryJdbcModeAnnotation = "iot.enmasse.io/registry.jdbc.mode"
 
 var log = logf.Log.WithName("controller_iotconfig")
-
-type DeviceRegistryImplementation int
-
-const (
-	DeviceRegistryDefault = iota
-	DeviceRegistryIllegal
-	DeviceRegistryFileBased
-	DeviceRegistryInfinispan
-)
 
 // Gets called by parent "init", adding as to the manager
 func Add(mgr manager.Manager) error {
@@ -195,11 +187,13 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return r.processTenantService(ctx, config)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		switch deviceRegistryImplementation(config) {
-		case DeviceRegistryInfinispan:
+		switch config.EvalDeviceRegistryImplementation() {
+		case iotv1alpha1.DeviceRegistryInfinispan:
 			return r.processInfinispanDeviceRegistry(ctx, config)
-		case DeviceRegistryFileBased:
+		case iotv1alpha1.DeviceRegistryFileBased:
 			return r.processFileDeviceRegistry(ctx, config)
+		case iotv1alpha1.DeviceRegistryJdbc:
+			return r.processJdbcDeviceRegistry(ctx, config)
 		default:
 			return reconcile.Result{}, fmt.Errorf("illegal device registry configuration")
 		}

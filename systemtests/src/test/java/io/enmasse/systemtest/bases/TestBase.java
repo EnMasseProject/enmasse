@@ -113,7 +113,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         Map<String, String> labels = new HashMap<>();
         labels.put("name", "qdrouterd");
         labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-        TestUtils.waitForNReplicas(expectedReplicas, labels, budget);
+        TestUtils.waitForNReplicas(expectedReplicas, kubernetes.getInfraNamespace(), labels, budget);
     }
 
     protected void waitForPodsToTerminate(List<String> uids) throws Exception {

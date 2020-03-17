@@ -8,6 +8,7 @@ package iotproject
 import (
 	"context"
 	"fmt"
+	"k8s.io/client-go/tools/record"
 	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
@@ -30,6 +31,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+const ControllerName = "iotproject-controller"
+
 var log = logf.Log.WithName("controller_iotproject")
 
 const DefaultEndpointName = "messaging"
@@ -43,16 +46,17 @@ func Add(mgr manager.Manager) error {
 
 func newReconciler(mgr manager.Manager) *ReconcileIoTProject {
 	return &ReconcileIoTProject{
-		client: mgr.GetClient(),
-		reader: mgr.GetAPIReader(),
-		scheme: mgr.GetScheme(),
+		client:   mgr.GetClient(),
+		reader:   mgr.GetAPIReader(),
+		scheme:   mgr.GetScheme(),
+		recorder: mgr.GetEventRecorderFor(ControllerName),
 	}
 }
 
 func add(mgr manager.Manager, r *ReconcileIoTProject) error {
 
 	// Create a new controller
-	c, err := controller.New("iotproject-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New(ControllerName, mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
@@ -100,9 +104,10 @@ var _ reconcile.Reconciler = &ReconcileIoTProject{}
 type ReconcileIoTProject struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	reader client.Reader
-	scheme *runtime.Scheme
+	client   client.Client
+	reader   client.Reader
+	scheme   *runtime.Scheme
+	recorder record.EventRecorder
 }
 
 func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalProject *iotv1alpha1.IoTProject, reconciledProject *iotv1alpha1.IoTProject, currentError error) (reconcile.Result, error) {
@@ -214,7 +219,7 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	rc.Process(func() (result reconcile.Result, e error) {
-		return finalizer.ProcessFinalizers(ctx, r.client, r.reader, project, finalizers)
+		return finalizer.ProcessFinalizers(ctx, r.client, r.reader, r.recorder, project, finalizers)
 	})
 
 	if rc.Error() != nil || rc.NeedRequeue() {

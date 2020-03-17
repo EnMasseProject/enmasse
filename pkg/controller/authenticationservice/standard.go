@@ -183,17 +183,17 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		return err
 	}
 
-	install.ApplySecretVolume(deployment, "standard-authservice-cert", authservice.Spec.Standard.CertificateSecret.Name)
-	install.ApplyEmptyDirVolume(deployment, "keycloak-providers")
-	install.ApplyEmptyDirVolume(deployment, "keycloak-configuration")
-	install.ApplyEmptyDirVolume(deployment, "keycloak-configuration")
+	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "standard-authservice-cert", authservice.Spec.Standard.CertificateSecret.Name)
+	install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "keycloak-providers")
+	install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "keycloak-configuration")
+	install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "keycloak-configuration")
 
 	// Only allow setting volume on initial creation
 	if util.IsNewObject(deployment) {
 		if authservice.Spec.Standard.Storage.Type == adminv1beta1.PersistentClaim {
-			install.ApplyPersistentVolume(deployment, "keycloak-persistence", *authservice.Spec.Standard.Storage.ClaimName)
+			install.ApplyPersistentVolume(&deployment.Spec.Template.Spec, "keycloak-persistence", *authservice.Spec.Standard.Storage.ClaimName)
 		} else {
-			install.ApplyEmptyDirVolume(deployment, "keycloak-persistence")
+			install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "keycloak-persistence")
 		}
 	}
 

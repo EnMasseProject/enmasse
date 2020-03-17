@@ -111,6 +111,10 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		container.VolumeMounts[0].MountPath = "/var/qdr-certs"
 		container.VolumeMounts[0].ReadOnly = false
 
+		// tracing config
+
+		BlockTracingSidecarConfig(config, container)
+
 		// apply container options
 
 		applyContainerConfig(container, containers.ProxyConfigurator)
@@ -152,6 +156,10 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		container.VolumeMounts[1].MountPath = "/etc/qdr/config"
 		container.VolumeMounts[1].ReadOnly = true
 
+		// tracing config
+
+		BlockTracingSidecarConfig(config, container)
+
 		// apply container options
 
 		applyContainerConfig(container, containers.Proxy)
@@ -165,8 +173,8 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		return err
 	}
 
-	install.ApplyConfigMapVolume(deployment, "qdr-proxy-config", "qdr-proxy-configurator")
-	install.ApplyEmptyDirVolume(deployment, "qdr-tmp-certs")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "qdr-proxy-config", "qdr-proxy-configurator")
+	install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "qdr-tmp-certs")
 
 	return nil
 }
@@ -274,11 +282,11 @@ func applyAdapterEndpointDeployment(endpoint *iotv1alpha1.AdapterEndpointConfig,
 
 		// use provided secret
 
-		install.ApplySecretVolume(deployment, "tls", endpoint.SecretNameStrategy.TlsSecretName)
+		install.ApplySecretVolume(&deployment.Spec.Template.Spec, "tls", endpoint.SecretNameStrategy.TlsSecretName)
 
 	} else if endpoint != nil && endpoint.KeyCertificateStrategy != nil {
 
-		install.ApplySecretVolume(deployment, "tls", endpointSecretName+"-"+endpoint.KeyCertificateStrategy.HashString())
+		install.ApplySecretVolume(&deployment.Spec.Template.Spec, "tls", endpointSecretName+"-"+endpoint.KeyCertificateStrategy.HashString())
 
 	} else {
 
@@ -288,7 +296,7 @@ func applyAdapterEndpointDeployment(endpoint *iotv1alpha1.AdapterEndpointConfig,
 			return fmt.Errorf("not running in OpenShift, unable to use service CA, you need to provide a protocol adapter endpoint key/certificate")
 		}
 
-		install.ApplySecretVolume(deployment, "tls", endpointSecretName+"-tls")
+		install.ApplySecretVolume(&deployment.Spec.Template.Spec, "tls", endpointSecretName+"-tls")
 	}
 
 	return nil

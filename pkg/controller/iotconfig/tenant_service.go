@@ -55,7 +55,10 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-tenant-service"
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, nil)
 
+	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "tenant-service", func(container *corev1.Container) error {
+
+		tracingContainer = container
 
 		if err := install.SetContainerImage(container, "iot-tenant-service", config); err != nil {
 			return err
@@ -91,6 +94,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 			{Name: "ENMASSE_IOT_TENANT_ENDPOINT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.IsNativeTlsRequired(config))},
 		}
 
+		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)
 
 		if err := AppendTrustStores(config, container, []string{"ENMASSE_IOT_AUTH_TRUST_STORE_PATH"}); err != nil {
@@ -115,9 +119,17 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 		return err
 	}
 
+	// reset init containers
+
+	deployment.Spec.Template.Spec.InitContainers = nil
+
+	// tracing
+
+	SetupTracing(config, deployment, tracingContainer)
+
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "config", nameTenantService+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameTenantService+"-config")
 
 	// inter service secrets
 

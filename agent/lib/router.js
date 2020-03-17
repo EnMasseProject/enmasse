@@ -47,7 +47,7 @@ var KnownRouter = function (container_id, listeners) {
 
 /**
  * A ConnectedRouter represents a router this process is connected to
- * and is therefore resonsible for configuring.
+ * and is therefore responsible for configuring.
  */
 var ConnectedRouter = function (connection) {
     events.EventEmitter.call(this);

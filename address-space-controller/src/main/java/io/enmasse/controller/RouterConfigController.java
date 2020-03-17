@@ -12,6 +12,7 @@ import io.enmasse.address.model.AddressSpaceSpecConnectorEndpoint;
 import io.enmasse.address.model.AddressSpaceSpecConnectorTls;
 import io.enmasse.address.model.AddressSpaceStatusConnector;
 import io.enmasse.address.model.AddressSpaceStatusConnectorBuilder;
+import io.enmasse.address.model.AddressSpaceStatusRouter;
 import io.enmasse.address.model.AuthenticationServiceSettings;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.address.model.Phase;
@@ -68,11 +69,13 @@ public class RouterConfigController implements Controller {
     private final NamespacedKubernetesClient client;
     private final String namespace;
     private final AuthenticationServiceResolver authenticationServiceResolver;
+    private final RouterStatusCache routerStatusCache;
 
-    public RouterConfigController(NamespacedKubernetesClient client, String namespace, AuthenticationServiceResolver authenticationServiceResolver) {
+    public RouterConfigController(NamespacedKubernetesClient client, String namespace, AuthenticationServiceResolver authenticationServiceResolver, RouterStatusCache routerStatusCache) {
         this.client = client;
         this.namespace = namespace;
         this.authenticationServiceResolver = authenticationServiceResolver;
+        this.routerStatusCache = routerStatusCache;
     }
 
     public AddressSpace reconcileActive(AddressSpace addressSpace) throws Exception {
@@ -87,6 +90,7 @@ public class RouterConfigController implements Controller {
                 addressSpace.getStatus().setPhase(Phase.Configuring);
             }
             routerSet.apply(client);
+            checkRouterConnectorStatus(addressSpace);
         }
         return addressSpace;
     }
@@ -714,6 +718,145 @@ public class RouterConfigController implements Controller {
             s.setReady(isReady);
             s.appendMessage(message);
         });
+    }
+
+    void checkRouterConnectorStatus(AddressSpace addressSpace) {
+        Map<String, AddressSpaceSpecConnector> connectorMap = new HashMap<>();
+        for (AddressSpaceSpecConnector connector : addressSpace.getSpec().getConnectors()) {
+            connectorMap.put(connector.getName(), connector);
+        }
+
+        List<RouterStatus> routerStatusList = routerStatusCache.getLatestResult(addressSpace);
+
+        for (AddressSpaceStatusConnector connector : addressSpace.getStatus().getConnectors()) {
+            checkConnectorStatus(connector, connectorMap.get(connector.getName()), routerStatusList);
+        }
+    }
+
+    /*
+     * Until the connector entity allows querying for the status, we have to go through all connections and
+     * see if we can find our connector host in there.
+     */
+    private void checkConnectorStatus(AddressSpaceStatusConnector connectorStatus, AddressSpaceSpecConnector connector, List<RouterStatus> response) {
+        Map<String, ConnectionStatus> connectionStatuses = new HashMap<>();
+        for (AddressSpaceSpecConnectorEndpoint endpoint : connector.getEndpointHosts()) {
+            String host = String.format("%s:%d", endpoint.getHost(), connector.getPort(endpoint.getPort()));
+            connectionStatuses.put(host, new ConnectionStatus());
+        }
+
+        if (response == null || response.isEmpty()) {
+            connectorStatus.setReady(false);
+            connectorStatus.appendMessage("No router status found.");
+            return;
+        }
+
+        for (RouterStatus routerStatus : response) {
+            List<String> hosts = routerStatus.getConnections().getHosts();
+            List<Boolean> opened = routerStatus.getConnections().getOpened();
+            List<String> operStatus = routerStatus.getConnections().getOperStatus();
+
+            for (int i = 0; i < hosts.size(); i++) {
+                ConnectionStatus status = connectionStatuses.get(hosts.get(i));
+                if (status != null) {
+                    status.setFound(true);
+                    if (operStatus.get(i).equals("up")) {
+                        status.setConnected(true);
+                    }
+                    if (opened.get(i)) {
+                        status.setOpened(true);
+                    }
+                }
+            }
+        }
+
+        // Assumption/decision: If the primary or failover for any connector is up, we are ok
+        List<ConnectionStatus> found = connectionStatuses.values().stream()
+                .filter(ConnectionStatus::isFound)
+                .collect(Collectors.toList());
+
+        List<ConnectionStatus> isConnected = found.stream()
+                .filter(ConnectionStatus::isConnected)
+                .collect(Collectors.toList());
+
+        List<ConnectionStatus> isOpened = isConnected.stream()
+                .filter(ConnectionStatus::isOpened)
+                .collect(Collectors.toList());
+
+        if (found.isEmpty()) {
+            connectorStatus.setReady(false);
+            connectorStatus.appendMessage("Unable to find active connection for connector '" + connector.getName() + "'");
+            return;
+        }
+
+        if (isConnected.isEmpty()) {
+            connectorStatus.setReady(false);
+            connectorStatus.appendMessage("Unable to find connection in the connected state for connector '" + connector.getName() + "'");
+        }
+
+        if (isOpened.isEmpty()) {
+            connectorStatus.setReady(false);
+            connectorStatus.appendMessage("Unable to find connection in the opened state for connector '" + connector.getName() + "'");
+        }
+    }
+
+    private void checkRouterMesh(AddressSpace addressSpace, List<RouterStatus> routerStatusList) {
+        final List<AddressSpaceStatusRouter> routers = new ArrayList<>();
+        Set<String> routerIds = routerStatusList.stream().map(RouterStatus::getRouterId).collect(Collectors.toSet());
+
+        for (RouterStatus routerStatus : routerStatusList) {
+            String routerId = routerStatus.getRouterId();
+            List<String> neighbors = new ArrayList<>(routerStatus.getNeighbors());
+            // Add ourselves to make the comparison simpler
+            neighbors.add(routerId);
+
+            if (!neighbors.containsAll(routerIds)) {
+                Set<String> missing = new HashSet<>(routerIds);
+                missing.removeAll(neighbors);
+                String msg = String.format("Router %s is missing connection to %s.", routerId, missing);
+                log.warn(msg);
+                addressSpace.getStatus().setReady(false);
+                addressSpace.getStatus().appendMessage(msg);
+            }
+
+            AddressSpaceStatusRouter addressSpaceStatusRouter = new AddressSpaceStatusRouter();
+            addressSpaceStatusRouter.setId(routerId);
+            addressSpaceStatusRouter.setNeighbors(neighbors);
+            addressSpaceStatusRouter.setUndelivered(routerStatus.getUndelivered());
+
+            log.debug("Router {} has neighbors: {} and undelivered: {}", routerId, neighbors, routerStatus.getUndelivered());
+            routers.add(addressSpaceStatusRouter);
+        }
+        addressSpace.getStatus().setRouters(routers);
+    }
+
+    private static class ConnectionStatus {
+        private boolean isFound = false;
+        private boolean isConnected = false;
+        private boolean isOpened = false;
+
+        boolean isConnected() {
+            return isConnected;
+        }
+
+        void setConnected(boolean connected) {
+            isConnected = connected;
+        }
+
+        boolean isOpened() {
+            return isOpened;
+        }
+
+        void setOpened(boolean opened) {
+            isOpened = opened;
+        }
+
+        boolean isFound() {
+            return isFound;
+        }
+
+        void setFound(boolean found) {
+            isFound = found;
+        }
     }
 
     @Override

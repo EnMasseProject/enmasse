@@ -4,6 +4,15 @@
  */
 package io.enmasse.systemtest.manager;
 
+import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
+
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
@@ -14,15 +23,6 @@ import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-
-import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
 
 public class IsolatedIoTManager extends ResourceManager {
 
@@ -75,6 +75,8 @@ public class IsolatedIoTManager extends ResourceManager {
                     SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
                 }
                 SystemtestsKubernetesApps.deleteInfinispanServer();
+                SystemtestsKubernetesApps.deletePostgresqlServer();
+                SystemtestsKubernetesApps.deleteH2Server();
             } catch (Exception e) {
                 LOGGER.error("Error tearing down iot test: {}", e.getMessage());
                 throw e;

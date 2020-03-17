@@ -1,0 +1,11 @@
+findCredentials: |
+   SELECT
+      device_id,
+      version,
+      credentials
+   FROM
+      %s
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      credentials @> jsonb_build_array(jsonb_build_object('type', :type, 'auth-id', :auth_id))

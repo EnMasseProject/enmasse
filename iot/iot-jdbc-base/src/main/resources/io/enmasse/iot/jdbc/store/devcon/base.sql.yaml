@@ -1,0 +1,14 @@
+read: |
+   SELECT
+      last_known_gateway
+   FROM
+      %s
+   WHERE
+      tenant_id=:tenant_id
+   AND
+      device_id=:device_id
+
+dropTenant: |
+   DELETE FROM %s
+   WHERE
+      tenant_id=:tenant_id

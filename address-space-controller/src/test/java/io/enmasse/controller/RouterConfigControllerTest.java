@@ -11,6 +11,7 @@ import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.router.config.*;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
+import io.enmasse.k8s.api.LogEventLogger;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,7 +70,8 @@ public class RouterConfigControllerTest {
         RouterConfigController configController = new RouterConfigController(
                 client,
                 "test",
-                new AuthenticationServiceResolver(authenticationServiceRegistry));
+                new AuthenticationServiceResolver(authenticationServiceRegistry),
+                new RouterStatusCache(new LogEventLogger(), Duration.ofSeconds(100), mock(NamespacedKubernetesClient.class), "test", Duration.ofSeconds(100), Duration.ofSeconds(100)));
 
         StandardInfraConfig appliedConfig = new StandardInfraConfigBuilder()
                 .editOrNewMetadata()
@@ -172,16 +176,19 @@ public class RouterConfigControllerTest {
 
     @Test
     public void testReconcileConnector() throws Exception {
+        RouterStatusCache routerStatusCache = new RouterStatusCache(new LogEventLogger(), Duration.ofSeconds(100), mock(NamespacedKubernetesClient.class), "test", Duration.ofSeconds(100), Duration.ofSeconds(100));
         RouterConfigController configController = new RouterConfigController(
                 client,
                 "test",
-                new AuthenticationServiceResolver(authenticationServiceRegistry));
+                new AuthenticationServiceResolver(authenticationServiceRegistry),
+                routerStatusCache);
 
-        StandardInfraConfig appliedConfig = new StandardInfraConfigBuilder()
-                .editOrNewMetadata()
-                .withName("test")
-                .endMetadata()
-                .build();
+
+                StandardInfraConfig appliedConfig = new StandardInfraConfigBuilder()
+                        .editOrNewMetadata()
+                        .withName("test")
+                        .endMetadata()
+                        .build();
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .editOrNewMetadata()
@@ -190,7 +197,7 @@ public class RouterConfigControllerTest {
                 .addToAnnotations(AnnotationKeys.INFRA_UUID, "1234")
                 .endMetadata()
                 .editOrNewSpec()
-                .withType("type1")
+                .withType("standard")
                 .withPlan("plan1")
                 .withNewAuthenticationService()
                 .withName("test")
@@ -235,6 +242,13 @@ public class RouterConfigControllerTest {
 
 
         InfraConfigs.setCurrentInfraConfig(addressSpace, appliedConfig);
+
+
+        routerStatusCache.reconcileAll(Collections.singletonList(addressSpace));
+        routerStatusCache.checkRouterStatus(a -> Collections.singletonList(new RouterStatus("r1",
+                new RouterConnections(Collections.singletonList("messaging.example.com:5671"), Collections.singletonList(true), Collections.singletonList("up")),
+                Collections.emptyList(),
+                0)));
 
         /*
         client.apps().statefulSets().inNamespace("test").createOrReplaceWithNew()
@@ -300,7 +314,6 @@ public class RouterConfigControllerTest {
 
         configController.reconcileAnyState(addressSpace);
 
-
         routerConfigMap = client.configMaps().inNamespace("test").withName("qdrouterd-config.1234").get();
         assertNotNull(routerConfigMap);
 
@@ -338,7 +351,7 @@ public class RouterConfigControllerTest {
         status = addressSpace.getStatus().getConnectors().get(0);
         assertNotNull(status);
         assertEquals("remote1", status.getName());
-        assertTrue(status.isReady());
+        assertTrue(status.isReady(), String.join(",", status.getMessages()));
 
         Secret certs = client.secrets().inNamespace("test").withName("external-connector-1234-remote1").get();
         assertNotNull(certs);

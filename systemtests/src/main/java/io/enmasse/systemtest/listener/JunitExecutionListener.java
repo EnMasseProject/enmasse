@@ -4,6 +4,10 @@
  */
 package io.enmasse.systemtest.listener;
 
+import org.junit.platform.launcher.TestExecutionListener;
+import org.junit.platform.launcher.TestPlan;
+import org.slf4j.Logger;
+
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -15,9 +19,6 @@ import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
-import org.junit.platform.launcher.TestExecutionListener;
-import org.junit.platform.launcher.TestPlan;
-import org.slf4j.Logger;
 
 public class JunitExecutionListener implements TestExecutionListener {
     private static final Logger LOGGER = CustomLogger.getLogger();
@@ -72,11 +73,25 @@ public class JunitExecutionListener implements TestExecutionListener {
                         LOGGER.warn("Failed to delete IoT config: {}", config, e);
                     }
                 });
+
                 LOGGER.info("Infinispan server will be removed");
                 SystemtestsKubernetesApps.deleteInfinispanServer();
                 if (!SystemtestsKubernetesApps.INFINISPAN_PROJECT.equals(kube.getInfraNamespace())) {
                     kube.deleteNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
                 }
+
+                LOGGER.info("PostgreSQL server will be removed");
+                SystemtestsKubernetesApps.deletePostgresqlServer();
+                if (!SystemtestsKubernetesApps.POSTGRESQL_PROJECT.equals(kube.getInfraNamespace())) {
+                    kube.deleteNamespace(SystemtestsKubernetesApps.POSTGRESQL_PROJECT);
+                }
+
+                LOGGER.info("H2 server will be removed");
+                SystemtestsKubernetesApps.deleteH2Server();
+                if (!SystemtestsKubernetesApps.H2_PROJECT.equals(kube.getInfraNamespace())) {
+                    kube.deleteNamespace(SystemtestsKubernetesApps.H2_PROJECT);
+                }
+
             } catch (Exception e) {
                 LOGGER.warn("Cleanup failed or no clean is needed");
             }

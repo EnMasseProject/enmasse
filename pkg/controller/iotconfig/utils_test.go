@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -8,34 +8,34 @@ package iotconfig
 import (
 	"testing"
 
-	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
 func TestDeviceRegistryEval(t *testing.T) {
 
-	if deviceRegistryImplementation(&v1alpha1.IoTConfig{}) != DeviceRegistryIllegal {
+	if (iotv1alpha1.IoTConfig{}).EvalDeviceRegistryImplementation() != iotv1alpha1.DeviceRegistryIllegal {
 		t.Errorf("Device registry should be evaluated as 'illegal' but wasn't")
 	}
 
-	if deviceRegistryImplementation(&v1alpha1.IoTConfig{
-		Spec: v1alpha1.IoTConfigSpec{
-			ServicesConfig: v1alpha1.ServicesConfig{
-				DeviceRegistry: v1alpha1.DeviceRegistryServiceConfig{
-					File: &v1alpha1.FileBasedDeviceRegistry{},
+	if (iotv1alpha1.IoTConfig{
+		Spec: iotv1alpha1.IoTConfigSpec{
+			ServicesConfig: iotv1alpha1.ServicesConfig{
+				DeviceRegistry: iotv1alpha1.DeviceRegistryServiceConfig{
+					File: &iotv1alpha1.FileBasedDeviceRegistry{},
 				},
 			},
 		},
-	}) != DeviceRegistryFileBased {
+	}).EvalDeviceRegistryImplementation() != iotv1alpha1.DeviceRegistryFileBased {
 		t.Errorf("Device registry should be evaluated as 'file based' but wasn't")
 	}
 
-	if deviceRegistryImplementation(&v1alpha1.IoTConfig{
-		Spec: v1alpha1.IoTConfigSpec{
-			ServicesConfig: v1alpha1.ServicesConfig{
-				DeviceRegistry: v1alpha1.DeviceRegistryServiceConfig{
-					Infinispan: &v1alpha1.InfinispanDeviceRegistry{
-						Server: v1alpha1.InfinispanServer{
-							External: &v1alpha1.ExternalInfinispanServer{
+	if (iotv1alpha1.IoTConfig{
+		Spec: iotv1alpha1.IoTConfigSpec{
+			ServicesConfig: iotv1alpha1.ServicesConfig{
+				DeviceRegistry: iotv1alpha1.DeviceRegistryServiceConfig{
+					Infinispan: &iotv1alpha1.InfinispanDeviceRegistry{
+						Server: iotv1alpha1.InfinispanServer{
+							External: &iotv1alpha1.ExternalInfinispanServer{
 								Host: "127.0.0.1",
 							},
 						},
@@ -43,7 +43,7 @@ func TestDeviceRegistryEval(t *testing.T) {
 				},
 			},
 		},
-	}) != DeviceRegistryInfinispan {
+	}).EvalDeviceRegistryImplementation() != iotv1alpha1.DeviceRegistryInfinispan {
 		t.Errorf("Device registry should be evaluated as 'infinispan' but wasn't")
 	}
 

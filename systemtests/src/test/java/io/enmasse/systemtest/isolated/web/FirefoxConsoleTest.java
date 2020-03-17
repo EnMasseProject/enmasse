@@ -26,6 +26,11 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     }
 
     @Test
+    void testOpenshiftClientInSnippet() throws Exception {
+        doTestSnippetClient(AddressSpaceType.STANDARD);
+    }
+
+    @Test
     void testAddressSpaceSnippetStandard() throws Exception {
         doTestAddressSpaceSnippet(AddressSpaceType.STANDARD);
     }
@@ -120,6 +125,11 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     @Test
     void testBlankPageAfterAddressDeletion() throws Exception {
         doTestBlankPageAfterAddressDeletion();
+    }
+
+    @Test
+    void testViewCustomPlans() throws Exception {
+        doTestViewCustomPlans();
     }
 }
 

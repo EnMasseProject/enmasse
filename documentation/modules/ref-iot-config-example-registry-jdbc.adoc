@@ -1,0 +1,15 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-service-admin-guide.adoc
+
+[id='iot-registry-example-registry-jdbc-{context}']
+= Configuration for JDBC with external PostgreSQL
+
+[source,yaml,options="nowrap"]
+----
+include::../common/iot-config-jdbc-external-1.yaml[]
+----
+<1> The JDBC URL to the PostgreSQL database. This includes the hostname, port, and database name.
+    For more information also see: https://jdbc.postgresql.org/documentation/head/connect.html
+<2> The username used to connect to the PostgreSQL server
+<3> The password used to connect to the PostgreSQL server

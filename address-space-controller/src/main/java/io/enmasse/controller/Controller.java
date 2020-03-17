@@ -13,11 +13,11 @@ public interface Controller {
         return addressSpace;
     }
 
-    default AddressSpace reconcileAnyState(AddressSpace addressSpace) throws Exception {
+    default ReconcileResult reconcileAnyState(AddressSpace addressSpace) throws Exception {
         if (!Controller.isDeleted(addressSpace)) {
-            return reconcileActive(addressSpace);
+            return ReconcileResult.create(reconcileActive(addressSpace));
         } else {
-            return addressSpace;
+            return ReconcileResult.create(addressSpace);
         }
     }
 
@@ -32,5 +32,36 @@ public interface Controller {
     static boolean isDeleted(final AddressSpace addressSpace) {
         return addressSpace.getMetadata().getDeletionTimestamp() != null
                 && !addressSpace.getMetadata().getDeletionTimestamp().isBlank();
+    }
+
+    class ReconcileResult {
+        private final AddressSpace addressSpace;
+        private final boolean persistAndRequeue;
+
+        private ReconcileResult(AddressSpace addressSpace, boolean persistAndRequeue) {
+            this.addressSpace = addressSpace;
+            this.persistAndRequeue = persistAndRequeue;
+        }
+
+        public AddressSpace getAddressSpace() {
+            return addressSpace;
+        }
+
+        /**
+         * Signal if the AddressSpace object return in this result should be persisted. It is assumed that the
+         * AddressSpace object contains the modifications that should be persisted.
+         */
+        public boolean isPersistAndRequeue() {
+            return persistAndRequeue;
+        }
+
+        public static ReconcileResult create(AddressSpace addressSpace) {
+            return new ReconcileResult(addressSpace, false);
+        }
+
+        public static ReconcileResult createRequeued(AddressSpace addressSpace, boolean requeue) {
+            return new ReconcileResult(addressSpace, requeue);
+        }
+
     }
 }

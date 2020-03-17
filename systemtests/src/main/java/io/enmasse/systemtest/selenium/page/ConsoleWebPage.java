@@ -11,6 +11,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.AddressSpaceWebItem;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
@@ -499,6 +500,11 @@ public class ConsoleWebPage implements IWebPage {
         }
     }
 
+    public WebElement getFirstLineOfDeploymentSnippet() {
+        List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
+        return snippetElements.get(0);
+    }
+
     public String getDeploymentSnippet() throws InterruptedException {
         final int RETRY_COUNTER = 5;
 
@@ -507,7 +513,7 @@ public class ConsoleWebPage implements IWebPage {
             List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
 
             for (WebElement currentElement : snippetElements) {
-                if (currentElement.getText().contains("kubectl") || currentElement.getText().contains("oc")
+                if (currentElement.getText().contains(KubeCMDClient.getCMD())
                         || currentElement.getText().isEmpty() || currentElement.getText().equals("EOF")) {
                     continue;
                 } else if (addressSpaceDeployment.length() == 0) {
@@ -590,7 +596,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.waitUntilItemNotPresent(30, () -> getAddressSpaceItem(addressSpace));
     }
 
-    public void switchAddressSpacePlan(AddressSpace addressSpace, String addressSpacePlan) throws Exception {
+    public void changeAddressSpacePlan(AddressSpace addressSpace, String addressSpacePlan) throws Exception {
         AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getActionDropDown(), "Address space dropdown");
         selenium.clickOnItem(item.getEditMenuItem());
@@ -602,7 +608,7 @@ public class ConsoleWebPage implements IWebPage {
         addressSpace.getSpec().setPlan(addressSpacePlan);
     }
 
-    public void switchAuthService(AddressSpace addressSpace, String authServiceName, AuthenticationServiceType type) throws Exception {
+    public void changeAuthService(AddressSpace addressSpace, String authServiceName, AuthenticationServiceType type) throws Exception {
         AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getActionDropDown(), "AddressSpaceDropdown");
         selenium.clickOnItem(item.getEditMenuItem());
@@ -796,8 +802,10 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getAddressSpacesTableDropDown(), "Main dropdown");
         selenium.clickOnItem(getAddressSpacesDeleteAllButton());
         selenium.clickOnItem(getConfirmButton());
+
+        int timeAllowed = 30*addressSpaces.length;
         for (AddressSpace space : addressSpaces) {
-            selenium.waitUntilItemNotPresent(30, () -> getAddressSpaceItem(space));
+            selenium.waitUntilItemNotPresent(timeAllowed, () -> getAddressSpaceItem(space));
         }
     }
 
@@ -848,7 +856,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.takeScreenShot();
         try {
             selenium.clickOnItem(getApplicationsElem().findElement(By.xpath("//a[contains(text(), 'Help')]")));
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.urlToBe(expectedUrl));
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.urlContains(expectedUrl));
         } finally {
             selenium.takeScreenShot();
         }
@@ -943,7 +951,11 @@ public class ConsoleWebPage implements IWebPage {
     private boolean waitUntilLoginPage() {
         try {
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains("Log"));
-            selenium.clickOnItem(selenium.getDriver().findElement(By.tagName("button")));
+            try {
+                selenium.clickOnItem(selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Log in with OpenShift')]")));
+            } catch (Exception ex) {
+                log.info("Only openshift auth provider is enabled");
+            }
             return true;
         } catch (Exception ex) {
             selenium.takeScreenShot();

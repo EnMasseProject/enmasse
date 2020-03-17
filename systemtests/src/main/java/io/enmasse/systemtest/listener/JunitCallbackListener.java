@@ -195,64 +195,18 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     private void saveKubernetesState(String description, ExtensionContext extensionContext, Throwable throwable) throws Throwable {
-        LOGGER.warn("Test failed at {}: Saving pod logs and info...", description);
+        LOGGER.error("Test failed at {}: Saving pod logs and info...", description);
         logPodsInInfraNamespace();
         if (env.isSkipSaveState()) {
             throw throwable;
         }
-
-        try {
-            Kubernetes kube = Kubernetes.getInstance();
-            Path path = TestUtils.getFailedTestLogsPath(extensionContext);
-            Files.createDirectories(path);
-            List<Pod> pods = kube.listPods();
-            for (Pod p : pods) {
-                try {
-                    List<Container> containers = kube.getContainersFromPod(p.getMetadata().getName());
-                    for (Container c : containers) {
-                        Path filePath = path.resolve(String.format("%s_%s.log", p.getMetadata().getName(), c.getName()));
-                        try {
-                            Files.writeString(filePath, kube.getLog(p.getMetadata().getName(), c.getName()));
-                        } catch (IOException e) {
-                            LOGGER.warn("Cannot write file {}", filePath, e);
-                        }
-                    }
-                } catch (Exception ex) {
-                    LOGGER.warn("Cannot access logs from pod {} ", p.getMetadata().getName(), ex);
-                }
-            }
-
-            kube.getLogsOfTerminatedPods(kube.getInfraNamespace()).forEach((name, podLogTerminated) -> {
-                Path filePath = path.resolve(String.format("%s.terminated.log", name));
-                try {
-                    Files.writeString(filePath, podLogTerminated);
-                } catch (IOException e) {
-                    LOGGER.warn("Cannot write file {}", filePath, e);
-                }
-            });
-
-            Files.writeString(path.resolve("describe_pods.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut());
-            Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
-            Files.writeString(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut());
-            Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(kube.getInfraNamespace()).getStdOut());
-            Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pv").getStdOut());
-            Files.writeString(path.resolve("pvcs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", Kubernetes.getInstance().getInfraNamespace()).getStdOut());
-            Files.writeString(path.resolve("storageclass.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "storageclass", "-o", "yaml").getStdOut());
-            if (testInfo.isClassIoT()) {
-                Files.writeString(path.resolve("iotconfig.yaml"), KubeCMDClient.getIoTConfig(kube.getInfraNamespace()).getStdOut());
-                GlobalLogCollector collectors = new GlobalLogCollector(kube, path, kube.getInfraNamespace());
-                collectors.collectAllAdapterQdrProxyState();
-            }
-            LOGGER.info("Pod logs and describe successfully stored into {}", path);
-        } catch (Exception ex) {
-            LOGGER.warn("Cannot save pod logs and info: ", ex);
-        }
+        GlobalLogCollector.saveInfraState(TestUtils.getFailedTestLogsPath(extensionContext));
         throw throwable;
     }
 
     private void logPodsInInfraNamespace() {
         LOGGER.info("Print all pods in infra namespace");
-        KubeCMDClient.runOnCluster("get", "pods", "-n", kubernetes.getInfraNamespace());
+        KubeCMDClient.runOnCluster("get", "pods", "-n", kubernetes.getInfraNamespace(), "-o", "wide");
     }
 
 }

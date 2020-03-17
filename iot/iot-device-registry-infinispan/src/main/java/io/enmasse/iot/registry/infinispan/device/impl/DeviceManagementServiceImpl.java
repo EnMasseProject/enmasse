@@ -18,6 +18,7 @@ import static org.eclipse.hono.service.management.OperationResult.ok;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
 import org.eclipse.hono.client.ServiceInvocationException;
 import org.eclipse.hono.service.management.Id;
 import org.eclipse.hono.service.management.OperationResult;
@@ -32,9 +33,11 @@ import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.registry.device.AbstractDeviceManagementService;
+import io.enmasse.iot.registry.device.DeviceKey;
+import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
+import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 
 @Component
@@ -57,14 +60,14 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
     }
 
     @Override
-    protected CompletableFuture<OperationResult<Id>> processCreateDevice(final DeviceKey key, final Device device, final Span span) {
+    protected Future<OperationResult<Id>> processCreateDevice(final DeviceKey key, final Device device, final Span span) {
 
         final DeviceInformation value = new DeviceInformation();
         value.setTenantId(key.getTenantId());
         value.setDeviceId(key.getDeviceId());
         value.setRegistrationInformation(Json.encode(device));
 
-        return this.managementCache
+        final CompletableFuture<OperationResult<Id>> f = this.managementCache
                 .withFlags(Flag.FORCE_RETURN_VALUE)
                 .putIfAbsentAsync(deviceKey(key), value)
                 .thenApply(result -> {
@@ -78,12 +81,14 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
                     }
                 });
 
+        return MoreFutures.map(f);
+
     }
 
     @Override
-    protected CompletableFuture<OperationResult<Device>> processReadDevice(final DeviceKey key, final Span span) {
+    protected Future<OperationResult<Device>> processReadDevice(final DeviceKey key, final Span span) {
 
-        return this.managementCache
+        final CompletableFuture<OperationResult<Device>> future = this.managementCache
                 .getWithMetadataAsync(deviceKey(key))
                 .thenApply(result -> {
 
@@ -99,12 +104,14 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
 
                 });
 
+        return MoreFutures.map(future);
+
     }
 
     @Override
-    protected CompletableFuture<OperationResult<Id>> processUpdateDevice(final DeviceKey key, final Device device, final Optional<String> resourceVersion, final Span span) {
+    protected Future<OperationResult<Id>> processUpdateDevice(final DeviceKey key, final Device device, final Optional<String> resourceVersion, final Span span) {
 
-        return this.managementCache
+        final CompletableFuture<OperationResult<Id>> future = this.managementCache
 
                 .getWithMetadataAsync(deviceKey(key))
                 .thenCompose(currentValue -> {
@@ -136,11 +143,14 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
                             });
 
                 });
+
+        return MoreFutures.map(future);
     }
 
-    protected CompletableFuture<Result<Void>> processDeleteDevice(final DeviceKey key, final Optional<String> resourceVersion, final Span span) {
+    @Override
+    protected Future<Result<Void>> processDeleteDevice(final DeviceKey key, final Optional<String> resourceVersion, final Span span) {
 
-        return this.managementCache
+        final CompletableFuture<Result<Void>> future = this.managementCache
                 .getWithMetadataAsync(deviceKey(key))
                 .thenCompose(result -> {
 
@@ -159,6 +169,8 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
                             });
 
                 });
+
+        return MoreFutures.map(future);
     }
 
 }

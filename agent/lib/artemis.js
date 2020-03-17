@@ -42,6 +42,7 @@ var Artemis = function (connection) {
     connection.on('connection_error', this.on_connection_error.bind(this));
     connection.on('connection_close', this.on_connection_close.bind(this));
     connection.on('disconnected', this.disconnected.bind(this));
+    connection.on('error', this.on_error.bind(this));
     this.handlers = [];
     this.requests = [];
     this.pushed = 0;
@@ -135,6 +136,10 @@ Artemis.prototype.on_connection_close = function (context) {
     var error = this.connection.container_id + ' connection closed';
     log.info('[' + this.connection.container_id + '] connection closed');
     this.abort_requests(error);
+};
+
+Artemis.prototype.on_error = function (error) {
+    log.error('[%s] socket error: %s', this.connection.container_id, JSON.stringify(error));
 };
 
 Artemis.prototype._send_pending_requests = function () {

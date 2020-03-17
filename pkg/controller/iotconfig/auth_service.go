@@ -61,7 +61,10 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 	service := config.Spec.ServicesConfig.Authentication
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, configCtx)
 
+	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "auth-service", func(container *corev1.Container) error {
+
+		tracingContainer = container
 
 		if err := install.SetContainerImage(container, "iot-auth-service", config); err != nil {
 			return err
@@ -99,6 +102,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 			return err
 		}
 
+		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)
 
 		// volume mounts
@@ -119,9 +123,17 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 		return err
 	}
 
+	// reset init containers
+
+	deployment.Spec.Template.Spec.InitContainers = nil
+
+	// tracing
+
+	SetupTracing(config, deployment, tracingContainer)
+
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "config", nameAuthService+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameAuthService+"-config")
 
 	// inter service secrets
 

@@ -19,7 +19,7 @@ const allAddressesForAddressspace = {
     query: `
         query all_addresses_for_addressspace {
           addresses(
-            filter: "\`$.spec.addressSpace\` = 'mars_as2' AND \`$.metadata.namespace\` = 'app2_ns'",
+            filter: "\`$.metadata.name\` LIKE 'mars_as2.%' AND \`$.metadata.namespace\` = 'app2_ns'",
             orderBy: "\`$.metadata.name\` DESC"
           ) {
             total

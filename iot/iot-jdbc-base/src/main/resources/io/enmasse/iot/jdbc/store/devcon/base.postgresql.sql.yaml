@@ -1,0 +1,16 @@
+update: |
+   INSERT INTO %s (
+      tenant_id,
+      device_id,
+      last_known_gateway
+   ) VALUES (
+      :tenant_id,
+      :device_id,
+      :gateway_id
+   )
+   ON CONFLICT (
+      tenant_id,
+      device_id
+   )
+   DO UPDATE SET
+      last_known_gateway=EXCLUDED.last_known_gateway

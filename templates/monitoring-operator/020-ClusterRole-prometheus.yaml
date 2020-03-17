@@ -25,6 +25,7 @@ rules:
 - apiGroups: [""]
   resources:
   - configmaps
+  - namespaces # Required to get through the alertmanager oauth proxy
   verbs: ["get"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]

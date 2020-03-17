@@ -7,6 +7,7 @@ package iotconfig
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -35,39 +36,92 @@ func FullHostNameForEnvVar(serviceName string) string {
 	return serviceName + ".$(KUBERNETES_NAMESPACE).svc"
 }
 
-// Append a string to the value of an env-var. If the env-var doesn't exist, it will be created with the provided value.
-// A whitespace is added between the existing value and the new value.
-func AppendEnvVarValue(container *corev1.Container, name string, value string) {
-	if container.Env == nil {
-		container.Env = make([]corev1.EnvVar, 0)
+// block injection of sidecar variables, for containers not using jaeger
+func BlockTracingSidecarConfig(config *iotv1alpha1.IoTConfig, container *corev1.Container) {
+
+	if config.Spec.Tracing.Strategy.Sidecar != nil || config.Spec.Tracing.Strategy.DaemonSet != nil {
+
+		install.ApplyEnvSimple(container, "JAEGER_SERVICE_NAME", "")
+		install.ApplyEnvSimple(container, "JAEGER_PROPAGATION", "")
+
+	} else {
+
+		install.RemoveEnv(container, "JAEGER_SERVICE_NAME")
+		install.RemoveEnv(container, "JAEGER_PROPAGATION")
+
 	}
 
-	opts := ""
+}
 
-	for _, env := range container.Env {
-		if env.Name == name {
-			opts = env.Value
+// setup tracing for a container
+func SetupTracing(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, container *corev1.Container) {
+
+	if config.Spec.Tracing.Strategy.Sidecar != nil {
+
+		// sidecar
+
+		install.ApplyEnvSimple(container, "JAEGER_SERVICE_NAME", deployment.Name)
+		install.ApplyEnvSimple(container, "JAEGER_PROPAGATION", "jaeger,b3")
+		install.ApplyEnvSimple(container, "JAEGER_AGENT_HOST", "localhost")
+
+	} else if config.Spec.Tracing.Strategy.DaemonSet != nil {
+
+		// daemon set
+
+		install.ApplyEnvSimple(container, "JAEGER_SERVICE_NAME", deployment.Name)
+		install.ApplyEnvSimple(container, "JAEGER_PROPAGATION", "jaeger,b3")
+		install.ApplyEnv(container, "JAEGER_AGENT_HOST", func(envvar *corev1.EnvVar) {
+			envvar.Value = ""
+			envvar.ValueFrom = &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "status.hostIP",
+				},
+			}
+		})
+
+	} else {
+
+		// disabled
+
+		install.RemoveEnv(container, "JAEGER_AGENT_HOST")
+		install.RemoveEnv(container, "JAEGER_SERVICE_NAME")
+		install.RemoveEnv(container, "JAEGER_PROPAGATION")
+
+	}
+
+	if config.Spec.Tracing.Strategy.Sidecar != nil {
+
+		if deployment.Annotations["sidecar.jaegertracing.io/inject"] == "" {
+			// we only set this to true when unset, because the tracing operator
+			// will replace this with the actual tracing instance
+			deployment.Annotations["sidecar.jaegertracing.io/inject"] = "true"
 		}
+
+	} else {
+
+		delete(deployment.Labels, "sidecar.jaegertracing.io/injected")
+		delete(deployment.Annotations, "sidecar.jaegertracing.io/inject")
+
+		for i, c := range deployment.Spec.Template.Spec.Containers {
+			if c.Name == "jaeger-agent" {
+				log.Info(fmt.Sprintf("Removing jaeger tracing sidecar from deployment: %s", deployment.Name))
+				deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers[:i], deployment.Spec.Template.Spec.Containers[i+1:]...)
+				break
+			}
+		}
+
 	}
 
-	if len(opts) > 0 {
-		opts += " "
-	}
-
-	opts += value
-
-	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  name,
-		Value: opts,
-	})
 }
 
 func AppendStandardHonoJavaOptions(container *corev1.Container) {
-	AppendEnvVarValue(
+
+	install.AppendEnvVarValue(
 		container,
-		"JAVA_APP_OPTS",
+		install.JavaOptsEnvVarName,
 		"-Djava.net.preferIPv4Stack=true -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory",
 	)
+
 }
 
 func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig iotv1alpha1.ServiceConfig, configCtx *cchange.ConfigChangeRecorder) {
@@ -118,20 +172,6 @@ func (r *ReconcileIoTConfig) cleanupSecrets(ctx context.Context, config *iotv1al
 	return err
 }
 
-func deviceRegistryImplementation(config *iotv1alpha1.IoTConfig) DeviceRegistryImplementation {
-
-	var file = config.Spec.ServicesConfig.DeviceRegistry.File
-	var infinispan = config.Spec.ServicesConfig.DeviceRegistry.Infinispan
-
-	if infinispan != nil && file == nil {
-		return DeviceRegistryInfinispan
-	} else if infinispan == nil && file != nil {
-		return DeviceRegistryFileBased
-	} else {
-		return DeviceRegistryIllegal
-	}
-}
-
 func updateEndpointStatus(protocol string, forcePort bool, service *routev1.Route, status *iotv1alpha1.EndpointStatus) {
 
 	status.URI = ""
@@ -170,7 +210,7 @@ func (r *ReconcileIoTConfig) reconcileMetricsService(serviceName string) func(co
 // Hono exposes metrics on /prometheus on the health endpoint. We create a "<component>-metrics" service and map
 // the "prometheus" port form the service to the "health" port of the container. So we can define a "prometheus"
 // port on the ServiceMonitor on EnMasse with a custom path of "/prometheus".
-func processReconcileMetricsService(config *iotv1alpha1.IoTConfig, serviceName string, service *corev1.Service) error {
+func processReconcileMetricsService(_ *iotv1alpha1.IoTConfig, serviceName string, service *corev1.Service) error {
 
 	install.ApplyMetricsServiceDefaults(service, "iot", serviceName)
 

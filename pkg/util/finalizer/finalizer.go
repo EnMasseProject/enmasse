@@ -8,7 +8,8 @@ package finalizer
 import (
 	"context"
 	"fmt"
-
+	"github.com/pkg/errors"
+	"k8s.io/client-go/tools/record"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,10 +22,11 @@ import (
 var log = logf.Log.WithName("finalizer")
 
 type DeconstructorContext struct {
-	Context context.Context
-	Client  client.Client
-	Reader  client.Reader
-	Object  runtime.Object
+	Context  context.Context
+	Client   client.Client
+	Reader   client.Reader
+	Object   runtime.Object
+	Recorder record.EventRecorder
 }
 
 type Finalizer struct {
@@ -80,7 +82,7 @@ func removeFinalizer(name string, list []string) []string {
 // If the deletion timestamp is non-nil, it will iterate over the finalizers, and call the destructor for the first
 // finalizer it still finds in the list (in any order). If the deconstructor returns as "finished", then will remove
 // the finalizer from the list, update the object, and request to be re-queued.
-func ProcessFinalizers(ctx context.Context, client client.Client, reader client.Reader, obj runtime.Object, finalizers []Finalizer) (reconcile.Result, error) {
+func ProcessFinalizers(ctx context.Context, client client.Client, reader client.Reader, recorder record.EventRecorder, obj runtime.Object, finalizers []Finalizer) (reconcile.Result, error) {
 
 	object, ok := obj.(v1.Object)
 	if !ok {
@@ -108,7 +110,8 @@ func ProcessFinalizers(ctx context.Context, client client.Client, reader client.
 			// the list of finalizers has changed, update and return
 			object.SetFinalizers(current)
 			log.Info("Re-queue: added finalizer")
-			return reconcile.Result{Requeue: true}, client.Update(ctx, obj)
+			return reconcile.Result{Requeue: true},
+				errors.Wrap(client.Update(ctx, obj), "Failed adding finalizers")
 		}
 
 	} else {
@@ -129,17 +132,18 @@ func ProcessFinalizers(ctx context.Context, client client.Client, reader client.
 				var err error = nil
 				if f.Deconstruct != nil {
 					result, err = f.Deconstruct(DeconstructorContext{
-						Context: ctx,
-						Client:  client,
-						Reader:  reader,
-						Object:  obj,
+						Context:  ctx,
+						Client:   client,
+						Reader:   reader,
+						Object:   obj,
+						Recorder: recorder,
 					})
 				}
 
 				// process the result
 
 				if err != nil {
-					return reconcile.Result{}, err
+					return reconcile.Result{}, errors.Wrap(err, "Failed processing finalizers")
 				}
 
 				if !result.Requeue && result.RequeueAfter <= 0 {
@@ -151,7 +155,8 @@ func ProcessFinalizers(ctx context.Context, client client.Client, reader client.
 					object.SetFinalizers(removeFinalizer(f.Name, c))
 					// persist, and re-schedule for the next finalizer
 					log.Info("Re-queue: removed finalizer")
-					return reconcile.Result{Requeue: true}, client.Update(ctx, obj)
+					return reconcile.Result{Requeue: true},
+						errors.Wrap(client.Update(ctx, obj), "Failed updating finalizers")
 
 				} else {
 

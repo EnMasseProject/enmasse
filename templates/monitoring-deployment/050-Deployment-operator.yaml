@@ -17,7 +17,7 @@ spec:
         - name: application-monitoring-operator
           image: ${APPLICATION_MONITORING_OPERATOR_IMAGE}
           ports:
-            - containerPort: 60000
+            - containerPort: 8383
               name: metrics
           command:
             - application-monitoring-operator
@@ -33,8 +33,6 @@ spec:
           env:
             - name: TEMPLATE_PATH
               value: /usr/local/bin/templates
-            - name: MONITORING_KEY
-              value: middleware
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:

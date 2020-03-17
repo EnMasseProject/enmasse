@@ -25,6 +25,7 @@ import {
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { IAddressResponse } from "types/ResponseTypes";
+import { dropdown_item_styles } from "modules/address-space/dialogs/CreateAddressSpace";
 
 const styles = StyleSheet.create({
   capitalize_labels: {
@@ -62,6 +63,7 @@ interface IAddressPlans {
       addressType: string;
       displayName: string;
       shortDescription: string;
+      longDescription: string;
     };
   }>;
 }
@@ -113,8 +115,8 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
         const planOptions = addressPlans.data.addressPlans.map(plan => {
           return {
             value: plan.metadata.name,
-            label: plan.spec.displayName,
-            description: plan.spec.shortDescription
+            label: plan.spec.displayName || plan.metadata.name,
+            description: plan.spec.shortDescription || plan.spec.longDescription
           };
         });
         setPlan(" ");
@@ -274,7 +276,9 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
                   >
                     <b>{option.label}</b>
                     <br />
-                    {option.description}
+                    <div className={css(dropdown_item_styles.format_item)}>
+                      {option.description}
+                    </div>
                   </DropdownItem>
                 ))}
               />

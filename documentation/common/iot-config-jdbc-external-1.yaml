@@ -1,0 +1,13 @@
+kind: IoTConfig
+apiVersion: iot.enmasse.io/v1alpha1
+metadata:
+  name: default
+spec:
+  services:
+    deviceRegistry:
+      jdbc:
+        server:
+          external:
+            url: jdbc://postgresql.namespace.svc:5432/database-name # <1>
+            username: app # <2>
+            password: test12 # <3>

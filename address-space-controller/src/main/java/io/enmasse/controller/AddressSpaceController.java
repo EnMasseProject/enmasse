@@ -125,13 +125,21 @@ public class AddressSpaceController {
 
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
+        /*
+         * Add controllers managing a separate of the reconciliation. The order between some of these are important:
+         * - DefaultsController should always be first to ensure defaults are set
+         * - Finalizers should run next to ensure finalizers are added and persisted
+         * - StatusInitializer should then run to clear the status and messages before the remaining controllers run.
+         * - The remaining controllers can be added in any order
+         */
         controllerChain.addController(new DefaultsController(authenticationServiceRegistry, kubernetes));
         controllerChain.addController(new AddressFinalizerController(addressSpaceApi));
         controllerChain.addController(new MessagingUserFinalizerController(controllerClient));
         controllerChain.addController(new ComponentFinalizerController(kubernetes));
         controllerChain.addController(new RealmFinalizerController(keycloakRealmApi, authenticationServiceRegistry));
+        controllerChain.addController(new StatusInitializer());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi, authenticationServiceResolver));
-        controllerChain.addController(new RouterConfigController(controllerClient, controllerClient.getNamespace(), authenticationServiceResolver));
+        controllerChain.addController(new RouterConfigController(controllerClient, controllerClient.getNamespace(), authenticationServiceResolver, routerStatusCache));
         controllerChain.addController(new PodDisruptionBudgetController(controllerClient, controllerClient.getNamespace()));
         controllerChain.addController(new RealmController(keycloakRealmApi, authenticationServiceRegistry));
         controllerChain.addController(new NetworkPolicyController(controllerClient));

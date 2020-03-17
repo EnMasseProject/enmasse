@@ -137,9 +137,10 @@ Router.prototype.closed = function (context) {
     if (context.connection.error) {
         log.error('[%s] ERROR: router closed connection with %s', this.get_id(), context.connection.error.description);
     }
-    log.info('[%s] router closed ', this.get_id(), this.target);
+    log.info('[%s] router closed %s, abort_idle: %s', this.get_id(), this.target, context.connection.abort_idle);
     this.address = undefined;
     this._abort_requests('closed');
+    this._clear_timer();
 };
 
 Router.prototype._abort_requests = function (error) {
@@ -161,6 +162,7 @@ Router.prototype.on_sender_error = function (context) {
 
 Router.prototype.disconnected = function (context) {
     this.address = undefined;
+    log.info('[%s] router disconnected %s, abort_idle: %s', this.get_id(), this.target, context.connection.abort_idle);
     this._abort_requests('disconnected');
 }
 
@@ -317,10 +319,17 @@ Router.prototype.incoming = function (context) {
     this._send_pending_requests();
 };
 
+Router.prototype._clear_timer  = function () {
+    if (this.timer) {
+        clearInterval(this.timer);
+        this.timer = null;
+    }
+};
+
 Router.prototype.close = function () {
     if (this.connection) this.connection.close();
-    if (this.timer) clearInterval(this.timer);
-}
+    this._clear_timer();
+};
 
 function add_resource_type (name, typename, plural) {
     var resource_type = typename || name;

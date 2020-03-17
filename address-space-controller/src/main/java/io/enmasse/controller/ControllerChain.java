@@ -97,12 +97,19 @@ public class ControllerChain implements Watcher<AddressSpace> {
                 log.debug("Controller chain input: {}", original);
 
                 log.info("Checking address space {}", addressSpaceName);
-                addressSpace.getStatus().setReady(true);
-                addressSpace.getStatus().clearMessages();
                 for (Controller controller : chain) {
                     log.info("Controller {}", controller);
                     log.debug("Address space input: {}", addressSpace);
-                    addressSpace = controller.reconcileAnyState(addressSpace);
+                    Controller.ReconcileResult result = controller.reconcileAnyState(addressSpace);
+                    addressSpace = result.getAddressSpace();
+
+                    // If instructed to requeue, break loop and let the comparison of original vs current
+                    // determine if we need to persist anything. Once persisted, it is assumed that another
+                    // reconciliation event will occur in the near future to allow the reconciliation of this
+                    // AddressSpace to continue.
+                    if (result.isPersistAndRequeue()) {
+                        break;
+                    }
                 }
 
                 log.debug("Controller chain output: {}", addressSpace);

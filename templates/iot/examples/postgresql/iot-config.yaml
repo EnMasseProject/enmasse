@@ -1,0 +1,18 @@
+kind: IoTConfig
+apiVersion: iot.enmasse.io/v1alpha1
+metadata:
+  name: default
+spec:
+  # ...
+  services:
+    deviceRegistry:
+      jdbc:
+        server:
+          # This example only focuses on the aspect of the "external" JDBC device registry.
+          # It is not a complete configuration.
+          external:
+            devices:
+              mode: JSON_TREE
+            password: user12
+            url: jdbc:postgresql://postgresql.device-registry-storage.svc/device-registry
+            username: registry

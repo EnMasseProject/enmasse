@@ -73,7 +73,10 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	service := config.Spec.ServicesConfig.DeviceRegistry
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, nil)
 
+	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
+
+		tracingContainer = container
 
 		if err := install.SetContainerImage(container, "iot-device-registry-infinispan", config); err != nil {
 			return err
@@ -123,6 +126,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "ENMASSE_IOT_REGISTRY_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.Infinispan.Management.AuthTokenCacheExpiration},
 		}
 
+		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)
 
 		// append trust stores
@@ -162,10 +166,18 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 		return err
 	}
 
+	// reset init containers
+
+	deployment.Spec.Template.Spec.InitContainers = nil
+
+	// tracing
+
+	SetupTracing(config, deployment, tracingContainer)
+
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "config", nameDeviceRegistry+"-config")
-	install.DropVolume(deployment, "registry")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameDeviceRegistry+"-config")
+	install.DropVolume(&deployment.Spec.Template.Spec, "registry")
 
 	// inter service secrets
 

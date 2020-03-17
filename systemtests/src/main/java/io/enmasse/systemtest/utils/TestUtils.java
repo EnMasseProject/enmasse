@@ -35,7 +35,11 @@ import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.HttpURLConnection;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -65,8 +69,8 @@ public class TestUtils {
     private static final Random R = new Random();
     private static Logger log = CustomLogger.getLogger();
 
-    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
-        waitForNReplicas(expectedReplicas, labelSelector, Collections.emptyMap(), budget);
+    public static void waitForNReplicas(int expectedReplicas, String namespace, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(expectedReplicas, namespace, labelSelector, Collections.emptyMap(), budget);
     }
 
     /**
@@ -84,6 +88,7 @@ public class TestUtils {
                 waitForNReplicas(
                         expectedReplicas,
                         readyRequired,
+                        Kubernetes.getInstance().getInfraNamespace(),
                         labels,
                         Collections.singletonMap("cluster_id", brokerStatus.getClusterId()),
                         budget,
@@ -106,15 +111,15 @@ public class TestUtils {
      * @param budget             timeout budget - throws Exception when timeout is reached
      * @throws InterruptedException
      */
-    public static void waitForNReplicas(int expectedReplicas, boolean readyRequired,
+    public static void waitForNReplicas(int expectedReplicas, boolean readyRequired, String namespace,
                                         Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
         int actualReplicas;
         do {
             final List<Pod> pods;
             if (annotationSelector.isEmpty()) {
-                pods = Kubernetes.getInstance().listPods(labelSelector);
+                pods = Kubernetes.getInstance().listPods(namespace, labelSelector);
             } else {
-                pods = Kubernetes.getInstance().listPods(labelSelector, annotationSelector);
+                pods = Kubernetes.getInstance().listPods(namespace, labelSelector, annotationSelector);
             }
             if (!readyRequired) {
                 actualReplicas = pods.size();
@@ -135,12 +140,12 @@ public class TestUtils {
         // finished successfully
     }
 
-    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
-        waitForNReplicas(expectedReplicas, true, labelSelector, annotationSelector, budget, checkInterval);
+    public static void waitForNReplicas(int expectedReplicas, String namespace, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+        waitForNReplicas(expectedReplicas, true, namespace, labelSelector, annotationSelector, budget, checkInterval);
     }
 
-    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
-        waitForNReplicas(expectedReplicas, labelSelector, annotationSelector, budget, 5000);
+    public static void waitForNReplicas(int expectedReplicas, String namespace, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(expectedReplicas, namespace, labelSelector, annotationSelector, budget, 5000);
     }
 
     /**
@@ -435,7 +440,7 @@ public class TestUtils {
         throw new IllegalStateException(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
     }
 
-    public static void waitUntilCondition(final String forWhat, final Predicate<WaitPhase> condition, final TimeoutBudget budget) throws Exception {
+    public static void waitUntilCondition(final String forWhat, final Predicate<WaitPhase> condition, final TimeoutBudget budget) {
 
         Objects.requireNonNull(condition);
         Objects.requireNonNull(budget);
@@ -677,7 +682,7 @@ public class TestUtils {
 
     public static void waitForRoutersInSync(AddressSpace addressSpace) throws Exception {
         String appliedConfig = addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
-        TestUtils.waitUntilCondition(String.format("Router configuration in sync for {}/{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName()),
+        TestUtils.waitUntilCondition(String.format("Router configuration in sync for %s/%s", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName()),
                 waitPhase -> {
                     int inSync = 0;
                     List<Pod> routerPods = listRouterPods(Kubernetes.getInstance(), addressSpace);
@@ -692,18 +697,25 @@ public class TestUtils {
 
 
     @FunctionalInterface
-    public static interface ThrowingCallable {
+    public interface ThrowingCallable {
         void call() throws Exception;
     }
 
     public static Path getFailedTestLogsPath(ExtensionContext extensionContext) {
+        return getLogsPath(extensionContext, "failed_test_logs");
+    }
+
+    public static Path getScaleTestLogsPath(ExtensionContext extensionContext) {
+        return getLogsPath(extensionContext, "scale_test");
+    }
+
+    public static Path getLogsPath(ExtensionContext extensionContext, String rootFolder) {
         String testMethod = extensionContext.getDisplayName();
         Class<?> testClass = extensionContext.getRequiredTestClass();
-        Path path = Environment.getInstance().testLogDir().resolve(Paths.get("failed_test_logs", testClass.getName()));
+        Path path = Environment.getInstance().testLogDir().resolve(Paths.get(rootFolder, testClass.getName()));
         if (testMethod != null) {
             path = path.resolve(testMethod);
         }
         return path;
     }
-
 }

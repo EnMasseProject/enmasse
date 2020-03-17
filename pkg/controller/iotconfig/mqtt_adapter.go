@@ -86,7 +86,10 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 	applyDefaultAdapterDeploymentSpec(deployment)
 
 	install.DropContainer(deployment, "mqtt-adapter")
+	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
+
+		tracingContainer = container
 
 		if err := install.SetContainerImage(container, "iot-mqtt-adapter", config); err != nil {
 			return err
@@ -122,6 +125,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 			{Name: "HONO_MQTT_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(adapter.IsNativeTlsRequired(config))},
 		}
 
+		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)
 
 		if err := AppendHonoAdapterEnvs(config, container, findAdapter("mqtt")); err != nil {
@@ -152,9 +156,17 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 		return err
 	}
 
+	// reset init containers
+
+	deployment.Spec.Template.Spec.InitContainers = nil
+
+	// tracing
+
+	SetupTracing(config, deployment, tracingContainer)
+
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "config", nameMqttAdapter+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameMqttAdapter+"-config")
 
 	// inter service secrets
 

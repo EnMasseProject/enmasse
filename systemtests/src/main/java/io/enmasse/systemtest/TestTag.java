@@ -20,9 +20,9 @@ public class TestTag {
     public static final String SOAK = "soak";
     public static final String NON_PR = "nonPR";
     public static final String UPGRADE = "upgrade";
-    public static final String NONE_AUTH = "noneAuth";
     public static final String SMOKE = "smoke";
     public static final String ACCEPTANCE = "acceptance";
+    public static final String SCALE = "scale";
     public static final String OLM = "olm";
     public static final Set<String> SHARED_TAGS = new HashSet<>(Arrays.asList(SHARED_BROKERED, SHARED_STANDARD, SHARED_MQTT, SHARED_IOT));
     public static final Set<String> IOT_TAGS = new HashSet<>(Arrays.asList(SHARED_IOT, ISOLATED_IOT));

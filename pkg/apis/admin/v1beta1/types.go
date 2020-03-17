@@ -152,6 +152,7 @@ type ConsoleServiceSpec struct {
 }
 
 type ConsoleServiceOauthProxySpec struct {
+	ExtraArgs []string                     `json:"extraArgs,omitempty"`
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 

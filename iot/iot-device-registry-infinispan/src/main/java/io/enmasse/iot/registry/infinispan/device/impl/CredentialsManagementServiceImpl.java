@@ -44,6 +44,8 @@ import io.enmasse.iot.registry.device.AbstractCredentialsManagementService;
 import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 
 @Component
 public class CredentialsManagementServiceImpl extends AbstractCredentialsManagementService {
@@ -57,8 +59,8 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     private final RemoteCache<io.enmasse.iot.infinispan.device.DeviceKey, DeviceInformation> managementCache;
 
     @Autowired
-    public CredentialsManagementServiceImpl(final DeviceManagementCacheProvider cacheProvider, final HonoPasswordEncoder passwordEncoder) {
-        super(passwordEncoder);
+    public CredentialsManagementServiceImpl(final Vertx vertx, final DeviceManagementCacheProvider cacheProvider, final HonoPasswordEncoder passwordEncoder) {
+        super(passwordEncoder, vertx);
         this.managementCache = cacheProvider
                 .getDeviceManagementCache()
                 .orElseThrow(() -> new NoSuchElementException("Missing device management cache"));
@@ -68,10 +70,10 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     }
 
     @Override
-    protected CompletableFuture<OperationResult<Void>> processSet(final DeviceKey key, final Optional<String> resourceVersion,
+    protected Future<OperationResult<Void>> processSet(final DeviceKey key, final Optional<String> resourceVersion,
             final List<CommonCredential> credentials, final Span span) {
 
-        return this.managementCache
+        final CompletableFuture<OperationResult<Void>> f = this.managementCache
 
                 .getWithMetadataAsync(deviceKey(key))
                 .thenCompose(currentValue -> {
@@ -115,14 +117,17 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
                             .thenCompose(replaceResult -> {
                                 return clearAdapterEntries(affectedKeys)
-                                            .thenApply(x -> replaceResult);
+                                        .thenApply(x -> replaceResult);
                             });
 
                 });
 
+        return MoreFutures.map(f);
+
     }
 
-    static Collection<io.enmasse.iot.infinispan.device.CredentialKey> calculateDifference(final String tenantId, final List<DeviceCredential> current, final List<DeviceCredential> next) {
+    static Collection<io.enmasse.iot.infinispan.device.CredentialKey> calculateDifference(final String tenantId, final List<DeviceCredential> current,
+            final List<DeviceCredential> next) {
 
         final Set<io.enmasse.iot.infinispan.device.CredentialKey> result = new HashSet<>();
 
@@ -132,13 +137,13 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
         for (final var entry : nextMap.entrySet()) {
             final var currentEntry = currentMap.remove(entry.getKey());
 
-            if ( currentEntry == null ) {
+            if (currentEntry == null) {
                 // entry was added ... clear in any case
                 result.add(entry.getKey());
                 continue;
             }
 
-            if ( !currentEntry.equals(entry.getValue() )) {
+            if (!currentEntry.equals(entry.getValue())) {
                 // entry changed
                 result.add(entry.getKey());
                 continue;
@@ -161,7 +166,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
         // if the map is null or empty ...
 
-        if ( entries == null || entries.isEmpty()) {
+        if (entries == null || entries.isEmpty()) {
             // ... directly return an empty result
             return new HashMap<>();
         }
@@ -199,9 +204,9 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     }
 
     @Override
-    protected CompletableFuture<OperationResult<List<CommonCredential>>> processGet(final DeviceKey key, final Span span) {
+    protected Future<OperationResult<List<CommonCredential>>> processGet(final DeviceKey key, final Span span) {
 
-        return this.managementCache
+        final CompletableFuture<OperationResult<List<CommonCredential>>> f = this.managementCache
 
                 .getAsync(deviceKey(key))
                 .thenApply(result -> {
@@ -217,6 +222,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
                             Optional.ofNullable(result.getVersion()));
                 });
 
+        return MoreFutures.map(f);
     }
 
 }

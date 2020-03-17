@@ -38,6 +38,7 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
+import io.enmasse.iot.model.v1.Mode;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
@@ -88,19 +89,15 @@ public class IoTUtils {
         String[] expectedDeployments = getExpectedDeploymentsNames(config);
 
         TestUtils.waitUntilCondition("IoT Config to deploy", (phase) -> allDeploymentsPresent(kubernetes, expectedDeployments), budget);
-        TestUtils.waitForNReplicas(expectedDeployments.length, IOT_LABELS, budget);
+        TestUtils.waitForNReplicas(expectedDeployments.length, config.getMetadata().getNamespace(), IOT_LABELS, budget);
     }
 
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception {
         log.info("Deleting IoTConfig: {} in namespace: {}", config.getMetadata().getName(), config.getMetadata().getNamespace());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
         kubernetes.getIoTConfigClient(config.getMetadata().getNamespace()).withName(config.getMetadata().getName()).cascading(true).delete();
-        waitForIoTConfigDeleted(kubernetes);
+        TestUtils.waitForNReplicas(0, false, config.getMetadata().getNamespace(), IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
         TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    private static void waitForIoTConfigDeleted(Kubernetes kubernetes) throws Exception {
-        TestUtils.waitForNReplicas(0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
     }
 
     private static boolean allDeploymentsPresent(Kubernetes kubernetes, String[] expectedDeployments) {
@@ -177,7 +174,15 @@ public class IoTUtils {
         assertThat(project.getStatus().getDownstreamEndpoint().getPort(), not(is(0)));
     }
 
-    private static void waitForIoTProjectDeleted(Kubernetes kubernetes, IoTProject project) throws Exception {
+    public static boolean isIoTInstalled(Kubernetes kubernetes) {
+        return kubernetes.getCRD(IoTCrd.project().getMetadata().getName()) != null;
+    }
+
+    public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {
+
+        log.info("Deleting IoTProject: {}", project.getMetadata().getName());
+
+        final String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
 
         var projectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         var asClient = kubernetes.getAddressSpaceClient(project.getMetadata().getNamespace());
@@ -187,26 +192,33 @@ public class IoTUtils {
         var initialAddressSpaces = projectClient
                 .list().getItems().stream()
                 .flatMap(p -> {
-            var managed = p.getSpec().getDownstreamStrategy().getManagedStrategy();
-            if ( managed == null )  {
-                return Stream.empty();
-            } else {
-                return Stream.ofNullable(managed.getAddressSpace().getName());
-            }
-        })
+                    var managed = p.getSpec().getDownstreamStrategy().getManagedStrategy();
+                    if (managed == null) {
+                        return Stream.empty();
+                    } else {
+                        return Stream.ofNullable(managed.getAddressSpace().getName());
+                    }
+                })
                 .collect(Collectors.toSet());
 
         // pre-fetch address spaces for later use
 
         var deletedAddressSpaces = initialAddressSpaces.stream()
                 .<AddressSpace>map(asName -> asClient.withName(asName).get())
-                .collect(Collectors.<AddressSpace, String,AddressSpace>toMap(
+                .collect(Collectors.<AddressSpace, String, AddressSpace>toMap(
                         e -> e.getMetadata().getName(),
                         e -> e));
 
+        // delete the IoTProject
+
+        kubernetes.getIoTProjectClient(project.getMetadata().getNamespace())
+                .withName(project.getMetadata().getName())
+                .cascading(true)
+                .delete();
+
         // wait until the IoTProject is deleted
 
-        var projectName = project.getMetadata().getNamespace() + "/"+ project.getMetadata().getName();
+        var projectName = project.getMetadata().getNamespace() + "/" + project.getMetadata().getName();
         TestUtils.waitUntilConditionOrFail(() -> {
             var updated = projectClient.withName(project.getMetadata().getName()).get();
             if (updated != null) {
@@ -221,13 +233,13 @@ public class IoTUtils {
         var expectedAddressSpaces = projectClient
                 .list().getItems().stream()
                 .flatMap(p -> {
-            var managed = p.getSpec().getDownstreamStrategy().getManagedStrategy();
-            if ( managed == null )  {
-                return Stream.empty();
-            } else {
-                return Stream.ofNullable(managed.getAddressSpace().getName());
-            }
-        })
+                    var managed = p.getSpec().getDownstreamStrategy().getManagedStrategy();
+                    if (managed == null) {
+                        return Stream.empty();
+                    } else {
+                        return Stream.ofNullable(managed.getAddressSpace().getName());
+                    }
+                })
                 .collect(Collectors.toSet());
 
         // retain only the addresses spaces which are expected to be deleted
@@ -236,7 +248,7 @@ public class IoTUtils {
 
         // verify the destruction of the address spaces
 
-        for (final Map.Entry<String,AddressSpace> deleted : deletedAddressSpaces.entrySet()) {
+        for (final Map.Entry<String, AddressSpace> deleted : deletedAddressSpaces.entrySet()) {
             log.info("Verify destruction of address space: {}", deleted.getKey());
             AddressSpaceUtils.waitForAddressSpaceDeleted(deleted.getValue());
         }
@@ -248,19 +260,11 @@ public class IoTUtils {
 
         // verify that we only have expected address spaces remaining
 
+        log.info("Address Spaces - expected: {}, actual: {}", expectedAddressSpaces, actualAddressSpaces);
         assertEquals(expectedAddressSpaces, actualAddressSpaces);
 
-    }
+        // stop measuring time
 
-    public static boolean isIoTInstalled(Kubernetes kubernetes) {
-        return kubernetes.getCRD(IoTCrd.project().getMetadata().getName()) != null;
-    }
-
-    public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {
-        log.info("Deleting IoTProject: {}", project.getMetadata().getName());
-        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
-        kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).cascading(true).delete();
-        IoTUtils.waitForIoTProjectDeleted(kubernetes, project);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
@@ -380,6 +384,12 @@ public class IoTUtils {
         final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
         assertNotNull(deployment);
         assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.type"));
+    }
+
+    public static void assertCorrectRegistryMode (final Mode mode) {
+        final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
+        assertNotNull(deployment);
+        assertEquals(mode.name(), deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.jdbc.mode"));
     }
 
     public static void checkCredentials(String authId, String password, boolean authFail, Endpoint httpAdapterEndpoint, AmqpClient iotAmqpClient, IoTProject ioTProject) throws Exception {

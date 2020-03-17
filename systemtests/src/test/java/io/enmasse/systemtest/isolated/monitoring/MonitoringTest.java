@@ -21,6 +21,7 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.EnvVar;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
@@ -42,12 +43,14 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     private static final int TIMEOUT_QUERY_RESULT_MINUTES = 3;
     private static final String ENMASSE_ADDRESS_SPACES_NOT_READY = "enmasse_address_space_status_not_ready";
     private static final String ENMASSE_ADDRESS_SPACES_READY = "enmasse_address_space_status_ready";
+    private static final String ENABLE_MONITORING = "ENABLE_MONITORING";
     private static Logger log = CustomLogger.getLogger();
     private Path templatesDir = Paths.get(environment.getTemplatesPath());
     private PrometheusApiClient prometheusApiClient;
 
     @BeforeEach
     void installMonitoring() throws Exception {
+        setEnmasseOperatorEnableMonitoring(false);
         KubeCMDClient.createNamespace(environment.getMonitoringNamespace());
         KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
         waitForMonitoringResources();
@@ -67,8 +70,42 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
         this.prometheusApiClient = new PrometheusApiClient(prometheusEndpoint);
 
+        setEnmasseOperatorEnableMonitoring(true);
         waitUntilPrometheusReady();
 
+    }
+
+    private void setEnmasseOperatorEnableMonitoring(boolean enable) {
+        List<EnvVar> envVars = Kubernetes.getInstance().getClient().apps()
+                .deployments()
+                .inNamespace(kubernetes.getInfraNamespace())
+                .withName("enmasse-operator")
+                .get().getSpec().getTemplate().getSpec().getContainers().get(0).getEnv();
+        List<EnvVar> updatedEnvVars = envVars
+                .stream()
+                .map(envVarObj -> {
+                    if (ENABLE_MONITORING.equals(envVarObj.getName())) {
+                        envVarObj.setValue(Boolean.toString(enable));
+                    }
+                    return envVarObj;
+                })
+                .collect(Collectors.toList());
+
+        Kubernetes.getInstance().getClient().apps()
+                .deployments()
+                .inNamespace(kubernetes.getInfraNamespace())
+                .withName("enmasse-operator")
+                .edit()
+                .editSpec()
+                .editTemplate()
+                .editSpec()
+                .editFirstContainer()
+                .withEnv(updatedEnvVars)
+                .endContainer()
+                .endSpec()
+                .endTemplate()
+                .endSpec()
+                .done();
     }
 
     private void waitForMonitoringResources() throws Exception {
@@ -159,21 +196,21 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.createAddressSpace(addressSpace);
 
-        validateAddressSpaceQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, addressSpaceName, "1");
+        validateAddressSpaceQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, "1");
 
-        validateAddressSpaceQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, addressSpaceName, "0");
+        validateAddressSpaceQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, "0");
 
         //tests address spaces ready goes from 0 to 1
-        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, startTs, addressSpaceName, range -> Ordering.natural().isOrdered(range));
+        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, startTs, range -> Ordering.natural().isOrdered(range));
 
         //tests address spaces not ready goes from 1 to 0
-        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, startTs, addressSpaceName, range -> Ordering.natural().reverse().isOrdered(range));
+        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, startTs, range -> Ordering.natural().reverse().isOrdered(range));
     }
 
-    private void validateAddressSpaceQueryWaiting(String query, String addressSpace, String expectedValue) throws Exception {
+    private void validateAddressSpaceQueryWaiting(String query, String expectedValue) throws Exception {
         TestUtils.waitUntilCondition(query, phase -> {
             try {
-                validateAddressSpaceQuery(query, addressSpace, expectedValue);
+                validateAddressSpaceQuery(query, expectedValue);
                 return true;
             } catch (Exception e) {
                 if (phase == WaitPhase.LAST_TRY) {
@@ -184,10 +221,10 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         }, new TimeoutBudget(TIMEOUT_QUERY_RESULT_MINUTES, TimeUnit.MINUTES));
     }
 
-    private void validateAddressSpaceRangeQueryWaiting(String query, Instant start, String addressSpace, Predicate<List<String>> rangeValidator) throws Exception {
+    private void validateAddressSpaceRangeQueryWaiting(String query, Instant start, Predicate<List<String>> rangeValidator) throws Exception {
         TestUtils.waitUntilCondition(query, phase -> {
             try {
-                validateAddressSpaceRangeQuery(query, start, addressSpace, rangeValidator);
+                validateAddressSpaceRangeQuery(query, start, query, rangeValidator);
                 return true;
             } catch (Exception e) {
                 if (phase == WaitPhase.LAST_TRY) {
@@ -198,10 +235,10 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         }, new TimeoutBudget(TIMEOUT_QUERY_RESULT_MINUTES, TimeUnit.MINUTES));
     }
 
-    private void validateAddressSpaceQuery(String query, String addressSpace, String expectedValue) throws Exception {
+    private void validateAddressSpaceQuery(String query, String expectedValue) throws Exception {
         JsonObject queryResult = prometheusApiClient.doQuery(query);
         basicQueryResultValidation(query, queryResult);
-        boolean validateResult = metricQueryResultValidation(queryResult, addressSpace, jsonResult -> {
+        boolean validateResult = metricQueryResultValidation(queryResult, query, jsonResult -> {
             JsonArray valueArray = jsonResult.getJsonArray("value", new JsonArray());
             return valueArray.size() == 2 && valueArray.getString(1).equals(expectedValue);
         });
@@ -237,7 +274,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         JsonObject data = queryResult.getJsonObject("data", new JsonObject());
         for (Object result : data.getJsonArray("result", new JsonArray())) {
             JsonObject jsonResult = (JsonObject) result;
-            if (jsonResult.getJsonObject("metric", new JsonObject()).getString("name", "").equals(metricName)) {
+            if (jsonResult.getJsonObject("metric", new JsonObject()).getString("__name__", "").equals(metricName)) {
                 return resultValidator.test(jsonResult);
             }
         }
