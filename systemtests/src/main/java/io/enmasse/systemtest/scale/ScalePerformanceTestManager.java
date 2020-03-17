@@ -142,7 +142,15 @@ public class ScalePerformanceTestManager {
                         ScaleTestClient<MessagingClientMetricsClient> client = clientsMap.get(clientId);
                         MessagingClientMetricsClient metricsClient = client.getMetricsClient();
 
-                        waitUntilHasValue(() -> metricsClient.getAcceptedDeliveries(client.getAddressesType()), "Client is not reporting accepted deliveries");
+                        AssertingConsumer<AddressType> dataWait = type -> {
+                            waitUntilHasValue(() -> metricsClient.getAcceptedDeliveries(type), "Client is not reporting accepted deliveries - " + type.toString());
+                        };
+                        if (client.getAddressesType() == null) {
+                            dataWait.accept(AddressType.ANYCAST);
+                            dataWait.accept(AddressType.QUEUE);
+                        } else {
+                            dataWait.accept(client.getAddressesType());
+                        }
 
                         int totalMadeConnections = (int) (metricsClient.getReconnects().getValue() + client.getConnections());
 
@@ -155,17 +163,34 @@ public class ScalePerformanceTestManager {
                             assertTrue(reconnectFailuresRatio < reconnectFailureRatioThreshold, "Reconnects failures ratio is "+reconnectFailuresRatio);
                         }
 
-                        isPresent(metricsClient.getAcceptedDeliveries(client.getAddressesType()))
+                        AssertingConsumer<AddressType> deliveriesChecker = type -> {
+                            isPresent(metricsClient.getAcceptedDeliveries(type))
                             .and(c -> c.getValue() >= 0)
-                            .assertTrue("There are not accepted deliveries");
+                            .assertTrue("There are not accepted deliveries - " + type.toString());
+                        };
 
-                        Double rejected = metricsClient.getRejectedDeliveries(client.getAddressesType()).map(Counter::getValue).orElse(0d);
-                        Double modified = metricsClient.getModifiedDeliveries(client.getAddressesType()).map(Counter::getValue).orElse(0d);
-                        Double accepted = metricsClient.getAcceptedDeliveries(client.getAddressesType()).map(Counter::getValue).orElse(0d);
-                        int totalNoAcceptedDeliveries = (int) (rejected + modified);
-                        double noAcceptedDeliveriesRatio = totalNoAcceptedDeliveries / (totalNoAcceptedDeliveries + accepted);
+                        if (client.getAddressesType() == null) {
+                            deliveriesChecker.accept(AddressType.ANYCAST);
+                            deliveriesChecker.accept(AddressType.QUEUE);
+                        } else {
+                            deliveriesChecker.accept(client.getAddressesType());
+                        }
 
-                        assertTrue(noAcceptedDeliveriesRatio < notAcceptedDeliveriesRatioThreshold, "deliveries: accepted:"+accepted+" rejected:"+rejected+" midified:"+modified);
+                        AssertingConsumer<AddressType> deliveriesPredicate = type -> {
+                            Double rejected = metricsClient.getRejectedDeliveries(type).map(Counter::getValue).orElse(0d);
+                            Double modified = metricsClient.getModifiedDeliveries(type).map(Counter::getValue).orElse(0d);
+                            Double accepted = metricsClient.getAcceptedDeliveries(type).map(Counter::getValue).orElse(0d);
+                            int totalNoAcceptedDeliveries = (int) (rejected + modified);
+                            double noAcceptedDeliveriesRatio = totalNoAcceptedDeliveries / (totalNoAcceptedDeliveries + accepted);
+
+                            assertTrue(noAcceptedDeliveriesRatio < notAcceptedDeliveriesRatioThreshold, type.toString() + " deliveries: accepted:"+accepted+" rejected:"+rejected+" midified:"+modified);
+                        };
+                        if (client.getAddressesType() == null) {
+                            deliveriesPredicate.accept(AddressType.ANYCAST);
+                            deliveriesPredicate.accept(AddressType.QUEUE);
+                        } else {
+                            deliveriesPredicate.accept(client.getAddressesType());
+                        }
 
                         clientsMonitoringQueue.offer(clientId);
 
@@ -194,6 +219,13 @@ public class ScalePerformanceTestManager {
             var counter = counterSupplier.get();
             return counter.isPresent() && counter.get().getValue() >= 0;
         }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> timeoutMessage);
+    }
+
+    @FunctionalInterface
+    private static interface AssertingConsumer<T> {
+
+        void accept(T value) throws AssertionError;
+
     }
 
 }
