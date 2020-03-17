@@ -8,29 +8,46 @@
 .Prerequisites
 * You must be logged into the {ConsoleName}.
 
+ifdef::Asciidoctor[]
+image::console-screenshot-addr.png[{ConsoleName}]
+endif::Asciidoctor[]
+
+ifndef::Asciidoctor[]
+image::{imagesdir}/console-screenshot-addr.png[{ConsoleName}]
+endif::Asciidoctor[]
+
 .Message statistics reference table
 [cols="50%a,50%a",options="header"]
 |===
 |To view... |On the Addresses page...
-|Address status | See the third column, *Status*
 |Address type |See the first icon in the second column, *Type/plan*
 |Address plan |See the string that follows the icon in the second column, *Type/plan*
+|Address status | See the third column, *Status*
 |Messages received per second (computed over the last 5 minutes) |See *Messages In/sec*
 |Messages sent per second (computed over the last 5 minutes) |See *Messages Out/sec*
+|Queue and topic address types only: Number of stored messages on the broker or brokers |*Stored Messages*
 |Number of senders attached |See *Senders*
 |Number of receivers attached |See *Receivers*
-|Queue and topic address types only: Number of stored messages on the broker or brokers |*Stored Messages*
 |Standard address space only: Message deliveries per second |Click the desired address, which then shows the links page for that address; see the *Delivery Rate* column.
 // |Standard address space and queue address type only: Number of rejected messages stored in the global dead-letter queue (DLQ) |*Global DLQ*
 |===
 
 
 .Application connection statistics reference table
+
+ifdef::Asciidoctor[]
+image::console-screenshot-conns.png[{ConsoleName}]
+endif::Asciidoctor[]
+
+ifndef::Asciidoctor[]
+image::{imagesdir}/console-screenshot-conns.png[{ConsoleName}]
+endif::Asciidoctor[]
+
 [cols="50%a,50%a",options="header"]
 |===
 |To view... |On the Connections page...
-|Messages received per second (computed over the last 5 minutes) |See *Messages In*
-|Standard address space only: Messages sent per second (computed over the last 5 minutes) |See *Messages Out*
+|Messages received per second (computed over the last 5 minutes) |See *Messages In/sec*
+|Standard address space only: Messages sent per second (computed over the last 5 minutes) |See *Messages Out/sec*
 |Total number of messages delivered |Click the desired host name to show the list of senders and receivers; see the *Deliveries* column.
 // |Standard address space only: Username used by the client to connect |See the third column
 |===

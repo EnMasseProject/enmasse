@@ -8,11 +8,15 @@
 .Prerequisites
 ifeval::["{cmdcli}" == "oc"]
 * On OpenShift Container Platform 3.x, obtain the host name for the {ConsoleName} by running the following command:
++
+[options="nowrap",subs="attributes,+quotes"]
 ----
 {cmdcli} get routes console -o jsonpath={.spec.host}
 ----
 
 * On OpenShift Container Platform 4.x, obtain the host name for the {ConsoleName} by running the following command:
++
+[options="nowrap",subs="attributes,+quotes"]
 ----
 {cmdcli} get consolelink -l app=enmasse -o jsonpath={.spec.href}
 ----
