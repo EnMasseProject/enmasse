@@ -3,7 +3,8 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React, { useState } from "react";
+import AceEditor from "react-ace";
 import {
   Grid,
   GridItem,
@@ -15,22 +16,20 @@ import {
   Button,
   ButtonVariant
 } from "@patternfly/react-core";
-import { Loading } from "use-patternfly";
-import { useQuery } from "@apollo/react-hooks";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "@patternfly/react-styles";
-import AceEditor from "react-ace";
-import "ace-builds/src-noconflict/mode-java";
-import "ace-builds/src-noconflict/theme-github";
-import { ADDRESS_SPACE_COMMAND_REVIEW_DETAIL } from "graphql-module/queries";
 
-export interface IAddressSpaceReview {
+export interface IAddressSpaceReviewProps {
   name?: string;
   type?: string;
   plan?: string;
   namespace: string;
   authenticationService: string;
+  data: {
+    addressSpaceCommand: string;
+  };
 }
+
 const Style = StyleSheet.create({
   left_padding: {
     paddingLeft: 32
@@ -40,36 +39,15 @@ const Style = StyleSheet.create({
   }
 });
 
-export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = ({
+export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
   name,
   type,
   plan,
   namespace,
-  authenticationService
+  authenticationService,
+  data
 }) => {
-  const [isCopied, setIsCopied] = React.useState<boolean>(false);
-  const { data, loading, error } = useQuery(
-    ADDRESS_SPACE_COMMAND_REVIEW_DETAIL,
-    {
-      variables: {
-        as: {
-          metadata: {
-            name: name,
-            namespace: namespace
-          },
-          spec: {
-            plan: plan ? plan.toLowerCase() : "",
-            type: type ? type.toLowerCase() : "",
-            authenticationService: {
-              name: authenticationService
-            }
-          }
-        }
-      }
-    }
-  );
-  if (loading) return <Loading />;
-  if (error) console.log("Address Space Review Query Error", error);
+  const [isCopied, setIsCopied] = useState<boolean>(false);
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Title size="3xl" style={{ marginBottom: 32 }}>
@@ -166,7 +144,7 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
                     variant={ButtonVariant.link}
                     aria-label="copy-configuration"
                     onClick={() => {
-                      navigator.clipboard.writeText(data.addressCommand);
+                      navigator.clipboard.writeText(data.addressSpaceCommand);
                       setIsCopied(true);
                     }}
                     onMouseLeave={() => {

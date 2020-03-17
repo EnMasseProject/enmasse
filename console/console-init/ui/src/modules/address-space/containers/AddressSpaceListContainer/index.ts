@@ -4,4 +4,3 @@
  */
 
 export * from "./AddressSpaceListContainer";
-export * from "./AddressSpaceFilterContainer";
