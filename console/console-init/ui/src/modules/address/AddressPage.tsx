@@ -276,6 +276,16 @@ export default function AddressPage() {
     return true;
   };
 
+  const renderPagination = () => {
+    return (
+      <TablePagination
+        itemCount={totalAddresses}
+        variant={"top"}
+        page={page}
+        perPage={perPage}
+      />
+    );
+  };
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
@@ -301,14 +311,7 @@ export default function AddressPage() {
             isPurgeAllDisabled={isPurgeAllOptionDisbled()}
           />
         </GridItem>
-        <GridItem span={5}>
-          <TablePagination
-            itemCount={totalAddresses}
-            variant={"top"}
-            page={page}
-            perPage={perPage}
-          />
-        </GridItem>
+        <GridItem span={5}>{renderPagination()}</GridItem>
       </Grid>
       <Divider />
       <AddressListContainer
@@ -331,12 +334,7 @@ export default function AddressPage() {
         onSelectAddress={onSelectAddress}
         onSelectAllAddress={onSelectAllAddress}
       />
-      <TablePagination
-        itemCount={totalAddresses}
-        variant={"bottom"}
-        page={page}
-        perPage={perPage}
-      />
+      {renderPagination()}
     </PageSection>
   );
 }

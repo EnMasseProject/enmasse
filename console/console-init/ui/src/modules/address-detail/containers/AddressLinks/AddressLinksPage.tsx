@@ -49,7 +49,16 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
     Array<{ value: string; isExact: boolean }>
   >([]);
   const [filterRole, setFilterRole] = React.useState<string>();
-
+  const renderPagination = () => {
+    return (
+      <TablePagination
+        itemCount={addresLinksTotal}
+        variant={"top"}
+        page={page}
+        perPage={perPage}
+      />
+    );
+  };
   return (
     <PageSection>
       <PageSection variant={PageSectionVariants.light}>
@@ -77,14 +86,7 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
               addressName={addressName}
             />
           </GridItem>
-          <GridItem span={5}>
-            <TablePagination
-              itemCount={addresLinksTotal}
-              variant={"top"}
-              page={page}
-              perPage={perPage}
-            />
-          </GridItem>
+          <GridItem span={5}>{renderPagination()}</GridItem>
         </Grid>
         <Divider />
         <AddressLinksContainer
@@ -101,12 +103,7 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
           setSortValue={setSortDropdownValue}
           filterRole={filterRole}
         />
-        <TablePagination
-          itemCount={addresLinksTotal}
-          variant={"bottom"}
-          page={page}
-          perPage={perPage}
-        />
+        {renderPagination()}
       </PageSection>
     </PageSection>
   );
