@@ -708,6 +708,9 @@ public abstract class ConsoleTest extends TestBase {
 
         consolePage.purgeSelectedAddresses(queue1, queue3);
 
+        selenium.waitUntilPropertyPresent(60, 0, () -> consolePage.getAddressItem(queue1).getMessagesStored());
+        selenium.waitUntilPropertyPresent(60, 0, () -> consolePage.getAddressItem(queue3).getMessagesStored());
+
         assertTrue(client.withAddress(queue2).withClientEngine(new RheaClientReceiver()).run(false));
         assertThat(client.getMessages().size(), is(1000));
         assertTrue(client.withAddress(queue3).withTimeout(10).withClientEngine(new RheaClientReceiver()).run(false));
