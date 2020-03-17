@@ -93,6 +93,11 @@
         <!-- NOTE: opentracing must be aligned with Hono -->
         <opentracing.version>0.31.0</opentracing.version>
 
+        <!-- NOTE: jaeger-client must be aligned with Hono -->
+        <jaeger-client.version>0.34.0</jaeger-client.version>
+        <!-- NOTE: opentracing must be aligned with Hono -->
+        <opentracing.version>0.31.0</opentracing.version>
+
         <asciidoctor-maven-plugin.version>1.5.8</asciidoctor-maven-plugin.version>
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
         <mycila-license-maven-plugin.version>2.11</mycila-license-maven-plugin.version>
