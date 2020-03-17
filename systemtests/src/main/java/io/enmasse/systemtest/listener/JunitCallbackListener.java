@@ -243,6 +243,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                 GlobalLogCollector collectors = new GlobalLogCollector(kube, path, kube.getInfraNamespace());
                 collectors.collectAllAdapterQdrProxyState();
             }
+            if (testInfo.isOLMTest()) {
+                Files.writeString(path.resolve("describe_pods_olm.txt"), KubeCMDClient.describePods(kube.getOlmNamespace()).getStdOut());
+            }
             LOGGER.info("Pod logs and describe successfully stored into {}", path);
         } catch (Exception ex) {
             LOGGER.warn("Cannot save pod logs and info: ", ex);
