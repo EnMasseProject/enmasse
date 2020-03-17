@@ -219,13 +219,73 @@ public abstract class ConsoleTest extends TestBase {
         int addressCount = 4;
         String namespace = "test-namespace";
         UserCredentials user = Credentials.userCredentials();
+        KubeCMDClient.createNamespace(namespace);
+        kubernetes.getClient().rbac().clusterRoles().createOrReplaceWithNew()
+                .editOrNewMetadata()
+                .withName(namespace)
+                .endMetadata()
+                .addNewRule()
+                .withApiGroups("")
+                .withResources("namespaces")
+                .withVerbs("get")
+                .withResourceNames(namespace)
+                .endRule()
+                .done();
+
+        kubernetes.getClient().rbac().clusterRoleBindings().createOrReplaceWithNew()
+                .editOrNewMetadata()
+                .withName(namespace)
+                .endMetadata()
+                .addNewSubject()
+                .withApiGroup("rbac.authorization.k8s.io")
+                .withKind("User")
+                .withName("pepa")
+                .endSubject()
+                .editOrNewRoleRef()
+                .withApiGroup("rbac.authorization.k8s.io")
+                .withKind("ClusterRole")
+                .withName(namespace)
+                .endRoleRef()
+                .done();
+
+        kubernetes.getClient().rbac().clusterRoleBindings().createOrReplaceWithNew()
+                .editOrNewMetadata()
+                .withName(namespace)
+                .endMetadata()
+                .addNewSubject()
+                .withApiGroup("rbac.authorization.k8s.io")
+                .withKind("User")
+                .withName("pepa")
+                .endSubject()
+                .editOrNewRoleRef()
+                .withApiGroup("rbac.authorization.k8s.io")
+                .withKind("ClusterRole")
+                .withName(namespace)
+                .endRoleRef()
+                .done();
+
+        kubernetes.getClient().rbac().roleBindings().inNamespace(namespace).createOrReplaceWithNew()
+                .editOrNewMetadata()
+                .withName("pepa-admin")
+                .withNamespace(namespace)
+                .endMetadata()
+                .addNewSubject()
+                .withApiGroup("rbac.authorization.k8s.io")
+                .withKind("User")
+                .withName("pepa")
+                .endSubject()
+                .editOrNewRoleRef()
+                .withApiGroup("rbac.authorization.k8s.io")
+                .withKind("ClusterRole")
+                .withName(namespace)
+                .endRoleRef()
+                .done();
+
         UserCredentials messagingUser = new UserCredentials("pepa", "zdepa");
-        KubeCMDClient.runOnCluster("create", "rolebinding", "clients-admin", "--clusterrole", "admin", "--user", user.getUsername(), "--namespace", SystemtestsKubernetesApps.MESSAGING_PROJECT);
         boolean success = false;
         AddressSpace addressSpace = null;
         try {
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
-            KubeCMDClient.createNamespace(namespace);
 
             addressSpace = new AddressSpaceBuilder()
                     .withNewMetadata()
@@ -286,6 +346,8 @@ public abstract class ConsoleTest extends TestBase {
                 KubeCMDClient.loginUser(environment.getApiToken());
                 KubeCMDClient.switchProject(environment.namespace());
                 kubernetes.deleteNamespace(namespace);
+                kubernetes.getClient().rbac().clusterRoleBindings().withName(namespace).delete();
+                kubernetes.getClient().rbac().clusterRoles().withName(namespace).delete();
             }
         }
     }
