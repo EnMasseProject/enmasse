@@ -289,9 +289,11 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 log.error("Failed to wait for addresses");
                 operableAddresses = (int) kubernetes.getAddressClient().inNamespace(namespace).list().getItems().stream()
                         .filter(address -> address.getStatus().getPhase().equals(Phase.Active)).count();
-                log.info("----------------------------------------------------------");
-                log.info("Total operable addresses {}", operableAddresses);
-                log.info("----------------------------------------------------------");
+                LOGGER.info("#######################################");
+                LOGGER.info("Total addresses created {}", operableAddresses);
+                LOGGER.info("Total connections created {}", manager.getConnections());
+                LOGGER.info("Total clients deployed {}", manager.getClients());
+                LOGGER.info("#######################################");
                 assertThat(operableAddresses, greaterThan(failureThreshold));
                 break;
             }
