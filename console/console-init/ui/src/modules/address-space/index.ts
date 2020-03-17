@@ -6,3 +6,5 @@
 export * from "./AddressSpacePage";
 export * from "./utils";
 export * from "./dialogs";
+export * from "./components";
+export * from "./containers";

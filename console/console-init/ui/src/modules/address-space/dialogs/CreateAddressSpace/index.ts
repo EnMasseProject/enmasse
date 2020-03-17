@@ -4,5 +4,5 @@
  */
 
 export * from "./CreateAddressSpace";
-export * from "./CreateAddressSpaceConfiguration";
-export * from "./ReviewAddressSpace";
+export * from "./Configuration";
+export * from "./Review";

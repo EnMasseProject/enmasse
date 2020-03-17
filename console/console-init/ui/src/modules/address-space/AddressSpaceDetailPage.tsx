@@ -4,6 +4,8 @@
  */
 
 import * as React from "react";
+import { useHistory } from "react-router";
+import { useParams, Link } from "react-router-dom";
 import { AddressSpaceNavigation } from "components/AddressSpace/AddressSpaceNavigation";
 import {
   useA11yRouteChange,
@@ -11,20 +13,18 @@ import {
   Loading,
   useBreadcrumb
 } from "use-patternfly";
+import { useQuery, useApolloClient } from "@apollo/react-hooks";
+import { StyleSheet, css } from "@patternfly/react-styles";
 import {
   PageSection,
   PageSectionVariants,
   Breadcrumb,
   BreadcrumbItem
 } from "@patternfly/react-core";
-import { useParams, Link } from "react-router-dom";
 import {
   IAddressSpaceHeaderProps,
   AddressSpaceHeader
 } from "components/AddressSpace/AddressSpaceHeader";
-import { useQuery, useApolloClient } from "@apollo/react-hooks";
-import { StyleSheet, css } from "@patternfly/react-styles";
-import { useHistory } from "react-router";
 import {
   DOWNLOAD_CERTIFICATE,
   DELETE_ADDRESS_SPACE,
@@ -34,8 +34,9 @@ import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
 import { IAddressSpace } from "modules/address-space/components/AddressSpaceList/AddressSpaceList";
 import { useMutationQuery } from "hooks";
-import { AddressSpaceRoutes } from "Routes";
+import { Routes } from "./Routes";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
+import { IAddressSpaceDetailResponse } from "types/ResponseTypes";
 
 const styles = StyleSheet.create({
   no_bottom_padding: {
@@ -43,40 +44,11 @@ const styles = StyleSheet.create({
   }
 });
 
-interface IAddressSpaceDetailResponse {
-  addressSpaces: {
-    addressSpaces: Array<{
-      metadata: {
-        namespace: string;
-        name: string;
-        creationTimestamp: string;
-      };
-      spec: {
-        type: string;
-        plan: {
-          metadata: {
-            name: string;
-          };
-          spec: {
-            displayName: string;
-          };
-        };
-        authenticationService: {
-          name: string;
-        };
-      };
-      status: {
-        isReady: boolean;
-        phase: string;
-        messages: Array<string>;
-      };
-    }>;
-  };
-}
 export interface IObjectMeta_v1_Input {
   name: string;
   namespace: string;
 }
+
 const breadcrumb = (
   <Breadcrumb>
     <BreadcrumbItem>
@@ -94,7 +66,8 @@ export default function AddressSpaceDetailPage() {
   useBreadcrumb(breadcrumb);
   useDocumentTitle("Address Space Detail");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
-  const { loading, data, refetch } = useQuery<IAddressSpaceDetailResponse>(
+
+  const { loading, data } = useQuery<IAddressSpaceDetailResponse>(
     RETURN_ADDRESS_SPACE_DETAIL(name, namespace),
     {
       fetchPolicy: FetchPolicy.NETWORK_ONLY,
@@ -249,7 +222,7 @@ export default function AddressSpaceDetailPage() {
         ></AddressSpaceNavigation>
       </PageSection>
       <PageSection>
-        <AddressSpaceRoutes />
+        <Routes />
       </PageSection>
     </>
   );

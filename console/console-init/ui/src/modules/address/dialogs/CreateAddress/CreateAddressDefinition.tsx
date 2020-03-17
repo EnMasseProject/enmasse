@@ -25,6 +25,7 @@ import {
 import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { IAddressResponse } from "types/ResponseTypes";
+import { dropdown_item_styles } from "modules/address-space";
 import { FetchPolicy } from "constants/constants";
 
 const styles = StyleSheet.create({

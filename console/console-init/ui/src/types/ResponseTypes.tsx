@@ -326,3 +326,34 @@ export interface IUserDetail {
     fullName: string;
   };
 }
+
+export interface IAddressSpaceDetailResponse {
+  addressSpaces: {
+    addressSpaces: Array<{
+      metadata: {
+        namespace: string;
+        name: string;
+        creationTimestamp: string;
+      };
+      spec: {
+        type: string;
+        plan: {
+          metadata: {
+            name: string;
+          };
+          spec: {
+            displayName: string;
+          };
+        };
+        authenticationService: {
+          name: string;
+        };
+      };
+      status: {
+        isReady: boolean;
+        phase: string;
+        messages: Array<string>;
+      };
+    }>;
+  };
+}
