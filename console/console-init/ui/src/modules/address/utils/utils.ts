@@ -1,4 +1,5 @@
 import { statusToDisplay } from "modules/address-space";
+import { AddressTypes } from "constants/constants";
 
 /*
  * Copyright 2020, EnMasse authors.
@@ -8,13 +9,17 @@ import { statusToDisplay } from "modules/address-space";
 interface IAddressStatusProps {
   phase: string;
 }
+export interface IFilterValue {
+  value: string;
+  isExact: boolean;
+}
 
 const getFilteredAddressesByType = (addresses: any[]) => {
   if (addresses && addresses.length > 0) {
     return addresses.filter(
       address =>
-        address.type.toLowerCase() === "queue" ||
-        address.type.toLowerCase() === "subscription"
+        address.type.toLowerCase() === AddressTypes.QUEUE ||
+        address.type.toLowerCase() === AddressTypes.SUBSCRIPTION
     );
   }
 };
@@ -32,8 +37,8 @@ const getFilteredAddressDisplayName = (addresses: any[]) => {
   if (addresses && addresses.length > 0) {
     return addresses.filter(
       address =>
-        address.type.toLowerCase() === "queue" ||
-        address.type.toLowerCase() === "subscription"
+        address.type.toLowerCase() === AddressTypes.QUEUE ||
+        address.type.toLowerCase() === AddressTypes.SUBSCRIPTION
     )[0].displayName;
   }
 };
@@ -60,8 +65,8 @@ const getFilteredAdressNames = (addresses: any[]) => {
     addresses
       .filter(
         address =>
-          address.type.toLowerCase() === "queue" ||
-          address.type.toLowerCase() === "subscription"
+          address.type.toLowerCase() === AddressTypes.QUEUE ||
+          address.type.toLowerCase() === AddressTypes.SUBSCRIPTION
       )
       .map(address => address.name)
   );

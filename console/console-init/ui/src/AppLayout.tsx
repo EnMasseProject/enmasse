@@ -10,7 +10,7 @@ import { useHistory } from "react-router-dom";
 import { Brand, Avatar } from "@patternfly/react-core";
 import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
-import NavToolBar from "components/NavToolBar/NavToolBar";
+import { NavToolBar } from "components/Toolbar";
 import { AppRoutes } from "Routes";
 import brandImg from "./assets/images/logo.svg";
 import avatarImg from "./img_avatar.svg";

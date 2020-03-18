@@ -19,6 +19,7 @@ import {
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { TypeBadge } from "modules/address-detail/components/TypeBadge";
+import { AddressTypes } from "constants/constants";
 
 export interface IAddressDetailHeaderProps {
   type: string;
@@ -148,7 +149,8 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
     ];
     if (
       type &&
-      (type.toLowerCase() === "queue" || type.toLowerCase() === "subscription")
+      (type.toLowerCase() === AddressTypes.QUEUE ||
+        type.toLowerCase() === AddressTypes.SUBSCRIPTION)
     ) {
       dropdownItems.push(
         <DropdownItem

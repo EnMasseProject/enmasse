@@ -5,13 +5,12 @@
 
 import * as React from "react";
 import { Wizard } from "@patternfly/react-core";
-import { AddressDefinition } from "modules/address/dialogs/CreateAddress/CreateAddressDefinition";
-import { PreviewAddress } from "./PreviewAddress";
-import { useApolloClient } from "@apollo/react-hooks";
+import { useMutationQuery } from "hooks";
+import { AddressDefinition } from "modules/address/dialogs/CreateAddress/Configuration";
+import { PreviewAddress } from "./Preview";
 import { CREATE_ADDRESS } from "graphql-module/queries";
 import { IDropdownOption } from "components/common/FilterDropdown";
 import { messagingAddressNameRegexp } from "types/Configs";
-import { useMutationQuery } from "hooks";
 
 interface ICreateAddressProps {
   name: string;
@@ -37,7 +36,6 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
   const [addressType, setAddressType] = React.useState(" ");
   const [plan, setPlan] = React.useState(" ");
   const [topic, setTopic] = React.useState(" ");
-  const client = useApolloClient();
   const [addressTypes, setAddressTypes] = React.useState<IDropdownOption[]>([]);
   const [addressPlans, setAddressPlans] = React.useState<IDropdownOption[]>([]);
   const [topicsForSubscription, setTopicForSubscription] = React.useState<

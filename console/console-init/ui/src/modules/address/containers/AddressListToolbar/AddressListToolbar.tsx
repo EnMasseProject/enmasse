@@ -10,7 +10,7 @@ import {
   DataToolbarItem,
   DataToolbarContent
 } from "@patternfly/react-core/dist/js/experimental";
-import { CreateAddressPage } from "modules/address/dialogs/CreateAddress/CreateAddressPage";
+import { CreateAddressPage } from "modules/address/dialogs/CreateAddress/CreateAddress";
 import { useParams } from "react-router";
 import { useApolloClient } from "@apollo/react-hooks";
 import { RETURN_ADDRESS_SPACE_DETAIL } from "graphql-module/queries";
@@ -21,12 +21,13 @@ import { SortForMobileView } from "components/common/SortForMobileView";
 import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy } from "constants/constants";
 import { AddressListKebab } from "modules/address/components/AddressListKebab";
+import { IFilterValue } from "modules/address/utils";
 
 export interface AddressListFilterProps {
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;
-  filterNames: Array<{ value: string; isExact: boolean }>;
-  setFilterNames: (value: Array<{ value: string; isExact: boolean }>) => void;
+  filterNames: Array<IFilterValue>;
+  setFilterNames: (value: Array<IFilterValue>) => void;
   typeValue: string | null;
   setTypeValue: (value: string | null) => void;
   statusValue: string | null;

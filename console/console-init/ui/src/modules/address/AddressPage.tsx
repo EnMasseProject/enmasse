@@ -4,7 +4,7 @@
  */
 
 import * as React from "react";
-import { useParams, useLocation, useHistory } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 
 import {
   PageSection,
@@ -32,10 +32,12 @@ import {
   getDetailTextForPurgeAll,
   getHeaderTextForDelateAll,
   getDetailTextForDeleteAll,
-  getFilteredAddressesByType
+  getFilteredAddressesByType,
+  IFilterValue
 } from "modules/address/utils";
 import { compareObject } from "utils";
 import { TablePagination } from "components/TablePagination";
+import { AddressTypes } from "constants/constants";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -64,13 +66,11 @@ export default function AddressPage() {
   const { dispatch } = useStoreContext();
   useDocumentTitle("Address List");
   useA11yRouteChange();
-  const { name, namespace, type } = useParams();
+  const { name, namespace } = useParams();
   const [filterValue, setFilterValue] = React.useState<string | null>(
     "Address"
   );
-  const [filterNames, setFilterNames] = React.useState<
-    Array<{ value: string; isExact: boolean }>
-  >([]);
+  const [filterNames, setFilterNames] = React.useState<Array<IFilterValue>>([]);
   const [typeValue, setTypeValue] = React.useState<string | null>(null);
   const [statusValue, setStatusValue] = React.useState<string | null>(null);
   const [totalAddresses, setTotalAddress] = React.useState<number>(0);
@@ -266,8 +266,8 @@ export default function AddressPage() {
   const isPurgeAllOptionDisbled = () => {
     const filteredAddresses = selectedAddresses.filter(
       address =>
-        address.type.toLowerCase() === "queue" ||
-        address.type.toLowerCase() === "subscription"
+        address.type.toLowerCase() === AddressTypes.QUEUE ||
+        address.type.toLowerCase() === AddressTypes.SUBSCRIPTION
     );
 
     if (filteredAddresses.length > 0) {
