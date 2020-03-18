@@ -77,7 +77,7 @@ function get_path(base, resource, options) {
     if (options.requestTimeout) {
         queryParams.timeoutSeconds = options.requestTimeout;
     }
-    if (Object.keys(queryParams).length) {
+    if (Object.keys(queryParams).length > 0) {
         path += '?' + querystring.stringify(queryParams);
     }
     return path;
