@@ -261,7 +261,7 @@ public abstract class ConsoleTest extends TestBase {
                 .editOrNewRoleRef()
                 .withApiGroup("rbac.authorization.k8s.io")
                 .withKind("ClusterRole")
-                .withName(namespace)
+                .withName("enmasse.io:tenant-edit")
                 .endRoleRef()
                 .done();
 
