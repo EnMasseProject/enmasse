@@ -248,22 +248,6 @@ public abstract class ConsoleTest extends TestBase {
                 .endRoleRef()
                 .done();
 
-        kubernetes.getClient().rbac().clusterRoleBindings().createOrReplaceWithNew()
-                .editOrNewMetadata()
-                .withName(namespace)
-                .endMetadata()
-                .addNewSubject()
-                .withApiGroup("rbac.authorization.k8s.io")
-                .withKind("User")
-                .withName("pepa")
-                .endSubject()
-                .editOrNewRoleRef()
-                .withApiGroup("rbac.authorization.k8s.io")
-                .withKind("ClusterRole")
-                .withName(namespace)
-                .endRoleRef()
-                .done();
-
         kubernetes.getClient().rbac().roleBindings().inNamespace(namespace).createOrReplaceWithNew()
                 .editOrNewMetadata()
                 .withName("pepa-admin")
