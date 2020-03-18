@@ -67,15 +67,15 @@ function get_options(options, path) {
     };
 }
 
-function get_path(base, resource, options) {
+function get_path(base, resource, options, timeout) {
     var namespace = options.namespace || process.env.KUBERNETES_NAMESPACE || read('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
     var path = base + namespace + '/' + resource;
     var queryParams = {};
     if (options.selector) {
         queryParams.labelSelector = options.selector;
     }
-    if (options.requestTimeout) {
-        queryParams.timeoutSeconds = options.requestTimeout;
+    if (timeout) {
+        queryParams.timeoutSeconds = timeout;
     }
     if (Object.keys(queryParams).length > 0) {
         path += '?' + querystring.stringify(queryParams);
@@ -87,17 +87,14 @@ function list_options(resource, baseOptions) {
     var base = resource.startsWith("address") ? '/apis/enmasse.io/v1beta1/namespaces/' : '/api/v1/namespaces/';
     let path = get_path(base, resource, baseOptions);
     var options = get_options(baseOptions, path);
-    return myutils.merge({requestTimeout: options.requestTimeout || process.env.REQUEST_TIMEOUT || 120}, options);
+    return myutils.merge({requestTimeout: baseOptions.requestTimeout || process.env.REQUEST_TIMEOUT || 120}, options);
 }
 
 function watch_options(resource, baseOptions) {
     var base = resource.startsWith("address") ? '/apis/enmasse.io/v1beta1/watch/namespaces/' : '/api/v1/watch/namespaces/';
-    var options = get_options(baseOptions, get_path(base, resource, includeResyncInterval(baseOptions)));
-    return includeResyncInterval(options);
-}
-
-function includeResyncInterval(options) {
-    return myutils.merge({requestTimeout: options.requestTimeout || process.env.RESYNC_INTERVAL}, options);
+    var timeout = baseOptions.requestTimeout || process.env.RESYNC_INTERVAL;
+    var options = get_options(baseOptions, get_path(base, resource, baseOptions, timeout));
+    return myutils.merge({requestTimeout: timeout}, options);
 }
 
 function apply_timeout(opts, request) {
