@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React, { useState } from "react";
 
 import {
   DataToolbar,
@@ -15,21 +15,19 @@ import { useParams } from "react-router";
 import { useApolloClient } from "@apollo/react-hooks";
 import { RETURN_ADDRESS_SPACE_DETAIL } from "graphql-module/queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
-import {
-  AddressListFilter,
-  AddressListKebab
-} from "modules/address/containers/AddressListFilter";
+import { AddressListFilter } from "modules/address/containers/AddressFilter";
 import useWindowDimensions from "components/common/WindowDimension";
 import { SortForMobileView } from "components/common/SortForMobileView";
 import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy } from "constants/constants";
+import { AddressListKebab } from "modules/address/components/AddressListKebab";
 import { Loading } from "use-patternfly";
 
 export interface AddressListFilterProps {
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;
-  filterNames: any[];
-  setFilterNames: (value: Array<any>) => void;
+  filterNames: Array<{ value: string; isExact: boolean }>;
+  setFilterNames: (value: Array<{ value: string; isExact: boolean }>) => void;
   typeValue: string | null;
   setTypeValue: (value: string | null) => void;
   statusValue: string | null;
@@ -67,9 +65,7 @@ export const AddressListToolbar: React.FunctionComponent<AddressListFilterProps>
   isPurgeAllDisabled
 }) => {
   const { name, namespace, type } = useParams();
-  const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(
-    null
-  );
+  const [addressSpacePlan, setAddressSpacePlan] = useState<string | null>(null);
   const client = useApolloClient();
   const { width } = useWindowDimensions();
 
