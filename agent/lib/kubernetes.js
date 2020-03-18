@@ -241,17 +241,17 @@ Watcher.prototype.watch = function () {
         log.info('GET %s => %s ', opts.path, response.statusCode);
         response.setEncoding('utf8');
         response.on('data', watch_handler(self));
-        response.on('end', function () {
-            if (!self.closed) {
-                log.debug('response %s ended; reconnecting...', opts.path);
-                self.list();
-            } else {
-                self.emit('closed');
-            }
-        });
     });
     request.on('error', function(e) {
         log.error('error on watch %s: %s', opts.path, e);
+    });
+    request.on('close', function () {
+        if (!self.closed) {
+            log.debug('response %s ended; reconnecting...', opts.path);
+            self.list();
+        } else {
+            self.emit('closed');
+        }
     });
     apply_timeout(opts, request);
 };
