@@ -215,7 +215,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.deleteAddressSpace(addressSpace);
     }
 
-    protected void doTestCreateAddrSpaceNonClusterAdmin() throws Exception {
+    protected void doTestCreateAddrSpaceNonClusterAdminMinimal() throws Exception {
         int addressCount = 4;
         String namespace = "test-namespace";
         UserCredentials user = Credentials.userCredentials();
@@ -230,22 +230,6 @@ public abstract class ConsoleTest extends TestBase {
                 .withVerbs("get")
                 .withResourceNames(namespace)
                 .endRule()
-                .done();
-
-        kubernetes.getClient().rbac().clusterRoleBindings().createOrReplaceWithNew()
-                .editOrNewMetadata()
-                .withName(namespace)
-                .endMetadata()
-                .addNewSubject()
-                .withApiGroup("rbac.authorization.k8s.io")
-                .withKind("User")
-                .withName("pepa")
-                .endSubject()
-                .editOrNewRoleRef()
-                .withApiGroup("rbac.authorization.k8s.io")
-                .withKind("ClusterRole")
-                .withName(namespace)
-                .endRoleRef()
                 .done();
 
         kubernetes.getClient().rbac().clusterRoleBindings().createOrReplaceWithNew()
@@ -348,6 +332,81 @@ public abstract class ConsoleTest extends TestBase {
                 kubernetes.deleteNamespace(namespace);
                 kubernetes.getClient().rbac().clusterRoleBindings().withName(namespace).delete();
                 kubernetes.getClient().rbac().clusterRoles().withName(namespace).delete();
+            }
+        }
+    }
+
+    protected void doTestCreateAddrSpaceNonClusterAdmin() throws Exception {
+        int addressCount = 4;
+        String namespace = "test-namespace";
+        UserCredentials user = Credentials.userCredentials();
+        UserCredentials messagingUser = new UserCredentials("pepa", "zdepa");
+        KubeCMDClient.runOnCluster("create", "rolebinding", "clients-admin", "--clusterrole", "admin", "--user", user.getUsername(), "--namespace", SystemtestsKubernetesApps.MESSAGING_PROJECT);
+        boolean success = false;
+        AddressSpace addressSpace = null;
+        try {
+            KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
+            KubeCMDClient.createNamespace(namespace);
+
+            addressSpace = new AddressSpaceBuilder()
+                    .withNewMetadata()
+                    .withName("test-addr-space-api")
+                    .withNamespace(namespace)
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType(AddressSpaceType.STANDARD.toString())
+                    .withPlan(AddressSpacePlans.STANDARD_MEDIUM)
+                    .withNewAuthenticationService()
+                    .withName("standard-authservice")
+                    .endAuthenticationService()
+                    .endSpec()
+                    .build();
+
+            consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), user);
+            consolePage.openConsolePage();
+            consolePage.createAddressSpace(addressSpace);
+            waitUntilAddressSpaceActive(addressSpace);
+
+            resourcesManager.createOrUpdateUser(addressSpace, messagingUser);
+
+            consolePage.openAddressList(addressSpace);
+
+            List<Address> addresses = generateQueueTopicList(addressSpace, "test", IntStream.range(0, addressCount));
+            consolePage.createAddresses(addresses.toArray(new Address[0]));
+            AddressUtils.waitForDestinationsReady(addresses.toArray(new Address[0]));
+
+            clientsList = attachClients(addressSpace, addresses, messagingUser);
+
+            consolePage.switchToConnectionTab();
+            TestUtils.waitUntilConditionOrFail(() -> consolePage.getConnectionItems().stream()
+                            .allMatch(c -> c.getReceivers() > 0),
+                    Duration.ofSeconds(60),
+                    Duration.ofSeconds(1),
+                    () -> "Failed to wait for connections count");
+
+            consolePage.switchToAddressTab();
+            consolePage.openClientsList(addresses.get(1));
+
+            TestUtils.waitUntilConditionOrFail(() -> consolePage.getClientItems().stream()
+                            .noneMatch(c -> Strings.isNullOrEmpty(c.getContainerId())),
+                    Duration.ofSeconds(60),
+                    Duration.ofSeconds(1),
+                    () -> "Failed to wait for clients count");
+
+            consolePage.openConsolePage();
+            success = true;
+        } finally {
+            try {
+                if (!success) {
+                    GlobalLogCollector testDirLogCollector = new GlobalLogCollector(kubernetes, TestUtils.getFailedTestLogsPath(TestInfo.getInstance().getActualTest()), environment.namespace(), false);
+                    testDirLogCollector.collectLogsOfPodsByLabels(environment.namespace(), null,
+                            Collections.singletonMap(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)));
+                }
+                consolePage.deleteAddressSpace(addressSpace);
+            } finally {
+                KubeCMDClient.loginUser(environment.getApiToken());
+                KubeCMDClient.switchProject(environment.namespace());
+                kubernetes.deleteNamespace(namespace);
             }
         }
     }
