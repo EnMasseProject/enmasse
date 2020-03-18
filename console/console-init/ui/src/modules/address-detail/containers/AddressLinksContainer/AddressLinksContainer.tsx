@@ -22,8 +22,8 @@ interface IAddressLinksListProps {
   perPage: number;
   setAddressLinksTotal: (total: number) => void;
   setSortValue: (value?: ISortBy) => void;
-  filterNames: string[];
-  filterContainers: string[];
+  filterNames: Array<{ value: string; isExact: boolean }>;
+  filterContainers: Array<{ value: string; isExact: boolean }>;
   name?: string;
   namespace?: string;
   addressName?: string;

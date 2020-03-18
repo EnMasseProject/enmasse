@@ -6,7 +6,7 @@
 import React from "react";
 import { MemoryRouter } from "react-router";
 import { action } from "@storybook/addon-actions";
-import { AddressListFilter } from "modules/address/containers/AddressListFilter";
+import { AddressListFilter } from "modules/address/containers/AddressFilter";
 import { text, number } from "@storybook/addon-knobs";
 
 export default {
@@ -18,7 +18,7 @@ export const addressListFilter = () => (
     <AddressListFilter
       filterValue={text("FilterValue", "Name")}
       setFilterValue={action("set filter value")}
-      filterNames={[text("Filter Names", "")]}
+      filterNames={[{ value: text("Filter Names", ""), isExact: true }]}
       setFilterNames={action("set Filter names")}
       typeValue={text("typeValue", "")}
       setTypeValue={action("setTypeValue")}
