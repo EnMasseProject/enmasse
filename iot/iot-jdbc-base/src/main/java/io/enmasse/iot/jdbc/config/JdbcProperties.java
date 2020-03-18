@@ -8,11 +8,15 @@ package io.enmasse.iot.jdbc.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLClient;
 
+@JsonInclude(value = Include.NON_NULL)
 public class JdbcProperties {
 
     private static final Logger log = LoggerFactory.getLogger(JdbcProperties.class);

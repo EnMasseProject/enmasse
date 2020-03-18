@@ -21,12 +21,18 @@ func TestDeviceRegistryEval(t *testing.T) {
 		Spec: iotv1alpha1.IoTConfigSpec{
 			ServicesConfig: iotv1alpha1.ServicesConfig{
 				DeviceRegistry: iotv1alpha1.DeviceRegistryServiceConfig{
-					File: &iotv1alpha1.FileBasedDeviceRegistry{},
+					JDBC: &iotv1alpha1.JdbcDeviceRegistry{
+						Server: iotv1alpha1.JdbcRegistryServer{
+							External: &iotv1alpha1.ExternalJdbcRegistryServer{
+								Management: &iotv1alpha1.ExternalJdbcRegistryService{},
+							},
+						},
+					},
 				},
 			},
 		},
-	}).EvalDeviceRegistryImplementation() != iotv1alpha1.DeviceRegistryFileBased {
-		t.Errorf("Device registry should be evaluated as 'file based' but wasn't")
+	}).EvalDeviceRegistryImplementation() != iotv1alpha1.DeviceRegistryJdbc {
+		t.Errorf("Device registry should be evaluated as 'jdbc' but wasn't")
 	}
 
 	if (iotv1alpha1.IoTConfig{
@@ -34,9 +40,11 @@ func TestDeviceRegistryEval(t *testing.T) {
 			ServicesConfig: iotv1alpha1.ServicesConfig{
 				DeviceRegistry: iotv1alpha1.DeviceRegistryServiceConfig{
 					Infinispan: &iotv1alpha1.InfinispanDeviceRegistry{
-						Server: iotv1alpha1.InfinispanServer{
-							External: &iotv1alpha1.ExternalInfinispanServer{
-								Host: "127.0.0.1",
+						Server: iotv1alpha1.InfinispanRegistryServer{
+							External: &iotv1alpha1.ExternalInfinispanRegistryServer{
+								ExternalInfinispanServer: iotv1alpha1.ExternalInfinispanServer{
+									Host: "127.0.0.1",
+								},
 							},
 						},
 					},

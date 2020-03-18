@@ -34,9 +34,7 @@ class H2DeviceRegistryTest extends DeviceRegistryTest {
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
         return new IoTConfigBuilder()
                 .withNewSpec()
-                .withNewServices()
-                .withDeviceRegistry(newH2Based())
-                .endServices()
+                .withServices(newH2Based())
                 .withNewAdapters()
                 .withNewMqtt()
                 .endMqtt()

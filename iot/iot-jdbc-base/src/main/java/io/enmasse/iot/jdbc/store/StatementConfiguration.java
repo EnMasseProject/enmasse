@@ -38,7 +38,7 @@ public class StatementConfiguration {
     public StatementConfiguration overrideWith(final Path path, boolean ignoreMissing) throws IOException {
 
         if (ignoreMissing && !Files.exists(path)) {
-            log.info("Skipping statement configuration file: {}", path);
+            log.info("Ignoring missing statement configuration file: {}", path);
             return this;
         }
 

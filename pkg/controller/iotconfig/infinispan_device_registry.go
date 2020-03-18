@@ -7,14 +7,10 @@ package iotconfig
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
-	routev1 "github.com/openshift/api/route/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -31,33 +27,11 @@ func (r *ReconcileIoTConfig) processInfinispanDeviceRegistry(ctx context.Context
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameDeviceRegistry, config, false, r.reconcileInfinispanDeviceRegistryDeployment)
-	})
-	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameDeviceRegistry, config, false, r.reconcileInfinispanDeviceRegistryService)
-	})
-	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameDeviceRegistry+"-metrics", config, false, r.reconcileMetricsService(nameDeviceRegistry))
-	})
-	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, r.reconcileInfinispanDeviceRegistryConfigMap)
 	})
-	if !util.IsOpenshift() {
-		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameDeviceRegistry+"-external", config, false, r.reconcileInfinispanDeviceRegistryServiceExternal)
-		})
-	}
-
-	if util.IsOpenshift() {
-		routesEnabled := config.WantDefaultRoutes(nil)
-
-		rc.ProcessSimple(func() error {
-			endpoint := config.Status.Services["deviceRegistry"]
-			err := r.processRoute(ctx, routeDeviceRegistry, config, !routesEnabled, &endpoint.Endpoint, r.reconcileInfinispanDeviceRegistryRoute)
-			config.Status.Services["deviceRegistry"] = endpoint
-			return err
-		})
-	}
+	rc.ProcessSimple(func() error {
+		return r.processDeployment(ctx, nameDeviceRegistry, config, false, r.reconcileInfinispanDeviceRegistryDeployment)
+	})
 
 	return rc.Result()
 }
@@ -70,8 +44,11 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-device-registry"
 	deployment.Spec.Template.Annotations[RegistryTypeAnnotation] = "infinispan"
 
+	deployment.Spec.Template.Labels[RegistryAdapterFeatureLabel] = "true"
+	deployment.Spec.Template.Labels[RegistryManagementFeatureLabel] = "true"
+
 	service := config.Spec.ServicesConfig.DeviceRegistry
-	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, nil)
+	applyDefaultDeploymentConfig(deployment, service.Infinispan.ServiceConfig, nil)
 
 	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
@@ -114,16 +91,17 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 		container.Env = []corev1.EnvVar{
 			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/config/"},
-			{Name: "SPRING_PROFILES_ACTIVE", Value: ""},
+			{Name: "SPRING_PROFILES_ACTIVE", Value: "device-registry"},
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
-			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
-			{Name: "ENMASSE_IOT_REGISTRY_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
-			{Name: "ENMASSE_IOT_REGISTRY_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.Infinispan.Management.AuthTokenCacheExpiration},
+			{Name: "ENMASSE_IOT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
+
+			{Name: "ENMASSE_IOT_REST_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
+			{Name: "ENMASSE_IOT_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.Infinispan.Management.AuthTokenCacheExpiration},
 		}
 
 		SetupTracing(config, deployment, container)
@@ -154,7 +132,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 				return err
 			}
 		} else {
-			return fmt.Errorf("infinispan backend server configuration missing")
+			return util.NewConfigurationError("infinispan backend server configuration missing")
 		}
 
 		// return
@@ -190,7 +168,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	return nil
 }
 
-func appendInfinispanExternalServer(container *v1.Container, external *iotv1alpha1.ExternalInfinispanServer) error {
+func appendInfinispanExternalServer(container *v1.Container, external *iotv1alpha1.ExternalInfinispanRegistryServer) error {
 
 	// basic connection
 
@@ -201,65 +179,27 @@ func appendInfinispanExternalServer(container *v1.Container, external *iotv1alph
 
 	// SASL
 
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASL_SERVER_NAME", external.SaslServerName)
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASL_REALM", external.SaslRealm)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASLSERVERNAME", external.SaslServerName)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASLREALM", external.SaslRealm)
 
 	// cache names
 
 	adapterCredentials := ""
 	devices := ""
-	deviceStates := ""
 	if external.CacheNames != nil {
 		adapterCredentials = external.CacheNames.AdapterCredentials
 		devices = external.CacheNames.Devices
-		deviceStates = external.CacheNames.DeviceStates
 	}
 
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_ADAPTER_CREDENTIALS_CACHE_NAME", adapterCredentials)
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_DEVICES_CACHE_NAME", devices)
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_DEVICE_STATES_CACHE_NAME", deviceStates)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_CACHENAMES_ADAPTERCREDENTIALS", adapterCredentials)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_CACHENAMES_DEVICES", devices)
 
 	// done
 
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
-
-	install.ApplyServiceDefaults(service, "iot", service.Name)
-
-	if len(service.Spec.Ports) != 2 {
-		service.Spec.Ports = make([]corev1.ServicePort, 2)
-	}
-
-	// AMQPS port
-
-	service.Spec.Ports[0].Name = "amqps"
-	service.Spec.Ports[0].Port = 5671
-	service.Spec.Ports[0].TargetPort = intstr.FromInt(5671)
-	service.Spec.Ports[0].Protocol = corev1.ProtocolTCP
-
-	// HTTP port
-
-	service.Spec.Ports[1].Name = "https"
-	service.Spec.Ports[1].Port = 8443
-	service.Spec.Ports[1].TargetPort = intstr.FromInt(8443)
-	service.Spec.Ports[1].Protocol = corev1.ProtocolTCP
-
-	// annotations
-
-	if service.Annotations == nil {
-		service.Annotations = make(map[string]string)
-	}
-
-	if err := ApplyInterServiceForService(config, service, nameDeviceRegistry); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryConfigMap(_ *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -296,89 +236,20 @@ enmasse:
       startupTimeout: 90
 
     registry:
+      ttl: 1m
+      maxBcryptIterations: 10
 
-      device:
-        credentials:
-          ttl: 1m
+    amqp:
+      bindAddress: 0.0.0.0
+      keyPath: /etc/tls/tls.key
+      certPath: /etc/tls/tls.crt
+      keyFormat: PEM
 
-      amqp:
-        bindAddress: 0.0.0.0
-        keyPath: /etc/tls/tls.key
-        certPath: /etc/tls/tls.crt
-        keyFormat: PEM
-      rest:
-        bindAddress: 0.0.0.0
-        keyPath: /etc/tls/tls.key
-        certPath: /etc/tls/tls.crt
-        keyFormat: PEM
-
-    credentials:
-      svc:
-        maxBcryptIterations: 10
+    rest:
+      bindAddress: 0.0.0.0
+      keyPath: /etc/tls/tls.key
+      certPath: /etc/tls/tls.crt
+      keyFormat: PEM
 `
-	return nil
-}
-
-func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error {
-
-	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", route.Name)
-
-	// Port
-
-	route.Spec.Port = &routev1.RoutePort{
-		TargetPort: intstr.FromString("https"),
-	}
-
-	// Path
-
-	route.Spec.Path = ""
-
-	// TLS
-
-	if route.Spec.TLS == nil {
-		route.Spec.TLS = &routev1.TLSConfig{}
-	}
-
-	route.Spec.TLS.Termination = routev1.TLSTerminationReencrypt
-	route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
-
-	// Service
-
-	route.Spec.To.Kind = "Service"
-	route.Spec.To.Name = nameDeviceRegistry
-
-	// Update endpoint
-
-	updateEndpointStatus("https", false, route, endpointStatus)
-
-	// return
-
-	return nil
-}
-
-func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryServiceExternal(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
-
-	install.ApplyServiceDefaults(service, "iot", service.Name)
-
-	if len(service.Spec.Ports) != 1 {
-		service.Spec.Ports = make([]corev1.ServicePort, 1)
-	}
-
-	service.Spec.Ports[0].Name = "https"
-	service.Spec.Ports[0].Port = 31443
-	service.Spec.Ports[0].TargetPort = intstr.FromInt(8443)
-	service.Spec.Ports[0].Protocol = corev1.ProtocolTCP
-
-	if service.Annotations == nil {
-		service.Annotations = make(map[string]string)
-	}
-
-	if err := ApplyInterServiceForService(config, service, nameDeviceRegistry); err != nil {
-		return err
-	}
-
-	service.Spec.Type = "LoadBalancer"
-	service.Spec.Selector["name"] = nameDeviceRegistry
-
 	return nil
 }

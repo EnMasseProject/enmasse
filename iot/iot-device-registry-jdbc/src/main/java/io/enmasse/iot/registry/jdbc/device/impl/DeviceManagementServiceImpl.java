@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.jdbc.device.impl;
 
+import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_REGISTRY_MANAGEMENT;
 import static io.enmasse.iot.utils.MoreThrowables.hasCauseOf;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static java.net.HttpURLConnection.HTTP_CREATED;
@@ -25,10 +26,11 @@ import org.eclipse.hono.service.management.Result;
 import org.eclipse.hono.service.management.device.Device;
 import org.eclipse.hono.util.CacheDirective;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.jdbc.store.DuplicateKeyException;
-import io.enmasse.iot.jdbc.store.device.AbstractDeviceStore;
+import io.enmasse.iot.jdbc.store.device.AbstractDeviceManagementStore;
 import io.enmasse.iot.registry.device.AbstractDeviceManagementService;
 import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.registry.jdbc.config.DeviceServiceProperties;
@@ -36,13 +38,14 @@ import io.opentracing.Span;
 import io.vertx.core.Future;
 
 @Component
+@Profile(PROFILE_REGISTRY_MANAGEMENT)
 public class DeviceManagementServiceImpl extends AbstractDeviceManagementService {
 
-    private final AbstractDeviceStore store;
+    private final AbstractDeviceManagementStore store;
     private final Optional<CacheDirective> ttl;
 
     @Autowired
-    public DeviceManagementServiceImpl(final AbstractDeviceStore store, final DeviceServiceProperties properties) {
+    public DeviceManagementServiceImpl(final AbstractDeviceManagementStore store, final DeviceServiceProperties properties) {
         this.store = store;
         this.ttl = of(maxAgeDirective(properties.getRegistrationTtl().toSeconds()));
     }

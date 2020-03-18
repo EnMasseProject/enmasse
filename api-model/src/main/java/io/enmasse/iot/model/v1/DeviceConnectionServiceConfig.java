@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020, EnMasse authors.
+ * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -19,17 +19,26 @@ import io.sundr.builder.annotations.Inline;
                 type = Doneable.class,
                 prefix = "Doneable",
                 value = "done"))
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class ExternalJdbcService extends JdbcConnectionInformation {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class DeviceConnectionServiceConfig {
 
-    private String tableName;
+    private InfinispanDeviceConnection infinispan;
+    private JdbcDeviceConnection jdbc;
 
-    public String getTableName() {
-        return tableName;
+    public InfinispanDeviceConnection getInfinispan() {
+        return infinispan;
     }
 
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
+    public void setInfinispan(InfinispanDeviceConnection infinispan) {
+        this.infinispan = infinispan;
+    }
+
+    public JdbcDeviceConnection getJdbc() {
+        return jdbc;
+    }
+
+    public void setJdbc(JdbcDeviceConnection jdbc) {
+        this.jdbc = jdbc;
     }
 
 }

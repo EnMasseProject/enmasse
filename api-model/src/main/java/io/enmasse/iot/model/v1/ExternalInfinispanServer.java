@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -33,8 +33,6 @@ public class ExternalInfinispanServer {
 
     private String saslServerName;
     private String saslRealm;
-
-    private ExternalCacheNames cacheNames;
 
     public String getHost() {
         return host;
@@ -82,14 +80,6 @@ public class ExternalInfinispanServer {
 
     public void setSaslRealm(String saslRealm) {
         this.saslRealm = saslRealm;
-    }
-
-    public ExternalCacheNames getCacheNames() {
-        return cacheNames;
-    }
-
-    public void setCacheNames(ExternalCacheNames cacheNames) {
-        this.cacheNames = cacheNames;
     }
 
 }

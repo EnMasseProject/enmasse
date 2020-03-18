@@ -26,7 +26,7 @@ public class InfinispanDeviceRegistry {
 
     private ContainerConfig container;
     private JavaContainerOptions java;
-    private InfinispanServer server;
+    private InfinispanDeviceRegistryServer server;
 
     public ContainerConfig getContainer() {
         return container;
@@ -35,10 +35,10 @@ public class InfinispanDeviceRegistry {
         this.container = container;
     }
 
-    public InfinispanServer getServer() {
+    public InfinispanDeviceRegistryServer getServer() {
         return server;
     }
-    public void setServer(InfinispanServer server) {
+    public void setServer(InfinispanDeviceRegistryServer server) {
         this.server = server;
     }
 

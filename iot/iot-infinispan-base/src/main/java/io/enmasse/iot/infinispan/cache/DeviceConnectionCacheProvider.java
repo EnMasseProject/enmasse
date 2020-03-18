@@ -15,12 +15,14 @@ import org.infinispan.configuration.cache.Index;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.config.InfinispanProperties;
 import io.enmasse.iot.infinispan.devcon.DeviceConnectionKey;
 
 @Component
+@Lazy
 public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
 
     private static final String GENERATED_PROTOBUF_FILE_NAME = "deviceConnection.proto";
@@ -73,14 +75,14 @@ public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
     }
 
     public RemoteCache<DeviceConnectionKey, String> getOrCreateDeviceStateCache() {
-        return getOrCreateCache(properties.getDeviceStatesCacheName(), this::buildConfiguration);
+        return getOrCreateCache(properties.getCacheNames().getDeviceConnections(), this::buildConfiguration);
     }
 
     public Optional<RemoteCache<DeviceConnectionKey, String>> getDeviceStateCache() {
-        return getCache(properties.getDeviceStatesCacheName());
+        return getCache(properties.getCacheNames().getDeviceConnections());
     }
 
     public RemoteCache<DeviceConnectionKey, String> getDeviceStateTestCache() {
-        return getOrCreateTestCache(properties.getDeviceStatesCacheName(), buildConfiguration());
+        return getOrCreateTestCache(properties.getCacheNames().getDeviceConnections(), buildConfiguration());
     }
 }

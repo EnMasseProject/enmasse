@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -19,6 +19,9 @@ import org.infinispan.query.dsl.QueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 
 import io.enmasse.iot.infinispan.cache.DeviceConnectionCacheProvider;
@@ -29,19 +32,19 @@ import io.enmasse.iot.infinispan.device.DeviceKey;
 import io.enmasse.iot.registry.tenant.TenantHandle;
 import io.enmasse.iot.tools.cleanup.config.CleanerConfig;
 
-public class InfinispanTenantCleaner implements AutoCloseable {
+public class InfinispanDeviceRegistryCleaner implements AutoCloseable {
 
     private interface Closer {
         void close() throws Exception;
     }
 
-    private static final Logger log = LoggerFactory.getLogger(InfinispanTenantCleaner.class);
+    private static final Logger log = LoggerFactory.getLogger(InfinispanDeviceRegistryCleaner.class);
 
     private CleanerConfig config;
 
-    public InfinispanTenantCleaner(final CleanerConfig config) {
-        this.config = config;
-        this.config.getInfinispan().setOverrideSchema(false);
+    public InfinispanDeviceRegistryCleaner() throws JsonMappingException, JsonProcessingException {
+        final ObjectMapper mapper = new ObjectMapper();
+        this.config = mapper.readValue(System.getenv("infinispan.registry"), CleanerConfig.class);
     }
 
     @Override
@@ -142,7 +145,7 @@ public class InfinispanTenantCleaner implements AutoCloseable {
                 .create(
                         String.format("from %s d where d.tenantId=:tenantId", DeviceInformation.class.getName()),
                         config.isIndexBroadcastQuery() ? IndexedQueryMode.BROADCAST : IndexedQueryMode.FETCH)
-                .maxResults(config.getDeletionChunkSize())
+                .maxResults(Math.max(config.getInfinispan().getDeletionChunkSize(), CleanerConfig.DEFAULT_DELETION_CHUNK_SIZE))
                 .setParameter("tenantId", tenantId);
 
     }

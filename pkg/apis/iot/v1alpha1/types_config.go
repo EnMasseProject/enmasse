@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019, EnMasse authors.
+ * Copyright 2018-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -55,6 +55,10 @@ type DaemonSetTracingStrategy struct {
 
 //endregion
 
+type ExtensionImage struct {
+	Container corev1.Container `json:"container"`
+}
+
 type JavaContainerDefaults struct {
 	RequireNativeTls *bool `json:"requireNativeTls,omitempty"`
 }
@@ -78,10 +82,11 @@ type SecretCertificatesStrategy struct {
 }
 
 type ServicesConfig struct {
-	DeviceRegistry DeviceRegistryServiceConfig `json:"deviceRegistry,omitempty"`
-	Authentication AuthenticationServiceConfig `json:"authentication,omitempty"`
-	Tenant         TenantServiceConfig         `json:"tenant,omitempty"`
-	Collector      CollectorConfig             `json:"collector,omitempty"`
+	Authentication   AuthenticationServiceConfig   `json:"authentication,omitempty"`
+	DeviceConnection DeviceConnectionServiceConfig `json:"deviceConnection,omitempty"`
+	DeviceRegistry   DeviceRegistryServiceConfig   `json:"deviceRegistry,omitempty"`
+	Tenant           TenantServiceConfig           `json:"tenant,omitempty"`
+	Collector        CollectorConfig               `json:"collector,omitempty"`
 }
 
 type AdaptersConfig struct {
@@ -128,64 +133,63 @@ type CommonAdapterContainers struct {
 	ProxyConfigurator *ContainerConfig `json:"proxyConfigurator,omitempty"`
 }
 
+//region Collector
+
 // Deprecated: no longer used
 type CollectorConfig struct {
 	Container *ContainerConfig `json:"container,omitempty"`
 }
 
-type DeviceRegistryServiceConfig struct {
-	ServiceConfig `json:",inline"`
+//endregion
 
-	File       *FileBasedDeviceRegistry  `json:"file,omitempty"`
-	Infinispan *InfinispanDeviceRegistry `json:"infinispan,omitempty"`
-	JDBC       *JdbcDeviceRegistry       `json:"jdbc,omitempty"`
+//region DeviceConnection
+
+type DeviceConnectionServiceConfig struct {
+	Infinispan *InfinispanDeviceConnection `json:"infinispan,omitempty"`
+	JDBC       *JdbcDeviceConnection       `json:"jdbc,omitempty"`
 }
 
-type JdbcServer struct {
-	External *ExternalJdbcServer `json:"external,omitempty"`
+type InfinispanDeviceConnection struct {
+	ServiceConfig        `json:",inline"`
+	CommonDeviceRegistry `json:",inline"`
+	CommonServiceConfig  `json:",inline"`
+
+	Server InfinispanDeviceConnectionServer `json:"server"`
 }
 
-type ExtensionImage struct {
-	Container corev1.Container `json:"container"`
+type InfinispanDeviceConnectionServer struct {
+	External *ExternalInfinispanDeviceConnectionServer `json:"external,omitempty"`
 }
 
-type ExternalJdbcServer struct {
+type ExternalInfinispanDeviceConnectionServer struct {
+	ExternalInfinispanServer `json:",inline"`
+
+	CacheNames *ExternalDeviceConnectionCacheNames `json:"cacheNames,omitempty"`
+}
+
+type ExternalDeviceConnectionCacheNames struct {
+	DeviceConnections string `json:"deviceConnections,omitempty"`
+}
+
+type JdbcDeviceConnection struct {
+	ServiceConfig        `json:",inline"`
+	CommonDeviceRegistry `json:",inline"`
+	CommonServiceConfig  `json:",inline"`
+
+	Server JdbcDeviceConnectionServer `json:"server"`
+}
+
+type JdbcDeviceConnectionServer struct {
+	External *ExternalJdbcDeviceConnectionServer `json:"external,omitempty"`
+}
+
+type ExternalJdbcDeviceConnectionServer struct {
 	JdbcConnectionInformation `json:",inline"`
-
-	Devices           ExternalJdbcDevices           `json:"devices,omitempty"`
-	DeviceInformation ExternalJdbcDeviceInformation `json:"deviceInformation,omitempty"`
 
 	Extensions []ExtensionImage `json:"extensions,omitempty"`
 }
 
-type JdbcConnectionInformation struct {
-	URL         string `json:"url"`
-	DriverClass string `json:"driverClass"`
-	Username    string `json:"username,omitempty"`
-	Password    string `json:"password,omitempty"`
-
-	MaximumPoolSize uint32 `json:"maximumPoolSize,omitempty"`
-}
-
-type ExternalJdbcService struct {
-	JdbcConnectionInformation `json:",inline"`
-
-	TableName string `json:"tableName,omitempty"`
-}
-
-type ExternalJdbcDevices struct {
-	ExternalJdbcService `json:",inline"`
-
-	Mode string `json:"mode,omitempty"`
-}
-
-type ExternalJdbcDeviceInformation struct {
-	ExternalJdbcService `json:",inline"`
-}
-
-type InfinispanServer struct {
-	External *ExternalInfinispanServer `json:"external,omitempty"`
-}
+//endregion
 
 type ExternalInfinispanServer struct {
 	Host string `json:"host"`
@@ -196,38 +200,18 @@ type ExternalInfinispanServer struct {
 	SaslServerName string `json:"saslServerName,omitempty"`
 	SaslRealm      string `json:"saslRealm,omitempty"`
 
-	CacheNames        *ExternalCacheNames `json:"cacheNames,omitempty"`
-	DeletionChunkSize uint32              `json:"deletionChunkSize"`
+	DeletionChunkSize uint32 `json:"deletionChunkSize"`
 }
 
-type InfinispanRegistryManagement struct {
-	AuthTokenCacheExpiration string `json:"authTokenCacheExpiration,omitempty"`
-}
+type JdbcConnectionInformation struct {
+	URL         string `json:"url"`
+	DriverClass string `json:"driverClass,omitempty"`
+	Username    string `json:"username,omitempty"`
+	Password    string `json:"password,omitempty"`
 
-type JdbcRegistryManagement struct {
-	AuthTokenCacheExpiration string `json:"authTokenCacheExpiration,omitempty"`
-}
+	MaximumPoolSize uint32 `json:"maximumPoolSize,omitempty"`
 
-type ExternalCacheNames struct {
-	Devices            string `json:"devices,omitempty"`
-	DeviceStates       string `json:"deviceStates,omitempty"`
-	AdapterCredentials string `json:"adapterCredentials,omitempty"`
-}
-
-// Common options for a single container Java service
-type CommonServiceConfig struct {
-	Container *ContainerConfig      `json:"container,omitempty"`
-	Java      *JavaContainerOptions `json:"java,omitempty"`
-}
-
-type TenantServiceConfig struct {
-	ServiceConfig       `json:",inline"`
-	CommonServiceConfig `json:",inline"`
-}
-
-type AuthenticationServiceConfig struct {
-	ServiceConfig       `json:",inline"`
-	CommonServiceConfig `json:",inline"`
+	TableName string `json:"tableName,omitempty"`
 }
 
 type CommonDeviceRegistry struct {
@@ -235,29 +219,99 @@ type CommonDeviceRegistry struct {
 	Disabled bool `json:"disabled,omitempty"`
 }
 
-type FileBasedDeviceRegistry struct {
-	CommonDeviceRegistry `json:",inline"`
+//region DeviceRegistry
 
-	NumberOfDevicesPerTenant *uint32 `json:"numberOfDevicesPerTenant,omitempty"`
-	CommonServiceConfig      `json:",inline"`
-	SecurityContext          *corev1.PodSecurityContext `json:"securityContext,omitempty"`
+type DeviceRegistryServiceConfig struct {
+	Infinispan *InfinispanDeviceRegistry `json:"infinispan,omitempty"`
+	JDBC       *JdbcDeviceRegistry       `json:"jdbc,omitempty"`
+}
+
+type InfinispanRegistryServer struct {
+	External *ExternalInfinispanRegistryServer `json:"external,omitempty"`
+}
+
+type ExternalInfinispanRegistryServer struct {
+	ExternalInfinispanServer `json:",inline"`
+
+	CacheNames *ExternalRegistryCacheNames `json:"cacheNames,omitempty"`
+}
+
+type InfinispanRegistryManagement struct {
+	AuthTokenCacheExpiration string `json:"authTokenCacheExpiration,omitempty"`
+}
+
+type ExternalRegistryCacheNames struct {
+	Devices            string `json:"devices,omitempty"`
+	AdapterCredentials string `json:"adapterCredentials,omitempty"`
 }
 
 type InfinispanDeviceRegistry struct {
+	ServiceConfig        `json:",inline"`
 	CommonDeviceRegistry `json:",inline"`
 	CommonServiceConfig  `json:",inline"`
 
-	Server     InfinispanServer             `json:"server"`
+	Server     InfinispanRegistryServer     `json:"server"`
 	Management InfinispanRegistryManagement `json:"management"`
 }
 
 type JdbcDeviceRegistry struct {
 	CommonDeviceRegistry `json:",inline"`
-	CommonServiceConfig  `json:",inline"`
 
-	Server     JdbcServer             `json:"server"`
+	Server     JdbcRegistryServer     `json:"server"`
 	Management JdbcRegistryManagement `json:"management"`
 }
+
+type JdbcRegistryServer struct {
+	External *ExternalJdbcRegistryServer `json:"external,omitempty"`
+}
+
+type ExternalJdbcRegistryServer struct {
+	Mode string `json:"mode,omitempty"`
+
+	Management *ExternalJdbcRegistryService `json:"management,omitempty"`
+	Adapter    *ExternalJdbcRegistryService `json:"adapter,omitempty"`
+
+	Extensions []ExtensionImage `json:"extensions,omitempty"`
+}
+
+type ExternalJdbcRegistryService struct {
+	CommonServiceConfig `json:",inline"`
+	ServiceConfig       `json:",inline"`
+
+	Connection JdbcConnectionInformation `json:"connection"`
+}
+
+type JdbcRegistryManagement struct {
+	AuthTokenCacheExpiration string `json:"authTokenCacheExpiration,omitempty"`
+}
+
+//endregion
+
+// Common options for a single container Java service
+type CommonServiceConfig struct {
+	Container *ContainerConfig      `json:"container,omitempty"`
+	Java      *JavaContainerOptions `json:"java,omitempty"`
+}
+
+//region TenantService
+
+type TenantServiceConfig struct {
+	ServiceConfig       `json:",inline"`
+	CommonServiceConfig `json:",inline"`
+}
+
+//endregion
+
+//region AuthenticationService
+
+type AuthenticationServiceConfig struct {
+	ServiceConfig       `json:",inline"`
+	CommonServiceConfig `json:",inline"`
+}
+
+//endregion
+
+//region Adapters
 
 // The adapter options should focus on functional configuration applicable to all adapters
 type AdapterOptions struct {
@@ -291,6 +345,8 @@ type LoraWanAdapterConfig struct {
 type MqttAdapterConfig struct {
 	CommonAdapterConfig `json:",inline"`
 }
+
+//endregion
 
 //region Status
 

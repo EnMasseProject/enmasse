@@ -24,11 +24,11 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(NON_NULL)
-public class FileBasedDeviceRegistry {
+public class InfinispanDeviceConnection {
 
     private ContainerConfig container;
     private JavaContainerOptions java;
-    private Integer numberOfDevicesPerTenant;
+    private InfinispanDeviceConnectionServer server;
 
     public ContainerConfig getContainer() {
         return container;
@@ -37,11 +37,11 @@ public class FileBasedDeviceRegistry {
         this.container = container;
     }
 
-    public Integer getNumberOfDevicesPerTenant() {
-        return numberOfDevicesPerTenant;
+    public InfinispanDeviceConnectionServer getServer() {
+        return server;
     }
-    public void setNumberOfDevicesPerTenant(Integer numberOfDevicesPerTenant) {
-        this.numberOfDevicesPerTenant = numberOfDevicesPerTenant;
+    public void setServer(InfinispanDeviceConnectionServer server) {
+        this.server = server;
     }
 
     public void setJava(JavaContainerOptions java) {

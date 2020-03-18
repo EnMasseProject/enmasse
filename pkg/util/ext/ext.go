@@ -6,11 +6,9 @@
 package ext
 
 import (
-	"fmt"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	corev1 "k8s.io/api/core/v1"
-	"strings"
 )
 
 // Do a standard mapping of the extension volume into the container
@@ -24,34 +22,32 @@ func AddExtensionVolume(pod *corev1.PodSpec) {
 }
 
 // Add all provided extensions to the deployment
-func AddExtensionContainers(extensions []iotv1alpha1.ExtensionImage, pod *corev1.PodSpec) error {
+func AddExtensionContainers(extensions []iotv1alpha1.ExtensionImage, pod *corev1.PodSpec, prefix string) error {
 
 	// add extension containers
 
-	expectedContainers := make([]string, 0)
+	expectedContainers := make([]string, 0, len(extensions))
 
-	// add if we have some
+	for _, ext := range extensions {
 
-	if extensions != nil {
-		for _, ext := range extensions {
-			if ext.Container.Name == "" {
-				continue
-			}
+		// no name, no container
 
-			if !strings.HasPrefix(ext.Container.Name, "ext-") {
-				return fmt.Errorf("extension container names must start with 'ext-'")
-			}
+		if ext.Container.Name == "" {
+			continue
+		}
 
-			expectedContainers = append(expectedContainers, ext.Container.Name)
+		containerName := prefix + ext.Container.Name
+		expectedContainers = append(expectedContainers, containerName)
 
-			if containers, err := install.ApplyContainerWithError(pod.InitContainers, ext.Container.Name, func(container *corev1.Container) error {
-				ext.Container.DeepCopyInto(container)
-				return nil
-			}); err != nil {
-				return err
-			} else {
-				pod.InitContainers = containers
-			}
+		if containers, err := install.ApplyContainerWithError(pod.InitContainers, containerName, func(container *corev1.Container) error {
+			ext.Container.DeepCopyInto(container)
+			// restore container name, overwritten by DeepCopyInto
+			container.Name = containerName
+			return nil
+		}); err != nil {
+			return err
+		} else {
+			pod.InitContainers = containers
 		}
 	}
 
@@ -59,6 +55,7 @@ func AddExtensionContainers(extensions []iotv1alpha1.ExtensionImage, pod *corev1
 
 	pod.InitContainers = install.DeleteOtherContainers(
 		pod.InitContainers,
+		prefix,
 		expectedContainers)
 
 	// done

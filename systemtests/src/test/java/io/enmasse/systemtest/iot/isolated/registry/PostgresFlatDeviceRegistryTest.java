@@ -20,9 +20,7 @@ class PostgresFlatDeviceRegistryTest extends DeviceRegistryTest {
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
         return new IoTConfigBuilder()
                 .withNewSpec()
-                .withNewServices()
-                .withDeviceRegistry(newPostgresFlatBased())
-                .endServices()
+                .withServices(newPostgresFlatBased())
                 .withNewAdapters()
                 .withNewMqtt()
                 .endMqtt()

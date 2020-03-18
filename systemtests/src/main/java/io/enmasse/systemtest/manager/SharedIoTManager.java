@@ -133,10 +133,11 @@ public class SharedIoTManager extends ResourceManager {
                 .withName("default")
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
+
                 .withNewSpec()
-                .withNewServices()
-                .withDeviceRegistry(DefaultDeviceRegistry.newDefaultInstance())
-                .endServices()
+
+                .withServices(DefaultDeviceRegistry.newDefaultInstance())
+
                 .withNewAdapters()
                 .withNewMqtt()
                 .withNewEndpoint()
@@ -147,7 +148,9 @@ public class SharedIoTManager extends ResourceManager {
                 .endEndpoint()
                 .endMqtt()
                 .endAdapters()
+
                 .endSpec()
+
                 .build();
         createIoTConfig(sharedIoTConfig);
     }

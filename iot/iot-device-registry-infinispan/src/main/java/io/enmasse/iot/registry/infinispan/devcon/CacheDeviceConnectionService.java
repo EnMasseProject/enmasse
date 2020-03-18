@@ -6,16 +6,20 @@
 package io.enmasse.iot.registry.infinispan.devcon;
 
 import static io.enmasse.iot.infinispan.devcon.DeviceConnectionKey.deviceConnectionKey;
+import static io.enmasse.iot.registry.infinispan.Profiles.PROFILE_DEVICE_CONNECTION;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.eclipse.hono.util.DeviceConnectionResult.from;
+
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
 import org.eclipse.hono.util.DeviceConnectionConstants;
 import org.eclipse.hono.util.DeviceConnectionResult;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceConnectionCacheProvider;
@@ -36,6 +40,7 @@ import io.vertx.core.json.JsonObject;
  *
  */
 @Component
+@Profile(PROFILE_DEVICE_CONNECTION)
 public class CacheDeviceConnectionService extends AbstractDeviceConnectionService {
 
     private final RemoteCache<DeviceConnectionKey, String> cache;
@@ -81,7 +86,7 @@ public class CacheDeviceConnectionService extends AbstractDeviceConnectionServic
         value.put(DeviceConnectionConstants.FIELD_GATEWAY_ID, gatewayId);
 
         var f = this.cache
-                .putAsync(deviceConnectionKey(key), value.encode())
+                .putAsync(deviceConnectionKey(key), value.encode(), 30, TimeUnit.DAYS)
                 .thenApply(result -> from(HTTP_NO_CONTENT));
 
         return MoreFutures.map(f);

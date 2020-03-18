@@ -26,9 +26,7 @@ class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
         return new IoTConfigBuilder()
                 .withNewSpec()
-                .withNewServices()
-                .withDeviceRegistry(newInfinispanBased())
-                .endServices()
+                .withServices(newInfinispanBased())
                 .withNewAdapters()
                 .withNewMqtt()
                 .endMqtt()

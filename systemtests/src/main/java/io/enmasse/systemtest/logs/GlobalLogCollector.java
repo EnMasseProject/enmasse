@@ -260,7 +260,7 @@ public class GlobalLogCollector {
             }
             Kubernetes kube = Kubernetes.getInstance();
             Files.createDirectories(path);
-            List<Pod> pods = kube.listPods();
+            List<Pod> pods = kube.listAllPods();
             for (Pod p : pods) {
                 try {
                     List<Container> containers = kube.getContainersFromPod(p.getMetadata().getName());

@@ -22,13 +22,13 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class InfinispanServer {
-    private ExternalInfinispanServer external;
+public class InfinispanDeviceRegistryServer {
+    private ExternalInfinispanDeviceRegistryServer external;
 
-    public void setExternal(ExternalInfinispanServer external) {
+    public void setExternal(ExternalInfinispanDeviceRegistryServer external) {
         this.external = external;
     }
-    public ExternalInfinispanServer getExternal() {
+    public ExternalInfinispanDeviceRegistryServer getExternal() {
         return external;
     }
 }

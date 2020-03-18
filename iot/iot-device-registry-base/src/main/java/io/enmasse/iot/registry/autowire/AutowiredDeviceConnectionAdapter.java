@@ -8,6 +8,7 @@ package io.enmasse.iot.registry.autowire;
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
 import org.eclipse.hono.service.deviceconnection.EventBusDeviceConnectionAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
  * in a Spring Boot environment.
  */
 @Component
+@ConditionalOnBean(DeviceConnectionService.class)
 public final class AutowiredDeviceConnectionAdapter extends EventBusDeviceConnectionAdapter {
 
     private DeviceConnectionService service;

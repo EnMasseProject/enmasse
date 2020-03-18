@@ -9,7 +9,7 @@ import static java.time.Duration.ofSeconds;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.eclipse.hono.service.HealthCheckProvider;
 import org.eclipse.hono.tracing.TracingHelper;
@@ -86,9 +86,9 @@ public class AbstractStore implements HealthCheckProvider, AutoCloseable {
      *         broken optimistic lock, and a failed future will be returned. Otherwise it is considered
      *         an "object not found" condition.
      */
-    protected <K> Future<UpdateResult> checkOptimisticLock(final Future<UpdateResult> result, final Span span,
-            final BiFunction<K, Span, Future<ResultSet>> reader,
-            final K key, final Optional<String> resourceVersion) {
+    protected Future<UpdateResult> checkOptimisticLock(final Future<UpdateResult> result, final Span span,
+            final Optional<String> resourceVersion,
+            final Function<Span, Future<ResultSet>> reader) {
 
         // if we don't have a resource version ...
         if (resourceVersion.isEmpty()) {
@@ -115,7 +115,7 @@ public class AbstractStore implements HealthCheckProvider, AutoCloseable {
                             .start();
 
                     // we did not update anything, we need to check why ...
-                    var f = reader.apply(key, readSpan)
+                    var f = reader.apply(readSpan)
                             .<UpdateResult>flatMap(readResult -> {
 
                                 span.log(Map.of(

@@ -5,6 +5,8 @@
 
 package io.enmasse.iot.model.v1;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -19,7 +21,7 @@ import io.sundr.builder.annotations.Inline;
                 type = Doneable.class,
                 prefix = "Doneable",
                 value = "done"))
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(NON_NULL)
 public class CommonServiceConfig extends ServiceConfig {
 
     private ContainerConfig container;

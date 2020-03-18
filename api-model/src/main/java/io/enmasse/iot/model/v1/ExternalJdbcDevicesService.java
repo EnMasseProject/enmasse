@@ -5,7 +5,12 @@
 
 package io.enmasse.iot.model.v1;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.annotation.Nulls;
 
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -19,17 +24,39 @@ import io.sundr.builder.annotations.Inline;
                 type = Doneable.class,
                 prefix = "Doneable",
                 value = "done"))
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class ExternalJdbcDevicesService extends ExternalJdbcService {
+@JsonInclude(NON_EMPTY)
+public class ExternalJdbcDevicesService {
 
-    private Mode mode;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private JdbcConnectionInformation connection;
 
-    public Mode getMode() {
-        return mode;
+    @JsonUnwrapped
+    private CommonServiceConfig commonConfig;
+    @JsonUnwrapped
+    private ServiceConfig serviceConfig;
+
+    public JdbcConnectionInformation getConnection() {
+        return connection;
     }
 
-    public void setMode(Mode mode) {
-        this.mode = mode;
+    public void setConnection(JdbcConnectionInformation connection) {
+        this.connection = connection;
+    }
+
+    public CommonServiceConfig getCommonConfig() {
+        return commonConfig;
+    }
+
+    public void setCommonConfig(CommonServiceConfig commonConfig) {
+        this.commonConfig = commonConfig;
+    }
+
+    public ServiceConfig getServiceConfig() {
+        return serviceConfig;
+    }
+
+    public void setServiceConfig(ServiceConfig serviceConfig) {
+        this.serviceConfig = serviceConfig;
     }
 
 }

@@ -6,6 +6,7 @@
 package io.enmasse.iot.model.v1;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,31 +27,17 @@ import io.sundr.builder.annotations.Inline;
                 type = Doneable.class,
                 prefix = "Doneable",
                 value = "done"))
-@JsonInclude(NON_EMPTY)
-public class ExternalJdbcServer extends JdbcConnectionInformation {
+@JsonInclude(NON_NULL)
+public class ExternalJdbcDeviceConnectionServer extends JdbcConnectionInformation {
 
-    private ExternalJdbcDevicesService devices;
-    private ExternalJdbcService deviceInformation;
     @JsonSetter(nulls = Nulls.AS_EMPTY)
+    @JsonInclude(NON_EMPTY)
     private List<ExtensionImage> extensions = new ArrayList<>();
-
-    public ExternalJdbcDevicesService getDevices() {
-        return devices;
-    }
-    public void setDevices(ExternalJdbcDevicesService devices) {
-        this.devices = devices;
-    }
-
-    public ExternalJdbcService getDeviceInformation() {
-        return deviceInformation;
-    }
-    public void setDeviceInformation(ExternalJdbcService deviceInformation) {
-        this.deviceInformation = deviceInformation;
-    }
 
     public List<ExtensionImage> getExtensions() {
         return extensions;
     }
+
     public void setExtensions(List<ExtensionImage> extensions) {
         this.extensions = extensions;
     }

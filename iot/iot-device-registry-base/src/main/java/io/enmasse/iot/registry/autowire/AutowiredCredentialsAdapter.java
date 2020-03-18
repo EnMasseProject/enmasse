@@ -8,6 +8,7 @@ package io.enmasse.iot.registry.autowire;
 import org.eclipse.hono.service.credentials.CredentialsService;
 import org.eclipse.hono.service.credentials.EventBusCredentialsAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
  * in a Spring Boot environment.
  */
 @Component
+@ConditionalOnBean(CredentialsService.class)
 public final class AutowiredCredentialsAdapter extends EventBusCredentialsAdapter {
 
     private CredentialsService service;

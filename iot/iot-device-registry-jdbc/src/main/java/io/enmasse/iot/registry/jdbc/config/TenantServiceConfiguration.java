@@ -24,9 +24,9 @@ public class TenantServiceConfiguration {
      *
      * @return The handler.
      */
+    @Autowired
     @Bean
     @ConditionalOnBean(TenantService.class)
-    @Autowired
     public TenantAmqpEndpoint tenantAmqpEndpoint(final Vertx vertx) {
         return new TenantAmqpEndpoint(vertx);
     }
@@ -36,9 +36,9 @@ public class TenantServiceConfiguration {
      *
      * @return The handler.
      */
+    @Autowired
     @Bean
     @ConditionalOnBean(TenantManagementService.class)
-    @Autowired
     public TenantManagementHttpEndpoint tenantHttpEndpoint(final Vertx vertx) {
         return new TenantManagementHttpEndpoint(vertx);
     }
