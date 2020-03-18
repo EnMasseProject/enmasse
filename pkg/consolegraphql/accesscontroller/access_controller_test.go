@@ -139,6 +139,7 @@ func TestReadNamespaceDenied(t *testing.T) {
 	configureReactor(tr.clientset, ssarResponseDenyMatching(
 		&authv1.ResourceAttributes{
 			Namespace: namespace.Name,
+			Name:      namespace.Name,
 			Version:   "v1",
 			Resource:  "namespaces",
 		}))

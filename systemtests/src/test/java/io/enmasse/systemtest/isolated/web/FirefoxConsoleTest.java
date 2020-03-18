@@ -93,6 +93,12 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
 
     @Test
     @ExternalClients
+    void testCreateAddrSpaceNonClusterAdminMinimal() throws Exception {
+        doTestCreateAddrSpaceNonClusterAdminMinimal();
+    }
+
+    @Test
+    @ExternalClients
     void testCreateAddrSpaceNonClusterAdmin() throws Exception {
         doTestCreateAddrSpaceNonClusterAdmin();
     }
