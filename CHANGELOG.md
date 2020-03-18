@@ -37,6 +37,8 @@
 * #3949: Address unsafe publication to volatiles used to form the schema
 * #3981: Timeout when deleting address space
 * #3541: Allow addressspace spec changes
+* #4131: Ensure the watch is restarted on all paths (#4132)
+* #4134: Ensure address watch respects 600s timeout (#4134)
 
 ## 0.30.2
 *  #2714: Allow setting security context of pods using persistent volumes
