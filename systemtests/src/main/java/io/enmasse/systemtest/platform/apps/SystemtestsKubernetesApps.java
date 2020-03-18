@@ -357,7 +357,7 @@ public class SystemtestsKubernetesApps {
 
         kubeCli.createSecret(namespace, getBrokerSecret(name, certBundle, user, password));
 
-        kubeCli.createDeploymentFromResource(namespace, getBrokerDeployment(name, user, password), 3, TimeUnit.MINUTES, false);
+        kubeCli.createDeploymentFromResource(namespace, getBrokerDeployment(name, user, password));
 
         ServicePort tlsPort = new ServicePortBuilder()
                 .withName("amqps")
