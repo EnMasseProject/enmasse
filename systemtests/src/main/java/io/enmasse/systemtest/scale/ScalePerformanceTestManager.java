@@ -8,15 +8,20 @@ import static io.enmasse.systemtest.scale.metrics.MetricsAssertions.isPresent;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.HdrHistogram.DoubleHistogram;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.hawkular.agent.prometheus.types.Counter;
 import org.slf4j.Logger;
 
@@ -29,6 +34,8 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
 import io.enmasse.systemtest.scale.metrics.MetricsMonitoringResult;
+import io.enmasse.systemtest.scale.metrics.PerformanceResults;
+import io.enmasse.systemtest.scale.metrics.ThroughputData;
 import io.enmasse.systemtest.utils.TestUtils;
 
 /**
@@ -51,6 +58,8 @@ public class ScalePerformanceTestManager {
     private final Map<String, ScaleTestClient<MessagingClientMetricsClient>> clientsMap = new ConcurrentHashMap<>();
     private final Queue<String> clientsMonitoringQueue = new ConcurrentLinkedQueue<>();
     private final AtomicReference<MetricsMonitoringResult> monitoringResult = new AtomicReference<MetricsMonitoringResult>(new MetricsMonitoringResult());
+    private final AtomicBoolean monitorFlag = new AtomicBoolean(true);
+    private final PerformanceResults results = new PerformanceResults();
 
     public ScalePerformanceTestManager(Endpoint addressSpaceEndpoint, UserCredentials credentials) {
         this.clientProvider = () -> {
@@ -76,7 +85,10 @@ public class ScalePerformanceTestManager {
         return monitoringResult;
     }
 
-    //probably can be deleted
+    public PerformanceResults getPerformanceResults() {
+        return results;
+    }
+
     public void deployMessagingClient(List<Address> addresses, AddressType type, int linksPerConnection) throws Exception {
         if (addresses == null || addresses.isEmpty()) {
             throw new IllegalArgumentException("Addresses cannot be null or empty");
@@ -105,7 +117,7 @@ public class ScalePerformanceTestManager {
         clientsMonitoringQueue.offer(clientId);
     }
 
-    public void deployTenantClient(List<Address> addresses, int addressesPerTenant, int sendMsgPeriod) throws Exception {
+    public void deployTenantClient(List<Address> addresses, int addressesPerTenant, int sendMsgPeriodMillis) throws Exception {
         if (addresses == null || addresses.isEmpty()) {
             throw new IllegalArgumentException("Addresses cannot be null or empty");
         }
@@ -116,7 +128,7 @@ public class ScalePerformanceTestManager {
         clientConfig.setClientType(ScaleTestClientType.tenant);
         clientConfig.setAddresses(addr);
         clientConfig.setAddressesPerTenant(addressesPerTenant);
-        clientConfig.setSendMessagePeriod(sendMsgPeriod);
+        clientConfig.setSendMessagePeriod(sendMsgPeriodMillis);
 
         SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, clientConfig);
 
@@ -135,14 +147,22 @@ public class ScalePerformanceTestManager {
     public void monitorMetrics() {
         try {
             String lastClientId = null;
-            while (true) {
+            while (monitorFlag.get()) {
                 String clientId = clientsMonitoringQueue.poll();
                 try {
                     if (clientId != null && !clientId.equals(lastClientId)) {
                         ScaleTestClient<MessagingClientMetricsClient> client = clientsMap.get(clientId);
                         MessagingClientMetricsClient metricsClient = client.getMetricsClient();
 
-                        waitUntilHasValue(() -> metricsClient.getAcceptedDeliveries(client.getAddressesType()), "Client is not reporting accepted deliveries");
+                        AssertingConsumer<AddressType> dataWait = type -> {
+                            waitUntilHasValue(() -> metricsClient.getAcceptedDeliveries(type), "Client is not reporting accepted deliveries - " + type.toString());
+                        };
+                        if (client.getAddressesType() == null) {
+                            dataWait.accept(AddressType.ANYCAST);
+                            dataWait.accept(AddressType.QUEUE);
+                        } else {
+                            dataWait.accept(client.getAddressesType());
+                        }
 
                         int totalMadeConnections = (int) (metricsClient.getReconnects().getValue() + client.getConnections());
 
@@ -155,17 +175,34 @@ public class ScalePerformanceTestManager {
                             assertTrue(reconnectFailuresRatio < reconnectFailureRatioThreshold, "Reconnects failures ratio is "+reconnectFailuresRatio);
                         }
 
-                        isPresent(metricsClient.getAcceptedDeliveries(client.getAddressesType()))
+                        AssertingConsumer<AddressType> deliveriesChecker = type -> {
+                            isPresent(metricsClient.getAcceptedDeliveries(type))
                             .and(c -> c.getValue() >= 0)
-                            .assertTrue("There are not accepted deliveries");
+                            .assertTrue("There are not accepted deliveries - " + type.toString());
+                        };
 
-                        Double rejected = metricsClient.getRejectedDeliveries(client.getAddressesType()).map(Counter::getValue).orElse(0d);
-                        Double modified = metricsClient.getModifiedDeliveries(client.getAddressesType()).map(Counter::getValue).orElse(0d);
-                        Double accepted = metricsClient.getAcceptedDeliveries(client.getAddressesType()).map(Counter::getValue).orElse(0d);
-                        int totalNoAcceptedDeliveries = (int) (rejected + modified);
-                        double noAcceptedDeliveriesRatio = totalNoAcceptedDeliveries / (totalNoAcceptedDeliveries + accepted);
+                        if (client.getAddressesType() == null) {
+                            deliveriesChecker.accept(AddressType.ANYCAST);
+                            deliveriesChecker.accept(AddressType.QUEUE);
+                        } else {
+                            deliveriesChecker.accept(client.getAddressesType());
+                        }
 
-                        assertTrue(noAcceptedDeliveriesRatio < notAcceptedDeliveriesRatioThreshold, "deliveries: accepted:"+accepted+" rejected:"+rejected+" midified:"+modified);
+                        AssertingConsumer<AddressType> deliveriesPredicate = type -> {
+                            Double rejected = metricsClient.getRejectedDeliveries(type).map(Counter::getValue).orElse(0d);
+                            Double modified = metricsClient.getModifiedDeliveries(type).map(Counter::getValue).orElse(0d);
+                            Double accepted = metricsClient.getAcceptedDeliveries(type).map(Counter::getValue).orElse(0d);
+                            int totalNoAcceptedDeliveries = (int) (rejected + modified);
+                            double noAcceptedDeliveriesRatio = totalNoAcceptedDeliveries / (totalNoAcceptedDeliveries + accepted);
+
+                            assertTrue(noAcceptedDeliveriesRatio < notAcceptedDeliveriesRatioThreshold, type.toString() + " deliveries: accepted:"+accepted+" rejected:"+rejected+" midified:"+modified);
+                        };
+                        if (client.getAddressesType() == null) {
+                            deliveriesPredicate.accept(AddressType.ANYCAST);
+                            deliveriesPredicate.accept(AddressType.QUEUE);
+                        } else {
+                            deliveriesPredicate.accept(client.getAddressesType());
+                        }
 
                         clientsMonitoringQueue.offer(clientId);
 
@@ -189,6 +226,10 @@ public class ScalePerformanceTestManager {
         }
     }
 
+    public void stopMonitoring() {
+        monitorFlag.getAndSet(false);
+    }
+
     private void waitUntilHasValue(Supplier<Optional<Counter>> counterSupplier, String timeoutMessage) {
         TestUtils.waitUntilConditionOrFail(() -> {
             var counter = counterSupplier.get();
@@ -196,4 +237,52 @@ public class ScalePerformanceTestManager {
         }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> timeoutMessage);
     }
 
+    @FunctionalInterface
+    private static interface AssertingConsumer<T> {
+
+        void accept(T value) throws AssertionError;
+
+    }
+
+    public void gatherPerformanceResults() {
+
+//        DoubleHistogram acceptedPerSecondHistogram = new DoubleHistogram(2);
+
+        results.setTotalClientsDeployed(getClients());
+        results.setTotalConnectionsCreated(getConnections());
+        results.setSenders(gatherThroughput(c -> c.getMessagesSendPerSecondHistogram(), c -> c.getAcceptedMsgPerSecond()));
+        results.setReceivers(gatherThroughput(c -> c.getMessagesReceivedPerSecondHistogram(), c -> c.getReceivedMsgPerSecond()));
+    }
+
+    private ThroughputData gatherThroughput(Function<MessagingClientMetricsClient, DoubleHistogram> histogramGetter, Function<MessagingClientMetricsClient, Double> msgPerSecondGetter){
+        ThroughputData data = new ThroughputData();
+
+        List<Double> throughputs99p = new ArrayList<>();
+        List<Double> throughputsMedian = new ArrayList<>();
+
+        for (var client : clientsMap.values()) {
+            var metricsClient = client.getMetricsClient();
+            var histogram = histogramGetter.apply(metricsClient);
+
+            var percentile99 = histogram.getValueAtPercentile(0.99);
+            throughputs99p.add(percentile99);
+            data.getThroughputs99p().add(percentile99+" msg/sec");
+
+            var median = histogram.getValueAtPercentile(0.5);
+            throughputsMedian.add(median);
+            data.getThroughputsMedian().add(median+" msg/sec");
+
+            data.getMsgPerSecond().add(msgPerSecondGetter.apply(metricsClient)+" msg/sec");
+        }
+
+        Median median = new Median();
+
+        double global99pMedian = median.evaluate(throughputs99p.stream().mapToDouble(d -> d).toArray());
+        data.setGlobalThroughputs99pMedian(global99pMedian+" msg/sec");
+
+        double globalMediansMedian = median.evaluate(throughputsMedian.stream().mapToDouble(d -> d).toArray());
+        data.setGlobalThroughputsMediansMedian(globalMediansMedian+" msg/sec");
+
+        return data;
+    }
 }

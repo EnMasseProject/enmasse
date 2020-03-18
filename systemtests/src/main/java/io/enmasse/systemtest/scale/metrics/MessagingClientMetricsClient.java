@@ -5,9 +5,15 @@
 package io.enmasse.systemtest.scale.metrics;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
+import org.HdrHistogram.DoubleHistogram;
+import org.HdrHistogram.DoubleRecorder;
 import org.hawkular.agent.prometheus.types.Counter;
+import org.hawkular.agent.prometheus.types.MetricFamily;
+
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.model.address.AddressType;
 
@@ -31,8 +37,60 @@ public class MessagingClientMetricsClient extends ScaleTestClientMetricsClient {
     private static final String TEST_RELEASED_TOTAL_METRIC = "test_released_total";
     private static final String TEST_MODIFIED_TOTAL_METRIC = "test_modified_total";
 
+    private double receivedMsgPerSecond = 0;
+    private double acceptedMsgPerSecond = 0;
+
+//    private DoubleHi
+    private DoubleRecorder receivedPerSecondRecorder = new DoubleRecorder(2);
+    private DoubleRecorder acceptedPerSecondRecorder = new DoubleRecorder(2);
+
+    private DoubleHistogram receivedPerSecondHistogram = new DoubleHistogram(2);
+    private DoubleHistogram acceptedPerSecondHistogram = new DoubleHistogram(2);
+
     public MessagingClientMetricsClient(Endpoint metricsEndpoint) throws IOException {
         super(metricsEndpoint);
+    }
+
+    @Override
+    protected void afterScrape(List<MetricFamily> metrics) {
+
+        for (AddressType type : Arrays.asList(AddressType.ANYCAST, AddressType.QUEUE)) {
+            getCounter(metrics, TEST_ACCEPTED_TOTAL_METRIC, "addressType", type.toString())
+                .filter(c -> c.getValue() > 0)
+                .ifPresent(counter -> {
+                    double acceptedPerSecond = counter.getValue() / (METRICS_UPDATE_PERIOD_MILLIS / 1000);
+                    acceptedPerSecondRecorder.recordValue(acceptedPerSecond);
+                    acceptedPerSecondHistogram.recordValue(acceptedPerSecond);
+
+                    acceptedMsgPerSecond = acceptedPerSecond;
+
+                });
+
+            getCounter(metrics, TEST_RECEIVED_TOTAL_METRIC, "addressType", type.toString())
+                .ifPresent(counter -> {
+                    double receivedPerSecond = counter.getValue() / (METRICS_UPDATE_PERIOD_MILLIS / 1000);
+//                    receivedPerSecondRecorder.recordValue(receivedPerSecond);
+
+                    receivedMsgPerSecond = receivedPerSecond;
+                });
+        }
+
+    }
+
+    public double getReceivedMsgPerSecond() {
+        return receivedMsgPerSecond;
+    }
+
+    public void setReceivedMsgPerSecond(double receivedMsgPerSecond) {
+        this.receivedMsgPerSecond = receivedMsgPerSecond;
+    }
+
+    public double getAcceptedMsgPerSecond() {
+        return acceptedMsgPerSecond;
+    }
+
+    public void setAcceptedMsgPerSecond(double acceptedMsgPerSecond) {
+        this.acceptedMsgPerSecond = acceptedMsgPerSecond;
     }
 
     public Counter getConnectSuccess() {
@@ -91,4 +149,11 @@ public class MessagingClientMetricsClient extends ScaleTestClientMetricsClient {
         return getCounter(TEST_MODIFIED_TOTAL_METRIC, addressType);
     }
 
+    public DoubleHistogram getMessagesSendPerSecondHistogram() {
+        return acceptedPerSecondRecorder.getIntervalHistogram();
+    }
+
+    public DoubleHistogram getMessagesReceivedPerSecondHistogram() {
+        return receivedPerSecondRecorder.getIntervalHistogram();
+    }
 }

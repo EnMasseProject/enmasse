@@ -21,11 +21,11 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 
-public class ScaleTestClientMetricsClient {
+public abstract class ScaleTestClientMetricsClient {
 
     private final static Logger log = CustomLogger.getLogger();
 
-    private static final long METRICS_UPDATE_PERIOD_MILLIS = 5000;
+    protected static final long METRICS_UPDATE_PERIOD_MILLIS = 5000;
 
     private PrometheusScraper scraper;
 
@@ -38,6 +38,10 @@ public class ScaleTestClientMetricsClient {
         scraper = new PrometheusScraper(url, PrometheusDataFormat.TEXT);
     }
 
+    protected void afterScrape(List<MetricFamily> metrics) {
+        //do nothing
+    }
+
     private void scrape() throws IOException {
         lastMetrics = scraper.scrape();
         if (lastMetrics == null) {
@@ -45,6 +49,7 @@ public class ScaleTestClientMetricsClient {
             lastMetrics = new ArrayList<>();
         }
         lastUpdate = System.currentTimeMillis();
+        afterScrape(lastMetrics);
     }
 
     protected List<MetricFamily> getMetrics() throws IOException {
@@ -77,21 +82,25 @@ public class ScaleTestClientMetricsClient {
 
     protected Optional<Counter> getCounter(String name, String label, String labelValue) {
         try {
-            var stream = getMetrics()
-                    .stream()
-                    .filter(m -> m.getName().equals(name))
-                    .findFirst()
-                    .orElseThrow(() -> metricNotFound(name))
-                    .getMetrics()
-                    .stream()
-                    .filter(m -> m.getName().equals(name));
-            if (label != null && labelValue != null) {
-                stream = stream.filter(m -> m.getLabels().containsKey(label) && m.getLabels().containsValue(labelValue));
-            }
-            return stream.findFirst().map(m -> (Counter)m);
+            return getCounter(getMetrics(), name, label, labelValue);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    protected Optional<Counter> getCounter(List<MetricFamily> metrics, String name, String label, String labelValue) {
+        var stream = metrics
+                .stream()
+                .filter(m -> m.getName().equals(name))
+                .findFirst()
+                .orElseThrow(() -> metricNotFound(name))
+                .getMetrics()
+                .stream()
+                .filter(m -> m.getName().equals(name));
+        if (label != null && labelValue != null) {
+            stream = stream.filter(m -> m.getLabels().containsKey(label) && m.getLabels().containsValue(labelValue));
+        }
+        return stream.findFirst().map(m -> (Counter)m);
     }
 
 }

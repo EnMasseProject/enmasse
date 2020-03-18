@@ -12,6 +12,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -27,7 +28,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import io.enmasse.systemtest.time.TimeoutBudget;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -36,6 +36,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
@@ -65,6 +67,7 @@ import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
 import io.enmasse.systemtest.scale.metrics.MetricsMonitoringResult;
 import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
@@ -91,6 +94,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     private final int anycastLinksPerConnIncrease = initialAnycastLinksPerConn;
     private final int initialQueueLinksPerConn = 1;
     private final int queueLinksPerConnIncrease = initialQueueLinksPerConn;
+    private final int performanceSendMessagesPeriod = 10000;
 
     private final String namespace = "scale-test-namespace";
     private final String addressSpacePlanName = "test-addressspace-plan";
@@ -184,7 +188,8 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
     @Test
     void testMessagingPerformance() throws Exception {
-        int initialAddresses = performanceInitialAddresses;
+//        int initialAddresses = performanceInitialAddresses;
+        int initialAddresses = 1000;
         int anycastLinksPerConnection = initialAnycastLinksPerConn;
         int queueLinksPerConnection = initialQueueLinksPerConn;
         int addressesPerGroup = initialAddressesPerGroup;
@@ -193,6 +198,8 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
         ScalePerformanceTestManager manager = new ScalePerformanceTestManager(endpoint, userCredentials);
+
+        manager.getPerformanceResults().setTotalAddressesCreated(addresses.size());
 
         try {
 
@@ -208,15 +215,9 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 //deploy clients and start messaging
                 for (var groupOfAddresses : addressesGroups) {
                     checkMetrics(manager.getMonitoringResult());
-
-                    manager.deployMessagingClient(groupOfAddresses, AddressType.ANYCAST, anycastLinksPerConnection);
-
+                    manager.deployTenantClient(groupOfAddresses, addressesPerTenant, performanceSendMessagesPeriod);
                     checkMetrics(manager.getMonitoringResult());
-
-                    manager.deployMessagingClient(groupOfAddresses, AddressType.QUEUE, queueLinksPerConnection);
                 }
-
-                checkMetrics(manager.getMonitoringResult());
 
                 long sleepMs = 4 * manager.getConnections();
 
@@ -246,9 +247,20 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 LOGGER.info("Increasing load, creating groups of {} addresses, anycast addresses links per connection {}"
                         + ", queues links per connection {}", addressesPerGroup, anycastLinksPerConnection, queueLinksPerConnection);
                 LOGGER.info("#######################################");
+
+                Assertions.fail("remove me");
             }
 
         } finally {
+            manager.stopMonitoring();
+            manager.gatherPerformanceResults();
+
+            var logsPath = TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest());
+            var mapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
+            String results = mapper.writeValueAsString(manager.getPerformanceResults());
+            Files.createDirectories(logsPath);
+            LOGGER.info("Saving performance results into {}", logsPath);
+            Files.writeString(logsPath.resolve("messaging_performance_results.json"), results);
             LOGGER.info("#######################################");
             LOGGER.info("Total addresses created {}", addresses.size());
             LOGGER.info("Total connections created {}", manager.getConnections());
