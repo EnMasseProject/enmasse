@@ -70,8 +70,15 @@ function get_options(options, path) {
 function get_path(base, resource, options) {
     var namespace = options.namespace || process.env.KUBERNETES_NAMESPACE || read('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
     var path = base + namespace + '/' + resource;
+    var queryParams = {};
     if (options.selector) {
-        path += '?' + querystring.stringify({'labelSelector':options.selector});
+        queryParams.labelSelector = options.selector;
+    }
+    if (options.requestTimeout) {
+        queryParams.timeoutSeconds = options.requestTimeout;
+    }
+    if (Object.keys(queryParams).length) {
+        path += '?' + querystring.stringify(queryParams);
     }
     return path;
 }
@@ -85,7 +92,11 @@ function list_options(resource, baseOptions) {
 
 function watch_options(resource, baseOptions) {
     var base = resource.startsWith("address") ? '/apis/enmasse.io/v1beta1/watch/namespaces/' : '/api/v1/watch/namespaces/';
-    var options = get_options(baseOptions, get_path(base, resource, baseOptions));
+    var options = get_options(baseOptions, get_path(base, resource, includeResyncInterval(baseOptions)));
+    return includeResyncInterval(options);
+}
+
+function includeResyncInterval(options) {
     return myutils.merge({requestTimeout: options.requestTimeout || process.env.RESYNC_INTERVAL}, options);
 }
 
