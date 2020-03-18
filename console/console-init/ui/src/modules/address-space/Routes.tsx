@@ -18,12 +18,12 @@ export const Routes = () => (
     <Redirect path="/" to="/address-spaces" exact={true} />
     <LazyRoute
       path="/address-spaces/:namespace/:name/:type/addresses/"
-      getComponent={getConnections}
+      getComponent={getAddresses}
       exact={true}
     />
     <LazyRoute
       path="/address-spaces/:namespace/:name/:type/connections/"
-      getComponent={getAddresses}
+      getComponent={getConnections}
       exact={true}
     />
   </SwitchWith404>

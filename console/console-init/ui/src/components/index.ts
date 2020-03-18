@@ -4,3 +4,4 @@
  */
 
 export * from "./TablePagination";
+export * from "./TypeAheadSelect";

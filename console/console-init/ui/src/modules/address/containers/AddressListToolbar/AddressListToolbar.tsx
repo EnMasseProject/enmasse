@@ -15,20 +15,18 @@ import { useParams } from "react-router";
 import { useApolloClient } from "@apollo/react-hooks";
 import { RETURN_ADDRESS_SPACE_DETAIL } from "graphql-module/queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
-import {
-  AddressListFilter,
-  AddressListKebab
-} from "modules/address/containers/AddressListFilter";
+import { AddressListFilter } from "modules/address/containers/AddressFilter";
 import useWindowDimensions from "components/common/WindowDimension";
 import { SortForMobileView } from "components/common/SortForMobileView";
 import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy } from "constants/constants";
+import { AddressListKebab } from "modules/address/components/AddressListKebab";
 
 export interface AddressListFilterProps {
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;
-  filterNames: any[];
-  setFilterNames: (value: Array<any>) => void;
+  filterNames: Array<{ value: string; isExact: boolean }>;
+  setFilterNames: (value: Array<{ value: string; isExact: boolean }>) => void;
   typeValue: string | null;
   setTypeValue: (value: string | null) => void;
   statusValue: string | null;
