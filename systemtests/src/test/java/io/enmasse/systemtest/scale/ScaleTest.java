@@ -594,7 +594,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     }
 
     private void saveResultsFile(String filename, Object resultsObject) throws Exception {
-        var logsPath = TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest());
+        var logsPath = TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()).resolve("result");
         LOGGER.info("Saving results into {}", logsPath);
         var mapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
         Files.createDirectories(logsPath);
