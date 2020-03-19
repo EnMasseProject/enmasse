@@ -1,0 +1,52 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: systemtest-task
+  labels:
+    app: enmasse-test
+spec:
+  inputs:
+    params:
+      - name: profile
+        type: string
+      - name: testcase
+        type: string
+      - name: kube_api_url
+        type: string
+      - name: kube_token
+        type: string
+      - name: kube_namespace
+        type: string
+    resources:
+      - name: enmasse-repo
+        type: git
+  steps:
+    - name: maven-test
+      securityContext:
+        privileged: true
+      image: docker.io/library/maven:3.6.3-jdk-11
+      command:
+        - /bin/bash
+      env:
+        - name: GOROOT
+          value: /usr/local/go
+      workingDir: /workspace/enmasse-repo
+      args:
+        - -c
+        - |
+          apt -qq update
+          apt -qq install make gcc -y
+
+          wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz -q
+          tar xf go1.13.3.linux-amd64.tar.gz
+          mv go /usr/local
+          export PATH=$PATH:/usr/local/go/bin
+
+          wget https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz -q
+          tar xf oc.tar.gz
+          mv oc /usr/bin/oc
+          oc login --token $(inputs.params.kube_token) $(inputs.params.kube_api_url) --insecure-skip-tls-verify=true
+
+          export KUBERNETES_NAMESPACE=$(inputs.params.kube_namespace)
+          mvn test -pl systemtests -am -P$(inputs.params.profile) -Djava.net.preferIPv4Stack=true -DfailIfNoTests=false -Dstyle.color=always -DskipTests --no-transfer-progress -Dtest=$(inputs.params.testcase)
+

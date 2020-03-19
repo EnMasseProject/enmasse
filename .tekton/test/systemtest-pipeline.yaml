@@ -1,0 +1,44 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: systemtest-pipeline
+  labels:
+    app: enmasse-test
+spec:
+  params:
+    - name: profile
+      description: profile of test
+      default: systemtests
+    - name: testcase
+      description: testcases to run
+      default: "''"
+    - name: kube_api_url
+      description: url of cluster for running tests
+      default: ""
+    - name: kube_token
+      description: login token
+    - name: kube_namespace
+      description: namespace for enmasse infra deployment
+      default: "enmasse-infra"
+  resources:
+    - name: enmasse-repo
+      type: git
+  tasks:
+    - name: systemtest-task
+      taskRef:
+        name: systemtest-task
+      params:
+        - name: profile
+          value: $(params.profile)
+        - name: testcase
+          value: $(params.testcase)
+        - name: kube_api_url
+          value: $(params.kube_api_url)
+        - name: kube_token
+          value: $(params.kube_token)
+        - name: kube_namespace
+          value: $(params.kube_namespace)
+      resources:
+        inputs:
+          - name: enmasse-repo
+            resource: enmasse-repo
