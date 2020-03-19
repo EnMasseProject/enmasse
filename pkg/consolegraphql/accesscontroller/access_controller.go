@@ -91,6 +91,7 @@ func (k *kubernetesRbac) CanRead(obj interface{}) (bool, error) {
 			Resource:  plural.Resource, // Resource is Kind
 			Version:   gvk.Version,
 			Namespace: o.Name,
+			Name:      o.Name,
 		}
 		return k.makeAccessDecision(attributes)
 	default:
