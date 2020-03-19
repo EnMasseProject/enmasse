@@ -40,7 +40,7 @@ import {
 } from "constants/constants";
 import { getSelectOptionList, ISelectOption } from "utils";
 
-interface IConnectionListFilterProps {
+interface IConnectionToolbarProps {
   filterValue?: string | null;
   setFilterValue: (value: string) => void;
   hostnames: Array<any>;
@@ -53,7 +53,7 @@ interface IConnectionListFilterProps {
   addressSpaceName?: string;
   namespace?: string;
 }
-export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilterProps> = ({
+export const ConnectionToolbar: React.FunctionComponent<IConnectionToolbarProps> = ({
   filterValue,
   setFilterValue,
   hostnames,
