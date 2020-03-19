@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import {
   Table,
   TableVariant,
@@ -14,10 +14,10 @@ import {
   ISortBy
 } from "@patternfly/react-table";
 import { ExternalLinkAltIcon } from "@patternfly/react-icons";
+import { css } from "@patternfly/react-styles";
 import { Link } from "react-router-dom";
 import { Tooltip, TooltipPosition } from "@patternfly/react-core";
 import { StyleForTable } from "modules/address-space/components/AddressSpaceList/AddressSpaceList";
-import { css } from "emotion";
 
 interface IAddressLinksProps {
   rows: IAddressLink[];

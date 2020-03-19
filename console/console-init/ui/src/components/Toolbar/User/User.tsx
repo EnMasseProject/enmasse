@@ -3,13 +3,13 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { IUserDetail } from "types/ResponseTypes";
 import { RETURN_WHOAMI } from "graphql-module/queries";
 import { FetchPolicy, UNKNOWN } from "constants/constants";
 
-export const UserDetail: React.FunctionComponent = () => {
+const User: React.FunctionComponent = () => {
   const { data } = useQuery<IUserDetail>(RETURN_WHOAMI, {
     fetchPolicy: FetchPolicy.NETWORK_ONLY
   });
@@ -27,3 +27,4 @@ export const UserDetail: React.FunctionComponent = () => {
   }
   return <>{userName}</>;
 };
+export { User };
