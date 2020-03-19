@@ -70,6 +70,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
         this.prometheusApiClient = new PrometheusApiClient(prometheusEndpoint);
 
+        Thread.sleep(300_000);
         setEnmasseOperatorEnableMonitoring(true);
         waitUntilPrometheusReady();
 

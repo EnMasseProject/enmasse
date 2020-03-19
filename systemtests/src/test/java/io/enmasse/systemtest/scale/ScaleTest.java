@@ -40,6 +40,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
@@ -64,10 +65,10 @@ import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.scale.metrics.DowntimeData;
+import io.enmasse.systemtest.scale.downtime.DowntimeData;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
-import io.enmasse.systemtest.scale.metrics.MetricsMonitoringResult;
 import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
+import io.enmasse.systemtest.scale.metrics.ScaleTestClientMetricsClient;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -98,6 +99,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     private final int anycastLinksPerConnIncrease = initialAnycastLinksPerConn;
     private final int initialQueueLinksPerConn = 1;
     private final int queueLinksPerConnIncrease = initialQueueLinksPerConn;
+    private final int performanceSendMessagesPeriod = 10000; //important to be less than the metrics scrapping period
 
     //fault tolerance constants
     private final int faultToleranceInitialAddresses = 8000;
@@ -206,6 +208,8 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
         ScalePerformanceTestManager manager = new ScalePerformanceTestManager(endpoint, userCredentials);
 
+        manager.getPerformanceResults().setTotalAddressesCreated(addresses.size());
+
         try {
 
             Executors.newSingleThreadExecutor().execute(manager::monitorMetrics);
@@ -220,15 +224,9 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 //deploy clients and start messaging
                 for (var groupOfAddresses : addressesGroups) {
                     checkMetrics(manager.getMonitoringResult());
-
-                    manager.deployMessagingClient(groupOfAddresses, AddressType.ANYCAST, anycastLinksPerConnection);
-
+                    manager.deployTenantClient(groupOfAddresses, addressesPerTenant, performanceSendMessagesPeriod);
                     checkMetrics(manager.getMonitoringResult());
-
-                    manager.deployMessagingClient(groupOfAddresses, AddressType.QUEUE, queueLinksPerConnection);
                 }
-
-                checkMetrics(manager.getMonitoringResult());
 
                 manager.sleep();
 
@@ -254,6 +252,11 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             }
 
         } finally {
+            LOGGER.info("waiting for gathering of last metris");
+            Thread.sleep(ScaleTestClientMetricsClient.METRICS_UPDATE_PERIOD_MILLIS + 1000);
+            manager.stopMonitoring();
+            manager.gatherPerformanceResults();
+            saveResultsFile("messaging_performance_results.json", manager.getPerformanceResults());
             LOGGER.info("#######################################");
             LOGGER.info("Total addresses created {}", addresses.size());
             LOGGER.info("Total connections created {}", manager.getConnections());
@@ -293,6 +296,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 }
                 checkMetrics(manager.getMonitoringResult());
             } catch (Exception | AssertionError ex) {
+                manager.stopMonitoring();
                 log.error("Failed to wait for addresses/connections");
                 log.error(ex.getMessage());
                 operableAddresses = (int) kubernetes.getAddressClient().inNamespace(namespace).list().getItems().stream()
@@ -305,16 +309,11 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             }
             iterator++;
         }
-        var logsPath = TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest());
-        var mapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
         Map<String, Object> data = new HashMap<>();
         data.put("operable_addresses", operableAddresses);
         data.put("connection_count", manager.getConnections());
         data.put("links", manager.getConnections() * 5);
-        String results = mapper.writeValueAsString(data);
-        Files.createDirectories(logsPath);
-        LOGGER.info("Saving results into {}", logsPath);
-        Files.writeString(logsPath.resolve("operable_addresses.json"), results);
+        saveResultsFile("operable_addresses.json", data);
         assertThat(operableAddresses, greaterThan(failureThreshold));
     }
 
@@ -372,33 +371,9 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             }
 
         } finally {
-            var logsPath = TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest());
-            var mapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
-            String results = mapper.writeValueAsString(manager.getDowntimeResult());
-            Files.createDirectories(logsPath);
-            LOGGER.info("Saving failure recovery results into {}", logsPath);
-            Files.writeString(logsPath.resolve("failure_recovery_results.json"), results);
-            LOGGER.info("#######################################");
-            LOGGER.info(results);
-            LOGGER.info("#######################################");
+            saveResultsFile("failure_recovery_results.json", manager.getDowntimeResult());
         }
 
-    }
-
-    private Duration addAddressAndMeasure() throws Exception {
-        long start = System.currentTimeMillis();
-        var addresses = getTenantAddressBatch(addressSpace).toArray(new Address[0]);
-        getResourceManager().appendAddresses(false, addresses);
-        AddressUtils.waitForDestinationsReady(addresses);
-        long end = System.currentTimeMillis();
-        long duration = end - start;
-        return Duration.ofMillis(duration);
-    }
-
-    private void checkMetrics(AtomicReference<MetricsMonitoringResult> result) {
-        if (result.get().isError()) {
-            Assertions.fail(result.get().getErrors().toString());
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -565,7 +540,6 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         return currentAddresses;
     }
 
-//  oc set-env deployment <deploymentname> _JAVA_OPTIONS="-verbose:gc"
     private void setVerboseGCAuthservice(String authservice) {
         Supplier<Deployment> deploymentFinder = () -> kubernetes.getClient().apps()
                 .deployments()
@@ -601,6 +575,30 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 .endTemplate()
                 .endSpec()
                 .done();
+    }
+
+    private Duration addAddressAndMeasure() throws Exception {
+        long start = System.currentTimeMillis();
+        var addresses = getTenantAddressBatch(addressSpace).toArray(new Address[0]);
+        getResourceManager().appendAddresses(false, addresses);
+        AddressUtils.waitForDestinationsReady(addresses);
+        long end = System.currentTimeMillis();
+        long duration = end - start;
+        return Duration.ofMillis(duration);
+    }
+
+    private void checkMetrics(AtomicReference<MetricsMonitoringResult> result) {
+        if (result.get().isError()) {
+            Assertions.fail(result.get().getErrors().toString());
+        }
+    }
+
+    private void saveResultsFile(String filename, Object resultsObject) throws Exception {
+        var logsPath = TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest());
+        LOGGER.info("Saving results into {}", logsPath);
+        var mapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
+        Files.createDirectories(logsPath);
+        Files.write(logsPath.resolve("messaging_performance_results.json"), mapper.writeValueAsBytes(resultsObject));
     }
 
 }

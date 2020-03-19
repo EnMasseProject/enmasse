@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest.scale;
@@ -9,15 +9,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+
+import org.HdrHistogram.AtomicHistogram;
 import org.HdrHistogram.DoubleHistogram;
+import org.HdrHistogram.Histogram;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.hawkular.agent.prometheus.types.Counter;
 import org.slf4j.Logger;
@@ -29,16 +34,24 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.scale.metrics.DowntimeData;
-import io.enmasse.systemtest.scale.metrics.DowntimeMonitoringResult;
+import io.enmasse.systemtest.scale.downtime.DowntimeData;
+import io.enmasse.systemtest.scale.downtime.DowntimeMonitoringResult;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
-import io.enmasse.systemtest.scale.metrics.MetricsMonitoringResult;
+import io.enmasse.systemtest.scale.metrics.ScaleTestClientMetricsClient;
+import io.enmasse.systemtest.scale.metrics.MessagesCountRecord;
+import io.enmasse.systemtest.scale.performance.AddressTypePerformanceResults;
+import io.enmasse.systemtest.scale.performance.PerformanceResults;
+import io.enmasse.systemtest.scale.performance.ThroughputData;
 import io.enmasse.systemtest.utils.TestUtils;
 
 /**
  * This class should be instantiated once per test
  */
 public class ScalePerformanceTestManager {
+
+    private static final String MSG_PER_SEC_SUFFIX = " msg/sec";
+
+    private static final String SECONDS_SUFFIX = "s";
 
     private final Logger logger = CustomLogger.getLogger();
 
@@ -56,6 +69,8 @@ public class ScalePerformanceTestManager {
     private final Queue<String> clientsMonitoringQueue = new ConcurrentLinkedQueue<>();
     private final AtomicReference<MetricsMonitoringResult> monitoringResult = new AtomicReference<>(new MetricsMonitoringResult());
     private final DowntimeMonitoringResult downtimeResult = new DowntimeMonitoringResult();
+    private final AtomicBoolean monitorFlag = new AtomicBoolean(true);
+    private final PerformanceResults performanceResults = new PerformanceResults();
 
     public ScalePerformanceTestManager(Endpoint addressSpaceEndpoint, UserCredentials credentials) {
         this.clientProvider = () -> {
@@ -83,6 +98,10 @@ public class ScalePerformanceTestManager {
 
     public DowntimeMonitoringResult getDowntimeResult() {
         return downtimeResult;
+    }
+
+    public PerformanceResults getPerformanceResults() {
+        return performanceResults;
     }
 
     public void deployMessagingClient(List<Address> addresses, AddressType type, int linksPerConnection) throws Exception {
@@ -113,7 +132,7 @@ public class ScalePerformanceTestManager {
         clientsMonitoringQueue.offer(clientId);
     }
 
-    public void deployTenantClient(List<Address> addresses, int addressesPerTenant, int sendMsgPeriod) throws Exception {
+    public void deployTenantClient(List<Address> addresses, int addressesPerTenant, int sendMsgPeriodMillis) throws Exception {
         if (addresses == null || addresses.isEmpty()) {
             throw new IllegalArgumentException("Addresses cannot be null or empty");
         }
@@ -124,7 +143,7 @@ public class ScalePerformanceTestManager {
         clientConfig.setClientType(ScaleTestClientType.tenant);
         clientConfig.setAddresses(addr);
         clientConfig.setAddressesPerTenant(addressesPerTenant);
-        clientConfig.setSendMessagePeriod(sendMsgPeriod);
+        clientConfig.setSendMessagePeriod(sendMsgPeriodMillis);
 
         SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, clientConfig);
 
@@ -143,7 +162,7 @@ public class ScalePerformanceTestManager {
     public void monitorMetrics() {
         try {
             String lastClientId = null;
-            while (true) {
+            while (monitorFlag.get()) {
                 String clientId = clientsMonitoringQueue.poll();
                 try {
                     if (clientId != null && !clientId.equals(lastClientId)) {
@@ -247,11 +266,11 @@ public class ScalePerformanceTestManager {
 
                 double value99p = dh.getValueAtPercentile(0.99);
                 times99p.add(value99p);
-                data.getReconnectTimes99p().add(value99p+"s");
+                data.getReconnectTimes99p().add(value99p+SECONDS_SUFFIX);
 
                 double valueMedian = dh.getValueAtPercentile(0.5);
                 timesMedian.add(valueMedian);
-                data.getReconnectTimesMedian().add(valueMedian+"s");
+                data.getReconnectTimesMedian().add(valueMedian+SECONDS_SUFFIX);
 
                 double average = histogram.getSampleSum() / histogram.getSampleCount();
                 averages.add(average);
@@ -261,13 +280,13 @@ public class ScalePerformanceTestManager {
 
         Median median = new Median();
         double global99pMedian = median.evaluate(times99p.stream().mapToDouble(d -> d).toArray());
-        data.setGlobalReconnectTimes99pMedian(global99pMedian+"s");
+        data.setGlobalReconnectTimes99pMedian(global99pMedian+SECONDS_SUFFIX);
 
         double globalMediansMedian = median.evaluate(timesMedian.stream().mapToDouble(d -> d).toArray());
-        data.setGlobalReconnectTimesMediansMedian(globalMediansMedian+"s");
+        data.setGlobalReconnectTimesMediansMedian(globalMediansMedian+SECONDS_SUFFIX);
 
         double average = averages.stream().mapToDouble(d -> d).sum() / averages.size();
-        data.setReconnectTimeAverage(Duration.ofSeconds((long) average).toSeconds()+"s");
+        data.setReconnectTimeAverage(Duration.ofSeconds((long) average).toSeconds()+SECONDS_SUFFIX);
 
     }
 
@@ -282,11 +301,17 @@ public class ScalePerformanceTestManager {
         Thread.sleep(sleepMs);
     }
 
+    public void stopMonitoring() {
+        monitorFlag.getAndSet(false);
+    }
+
     private void waitUntilHasValue(Supplier<Optional<Counter>> counterSupplier, String timeoutMessage) {
         TestUtils.waitUntilConditionOrFail(() -> {
             var counter = counterSupplier.get();
             return counter.isPresent() && counter.get().getValue() >= 0;
-        }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> timeoutMessage);
+        }, Duration.ofMillis((ScaleTestClientMetricsClient.METRICS_UPDATE_PERIOD_MILLIS * 3) + 100),
+                Duration.ofMillis(ScaleTestClientMetricsClient.METRICS_UPDATE_PERIOD_MILLIS),
+                () -> timeoutMessage);
     }
 
     @FunctionalInterface
@@ -294,6 +319,95 @@ public class ScalePerformanceTestManager {
 
         void accept(T value) throws AssertionError;
 
+    }
+
+    public void gatherPerformanceResults() {
+
+        performanceResults.setTotalConnectionsCreated(getConnections());
+        performanceResults.setTotalClientsDeployed(getClients());
+
+        for (AddressType type : Arrays.asList(AddressType.ANYCAST, AddressType.QUEUE)) {
+            var addressTypeResults = new AddressTypePerformanceResults();
+            performanceResults.getAddresses().put(type.toString(), addressTypeResults);
+
+            Histogram acceptedMsgsPerSecHistogram = new AtomicHistogram(20000, 4);
+            Histogram receivedMsgsPerSecHistogram = new AtomicHistogram(20000, 4);
+
+            for (var client : clientsMap.values()) {
+                var metrics = client.getMetricsClient();
+
+                var data = gatherPerformanceData(client.getConfiguration().getClientId(), metrics.getAcceptedMessages().get(type.toString()),
+                        metrics.getStartTimeMillis(), acceptedMsgsPerSecHistogram);
+                if (data != null) {
+                    addressTypeResults.getSenders().add(data);
+                } else {
+                    logger.warn("Sender {} , address {} , messaging records is empty", client.getConfiguration().getClientId(), type.toString());
+                }
+
+                data = gatherPerformanceData(client.getConfiguration().getClientId(), metrics.getReceivedMessages().get(type.toString()),
+                        metrics.getStartTimeMillis(), receivedMsgsPerSecHistogram);
+                if (data != null) {
+                    addressTypeResults.getReceivers().add(data);
+                } else {
+                    logger.warn("Receiver {} , address {} , messaging records is empty", client.getConfiguration().getClientId(), type.toString());
+                }
+            }
+
+            addressTypeResults.setGlobalSenders(gatherGlobalPerformanceData(acceptedMsgsPerSecHistogram, addressTypeResults.getSenders().size()));
+            addressTypeResults.setGlobalReceivers(gatherGlobalPerformanceData(receivedMsgsPerSecHistogram, addressTypeResults.getReceivers().size()));
+
+        }
+
+    }
+
+    private ThroughputData gatherGlobalPerformanceData(Histogram histogram, int numberOfClients) {
+        ThroughputData global = new ThroughputData();
+
+        long perClientThroughput99p = histogram.getValueAtPercentile(0.99);
+        global.setPerClientThroughput99p(perClientThroughput99p+MSG_PER_SEC_SUFFIX);
+        long estimateTotalThroughput99p = perClientThroughput99p * numberOfClients;
+        global.setEstimateTotalThroughput99p(estimateTotalThroughput99p + MSG_PER_SEC_SUFFIX);
+
+        long perClientThroughputMedian = histogram.getValueAtPercentile(0.5);
+        global.setPerClientThroughputMedian(perClientThroughputMedian+MSG_PER_SEC_SUFFIX);
+        long estimateTotalThroughputMedian = perClientThroughputMedian * numberOfClients;
+        global.setEstimateTotalThroughputMedian(estimateTotalThroughputMedian + MSG_PER_SEC_SUFFIX);
+
+        return global;
+    }
+
+    private ThroughputData gatherPerformanceData(String clientId, List<MessagesCountRecord> messagesRecords, long clientStartTimeMillis, Histogram histogram) {
+        if (messagesRecords != null && !messagesRecords.isEmpty()) {
+            ThroughputData client = new ThroughputData();
+            client.setName(clientId);
+            client.setMsgPerSecond(new ArrayList<>());
+            boolean first = true;
+            long lastTimeMillis = clientStartTimeMillis;
+            long lastMessages = 0;
+
+            for (var record : messagesRecords) {
+
+                long timeSpentSeconds = (record.getTimestamp() - lastTimeMillis) / 1000;
+                if (timeSpentSeconds == 0) {
+                    if (!first) {
+                        logger.warn("0 seconds between messaging records, first record {}, client {}", first, clientId);
+                    }
+                    continue;
+                }
+                long messages = record.getMessages() - lastMessages;
+
+                long msgPerSec = messages / timeSpentSeconds;
+
+                client.getMsgPerSecond().add(msgPerSec+MSG_PER_SEC_SUFFIX);
+                histogram.recordValue(msgPerSec);
+
+                lastTimeMillis = record.getTimestamp();
+                lastMessages = record.getMessages();
+                first = false;
+            }
+            return client;
+        }
+        return null;
     }
 
 }
