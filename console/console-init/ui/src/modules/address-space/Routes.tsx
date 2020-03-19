@@ -7,10 +7,7 @@ import * as React from "react";
 import { SwitchWith404, LazyRoute } from "use-patternfly";
 import { Redirect } from "react-router";
 
-const getConnections = () =>
-  import(
-    "pages/AddressSpaceDetail/ConnectionList/ConnectionListWithFilterAndPaginationPage"
-  );
+const getConnections = () => import("../connection/ConnectionPage");
 const getAddresses = () => import("modules/address/AddressPage");
 
 export const Routes = () => (

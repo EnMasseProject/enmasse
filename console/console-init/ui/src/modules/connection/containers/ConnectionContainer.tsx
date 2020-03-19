@@ -5,18 +5,18 @@
 
 import * as React from "react";
 import { useQuery } from "@apollo/react-hooks";
+import { RETURN_ALL_CONECTION_LIST } from "graphql-module/queries";
+import { ISortBy } from "@patternfly/react-table";
 import {
   IConnection,
   ConnectionList
-} from "components/AddressSpace/Connection/ConnectionList";
-import { EmptyConnection } from "components/AddressSpace/Connection/EmptyConnection";
+} from "modules/connection/components/ConnectionList/ConnectionList";
+import { EmptyConnection } from "modules/connection/components/EmptyConnection/EmptyConnection";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { IConnectionListResponse } from "types/ResponseTypes";
-import { RETURN_ALL_CONECTION_LIST } from "graphql-module/queries";
-import { ISortBy } from "@patternfly/react-table";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 
-export interface IConnectionListPageProps {
+export interface IConnectionProps {
   name?: string;
   namespace?: string;
   hostnames: string[];
@@ -29,7 +29,7 @@ export interface IConnectionListPageProps {
   addressSpaceType?: string;
 }
 
-export const ConnectionsListPage: React.FunctionComponent<IConnectionListPageProps> = ({
+export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
   name,
   namespace,
   hostnames,
@@ -45,7 +45,7 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
-  let { loading, error, data } = useQuery<IConnectionListResponse>(
+  let { data } = useQuery<IConnectionListResponse>(
     RETURN_ALL_CONECTION_LIST(
       page,
       perPage,
@@ -58,10 +58,6 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
 
-  if (error) {
-    console.log(error);
-  }
-  // if (loading) return <Loading />;
   const { connections } = data || {
     connections: { total: 0, connections: [] }
   };
@@ -88,13 +84,16 @@ export const ConnectionsListPage: React.FunctionComponent<IConnectionListPagePro
   };
   return (
     <>
-      <ConnectionList
-        rows={connectionList ? connectionList : []}
-        addressSpaceType={addressSpaceType}
-        sortBy={sortBy}
-        onSort={onSort}
-      />
-      {connections.total > 0 ? " " : <EmptyConnection />}
+      {connections.total > 0 ? (
+        <ConnectionList
+          rows={connectionList ? connectionList : []}
+          addressSpaceType={addressSpaceType}
+          sortBy={sortBy}
+          onSort={onSort}
+        />
+      ) : (
+        <EmptyConnection />
+      )}
     </>
   );
 };
