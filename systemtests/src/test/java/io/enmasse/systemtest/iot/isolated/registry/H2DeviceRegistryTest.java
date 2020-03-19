@@ -18,13 +18,17 @@ import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.Mode;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
 class H2DeviceRegistryTest extends DeviceRegistryTest {
+
+    private final Logger log = CustomLogger.getLogger();
 
     @Override
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
