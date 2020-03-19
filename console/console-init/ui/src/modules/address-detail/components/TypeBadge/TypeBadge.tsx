@@ -1,6 +1,6 @@
-import * as React from "react";
-import { getTypeColor } from "utils";
+import React from "react";
 import { Badge } from "@patternfly/react-core";
+import { getTypeColor } from "utils";
 
 interface ITypeString {
   type: string;

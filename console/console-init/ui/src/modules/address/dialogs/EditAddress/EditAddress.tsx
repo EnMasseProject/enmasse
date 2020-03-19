@@ -14,10 +14,10 @@ import {
   Button
 } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
-import { RETURN_ADDRESS_PLANS, EDIT_ADDRESS } from "graphql-module/queries";
 import { Loading } from "use-patternfly";
 import { useStoreContext, types } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
+import { RETURN_ADDRESS_PLANS, EDIT_ADDRESS } from "graphql-module/queries";
 interface IAddressPlans {
   addressPlans: Array<{
     metadata: {

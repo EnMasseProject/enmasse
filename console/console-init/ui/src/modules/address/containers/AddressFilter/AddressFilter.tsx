@@ -3,14 +3,14 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React, { useState } from "react";
 import { DataToolbarChip } from "@patternfly/react-core/dist/js/experimental";
 import { useApolloClient } from "@apollo/react-hooks";
 import { IAddressListNameSearchResponse } from "types/ResponseTypes";
 import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "graphql-module/queries";
 import { TYPEAHEAD_REQUIRED_LENGTH, FetchPolicy } from "constants/constants";
 import { getSelectOptionList, ISelectOption } from "utils";
-import { AddressToolbarToggleGroup } from "modules/address/components/AddressToolbarToggleGroup";
+import { AddressToolbarToggleGroup } from "modules/address/components";
 
 interface IAddressListFilterProps {
   filterValue: string | null;
@@ -40,12 +40,12 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   namespace
 }) => {
   const client = useApolloClient();
-  const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
-  const [typeIsExpanded, setTypeIsExpanded] = React.useState(false);
-  const [statusIsExpanded, setStatusIsExpanded] = React.useState(false);
-  const [nameSelected, setNameSelected] = React.useState<string>();
-  const [nameOptions, setNameOptions] = React.useState<Array<ISelectOption>>();
-  const [nameInput, setNameInput] = React.useState<string>("");
+  const [filterIsExpanded, setFilterIsExpanded] = useState(false);
+  const [typeIsExpanded, setTypeIsExpanded] = useState(false);
+  const [statusIsExpanded, setStatusIsExpanded] = useState(false);
+  const [nameSelected, setNameSelected] = useState<string>();
+  const [nameOptions, setNameOptions] = useState<Array<ISelectOption>>();
+  const [nameInput, setNameInput] = useState<string>("");
 
   const onClickSearchIcon = (event: any) => {
     if (filterValue && filterValue === "Address") {

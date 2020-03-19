@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React, { useState } from "react";
 import {
   Split,
   SplitItem,
@@ -18,14 +18,14 @@ import {
   PageSection
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { TypeBadge } from "modules/address-detail/components/TypeBadge";
+import { TypeBadge } from "modules/address-detail/components";
+import { AddressTypes } from "constants/constants";
 
 export interface IAddressDetailHeaderProps {
   type: string;
   topic?: string | null;
   name: string;
   plan: string;
-  partitions: number | string;
   storedMessages: number | string;
   onEdit: (name: string) => void;
   onDelete: (name: string) => void;
@@ -64,13 +64,12 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
   topic,
   name,
   plan,
-  partitions,
   storedMessages,
   onEdit,
   onDelete,
   onPurge
 }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const onSelect = (result: any) => {
     setIsOpen(!isOpen);
   };
@@ -148,7 +147,8 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
     ];
     if (
       type &&
-      (type.toLowerCase() === "queue" || type.toLowerCase() === "subscription")
+      (type.toLowerCase() === AddressTypes.QUEUE ||
+        type.toLowerCase() === AddressTypes.SUBSCRIPTION)
     ) {
       dropdownItems.push(
         <DropdownItem

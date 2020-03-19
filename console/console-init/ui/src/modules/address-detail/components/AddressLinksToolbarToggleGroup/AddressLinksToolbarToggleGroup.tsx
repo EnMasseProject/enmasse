@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import {
   DataToolbarToggleGroup,
   DataToolbarGroup,
@@ -49,6 +49,7 @@ interface IAddressLinksToolbarToggleGroupProps {
   roleIsExpanded: boolean;
   setRoleIsExpanded: (value: boolean) => void;
 }
+
 const AddressLinksToolbarToggleGroup: React.FunctionComponent<IAddressLinksToolbarToggleGroupProps> = ({
   filterValue,
   filterNames,
