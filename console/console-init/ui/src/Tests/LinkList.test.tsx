@@ -6,7 +6,7 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { ILink, LinkList } from "components/ConnectionDetail/LinkList";
+import { ILink, LinkList } from "modules/connection-detail/LinkList";
 
 describe("Link List", () => {
   test("it renders a list of links", () => {

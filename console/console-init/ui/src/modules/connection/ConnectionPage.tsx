@@ -4,73 +4,42 @@
  */
 
 import * as React from "react";
+import { useParams, useLocation } from "react-router";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
-import { useParams, useHistory, useLocation } from "react-router";
 import {
   PageSection,
   PageSectionVariants,
   Grid,
-  GridItem,
-  Pagination
+  GridItem
 } from "@patternfly/react-core";
-import { ConnectionsListPage } from "./ConnectionsListPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
-import { ConnectionListFilter } from "pages/AddressSpaceDetail/ConnectionList/ConnectionListFilter";
 import { ISortBy } from "@patternfly/react-table";
+import { ConnectionContainer } from "./containers/ConnectionContainer";
+import { ConnectionToolbar } from "modules/connection";
+import { TablePagination } from "components";
 
-const ConnectionListFunction = () => {
+export default function ConnectionPage() {
   useDocumentTitle("Connection List");
 
   useA11yRouteChange();
-  const { name, namespace, type } = useParams();
   const [filterValue, setFilterValue] = React.useState<string>("Hostname");
-  const [hostnames, setHostnames] = React.useState<Array<any>>([]);
-  const [containerIds, setContainerIds] = React.useState<Array<any>>([]);
+  const [hostnames, setHostnames] = React.useState<Array<string>>([]);
+  const [containerIds, setContainerIds] = React.useState<Array<string>>([]);
   const [totalConnections, setTotalConnections] = React.useState<number>(0);
+  const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
+  const { name, namespace, type } = useParams();
   const location = useLocation();
-  const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
-  const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
-
-  const setSearchParam = React.useCallback(
-    (name: string, value: string) => {
-      searchParams.set(name, value.toString());
-    },
-    [searchParams]
-  );
-
-  const handlePageChange = React.useCallback(
-    (_: any, newPage: number) => {
-      setSearchParam("page", newPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
-
-  const handlePerPageChange = React.useCallback(
-    (_: any, newPerPage: number) => {
-      setSearchParam("page", "1");
-      setSearchParam("perPage", newPerPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
 
   const renderPagination = (page: number, perPage: number) => {
     return (
-      <Pagination
+      <TablePagination
         itemCount={totalConnections}
         perPage={perPage}
         page={page}
-        onSetPage={handlePageChange}
         variant="top"
-        onPerPageSelect={handlePerPageChange}
       />
     );
   };
@@ -79,7 +48,7 @@ const ConnectionListFunction = () => {
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
         <GridItem span={6}>
-          <ConnectionListFilter
+          <ConnectionToolbar
             filterValue={filterValue}
             setFilterValue={setFilterValue}
             hostnames={hostnames}
@@ -93,12 +62,10 @@ const ConnectionListFunction = () => {
             namespace={namespace}
           />
         </GridItem>
-        <GridItem span={6}>
-          {totalConnections > 0 && renderPagination(page, perPage)}
-        </GridItem>
+        <GridItem span={6}>{renderPagination(page, perPage)}</GridItem>
       </Grid>
       <Divider />
-      <ConnectionsListPage
+      <ConnectionContainer
         name={name}
         namespace={namespace}
         hostnames={hostnames}
@@ -110,11 +77,7 @@ const ConnectionListFunction = () => {
         setSortValue={setSortDropdownValue}
         addressSpaceType={type}
       />
-      {totalConnections > 0 && renderPagination(page, perPage)}
+      {renderPagination(page, perPage)}
     </PageSection>
   );
-};
-
-export default function ConnectionListWithFilterAndPaginationPage() {
-  return <ConnectionListFunction />;
 }

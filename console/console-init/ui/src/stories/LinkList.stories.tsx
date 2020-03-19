@@ -5,10 +5,10 @@
 
 import React from "react";
 import { MemoryRouter } from "react-router";
-import { LinkList, ILink } from "../components/ConnectionDetail/LinkList";
+import { LinkList, ILink } from "../modules/connection-detail/LinkList";
 import { text, number, select } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import { ConnectionLinksFilter } from "pages/ConnectionDetail/ConnectionLinksFilter";
+import { ConnectionLinksFilter } from "modules/connection-detail/ConnectionLinksFilter";
 
 export default {
   title: "Connection Details"
