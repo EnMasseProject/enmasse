@@ -18,7 +18,6 @@ describe("Address Detail Header", () => {
       type: "queue",
       plan: "Small",
       storedMessages: 1,
-      partitions: 2,
       onDelete: () => {},
       onEdit: () => {},
       onPurge: () => {}
