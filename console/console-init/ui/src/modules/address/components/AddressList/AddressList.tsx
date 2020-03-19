@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   Table,
   TableVariant,
@@ -14,7 +15,6 @@ import {
   IExtraData,
   ISortBy
 } from "@patternfly/react-table";
-import { Link } from "react-router-dom";
 import { TypePlan } from "modules/address/components";
 import { Messages } from "modules/address/components";
 import useWindowDimensions from "components/common/WindowDimension";
@@ -22,8 +22,8 @@ import { css } from "@patternfly/react-styles";
 import { FormatDistance } from "use-patternfly";
 import { StyleForTable } from "modules/address-space/components";
 import { AddressStatus } from "modules/address/utils";
-import { AddressErrorMessage } from "../AddressErrorMessage";
 import { AddressTypes } from "constants/constants";
+import { AddressErrorMessage } from "modules/address/components";
 
 export interface IAddress {
   name: string;

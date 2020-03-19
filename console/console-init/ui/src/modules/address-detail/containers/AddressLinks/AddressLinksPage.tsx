@@ -12,12 +12,12 @@ import {
   Grid,
   GridItem
 } from "@patternfly/react-core";
-import { GridStylesForTableHeader } from "modules/address/AddressPage";
-import { AddressLinksContainer } from "modules/address-detail/containers/AddressLinksContainer";
-import { AddressLinksToolbar } from "modules/address-detail/containers/AddressLinksToolbar";
 import { ISortBy } from "@patternfly/react-table";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { css } from "@patternfly/react-styles";
+import { GridStylesForTableHeader } from "modules/address/AddressPage";
+import { AddressLinksContainer } from "modules/address-detail/containers/AddressLinksContainer";
+import { AddressLinksToolbar } from "modules/address-detail/containers/AddressLinksToolbar";
 import { TablePagination } from "components/TablePagination";
 import { IFilterValue } from "modules/address/utils";
 

@@ -3,22 +3,21 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
-
+import React, { useState } from "react";
+import { useParams } from "react-router";
 import {
   DataToolbar,
   DataToolbarItem,
   DataToolbarContent
 } from "@patternfly/react-core/dist/js/experimental";
-import { CreateAddressPage } from "modules/address/dialogs/CreateAddress/CreateAddress";
-import { useParams } from "react-router";
+import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
+import { CreateAddressPage } from "modules/address/dialogs/CreateAddress";
 import { RETURN_ADDRESS_SPACE_DETAIL } from "graphql-module/queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
 import { AddressListFilter } from "modules/address/containers/AddressFilter";
 import useWindowDimensions from "components/common/WindowDimension";
 import { SortForMobileView } from "components/common/SortForMobileView";
-import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy } from "constants/constants";
 import { AddressListKebab } from "modules/address/components/AddressListKebab";
 import { IFilterValue } from "modules/address/utils";
@@ -65,7 +64,7 @@ export const AddressListToolbar: React.FunctionComponent<AddressListFilterProps>
   isPurgeAllDisabled
 }) => {
   const { name, namespace, type } = useParams();
-  const [addressSpacePlan, setAddressSpacePlan] = React.useState();
+  const [addressSpacePlan, setAddressSpacePlan] = useState();
   const client = useApolloClient();
   const { width } = useWindowDimensions();
 

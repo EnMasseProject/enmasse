@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React, { useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 
 import {
@@ -13,17 +13,17 @@ import {
   Grid
 } from "@patternfly/react-core";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
-import { StyleSheet } from "@patternfly/react-styles";
-import { AddressListToolbar } from "./containers/AddressListToolbar";
-import { AddressListContainer } from "./containers/AddressListContainer";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { useQuery, useMutation } from "@apollo/react-hooks";
+import { StyleSheet } from "@patternfly/react-styles";
+import { ISortBy } from "@patternfly/react-table";
+import { AddressListToolbar } from "./containers/AddressListToolbar";
+import { AddressListContainer } from "./containers/AddressListContainer";
 import {
   CURRENT_ADDRESS_SPACE_PLAN,
   DELETE_ADDRESS,
   PURGE_ADDRESS
 } from "graphql-module/queries";
-import { ISortBy } from "@patternfly/react-table";
 import { IAddress } from "./components/AddressList";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import {
@@ -67,31 +67,23 @@ export default function AddressPage() {
   useDocumentTitle("Address List");
   useA11yRouteChange();
   const { name, namespace } = useParams();
-  const [filterValue, setFilterValue] = React.useState<string | null>(
-    "Address"
-  );
-  const [filterNames, setFilterNames] = React.useState<Array<IFilterValue>>([]);
-  const [typeValue, setTypeValue] = React.useState<string | null>(null);
-  const [statusValue, setStatusValue] = React.useState<string | null>(null);
-  const [totalAddresses, setTotalAddress] = React.useState<number>(0);
-  const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(
-    null
-  );
+  const [filterValue, setFilterValue] = useState<string | null>("Address");
+  const [filterNames, setFilterNames] = useState<Array<IFilterValue>>([]);
+  const [typeValue, setTypeValue] = useState<string | null>(null);
+  const [statusValue, setStatusValue] = useState<string | null>(null);
+  const [totalAddresses, setTotalAddress] = useState<number>(0);
+  const [addressSpacePlan, setAddressSpacePlan] = useState<string | null>(null);
 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
 
-  const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
-  const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
-  const [onCreationRefetch, setOnCreationRefetch] = React.useState<boolean>(
-    false
-  );
+  const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
+  const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false);
+  const [onCreationRefetch, setOnCreationRefetch] = useState<boolean>(false);
 
-  const [selectedAddresses, setSelectedAddresses] = React.useState<IAddress[]>(
-    []
-  );
+  const [selectedAddresses, setSelectedAddresses] = useState<IAddress[]>([]);
   const { data } = useQuery<IAddressSpacePlanResponse>(
     CURRENT_ADDRESS_SPACE_PLAN(name, namespace)
   );
@@ -286,6 +278,7 @@ export default function AddressPage() {
       />
     );
   };
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid>

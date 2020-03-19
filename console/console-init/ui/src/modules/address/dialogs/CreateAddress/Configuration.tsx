@@ -5,13 +5,13 @@
 
 import React, { useState } from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
+import { Loading } from "use-patternfly";
 import { IDropdownOption } from "components/common/FilterDropdown";
 import {
   RETURN_ADDRESS_PLANS,
   RETURN_ADDRESS_TYPES,
   RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION
 } from "graphql-module/queries";
-import { Loading } from "use-patternfly";
 import { IAddressResponse } from "types/ResponseTypes";
 import { AddressConfiguration } from "modules/address/components/AddressConfiguration/AddressConfiguration";
 

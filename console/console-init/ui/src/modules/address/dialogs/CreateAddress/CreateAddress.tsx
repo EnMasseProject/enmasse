@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React, { useState } from "react";
 import { Wizard } from "@patternfly/react-core";
 import { useMutationQuery } from "hooks";
 import { AddressDefinition } from "modules/address/dialogs/CreateAddress/Configuration";
@@ -32,16 +32,16 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
   setIsCreateWizardOpen,
   setOnCreationRefetch
 }) => {
-  const [addressName, setAddressName] = React.useState("");
-  const [addressType, setAddressType] = React.useState(" ");
-  const [plan, setPlan] = React.useState(" ");
-  const [topic, setTopic] = React.useState(" ");
-  const [addressTypes, setAddressTypes] = React.useState<IDropdownOption[]>([]);
-  const [addressPlans, setAddressPlans] = React.useState<IDropdownOption[]>([]);
-  const [topicsForSubscription, setTopicForSubscription] = React.useState<
+  const [addressName, setAddressName] = useState("");
+  const [addressType, setAddressType] = useState(" ");
+  const [plan, setPlan] = useState(" ");
+  const [topic, setTopic] = useState(" ");
+  const [addressTypes, setAddressTypes] = useState<IDropdownOption[]>([]);
+  const [addressPlans, setAddressPlans] = useState<IDropdownOption[]>([]);
+  const [topicsForSubscription, setTopicForSubscription] = useState<
     IDropdownOption[]
   >([]);
-  const [isNameValid, setIsNameValid] = React.useState(true);
+  const [isNameValid, setIsNameValid] = useState(true);
 
   const resetFormState = () => {
     setIsCreateWizardOpen(false);

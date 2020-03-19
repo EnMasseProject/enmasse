@@ -220,7 +220,6 @@ export default function AddressDetailPage() {
           plan={address.planLabel}
           topic={address.topic}
           storedMessages={address.storedMessages}
-          partitions={address.partitions || ""}
           onEdit={onChangeEdit}
           onDelete={onChangeDelete}
           onPurge={onChangePurge}

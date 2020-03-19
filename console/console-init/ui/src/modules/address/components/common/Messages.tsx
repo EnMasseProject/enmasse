@@ -13,5 +13,5 @@ interface IMessagesProps {
 }
 
 export const Messages: React.FunctionComponent<IMessagesProps> = message => {
-  return <React.Fragment>{message.count}</React.Fragment>;
+  return <>{message.count}</>;
 };
