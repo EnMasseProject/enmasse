@@ -8,8 +8,8 @@ import { MemoryRouter } from "react-router";
 import {
   ConnectionList,
   IConnection
-} from "components/AddressSpace/Connection/ConnectionList";
-import { EmptyConnection } from "components/AddressSpace/Connection/EmptyConnection";
+} from "modules/connection/components/ConnectionList/ConnectionList";
+import { EmptyConnection } from "modules/connection/components/EmptyConnection/EmptyConnection";
 
 export default {
   title: "Connection"

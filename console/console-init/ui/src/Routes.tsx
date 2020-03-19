@@ -14,7 +14,7 @@ const getAddressSpaceDetail = () =>
 const getAddressDetail = () =>
   import("modules/address-detail/AddressDetailPage");
 const getConnectionDetail = () =>
-  import("pages/ConnectionDetail/ConnectionDetailPage");
+  import("modules/connection-detail/ConnectionDetailPage");
 
 export const AppRoutes = () => (
   <SwitchWith404>
