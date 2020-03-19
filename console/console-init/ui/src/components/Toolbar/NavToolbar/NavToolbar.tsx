@@ -12,7 +12,23 @@ import {
 } from "@patternfly/react-core";
 import { QuestionCircleIcon } from "@patternfly/react-icons";
 import { About } from "components/common/About";
-import { UserDetail } from "./User";
+import { User } from "components/Toolbar";
+import { StyleSheet, css } from "@patternfly/react-styles";
+
+const styles = StyleSheet.create({
+  navtb_dropdownitem_help: {
+    paddingRight: 100,
+    paddingLeft: 20,
+    paddingTop: 20,
+    paddingBottom: 10
+  },
+  navtb_dropdownitem_about: {
+    paddingRight: 100,
+    paddingLeft: 20,
+    paddingTop: 10,
+    paddingBottom: 20
+  }
+});
 
 const NavToolBar: React.FC = () => {
   const [isOpen, onToggle] = useState(false);
@@ -30,12 +46,7 @@ const NavToolBar: React.FC = () => {
       <DropdownItem
         id="navtb-item-help"
         key="help"
-        style={{
-          paddingRight: 100,
-          paddingLeft: 20,
-          paddingTop: 20,
-          paddingBottom: 10
-        }}
+        className={css(styles.navtb_dropdownitem_help)}
       >
         Help
       </DropdownItem>
@@ -43,12 +54,7 @@ const NavToolBar: React.FC = () => {
     <DropdownItem
       id="navtb-item-about"
       key="About"
-      style={{
-        paddingRight: 100,
-        paddingLeft: 20,
-        paddingTop: 10,
-        paddingBottom: 20
-      }}
+      className={css(styles.navtb_dropdownitem_about)}
       onClick={selectAbout}
     >
       About
@@ -85,7 +91,7 @@ const NavToolBar: React.FC = () => {
         isOpen={isUserDropdownOpen}
         toggle={
           <DropdownToggle onToggle={setIsUserDropdownOpen}>
-            <UserDetail />
+            <User />
           </DropdownToggle>
         }
         dropdownItems={userDropdownItems}
@@ -99,4 +105,4 @@ const NavToolBar: React.FC = () => {
   );
 };
 
-export default NavToolBar;
+export { NavToolBar };

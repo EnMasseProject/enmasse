@@ -3,19 +3,19 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { Loading } from "use-patternfly";
+import { ISortBy } from "@patternfly/react-table";
 import { IAddressResponse } from "types/ResponseTypes";
 import {
   RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE,
   DELETE_ADDRESS,
   PURGE_ADDRESS
 } from "graphql-module/queries";
-import { AddressList, IAddress } from "modules/address/components/AddressList";
+import { AddressList, IAddress } from "modules/address/components";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
-import { EmptyAddress } from "modules/address/components/EmptyAddress";
-import { ISortBy } from "@patternfly/react-table";
+import { EmptyAddress } from "modules/address/components";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
@@ -64,7 +64,7 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
 }) => {
   const { dispatch } = useStoreContext();
 
-  const [sortBy, setSortBy] = React.useState<ISortBy>();
+  const [sortBy, setSortBy] = useState<ISortBy>();
 
   const refetchQueries: string[] = ["all_addresses_for_addressspace_view"];
 

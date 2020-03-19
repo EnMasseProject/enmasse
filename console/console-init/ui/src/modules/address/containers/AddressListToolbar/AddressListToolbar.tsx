@@ -4,30 +4,30 @@
  */
 
 import React, { useState } from "react";
-
+import { useParams } from "react-router";
 import {
   DataToolbar,
   DataToolbarItem,
   DataToolbarContent
 } from "@patternfly/react-core/dist/js/experimental";
-import { CreateAddressPage } from "modules/address/dialogs/CreateAddress/CreateAddressPage";
-import { useParams } from "react-router";
+import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
+import { CreateAddressPage } from "modules/address/dialogs/CreateAddress";
 import { RETURN_ADDRESS_SPACE_DETAIL } from "graphql-module/queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
 import { AddressListFilter } from "modules/address/containers/AddressFilter";
 import useWindowDimensions from "components/common/WindowDimension";
 import { SortForMobileView } from "components/common/SortForMobileView";
-import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy } from "constants/constants";
 import { AddressListKebab } from "modules/address/components/AddressListKebab";
+import { IFilterValue } from "modules/address/utils";
 import { Loading } from "use-patternfly";
 
 export interface AddressListFilterProps {
   filterValue: string | null;
   setFilterValue: (value: string | null) => void;
-  filterNames: Array<{ value: string; isExact: boolean }>;
-  setFilterNames: (value: Array<{ value: string; isExact: boolean }>) => void;
+  filterNames: Array<IFilterValue>;
+  setFilterNames: (value: Array<IFilterValue>) => void;
   typeValue: string | null;
   setTypeValue: (value: string | null) => void;
   statusValue: string | null;

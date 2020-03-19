@@ -20,7 +20,7 @@ import {
 } from "graphql-module/queries";
 import { AddressLinksPage } from "./containers/AddressLinks";
 import { IAddressSpacePlanResponse } from "modules/address/AddressPage";
-import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
+import { POLL_INTERVAL, FetchPolicy, AddressTypes } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
@@ -184,8 +184,10 @@ export default function AddressDetailPage() {
 
   const onConfirmPurge = async () => {
     if (
-      addressDetail.spec.plan.spec.addressType.toLowerCase() === "queue" ||
-      addressDetail.spec.plan.spec.addressType.toLowerCase() === "subscription"
+      addressDetail.spec.plan.spec.addressType.toLowerCase() ===
+        AddressTypes.QUEUE ||
+      addressDetail.spec.plan.spec.addressType.toLowerCase() ===
+        AddressTypes.SUBSCRIPTION
     ) {
       await purgeAddress({
         name: addressDetail.metadata.name,
@@ -218,7 +220,6 @@ export default function AddressDetailPage() {
           plan={address.planLabel}
           topic={address.topic}
           storedMessages={address.storedMessages}
-          partitions={address.partitions || ""}
           onEdit={onChangeEdit}
           onDelete={onChangeDelete}
           onPurge={onChangePurge}

@@ -3,7 +3,8 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React, { useState } from "react";
+import { useLocation } from "react-router";
 import {
   PageSection,
   PageSectionVariants,
@@ -11,14 +12,14 @@ import {
   Grid,
   GridItem
 } from "@patternfly/react-core";
-import { GridStylesForTableHeader } from "modules/address/AddressPage";
-import { AddressLinksContainer } from "modules/address-detail/containers/AddressLinksContainer";
-import { useLocation } from "react-router";
-import { AddressLinksToolbar } from "modules/address-detail/containers/AddressLinksToolbar";
 import { ISortBy } from "@patternfly/react-table";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { css } from "@patternfly/react-styles";
+import { GridStylesForTableHeader } from "modules/address/AddressPage";
+import { AddressLinksContainer } from "modules/address-detail/containers/AddressLinksContainer";
+import { AddressLinksToolbar } from "modules/address-detail/containers/AddressLinksToolbar";
 import { TablePagination } from "components/TablePagination";
+import { IFilterValue } from "modules/address/utils";
 
 interface IAddressLinksListPageProps {
   addressspace_name: string;
@@ -40,15 +41,13 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const [addresLinksTotal, setAddressLinksTotal] = React.useState<number>(0);
-  const [filterValue, setFilterValue] = React.useState<string>("Name");
-  const [filterNames, setFilterNames] = React.useState<
-    Array<{ value: string; isExact: boolean }>
-  >([]);
-  const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
-  const [filterContainers, setFilterContainers] = React.useState<
-    Array<{ value: string; isExact: boolean }>
-  >([]);
-  const [filterRole, setFilterRole] = React.useState<string>();
+  const [filterValue, setFilterValue] = useState<string>("Name");
+  const [filterNames, setFilterNames] = useState<Array<IFilterValue>>([]);
+  const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
+  const [filterContainers, setFilterContainers] = useState<Array<IFilterValue>>(
+    []
+  );
+  const [filterRole, setFilterRole] = useState<string>();
   const renderPagination = () => {
     return (
       <TablePagination

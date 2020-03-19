@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   Table,
   TableVariant,
@@ -14,15 +15,14 @@ import {
   IExtraData,
   ISortBy
 } from "@patternfly/react-table";
-import { Link } from "react-router-dom";
-import { TypePlan } from "modules/address/components/common";
-import { Messages } from "modules/address/components/common";
+import { TypePlan, Messages } from "modules/address/components";
 import useWindowDimensions from "components/common/WindowDimension";
 import { css } from "@patternfly/react-styles";
 import { FormatDistance } from "use-patternfly";
 import { StyleForTable } from "modules/address-space/components";
 import { AddressStatus } from "modules/address/utils";
-import { AddressErrorMessage } from "../AddressErrorMessage";
+import { AddressTypes } from "constants/constants";
+import { AddressErrorMessage } from "modules/address/components";
 
 export interface IAddress {
   name: string;
@@ -70,8 +70,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;
     if (
-      originalData.type.trim() === "queue" ||
-      originalData.type.trim() === "subscription"
+      originalData.type.trim() === AddressTypes.QUEUE ||
+      originalData.type.trim() === AddressTypes.SUBSCRIPTION
     ) {
       return [
         {
@@ -143,7 +143,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
             : row.storedMessages,
           row.senders,
           row.receivers,
-          row.type === "queue" ? row.partitions : ""
+          row.type === AddressTypes.QUEUE ? row.partitions : ""
         ],
         originalData: row
       };
