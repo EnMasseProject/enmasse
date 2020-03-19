@@ -8,7 +8,7 @@ import { useQuery } from "@apollo/react-hooks";
 import { IConnectionLinksResponse } from "types/ResponseTypes";
 import { RETURN_CONNECTION_LINKS } from "graphql-module/queries";
 import { Loading } from "use-patternfly";
-import { ILink, LinkList } from "components/ConnectionDetail/LinkList";
+import { ILink, LinkList } from "modules/connection-detail/LinkList";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { ISortBy } from "@patternfly/react-table";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";

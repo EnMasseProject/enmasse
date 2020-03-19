@@ -4,6 +4,7 @@
  */
 
 import * as React from "react";
+import { Link } from "react-router-dom";
 import {
   Table,
   TableVariant,
@@ -13,12 +14,11 @@ import {
   sortable,
   ISortBy
 } from "@patternfly/react-table";
-import { Link } from "react-router-dom";
+import { FormatDistance } from "use-patternfly";
+import { css } from "@patternfly/react-styles";
 import { ConnectionProtocolFormat } from "components/common/ConnectionListFormatter";
 import useWindowDimensions from "components/common/WindowDimension";
-import { FormatDistance } from "use-patternfly";
 import { StyleForTable } from "modules/address-space/components/AddressSpaceList/AddressSpaceList";
-import { css } from "@patternfly/react-styles";
 
 interface IConnectionListProps {
   rows: IConnection[];

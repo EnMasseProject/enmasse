@@ -7,7 +7,7 @@ import * as React from "react";
 import {
   ConnectionDetailHeader,
   IConnectionHeaderDetailProps
-} from "components/ConnectionDetail/ConnectionDetailHeader";
+} from "modules/connection-detail/ConnectionDetailHeader";
 import {
   PageSection,
   Breadcrumb,
