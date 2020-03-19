@@ -20,7 +20,7 @@ import java.util.Map;
 
 @ExtendWith(ExtensionContextParameterResolver.class)
 public interface ITestSeparator {
-    Logger log = CustomLogger.getLogger();
+    Logger testSeparatorLogger = CustomLogger.getLogger();
     String separatorChar = "#";
 
     static void printThreadDump() {
@@ -33,7 +33,7 @@ public interface ITestSeparator {
             for (StackTraceElement aTrace : trace) {
                 sb.append(" ").append(aTrace).append("\r\n");
             }
-            log.error(sb.toString());
+            testSeparatorLogger.error(sb.toString());
         }
     }
 
@@ -41,8 +41,8 @@ public interface ITestSeparator {
     default void beforeEachTest(TestInfo testInfo) {
         TimeMeasuringSystem.setTestName(testInfo.getTestClass().get().getName(), testInfo.getDisplayName());
         TimeMeasuringSystem.startOperation(SystemtestsOperation.TEST_EXECUTION);
-        log.info(String.join("", Collections.nCopies(100, separatorChar)));
-        log.info(String.format("%s.%s-STARTED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName()));
+        testSeparatorLogger.info(String.join("", Collections.nCopies(100, separatorChar)));
+        testSeparatorLogger.info(String.format("%s.%s-STARTED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName()));
     }
 
     @AfterEach
@@ -50,14 +50,14 @@ public interface ITestSeparator {
         if (context.getExecutionException().isPresent()) { // on failed
             Throwable ex = context.getExecutionException().get();
             if (ex instanceof OutOfMemoryError) {
-                log.error("Got OOM, dumping thread info");
+                testSeparatorLogger.error("Got OOM, dumping thread info");
                 printThreadDump();
             } else {
-                log.error("Caught exception", ex);
+                testSeparatorLogger.error("Caught exception", ex);
             }
         }
         TimeMeasuringSystem.stopOperation(SystemtestsOperation.TEST_EXECUTION);
-        log.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName()));
-        log.info(String.join("", Collections.nCopies(100, separatorChar)));
+        testSeparatorLogger.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName()));
+        testSeparatorLogger.info(String.join("", Collections.nCopies(100, separatorChar)));
     }
 }

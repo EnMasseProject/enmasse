@@ -16,6 +16,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.isolated.Credentials;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -32,6 +33,7 @@ import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.enmasse.user.model.v1.UserBuilder;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -47,6 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITestIsolatedStandard {
+
+    private final Logger log = CustomLogger.getLogger();
 
     @Test
     void testAddressSpaceCreateViaCmdRemoveViaApi() throws Exception {
