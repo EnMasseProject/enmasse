@@ -16,7 +16,7 @@ import { GridStylesForTableHeader } from "modules/address/AddressPage";
 import { ConnectionLinksListPage } from "./ConnectionsLinksListPage";
 import { useLocation, useHistory } from "react-router";
 import { css } from "@patternfly/react-styles";
-import { ConnectionLinksFilter } from "pages/ConnectionDetail/ConnectionLinksFilter";
+import { ConnectionLinksFilter } from "modules/connection-detail/ConnectionLinksFilter";
 import { ISortBy } from "@patternfly/react-table";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 interface IConnectionLinksWithFilterAndPaginationPageProps {
