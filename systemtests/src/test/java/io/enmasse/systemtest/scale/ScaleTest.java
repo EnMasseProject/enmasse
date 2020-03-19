@@ -297,8 +297,8 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 checkMetrics(manager.getMonitoringResult());
             } catch (Exception | AssertionError ex) {
                 manager.stopMonitoring();
-                log.error("Failed to wait for addresses/connections");
-                log.error(ex.getMessage());
+                LOGGER.error("Failed to wait for addresses/connections");
+                LOGGER.error(ex.getMessage());
                 operableAddresses = (int) kubernetes.getAddressClient().inNamespace(namespace).list().getItems().stream()
                         .filter(address -> address.getStatus().getPhase().equals(Phase.Active)).count();
                 LOGGER.info("#######################################");
@@ -598,7 +598,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         LOGGER.info("Saving results into {}", logsPath);
         var mapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
         Files.createDirectories(logsPath);
-        Files.write(logsPath.resolve("messaging_performance_results.json"), mapper.writeValueAsBytes(resultsObject));
+        Files.write(logsPath.resolve(filename), mapper.writeValueAsBytes(resultsObject));
     }
 
 }
