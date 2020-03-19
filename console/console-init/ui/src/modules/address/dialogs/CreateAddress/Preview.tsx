@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React, { useState } from "react";
 import {
   Grid,
   GridItem,
@@ -49,7 +49,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   namespace,
   addressspace
 }) => {
-  const [isCopied, setIsCopied] = React.useState<boolean>(false);
+  const [isCopied, setIsCopied] = useState<boolean>(false);
   const { data, loading, error } = useQuery(ADDRESS_COMMAND_PREVIEW_DETAIL, {
     variables: {
       a: {
