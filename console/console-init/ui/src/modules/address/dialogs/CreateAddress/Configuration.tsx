@@ -13,7 +13,7 @@ import {
   RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION
 } from "graphql-module/queries";
 import { IAddressResponse } from "types/ResponseTypes";
-import { AddressConfiguration } from "modules/address/components/AddressConfiguration/AddressConfiguration";
+import { AddressConfiguration } from "modules/address/components";
 
 export interface IAddressDefinition {
   addressspaceName: string;
@@ -153,7 +153,7 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
     }
   );
   if (loading) return <Loading />;
-  if (error) return <Loading />;
+
   const { addressTypes_v2 } = data || {
     addressTypes_v2: []
   };

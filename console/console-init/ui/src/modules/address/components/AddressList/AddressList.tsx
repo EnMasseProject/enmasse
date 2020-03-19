@@ -15,8 +15,7 @@ import {
   IExtraData,
   ISortBy
 } from "@patternfly/react-table";
-import { TypePlan } from "modules/address/components";
-import { Messages } from "modules/address/components";
+import { TypePlan, Messages } from "modules/address/components";
 import useWindowDimensions from "components/common/WindowDimension";
 import { css } from "@patternfly/react-styles";
 import { FormatDistance } from "use-patternfly";

@@ -10,7 +10,7 @@ import { IAddressListNameSearchResponse } from "types/ResponseTypes";
 import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "graphql-module/queries";
 import { TYPEAHEAD_REQUIRED_LENGTH, FetchPolicy } from "constants/constants";
 import { getSelectOptionList, ISelectOption } from "utils";
-import { AddressToolbarToggleGroup } from "modules/address/components/AddressToolbarToggleGroup";
+import { AddressToolbarToggleGroup } from "modules/address/components";
 
 interface IAddressListFilterProps {
   filterValue: string | null;
