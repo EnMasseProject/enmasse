@@ -1,14 +1,20 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest.scale.metrics;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.hawkular.agent.prometheus.types.Counter;
 import org.hawkular.agent.prometheus.types.Histogram;
+import org.hawkular.agent.prometheus.types.MetricFamily;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -36,8 +42,37 @@ public class MessagingClientMetricsClient extends ScaleTestClientMetricsClient {
     private static final String TEST_RECONNECT_DURATION_HIST = "test_reconnect_duration";
     private static final String TEST_REATTACH_DURATION_HIST = "test_reattach_duration";
 
+    private final long startMillis;
+
+    private final Map<String, List<MessagesCountRecord>> acceptedMessages = new HashMap<>();
+    private final Map<String, List<MessagesCountRecord>> receivedMessages = new HashMap<>();
+
     public MessagingClientMetricsClient(Endpoint metricsEndpoint) throws IOException {
         super(metricsEndpoint);
+        startMillis = System.currentTimeMillis();
+    }
+
+    @Override
+    protected void afterScrape(List<MetricFamily> metrics) {
+
+        long now = System.currentTimeMillis();
+        for (AddressType type : Arrays.asList(AddressType.ANYCAST, AddressType.QUEUE)) {
+            long accepted = getCounter(metrics, TEST_ACCEPTED_TOTAL_METRIC, "addressType", type.toString())
+                    .map(c -> c.getValue())
+                    .orElse(0d)
+                    .longValue();
+            long received = getCounter(metrics, TEST_RECEIVED_TOTAL_METRIC, "addressType", type.toString())
+                    .map(c -> c.getValue())
+                    .orElse(0d)
+                    .longValue();
+            acceptedMessages.computeIfAbsent(type.toString(), k -> new ArrayList<>()).add(new MessagesCountRecord(now, accepted));
+            receivedMessages.computeIfAbsent(type.toString(), k -> new ArrayList<>()).add(new MessagesCountRecord(now, received));
+        }
+
+    }
+
+    public long getStartTimeMillis() {
+        return startMillis;
     }
 
     public Counter getConnectSuccess() {
@@ -102,6 +137,14 @@ public class MessagingClientMetricsClient extends ScaleTestClientMetricsClient {
 
     public Optional<Histogram> getReattachDurationHistogram() {
         return getHistogram(TEST_REATTACH_DURATION_HIST);
+    }
+
+    public Map<String, List<MessagesCountRecord>> getAcceptedMessages() {
+        return acceptedMessages;
+    }
+
+    public Map<String, List<MessagesCountRecord>> getReceivedMessages() {
+        return receivedMessages;
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest.scale.metrics;
@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.hawkular.agent.prometheus.PrometheusDataFormat;
 import org.hawkular.agent.prometheus.PrometheusScraper;
@@ -22,21 +23,27 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 
-public class ScaleTestClientMetricsClient {
+public abstract class ScaleTestClientMetricsClient {
 
     private final static Logger log = CustomLogger.getLogger();
 
-    private static final long METRICS_UPDATE_PERIOD_MILLIS = 5000;
+    private static final int SCRAPE_RETRIES = 2;
+    public static final long METRICS_UPDATE_PERIOD_MILLIS = 11000;
 
     private PrometheusScraper scraper;
 
     private long lastUpdate;
     private List<MetricFamily> lastMetrics;
+    private AtomicBoolean failedScrape = new AtomicBoolean(false);
 
     protected ScaleTestClientMetricsClient(Endpoint metricsEndpoint) throws IOException {
         var url = new URL("http", metricsEndpoint.getHost(), metricsEndpoint.getPort(), "/metrics");
         log.debug("Scrapping from {}", url);
         scraper = new PrometheusScraper(url, PrometheusDataFormat.TEXT);
+    }
+
+    protected void afterScrape(List<MetricFamily> metrics) {
+        //do nothing
     }
 
     private void scrape() throws IOException {
@@ -46,25 +53,39 @@ public class ScaleTestClientMetricsClient {
             lastMetrics = new ArrayList<>();
         }
         lastUpdate = System.currentTimeMillis();
+        afterScrape(lastMetrics);
     }
 
     protected List<MetricFamily> getMetrics() {
-        try {
-            boolean scrape = false;
-            if (lastMetrics == null) {
-                log.debug("Initializing metrics");
-                scrape = true;
+        int retries = SCRAPE_RETRIES;
+        IOException error = null;
+        do {
+            try {
+                boolean scrape = false;
+                if (lastMetrics == null) {
+                    log.debug("Initializing metrics");
+                    scrape = true;
+                }
+                if (!scrape && (System.currentTimeMillis()-METRICS_UPDATE_PERIOD_MILLIS) > lastUpdate) {
+                    log.debug("Metrics update period elapsed, scraping metrics");
+                    scrape = true;
+                }
+                if (scrape) {
+                    scrape();
+                }
+                return lastMetrics;
+            } catch (IOException e) {
+                retries--;
+                error = e;
+                log.warn("Scraping failed {}", e.getMessage());
             }
-            if (!scrape && (System.currentTimeMillis()-METRICS_UPDATE_PERIOD_MILLIS) > lastUpdate) {
-                log.debug("Metrics update period elapsed, scraping metrics");
-                scrape = true;
-            }
-            if (scrape) {
-                scrape();
-            }
+        } while(retries > 0);
+        if (failedScrape.get()) {
+            throw new UncheckedIOException(error);
+        } else {
+            log.warn("Returning previous metrics after scraping failure");
+            failedScrape.set(true);
             return lastMetrics;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 
@@ -81,18 +102,7 @@ public class ScaleTestClientMetricsClient {
     }
 
     protected Optional<Counter> getCounter(String name, String label, String labelValue) {
-        var stream = getMetrics()
-                .stream()
-                .filter(m -> m.getName().equals(name))
-                .findFirst()
-                .orElseThrow(() -> metricNotFound(name))
-                .getMetrics()
-                .stream()
-                .filter(m -> m.getName().equals(name));
-        if (label != null && labelValue != null) {
-            stream = stream.filter(m -> m.getLabels().containsKey(label) && m.getLabels().containsValue(labelValue));
-        }
-        return stream.findFirst().map(m -> (Counter)m);
+        return getCounter(getMetrics(), name, label, labelValue);
     }
 
 
@@ -107,6 +117,21 @@ public class ScaleTestClientMetricsClient {
                 .filter(m -> m.getName().equals(name))
                 .findFirst()
                 .map(h -> (Histogram)h);
+    }
+
+    protected Optional<Counter> getCounter(List<MetricFamily> metrics, String name, String label, String labelValue) {
+        var stream = metrics
+                .stream()
+                .filter(m -> m.getName().equals(name))
+                .findFirst()
+                .orElseThrow(() -> metricNotFound(name))
+                .getMetrics()
+                .stream()
+                .filter(m -> m.getName().equals(name));
+        if (label != null && labelValue != null) {
+            stream = stream.filter(m -> m.getLabels().containsKey(label) && m.getLabels().containsValue(labelValue));
+        }
+        return stream.findFirst().map(m -> (Counter)m);
     }
 
 }

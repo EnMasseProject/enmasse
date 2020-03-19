@@ -175,6 +175,12 @@ public class IsolatedResourcesManager extends ResourceManager {
     }
 
     @Override
+    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan, boolean wait) throws Exception {
+        addressSpacePlans.add(addressSpacePlan);
+        super.createAddressSpacePlan(addressSpacePlan, wait);
+    }
+
+    @Override
     public void removeAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
         super.removeAddressSpacePlan(addressSpacePlan);
         addressSpacePlans.removeIf(spacePlanIter -> spacePlanIter.getMetadata().getName().equals(addressSpacePlan.getMetadata().getName()));
