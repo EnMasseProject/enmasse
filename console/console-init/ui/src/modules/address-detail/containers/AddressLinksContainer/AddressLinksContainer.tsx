@@ -3,8 +3,10 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@apollo/react-hooks";
+import { ISortBy } from "@patternfly/react-table";
+import { Loading } from "use-patternfly";
 import { RETURN_ADDRESS_LINKS } from "graphql-module/queries";
 import { IAddressLinksResponse } from "types/ResponseTypes";
 import {
@@ -12,8 +14,6 @@ import {
   AddressLinks
 } from "modules/address-detail/components/AddressLinks/AddressLinks";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
-import { ISortBy } from "@patternfly/react-table";
-import { Loading } from "use-patternfly";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { EmptyAddressLinks } from "modules/address-detail/components/EmptyAddressLinks";
 
@@ -45,7 +45,7 @@ const AddressLinksContainer: React.FunctionComponent<IAddressLinksListProps> = (
   sortValue,
   filterRole
 }) => {
-  const [sortBy, setSortBy] = React.useState<ISortBy>();
+  const [sortBy, setSortBy] = useState<ISortBy>();
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }

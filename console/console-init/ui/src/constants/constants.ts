@@ -27,6 +27,14 @@ enum ErrorCodes {
   FORBIDDEN = 403
 }
 
+enum AddressTypes {
+  QUEUE = "queue",
+  ANYCAST = "anycast",
+  MULTICAST = "multicast",
+  TOPIC = "topic",
+  SUBSCRIPTION = "subscription"
+}
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -37,5 +45,6 @@ export {
   MAX_ITEM_TO_FETCH_IN_TYPEAHEAD_DROPDOWN as MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   TypeAheadMessage,
-  ErrorCodes
+  ErrorCodes,
+  AddressTypes
 };

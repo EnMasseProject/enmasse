@@ -18,7 +18,8 @@ describe("Address Space Detail", () => {
       createdOn: "2019-11-25T05:24:05.755Z",
       type: "Standard",
       onDownload: () => {},
-      onDelete: () => {}
+      onDelete: () => {},
+      onEdit: () => {}
     };
 
     const { getByText } = render(<AddressSpaceHeader {...props} />);

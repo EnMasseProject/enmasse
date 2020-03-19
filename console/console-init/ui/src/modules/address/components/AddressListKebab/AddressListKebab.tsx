@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState } from "react";
 import {
   DropdownItem,
   Button,
@@ -29,7 +29,7 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
   isDeleteAllDisabled,
   isPurgeAllDisabled
 }) => {
-  const [isKebabOpen, setIsKebabOpen] = React.useState(false);
+  const [isKebabOpen, setIsKebabOpen] = useState(false);
   const dropdownItems = [
     <DropdownItem
       id="al-filter-dropdown-item-deleteall"
