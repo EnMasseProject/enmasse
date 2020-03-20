@@ -37,7 +37,6 @@ import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.scale.downtime.DowntimeData;
 import io.enmasse.systemtest.scale.downtime.DowntimeMonitoringResult;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
-import io.enmasse.systemtest.scale.metrics.ScaleTestClientMetricsClient;
 import io.enmasse.systemtest.scale.metrics.MessagesCountRecord;
 import io.enmasse.systemtest.scale.performance.AddressTypePerformanceResults;
 import io.enmasse.systemtest.scale.performance.PerformanceResults;
@@ -50,15 +49,19 @@ import io.enmasse.systemtest.utils.TestUtils;
 public class ScalePerformanceTestManager {
 
     private static final String MSG_PER_SEC_SUFFIX = " msg/sec";
-
     private static final String SECONDS_SUFFIX = "s";
 
     private final Logger logger = CustomLogger.getLogger();
 
+    private static final ScaleTestEnvironment env = ScaleTestEnvironment.getInstance();
+
+    //general purpose
+    private final int sleepPerConnectionMillis = env.getSleepPerConnectionMillis();
+
     //metrics monitoring constants
-    private final double connectionFailureRatioThreshold = 0.45;
-    private final double reconnectFailureRatioThreshold = 0.45;
-    private final double notAcceptedDeliveriesRatioThreshold = 0.5;
+    private final double connectionFailureRatioThreshold = env.getConnectionFailureRatioThreshold();
+    private final double reconnectFailureRatioThreshold = env.getReconnectFailureRatioThreshold();
+    private final double notAcceptedDeliveriesRatioThreshold = env.getNotAcceptedDeliveriesRatioThreshold();
 
     private final Kubernetes kubernetes;
 
@@ -291,7 +294,7 @@ public class ScalePerformanceTestManager {
     }
 
     public void sleep() throws InterruptedException {
-        long sleepMs = 4 * getConnections();
+        long sleepMs = sleepPerConnectionMillis * getConnections();
 
         logger.info("#######################################");
         logger.info("Created total {} connections with {} deployed clients, waiting {} s for system to react",
@@ -309,8 +312,8 @@ public class ScalePerformanceTestManager {
         TestUtils.waitUntilConditionOrFail(() -> {
             var counter = counterSupplier.get();
             return counter.isPresent() && counter.get().getValue() >= 0;
-        }, Duration.ofMillis((ScaleTestClientMetricsClient.METRICS_UPDATE_PERIOD_MILLIS * 3) + 100),
-                Duration.ofMillis(ScaleTestClientMetricsClient.METRICS_UPDATE_PERIOD_MILLIS),
+        }, Duration.ofMillis((env.getMetricsUpdatePeriodMillis() * (env.getScrapeRetries() + 1)) + 100),
+                Duration.ofMillis(env.getMetricsUpdatePeriodMillis()),
                 () -> timeoutMessage);
     }
 

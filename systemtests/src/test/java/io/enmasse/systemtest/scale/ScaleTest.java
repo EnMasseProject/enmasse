@@ -68,7 +68,6 @@ import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.scale.downtime.DowntimeData;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
 import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
-import io.enmasse.systemtest.scale.metrics.ScaleTestClientMetricsClient;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -86,25 +85,28 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 class ScaleTest extends TestBase implements ITestBaseIsolated {
     private final static Logger LOGGER = CustomLogger.getLogger();
 
-    private final int addressesPerTenant = 5;
+    private final ScaleTestEnvironment env = ScaleTestEnvironment.getInstance();
+
+    private final int addressesPerTenant = env.getAddressesPerTenant();
 
     //addresses and connections scaling constants
-    private final int scaleSendMessagesPeriod = 10000;
+    private final int scaleSendMessagesPeriod = env.getScaleSendMessagesPeriod();
+    private final int scaleAddressesFailureThreshold = env.getScaleAddressesFailureThreshold();
 
     //performance test constants
-    private final int performanceInitialAddresses = 12000;
-    private final int initialAddressesPerGroup = 100;
-    private final int addressesPerGroupIncrease = initialAddressesPerGroup;
-    private final int initialAnycastLinksPerConn = 1;
-    private final int anycastLinksPerConnIncrease = initialAnycastLinksPerConn;
-    private final int initialQueueLinksPerConn = 1;
-    private final int queueLinksPerConnIncrease = initialQueueLinksPerConn;
-    private final int performanceSendMessagesPeriod = 10000; //important to be less than the metrics scrapping period
+    private final int performanceInitialAddresses = env.getPerfInitialAddresses();
+    private final int initialAddressesPerGroup = env.getPerfInitialAddressesPerGroup();
+    private final int addressesPerGroupIncrease = env.getPerfAddressesPerGroupIncrease();
+    private final int initialAnycastLinksPerConn = env.getPerfInitialAnycastLinksPerConn();
+    private final int anycastLinksPerConnIncrease = env.getPerfAnycastLinksPerConnIncrease();
+    private final int initialQueueLinksPerConn = env.getPerfInitialQueueLinksPerConn();
+    private final int queueLinksPerConnIncrease = env.getPerfQueueLinksPerConnIncrease();
+    private final int performanceSendMessagesPeriod = env.getPerfSendMessagesPeriod();
 
     //fault tolerance constants
-    private final int faultToleranceInitialAddresses = 8000;
-    private final int faultToleranceAddressesPerGroup = 100;
-    private final int faultToleranceSendMessagesPeriod = 20000;
+    private final int faultToleranceInitialAddresses = env.getFaultToleranceInitialAddresses();
+    private final int faultToleranceAddressesPerGroup = env.getFaultToleranceAddressesPerGroup();
+    private final int faultToleranceSendMessagesPeriod = env.getFaultToleranceSendMessagesPeriod();
 
     private final String namespace = "scale-test-namespace";
     private final String addressSpacePlanName = "test-addressspace-plan";
@@ -118,6 +120,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     @BeforeAll
     void disableVerboseLogging() {
         TimeMeasuringSystem.disableResultsLogging();
+        AddressUtils.disableVerboseLogs();
     }
 
     @BeforeEach
@@ -253,7 +256,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
         } finally {
             LOGGER.info("waiting for gathering of last metris");
-            Thread.sleep(ScaleTestClientMetricsClient.METRICS_UPDATE_PERIOD_MILLIS + 1000);
+            Thread.sleep(env.getMetricsUpdatePeriodMillis() + 1000);
             manager.stopMonitoring();
             manager.gatherPerformanceResults();
             saveResultsFile("messaging_performance_results.json", manager.getPerformanceResults());
@@ -272,7 +275,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     void testNumberOfSupportedAddresses() throws Exception {
         int operableAddresses;
         int iterator = 0;
-        int failureThreshold = 12_000;
+        int failureThreshold = scaleAddressesFailureThreshold;
         List<Address> addressBatch = new LinkedList<>();
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
         ScalePerformanceTestManager manager = new ScalePerformanceTestManager(endpoint, userCredentials);
