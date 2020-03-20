@@ -15,14 +15,14 @@ const styles = StyleSheet.create({
     fontSize: 21
   }
 });
-export interface IMessagesDetail {
+export interface IMessagesDetailHeaderAttributes {
   messageIn?: number | string;
   messageOut?: number | string;
   addressSpaceType?: string;
   isMobileView: boolean;
 }
 
-export const MessagesDetail: React.FunctionComponent<IMessagesDetail> = ({
+export const MessagesDetailHeaderAttributes: React.FunctionComponent<IMessagesDetailHeaderAttributes> = ({
   messageIn,
   messageOut,
   addressSpaceType,

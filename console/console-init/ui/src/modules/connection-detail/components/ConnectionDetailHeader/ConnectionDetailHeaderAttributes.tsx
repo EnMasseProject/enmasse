@@ -20,14 +20,14 @@ const styles = StyleSheet.create({
     paddingBottom: "12px"
   }
 });
-export interface IConnectionDetailProps {
+export interface IConnectionDetailHeaderAttributesProps {
   product?: string;
   version?: string;
   jvm?: string;
   os?: string;
   isMobileView: boolean;
 }
-export const ConnectionDetail: React.FunctionComponent<IConnectionDetailProps> = ({
+export const ConnectionDetailHeaderAttributes: React.FunctionComponent<IConnectionDetailHeaderAttributesProps> = ({
   product,
   version,
   jvm,

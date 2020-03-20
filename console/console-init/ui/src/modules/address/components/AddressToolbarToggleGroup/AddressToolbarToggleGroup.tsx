@@ -16,7 +16,7 @@ import {
   Button,
   ButtonVariant
 } from "@patternfly/react-core";
-import { TypeAheadSelect } from "components";
+import { TypeAheadSelect } from "components/TypeAheadSelect";
 import { ISelectOption } from "utils";
 
 interface IAddressToolbarProps {

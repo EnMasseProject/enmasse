@@ -7,7 +7,7 @@ import * as React from "react";
 import {
   ConnectionDetailHeader,
   IConnectionHeaderDetailProps
-} from "modules/connection-detail/ConnectionDetailHeader";
+} from "modules/connection-detail/components/ConnectionDetailHeader/ConnectionDetailHeader";
 import {
   PageSection,
   Breadcrumb,
@@ -25,7 +25,7 @@ import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { IConnectionDetailResponse } from "types/ResponseTypes";
 import { Link } from "react-router-dom";
 import { RETURN_CONNECTION_DETAIL } from "graphql-module/queries";
-import { ConnectionLinksWithFilterAndPaginationPage } from "./ConnectionLinksWithFilterAndPaginationPage";
+import { ConnectionDetailToolbar } from "./components/ConnectionDetailToolbar/ConnectionDetailToolbar";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { NoDataFound } from "components/common/NoDataFound";
 
@@ -79,14 +79,12 @@ export default function ConnectionDetailPage() {
 
   useBreadcrumb(breadcrumb);
   useA11yRouteChange();
-  const { loading, error, data } = useQuery<IConnectionDetailResponse>(
+  const { loading, data } = useQuery<IConnectionDetailResponse>(
     RETURN_CONNECTION_DETAIL(name || "", namespace || "", connectionname || ""),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
   if (loading) return <Loading />;
-  if (error) {
-    console.log(error);
-  }
+
   const { connections } = data || {
     connections: { total: 0, connections: [] }
   };
@@ -140,7 +138,7 @@ export default function ConnectionDetailPage() {
     <>
       <ConnectionDetailHeader {...connectionDetail} addressSpaceType={type} />
       <PageSection>
-        <ConnectionLinksWithFilterAndPaginationPage
+        <ConnectionDetailToolbar
           name={name}
           namespace={namespace}
           connectionName={connectionname}

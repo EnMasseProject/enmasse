@@ -16,7 +16,7 @@ import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
 import { ConnectionContainer } from "./containers/ConnectionContainer";
 import { ConnectionToolbar } from "modules/connection";
-import { TablePagination } from "components";
+import { TablePagination } from "components/TablePagination";
 
 export default function ConnectionPage() {
   useDocumentTitle("Connection List");

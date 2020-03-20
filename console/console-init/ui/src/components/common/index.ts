@@ -7,7 +7,7 @@ export * from "./About";
 export * from "./AddressSpaceListFormatter";
 export * from "./ConnectionListFormatter";
 export * from "./DialogPrompt";
-export * from "./EmptyLinks";
+export * from "../../modules/connection-detail/components/EmptyConnectionLinks/EmptyConnectionLinks";
 export * from "./Error";
 export * from "./ErrorBoundary";
 export * from "./FilterDropdown";
