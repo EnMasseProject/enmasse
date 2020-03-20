@@ -9,6 +9,19 @@ An address space is a group of addresses that can be accessed through a single c
 
 {ProductName} has two types of address spaces:
 
+ifdef::SingleBookLink[]
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-standard-address-space-messaging[Standard]
+endif::SingleBookLink[]
+
+ifndef::SingleBookLink[]
+* link:{BookUrlBase}{BaseProductVersion}/html-single/using_amq_online_on_openshift/#con-standard-address-space-messaging[Standard]
+endif::SingleBookLink[]
+
+ifdef::SingleBookLink[]
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-brokered-address-space-messaging[Brokered]
+endif::SingleBookLink[]
+
+ifndef::SingleBookLink[]
+* link:{BookUrlBase}{BaseProductVersion}/html-single/using_amq_online_on_openshift/#con-brokered-address-space-messaging[Brokered]
+endif::SingleBookLink[]
 
