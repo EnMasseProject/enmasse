@@ -15,7 +15,7 @@ import {
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { ISortBy } from "@patternfly/react-table";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
-import { EmptyLinks } from "modules/connection-detail/components/EmptyConnectionLinks/EmptyConnectionLinks";
+import { EmptyConnectionLinks } from "modules/connection-detail/components";
 
 interface IConnectionDetailContainerProps {
   name: string;
@@ -30,7 +30,7 @@ interface IConnectionDetailContainerProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
 }
-export const ConnectionDetailContainer: React.FunctionComponent<IConnectionDetailContainerProps> = ({
+export const ConnectionLinksContainer: React.FunctionComponent<IConnectionDetailContainerProps> = ({
   name,
   namespace,
   connectionName,
@@ -94,7 +94,7 @@ export const ConnectionDetailContainer: React.FunctionComponent<IConnectionDetai
       {linkRows && linkRows.length > 0 ? (
         <ConnectionLinksList rows={linkRows} onSort={onSort} sortBy={sortBy} />
       ) : (
-        <EmptyLinks />
+        <EmptyConnectionLinks />
       )}
     </>
   );

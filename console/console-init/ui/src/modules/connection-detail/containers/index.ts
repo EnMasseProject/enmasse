@@ -1,1 +1,1 @@
-export * from "./ConnectionDetailContainer";
+export * from "./ConnectionLinksContainer";

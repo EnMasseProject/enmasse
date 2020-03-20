@@ -12,10 +12,10 @@ import {
   Grid
 } from "@patternfly/react-core";
 import { GridStylesForTableHeader } from "modules/address/AddressPage";
-import { ConnectionDetailContainer } from "../../containers/ConnectionDetailContainer";
+import { ConnectionLinksContainer } from "../../containers";
 import { useLocation } from "react-router";
 import { css } from "@patternfly/react-styles";
-import { ConnectionDetailFilter } from "modules/connection-detail/components/ConnectionDetailFilter/ConnectionDetailFilter";
+import { ConnectionDetailFilter } from "../ConnectionDetailFilter";
 import { ISortBy } from "@patternfly/react-table";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { TablePagination } from "components";
@@ -83,7 +83,7 @@ export const ConnectionDetailToolbar: React.FunctionComponent<IConnectionDetailT
         <GridItem span={6}>{renderPagination(page, perPage)}</GridItem>
       </Grid>
       <Divider />
-      <ConnectionDetailContainer
+      <ConnectionLinksContainer
         name={name || ""}
         namespace={namespace || ""}
         connectionName={connectionName || ""}
