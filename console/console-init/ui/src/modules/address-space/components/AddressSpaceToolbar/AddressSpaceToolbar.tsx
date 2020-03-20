@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React, { useState } from "react";
 import {
   DataToolbarContent,
   DataToolbar,
@@ -19,8 +19,6 @@ import useWindowDimensions from "components/common/WindowDimension";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
 interface IAddressSpaceToolbarProps {
-  filterValue?: string;
-  setFilterValue: (value: string) => void;
   filterNames: any[];
   setFilterNames: (value: Array<any>) => void;
   filterNamespaces: any[];
@@ -34,8 +32,6 @@ interface IAddressSpaceToolbarProps {
   isDeleteAllDisabled: boolean;
 }
 export const AddressSpaceToolbar: React.FunctionComponent<IAddressSpaceToolbarProps> = ({
-  filterValue,
-  setFilterValue,
   filterNames,
   setFilterNames,
   filterNamespaces,
@@ -50,6 +46,8 @@ export const AddressSpaceToolbar: React.FunctionComponent<IAddressSpaceToolbarPr
 }) => {
   const { width } = useWindowDimensions();
   const { dispatch } = useStoreContext();
+
+  const [filterValue, setFilterValue] = useState<string>("Name");
 
   const onClearAllFilters = () => {
     setFilterValue("Name");

@@ -5,9 +5,7 @@
 
 import * as React from "react";
 import {
-  Dropdown,
   DropdownPosition,
-  KebabToggle,
   DropdownItem,
   Title,
   Flex,
@@ -16,9 +14,10 @@ import {
   SplitItem,
   Badge
 } from "@patternfly/react-core";
+import { FormatDistance } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { AddressSpaceType } from "components/common/AddressSpaceListFormatter";
-import { FormatDistance } from "use-patternfly";
+import { DropdownWithKababToggle } from "components";
 
 const styles = StyleSheet.create({
   flex_right_border: {
@@ -62,13 +61,6 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
   onDelete,
   onEdit
 }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const onSelect = (result: any) => {
-    setIsOpen(!isOpen);
-  };
-  const onToggle = () => {
-    setIsOpen(!isOpen);
-  };
   const dropdownItems = [
     <DropdownItem
       key="edit"
@@ -129,12 +121,10 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
         </SplitItem>
         <SplitItem isFilled></SplitItem>
         <SplitItem className={css(styles.kebab_toggle_margin)}>
-          <Dropdown
+          <DropdownWithKababToggle
             id="as-header-dropdown"
-            onSelect={onSelect}
+            toggleId={"as-header-kebab"}
             position={DropdownPosition.right}
-            toggle={<KebabToggle id="as-header-kebab" onToggle={onToggle} />}
-            isOpen={isOpen}
             isPlain={true}
             dropdownItems={dropdownItems}
           />
