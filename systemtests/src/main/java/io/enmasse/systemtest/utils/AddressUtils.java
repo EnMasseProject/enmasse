@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.utils;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +24,6 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressStatus;
 import io.enmasse.address.model.AddressStatusForwarder;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
@@ -49,6 +47,13 @@ import io.vertx.core.json.JsonObject;
 
 public class AddressUtils {
     private static Logger log = CustomLogger.getLogger();
+
+    //TODO make this configurable via env var
+    private static boolean verboseLogs = true;
+
+    public static void disableVerboseLogs() {
+        verboseLogs = false;
+    }
 
     public static List<Address> getAddresses(AddressSpace addressSpace) {
         return getAddresses(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
@@ -236,8 +241,10 @@ public class AddressUtils {
             try {
                 List<Address> addressList = addressClient.list().getItems();
                 Map<String, Address> notMatched = addressListMatcher.matchAddresses(addressList);
-                notMatched.values().forEach(address ->
+                if (verboseLogs) {
+                    notMatched.values().forEach(address ->
                         log.info("Waiting until address {} ready, message {}", address.getMetadata().getName(), address.getStatus().getMessages()));
+                }
                 if (!notMatched.isEmpty() && phase == WaitPhase.LAST_TRY) {
                     log.info(notMatched.size() + " out of " + totalDestinations + " addresses are not matched: " + notMatched.values());
                 }

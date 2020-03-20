@@ -22,13 +22,16 @@ import org.slf4j.Logger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.scale.ScaleTestEnvironment;
 
 public abstract class ScaleTestClientMetricsClient {
 
     private final static Logger log = CustomLogger.getLogger();
 
-    private static final int SCRAPE_RETRIES = 2;
-    public static final long METRICS_UPDATE_PERIOD_MILLIS = 11000;
+    private static final ScaleTestEnvironment env = ScaleTestEnvironment.getInstance();
+
+    private static final int SCRAPE_RETRIES = env.getScrapeRetries();
+    private static final long METRICS_UPDATE_PERIOD_MILLIS = env.getMetricsUpdatePeriodMillis();
 
     private PrometheusScraper scraper;
 
