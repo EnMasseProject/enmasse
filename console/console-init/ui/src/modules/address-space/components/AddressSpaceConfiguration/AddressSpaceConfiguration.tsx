@@ -14,7 +14,7 @@ import {
   Radio
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { DropdownWithToggle } from "components";
+import { DropdownWithToggle, IDropdownOption } from "components";
 
 export const dropdown_item_styles = StyleSheet.create({
   format_item: { whiteSpace: "normal", textAlign: "justify" },
@@ -40,7 +40,7 @@ export interface IAddressSpaceConfigurationProps {
   onPlanSelect: (event: any) => void;
   handleStandardChange: () => void;
   onAuthenticationServiceSelect: (event: any) => void;
-  namespaceOptions: any[];
+  namespaceOptions: IDropdownOption[];
   namespace: string;
   name: string;
   isNameValid: boolean;

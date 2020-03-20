@@ -20,6 +20,13 @@ export const dropdown_styles = StyleSheet.create({
   font_item: { fontWeight: "bold" }
 });
 
+export interface IDropdownOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+  description?: string;
+}
+
 export interface IDropdownWithToggleProps
   extends Omit<DropdownProps, "toggle" | "onSelect"> {
   id: string;
@@ -66,7 +73,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   };
 
   const getDropdownItems = () => {
-    let items: any[] = [];
+    let items: React.ReactElement<IDropdownOption>[] = [];
     if (dropdownItems && dropdownItems.length > 0) {
       items = dropdownItems.map(option => (
         <DropdownItem
