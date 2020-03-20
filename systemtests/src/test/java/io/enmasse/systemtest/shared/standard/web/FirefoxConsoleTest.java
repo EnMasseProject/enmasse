@@ -326,4 +326,9 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
         doTestValidAddressNames(getSharedAddressSpace());
     }
 
+    @Test
+    void testErrorDialog() throws Exception {
+        doTestErrorDialog(getSharedAddressSpace());
+    }
+
 }
