@@ -56,6 +56,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -344,8 +346,9 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
     }
 
-    @Test
-    void testAddressSpaceKubernetesApiServerRestart() throws Exception {
+    @ParameterizedTest(name = "testAddressSpaceKubernetesApiServerRestart-{0}-space")
+    @ValueSource(strings = {"standard", "brokered"})
+    void testAddressSpaceKubernetesApiServerRestart(String type) throws Exception {
 
         try {
             SystemtestsKubernetesApps.deployProxyApiApp();
@@ -353,12 +356,12 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
             AddressSpace standard = new AddressSpaceBuilder()
                     .withNewMetadata()
-                    .withName("space-restart-standard")
+                    .withName("space-k8api-restart-" + type)
                     .withNamespace(kubernetes.getInfraNamespace())
                     .endMetadata()
                     .withNewSpec()
-                    .withType(AddressSpaceType.STANDARD.toString())
-                    .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                    .withType(type)
+                    .withPlan(AddressSpaceType.STANDARD.toString().equals(type) ? AddressSpacePlans.STANDARD_SMALL : AddressSpacePlans.BROKERED)
                     .withNewAuthenticationService()
                     .withName("standard-authservice")
                     .endAuthenticationService()
@@ -366,8 +369,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                     .build();
             isolatedResourcesManager.createAddressSpaceList(standard);
 
-            // configure admin pod use api proxy
-
+            // configure admin pod to use api proxy
             Map<String, String> adminLabels = new HashMap<>();
             adminLabels.put(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(standard));
             adminLabels.put(LabelKeys.NAME, "admin");
@@ -388,9 +390,9 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                         .withNewSpec()
                         .withType("queue")
                         .withAddress(name)
-                        .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                        .withPlan(AddressSpaceType.STANDARD.toString().equals(type) ? DestinationPlan.STANDARD_SMALL_QUEUE : DestinationPlan.BROKERED_QUEUE)
                         .endSpec()
-                        .build()         ;
+                        .build();
             }).limit(2).collect(Collectors.toList()).iterator();
 
             // Create address before proxy goes away
@@ -408,7 +410,6 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
             // Create address after proxy has returned
             resourcesManager.setAddresses(itr.next());
-
         } finally {
             SystemtestsKubernetesApps.deleteProxyApiApp();
         }
