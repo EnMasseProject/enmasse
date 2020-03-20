@@ -253,6 +253,24 @@ public class KubeCMDClient {
         return Exec.execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
+    public static ExecutionResultData setResourceEnvVarByLabel(String resourceType, Optional<String> containers, String resourceName, String envVarName, String envVarValue) {
+        ArrayList<String> setEnvCmd = new ArrayList<>();
+        setEnvCmd.add(CMD);
+        setEnvCmd.add("set");
+        setEnvCmd.add("env");
+        setEnvCmd.add(resourceType);
+        setEnvCmd.add(resourceName);
+        containers.ifPresent(s -> setEnvCmd.add("--containers=" + s));
+
+        if (envVarValue == null) {
+            setEnvCmd.add(envVarName + "-");
+        } else {
+            setEnvCmd.add(envVarName + "=" + envVarValue);
+        }
+
+        return Exec.execute(setEnvCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
     public static ExecutionResultData runOnPod(String namespace, String podName, Optional<String> container, String... args) {
         List<String> runCmd = new ArrayList<>();
         String[] base = container.map(s -> new String[]{CMD, "exec", podName, "-n", namespace, "--container", s, "--"})
