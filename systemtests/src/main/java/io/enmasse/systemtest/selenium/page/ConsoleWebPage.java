@@ -23,6 +23,7 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NotFoundException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -860,6 +861,20 @@ public class ConsoleWebPage implements IWebPage {
         } finally {
             selenium.takeScreenShot();
         }
+    }
+
+    public WebElement getErrorDialog() {
+        try {
+            WebElement error = selenium.getDriver().findElement(By.xpath("//div[@aria-label='Danger Alert']"));
+            return error;
+        } catch (NotFoundException e) {
+            return null;
+        }
+    }
+
+    public void waitForErrorDialogToBePresent() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30))
+                .until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//div[@aria-label='Danger Alert']")));
     }
 
     public void sortAddresses(SortType sortType, boolean asc) throws Exception {

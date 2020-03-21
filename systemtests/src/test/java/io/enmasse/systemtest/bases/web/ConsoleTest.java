@@ -78,6 +78,7 @@ import java.util.stream.IntStream;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.either;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -1404,6 +1405,18 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.prepareAddressCreation(address);
         String snippet = consolePage.getDeploymentSnippet();
         KubeCMDClient.createCR(Kubernetes.getInstance().getInfraNamespace(), snippet);
+    }
+
+    protected void doTestErrorDialog(AddressSpace addressSpace) throws Exception {
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
+        Address address = generateAddressObject(addressSpace, DestinationPlan.STANDARD_SMALL_QUEUE);
+        consolePage.createAddress(address);
+        consolePage.createAddress(address);
+        consolePage.waitForErrorDialogToBePresent();
+        assertThat("Error dialog is not present after error situation!", consolePage.getErrorDialog(), notNullValue());
+
     }
 
     //============================================================================================
