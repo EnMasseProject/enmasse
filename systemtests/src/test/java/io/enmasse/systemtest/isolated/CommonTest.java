@@ -376,7 +376,8 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             adminLabels.put(LabelKeys.APP, "enmasse");
 
             kubernetes.listDeployments(adminLabels).forEach(d -> {
-                ExecutionResultData labelRes = KubeCMDClient.setResourceEnvVarByLabel("deployment", Optional.of("agent"), d.getMetadata().getName(), "KUBERNETES_SERVICE_HOST", proxyDnsName);
+                KubeCMDClient.runOnCluster("get", "deployments", "-n", kubernetes.getInfraNamespace(), "-o", "wide");
+                ExecutionResultData labelRes = KubeCMDClient.setResourceEnvVarByLabel(Optional.of(kubernetes.getInfraNamespace()), "deployment", Optional.of("agent"), "KUBERNETES_SERVICE_HOST", d.getMetadata().getName(), proxyDnsName);
                 assertTrue(labelRes.getRetCode());
             });
 
