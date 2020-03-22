@@ -93,25 +93,6 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
     private final int addressesPerTenant = env.getAddressesPerTenant();
 
-    //addresses and connections scaling constants
-    private final int scaleSendMessagesPeriod = env.getScaleSendMessagesPeriod();
-    private final int scaleAddressesFailureThreshold = env.getScaleAddressesFailureThreshold();
-
-    //performance test constants
-    private final int performanceInitialAddresses = env.getPerfInitialAddresses();
-    private final int initialAddressesPerGroup = env.getPerfInitialAddressesPerGroup();
-    private final int addressesPerGroupIncrease = env.getPerfAddressesPerGroupIncrease();
-    private final int initialAnycastLinksPerConn = env.getPerfInitialAnycastLinksPerConn();
-    private final int anycastLinksPerConnIncrease = env.getPerfAnycastLinksPerConnIncrease();
-    private final int initialQueueLinksPerConn = env.getPerfInitialQueueLinksPerConn();
-    private final int queueLinksPerConnIncrease = env.getPerfQueueLinksPerConnIncrease();
-    private final int performanceSendMessagesPeriod = env.getPerfSendMessagesPeriod();
-
-    //fault tolerance constants
-    private final int faultToleranceInitialAddresses = env.getFaultToleranceInitialAddresses();
-    private final int faultToleranceAddressesPerGroup = env.getFaultToleranceAddressesPerGroup();
-    private final int faultToleranceSendMessagesPeriod = env.getFaultToleranceSendMessagesPeriod();
-
     private final String namespace = "scale-test-namespace";
     private final String addressSpacePlanName = "test-addressspace-plan";
     private final String queuePlanName = "test-queue-plan";
@@ -205,10 +186,14 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
     @Test
     void testMessagingPerformance() throws Exception {
-        int initialAddresses = performanceInitialAddresses;
-        int anycastLinksPerConnection = initialAnycastLinksPerConn;
-        int queueLinksPerConnection = initialQueueLinksPerConn;
-        int addressesPerGroup = initialAddressesPerGroup;
+        final int initialAddresses = env.getPerfInitialAddresses();
+        final int addressesPerGroupIncrease = env.getPerfAddressesPerGroupIncrease();
+        final int anycastLinksPerConnIncrease = env.getPerfAnycastLinksPerConnIncrease();
+        final int queueLinksPerConnIncrease = env.getPerfQueueLinksPerConnIncrease();
+
+        int anycastLinksPerConnection = env.getPerfInitialAnycastLinksPerConn();
+        int queueLinksPerConnection = env.getPerfInitialQueueLinksPerConn();
+        int addressesPerGroup = env.getPerfInitialAddressesPerGroup();
 
         var addresses = createInitialAddresses(initialAddresses);
 
@@ -231,7 +216,12 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 //deploy clients and start messaging
                 for (var groupOfAddresses : addressesGroups) {
                     checkMetrics(manager.getMonitoringResult());
-                    manager.deployTenantClient(groupOfAddresses, addressesPerTenant, performanceSendMessagesPeriod);
+                    var config = new ScaleTestClientConfiguration();
+                    config.setAddressesPerTenant(addressesPerTenant);
+                    config.setSendMessagePeriod(env.getPerfSendMessagesPeriod());
+                    config.setReceiversPerTenant(env.getPerfReceiversPerTenant());
+                    config.setSendersPerTenant(env.getPerfSendersPerTenant());
+                    manager.deployTenantClient(groupOfAddresses, config);
                     checkMetrics(manager.getMonitoringResult());
                 }
 
@@ -289,7 +279,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     void testNumberOfSupportedAddresses() throws Exception {
         int operableAddresses;
         int iterator = 0;
-        int failureThreshold = scaleAddressesFailureThreshold;
+        int failureThreshold = env.getScaleAddressesFailureThreshold();
         List<Address> addressBatch = new LinkedList<>();
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
         ScaleTestManager manager = new ScaleTestManager(endpoint, userCredentials);
@@ -304,7 +294,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                     List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
                     AddressUtils.waitForDestinationsReady(new TimeoutBudget(15, TimeUnit.MINUTES), currentAddresses.toArray(new Address[0]));
 
-                    manager.deployTenantClient(addressBatch, addressesPerTenant, scaleSendMessagesPeriod);
+                    manager.deployTenantClient(addressBatch, addressesPerTenant, env.getScaleSendMessagesPeriod());
                     addressBatch.clear();
                     manager.sleep();
                     TestUtils.listRouterPods(kubernetes, addressSpace).forEach(
@@ -337,8 +327,8 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
     @Test
     public void testFailureRecovery() throws Exception {
-        int addressesToCreate = faultToleranceInitialAddresses;
-        int addressesPerGroup = faultToleranceAddressesPerGroup;
+        int addressesToCreate = env.getFaultToleranceInitialAddresses();
+        int addressesPerGroup = env.getFaultToleranceAddressesPerGroup();
 
         //create addresses
         var addresses = createInitialAddresses(addressesToCreate);
@@ -360,7 +350,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
         //deploy clients and start messaging
         for (var groupOfAddresses : addressesGroups) {
-            manager.deployTenantClient(groupOfAddresses, addressesPerTenant, faultToleranceSendMessagesPeriod);
+            manager.deployTenantClient(groupOfAddresses, addressesPerTenant, env.getFaultToleranceSendMessagesPeriod());
         }
         manager.getDowntimeResult().setClientsDeployed(addressesGroups.size());
 

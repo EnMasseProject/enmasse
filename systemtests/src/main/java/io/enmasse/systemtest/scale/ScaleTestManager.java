@@ -136,6 +136,13 @@ public class ScaleTestManager {
     }
 
     public void deployTenantClient(List<Address> addresses, int addressesPerTenant, int sendMsgPeriodMillis) throws Exception {
+        var config = new ScaleTestClientConfiguration();
+        config.setAddressesPerTenant(addressesPerTenant);
+        config.setSendMessagePeriod(sendMsgPeriodMillis);
+        deployTenantClient(addresses, config);
+    }
+
+    public void deployTenantClient(List<Address> addresses, ScaleTestClientConfiguration params) throws Exception {
         if (addresses == null || addresses.isEmpty()) {
             throw new IllegalArgumentException("Addresses cannot be null or empty");
         }
@@ -145,12 +152,15 @@ public class ScaleTestManager {
         var clientConfig = clientProvider.get();
         clientConfig.setClientType(ScaleTestClientType.tenant);
         clientConfig.setAddresses(addr);
-        clientConfig.setAddressesPerTenant(addressesPerTenant);
-        clientConfig.setSendMessagePeriod(sendMsgPeriodMillis);
+        clientConfig.setAddressesPerTenant(params.getAddressesPerTenant());
+        clientConfig.setSendMessagePeriod(params.getSendMessagePeriod());
+        clientConfig.setReceiversPerTenant(params.getReceiversPerTenant());
+        clientConfig.setSendersPerTenant(params.getSendersPerTenant());
 
         SystemtestsKubernetesApps.deployScaleTestClient(kubernetes, clientConfig);
 
-        int connectionsInThisClient = (addr.length / addressesPerTenant) * 2; // *2 because client creates sender and receiver
+        int tenantsInThisBatch = addr.length / clientConfig.getAddressesPerTenant();
+        int connectionsInThisClient = tenantsInThisBatch * (clientConfig.getReceiversPerTenant() + clientConfig.getSendersPerTenant());
         totalExpectedConnections += connectionsInThisClient;
 
         var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, clientConfig.getClientId());

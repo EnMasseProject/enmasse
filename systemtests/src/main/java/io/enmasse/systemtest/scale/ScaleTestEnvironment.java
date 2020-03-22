@@ -31,6 +31,8 @@ public class ScaleTestEnvironment {
     private static final String SCALE_PERF_INIT_QUEUE_LINKS_PER_CONN = "SCALE_PERF_INIT_QUEUE_LINKS_PER_CONN";
     private static final String SCALE_PERF_QUEUE_LINKS_PER_CONN_INC = "SCALE_PERF_QUEUE_LINKS_PER_CONN_INC";
     private static final String SCALE_PERF_SEND_MSG_PERIOD_MILLIS = "SCALE_PERF_SEND_MSG_PERIOD_MILLIS";
+    private static final String SCALE_PERF_RECEIVERS_PER_TENANT = "SCALE_PERF_RECEIVERS_PER_TENANT";
+    private static final String SCALE_PERF_SENDERS_PER_TENANT = "SCALE_PERF_SENDERS_PER_TENANT";
 
     private static final String SCALE_HA_ADDRESSES = "SCALE_HA_ADDRESSES";
     private static final String SCALE_HA_ADDRESSES_PER_GROUP = "SCALE_HA_ADDRESSES_PER_GROUP";
@@ -65,6 +67,8 @@ public class ScaleTestEnvironment {
      * that this value is less than  the metrics scrapping period
      */
     private final int performanceSendMessagesPeriod = getOrDefault(SCALE_PERF_SEND_MSG_PERIOD_MILLIS, Integer::parseInt, 10_000);
+    private final int performanceReceiversPerTenant = getOrDefault(SCALE_PERF_RECEIVERS_PER_TENANT, Integer::parseInt, 1);
+    private final int performanceSendersPerTenant = getOrDefault(SCALE_PERF_SENDERS_PER_TENANT, Integer::parseInt, 1);
 
     //fault tolerance constants
     private final int faultToleranceInitialAddresses = getOrDefault(SCALE_HA_ADDRESSES, Integer::parseInt, 8_000);
@@ -142,6 +146,15 @@ public class ScaleTestEnvironment {
     public int getPerfSendMessagesPeriod() {
         return performanceSendMessagesPeriod;
     }
+
+    public int getPerfReceiversPerTenant() {
+        return performanceReceiversPerTenant;
+    }
+
+    public int getPerfSendersPerTenant() {
+        return performanceSendersPerTenant;
+    }
+
 
     public int getFaultToleranceInitialAddresses() {
         return faultToleranceInitialAddresses;

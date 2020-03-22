@@ -27,6 +27,8 @@ public class ScaleTestClientConfiguration {
     //tenant-client
     private Integer addressesPerTenant;
     private Integer sendMessagePeriod; //milliseconds
+    private Integer receiversPerTenant = 1;
+    private Integer sendersPerTenant = 1;
 
     public ScaleTestClientConfiguration() {
 		// empty
@@ -121,6 +123,22 @@ public class ScaleTestClientConfiguration {
 
     public void setSendMessagePeriod(Integer sendMessagePeriod) {
         this.sendMessagePeriod = sendMessagePeriod;
+    }
+
+    public Integer getReceiversPerTenant() {
+        return receiversPerTenant;
+    }
+
+    public void setReceiversPerTenant(Integer receiversPerTenant) {
+        this.receiversPerTenant = receiversPerTenant;
+    }
+
+    public Integer getSendersPerTenant() {
+        return sendersPerTenant;
+    }
+
+    public void setSendersPerTenant(Integer sendersPerTenant) {
+        this.sendersPerTenant = sendersPerTenant;
     }
 
 }
