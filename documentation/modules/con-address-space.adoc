@@ -1,6 +1,7 @@
 // Module included in the following assemblies:
 //
 // assembly-tenant-guide.adoc
+// assembly-address-space-address-concepts.adoc
 
 [id='con-address-space-{context}']
 = Address space
