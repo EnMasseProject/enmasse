@@ -7,9 +7,9 @@ package io.enmasse.systemtest.iot;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.ApiClient;
-import io.enmasse.systemtest.apiclients.Predicates;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.utils.Predicates;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;

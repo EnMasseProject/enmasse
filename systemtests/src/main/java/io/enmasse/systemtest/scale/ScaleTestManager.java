@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.scale;
 
-import static io.enmasse.systemtest.scale.metrics.MetricsAssertions.isPresent;
+import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
@@ -46,7 +46,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 /**
  * This class should be instantiated once per test
  */
-public class ScalePerformanceTestManager {
+public class ScaleTestManager {
 
     private static final String MSG_PER_SEC_SUFFIX = " msg/sec";
     private static final String SECONDS_SUFFIX = "s";
@@ -75,7 +75,7 @@ public class ScalePerformanceTestManager {
     private final AtomicBoolean monitorFlag = new AtomicBoolean(true);
     private final PerformanceResults performanceResults = new PerformanceResults();
 
-    public ScalePerformanceTestManager(Endpoint addressSpaceEndpoint, UserCredentials credentials) {
+    public ScaleTestManager(Endpoint addressSpaceEndpoint, UserCredentials credentials) {
         this.clientProvider = () -> {
             ScaleTestClientConfiguration client = new ScaleTestClientConfiguration();
             client.setHostname(addressSpaceEndpoint.getHost());
