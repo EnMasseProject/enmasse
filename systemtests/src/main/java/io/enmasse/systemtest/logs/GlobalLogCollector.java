@@ -61,7 +61,9 @@ public class GlobalLogCollector {
     }
 
     public void collectConfigMaps(String operation) {
-        LOGGER.info("Collecting configmaps for namespace {}", namespace);
+        if (verbose) {
+            LOGGER.info("Collecting configmaps for namespace {}", namespace);
+        }
         kubernetes.getAllConfigMaps(namespace).getItems().forEach(configMap -> {
             try {
                 Path confMapFile = resolveLogFile(configMap.getMetadata().getName() + "." + operation + ".configmap");
@@ -98,7 +100,9 @@ public class GlobalLogCollector {
     }
 
     public void collectLogsOfPodsByLabels(String namespace, String discriminator, Map<String, String> labels) {
-        LOGGER.info("Store logs from all pods in namespace '{}' matching labels {}", namespace, labels);
+        if (verbose) {
+            LOGGER.info("Store logs from all pods in namespace '{}' matching labels {}", namespace, labels);
+        }
         kubernetes.getLogsByLables(namespace, labels).forEach((podName, podLogs) -> {
             try {
                 String filename = discriminator == null ? String.format("%s.%s.log", namespace, podName) : String.format("%s.%s.%s.log", namespace, discriminator, podName);
