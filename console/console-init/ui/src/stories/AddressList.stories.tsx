@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { MemoryRouter } from "react-router";
 import { AddressList, IAddress } from "modules/address/components/AddressList";
 import { action } from "@storybook/addon-actions";
@@ -82,7 +82,7 @@ export const addressList = () => (
 );
 
 export const emptyAddress = () => {
-  const [isOpen, setIsOpen] = React.useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   return (
     <MemoryRouter>
       <EmptyAddress isWizardOpen={isOpen} setIsWizardOpen={setIsOpen} />

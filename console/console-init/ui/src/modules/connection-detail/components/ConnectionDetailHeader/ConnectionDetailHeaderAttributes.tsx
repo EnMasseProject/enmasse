@@ -21,18 +21,18 @@ const styles = StyleSheet.create({
   }
 });
 export interface IConnectionDetailHeaderAttributesProps {
+  isMobileView: boolean;
   product?: string;
   version?: string;
   jvm?: string;
   os?: string;
-  isMobileView: boolean;
 }
 export const ConnectionDetailHeaderAttributes: React.FunctionComponent<IConnectionDetailHeaderAttributesProps> = ({
+  isMobileView,
   product,
   version,
   jvm,
-  os,
-  isMobileView
+  os
 }) => {
   return (
     <Flex

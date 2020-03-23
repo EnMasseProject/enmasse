@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { Nav, NavList, NavVariants, NavItem } from "@patternfly/react-core";
 import { NavLink } from "react-router-dom";
 
@@ -13,7 +13,7 @@ export interface AddressSpaceNavigationProps {
 export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigationProps> = ({
   activeItem
 }) => {
-  const [active, setActive] = React.useState(activeItem);
+  const [active, setActive] = useState(activeItem);
   const onSelect1 = (result: any) => {
     setActive(result.itemId);
   };

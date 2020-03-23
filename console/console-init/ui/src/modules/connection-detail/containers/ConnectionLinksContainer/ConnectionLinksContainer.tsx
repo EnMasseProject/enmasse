@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { IConnectionLinksResponse } from "types/ResponseTypes";
 import { RETURN_CONNECTION_LINKS } from "graphql-module/queries";
@@ -43,7 +43,7 @@ export const ConnectionLinksContainer: React.FunctionComponent<IConnectionDetail
   sortValue,
   setSortValue
 }) => {
-  const [sortBy, setSortBy] = React.useState<ISortBy>();
+  const [sortBy, setSortBy] = useState<ISortBy>();
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }

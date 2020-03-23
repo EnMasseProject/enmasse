@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { createElement } from "react";
+import React, { createElement, useState } from "react";
 import { MemoryRouter } from "react-router";
 import { Button } from "@patternfly/react-core";
 //import { DialogPrompt} from "components/common/DialogPrompt";
@@ -15,7 +15,7 @@ export default {
 
 export const deleteAddressPrompt = () => {
   return createElement(() => {
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [isOpen, setIsOpen] = useState(false);
     const handleCancel = () => setIsOpen(!isOpen);
     const handleDelete = () => setIsOpen(!isOpen);
     return (
