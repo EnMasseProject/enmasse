@@ -9,7 +9,6 @@ export * from "./ConnectionListFormatter";
 export * from "./DialogPrompt";
 export * from "./Error";
 export * from "./ErrorBoundary";
-export * from "./FilterDropdown";
 export * from "./NotFound";
 export * from "./ServerMessageAlert";
 export * from "./SortForMobileView";

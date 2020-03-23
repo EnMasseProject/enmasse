@@ -5,7 +5,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@apollo/react-hooks";
-import { IDropdownOption } from "components/common/FilterDropdown";
 import {
   RETURN_ADDRESS_SPACE_PLANS,
   RETURN_NAMESPACES,
@@ -83,40 +82,28 @@ export const Configuration: React.FunctionComponent<IConfiguration> = ({
   isNameValid,
   setIsNameValid
 }) => {
-  let namespaceOptions: IDropdownOption[];
+  let namespaceOptions: any[];
   let planOptions: any[] = [];
   let authenticationServiceOptions: IAuthenticationServiceOptions[] = [];
 
-  const [isNameSpaceOpen, setIsNameSpaceOpen] = useState(false);
   const [isStandardChecked, setIsStandardChecked] = useState(false);
   const [isBrokeredChecked, setIsBrokeredChecked] = useState(false);
-  const [isPlanOpen, setIsPlanOpen] = useState(false);
-  const [
-    isAuthenticationServiceOpen,
-    setIsAuthenticationServiceOpen
-  ] = useState(false);
 
   useEffect(() => {
     if (type === "standard") setIsStandardChecked(true);
     else if (type === "brokered") setIsBrokeredChecked(true);
-  }, []);
+  }, [type]);
 
-  const onNameSpaceSelect = (event: any) => {
-    event.currentTarget.childNodes[0] &&
-      setNamespace(event.currentTarget.childNodes[0].value);
-    setIsNameSpaceOpen(!isNameSpaceOpen);
+  const onNameSpaceSelect = (value: string) => {
+    setNamespace(value);
   };
 
-  const onPlanSelect = (event: any) => {
-    event.currentTarget.childNodes[0] &&
-      setPlan(event.currentTarget.childNodes[0].value);
-    setIsPlanOpen(!isPlanOpen);
+  const onPlanSelect = (value: string) => {
+    setPlan(value);
   };
 
-  const onAuthenticationServiceSelect = (event: any) => {
-    event.currentTarget.childNodes[0] &&
-      setAuthenticationService(event.currentTarget.childNodes[0].value);
-    setIsAuthenticationServiceOpen(!isAuthenticationServiceOpen);
+  const onAuthenticationServiceSelect = (value: string) => {
+    setAuthenticationService(value);
   };
 
   const { loading, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
@@ -199,26 +186,20 @@ export const Configuration: React.FunctionComponent<IConfiguration> = ({
     <>
       <AddressSpaceConfiguration
         onNameSpaceSelect={onNameSpaceSelect}
-        setIsNameSpaceOpen={setIsNameSpaceOpen}
         handleNameChange={handleNameChange}
         handleBrokeredChange={handleBrokeredChange}
         onPlanSelect={onPlanSelect}
         handleStandardChange={handleStandardChange}
-        setIsPlanOpen={setIsPlanOpen}
         onAuthenticationServiceSelect={onAuthenticationServiceSelect}
-        setIsAuthenticationServiceOpen={setIsAuthenticationServiceOpen}
-        isNameSpaceOpen={isNameSpaceOpen}
         namespace={namespace}
         namespaceOptions={namespaceOptions}
         name={name}
         isNameValid={isNameValid}
         isStandardChecked={isStandardChecked}
         isBrokeredChecked={isBrokeredChecked}
-        isPlanOpen={isPlanOpen}
         type={type}
         plan={plan}
         planOptions={planOptions}
-        isAuthenticationServiceOpen={isAuthenticationServiceOpen}
         authenticationService={authenticationService}
         authenticationServiceOptions={authenticationServiceOptions}
       />
