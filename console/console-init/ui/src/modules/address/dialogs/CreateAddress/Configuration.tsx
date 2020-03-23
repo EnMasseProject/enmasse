@@ -19,14 +19,14 @@ export interface IAddressDefinition {
   addressspaceName: string;
   namespace: string;
   addressName: string;
-  addressSpacePlan: string;
+  addressSpacePlan: string | null;
   handleAddressChange: (name: string) => void;
   type: string;
   setType: (value: any) => void;
   plan: string;
   setPlan: (value: any) => void;
   topic: string;
-  addressSpaceType: string;
+  addressSpaceType?: string;
   setTopic: (value: string) => void;
   typeOptions: IDropdownOption[];
   setTypeOptions: (values: IDropdownOption[]) => void;

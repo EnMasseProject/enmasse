@@ -13,12 +13,13 @@ import {
   CardBody
 } from "@patternfly/react-core";
 import { AngleDownIcon, AngleUpIcon } from "@patternfly/react-icons";
+import { FormatDistance } from "use-patternfly";
 import { ConnectionDetailHeaderAttributes } from "./ConnectionDetailHeaderAttributes";
 import { MessagesDetailHeaderAttributes } from "./MessagesDetailHeaderAttributes";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { ConnectionProtocolFormat } from "components/common/ConnectionListFormatter";
-import useWindowDimensions from "components/common/WindowDimension";
-import { FormatDistance } from "use-patternfly";
+import { ConnectionProtocolFormat } from "utils";
+import { useWindowDimensions } from "components";
+
 const styles = StyleSheet.create({
   expandable: {
     color: "rgb(0, 102, 204)"
