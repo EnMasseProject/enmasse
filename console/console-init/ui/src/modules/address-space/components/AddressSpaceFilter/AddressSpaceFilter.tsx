@@ -4,14 +4,6 @@
  */
 
 import React from "react";
-
-import {
-  DataToolbarChip,
-  DataToolbarToggleGroup,
-  DataToolbarGroup,
-  DataToolbarFilter,
-  DataToolbarItem
-} from "@patternfly/react-core/dist/js/experimental";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import {
   InputGroup,
@@ -22,6 +14,13 @@ import {
   Select,
   SelectVariant,
   SelectOptionObject,
+  DataToolbarChipGroup,
+  DataToolbarChip,
+  DataToolbarGroup,
+  DataToolbarFilter,
+  DataToolbarItem,
+  DataToolbarToggleGroup
+  SelectOptionObject,
   DropdownPosition
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
@@ -31,8 +30,8 @@ import { DropdownWithToggle } from "components";
 export interface IAddressSpaceFilterProps {
   onFilterSelect: (value: string) => void;
   onDelete: (
-    type: string | DataToolbarChip,
-    id: string | DataToolbarChip
+    category: string | DataToolbarChipGroup,
+    chip: string | DataToolbarChip
   ) => void;
   onNameSelectToggle: () => void;
   onNameSelect: (event: any, selection: string | SelectOptionObject) => void;
