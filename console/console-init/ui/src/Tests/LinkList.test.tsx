@@ -6,7 +6,10 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { ILink, LinkList } from "modules/connection-detail/LinkList";
+import {
+  ILink,
+  ConnectionLinksList
+} from "modules/connection-detail/components/ConnectionLinksList/ConnectionLinksList";
 
 describe("Link List", () => {
   test("it renders a list of links", () => {
@@ -41,7 +44,7 @@ describe("Link List", () => {
 
     const { getByText } = render(
       <MemoryRouter>
-        <LinkList rows={links} />
+        <ConnectionLinksList rows={links} />
       </MemoryRouter>
     );
 
