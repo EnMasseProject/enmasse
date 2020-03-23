@@ -38,8 +38,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
@@ -86,6 +89,7 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 
 @Tag(SCALE)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ScaleTest extends TestBase implements ITestBaseIsolated {
     private final static Logger LOGGER = CustomLogger.getLogger();
 
@@ -106,6 +110,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     void disableVerboseLogging() {
         TimeMeasuringSystem.disableResultsLogging();
         AddressUtils.disableVerboseLogs();
+        getResourceManager().disableVerboseLogging();
         logCollector.disableVerboseLogging();
     }
 
@@ -125,6 +130,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     }
 
     @Test
+    @Order(1)
     void testScaleTestToolsWork() throws Exception {
         int initialAddresses = 5;
         var addresses = createInitialAddresses(initialAddresses).stream().map(a -> a.getSpec().getAddress()).collect(Collectors.toList());
@@ -186,6 +192,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     }
 
     @Test
+    @Order(2)
     void testMessagingPerformance() throws Exception {
         final int initialAddresses = env.getPerfInitialAddresses();
         final int addressesPerGroupIncrease = env.getPerfAddressesPerGroupIncrease();
@@ -277,6 +284,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     }
 
     @Test
+    @Order(3)
     void testNumberOfSupportedAddresses() throws Exception {
         int operableAddresses;
         int iterator = 0;
@@ -327,6 +335,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     }
 
     @Test
+    @Order(4)
     public void testFailureRecovery() throws Exception {
         int addressesToCreate = env.getFaultToleranceInitialAddresses();
         int addressesPerGroup = env.getFaultToleranceAddressesPerGroup();
@@ -511,6 +520,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, true, "5Gi", "3Gi", true, authServiceName);
         resourcesManager.createAuthService(standardAuth, false);
         setVerboseGCAuthservice(authServiceName);
+        Thread.sleep(120_000);
         resourcesManager.waitForAuthPods(standardAuth);
 
         LOGGER.info("Create addressspace");
@@ -638,7 +648,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         try (BufferedWriter writer = Files.newBufferedWriter(logsPath.resolve(fileName), StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
             writer.write(String.join(",", data.keySet().toArray(new String[0])));
             writer.newLine();
-            writer.write(String.join(",", data.values().stream().map(value -> value.toString().replaceAll("\\D+","")).toArray(String[]::new)));
+            writer.write(String.join(",", data.values().stream().map(value -> value.toString().replaceAll("\\D+", "")).toArray(String[]::new)));
             writer.newLine();
         }
     }
