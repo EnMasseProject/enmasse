@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import { Split, SplitItem } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 
@@ -15,14 +15,14 @@ const styles = StyleSheet.create({
     fontSize: 21
   }
 });
-export interface IMessagesDetail {
+export interface IMessagesDetailHeaderAttributes {
   messageIn?: number | string;
   messageOut?: number | string;
   addressSpaceType?: string;
   isMobileView: boolean;
 }
 
-export const MessagesDetail: React.FunctionComponent<IMessagesDetail> = ({
+export const MessagesDetailHeaderAttributes: React.FunctionComponent<IMessagesDetailHeaderAttributes> = ({
   messageIn,
   messageOut,
   addressSpaceType,

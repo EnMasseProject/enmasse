@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import { BreadcrumbItem, Breadcrumb } from "@patternfly/react-core";
 import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
 import { Link, useHistory } from "react-router-dom";

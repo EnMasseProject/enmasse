@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { RETURN_ALL_CONECTION_LIST } from "graphql-module/queries";
 import { ISortBy } from "@patternfly/react-table";

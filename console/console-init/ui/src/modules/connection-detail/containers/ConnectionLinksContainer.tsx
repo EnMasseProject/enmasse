@@ -3,18 +3,21 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { IConnectionLinksResponse } from "types/ResponseTypes";
 import { RETURN_CONNECTION_LINKS } from "graphql-module/queries";
 import { Loading } from "use-patternfly";
-import { ILink, LinkList } from "modules/connection-detail/LinkList";
+import {
+  ILink,
+  ConnectionLinksList
+} from "modules/connection-detail/components/ConnectionLinksList/ConnectionLinksList";
 import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { ISortBy } from "@patternfly/react-table";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
-import { EmptyLinks } from "components/common/EmptyLinks";
+import { EmptyConnectionLinks } from "modules/connection-detail/components";
 
-interface IConnectionLinksListPageProps {
+interface IConnectionDetailContainerProps {
   name: string;
   namespace: string;
   connectionName: string;
@@ -27,7 +30,7 @@ interface IConnectionLinksListPageProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
 }
-export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksListPageProps> = ({
+export const ConnectionLinksContainer: React.FunctionComponent<IConnectionDetailContainerProps> = ({
   name,
   namespace,
   connectionName,
@@ -44,7 +47,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
-  const { loading, error, data } = useQuery<IConnectionLinksResponse>(
+  const { loading, data } = useQuery<IConnectionLinksResponse>(
     RETURN_CONNECTION_LINKS(
       page,
       perPage,
@@ -88,8 +91,11 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
 
   return (
     <>
-      <LinkList rows={linkRows} onSort={onSort} sortBy={sortBy} />
-      {linkRows && linkRows.length > 0 ? <></> : <EmptyLinks />}
+      {linkRows && linkRows.length > 0 ? (
+        <ConnectionLinksList rows={linkRows} onSort={onSort} sortBy={sortBy} />
+      ) : (
+        <EmptyConnectionLinks />
+      )}
     </>
   );
 };

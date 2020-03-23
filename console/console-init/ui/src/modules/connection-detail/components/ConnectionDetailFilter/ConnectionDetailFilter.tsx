@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import {
   DataToolbarGroup,
   DataToolbarFilter,
@@ -46,7 +46,7 @@ import {
 } from "constants/constants";
 import { getSelectOptionList, ISelectOption } from "utils";
 
-interface IConnectionLinksFilterProps {
+interface IConnectionDetailFilterProps {
   filterValue: string;
   setFilterValue: (value: string) => void;
   filterNames: any[];
@@ -58,12 +58,11 @@ interface IConnectionLinksFilterProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   totalLinks: number;
-  addressSpaceName: string;
   namespace: string;
   connectionName: string;
 }
 
-export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilterProps> = ({
+export const ConnectionDetailFilter: React.FunctionComponent<IConnectionDetailFilterProps> = ({
   filterValue,
   setFilterValue,
   filterNames,
@@ -75,7 +74,6 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
   sortValue,
   setSortValue,
   totalLinks,
-  addressSpaceName,
   namespace,
   connectionName
 }) => {
@@ -121,7 +119,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
     { key: "undelievered", value: "Undelievered", index: 9 }
   ];
 
-  const onClickSearchIcon = (event: any) => {
+  const onSearch = (event: any) => {
     if (filterValue && filterValue === "Name") {
       if (nameSelected && nameSelected.trim() !== "")
         if (
@@ -425,7 +423,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     id="cl-filter-search-name"
                     variant={ButtonVariant.control}
                     aria-label="search button for search name"
-                    onClick={onClickSearchIcon}
+                    onClick={onSearch}
                   >
                     <SearchIcon />
                   </Button>
@@ -488,7 +486,7 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
                     id="cl-filter-search-address"
                     variant={ButtonVariant.control}
                     aria-label="search button for search address"
-                    onClick={onClickSearchIcon}
+                    onClick={onSearch}
                   >
                     <SearchIcon />
                   </Button>

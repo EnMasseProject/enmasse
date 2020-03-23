@@ -3,7 +3,8 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
+import { useApolloClient } from "@apollo/react-hooks";
 import {
   DataToolbarChip,
   DataToolbarGroup,
@@ -27,10 +28,9 @@ import {
   SelectVariant
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import useWindowDimensions from "components/common/WindowDimension";
 import { ISortBy } from "@patternfly/react-table";
+import useWindowDimensions from "components/common/WindowDimension";
 import { SortForMobileView } from "components/common/SortForMobileView";
-import { useApolloClient } from "@apollo/react-hooks";
 import { RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "graphql-module/queries";
 import { IConnectionListNameSearchResponse } from "types/ResponseTypes";
 import {
@@ -69,6 +69,7 @@ export const ConnectionToolbar: React.FunctionComponent<IConnectionToolbarProps>
   const { width } = useWindowDimensions();
   const client = useApolloClient();
   const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
+
   const onFilterSelect = (event: any) => {
     setFilterValue(event.target.value);
     setFilterIsExpanded(!filterIsExpanded);
@@ -107,7 +108,7 @@ export const ConnectionToolbar: React.FunctionComponent<IConnectionToolbarProps>
     { key: "receiver", value: "Receivers", index: 6 }
   ];
 
-  const onClickSearchIcon = (event: any) => {
+  const onSearch = (event: any) => {
     if (filterValue)
       if (filterValue === "Container") {
         if (
@@ -415,7 +416,7 @@ export const ConnectionToolbar: React.FunctionComponent<IConnectionToolbarProps>
                   id="cl-filter-search-btn"
                   variant={ButtonVariant.control}
                   aria-label="search button for search input"
-                  onClick={onClickSearchIcon}
+                  onClick={onSearch}
                 >
                   <SearchIcon />
                 </Button>
@@ -478,7 +479,7 @@ export const ConnectionToolbar: React.FunctionComponent<IConnectionToolbarProps>
                   id="cl-filter-search"
                   variant={ButtonVariant.control}
                   aria-label="search button for search input"
-                  onClick={onClickSearchIcon}
+                  onClick={onSearch}
                 >
                   <SearchIcon />
                 </Button>

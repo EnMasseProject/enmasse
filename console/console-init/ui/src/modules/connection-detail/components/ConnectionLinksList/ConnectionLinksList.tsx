@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import {
   Table,
   TableVariant,
@@ -16,7 +16,7 @@ import {
 import { StyleForTable } from "modules/address-space/components/AddressSpaceList/AddressSpaceList";
 import { css } from "@patternfly/react-styles";
 
-interface ILinkListProps {
+interface IConnectionLinksListProps {
   rows: ILink[];
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
@@ -36,7 +36,7 @@ export interface ILink {
   status?: "creating" | "deleting" | "running";
 }
 
-export const LinkList: React.FunctionComponent<ILinkListProps> = ({
+export const ConnectionLinksList: React.FunctionComponent<IConnectionLinksListProps> = ({
   rows,
   sortBy,
   onSort
