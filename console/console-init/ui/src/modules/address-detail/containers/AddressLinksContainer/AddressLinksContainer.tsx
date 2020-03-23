@@ -13,7 +13,7 @@ import {
   IAddressLink,
   AddressLinks
 } from "modules/address-detail/components/AddressLinks/AddressLinks";
-import { getFilteredValue } from "components/common/ConnectionListFormatter";
+import { getFilteredValue } from "utils";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { EmptyAddressLinks } from "modules/address-detail/components/EmptyAddressLinks";
 

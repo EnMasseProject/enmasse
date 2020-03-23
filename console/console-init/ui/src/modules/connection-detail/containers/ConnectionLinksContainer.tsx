@@ -12,7 +12,7 @@ import {
   ILink,
   ConnectionLinksList
 } from "modules/connection-detail/components/ConnectionLinksList/ConnectionLinksList";
-import { getFilteredValue } from "components/common/ConnectionListFormatter";
+import { getFilteredValue } from "utils";
 import { ISortBy } from "@patternfly/react-table";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
 import { EmptyConnectionLinks } from "modules/connection-detail/components";
