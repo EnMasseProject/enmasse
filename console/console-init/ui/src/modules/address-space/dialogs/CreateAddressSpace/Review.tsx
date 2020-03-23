@@ -6,8 +6,6 @@
 import React from "react";
 import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
-import "ace-builds/src-noconflict/mode-java";
-import "ace-builds/src-noconflict/theme-github";
 import { ADDRESS_SPACE_COMMAND_REVIEW_DETAIL } from "graphql-module/queries";
 import { AddressSpaceReview } from "modules/address-space/components";
 

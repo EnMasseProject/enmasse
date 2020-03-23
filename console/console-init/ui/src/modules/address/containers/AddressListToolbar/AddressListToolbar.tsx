@@ -12,15 +12,12 @@ import {
 } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
-import { CreateAddressPage } from "modules/address/dialogs/CreateAddress";
+import { CreateAddress, IFilterValue, AddressListKebab } from "modules/address";
 import { RETURN_ADDRESS_SPACE_DETAIL } from "graphql-module/queries";
 import { IAddressSpacesResponse } from "types/ResponseTypes";
 import { AddressListFilter } from "modules/address/containers/AddressFilter";
-import useWindowDimensions from "components/common/WindowDimension";
-import { SortForMobileView } from "components/common/SortForMobileView";
+import { useWindowDimensions, SortForMobileView } from "components";
 import { FetchPolicy } from "constants/constants";
-import { AddressListKebab } from "modules/address/components/AddressListKebab";
-import { IFilterValue } from "modules/address/utils";
 
 export interface AddressListFilterProps {
   filterValue: string | null;
@@ -130,7 +127,7 @@ export const AddressListToolbar: React.FunctionComponent<AddressListFilterProps>
       )}
       <DataToolbarItem>
         {isCreateWizardOpen && (
-          <CreateAddressPage
+          <CreateAddress
             name={name || ""}
             namespace={namespace || ""}
             addressSpace={name || ""}

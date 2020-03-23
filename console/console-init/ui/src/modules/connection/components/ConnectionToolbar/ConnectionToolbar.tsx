@@ -29,8 +29,7 @@ import {
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { ISortBy } from "@patternfly/react-table";
-import useWindowDimensions from "components/common/WindowDimension";
-import { SortForMobileView } from "components/common/SortForMobileView";
+import { useWindowDimensions, SortForMobileView } from "components";
 import { RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "graphql-module/queries";
 import { IConnectionListNameSearchResponse } from "types/ResponseTypes";
 import {

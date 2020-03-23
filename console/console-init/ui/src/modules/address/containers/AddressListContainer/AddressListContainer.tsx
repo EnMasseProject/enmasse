@@ -14,12 +14,11 @@ import {
   PURGE_ADDRESS
 } from "graphql-module/queries";
 import { AddressList, IAddress } from "modules/address/components";
-import { getFilteredValue } from "components/common/ConnectionListFormatter";
 import { EmptyAddress } from "modules/address/components";
 import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
-import { compareObject } from "utils";
+import { compareObject, getFilteredValue } from "utils";
 
 export interface IAddressListPageProps {
   name?: string;

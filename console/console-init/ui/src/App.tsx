@@ -5,7 +5,7 @@
 
 import React from "react";
 import "@patternfly/react-core/dist/styles/base.css";
-import { ErrorBoundary } from "./components/common/ErrorBoundary";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import "./App.css";
 import { StoreProvider, useStore, rootReducer } from "context-state-reducer";
 import AppLayout from "AppLayout";
