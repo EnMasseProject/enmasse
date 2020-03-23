@@ -4,14 +4,14 @@
  */
 
 import React from "react";
-import { BreadcrumbItem, Breadcrumb } from "@patternfly/react-core";
-import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
 import { Link, useHistory } from "react-router-dom";
 import { useParams } from "react-router";
-import { AddressDetailHeader } from "modules/address-detail/components/AddressDetailHeader/AddressDetailHeader";
+import { BreadcrumbItem, Breadcrumb } from "@patternfly/react-core";
+import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
+import { AddressDetailHeader } from "modules/address-detail";
 import { IAddressDetailResponse } from "types/ResponseTypes";
-import { getFilteredValue } from "components/common/ConnectionListFormatter";
+import { getFilteredValue } from "utils";
 import {
   DELETE_ADDRESS,
   RETURN_ADDRESS_DETAIL,
@@ -19,12 +19,11 @@ import {
   PURGE_ADDRESS
 } from "graphql-module/queries";
 import { AddressLinksPage } from "./containers/AddressLinks";
-import { IAddressSpacePlanResponse } from "modules/address/AddressPage";
+import { IAddressSpacePlanResponse, IAddress } from "modules/address";
 import { POLL_INTERVAL, FetchPolicy, AddressTypes } from "constants/constants";
-import { NoDataFound } from "components/common/NoDataFound";
+import { NoDataFound } from "components";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
-import { IAddress } from "modules/address/components/AddressList";
 
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();

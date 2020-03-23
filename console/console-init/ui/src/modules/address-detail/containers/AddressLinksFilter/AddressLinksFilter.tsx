@@ -11,7 +11,7 @@ import {
   ISearchAddressLinkContainerResponse,
   ISearchAddressLinkNameResponse
 } from "types/ResponseTypes";
-import { AddressLinksToolbarToggleGroup } from "modules/address-detail/components/AddressLinksToolbarToggleGroup";
+import { AddressLinksToolbarToggleGroup } from "modules/address-detail";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -28,7 +28,8 @@ interface IAddressLinksFilterProps {
   addressName: string;
   namespace: string;
 }
-const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProps> = ({
+
+export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProps> = ({
   filterValue,
   setFilterValue,
   filterNames,
@@ -247,5 +248,3 @@ const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProps> = ({
     />
   );
 };
-
-export { AddressLinksFilter };

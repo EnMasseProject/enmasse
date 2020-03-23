@@ -15,14 +15,17 @@ import {
   IExtraData,
   ISortBy
 } from "@patternfly/react-table";
-import { TypePlan, Messages } from "modules/address/components";
-import useWindowDimensions from "components/common/WindowDimension";
 import { css } from "@patternfly/react-styles";
 import { FormatDistance } from "use-patternfly";
+import { useWindowDimensions } from "components";
 import { StyleForTable } from "modules/address-space/components";
-import { AddressStatus } from "modules/address/utils";
+import {
+  AddressStatus,
+  AddressErrorMessage,
+  TypePlan,
+  Messages
+} from "modules/address";
 import { AddressTypes } from "constants/constants";
-import { AddressErrorMessage } from "modules/address/components";
 
 export interface IAddress {
   name: string;

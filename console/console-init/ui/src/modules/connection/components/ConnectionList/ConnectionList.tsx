@@ -16,9 +16,9 @@ import {
 } from "@patternfly/react-table";
 import { FormatDistance } from "use-patternfly";
 import { css } from "@patternfly/react-styles";
-import { ConnectionProtocolFormat } from "components/common/ConnectionListFormatter";
-import useWindowDimensions from "components/common/WindowDimension";
-import { StyleForTable } from "modules/address-space/components/AddressSpaceList/AddressSpaceList";
+import { ConnectionProtocolFormat } from "utils";
+import { useWindowDimensions } from "components";
+import { StyleForTable } from "modules/address-space";
 
 interface IConnectionListProps {
   rows: IConnection[];

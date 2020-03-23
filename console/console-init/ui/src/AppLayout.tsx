@@ -4,21 +4,24 @@
  */
 
 import React from "react";
+import { useHistory } from "react-router-dom";
+import ApolloClient from "apollo-boost";
 import "@patternfly/react-core/dist/styles/base.css";
 import { AppLayout as Layout } from "use-patternfly";
-import { useHistory } from "react-router-dom";
 import { Brand, Avatar } from "@patternfly/react-core";
-import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
-import { NavToolBar } from "components/Toolbar";
+import {
+  NavToolBar,
+  ServerMessageAlert,
+  NetworkStatusAlert,
+  RootModal
+} from "components";
 import { AppRoutes } from "Routes";
 import brandImg from "./assets/images/logo.svg";
 import avatarImg from "./img_avatar.svg";
 import "./App.css";
-import { ServerMessageAlert, NetworkStatusAlert } from "./components/common";
 import { useStoreContext } from "./context-state-reducer";
 import { onServerError } from "./graphql-module";
-import { RootModal } from "./components/RootModal";
 
 let history: any, dispactAction: any, states: any;
 

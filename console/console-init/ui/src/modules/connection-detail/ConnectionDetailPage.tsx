@@ -4,30 +4,30 @@
  */
 
 import React from "react";
-import {
-  ConnectionDetailHeader,
-  IConnectionHeaderDetailProps
-} from "modules/connection-detail/components/ConnectionDetailHeader/ConnectionDetailHeader";
+import { useParams } from "react-router";
+import { Link } from "react-router-dom";
+import { useQuery } from "@apollo/react-hooks";
 import {
   PageSection,
   Breadcrumb,
   BreadcrumbItem
 } from "@patternfly/react-core";
-import { useQuery } from "@apollo/react-hooks";
-import { useParams } from "react-router";
 import {
   Loading,
   useA11yRouteChange,
   useBreadcrumb,
   useDocumentTitle
 } from "use-patternfly";
-import { getFilteredValue } from "components/common/ConnectionListFormatter";
+import {
+  ConnectionDetailHeader,
+  IConnectionHeaderDetailProps
+} from "./components/ConnectionDetailHeader";
+import { getFilteredValue } from "utils";
 import { IConnectionDetailResponse } from "types/ResponseTypes";
-import { Link } from "react-router-dom";
 import { RETURN_CONNECTION_DETAIL } from "graphql-module/queries";
-import { ConnectionDetailToolbar } from "./components";
+import { ConnectionDetailToolbar } from "./components/ConnectionDetailToolbar";
 import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
-import { NoDataFound } from "components/common/NoDataFound";
+import { NoDataFound } from "components";
 
 const getProductFilteredValue = (object: any[], value: string) => {
   if (object && object != null) {

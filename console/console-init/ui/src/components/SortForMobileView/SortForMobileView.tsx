@@ -15,9 +15,9 @@ import {
   SortAmountUpAltIcon,
   SortAmountDownIcon
 } from "@patternfly/react-icons";
-import { Dropdown, DropdownToggle, DropdownItem } from "@patternfly/react-core";
-import useWindowDimensions from "components/common/WindowDimension";
 import { ISortBy } from "@patternfly/react-table";
+import { Dropdown, DropdownToggle, DropdownItem } from "@patternfly/react-core";
+import { useWindowDimensions } from "components";
 
 interface ISortForMobileViewProps {
   sortMenu: any[];
