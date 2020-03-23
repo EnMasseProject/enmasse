@@ -57,7 +57,7 @@ public class GlobalLogCollector {
     }
 
     public void disableVerboseLogging() {
-        this.verbose= false;
+        this.verbose = false;
     }
 
     public void collectConfigMaps(String operation) {
@@ -103,7 +103,9 @@ public class GlobalLogCollector {
             try {
                 String filename = discriminator == null ? String.format("%s.%s.log", namespace, podName) : String.format("%s.%s.%s.log", namespace, discriminator, podName);
                 Path podLog = resolveLogFile(filename);
-                LOGGER.info("log of '{}' pod will be archived with path: '{}'", podName, podLog);
+                if (verbose) {
+                    LOGGER.info("log of '{}' pod will be archived with path: '{}'", podName, podLog);
+                }
                 try (BufferedWriter bf = Files.newBufferedWriter(podLog)) {
                     bf.write(podLogs);
                 }

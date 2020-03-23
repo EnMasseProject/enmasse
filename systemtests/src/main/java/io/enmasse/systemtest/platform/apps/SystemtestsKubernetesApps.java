@@ -807,6 +807,7 @@ public class SystemtestsKubernetesApps {
         try {
             Files.createDirectories(logsPath);
             GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), logsPath, SCALE_TEST_CLIENTS_PROJECT);
+            collector.disableVerboseLogging();
             collector.collectLogsOfPodsByLabels(SCALE_TEST_CLIENTS_PROJECT, clientId, labels);
         } catch (Exception e) {
             log.error("Failed to collect client {} logs", clientId, e);
