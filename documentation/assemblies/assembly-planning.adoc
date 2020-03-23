@@ -1,7 +1,7 @@
 // This assembly is included in the following assemblies:
 //
 // assembly-service-admin-guide.adoc
-// Installing master.adoc
+// {InstallGuide} master.adoc
 
 :context: {context}-planning
 
