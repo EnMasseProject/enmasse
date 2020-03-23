@@ -14,10 +14,18 @@ import {
   DropdownItem,
   InputGroup,
   Button,
-  ButtonVariant
+  ButtonVariant,
+  SelectOptionObject,
+  SelectVariant,
+  Select,
+  SelectOption
 } from "@patternfly/react-core";
 import { TypeAheadSelect } from "components";
 import { ISelectOption } from "utils";
+import {
+  TYPEAHEAD_REQUIRED_LENGTH,
+  TypeAheadMessage
+} from "constants/constants";
 
 interface IAddressToolbarProps {
   totalAddresses: number;
@@ -39,12 +47,17 @@ interface IAddressToolbarProps {
   nameSelected?: string;
   setNameSelected: (value?: string) => void;
   nameInput: string;
-  setNameInput: (value: string) => void;
-  onChangeNameData: (value: string) => void;
   typeValue: string | null;
   statusValue: string | null;
   onTypeSelect: (event: any) => void;
   onStatusSelect: (event: any) => void;
+  onNameSelectToggle: () => void;
+  onNameSelect: (event: any, selection: string | SelectOptionObject) => void;
+  isSelectNameExpanded: boolean;
+  setIsSelectNameExpanded: (expanded: boolean) => void;
+  onNameSelectFilterChange: (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => React.ReactElement[];
 }
 const AddressToolbarToggleGroup: React.FunctionComponent<IAddressToolbarProps> = ({
   totalAddresses,
@@ -63,12 +76,15 @@ const AddressToolbarToggleGroup: React.FunctionComponent<IAddressToolbarProps> =
   nameSelected,
   setNameSelected,
   nameInput,
-  setNameInput,
-  onChangeNameData,
   typeValue,
   statusValue,
   onTypeSelect,
-  onStatusSelect
+  onStatusSelect,
+  onNameSelectToggle,
+  onNameSelect,
+  isSelectNameExpanded,
+  setIsSelectNameExpanded,
+  onNameSelectFilterChange
 }) => {
   const filterMenuItems = [
     { key: "filterAddress", value: "Address" },
@@ -155,18 +171,49 @@ const AddressToolbarToggleGroup: React.FunctionComponent<IAddressToolbarProps> =
                 >
                   {filterValue && filterValue === "Address" && (
                     <InputGroup>
-                      <TypeAheadSelect
-                        id={"al-filter-select-name"}
-                        ariaLabel={"Select a Address"}
+                      <Select
+                        id="al-filter-input-name"
+                        variant={SelectVariant.typeahead}
+                        aria-label="Select a Name"
+                        onToggle={onNameSelectToggle}
+                        onSelect={onNameSelect}
+                        onClear={() => {
+                          setNameSelected(undefined);
+                          setIsSelectNameExpanded(false);
+                        }}
+                        maxHeight="200px"
+                        selections={nameSelected}
+                        onFilter={onNameSelectFilterChange}
+                        isExpanded={isSelectNameExpanded}
                         ariaLabelledBy={"typeahead-select-id"}
-                        placeholderText={"Select Address"}
-                        options={nameOptions}
-                        selected={nameSelected}
-                        setSelected={setNameSelected}
-                        inputData={nameInput}
-                        setInputData={setNameInput}
-                        onChangeInputData={onChangeNameData}
-                      />
+                        placeholderText="Select name"
+                        isDisabled={false}
+                        isCreatable={false}
+                      >
+                        {nameOptions && nameOptions.length > 0 ? (
+                          nameOptions.map((option: any, index: number) => (
+                            <SelectOption
+                              key={index}
+                              value={option.value}
+                              isDisabled={option.isDisabled}
+                            />
+                          ))
+                        ) : nameInput.trim().length <
+                          TYPEAHEAD_REQUIRED_LENGTH ? (
+                          <SelectOption
+                            key={"invalid-input-length"}
+                            value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+                            disabled={true}
+                          />
+                        ) : (
+                          <SelectOption
+                            key={"no-results-found"}
+                            value={TypeAheadMessage.NO_RESULT_FOUND}
+                            disabled={true}
+                          />
+                        )}
+                        {/* {} */}
+                      </Select>
                       <Button
                         id={"al-filter-select-name-search"}
                         variant={ButtonVariant.control}

@@ -3,11 +3,11 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
-import { Link, useHistory } from "react-router-dom";
-import { useParams } from "react-router";
+import React, { useState } from "react";
 import { BreadcrumbItem, Breadcrumb } from "@patternfly/react-core";
 import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
+import { Link, useHistory } from "react-router-dom";
+import { useParams } from "react-router";
 import { useQuery } from "@apollo/react-hooks";
 import { AddressDetailHeader } from "modules/address-detail";
 import { IAddressDetailResponse } from "types/ResponseTypes";
@@ -55,9 +55,7 @@ export default function AddressDetailPage() {
   useA11yRouteChange();
   useBreadcrumb(breadcrumb);
   const history = useHistory();
-  const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(
-    null
-  );
+  const [addressSpacePlan, setAddressSpacePlan] = useState<string | null>(null);
   const { loading, data } = useQuery<IAddressDetailResponse>(
     RETURN_ADDRESS_DETAIL(name, namespace, addressname),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }

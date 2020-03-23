@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { DataToolbarChip } from "@patternfly/react-core/dist/js/experimental";
 import { useApolloClient } from "@apollo/react-hooks";
 import { ISelectOption, getSelectOptionList } from "utils";
@@ -43,18 +43,16 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   namespace
 }) => {
   const client = useApolloClient();
-  const [filterIsExpanded, setFilterIsExpanded] = React.useState<boolean>(
-    false
-  );
-  const [roleIsExpanded, setRoleIsExpanded] = React.useState<boolean>(false);
-  const [nameSelected, setNameSelected] = React.useState<string>();
-  const [containerSelected, setContainerSelected] = React.useState<string>();
-  const [nameOptions, setNameOptions] = React.useState<Array<ISelectOption>>();
-  const [containerOptions, setContainerOptions] = React.useState<
+  const [filterIsExpanded, setFilterIsExpanded] = useState<boolean>(false);
+  const [roleIsExpanded, setRoleIsExpanded] = useState<boolean>(false);
+  const [nameSelected, setNameSelected] = useState<string>();
+  const [containerSelected, setContainerSelected] = useState<string>();
+  const [nameOptions, setNameOptions] = useState<Array<ISelectOption>>();
+  const [containerOptions, setContainerOptions] = useState<
     Array<ISelectOption>
   >();
-  const [nameInput, setNameInput] = React.useState<string>("");
-  const [containerInput, setContainerInput] = React.useState<string>("");
+  const [nameInput, setNameInput] = useState<string>("");
+  const [containerInput, setContainerInput] = useState<string>("");
 
   const onAddInput = (event: any) => {
     if (filterValue && filterValue === "Name") {
