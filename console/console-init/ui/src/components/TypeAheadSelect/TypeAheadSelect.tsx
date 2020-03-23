@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Select,
   SelectVariant,
@@ -35,10 +35,15 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
   setInputData,
   onChangeInputData
 }) => {
-  const [isExpanded, setIsExpanded] = React.useState<boolean>();
+  const [isExpanded, setIsExpanded] = useState<boolean>();
+  const [selectOptions, setSelectOptions] = useState<any>(options);
 
-  const onToggle = () => {
-    setIsExpanded(!isExpanded);
+  useEffect(() => {
+    setSelectOptions(options);
+  }, [options]);
+
+  const onToggle = (isExpanded: boolean) => {
+    setIsExpanded(isExpanded);
   };
 
   const onSelect = (event: any, selection: string | SelectOptionObject) => {
@@ -53,13 +58,15 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
   };
 
   const onFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputData(e.target.value);
-    onChangeInputData(e.target.value);
+    const value = e.target.value;
+    setInputData(value);
+    onChangeInputData(value);
     const dropdownOptions: React.ReactElement[] = options
       ? options.map((option, index) => (
           <SelectOption key={index} value={option} />
         ))
       : [];
+    setSelectOptions(dropdownOptions);
     return dropdownOptions;
   };
 
@@ -80,11 +87,11 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
       isDisabled={false}
       isCreatable={false}
     >
-      {options && options.length > 0 ? (
-        options.map((option, index) => (
+      {selectOptions && selectOptions.length > 0 ? (
+        selectOptions.map((option: any, index: number) => (
           <SelectOption
             key={index}
-            value={option.value}
+            value={option.value || option.props.value}
             isDisabled={option.isDisabled}
           />
         ))
