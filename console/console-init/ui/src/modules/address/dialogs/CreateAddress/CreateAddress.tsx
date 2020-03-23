@@ -22,7 +22,7 @@ interface ICreateAddressProps {
   setIsCreateWizardOpen: (value: boolean) => void;
   setOnCreationRefetch?: (value: boolean) => void;
 }
-export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = ({
+export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
   name,
   namespace,
   addressSpace,

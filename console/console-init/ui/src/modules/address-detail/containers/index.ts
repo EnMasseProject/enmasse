@@ -6,3 +6,4 @@
 export * from "./AddressLinksContainer";
 export * from "./AddressLinksToolbar";
 export * from "./AddressLinks";
+export * from "./AddressLinksFilter";
