@@ -29,7 +29,6 @@ export default function AddressSpacePage() {
   useA11yRouteChange();
   let deleteAddressSpaceErrors: any = [];
 
-  const [filterValue, setFilterValue] = React.useState<string>("Name");
   const [filterNames, setFilterNames] = React.useState<string[]>([]);
   const [filterNamespaces, setFilterNamespaces] = React.useState<string[]>([]);
   const [filterType, setFilterType] = React.useState<string | null>(null);
@@ -153,8 +152,6 @@ export default function AddressSpacePage() {
       <Grid>
         <GridItem span={7}>
           <AddressSpaceToolbar
-            filterValue={filterValue}
-            setFilterValue={setFilterValue}
             filterNames={filterNames}
             setFilterNames={setFilterNames}
             filterNamespaces={filterNamespaces}

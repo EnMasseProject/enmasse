@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { Loading } from "use-patternfly";
-import { IDropdownOption } from "components/common/FilterDropdown";
+import { IDropdownOption } from "components";
 import {
   RETURN_ADDRESS_PLANS,
   RETURN_ADDRESS_TYPES,
