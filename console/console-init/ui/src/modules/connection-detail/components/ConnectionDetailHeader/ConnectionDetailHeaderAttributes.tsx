@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import { Flex, FlexItem } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 
@@ -20,14 +20,14 @@ const styles = StyleSheet.create({
     paddingBottom: "12px"
   }
 });
-export interface IConnectionDetailProps {
+export interface IConnectionDetailHeaderAttributesProps {
   product?: string;
   version?: string;
   jvm?: string;
   os?: string;
   isMobileView: boolean;
 }
-export const ConnectionDetail: React.FunctionComponent<IConnectionDetailProps> = ({
+export const ConnectionDetailHeaderAttributes: React.FunctionComponent<IConnectionDetailHeaderAttributesProps> = ({
   product,
   version,
   jvm,

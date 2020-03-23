@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import { DataToolbarChip } from "@patternfly/react-core/dist/js/experimental";
 import { SelectOption, SelectOptionObject } from "@patternfly/react-core";
 import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";

@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { DataToolbarChip } from "@patternfly/react-core/dist/js/experimental";
 import { useApolloClient } from "@apollo/react-hooks";
 import { ISelectOption, getSelectOptionList } from "utils";

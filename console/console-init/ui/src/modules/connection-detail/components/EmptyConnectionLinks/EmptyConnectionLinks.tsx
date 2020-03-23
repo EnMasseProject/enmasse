@@ -13,7 +13,7 @@ import {
 } from "@patternfly/react-core";
 import { GlobeRouteIcon } from "@patternfly/react-icons";
 
-export const EmptyLinks = () => {
+export const EmptyConnectionLinks = () => {
   return (
     <EmptyState variant={EmptyStateVariant.full} id="empty-link">
       <EmptyStateIcon icon={GlobeRouteIcon} />

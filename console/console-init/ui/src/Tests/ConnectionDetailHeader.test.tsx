@@ -3,11 +3,11 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import {
   IConnectionHeaderDetailProps,
   ConnectionDetailHeader
-} from "modules/connection-detail/ConnectionDetailHeader";
+} from "modules/connection-detail/components/ConnectionDetailHeader/ConnectionDetailHeader";
 import { render, fireEvent } from "@testing-library/react";
 
 describe("Connection Detail Header with all connection details", () => {

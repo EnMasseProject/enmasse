@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import { useParams, useLocation } from "react-router";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import {
@@ -16,7 +16,7 @@ import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
 import { ConnectionContainer } from "./containers/ConnectionContainer";
 import { ConnectionToolbar } from "modules/connection";
-import { TablePagination } from "components";
+import { TablePagination } from "components/TablePagination";
 
 export default function ConnectionPage() {
   useDocumentTitle("Connection List");

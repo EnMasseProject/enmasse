@@ -3,34 +3,33 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import {
   PageSection,
   PageSectionVariants,
   Title,
-  Pagination,
   GridItem,
   Grid
 } from "@patternfly/react-core";
 import { GridStylesForTableHeader } from "modules/address/AddressPage";
-import { ConnectionLinksListPage } from "./ConnectionsLinksListPage";
-import { useLocation, useHistory } from "react-router";
+import { ConnectionLinksContainer } from "modules/connection-detail/containers";
+import { useLocation } from "react-router";
 import { css } from "@patternfly/react-styles";
-import { ConnectionLinksFilter } from "modules/connection-detail/ConnectionLinksFilter";
+import { ConnectionDetailFilter } from "modules/connection-detail/components";
 import { ISortBy } from "@patternfly/react-table";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
-interface IConnectionLinksWithFilterAndPaginationPageProps {
+import { TablePagination } from "components";
+interface IConnectionDetailToolbarProps {
   name?: string;
   namespace?: string;
   connectionName?: string;
 }
-export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent<IConnectionLinksWithFilterAndPaginationPageProps> = ({
+export const ConnectionDetailToolbar: React.FunctionComponent<IConnectionDetailToolbarProps> = ({
   name,
   namespace,
   connectionName
 }) => {
   const location = useLocation();
-  const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
   const [totalLinks, setTotalLinks] = React.useState<number>(0);
   const page = parseInt(searchParams.get("page") || "", 10) || 0;
@@ -43,46 +42,14 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
   const [filterRole, setFilterRole] = React.useState<string>();
   const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
 
-  const setSearchParam = React.useCallback(
-    (name: string, value: string) => {
-      searchParams.set(name, value.toString());
-    },
-    [searchParams]
-  );
-
-  const handlePageChange = React.useCallback(
-    (_: any, newPage: number) => {
-      setSearchParam("page", newPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
-
-  const handlePerPageChange = React.useCallback(
-    (_: any, newPerPage: number) => {
-      setSearchParam("page", "0");
-      setSearchParam("perPage", newPerPage.toString());
-      history.push({
-        search: searchParams.toString()
-      });
-    },
-    [setSearchParam, history, searchParams]
-  );
-
   const renderPagination = (page: number, perPage: number) => {
-    return totalLinks > 0 ? (
-      <Pagination
+    return (
+      <TablePagination
         itemCount={totalLinks}
         perPage={perPage}
         page={page}
-        onSetPage={handlePageChange}
         variant="top"
-        onPerPageSelect={handlePerPageChange}
       />
-    ) : (
-      <></>
     );
   };
 
@@ -97,7 +64,7 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
       <br />
       <Grid>
         <GridItem span={6}>
-          <ConnectionLinksFilter
+          <ConnectionDetailFilter
             filterValue={filterValue}
             setFilterValue={setFilterValue}
             filterNames={filterNames}
@@ -109,7 +76,6 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
             totalLinks={totalLinks}
             sortValue={sortDropDownValue}
             setSortValue={setSortDropdownValue}
-            addressSpaceName={name || ""}
             namespace={namespace || ""}
             connectionName={connectionName || ""}
           />
@@ -117,7 +83,7 @@ export const ConnectionLinksWithFilterAndPaginationPage: React.FunctionComponent
         <GridItem span={6}>{renderPagination(page, perPage)}</GridItem>
       </Grid>
       <Divider />
-      <ConnectionLinksListPage
+      <ConnectionLinksContainer
         name={name || ""}
         namespace={namespace || ""}
         connectionName={connectionName || ""}
