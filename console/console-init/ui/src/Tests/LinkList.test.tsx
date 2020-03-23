@@ -9,7 +9,7 @@ import { MemoryRouter } from "react-router";
 import {
   ILink,
   ConnectionLinksList
-} from "modules/connection-detail/components/ConnectionLinksList/ConnectionLinksList";
+} from "modules/connection-detail/components";
 
 describe("Link List", () => {
   test("it renders a list of links", () => {

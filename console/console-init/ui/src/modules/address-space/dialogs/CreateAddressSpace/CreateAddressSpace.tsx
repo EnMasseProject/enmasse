@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { Wizard } from "@patternfly/react-core";
 import { Configuration } from "./Configuration";
 import { Review } from "./Review";
@@ -12,14 +12,14 @@ import { useMutationQuery } from "hooks";
 import { useStoreContext, types } from "context-state-reducer";
 
 export const CreateAddressSpace: React.FunctionComponent<{}> = () => {
-  const [addressSpaceName, setAddressSpaceName] = React.useState("");
+  const [addressSpaceName, setAddressSpaceName] = useState("");
   // State has been initialized to " " instead of null string
   // due to dropdown arrow positioning issues
-  const [addressSpaceType, setAddressSpaceType] = React.useState(" ");
-  const [addressSpacePlan, setAddressSpacePlan] = React.useState(" ");
-  const [namespace, setNamespace] = React.useState(" ");
-  const [authenticationService, setAuthenticationService] = React.useState(" ");
-  const [isNameValid, setIsNameValid] = React.useState(true);
+  const [addressSpaceType, setAddressSpaceType] = useState(" ");
+  const [addressSpacePlan, setAddressSpacePlan] = useState(" ");
+  const [namespace, setNamespace] = useState(" ");
+  const [authenticationService, setAuthenticationService] = useState(" ");
+  const [isNameValid, setIsNameValid] = useState(true);
 
   const { state, dispatch } = useStoreContext();
   const { modalProps } = (state && state.modal) || {};

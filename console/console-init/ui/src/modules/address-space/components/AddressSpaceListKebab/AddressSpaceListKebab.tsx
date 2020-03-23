@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   OverflowMenu,
   OverflowMenuContent,
@@ -30,7 +30,7 @@ export const AddressSpaceListKebab: React.FC<IAddressSpaceListKebabProps> = ({
   onCreateAddressSpace,
   onSelectDeleteAll
 }) => {
-  const [isKebabOpen, setIsKebabOpen] = React.useState(false);
+  const [isKebabOpen, setIsKebabOpen] = useState(false);
 
   const onKebabToggle = (isOpen: boolean) => {
     setIsKebabOpen(isOpen);

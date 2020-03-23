@@ -11,6 +11,7 @@ import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from 
 import { TYPEAHEAD_REQUIRED_LENGTH, FetchPolicy } from "constants/constants";
 import { getSelectOptionList, ISelectOption } from "utils";
 import { AddressToolbarToggleGroup } from "modules/address/components";
+import { SelectOption, SelectOptionObject } from "@patternfly/react-core";
 
 interface IAddressListFilterProps {
   filterValue: string | null;
@@ -46,6 +47,9 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   const [nameSelected, setNameSelected] = useState<string>();
   const [nameOptions, setNameOptions] = useState<Array<ISelectOption>>();
   const [nameInput, setNameInput] = useState<string>("");
+  const [isSelectNameExpanded, setIsSelectNameExpanded] = useState<boolean>(
+    false
+  );
 
   const onClickSearchIcon = (event: any) => {
     if (filterValue && filterValue === "Address") {
@@ -116,6 +120,25 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
       if (uniqueList.length > 0) setNameOptions(uniqueList);
     }
   };
+  const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNameInput(e.target.value);
+    onChangeNameData(e.target.value);
+    const options: React.ReactElement[] = nameOptions
+      ? nameOptions.map((option, index) => (
+          <SelectOption key={index} value={option} />
+        ))
+      : [];
+    return options;
+  };
+
+  const onNameSelect = (event: any, selection: string | SelectOptionObject) => {
+    setNameSelected(selection.toString());
+    setIsSelectNameExpanded(false);
+  };
+
+  const onNameSelectToggle = () => {
+    setIsSelectNameExpanded(!isSelectNameExpanded);
+  };
 
   const onDelete = (
     type: string | DataToolbarChip,
@@ -158,12 +181,15 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
       nameSelected={nameSelected}
       setNameSelected={setNameSelected}
       nameInput={nameInput}
-      setNameInput={setNameInput}
-      onChangeNameData={onChangeNameData}
       typeValue={typeValue}
       statusValue={statusValue}
       onTypeSelect={onTypeSelect}
       onStatusSelect={onStatusSelect}
+      onNameSelectToggle={onNameSelectToggle}
+      onNameSelect={onNameSelect}
+      isSelectNameExpanded={isSelectNameExpanded}
+      setIsSelectNameExpanded={setIsSelectNameExpanded}
+      onNameSelectFilterChange={onNameSelectFilterChange}
     />
   );
 };

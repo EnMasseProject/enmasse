@@ -27,6 +27,7 @@ interface AddressLinksToolbar {
   addressName: string;
   namespace: string;
 }
+
 const AddressLinksToolbar: React.FunctionComponent<AddressLinksToolbar> = ({
   filterValue,
   setFilterValue,

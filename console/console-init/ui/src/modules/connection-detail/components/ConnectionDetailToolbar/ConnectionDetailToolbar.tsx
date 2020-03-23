@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   PageSection,
   PageSectionVariants,
@@ -31,16 +31,14 @@ export const ConnectionDetailToolbar: React.FunctionComponent<IConnectionDetailT
 }) => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const [totalLinks, setTotalLinks] = React.useState<number>(0);
+  const [totalLinks, setTotalLinks] = useState<number>(0);
   const page = parseInt(searchParams.get("page") || "", 10) || 0;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
-  const [filterValue, setFilterValue] = React.useState<string>("Name");
-  const [filterNames, setFilterNames] = React.useState<Array<string>>([]);
-  const [filterAddresses, setFilterAddresses] = React.useState<Array<string>>(
-    []
-  );
-  const [filterRole, setFilterRole] = React.useState<string>();
-  const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
+  const [filterValue, setFilterValue] = useState<string>("Name");
+  const [filterNames, setFilterNames] = useState<Array<string>>([]);
+  const [filterAddresses, setFilterAddresses] = useState<Array<string>>([]);
+  const [filterRole, setFilterRole] = useState<string>();
+  const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
 
   const renderPagination = (page: number, perPage: number) => {
     return (
