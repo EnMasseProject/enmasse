@@ -4,6 +4,20 @@
  */
 package io.enmasse.systemtest.iot.shared.http;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+
+import java.net.HttpURLConnection;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.UUID;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
@@ -20,19 +34,6 @@ import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
-import java.net.HttpURLConnection;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.UUID;
-
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
 class HttpAdapterTest extends TestBase implements ITestIoTShared {
 
@@ -201,6 +202,5 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
                 .consume(MessageSendTester.Consume.BEFORE)
                 .execute();
     }
-
 }
 

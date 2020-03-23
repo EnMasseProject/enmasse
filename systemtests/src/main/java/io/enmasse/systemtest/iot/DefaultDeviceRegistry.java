@@ -88,7 +88,16 @@ public final class DefaultDeviceRegistry {
      * @throws Exception In case the deployment of the backend failed.
      */
     public static DeviceRegistryServiceConfig newDefaultInstance() throws Exception {
+        // align with deleteDefaultServer
         return newPostgresTreeBased();
+    }
+
+    /**
+     * Delete the server which got created by {@link #newDefaultInstance()}.
+     */
+    public static void deleteDefaultServer() throws Exception {
+        // align with newDefaultInstance
+        SystemtestsKubernetesApps.deletePostgresqlServer();
     }
 
     public static DeviceRegistryServiceConfig newInfinispanBased() throws Exception {

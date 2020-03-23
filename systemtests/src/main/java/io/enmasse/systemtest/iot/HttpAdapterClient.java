@@ -5,21 +5,12 @@
 
 package io.enmasse.systemtest.iot;
 
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.apiclients.ApiClient;
-import io.enmasse.systemtest.iot.MessageSendTester.Sender;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.utils.Predicates;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpRequest;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.client.WebClientOptions;
-import org.apache.http.entity.ContentType;
-import org.slf4j.Logger;
+import static com.google.common.net.HttpHeaders.AUTHORIZATION;
+import static io.enmasse.systemtest.iot.MessageType.EVENT;
+import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.time.Duration.ofSeconds;
 
-import javax.ws.rs.core.HttpHeaders;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
@@ -28,11 +19,21 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static com.google.common.net.HttpHeaders.AUTHORIZATION;
-import static io.enmasse.systemtest.iot.MessageType.EVENT;
-import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static java.time.Duration.ofSeconds;
+import javax.ws.rs.core.HttpHeaders;
+
+import org.apache.http.entity.ContentType;
+import org.slf4j.Logger;
+
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.apiclients.ApiClient;
+import io.enmasse.systemtest.iot.MessageSendTester.Sender;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.utils.Predicates;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 
 public class HttpAdapterClient extends ApiClient {
 
@@ -43,7 +44,7 @@ public class HttpAdapterClient extends ApiClient {
         this.authzString = getBasicAuth(deviceAuthId + "@" + tenantId, password);
     }
 
-    private static String contentType(final JsonObject payload) {
+    private static String contentType(final Buffer payload) {
         return payload != null ? ContentType.APPLICATION_JSON.getMimeType() : "application/vnd.eclipse-hono-empty-notification";
     }
 
@@ -65,12 +66,12 @@ public class HttpAdapterClient extends ApiClient {
         this.client.close();
     }
 
-    public HttpResponse<?> send(MessageType messageType, JsonObject payload, Predicate<Integer> expectedCodePredicate, Consumer<HttpRequest<?>> requestCustomizer,
+    public HttpResponse<?> send(MessageType messageType, Buffer payload, Predicate<Integer> expectedCodePredicate, Consumer<HttpRequest<?>> requestCustomizer,
                                 Duration responseTimeout) throws Exception {
         return send(messageType, null, payload, expectedCodePredicate, requestCustomizer, responseTimeout);
     }
 
-    public HttpResponse<?> send(MessageType messageType, String pathSuffix, JsonObject payload, Predicate<Integer> expectedCodePredicate,
+    public HttpResponse<?> send(MessageType messageType, String pathSuffix, Buffer payload, Predicate<Integer> expectedCodePredicate,
                                 Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
 
         CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
@@ -99,7 +100,7 @@ public class HttpAdapterClient extends ApiClient {
 
         // execute request with payload
 
-        request.sendJsonObject(payload, ar -> {
+        request.sendBuffer(payload, ar -> {
 
             // if the request failed ...
             if (!ar.succeeded()) {
@@ -143,11 +144,11 @@ public class HttpAdapterClient extends ApiClient {
     /**
      * Send method suitable for using as {@link Sender}.
      */
-    public boolean send(MessageSendTester.Type type, JsonObject payload, Duration timeout) {
+    public boolean send(MessageSendTester.Type type, Buffer payload, Duration timeout) {
         return sendDefault(type.type(), payload, timeout);
     }
 
-    private boolean sendDefault(MessageType type, JsonObject payload, Duration timeout) {
+    private boolean sendDefault(MessageType type, Buffer payload, Duration timeout) {
         try {
             send(type, payload, Predicates.is(HTTP_ACCEPTED), timeout);
             return true;
@@ -156,19 +157,19 @@ public class HttpAdapterClient extends ApiClient {
         }
     }
 
-    public HttpResponse<?> send(MessageType type, JsonObject payload, Predicate<Integer> expectedCodePredicate, Duration timeout) throws Exception {
+    public HttpResponse<?> send(MessageType type, Buffer payload, Predicate<Integer> expectedCodePredicate, Duration timeout) throws Exception {
         return send(type, payload, expectedCodePredicate, null, timeout);
     }
 
-    public HttpResponse<?> send(MessageType type, JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
+    public HttpResponse<?> send(MessageType type, Buffer payload, Predicate<Integer> expectedCodePredicate) throws Exception {
         return send(type, payload, expectedCodePredicate, null, ofSeconds(15));
     }
 
-    public HttpResponse<?> sendTelemetry(JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
+    public HttpResponse<?> sendTelemetry(Buffer payload, Predicate<Integer> expectedCodePredicate) throws Exception {
         return send(TELEMETRY, payload, expectedCodePredicate);
     }
 
-    public HttpResponse<?> sendEvent(JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
+    public HttpResponse<?> sendEvent(Buffer payload, Predicate<Integer> expectedCodePredicate) throws Exception {
         return send(EVENT, payload, expectedCodePredicate);
     }
 

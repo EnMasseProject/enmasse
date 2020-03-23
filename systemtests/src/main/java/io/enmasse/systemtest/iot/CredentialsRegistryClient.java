@@ -136,7 +136,7 @@ public class CredentialsRegistryClient extends HonoApiClient {
         return secret;
     }
 
-    static PasswordCredential createPlainPasswordCredentialsObject(final String authId, final String password, final Instant notAfter) {
+    public static PasswordCredential createPlainPasswordCredentialsObject(final String authId, final String password, final Instant notAfter) {
 
         var secret = createPlainPasswordSecret(authId, password, notAfter);
 

@@ -4,14 +4,6 @@
  */
 package io.enmasse.systemtest.logs;
 
-import io.enmasse.systemtest.info.TestInfo;
-import io.enmasse.systemtest.platform.KubeCMDClient;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.Pod;
-import org.slf4j.Logger;
-
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
@@ -27,6 +19,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.Pod;
 
 public class GlobalLogCollector {
     private final static Logger LOGGER = CustomLogger.getLogger();
@@ -252,6 +253,11 @@ public class GlobalLogCollector {
     public static void saveInfraState(Path path) {
         try {
             LOGGER.info("Saving pod logs and info...");
+            // check for marker file
+            if (Files.exists(path.resolve("done.txt"))) {
+                LOGGER.info("Information already saved in {}", path);
+                return;
+            }
             Kubernetes kube = Kubernetes.getInstance();
             Files.createDirectories(path);
             List<Pod> pods = kube.listPods();
@@ -301,8 +307,10 @@ public class GlobalLogCollector {
                 Files.writeString(path.resolve("describe_pods_olm.txt"), KubeCMDClient.describePods(kube.getOlmNamespace()).getStdOut());
             }
             LOGGER.info("Pod logs and describe successfully stored into {}", path);
+            // create marker file
+            Files.createFile(path.resolve("done.txt"));
         } catch (Exception ex) {
-            LOGGER.warn("Cannot save pod logs and info: ", ex);
+            LOGGER.warn("Cannot save pod logs and info", ex);
         }
     }
 }
