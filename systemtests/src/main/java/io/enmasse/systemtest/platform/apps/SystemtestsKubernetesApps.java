@@ -1264,6 +1264,12 @@ public class SystemtestsKubernetesApps {
         if (c.getSendMessagePeriod()!=null) {
             env.add(new EnvVarBuilder().withName("amqp-send-msg-period").withValue(Integer.toString(c.getSendMessagePeriod())).build());
         }
+        if (c.getReceiversPerTenant()!=null) {
+            env.add(new EnvVarBuilder().withName("amqp-receivers-per-tenant").withValue(Integer.toString(c.getReceiversPerTenant())).build());
+        }
+        if (c.getSendersPerTenant()!=null) {
+            env.add(new EnvVarBuilder().withName("amqp-senders-per-tenant").withValue(Integer.toString(c.getSendersPerTenant())).build());
+        }
 
         return new DeploymentBuilder()
                 .withNewMetadata()
