@@ -11,7 +11,6 @@ import {
   ListItem,
   PageSection
 } from "@patternfly/react-core";
-
 import { useStoreContext, types } from "context-state-reducer";
 
 export const ServerMessageAlert: React.FC = () => {

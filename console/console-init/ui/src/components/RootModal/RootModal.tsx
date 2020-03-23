@@ -1,11 +1,16 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import { useStoreContext, MODAL_TYPES } from "context-state-reducer";
-import { DialogPrompt } from "components/common/DialogPrompt";
+import { DialogPrompt } from "components";
 import {
   EditAddressSpaceContainer,
   CreateAddressSpace
 } from "modules/address-space/dialogs";
-import { EditAddress } from "modules/address/dialogs/EditAddress";
+import { EditAddress } from "modules/address/dialogs";
 
 const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.CREATE_ADDRESS_SPACE]: CreateAddressSpace,

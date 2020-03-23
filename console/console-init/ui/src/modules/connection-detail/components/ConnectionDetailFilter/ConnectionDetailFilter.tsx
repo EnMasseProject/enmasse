@@ -26,11 +26,11 @@ import {
   Select,
   SelectVariant
 } from "@patternfly/react-core";
+import { useApolloClient } from "@apollo/react-hooks";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { ISortBy } from "@patternfly/react-table";
-import useWindowDimensions from "components/common/WindowDimension";
-import { SortForMobileView } from "components/common/SortForMobileView";
-import { useApolloClient } from "@apollo/react-hooks";
+import { useWindowDimensions, SortForMobileView } from "components";
+
 import {
   IConnectionLinksNameSearchResponse,
   IConnectionLinksAddressSearchResponse

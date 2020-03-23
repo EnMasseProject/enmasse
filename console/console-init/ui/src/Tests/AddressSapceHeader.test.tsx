@@ -7,7 +7,7 @@ import React from "react";
 import {
   IAddressSpaceHeaderProps,
   AddressSpaceHeader
-} from "components/AddressSpace/AddressSpaceHeader";
+} from "modules/address-space/components/AddressSpaceHeader";
 import { render } from "@testing-library/react";
 
 describe("Address Space Detail", () => {

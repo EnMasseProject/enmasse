@@ -9,9 +9,8 @@ import {
   DataToolbarContent
 } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
-import useWindowDimensions from "components/common/WindowDimension";
-import { SortForMobileView } from "components/common/SortForMobileView";
-import { AddressLinksFilter } from "../AddressLinksFilter";
+import { useWindowDimensions, SortForMobileView } from "components";
+import { AddressLinksFilter } from "modules/address-detail/containers";
 
 interface AddressLinksToolbar {
   filterValue: string;

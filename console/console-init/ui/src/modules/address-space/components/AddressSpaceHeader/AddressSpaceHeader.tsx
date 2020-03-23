@@ -16,7 +16,7 @@ import {
 } from "@patternfly/react-core";
 import { FormatDistance } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { AddressSpaceType } from "components/common/AddressSpaceListFormatter";
+import { AddressSpaceType } from "modules/address-space/utils";
 import { DropdownWithKababToggle } from "components";
 
 const styles = StyleSheet.create({

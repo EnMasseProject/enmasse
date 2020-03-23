@@ -14,8 +14,7 @@ import {
   AddressSpaceListKebab
 } from "modules/address-space";
 import { ISortBy } from "@patternfly/react-table";
-import { SortForMobileView } from "components/common/SortForMobileView";
-import useWindowDimensions from "components/common/WindowDimension";
+import { SortForMobileView, useWindowDimensions } from "components";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
 interface IAddressSpaceToolbarProps {
