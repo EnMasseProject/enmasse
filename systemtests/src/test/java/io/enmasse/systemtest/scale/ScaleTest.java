@@ -12,8 +12,12 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -141,7 +145,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     @Test
     void testScaleTestToolsWork() throws Exception {
         int initialAddresses = 5;
-        var addresses = createInitialAddresses(initialAddresses).stream().map(a->a.getSpec().getAddress()).collect(Collectors.toList());
+        var addresses = createInitialAddresses(initialAddresses).stream().map(a -> a.getSpec().getAddress()).collect(Collectors.toList());
 
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
         Supplier<ScaleTestClientConfiguration> clientProvider = () -> {
@@ -162,9 +166,9 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             var metricsEndpoint = SystemtestsKubernetesApps.getScaleTestClientEndpoint(kubernetes, client.getClientId());
             ProbeClientMetricsClient probeClientMetrics = new ProbeClientMetricsClient(metricsEndpoint);
 
-            TestUtils.waitUntilConditionOrFail(() -> probeClientMetrics.getSuccessTotal().getValue()>0, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
+            TestUtils.waitUntilConditionOrFail(() -> probeClientMetrics.getSuccessTotal().getValue() > 0, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> "Client is not reporting successfull connections");
 
-            assertTrue(probeClientMetrics.getSuccessTotal().getValue()>0);
+            assertTrue(probeClientMetrics.getSuccessTotal().getValue() > 0);
             assertEquals(0, probeClientMetrics.getFailureTotal().getValue());
 
             SystemtestsKubernetesApps.deleteScaleTestClient(kubernetes, client, TestUtils.getScaleTestLogsPath(TestInfo.getInstance().getActualTest()));
@@ -184,18 +188,18 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 return counter.isPresent() && counter.get().getValue() >= 0;
             }, Duration.ofSeconds(35), Duration.ofSeconds(5), () -> "Client is not reporting accepted deliveries");
             Thread.sleep(30000);
-            assertTrue(msgClientMetrics.getConnectSuccess().getValue()>0);
+            assertTrue(msgClientMetrics.getConnectSuccess().getValue() > 0);
             assertEquals(0, msgClientMetrics.getConnectFailure().getValue());
 
             isNotPresent(msgClientMetrics.getRejectedDeliveries(AddressType.QUEUE))
-                .or(c -> c.getValue() == 0)
-                .assertTrue("There are rejected deliveries");
+                    .or(c -> c.getValue() == 0)
+                    .assertTrue("There are rejected deliveries");
             isPresent(msgClientMetrics.getAcceptedDeliveries(AddressType.QUEUE))
-                .and(c -> c.getValue() >= 0)
-                .assertTrue("There are not accepted deliveries");
+                    .and(c -> c.getValue() >= 0)
+                    .assertTrue("There are not accepted deliveries");
             isPresent(msgClientMetrics.getReceivedDeliveries(AddressType.QUEUE))
-                .or(c -> c.getValue() >= 0)
-                .assertTrue("There are not received deliveries");
+                    .or(c -> c.getValue() >= 0)
+                    .assertTrue("There are not received deliveries");
         }
     }
 
@@ -236,7 +240,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 checkMetrics(manager.getMonitoringResult());
 
                 //increase load
-                if (anycastLinksPerConnection%2 == 0) {
+                if (anycastLinksPerConnection % 2 == 0) {
                     queueLinksPerConnection += queueLinksPerConnIncrease;
                 }
                 anycastLinksPerConnection += anycastLinksPerConnIncrease;
@@ -260,6 +264,16 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             manager.stopMonitoring();
             manager.gatherPerformanceResults();
             saveResultsFile("messaging_performance_results.json", manager.getPerformanceResults());
+            Map<String, Object> data = new HashMap<>();
+            data.put("addresses", addresses.size());
+            data.put("connections", manager.getConnections());
+            data.put("anycastLinksPerConnection", anycastLinksPerConnection);
+            data.put("queueLinksPerConnection", queueLinksPerConnection);
+            data.put("anycastSenderMedianThroughput", manager.getPerformanceResults().getAddresses().get(AddressType.ANYCAST.toString()).getGlobalSenders().getEstimateTotalThroughputMedian());
+            data.put("anycastReceiverMedianThroughput", manager.getPerformanceResults().getAddresses().get(AddressType.ANYCAST.toString()).getGlobalReceivers().getEstimateTotalThroughputMedian());
+            data.put("queueSenderMedianThroughput", manager.getPerformanceResults().getAddresses().get(AddressType.QUEUE.toString()).getGlobalSenders().getEstimateTotalThroughputMedian());
+            data.put("queueReceiverMedianThroughput", manager.getPerformanceResults().getAddresses().get(AddressType.QUEUE.toString()).getGlobalReceivers().getEstimateTotalThroughputMedian());
+            savePlotCSV("messaging_performance.csv", data);
             LOGGER.info("#######################################");
             LOGGER.info("Total addresses created {}", addresses.size());
             LOGGER.info("Total connections created {}", manager.getConnections());
@@ -317,6 +331,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         data.put("connection_count", manager.getConnections());
         data.put("links", manager.getConnections() * 5);
         saveResultsFile("operable_addresses.json", data);
+        savePlotCSV("operable-addresses.csv", data);
         assertThat(operableAddresses, greaterThan(failureThreshold));
     }
 
@@ -335,7 +350,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
         //measure time to create address in normal conditions
         Duration normalTimeToAddAddress = addAddressAndMeasure();
-        manager.getDowntimeResult().setNormalTimeToCreateAddress(normalTimeToAddAddress.toSeconds()+"s");
+        manager.getDowntimeResult().setNormalTimeToCreateAddress(normalTimeToAddAddress.toSeconds() + "s");
 
         //deploy clients and start messaging
         List<List<Address>> addressesGroups = new ArrayList<>();
@@ -366,7 +381,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 manager.getDowntimeResult().getDowntimeData().add(data);
                 //time to create address
                 var createTime = addAddressAndMeasure();
-                data.setCreateAddressTime(createTime.toSeconds()+"s");
+                data.setCreateAddressTime(createTime.toSeconds() + "s");
                 //clients downtime
                 manager.measureClientsDowntime(data);
 
@@ -375,6 +390,11 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
         } finally {
             saveResultsFile("failure_recovery_results.json", manager.getDowntimeResult());
+            Map<String, Object> data = new HashMap<>();
+            data.put("addresses", addresses.size());
+            data.put("connections", manager.getConnections());
+            data.put("normalTimeToCreateAddress", manager.getDowntimeResult().getNormalTimeToCreateAddress());
+            savePlotCSV("failure_recovery.csv", data);
         }
 
     }
@@ -602,6 +622,18 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         var mapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
         Files.createDirectories(logsPath);
         Files.write(logsPath.resolve(filename), mapper.writeValueAsBytes(resultsObject));
+    }
+
+    private void savePlotCSV(String fileName, Map<String, Object> data) throws IOException {
+        var logsPath = environment.testLogDir().resolve("plot-data");
+        LOGGER.info("Saving plot data into {}", logsPath);
+        Files.createDirectories(logsPath);
+        try (BufferedWriter writer = Files.newBufferedWriter(logsPath.resolve(fileName), StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
+            writer.write(String.join(",", data.keySet().toArray(new String[0])));
+            writer.newLine();
+            writer.write(String.join(",", data.values().stream().map(value -> value.toString().replaceAll("\\D+","")).toArray(String[]::new)));
+            writer.newLine();
+        }
     }
 
 }

@@ -223,9 +223,7 @@ public class TimeMeasuringSystem {
                 writer.write(String.join(",", data.keySet().toArray(new String[0])));
                 writer.newLine();
                 if (loadedData != null) {
-                    loadedData.forEach((operation, duration) -> {
-                        data.put(operation, data.getOrDefault(operation, 0L) + duration);
-                    });
+                    loadedData.forEach((operation, duration) -> data.put(operation, data.getOrDefault(operation, 0L) + duration));
                 }
                 writer.write(String.join(",", data.values().stream().map(value -> Long.toString(value)).toArray(String[]::new)));
                 writer.newLine();
