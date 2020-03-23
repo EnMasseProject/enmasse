@@ -6,6 +6,7 @@ package io.enmasse.systemtest.scale.downtime;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -19,6 +20,11 @@ public class DowntimeData {
     private String globalReconnectTimesMediansMedian;
     private String reconnectTimeAverage;
     private String createAddressTime;
+
+    @JsonIgnore
+    private double valueCreateAddresTime;
+    @JsonIgnore
+    private double valueReconnectTimeMedian;
 
     public String getName() {
         return name;
@@ -74,6 +80,22 @@ public class DowntimeData {
 
     public void setCreateAddressTime(String createAddressTime) {
         this.createAddressTime = createAddressTime;
+    }
+
+    public Double getValueCreateAddresTime() {
+        return valueCreateAddresTime;
+    }
+
+    public void setValueCreateAddresTime(double valueCreateAddresTime) {
+        this.valueCreateAddresTime = valueCreateAddresTime;
+    }
+
+    public double getValueReconnectTimeMedian() {
+        return valueReconnectTimeMedian;
+    }
+
+    public void setValueReconnectTimeMedian(double valueReconnectTimeMedian) {
+        this.valueReconnectTimeMedian = valueReconnectTimeMedian;
     }
 
 }

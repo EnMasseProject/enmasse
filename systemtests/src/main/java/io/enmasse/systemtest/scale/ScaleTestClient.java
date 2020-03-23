@@ -42,4 +42,8 @@ public class ScaleTestClient <T extends ScaleTestClientMetricsClient>{
     public AddressType getAddressesType() {
         return configuration.getAddressesType();
     }
+
+    public String getClientId() {
+        return configuration.getClientId();
+    }
 }
