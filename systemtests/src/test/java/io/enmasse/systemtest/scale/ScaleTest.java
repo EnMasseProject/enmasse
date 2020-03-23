@@ -5,8 +5,8 @@
 package io.enmasse.systemtest.scale;
 
 import static io.enmasse.systemtest.TestTag.SCALE;
-import static io.enmasse.systemtest.scale.metrics.MetricsAssertions.isNotPresent;
-import static io.enmasse.systemtest.scale.metrics.MetricsAssertions.isPresent;
+import static io.enmasse.systemtest.utils.AssertionPredicate.isNotPresent;
+import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -213,7 +213,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         var addresses = createInitialAddresses(initialAddresses);
 
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
-        ScalePerformanceTestManager manager = new ScalePerformanceTestManager(endpoint, userCredentials);
+        ScaleTestManager manager = new ScaleTestManager(endpoint, userCredentials);
 
         manager.getPerformanceResults().setTotalAddressesCreated(addresses.size());
 
@@ -292,7 +292,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         int failureThreshold = scaleAddressesFailureThreshold;
         List<Address> addressBatch = new LinkedList<>();
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
-        ScalePerformanceTestManager manager = new ScalePerformanceTestManager(endpoint, userCredentials);
+        ScaleTestManager manager = new ScaleTestManager(endpoint, userCredentials);
 
         Executors.newSingleThreadExecutor().execute(manager::monitorMetrics);
         while (true) {
@@ -344,7 +344,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         var addresses = createInitialAddresses(addressesToCreate);
 
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
-        ScalePerformanceTestManager manager = new ScalePerformanceTestManager(endpoint, userCredentials);
+        ScaleTestManager manager = new ScaleTestManager(endpoint, userCredentials);
 
         manager.getDowntimeResult().setAddresses(addresses.size());
 

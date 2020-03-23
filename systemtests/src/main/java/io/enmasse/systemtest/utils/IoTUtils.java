@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.utils;
 
-import static io.enmasse.systemtest.apiclients.Predicates.any;
+import static io.enmasse.systemtest.utils.Predicates.any;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
