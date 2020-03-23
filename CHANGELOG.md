@@ -40,6 +40,12 @@
 * #4131: Ensure the watch is restarted on all paths (#4132)
 * #4134: Ensure address watch respects 600s timeout (#4134)
 
+## 0.30.3
+* #4049: (Agent) Apply HTTP timeout to kubernetes list, create, update, delete requests (#4050)
+* #4119: Use @PreMatching annotation of the api-server request log to ensure that 404 are processed without NPE.
+* #4131: (Agent) Ensure the watch is restarted on all paths (#4132)
+* #4147: Perform basic address validation for both address space types (#4147)
+
 ## 0.30.2
 *  #2714: Allow setting security context of pods using persistent volumes
 *  #3547: Network policies not deleted when address space is deleted
