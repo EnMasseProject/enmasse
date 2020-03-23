@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import {
   PageSection,
   PageSectionVariants,
@@ -12,10 +12,10 @@ import {
   Grid
 } from "@patternfly/react-core";
 import { GridStylesForTableHeader } from "modules/address/AddressPage";
-import { ConnectionLinksContainer } from "../../containers";
+import { ConnectionLinksContainer } from "modules/connection-detail/containers";
 import { useLocation } from "react-router";
 import { css } from "@patternfly/react-styles";
-import { ConnectionDetailFilter } from "../ConnectionDetailFilter";
+import { ConnectionDetailFilter } from "modules/connection-detail/components";
 import { ISortBy } from "@patternfly/react-table";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { TablePagination } from "components";
