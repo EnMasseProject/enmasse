@@ -13,13 +13,12 @@ import {
   SelectOption,
   Select,
   SelectVariant,
-  SelectOptionObject,
   DataToolbarChipGroup,
   DataToolbarChip,
   DataToolbarGroup,
   DataToolbarFilter,
   DataToolbarItem,
-  DataToolbarToggleGroup
+  DataToolbarToggleGroup,
   SelectOptionObject,
   DropdownPosition
 } from "@patternfly/react-core";
