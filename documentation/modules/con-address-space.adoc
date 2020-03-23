@@ -15,7 +15,7 @@ ifdef::SingleBookLink[]
 endif::SingleBookLink[]
 
 ifndef::SingleBookLink[]
-* link:{BookUrlBase}{BaseProductVersion}/html-single/using_amq_online_on_openshift/#con-standard-address-space-messaging[Standard]
+* link:{BookUrlBase}{BaseProductVersion}{UsingGuideUrl}#con-standard-address-space-messaging[Standard]
 endif::SingleBookLink[]
 
 ifdef::SingleBookLink[]
@@ -23,6 +23,6 @@ ifdef::SingleBookLink[]
 endif::SingleBookLink[]
 
 ifndef::SingleBookLink[]
-* link:{BookUrlBase}{BaseProductVersion}/html-single/using_amq_online_on_openshift/#con-brokered-address-space-messaging[Brokered]
+* link:{BookUrlBase}{BaseProductVersion}{UsingGuideUrl}#con-brokered-address-space-messaging[Brokered]
 endif::SingleBookLink[]
 
