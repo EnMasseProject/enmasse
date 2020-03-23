@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Form,
   FormGroup,
@@ -35,7 +35,7 @@ export const EditAddress: React.FunctionComponent = () => {
   const { modalProps } = (state && state.modal) || {};
   const { onConfirm, onClose, address } = modalProps || {};
   console.log(address);
-  const [plan, setPlan] = React.useState(
+  const [plan, setPlan] = useState(
     { planLabel: address.planLabel, value: address.planValue } || {}
   );
   const refetchQueries: string[] = [

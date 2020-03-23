@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   DataToolbarGroup,
   DataToolbarFilter,
@@ -79,22 +79,20 @@ export const ConnectionDetailFilter: React.FunctionComponent<IConnectionDetailFi
 }) => {
   const { width } = useWindowDimensions();
   const client = useApolloClient();
-  const [filterIsExpanded, setFilterIsExpanded] = React.useState(false);
-  const [roleIsExpanded, setRoleIsExpanded] = React.useState(false);
-  const [isSelectNameExpanded, setIsSelectNameExpanded] = React.useState<
+  const [filterIsExpanded, setFilterIsExpanded] = useState(false);
+  const [roleIsExpanded, setRoleIsExpanded] = useState(false);
+  const [isSelectNameExpanded, setIsSelectNameExpanded] = useState<boolean>(
+    false
+  );
+  const [isSelectAddressExpanded, setIsSelectAddressExpanded] = useState<
     boolean
   >(false);
-  const [isSelectAddressExpanded, setIsSelectAddressExpanded] = React.useState<
-    boolean
-  >(false);
-  const [nameSelected, setNameSelected] = React.useState<string>();
-  const [addressSelected, setAddressSelected] = React.useState<string>();
-  const [nameInput, setNameInput] = React.useState<string>("");
-  const [addressInput, setAddressInput] = React.useState<string>("");
-  const [nameOptions, setNameOptions] = React.useState<Array<ISelectOption>>();
-  const [addressOptions, setAddressOptions] = React.useState<
-    Array<ISelectOption>
-  >();
+  const [nameSelected, setNameSelected] = useState<string>();
+  const [addressSelected, setAddressSelected] = useState<string>();
+  const [nameInput, setNameInput] = useState<string>("");
+  const [addressInput, setAddressInput] = useState<string>("");
+  const [nameOptions, setNameOptions] = useState<Array<ISelectOption>>();
+  const [addressOptions, setAddressOptions] = useState<Array<ISelectOption>>();
 
   const filterMenuItems = [
     { key: "filterName", value: "Name" },

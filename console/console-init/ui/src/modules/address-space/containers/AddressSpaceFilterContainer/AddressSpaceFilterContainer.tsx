@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { DataToolbarChip } from "@patternfly/react-core/dist/js/experimental";
 import { SelectOption, SelectOptionObject } from "@patternfly/react-core";
 import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
@@ -37,19 +37,18 @@ export const AddressSpaceFilterContainer: React.FunctionComponent<IAddressSpaceF
   totalAddressSpaces
 }) => {
   const client = useApolloClient();
-  const [isSelectNameExpanded, setIsSelectNameExpanded] = React.useState<
+  const [isSelectNameExpanded, setIsSelectNameExpanded] = useState<boolean>(
+    false
+  );
+  const [isSelectNamespaceExpanded, setIsSelectNamespaceExpanded] = useState<
     boolean
   >(false);
-  const [
-    isSelectNamespaceExpanded,
-    setIsSelectNamespaceExpanded
-  ] = React.useState<boolean>(false);
-  const [nameSelected, setNameSelected] = React.useState<string>();
-  const [namespaceSelected, setNamespaceSelected] = React.useState<string>();
-  const [nameOptions, setNameOptions] = React.useState<Array<ISelectOption>>();
-  const [nameInput, setNameInput] = React.useState<string>("");
-  const [nameSpaceInput, setNameSpaceInput] = React.useState<string>("");
-  const [namespaceOptions, setNamespaceOptions] = React.useState<
+  const [nameSelected, setNameSelected] = useState<string>();
+  const [namespaceSelected, setNamespaceSelected] = useState<string>();
+  const [nameOptions, setNameOptions] = useState<Array<ISelectOption>>();
+  const [nameInput, setNameInput] = useState<string>("");
+  const [nameSpaceInput, setNameSpaceInput] = useState<string>("");
+  const [namespaceOptions, setNamespaceOptions] = useState<
     Array<ISelectOption>
   >();
 
