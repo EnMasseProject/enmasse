@@ -18,6 +18,11 @@ public class DowntimeMonitoringResult {
     private String normalTimeToCreateAddress;
     private List<DowntimeData> downtimeData = new ArrayList<>();
 
+    //summary
+    private DowntimeData routerSummary;
+
+    private DowntimeData brokerSummary;
+
     public int getAddresses() {
         return addresses;
     }
@@ -48,6 +53,22 @@ public class DowntimeMonitoringResult {
 
     public void setDowntimeData(List<DowntimeData> downtimeData) {
         this.downtimeData = downtimeData;
+    }
+
+    public DowntimeData getRouterSummary() {
+        return routerSummary;
+    }
+
+    public void setRouterSummary(DowntimeData routerSummary) {
+        this.routerSummary = routerSummary;
+    }
+
+    public DowntimeData getBrokerSummary() {
+        return brokerSummary;
+    }
+
+    public void setBrokerSummary(DowntimeData brokerSummary) {
+        this.brokerSummary = brokerSummary;
     }
 
 }

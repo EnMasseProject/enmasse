@@ -382,18 +382,34 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 //time to create address
                 var createTime = addAddressAndMeasure();
                 data.setCreateAddressTime(createTime.toSeconds() + "s");
+                data.setValueCreateAddresTime(createTime.toSeconds());
                 //clients downtime
                 manager.measureClientsDowntime(data);
 
                 TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
             }
-
+            manager.calculateDowntimeSummary();
         } finally {
             saveResultsFile("failure_recovery_results.json", manager.getDowntimeResult());
             Map<String, Object> data = new HashMap<>();
             data.put("addresses", addresses.size());
             data.put("connections", manager.getConnections());
+            data.put("clients", manager.getDowntimeResult().getClientsDeployed());
             data.put("normalTimeToCreateAddress", manager.getDowntimeResult().getNormalTimeToCreateAddress());
+            if (manager.getDowntimeResult().getRouterSummary() != null) {
+                data.put("timeToCreateAddressWhenRouterDown", manager.getDowntimeResult().getRouterSummary().getGlobalReconnectTimesMediansMedian());
+                data.put("timeToReconnectWhenRouterDown", manager.getDowntimeResult().getRouterSummary().getCreateAddressTime());
+            } else {
+                data.put("timeToCreateAddressWhenRouterDown", 0);
+                data.put("timeToReconnectWhenRouterDown", 0);
+            }
+            if (manager.getDowntimeResult().getBrokerSummary() != null) {
+                data.put("timeToCreateAddressWhenBrokerDown", manager.getDowntimeResult().getBrokerSummary().getGlobalReconnectTimesMediansMedian());
+                data.put("timeToReconnectWhenBrokerDown", manager.getDowntimeResult().getBrokerSummary().getCreateAddressTime());
+            } else {
+                data.put("timeToCreateAddressWhenBrokerDown", 0);
+                data.put("timeToReconnectWhenBrokerDown", 0);
+            }
             savePlotCSV("failure_recovery.csv", data);
         }
 

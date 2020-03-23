@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.HdrHistogram.AtomicHistogram;
 import org.HdrHistogram.DoubleHistogram;
@@ -255,9 +256,9 @@ public class ScaleTestManager {
             TestUtils.waitUntilCondition(() -> {
                 var optional = client.getMetricsClient().getReconnectDurationHistogram();
                 return optional.isPresent() && optional.get().getSampleCount() > 0;
-            }, Duration.ofSeconds(25), Duration.ofSeconds(5), () -> {
-                logger.info("Client {} not reporting reconnections maybe it's ok because of used router still available");
-            });
+            }, Duration.ofMillis((env.getMetricsUpdatePeriodMillis() * (env.getScrapeRetries() + 1)) + 100),
+                    Duration.ofMillis(env.getMetricsUpdatePeriodMillis()),
+                    () -> logger.info("Client {} not reporting reconnections maybe it's ok because of used router still available", client.getClientId()));
 
             client.getMetricsClient().getReconnectDurationHistogram().ifPresent(histogram -> {
                 DoubleHistogram dh = new DoubleHistogram(2);
@@ -287,10 +288,30 @@ public class ScaleTestManager {
 
         double globalMediansMedian = median.evaluate(timesMedian.stream().mapToDouble(d -> d).toArray());
         data.setGlobalReconnectTimesMediansMedian(globalMediansMedian+SECONDS_SUFFIX);
+        data.setValueReconnectTimeMedian(globalMediansMedian);
 
         double average = averages.stream().mapToDouble(d -> d).sum() / averages.size();
         data.setReconnectTimeAverage(Duration.ofSeconds((long) average).toSeconds()+SECONDS_SUFFIX);
 
+    }
+
+    public void calculateDowntimeSummary() {
+        var routersData = downtimeResult.getDowntimeData().stream().filter(d -> d.getName().contains("router")).collect(Collectors.toList());
+        if (!routersData.isEmpty()) {
+            var downtime = new DowntimeData();
+            Median m = new Median();
+            downtime.setGlobalReconnectTimesMediansMedian(m.evaluate(routersData.stream().mapToDouble(d -> d.getValueReconnectTimeMedian()).toArray()) + SECONDS_SUFFIX);
+            downtime.setCreateAddressTime(m.evaluate(routersData.stream().mapToDouble(d -> d.getValueCreateAddresTime()).toArray()) + SECONDS_SUFFIX);
+            downtimeResult.setRouterSummary(downtime);
+        }
+        var brokersData = downtimeResult.getDowntimeData().stream().filter(d -> d.getName().contains("broker")).collect(Collectors.toList());
+        if (!brokersData.isEmpty()) {
+            var downtime = new DowntimeData();
+            Median m = new Median();
+            downtime.setGlobalReconnectTimesMediansMedian(m.evaluate(brokersData.stream().mapToDouble(d -> d.getValueReconnectTimeMedian()).toArray()) + SECONDS_SUFFIX);
+            downtime.setCreateAddressTime(m.evaluate(brokersData.stream().mapToDouble(d -> d.getValueCreateAddresTime()).toArray()) + SECONDS_SUFFIX);
+            downtimeResult.setBrokerSummary(downtime);
+        }
     }
 
     public void sleep() throws InterruptedException {
@@ -339,20 +360,20 @@ public class ScaleTestManager {
             for (var client : clientsMap.values()) {
                 var metrics = client.getMetricsClient();
 
-                var data = gatherPerformanceData(client.getConfiguration().getClientId(), metrics.getAcceptedMessages().get(type.toString()),
+                var data = gatherPerformanceData(client.getClientId(), metrics.getAcceptedMessages().get(type.toString()),
                         metrics.getStartTimeMillis(), acceptedMsgsPerSecHistogram);
                 if (data != null) {
                     addressTypeResults.getSenders().add(data);
                 } else {
-                    logger.warn("Sender {} , address {} , messaging records is empty", client.getConfiguration().getClientId(), type.toString());
+                    logger.warn("Sender {} , address {} , messaging records is empty", client.getClientId(), type.toString());
                 }
 
-                data = gatherPerformanceData(client.getConfiguration().getClientId(), metrics.getReceivedMessages().get(type.toString()),
+                data = gatherPerformanceData(client.getClientId(), metrics.getReceivedMessages().get(type.toString()),
                         metrics.getStartTimeMillis(), receivedMsgsPerSecHistogram);
                 if (data != null) {
                     addressTypeResults.getReceivers().add(data);
                 } else {
-                    logger.warn("Receiver {} , address {} , messaging records is empty", client.getConfiguration().getClientId(), type.toString());
+                    logger.warn("Receiver {} , address {} , messaging records is empty", client.getClientId(), type.toString());
                 }
             }
 
