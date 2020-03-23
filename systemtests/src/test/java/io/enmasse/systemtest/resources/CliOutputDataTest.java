@@ -4,7 +4,10 @@
  */
 package io.enmasse.systemtest.resources;
 
+import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.resources.CliOutputData.CliOutputDataType;
+
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -12,6 +15,7 @@ import java.util.Arrays;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
+@Tag(TestTag.FRAMEWORK)
 public class CliOutputDataTest {
 
     @Test

@@ -24,6 +24,7 @@ public class TestTag {
     public static final String ACCEPTANCE = "acceptance";
     public static final String SCALE = "scale";
     public static final String OLM = "olm";
+    public static final String FRAMEWORK = "framework";
     public static final Set<String> SHARED_TAGS = new HashSet<>(Arrays.asList(SHARED_BROKERED, SHARED_STANDARD, SHARED_MQTT, SHARED_IOT));
     public static final Set<String> IOT_TAGS = new HashSet<>(Arrays.asList(SHARED_IOT, ISOLATED_IOT));
 }

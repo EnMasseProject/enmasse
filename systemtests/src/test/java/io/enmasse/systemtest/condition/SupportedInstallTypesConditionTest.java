@@ -6,20 +6,22 @@ package io.enmasse.systemtest.condition;
 
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.OLMInstallationType;
+import io.enmasse.systemtest.TestTag;
 
 import java.lang.annotation.Annotation;
+
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.EnmasseInstallType.BUNDLE;
 import static io.enmasse.systemtest.EnmasseInstallType.OLM;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag(TestTag.FRAMEWORK)
 public class SupportedInstallTypesConditionTest {
 
-    public static void main(String[] args) {
-        new SupportedInstallTypesConditionTest().testSupport();
-    }
-
+    @Test
     void testSupport() {
         assertTrue(test(false, BUNDLE, BUNDLE));
         assertFalse(test(false, BUNDLE, OLM));
