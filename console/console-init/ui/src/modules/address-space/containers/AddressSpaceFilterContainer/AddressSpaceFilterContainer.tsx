@@ -13,7 +13,7 @@ import { FetchPolicy, TYPEAHEAD_REQUIRED_LENGTH } from "constants/constants";
 import { ISelectOption, getSelectOptionList } from "utils";
 import { AddressSpaceFilter } from "modules/address-space/components";
 
-interface IAddressSpaceFilterContainerProps {
+export interface IAddressSpaceFilterContainerProps {
   filterValue?: string;
   setFilterValue: (value: string) => void;
   filterNames: any[];
@@ -37,12 +37,6 @@ export const AddressSpaceFilterContainer: React.FunctionComponent<IAddressSpaceF
   totalAddressSpaces
 }) => {
   const client = useApolloClient();
-  const [filterIsExpanded, setFilterIsExpanded] = React.useState<boolean>(
-    false
-  );
-  const [typeFilterIsExpanded, setTypeFilterIsExpanded] = React.useState<
-    boolean
-  >(false);
   const [isSelectNameExpanded, setIsSelectNameExpanded] = React.useState<
     boolean
   >(false);
@@ -149,14 +143,13 @@ export const AddressSpaceFilterContainer: React.FunctionComponent<IAddressSpaceF
         break;
     }
   };
-  const onFilterSelect = (event: any) => {
-    setFilterValue(event.target.value);
-    setFilterIsExpanded(!filterIsExpanded);
+
+  const onFilterSelect = (value: string) => {
+    setFilterValue(value);
   };
 
-  const onTypeFilterSelect = (event: any) => {
-    setFilterType(event.target.value);
-    setTypeFilterIsExpanded(!typeFilterIsExpanded);
+  const onTypeFilterSelect = (value: string) => {
+    setFilterType(value);
   };
 
   const onNameSelectToggle = () => {
@@ -291,7 +284,6 @@ export const AddressSpaceFilterContainer: React.FunctionComponent<IAddressSpaceF
   return (
     <AddressSpaceFilter
       onFilterSelect={onFilterSelect}
-      setFilterIsExpanded={setFilterIsExpanded}
       onDelete={onDelete}
       onNameSelectToggle={onNameSelectToggle}
       onNameSelect={onNameSelect}
@@ -303,7 +295,6 @@ export const AddressSpaceFilterContainer: React.FunctionComponent<IAddressSpaceF
       onNamespaceSelect={onNamespaceSelect}
       setNamespaceSelected={setNamespaceSelected}
       setIsSelectNamespaceExpanded={setIsSelectNamespaceExpanded}
-      setTypeFilterIsExpanded={setTypeFilterIsExpanded}
       onTypeFilterSelect={onTypeFilterSelect}
       onNamespaceSelectFilterChange={onNamespaceSelectFilterChange}
       checkIsFilterApplied={checkIsFilterApplied}
@@ -316,9 +307,7 @@ export const AddressSpaceFilterContainer: React.FunctionComponent<IAddressSpaceF
       isSelectNamespaceExpanded={isSelectNamespaceExpanded}
       namespaceOptions={namespaceOptions}
       nameSpaceInput={nameSpaceInput}
-      typeFilterIsExpanded={typeFilterIsExpanded}
       typeFilterMenuItems={typeFilterMenuItems}
-      filterIsExpanded={filterIsExpanded}
       filterMenuItems={filterMenuItems}
       isSelectNameExpanded={isSelectNameExpanded}
       nameOptions={nameOptions}

@@ -11,7 +11,7 @@ import {
   DropdownItem
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { IDropdownOption } from "components/common";
+import { IDropdownOption } from "components";
 import { dropdown_item_styles } from "modules/address-space";
 
 const styles = StyleSheet.create({
