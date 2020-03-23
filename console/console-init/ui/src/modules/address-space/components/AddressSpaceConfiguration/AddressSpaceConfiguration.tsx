@@ -10,16 +10,16 @@ import {
   Form,
   FormGroup,
   TextInput,
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
   DropdownPosition,
   Radio
 } from "@patternfly/react-core";
-import { IDropdownOption } from "components/common/FilterDropdown";
 import { css, StyleSheet } from "@patternfly/react-styles";
+import { DropdownWithToggle, IDropdownOption } from "components";
+
 export const dropdown_item_styles = StyleSheet.create({
-  format_item: { whiteSpace: "normal", textAlign: "justify" }
+  format_item: { whiteSpace: "normal", textAlign: "justify" },
+  dropdown_align: { display: "flex" },
+  dropdown_toggle_align: { flex: "1" }
 });
 
 export interface IPlanOption {
@@ -35,34 +35,26 @@ export interface IAuthenticationServiceOptions {
 
 export interface IAddressSpaceConfigurationProps {
   onNameSpaceSelect: (event: any) => void;
-  setIsNameSpaceOpen: (isOpen: boolean) => void;
   handleNameChange: (name: string) => void;
   handleBrokeredChange: () => void;
   onPlanSelect: (event: any) => void;
   handleStandardChange: () => void;
-  setIsPlanOpen: (isOpen: boolean) => void;
   onAuthenticationServiceSelect: (event: any) => void;
-  setIsAuthenticationServiceOpen: (isOpen: boolean) => void;
-  isNameSpaceOpen: boolean;
-  namespace: string;
   namespaceOptions: IDropdownOption[];
+  namespace: string;
   name: string;
   isNameValid: boolean;
   isStandardChecked: boolean;
   isBrokeredChecked: boolean;
-  isPlanOpen: boolean;
   type: string;
   plan: string;
   planOptions: IPlanOption[];
-  isAuthenticationServiceOpen: boolean;
   authenticationService: string;
   authenticationServiceOptions: IAuthenticationServiceOptions[];
 }
 
 export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps> = ({
   onNameSpaceSelect,
-  isNameSpaceOpen,
-  setIsNameSpaceOpen,
   namespace,
   namespaceOptions,
   name,
@@ -72,14 +64,10 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
   isBrokeredChecked,
   handleBrokeredChange,
   onPlanSelect,
-  isPlanOpen,
   type,
-  setIsPlanOpen,
   plan,
   planOptions,
   onAuthenticationServiceSelect,
-  isAuthenticationServiceOpen,
-  setIsAuthenticationServiceOpen,
   authenticationService,
   authenticationServiceOptions,
   isStandardChecked
@@ -91,31 +79,15 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
           <Form>
             <FormGroup label="Namespace" isRequired={true} fieldId="name-space">
               <br />
-              <Dropdown
+              <DropdownWithToggle
                 id="cas-dropdown-namespace"
+                className={css(dropdown_item_styles.dropdown_align)}
+                toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
                 position={DropdownPosition.left}
-                onSelect={onNameSpaceSelect}
-                isOpen={isNameSpaceOpen}
-                style={{ display: "flex" }}
-                toggle={
-                  <DropdownToggle
-                    style={{ flex: "1" }}
-                    onToggle={() => setIsNameSpaceOpen(!isNameSpaceOpen)}
-                  >
-                    {namespace}
-                  </DropdownToggle>
-                }
-                dropdownItems={namespaceOptions.map(option => (
-                  <DropdownItem
-                    id={`cas-dropdown-item-namespace${option.value}`}
-                    key={option.value}
-                    value={option.value}
-                    itemID={option.value}
-                    component={"button"}
-                  >
-                    <b>{option.label}</b>
-                  </DropdownItem>
-                ))}
+                onSelectItem={onNameSpaceSelect}
+                dropdownItems={namespaceOptions}
+                isItemDisplayBold={true}
+                value={namespace}
               />
             </FormGroup>
             <FormGroup
@@ -170,36 +142,16 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
               fieldId="address-space-plan"
             >
               <br />
-              <Dropdown
+              <DropdownWithToggle
                 id="cas-dropdown-plan"
                 position={DropdownPosition.left}
-                onSelect={onPlanSelect}
-                isOpen={isPlanOpen}
-                style={{ display: "flex" }}
-                toggle={
-                  <DropdownToggle
-                    isDisabled={type.trim() === ""}
-                    style={{ flex: "1", position: "inherit" }}
-                    onToggle={() => setIsPlanOpen(!isPlanOpen)}
-                  >
-                    {plan}
-                  </DropdownToggle>
-                }
-                dropdownItems={planOptions.map((option: IPlanOption) => (
-                  <DropdownItem
-                    id={`cas-dropdown-item-plan${option.value}`}
-                    key={option.value}
-                    value={option.value}
-                    itemID={option.value}
-                    component={"button"}
-                  >
-                    <b>{option.label}</b>
-                    <br />
-                    <div className={css(dropdown_item_styles.format_item)}>
-                      {option.description}
-                    </div>
-                  </DropdownItem>
-                ))}
+                onSelectItem={onPlanSelect}
+                className={css(dropdown_item_styles.dropdown_align)}
+                toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
+                dropdownItems={planOptions}
+                isDisabled={type.trim() === ""}
+                isItemDisplayBold={true}
+                value={plan}
               />
             </FormGroup>
             <FormGroup
@@ -208,38 +160,16 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
               fieldId="authentication-service"
             >
               <br />
-              <Dropdown
+              <DropdownWithToggle
                 id="cas-dropdown-auth-service"
                 position={DropdownPosition.left}
-                onSelect={onAuthenticationServiceSelect}
-                isOpen={isAuthenticationServiceOpen}
-                style={{ display: "flex" }}
-                toggle={
-                  <DropdownToggle
-                    isDisabled={type.trim() === ""}
-                    style={{ flex: "1", position: "inherit" }}
-                    onToggle={() =>
-                      setIsAuthenticationServiceOpen(
-                        !isAuthenticationServiceOpen
-                      )
-                    }
-                  >
-                    {authenticationService}
-                  </DropdownToggle>
-                }
-                dropdownItems={authenticationServiceOptions.map(
-                  (option: IAuthenticationServiceOptions) => (
-                    <DropdownItem
-                      id={`cas-dropdown-item-auth-service${option.value}`}
-                      key={option.value}
-                      value={option.value}
-                      itemID={option.value}
-                      component={"button"}
-                    >
-                      <b>{option.label}</b>
-                    </DropdownItem>
-                  )
-                )}
+                onSelectItem={onAuthenticationServiceSelect}
+                className={css(dropdown_item_styles.dropdown_align)}
+                toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
+                dropdownItems={authenticationServiceOptions}
+                isDisabled={type.trim() === ""}
+                isItemDisplayBold={true}
+                value={authenticationService}
               />
             </FormGroup>
           </Form>

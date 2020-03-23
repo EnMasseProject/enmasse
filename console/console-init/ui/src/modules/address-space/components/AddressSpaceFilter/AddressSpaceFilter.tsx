@@ -14,9 +14,6 @@ import {
 } from "@patternfly/react-core/dist/js/experimental";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import {
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
   InputGroup,
   Button,
   ButtonVariant,
@@ -24,17 +21,18 @@ import {
   SelectOption,
   Select,
   SelectVariant,
-  SelectOptionObject
+  SelectOptionObject,
+  DropdownPosition
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH
 } from "constants/constants";
+import { DropdownWithToggle } from "components";
 
 export interface IAddressSpaceFilterProps {
-  onFilterSelect: (event: any) => void;
-  setFilterIsExpanded: (expanded: boolean) => void;
+  onFilterSelect: (value: string) => void;
   onDelete: (
     type: string | DataToolbarChip,
     id: string | DataToolbarChip
@@ -54,7 +52,6 @@ export interface IAddressSpaceFilterProps {
   ) => void;
   setNamespaceSelected: (name: string | undefined) => void;
   setIsSelectNamespaceExpanded: (expanded: boolean) => void;
-  setTypeFilterIsExpanded: (expanded: boolean) => void;
   onTypeFilterSelect: (event: any) => void;
   onNamespaceSelectFilterChange: (
     e: React.ChangeEvent<HTMLInputElement>
@@ -69,9 +66,7 @@ export interface IAddressSpaceFilterProps {
   isSelectNamespaceExpanded: boolean;
   namespaceOptions: Array<ISelectOption> | undefined;
   nameSpaceInput: string;
-  typeFilterIsExpanded: boolean;
   typeFilterMenuItems: any[];
-  filterIsExpanded: boolean;
   filterMenuItems: any[];
   isSelectNameExpanded: boolean;
   nameOptions: Array<ISelectOption> | undefined;
@@ -81,7 +76,6 @@ export interface IAddressSpaceFilterProps {
 
 export const AddressSpaceFilter: React.FC<IAddressSpaceFilterProps> = ({
   onFilterSelect,
-  setFilterIsExpanded,
   onDelete,
   onNameSelectToggle,
   onNameSelect,
@@ -93,7 +87,6 @@ export const AddressSpaceFilter: React.FC<IAddressSpaceFilterProps> = ({
   onNamespaceSelect,
   setNamespaceSelected,
   setIsSelectNamespaceExpanded,
-  setTypeFilterIsExpanded,
   onTypeFilterSelect,
   onNamespaceSelectFilterChange,
   checkIsFilterApplied,
@@ -106,9 +99,7 @@ export const AddressSpaceFilter: React.FC<IAddressSpaceFilterProps> = ({
   isSelectNamespaceExpanded,
   namespaceOptions,
   nameSpaceInput,
-  typeFilterIsExpanded,
   typeFilterMenuItems,
-  filterIsExpanded,
   filterMenuItems,
   isSelectNameExpanded,
   nameOptions,
@@ -119,31 +110,19 @@ export const AddressSpaceFilter: React.FC<IAddressSpaceFilterProps> = ({
     <>
       <DataToolbarGroup variant="filter-group">
         <DataToolbarFilter categoryName="Filter">
-          <Dropdown
+          <DropdownWithToggle
             id="al-filter-dropdown"
-            position="left"
-            onSelect={onFilterSelect}
-            isOpen={filterIsExpanded}
-            toggle={
-              <DropdownToggle onToggle={setFilterIsExpanded}>
+            toggleId={"al-filter-dropdown"}
+            position={DropdownPosition.left}
+            onSelectItem={onFilterSelect}
+            dropdownItems={filterMenuItems}
+            value={filterValue?.trim() || "Filter"}
+            toggleIcon={
+              <>
                 <FilterIcon />
                 &nbsp;
-                {filterValue && filterValue.trim() !== ""
-                  ? filterValue
-                  : "Filter"}
-              </DropdownToggle>
+              </>
             }
-            dropdownItems={filterMenuItems.map((option: any) => (
-              <DropdownItem
-                id={`al-filter-dropdown${option.key}`}
-                key={option.key}
-                value={option.value}
-                itemID={option.key}
-                component={"button"}
-              >
-                {option.value}
-              </DropdownItem>
-            ))}
           />
         </DataToolbarFilter>
         {filterValue && filterValue.trim() !== "" && (
@@ -282,29 +261,12 @@ export const AddressSpaceFilter: React.FC<IAddressSpaceFilterProps> = ({
               >
                 {filterValue && filterValue === "Type" && (
                   <InputGroup>
-                    <Dropdown
+                    <DropdownWithToggle
                       id="al-filter-dropdown-type"
                       position="left"
-                      onSelect={onTypeFilterSelect}
-                      isOpen={typeFilterIsExpanded}
-                      toggle={
-                        <DropdownToggle onToggle={setTypeFilterIsExpanded}>
-                          {filterType && filterType.trim() !== ""
-                            ? filterType
-                            : "Select Type"}
-                        </DropdownToggle>
-                      }
-                      dropdownItems={typeFilterMenuItems.map((option: any) => (
-                        <DropdownItem
-                          id={`al-filter-dropdown-item-type${option.key}`}
-                          key={option.key}
-                          value={option.value}
-                          itemID={option.key}
-                          component={"button"}
-                        >
-                          {option.value}
-                        </DropdownItem>
-                      ))}
+                      onSelectItem={onTypeFilterSelect}
+                      dropdownItems={typeFilterMenuItems}
+                      value={(filterType && filterType.trim()) || "Select Type"}
                     />
                   </InputGroup>
                 )}

@@ -9,7 +9,7 @@ import { useMutationQuery } from "hooks";
 import { AddressDefinition } from "modules/address/dialogs/CreateAddress/Configuration";
 import { PreviewAddress } from "./Preview";
 import { CREATE_ADDRESS } from "graphql-module/queries";
-import { IDropdownOption } from "components/common/FilterDropdown";
+import { IDropdownOption } from "components";
 import { messagingAddressNameRegexp } from "types/Configs";
 
 interface ICreateAddressProps {
