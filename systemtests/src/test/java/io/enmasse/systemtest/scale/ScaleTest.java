@@ -106,6 +106,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     void disableVerboseLogging() {
         TimeMeasuringSystem.disableResultsLogging();
         AddressUtils.disableVerboseLogs();
+        logCollector.disableVerboseLogging();
     }
 
     @BeforeEach

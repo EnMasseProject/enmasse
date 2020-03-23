@@ -34,6 +34,7 @@ public class GlobalLogCollector {
     private final Path logDir;
     private final String namespace;
     private boolean appendNamespaceToLogDir;
+    private boolean verbose;
 
     public GlobalLogCollector(Kubernetes kubernetes, Path logDir) {
         this(kubernetes, logDir, kubernetes.getInfraNamespace());
@@ -48,10 +49,15 @@ public class GlobalLogCollector {
         this.logDir = logDir;
         this.namespace = namespace;
         this.appendNamespaceToLogDir = appendNamespaceToLogDir;
+        this.verbose = true;
     }
 
     public void collectConfigMaps() {
         collectConfigMaps("global");
+    }
+
+    public void disableVerboseLogging() {
+        this.verbose = false;
     }
 
     public void collectConfigMaps(String operation) {
@@ -59,7 +65,9 @@ public class GlobalLogCollector {
         kubernetes.getAllConfigMaps(namespace).getItems().forEach(configMap -> {
             try {
                 Path confMapFile = resolveLogFile(configMap.getMetadata().getName() + "." + operation + ".configmap");
-                LOGGER.info("config map '{}' will be archived with path: '{}'", configMap.getMetadata().getName(), confMapFile);
+                if (verbose) {
+                    LOGGER.info("config map '{}' will be archived with path: '{}'", configMap.getMetadata().getName(), confMapFile);
+                }
                 if (!Files.exists(confMapFile)) {
                     try (BufferedWriter bf = Files.newBufferedWriter(confMapFile)) {
                         bf.write(configMap.toString());
@@ -95,7 +103,9 @@ public class GlobalLogCollector {
             try {
                 String filename = discriminator == null ? String.format("%s.%s.log", namespace, podName) : String.format("%s.%s.%s.log", namespace, discriminator, podName);
                 Path podLog = resolveLogFile(filename);
-                LOGGER.info("log of '{}' pod will be archived with path: '{}'", podName, podLog);
+                if (verbose) {
+                    LOGGER.info("log of '{}' pod will be archived with path: '{}'", podName, podLog);
+                }
                 try (BufferedWriter bf = Files.newBufferedWriter(podLog)) {
                     bf.write(podLogs);
                 }
@@ -212,7 +222,9 @@ public class GlobalLogCollector {
                 command).getStdOut();
         try {
             Path routerAutoLinks = resolveLogFile(pod.getMetadata().getName() + filesuffix);
-            LOGGER.info("router info '{}' pod will be archived with path: '{}'", pod.getMetadata().getName(), routerAutoLinks);
+            if (verbose) {
+                LOGGER.info("router info '{}' pod will be archived with path: '{}'", pod.getMetadata().getName(), routerAutoLinks);
+            }
             Files.writeString(routerAutoLinks, output, UTF_8, CREATE_NEW);
         } catch (IOException e) {
             LOGGER.warn("Error collecting router state", e);
