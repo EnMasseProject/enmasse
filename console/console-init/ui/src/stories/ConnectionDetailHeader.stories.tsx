@@ -6,7 +6,7 @@
 import React from "react";
 import { text, number, boolean } from "@storybook/addon-knobs";
 import { MemoryRouter } from "react-router";
-import { ConnectionDetailHeader } from "modules/connection-detail/ConnectionDetailHeader";
+import { ConnectionDetailHeader } from "modules/connection-detail/components";
 
 export default {
   title: "Connection Detail"
