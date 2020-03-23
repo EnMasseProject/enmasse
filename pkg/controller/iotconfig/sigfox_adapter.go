@@ -232,6 +232,8 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterConfigMap(config *iotv1alpha1
 hono:
   app:
     maxInstances: 1
+  vertx:
+    preferNative: true
   healthCheck:
     insecurePortBindAddress: 0.0.0.0
     insecurePortEnabled: true

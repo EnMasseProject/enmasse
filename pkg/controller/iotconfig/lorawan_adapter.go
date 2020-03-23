@@ -231,6 +231,8 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterConfigMap(config *iotv1alpha
 hono:
   app:
     maxInstances: 1
+  vertx:
+    preferNative: true
   healthCheck:
     insecurePortBindAddress: 0.0.0.0
     insecurePortEnabled: true

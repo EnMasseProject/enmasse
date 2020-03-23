@@ -188,6 +188,8 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceConfigMap(config *iotv1alpha1.I
 hono:
   app:
     maxInstances: 1
+  vertx:
+    preferNative: true
   healthCheck:
     insecurePortBindAddress: 0.0.0.0
     insecurePortEnabled: true
