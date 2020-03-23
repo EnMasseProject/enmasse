@@ -17,7 +17,7 @@ const protocolIconToDisplay = (encrypted: boolean) => {
   else return <LockOpenIcon />;
 };
 
-export const ConnectionProtocolFormat: React.FunctionComponent<ProtocolIcon> = ({
+const ConnectionProtocolFormat: React.FunctionComponent<ProtocolIcon> = ({
   protocol,
   encrypted
 }) => {
@@ -27,8 +27,7 @@ export const ConnectionProtocolFormat: React.FunctionComponent<ProtocolIcon> = (
     </>
   );
 };
-
-export const getFilteredValue = (object: IMetrics[], value: string) => {
+const getFilteredValue = (object: IMetrics[], value: string) => {
   if (object && object != null) {
     const filtered = object.filter(
       obj => obj && obj.name && obj.name === value
@@ -39,3 +38,5 @@ export const getFilteredValue = (object: IMetrics[], value: string) => {
   }
   return "";
 };
+
+export { ConnectionProtocolFormat, getFilteredValue };

@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import {
@@ -29,16 +29,16 @@ export default function AddressSpacePage() {
   useA11yRouteChange();
   let deleteAddressSpaceErrors: any = [];
 
-  const [filterNames, setFilterNames] = React.useState<string[]>([]);
-  const [filterNamespaces, setFilterNamespaces] = React.useState<string[]>([]);
-  const [filterType, setFilterType] = React.useState<string | null>(null);
-  const [totalAddressSpaces, setTotalAddressSpaces] = React.useState<number>(0);
-  const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
+  const [filterNames, setFilterNames] = useState<string[]>([]);
+  const [filterNamespaces, setFilterNamespaces] = useState<string[]>([]);
+  const [filterType, setFilterType] = useState<string | null>(null);
+  const [totalAddressSpaces, setTotalAddressSpaces] = useState<number>(0);
+  const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
-  const [selectedAddressSpaces, setSelectedAddressSpaces] = React.useState<
+  const [selectedAddressSpaces, setSelectedAddressSpaces] = useState<
     IAddressSpace[]
   >([]);
 

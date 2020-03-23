@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useLocation } from "react-router";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import {
@@ -14,19 +14,19 @@ import {
 } from "@patternfly/react-core";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
-import { ConnectionContainer } from "./containers/ConnectionContainer";
-import { ConnectionToolbar } from "modules/connection";
-import { TablePagination } from "components/TablePagination";
+import { ConnectionContainer } from "modules/connection/containers";
+import { ConnectionToolbar } from "modules/connection/containers";
+import { TablePagination } from "components";
 
 export default function ConnectionPage() {
   useDocumentTitle("Connection List");
 
   useA11yRouteChange();
-  const [filterValue, setFilterValue] = React.useState<string>("Hostname");
-  const [hostnames, setHostnames] = React.useState<Array<string>>([]);
-  const [containerIds, setContainerIds] = React.useState<Array<string>>([]);
-  const [totalConnections, setTotalConnections] = React.useState<number>(0);
-  const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
+  const [filterValue, setFilterValue] = useState<string>("Hostname");
+  const [hostnames, setHostnames] = useState<Array<string>>([]);
+  const [containerIds, setContainerIds] = useState<Array<string>>([]);
+  const [totalConnections, setTotalConnections] = useState<number>(0);
+  const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
   const { name, namespace, type } = useParams();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);

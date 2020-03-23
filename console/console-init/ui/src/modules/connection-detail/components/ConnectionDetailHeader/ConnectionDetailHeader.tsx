@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Title,
   Flex,
@@ -58,7 +58,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
   messageOut,
   addressSpaceType
 }) => {
-  const [isHidden, setIsHidden] = React.useState(true);
+  const [isHidden, setIsHidden] = useState(true);
   const { width } = useWindowDimensions();
   return (
     <Card>

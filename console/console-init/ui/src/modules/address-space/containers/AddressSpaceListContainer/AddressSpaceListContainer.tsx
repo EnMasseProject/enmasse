@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
 import {
@@ -69,7 +69,7 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
   useA11yRouteChange();
   const client = useApolloClient();
   const { dispatch } = useStoreContext();
-  const [sortBy, setSortBy] = React.useState<ISortBy>();
+  const [sortBy, setSortBy] = useState<ISortBy>();
   const refetchQueries: string[] = ["all_address_spaces"];
   const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
     DELETE_ADDRESS_SPACE,

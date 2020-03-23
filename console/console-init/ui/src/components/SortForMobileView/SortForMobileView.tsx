@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   DataToolbar,
   DataToolbarContent,
@@ -29,12 +29,12 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
   sortValue,
   setSortValue
 }) => {
-  const [sortIsExpanded, setSortIsExpanded] = React.useState<boolean>(false);
+  const [sortIsExpanded, setSortIsExpanded] = useState<boolean>(false);
   const { width } = useWindowDimensions();
-  const [sortData, setSortData] = React.useState("");
-  const [sortDirection, setSortDirection] = React.useState<string>();
+  const [sortData, setSortData] = useState("");
+  const [sortDirection, setSortDirection] = useState<string>();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (sortValue) {
       const data = sortMenu.filter(data => data.index === sortValue.index);
       if (data && sortData !== data[0].value) {

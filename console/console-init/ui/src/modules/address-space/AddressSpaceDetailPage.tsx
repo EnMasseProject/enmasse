@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { useHistory } from "react-router";
 import { useParams, Link } from "react-router-dom";
 import {
@@ -65,7 +65,7 @@ export default function AddressSpaceDetailPage() {
   useA11yRouteChange();
   useBreadcrumb(breadcrumb);
   useDocumentTitle("Address Space Detail");
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const { loading, data } = useQuery<IAddressSpaceDetailResponse>(
     RETURN_ADDRESS_SPACE_DETAIL(name, namespace),

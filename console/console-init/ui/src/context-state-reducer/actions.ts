@@ -24,7 +24,7 @@ const CREATE_ADDRESS_SPACE = "CREATE_ADDRESS_SPACE";
 const DELETE_ADDRESS = "DELETE_ADDRESS";
 const PURGE_ADDRESS = "PURGE_ADDRESS";
 
-export const types = {
+const types = {
   SET_SERVER_ERROR,
   RESET_SERVER_ERROR,
   SET_NETWORK_ERROR,
@@ -33,7 +33,7 @@ export const types = {
   HIDE_MODAL
 };
 
-export const MODAL_TYPES = {
+const MODAL_TYPES = {
   DELETE_ADDRESS_SPACE,
   EDIT_ADDRESS_SPACE,
   EDIT_ADDRESS,
@@ -41,3 +41,5 @@ export const MODAL_TYPES = {
   DELETE_ADDRESS,
   PURGE_ADDRESS
 };
+
+export { MODAL_TYPES, types };
