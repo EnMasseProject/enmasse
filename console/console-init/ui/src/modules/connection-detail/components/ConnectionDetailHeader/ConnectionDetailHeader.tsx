@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import {
   Title,
   Flex,
@@ -13,8 +13,8 @@ import {
   CardBody
 } from "@patternfly/react-core";
 import { AngleDownIcon, AngleUpIcon } from "@patternfly/react-icons";
-import { ConnectionDetail } from "./ConnectionDetail";
-import { MessagesDetail } from "./MessagesDetail";
+import { ConnectionDetailHeaderAttributes } from "./ConnectionDetailHeaderAttributes";
+import { MessagesDetailHeaderAttributes } from "./MessagesDetailHeaderAttributes";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { ConnectionProtocolFormat } from "components/common/ConnectionListFormatter";
 import useWindowDimensions from "components/common/WindowDimension";
@@ -123,14 +123,14 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
         >
           {width < 992 || !isHidden ? (
             <>
-              <ConnectionDetail
+              <ConnectionDetailHeaderAttributes
                 product={product}
                 version={version}
                 jvm={platform}
                 os={os}
                 isMobileView={width < 992 ? true : false}
               />
-              <MessagesDetail
+              <MessagesDetailHeaderAttributes
                 messageIn={messageIn}
                 messageOut={messageOut}
                 isMobileView={width < 992 ? true : false}
