@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { DataToolbarChip } from "@patternfly/react-core/dist/js/experimental";
 import { useApolloClient } from "@apollo/react-hooks";
 import { ISelectOption, getSelectOptionList } from "utils";
-import { FetchPolicy, TYPEAHEAD_REQUIRED_LENGTH } from "constants/constants";
+import { FetchPolicy, TYPEAHEAD_REQUIRED_LENGTH } from "constant";
 import {
   RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH,
   RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH
@@ -10,7 +10,7 @@ import {
 import {
   ISearchAddressLinkContainerResponse,
   ISearchAddressLinkNameResponse
-} from "types/ResponseTypes";
+} from "schema/ResponseTypes";
 import { AddressLinksToolbarToggleGroup } from "modules/address-detail";
 
 interface IAddressLinksFilterProps {

@@ -10,7 +10,7 @@ import { Link, useHistory } from "react-router-dom";
 import { useParams } from "react-router";
 import { useQuery } from "@apollo/react-hooks";
 import { AddressDetailHeader } from "modules/address-detail";
-import { IAddressDetailResponse } from "types/ResponseTypes";
+import { IAddressDetailResponse } from "schema/ResponseTypes";
 import { getFilteredValue } from "utils";
 import {
   DELETE_ADDRESS,
@@ -20,7 +20,7 @@ import {
 } from "graphql-module/queries";
 import { AddressLinksPage } from "./containers/AddressLinks";
 import { IAddressSpacePlanResponse, IAddress } from "modules/address";
-import { POLL_INTERVAL, FetchPolicy, AddressTypes } from "constants/constants";
+import { POLL_INTERVAL, FetchPolicy, AddressTypes } from "constant";
 import { NoDataFound } from "components";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";

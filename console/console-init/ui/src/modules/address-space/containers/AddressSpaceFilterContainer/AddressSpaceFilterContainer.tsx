@@ -7,9 +7,9 @@ import React, { useState } from "react";
 import { DataToolbarChip } from "@patternfly/react-core/dist/js/experimental";
 import { SelectOption, SelectOptionObject } from "@patternfly/react-core";
 import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
-import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "types/ResponseTypes";
+import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "schema/ResponseTypes";
 import { useApolloClient } from "@apollo/react-hooks";
-import { FetchPolicy, TYPEAHEAD_REQUIRED_LENGTH } from "constants/constants";
+import { FetchPolicy, TYPEAHEAD_REQUIRED_LENGTH } from "constant";
 import { ISelectOption, getSelectOptionList } from "utils";
 import { AddressSpaceFilter } from "modules/address-space/components";
 

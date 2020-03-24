@@ -10,7 +10,7 @@ import { AddressDefinition } from "modules/address/dialogs/CreateAddress/Configu
 import { PreviewAddress } from "./Preview";
 import { CREATE_ADDRESS } from "graphql-module/queries";
 import { IDropdownOption } from "components";
-import { messagingAddressNameRegexp } from "types/Configs";
+import { messagingAddressNameRegexp } from "utils";
 
 interface ICreateAddressProps {
   name: string;
