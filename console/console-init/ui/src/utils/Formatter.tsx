@@ -5,7 +5,7 @@
 
 import React from "react";
 import { LockOpenIcon, LockIcon } from "@patternfly/react-icons";
-import { IMetrics } from "types/ResponseTypes";
+import { IMetrics } from "schema/ResponseTypes";
 
 interface ProtocolIcon {
   protocol: string;

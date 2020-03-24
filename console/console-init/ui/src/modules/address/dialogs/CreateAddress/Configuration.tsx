@@ -12,7 +12,7 @@ import {
   RETURN_ADDRESS_TYPES,
   RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION
 } from "graphql-module/queries";
-import { IAddressResponse } from "types/ResponseTypes";
+import { IAddressResponse } from "schema/ResponseTypes";
 import { AddressConfiguration } from "modules/address/components";
 
 export interface IAddressDefinition {

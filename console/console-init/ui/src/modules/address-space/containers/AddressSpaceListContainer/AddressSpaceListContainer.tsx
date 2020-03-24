@@ -17,8 +17,8 @@ import {
   RETURN_ALL_ADDRESS_SPACES,
   DOWNLOAD_CERTIFICATE
 } from "graphql-module/queries";
-import { IAddressSpacesResponse } from "types/ResponseTypes";
-import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
+import { IAddressSpacesResponse } from "schema/ResponseTypes";
+import { FetchPolicy, POLL_INTERVAL } from "constant";
 import { IObjectMeta_v1_Input } from "modules/address-space/AddressSpaceDetailPage";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";

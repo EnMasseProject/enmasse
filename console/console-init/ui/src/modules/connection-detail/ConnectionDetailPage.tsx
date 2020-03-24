@@ -23,10 +23,10 @@ import {
   IConnectionHeaderDetailProps
 } from "./components/ConnectionDetailHeader";
 import { getFilteredValue } from "utils";
-import { IConnectionDetailResponse } from "types/ResponseTypes";
+import { IConnectionDetailResponse } from "schema/ResponseTypes";
 import { RETURN_CONNECTION_DETAIL } from "graphql-module/queries";
 import { ConnectionDetailToolbar } from "./components/ConnectionDetailToolbar";
-import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
+import { POLL_INTERVAL, FetchPolicy } from "constant";
 import { NoDataFound } from "components";
 
 const getProductFilteredValue = (object: any[], value: string) => {

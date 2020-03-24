@@ -22,10 +22,7 @@ import {
 } from "@patternfly/react-core";
 import { TypeAheadSelect } from "components";
 import { ISelectOption } from "utils";
-import {
-  TYPEAHEAD_REQUIRED_LENGTH,
-  TypeAheadMessage
-} from "constants/constants";
+import { TYPEAHEAD_REQUIRED_LENGTH, TypeAheadMessage } from "constant";
 
 interface IAddressToolbarProps {
   totalAddresses: number;
