@@ -32,8 +32,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/*
-Class for store and query information about test plan and tests
+/**
+ * Class for store and query information about test plan and tests
  */
 public class TestInfo {
     private static final Logger LOGGER = CustomLogger.getLogger();

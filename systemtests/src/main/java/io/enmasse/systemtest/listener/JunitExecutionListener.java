@@ -21,6 +21,9 @@ import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 
+/**
+ * Execution listener useful for safety cleanups of the test environment after test suite execution
+ */
 public class JunitExecutionListener implements TestExecutionListener {
     private static final Logger LOGGER = CustomLogger.getLogger();
 
