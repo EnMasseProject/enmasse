@@ -11,7 +11,7 @@ import {
 } from "@patternfly/react-core";
 
 import { useStoreContext, types } from "context-state-reducer";
-import { ErrorCodes } from "constants/constants";
+import { ErrorCodes } from "constant";
 
 const NetworkStatusAlert: React.FunctionComponent = () => {
   const { state, dispatch } = useStoreContext();

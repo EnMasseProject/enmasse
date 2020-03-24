@@ -27,7 +27,6 @@ describe("Address Detail Header", () => {
 
     getByText(props.name);
     getByText(props.plan);
-    // getByText(String(props.partitions));
     getByText(String(props.storedMessages));
   });
 });

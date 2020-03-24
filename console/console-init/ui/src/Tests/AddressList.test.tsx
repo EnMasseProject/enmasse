@@ -62,23 +62,20 @@ describe("Address List", () => {
     );
     //Testing elements of first row
     getByText(addresses[0].name);
-    // getByText(addresses[0].type);
     getByText(addresses[0].planLabel);
     getByText(addresses[0].messageIn.toString());
     getByText(addresses[0].messageOut.toString());
     getByText(addresses[0].storedMessages.toString());
     getByText(addresses[0].senders.toString());
     getByText(addresses[0].receivers.toString());
-    // getByText(addresses[0].partitions.toString());
+
     //Testing elements of second row
     getByText(addresses[1].name);
-    // getByText(addresses[1].type;
     getByText(addresses[1].planLabel);
     getByText(addresses[1].messageIn.toString());
     getByText(addresses[1].messageOut.toString());
     getByText(addresses[1].storedMessages.toString());
     getByText(addresses[1].senders.toString());
     getByText(addresses[1].receivers.toString());
-    // getByText(addresses[1].partitions.toString());
   });
 });
