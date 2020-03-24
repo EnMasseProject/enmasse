@@ -11,7 +11,7 @@ import {
   RETURN_AUTHENTICATION_SERVICES
 } from "graphql-module/queries";
 import { Loading } from "use-patternfly";
-import { dnsSubDomainRfc1123NameRegexp } from "types/Configs";
+import { dnsSubDomainRfc1123NameRegexp } from "schema/Configs";
 import {
   AddressSpaceConfiguration,
   IAuthenticationServiceOptions

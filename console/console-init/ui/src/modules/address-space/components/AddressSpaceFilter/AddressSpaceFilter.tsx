@@ -25,10 +25,7 @@ import {
   DropdownPosition
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
-import {
-  TypeAheadMessage,
-  TYPEAHEAD_REQUIRED_LENGTH
-} from "constants/constants";
+import { TypeAheadMessage, TYPEAHEAD_REQUIRED_LENGTH } from "constant";
 import { DropdownWithToggle } from "components";
 
 export interface IAddressSpaceFilterProps {
@@ -116,7 +113,7 @@ export const AddressSpaceFilter: React.FC<IAddressSpaceFilterProps> = ({
             position={DropdownPosition.left}
             onSelectItem={onFilterSelect}
             dropdownItems={filterMenuItems}
-            value={filterValue?.trim() || "Filter"}
+            value={(filterValue && filterValue.trim()) || "Filter"}
             toggleIcon={
               <>
                 <FilterIcon />

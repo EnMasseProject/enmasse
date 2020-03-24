@@ -13,8 +13,8 @@ import {
   EmptyConnection
 } from "modules/connection/components";
 import { getFilteredValue } from "utils";
-import { IConnectionListResponse } from "types/ResponseTypes";
-import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
+import { IConnectionListResponse } from "schema/ResponseTypes";
+import { POLL_INTERVAL, FetchPolicy } from "constant";
 
 export interface IConnectionProps {
   name?: string;

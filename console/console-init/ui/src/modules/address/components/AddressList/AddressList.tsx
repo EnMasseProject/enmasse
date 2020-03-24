@@ -25,7 +25,7 @@ import {
   TypePlan,
   Messages
 } from "modules/address";
-import { AddressTypes } from "constants/constants";
+import { AddressTypes } from "constant";
 
 export interface IAddress {
   name: string;

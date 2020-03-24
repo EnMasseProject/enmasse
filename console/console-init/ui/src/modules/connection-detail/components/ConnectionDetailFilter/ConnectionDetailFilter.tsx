@@ -34,7 +34,7 @@ import { useWindowDimensions, SortForMobileView } from "components";
 import {
   IConnectionLinksNameSearchResponse,
   IConnectionLinksAddressSearchResponse
-} from "types/ResponseTypes";
+} from "schema/ResponseTypes";
 import {
   RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH,
   RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH
@@ -43,7 +43,7 @@ import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH,
   FetchPolicy
-} from "constants/constants";
+} from "constant";
 import { getSelectOptionList, ISelectOption } from "utils";
 
 interface IConnectionDetailFilterProps {

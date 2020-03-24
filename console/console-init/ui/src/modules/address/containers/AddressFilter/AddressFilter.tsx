@@ -6,9 +6,9 @@
 import React, { useState } from "react";
 import { DataToolbarChip } from "@patternfly/react-core/dist/js/experimental";
 import { useApolloClient } from "@apollo/react-hooks";
-import { IAddressListNameSearchResponse } from "types/ResponseTypes";
+import { IAddressListNameSearchResponse } from "schema/ResponseTypes";
 import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "graphql-module/queries";
-import { TYPEAHEAD_REQUIRED_LENGTH, FetchPolicy } from "constants/constants";
+import { TYPEAHEAD_REQUIRED_LENGTH, FetchPolicy } from "constant";
 import { getSelectOptionList, ISelectOption } from "utils";
 import { AddressToolbarToggleGroup } from "modules/address/components";
 import { SelectOption, SelectOptionObject } from "@patternfly/react-core";

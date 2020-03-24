@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { Loading } from "use-patternfly";
 import { ISortBy } from "@patternfly/react-table";
-import { IAddressResponse } from "types/ResponseTypes";
+import { IAddressResponse } from "schema/ResponseTypes";
 import {
   RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE,
   DELETE_ADDRESS,
@@ -15,7 +15,7 @@ import {
 } from "graphql-module/queries";
 import { AddressList, IAddress } from "modules/address/components";
 import { EmptyAddress } from "modules/address/components";
-import { FetchPolicy, POLL_INTERVAL } from "constants/constants";
+import { FetchPolicy, POLL_INTERVAL } from "constant";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { compareObject, getFilteredValue } from "utils";

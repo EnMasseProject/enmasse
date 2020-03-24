@@ -2,7 +2,7 @@ import {
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   TypeAheadMessage,
   NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
-} from "constants/constants";
+} from "constant";
 
 export interface ISelectOption {
   value: string;

@@ -1,5 +1,5 @@
 import { statusToDisplay } from "modules/address-space";
-import { AddressTypes } from "constants/constants";
+import { AddressTypes } from "constant";
 
 /*
  * Copyright 2020, EnMasse authors.
