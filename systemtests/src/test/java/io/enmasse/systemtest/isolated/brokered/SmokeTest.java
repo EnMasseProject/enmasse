@@ -33,6 +33,7 @@ import static io.enmasse.systemtest.TestTag.SMOKE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(NON_PR)
 @Tag(SMOKE)
@@ -109,6 +110,7 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
                         recvResults.get(0).get(3, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size())),
                 () -> assertThat("Wrong count of messages received",
                         recvResults.get(1).get(3, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size())));
+        fail("fail");
     }
 
     @Test
@@ -185,5 +187,6 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
         resourcesManager.deleteAddressSpace(addressSpaceA);
 
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
+        fail("fail");
     }
 }
