@@ -89,5 +89,15 @@ export const getTypeColor = (type: string) => {
   }
   return iconColor;
 };
+const dnsSubDomainRfc1123NameRegexp = new RegExp(
+  "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+);
+const messagingAddressNameRegexp = new RegExp("^[^#*\\s]+$");
 
-export { getSelectOptionList, compareObject, getType };
+export {
+  getSelectOptionList,
+  compareObject,
+  getType,
+  dnsSubDomainRfc1123NameRegexp,
+  messagingAddressNameRegexp
+};
