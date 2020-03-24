@@ -17,13 +17,19 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
 import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+
+import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered {
 
@@ -108,4 +114,133 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
 
         getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue), resourcesManager);
     }
+
+    @Test
+    void testCreateAddressSpaceWithUnknownPlanRejected() {
+        String unknownPlan = "unknown";
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("unknown-plan-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(unknownPlan)
+                .endSpec()
+                .build();
+
+        try {
+            kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).create(addressSpace);
+            fail("exception not thrown");
+        } catch (KubernetesClientException e) {
+            String message = e.getMessage();
+            assertTrue(message.contains(String.format("Unknown address space plan %s", unknownPlan)), "Unexpected exception message : " + message);
+            // PASS
+        }
+    }
+
+    @Test
+    void testReplaceAddressSpaceWithUnknownPlanRejected() throws Exception {
+        String unknownPlan = "unknown";
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("unknown-plan-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(addressSpace);
+
+        try {
+            AddressSpace upd = new AddressSpaceBuilder(addressSpace).editSpec().withPlan(unknownPlan).endSpec().build();
+            kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(upd);
+            fail("exception not thrown");
+        } catch (KubernetesClientException e) {
+            String message = e.getMessage();
+            assertTrue(message.contains(String.format("Unknown address space plan %s", unknownPlan)), "Unexpected exception message : " + message);
+            // PASS
+        }
+    }
+
+    @Test
+    void testCreateAddressWithUnknownPlanRejected() throws Exception {
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("unknown-plan-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(addressSpace);
+
+        String unknownPlan = "unknown";
+        Address addr = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue-1"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue-1")
+                .withPlan(unknownPlan)
+                .endSpec()
+                .build();
+
+        try {
+            kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace()).create(addr);
+            fail("exception not thrown");
+        } catch (KubernetesClientException e) {
+            String message = e.getMessage();
+            assertTrue(message.contains(String.format("Unknown address plan %s", unknownPlan)), "Unexpected exception message : " + message);
+            // PASS
+        }
+    }
+
+    @Test
+    void testReplaceAddressWithUnknownPlanRejected() throws Exception {
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("unknown-plan-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(addressSpace);
+
+        Address addr = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue-1"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue-1")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+
+        String unknownPlan = "unknown";
+        try {
+            Address upd = new AddressBuilder(addr).editSpec().withPlan(unknownPlan).endSpec().build();
+            kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace()).createOrReplace(upd);
+            fail("exception not thrown");
+        } catch (KubernetesClientException e) {
+            String message = e.getMessage();
+            assertTrue(message.contains(String.format("Unknown address plan %s", unknownPlan)), "Unexpected exception message : " + message);
+            // PASS
+        }
+    }
+
 }
