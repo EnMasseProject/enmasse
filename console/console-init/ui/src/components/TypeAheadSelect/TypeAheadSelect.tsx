@@ -5,10 +5,7 @@ import {
   SelectOption,
   SelectOptionObject
 } from "@patternfly/react-core";
-import {
-  TypeAheadMessage,
-  TYPEAHEAD_REQUIRED_LENGTH
-} from "constants/constants";
+import { TypeAheadMessage, TYPEAHEAD_REQUIRED_LENGTH } from "constant";
 import { ISelectOption } from "utils";
 
 interface ITypeAheadSelectProps {

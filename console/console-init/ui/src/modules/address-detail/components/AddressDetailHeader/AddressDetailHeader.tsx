@@ -19,7 +19,7 @@ import {
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { TypeBadge } from "modules/address-detail/components";
-import { AddressTypes } from "constants/constants";
+import { AddressTypes } from "constant";
 
 export interface IAddressDetailHeaderProps {
   type: string;

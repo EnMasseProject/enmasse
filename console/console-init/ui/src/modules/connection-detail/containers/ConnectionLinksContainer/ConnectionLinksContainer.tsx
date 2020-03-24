@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@apollo/react-hooks";
-import { IConnectionLinksResponse } from "types/ResponseTypes";
+import { IConnectionLinksResponse } from "schema/ResponseTypes";
 import { RETURN_CONNECTION_LINKS } from "graphql-module/queries";
 import { Loading } from "use-patternfly";
 import {
@@ -14,7 +14,7 @@ import {
 } from "modules/connection-detail/components/ConnectionLinksList/ConnectionLinksList";
 import { getFilteredValue } from "utils";
 import { ISortBy } from "@patternfly/react-table";
-import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
+import { POLL_INTERVAL, FetchPolicy } from "constant";
 import { EmptyConnectionLinks } from "modules/connection-detail/components";
 
 interface IConnectionDetailContainerProps {

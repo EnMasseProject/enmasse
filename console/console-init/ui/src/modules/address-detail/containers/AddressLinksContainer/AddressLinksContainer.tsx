@@ -8,13 +8,13 @@ import { useQuery } from "@apollo/react-hooks";
 import { ISortBy } from "@patternfly/react-table";
 import { Loading } from "use-patternfly";
 import { RETURN_ADDRESS_LINKS } from "graphql-module/queries";
-import { IAddressLinksResponse } from "types/ResponseTypes";
+import { IAddressLinksResponse } from "schema/ResponseTypes";
 import {
   IAddressLink,
   AddressLinks
 } from "modules/address-detail/components/AddressLinks/AddressLinks";
 import { getFilteredValue } from "utils";
-import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
+import { POLL_INTERVAL, FetchPolicy } from "constant";
 import { EmptyAddressLinks } from "modules/address-detail/components/EmptyAddressLinks";
 
 interface IAddressLinksListProps {
