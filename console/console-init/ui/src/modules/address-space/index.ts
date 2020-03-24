@@ -4,6 +4,7 @@
  */
 
 export * from "./AddressSpacePage";
+export * from "./AddressSpaceDetailPage";
 export * from "./utils";
 export * from "./dialogs";
 export * from "./components";
