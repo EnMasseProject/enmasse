@@ -18,6 +18,7 @@ import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.address.model.Phase;
 import io.enmasse.address.model.Schema;
+import io.enmasse.address.model.UnresolvedAddressException;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.InfraConfig;
@@ -265,6 +266,14 @@ public class AddressController implements Watcher<Address> {
                             .build());
                 }
                 address.getStatus().setForwarders(forwarderStatuses);
+            }
+
+            try {
+                addressResolver.getDesiredPlan(address);
+            } catch (UnresolvedAddressException e) {
+                address.getStatus().setPhase(Pending);
+                address.getStatus().appendMessage("Unknown address plan '" + address.getSpec().getPlan() + "'");
+                continue;
             }
 
             Address existing = validAddresses.get(address.getSpec().getAddress());
