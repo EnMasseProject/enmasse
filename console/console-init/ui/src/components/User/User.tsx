@@ -5,9 +5,9 @@
 
 import React from "react";
 import { useQuery } from "@apollo/react-hooks";
-import { IUserDetail } from "types/ResponseTypes";
+import { IUserDetail } from "schema/ResponseTypes";
 import { RETURN_WHOAMI } from "graphql-module/queries";
-import { FetchPolicy, UNKNOWN } from "constants/constants";
+import { FetchPolicy, UNKNOWN } from "constant";
 
 const User: React.FunctionComponent = () => {
   const { data } = useQuery<IUserDetail>(RETURN_WHOAMI, {

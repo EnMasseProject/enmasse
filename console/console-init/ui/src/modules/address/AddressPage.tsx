@@ -37,7 +37,7 @@ import {
 } from "modules/address/utils";
 import { compareObject } from "utils";
 import { TablePagination } from "components/TablePagination";
-import { AddressTypes } from "constants/constants";
+import { AddressTypes } from "constant";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {

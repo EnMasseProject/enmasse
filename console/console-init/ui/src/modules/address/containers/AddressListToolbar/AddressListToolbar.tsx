@@ -14,10 +14,10 @@ import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
 import { CreateAddress, IFilterValue, AddressListKebab } from "modules/address";
 import { RETURN_ADDRESS_SPACE_DETAIL } from "graphql-module/queries";
-import { IAddressSpacesResponse } from "types/ResponseTypes";
+import { IAddressSpacesResponse } from "schema/ResponseTypes";
 import { AddressListFilter } from "modules/address/containers/AddressFilter";
 import { useWindowDimensions, SortForMobileView } from "components";
-import { FetchPolicy } from "constants/constants";
+import { FetchPolicy } from "constants";
 import { Loading } from "use-patternfly";
 
 export interface AddressListFilterProps {

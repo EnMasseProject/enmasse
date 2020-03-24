@@ -31,12 +31,12 @@ import {
   DELETE_ADDRESS_SPACE,
   RETURN_ADDRESS_SPACE_DETAIL
 } from "graphql-module/queries";
-import { POLL_INTERVAL, FetchPolicy } from "constants/constants";
+import { POLL_INTERVAL, FetchPolicy } from "constant";
 import { NoDataFound } from "components";
 import { useMutationQuery } from "hooks";
 import { Routes } from "./Routes";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
-import { IAddressSpaceDetailResponse } from "types/ResponseTypes";
+import { IAddressSpaceDetailResponse } from "schema/ResponseTypes";
 
 const styles = StyleSheet.create({
   no_bottom_padding: {
