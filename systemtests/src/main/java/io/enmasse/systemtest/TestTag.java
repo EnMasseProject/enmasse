@@ -8,6 +8,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * This test suite is organized using different test profiles and those test profiles use a different set of tags.
+ *
+ * This class defines all the tags used in the test suite.
+ */
 public class TestTag {
     public static final String ISOLATED = "isolated";
     public static final String ISOLATED_STANDARD = "isolated-standard";
@@ -24,6 +29,7 @@ public class TestTag {
     public static final String ACCEPTANCE = "acceptance";
     public static final String SCALE = "scale";
     public static final String OLM = "olm";
+    public static final String FRAMEWORK = "framework";
     public static final Set<String> SHARED_TAGS = new HashSet<>(Arrays.asList(SHARED_BROKERED, SHARED_STANDARD, SHARED_MQTT, SHARED_IOT));
     public static final Set<String> IOT_TAGS = new HashSet<>(Arrays.asList(SHARED_IOT, ISOLATED_IOT));
 }

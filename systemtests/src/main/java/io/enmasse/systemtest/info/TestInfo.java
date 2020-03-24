@@ -32,8 +32,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/*
-Class for store and query information about test plan and tests
+/**
+ * Class for store and query information about test plan and tests
  */
 public class TestInfo {
     private static final Logger LOGGER = CustomLogger.getLogger();
@@ -42,6 +42,7 @@ public class TestInfo {
     private List<TestIdentifier> tests;
     private ExtensionContext currentTest;
     private ExtensionContext currentTestClass;
+    private List<String> testRunTags;
 
     public static synchronized TestInfo getInstance() {
         if (testInfo == null) {
@@ -103,6 +104,15 @@ public class TestInfo {
                });
             })
             .collect(Collectors.toList());
+
+        testRunTags = testClasses.stream()
+            .map(t -> {
+                return t.getTags();
+            })
+            .flatMap(Set::stream)
+            .distinct()
+            .map(t -> t.getName())
+            .collect(Collectors.toList());
     }
 
     private ConditionEvaluationResult disabledCondition(ExtensionContext ctx) {
@@ -151,6 +161,10 @@ public class TestInfo {
 
     public void setCurrentTestClass(ExtensionContext testClass) {
         currentTestClass = testClass;
+    }
+
+    public List<String> getTestRunTags() {
+        return testRunTags;
     }
 
     public boolean isTestShared() {

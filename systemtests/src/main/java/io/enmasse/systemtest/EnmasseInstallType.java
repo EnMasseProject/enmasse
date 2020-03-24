@@ -4,6 +4,9 @@
  */
 package io.enmasse.systemtest;
 
+/**
+ * The different ways of installing the operator
+ */
 public enum EnmasseInstallType {
     ANSIBLE,
     BUNDLE,

@@ -9,6 +9,7 @@ import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
 
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -20,6 +21,9 @@ import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 
+/**
+ * Execution listener useful for safety cleanups of the test environment after test suite execution
+ */
 public class JunitExecutionListener implements TestExecutionListener {
     private static final Logger LOGGER = CustomLogger.getLogger();
 
@@ -31,6 +35,12 @@ public class JunitExecutionListener implements TestExecutionListener {
 
     @Override
     public void testPlanExecutionFinished(TestPlan testPlan) {
+
+        var tags = TestInfo.getInstance().getTestRunTags();
+        if (tags != null && tags.size() == 1 && tags.get(0).equals(TestTag.FRAMEWORK)) {
+            LOGGER.info("Running framework tests, no cleanup performed");
+            return;
+        }
 
         final Environment env = Environment.getInstance();
 
