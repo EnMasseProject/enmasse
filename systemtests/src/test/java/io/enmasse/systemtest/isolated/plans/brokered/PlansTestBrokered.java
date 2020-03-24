@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered {
@@ -129,14 +130,12 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
                 .endSpec()
                 .build();
 
-        try {
+
+        KubernetesClientException exception = assertThrows(KubernetesClientException.class, () -> {
             kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).create(addressSpace);
-            fail("exception not thrown");
-        } catch (KubernetesClientException e) {
-            String message = e.getMessage();
-            assertTrue(message.contains(String.format("Unknown address space plan %s", unknownPlan)), "Unexpected exception message : " + message);
-            // PASS
-        }
+        });
+        String message = exception.getMessage();
+        assertTrue(message.contains(String.format("Unknown address space plan %s", unknownPlan)), "Unexpected exception message : " + message);
     }
 
     @Test
@@ -155,15 +154,12 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
 
         resourcesManager.createAddressSpace(addressSpace);
 
-        try {
+        KubernetesClientException exception = assertThrows(KubernetesClientException.class, () -> {
             AddressSpace upd = new AddressSpaceBuilder(addressSpace).editSpec().withPlan(unknownPlan).endSpec().build();
             kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(upd);
-            fail("exception not thrown");
-        } catch (KubernetesClientException e) {
-            String message = e.getMessage();
-            assertTrue(message.contains(String.format("Unknown address space plan %s", unknownPlan)), "Unexpected exception message : " + message);
-            // PASS
-        }
+        });
+        String message = exception.getMessage();
+        assertTrue(message.contains(String.format("Unknown address space plan %s", unknownPlan)), "Unexpected exception message : " + message);
     }
 
     @Test
@@ -194,14 +190,11 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
                 .endSpec()
                 .build();
 
-        try {
+        KubernetesClientException exception = assertThrows(KubernetesClientException.class, () -> {
             kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace()).create(addr);
-            fail("exception not thrown");
-        } catch (KubernetesClientException e) {
-            String message = e.getMessage();
-            assertTrue(message.contains(String.format("Unknown address plan %s", unknownPlan)), "Unexpected exception message : " + message);
-            // PASS
-        }
+        });
+        String message = exception.getMessage();
+        assertTrue(message.contains(String.format("Unknown address plan %s", unknownPlan)), "Unexpected exception message : " + message);
     }
 
     @Test
@@ -232,15 +225,12 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
                 .build();
 
         String unknownPlan = "unknown";
-        try {
+        KubernetesClientException exception = assertThrows(KubernetesClientException.class, () -> {
             Address upd = new AddressBuilder(addr).editSpec().withPlan(unknownPlan).endSpec().build();
             kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace()).createOrReplace(upd);
-            fail("exception not thrown");
-        } catch (KubernetesClientException e) {
-            String message = e.getMessage();
-            assertTrue(message.contains(String.format("Unknown address plan %s", unknownPlan)), "Unexpected exception message : " + message);
-            // PASS
-        }
+        });
+        String message = exception.getMessage();
+        assertTrue(message.contains(String.format("Unknown address plan %s", unknownPlan)), "Unexpected exception message : " + message);
     }
 
 }
