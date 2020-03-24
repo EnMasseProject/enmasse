@@ -9,17 +9,22 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.CoreCrd;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
 import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -33,6 +38,11 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -212,8 +222,8 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s", CoreCrd.VERSION, CoreCrd.GROUP)).getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
         }
     }
-
     //https://github.com/EnMasseProject/enmasse/issues/3098
+
     @Test
     void testRestartAdminComponent() throws Exception {
         List<Label> labels = new LinkedList<>();
@@ -331,6 +341,84 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             getClientUtils().receiveDurableMessages(resourcesManager, standard, addr, user, 15);
         }
 
+    }
+
+    @Test
+    void testAddressSpaceKubernetesApiServerRestartBrokered() throws Exception {
+        testAddressSpaceKubernetesApiServerRestart("brokered");
+    }
+
+    @Test
+    void testAddressSpaceKubernetesApiServerRestartStandard() throws Exception {
+        testAddressSpaceKubernetesApiServerRestart("standard");
+    }
+
+    void testAddressSpaceKubernetesApiServerRestart(String type) throws Exception {
+
+        try {
+            SystemtestsKubernetesApps.deployProxyApiApp();
+            String proxyDnsName = SystemtestsKubernetesApps.getProxyApiDnsName();
+
+            AddressSpace standard = new AddressSpaceBuilder()
+                    .withNewMetadata()
+                    .withName("space-k8api-restart-" + type)
+                    .withNamespace(kubernetes.getInfraNamespace())
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType(type)
+                    .withPlan(AddressSpaceType.STANDARD.toString().equals(type) ? AddressSpacePlans.STANDARD_SMALL : AddressSpacePlans.BROKERED)
+                    .withNewAuthenticationService()
+                    .withName("standard-authservice")
+                    .endAuthenticationService()
+                    .endSpec()
+                    .build();
+            isolatedResourcesManager.createAddressSpaceList(standard);
+
+            // configure admin pod to use api proxy
+            Map<String, String> adminLabels = new HashMap<>();
+            adminLabels.put(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(standard));
+            adminLabels.put(LabelKeys.NAME, "admin");
+            adminLabels.put(LabelKeys.APP, "enmasse");
+
+            kubernetes.listDeployments(adminLabels).forEach(d -> {
+                KubeCMDClient.runOnCluster("get", "deployments", "-n", kubernetes.getInfraNamespace(), "-o", "wide");
+                ExecutionResultData labelRes = KubeCMDClient.setResourceEnvVarByLabel(Optional.of(kubernetes.getInfraNamespace()), "deployment", Optional.of("agent"), "KUBERNETES_SERVICE_HOST", d.getMetadata().getName(), proxyDnsName);
+                assertTrue(labelRes.getRetCode());
+            });
+
+            Iterator<Address> itr = Stream.generate(() -> {
+                String name = "test-queue." + UUID.randomUUID();
+                return new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(standard.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(standard, name))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress(name)
+                        .withPlan(AddressSpaceType.STANDARD.toString().equals(type) ? DestinationPlan.STANDARD_SMALL_QUEUE : DestinationPlan.BROKERED_QUEUE)
+                        .endSpec()
+                        .build();
+            }).limit(2).collect(Collectors.toList()).iterator();
+
+            // Create address before proxy goes away
+            resourcesManager.setAddresses(itr.next());
+
+            Kubernetes.getInstance().setDeploymentReplicas(Kubernetes.getInstance().getInfraNamespace(), SystemtestsKubernetesApps.API_PROXY, 0);
+            LOGGER.info("api-proxy scaled down");
+            TestUtils.waitUntilCondition(() -> {
+                return kubernetes.listPods(Collections.singletonMap(LabelKeys.APP, SystemtestsKubernetesApps.API_PROXY)).size() == 0;
+            }, Duration.ofMinutes(1), Duration.ofSeconds(10));
+            LOGGER.info("api-proxy stopped");
+            // we now know admin will have been disconnected from the api-server
+            Kubernetes.getInstance().setDeploymentReplicas(Kubernetes.getInstance().getInfraNamespace(), SystemtestsKubernetesApps.API_PROXY, 1);
+            LOGGER.info("api-proxy scaled up");
+
+            // Create address after proxy has returned
+            resourcesManager.setAddresses(itr.next());
+        } finally {
+            SystemtestsKubernetesApps.deleteProxyApiApp();
+        }
     }
 
     @Test
