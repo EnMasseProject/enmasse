@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ import io.enmasse.systemtest.scale.ScaleTestClientConfiguration;
 import io.enmasse.systemtest.scale.ScaleTestClientType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
+
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -71,6 +73,8 @@ import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -98,6 +102,7 @@ public class SystemtestsKubernetesApps {
     private static final Logger log = CustomLogger.getLogger();
 
     public static final String MESSAGING_CLIENTS = "systemtests-clients";
+    public static final String API_PROXY = "api-proxy";
     public static final String SELENIUM_FIREFOX = "selenium-firefox";
     public static final String SELENIUM_CHROME = "selenium-chrome";
     public static final String SELENIUM_PROJECT = "systemtests-selenium";
@@ -174,7 +179,6 @@ public class SystemtestsKubernetesApps {
                 waitPhase -> Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
                         pod.getStatus().getContainerStatuses().get(0).getReady()).count() == 1,
                 new TimeoutBudget(1, TimeUnit.MINUTES));
-
         return Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
                 pod.getStatus().getContainerStatuses().get(0).getReady()).findAny().get().getMetadata().getName();
     }
@@ -306,6 +310,20 @@ public class SystemtestsKubernetesApps {
             kubeCli.deleteDeployment(namespace, POSTGRES_APP);
             kubeCli.deleteSecret(namespace, POSTGRES_APP);
         }
+    }
+
+    public static void deployProxyApiApp() throws Exception {
+        Kubernetes.getInstance().createServiceFromResource(Kubernetes.getInstance().getInfraNamespace(), getProxyApiServiceResource());
+        Kubernetes.getInstance().createDeploymentFromResource(Kubernetes.getInstance().getInfraNamespace(), getProxyApiAppDeploymentResource());
+    }
+
+    public static void deleteProxyApiApp() {
+        Kubernetes.getInstance().deleteDeployment(Kubernetes.getInstance().getInfraNamespace(), API_PROXY);
+        Kubernetes.getInstance().deleteService(Kubernetes.getInstance().getInfraNamespace(), API_PROXY);
+    }
+
+    public static String getProxyApiDnsName() {
+        return String.format("%s.%s.svc", SystemtestsKubernetesApps.API_PROXY, Kubernetes.getInstance().getInfraNamespace());
     }
 
     private static Function<InputStream, InputStream> namespaceReplacer(final String namespace) {
@@ -943,6 +961,56 @@ public class SystemtestsKubernetesApps {
          * .endSpec()
          * .done();
          */
+    }
+
+    private static Deployment getProxyApiAppDeploymentResource() {
+        return new DeploymentBuilder()
+                .withNewMetadata()
+                .withName(API_PROXY)
+                .addToLabels("app", API_PROXY)
+                .endMetadata()
+                .withNewSpec()
+                .withNewSelector()
+                .addToMatchLabels("app", API_PROXY)
+                .endSelector()
+                .withReplicas(1)
+                .withNewTemplate()
+                .withNewMetadata()
+                .addToLabels("app", API_PROXY)
+                .endMetadata()
+                .withNewSpec()
+                .addNewContainer()
+                .withName(API_PROXY)
+                .withImage("quay.io/enmasse/api-proxy:latest")
+                .withSecurityContext(new SecurityContextBuilder().withRunAsUser(0L).build())
+                .withPorts(new ContainerPortBuilder().withContainerPort(443).withName("https").withProtocol("TCP").build())
+                .withVolumeMounts(new VolumeMountBuilder().withMountPath("/etc/tls/private").withName("api-proxy-tls").withReadOnly(true).build())
+                .endContainer()
+                .withVolumes(Collections.singletonList(new VolumeBuilder().withName("api-proxy-tls").withSecret(new SecretVolumeSourceBuilder().withDefaultMode(420).withSecretName("api-proxy-cert").build()).build()))
+                .endSpec()
+                .endTemplate()
+                .endSpec()
+                .build();
+    }
+
+    private static Service getProxyApiServiceResource() {
+        return new ServiceBuilder()
+                .withNewMetadata()
+                .withName(API_PROXY)
+                .addToLabels("app", API_PROXY)
+                .addToAnnotations("service.alpha.openshift.io/serving-cert-secret-name", "api-proxy-cert")
+                .endMetadata()
+                .withNewSpec()
+                .addToSelector("app", API_PROXY)
+                .addNewPort()
+                .withName("https")
+                .withPort(443)
+                .withProtocol("TCP")
+                .withNewTargetPort("https")
+                .endPort()
+                .withClusterIP("None") // Headless
+                .endSpec()
+                .build();
     }
 
     private static Service getSystemtestsServiceResource(String appName, int port) {
