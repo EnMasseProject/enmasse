@@ -17,7 +17,7 @@ import {
 import { FormatDistance } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { AddressSpaceType } from "modules/address-space/utils";
-import { DropdownWithKababToggle } from "components";
+import { DropdownWithKebabToggle } from "components";
 
 const styles = StyleSheet.create({
   flex_right_border: {
@@ -121,7 +121,7 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
         </SplitItem>
         <SplitItem isFilled></SplitItem>
         <SplitItem className={css(styles.kebab_toggle_margin)}>
-          <DropdownWithKababToggle
+          <DropdownWithKebabToggle
             id="as-header-dropdown"
             toggleId={"as-header-kebab"}
             position={DropdownPosition.right}
