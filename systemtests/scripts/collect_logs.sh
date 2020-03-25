@@ -2,6 +2,16 @@
 LOGDIR=$1
 ARTIFACTS_DIR=$2
 
+if which oc &> /dev/null; then
+    CMD=oc
+elif which kubectl &> /dev/null; then
+    CMD=kubectl
+else
+    >&2 echo "$0: Cannot find oc or kubectl command, please check path to ensure it is installed"
+    exit 1
+fi
+
+
 function runcmd {
     local cmd=$1
     local logfile=$2
@@ -11,15 +21,15 @@ function runcmd {
 
 mkdir -p ${ARTIFACTS_DIR}/logs
 
-for pod in `oc get pods -o jsonpath='{.items[*].metadata.name}'`
+for pod in `${CMD} get pods -o jsonpath='{.items[*].metadata.name}'`
 do
-    for container in `oc get pod $pod -o jsonpath='{.spec.containers[*].name}'`
+    for container in `${CMD} get pod $pod -o jsonpath='{.spec.containers[*].name}'`
     do
-        runcmd "oc logs -c $container $pod" ${ARTIFACTS_DIR}/logs/${pod}_${container}.log
+        runcmd "${CMD} logs -c $container $pod" ${ARTIFACTS_DIR}/logs/${pod}_${container}.log
         if [[ "$container" == "router" ]]; then
-            runcmd "oc rsh -c $container $pod python /usr/bin/qdmanage query --type=address" ${ARTIFACTS_DIR}/logs/${pod}_${container}_router_address.txt
-            runcmd "oc rsh -c $container $pod python /usr/bin/qdmanage query --type=connection"  ${ARTIFACTS_DIR}/logs/${pod}_${container}_router_connection.txt
-            runcmd "oc rsh -c $container $pod python /usr/bin/qdmanage query --type=connector" ${ARTIFACTS_DIR}/logs/${pod}_${container}_router_connector.txt
+            runcmd "${CMD} rsh -c $container $pod python /usr/bin/qdmanage query --type=address" ${ARTIFACTS_DIR}/logs/${pod}_${container}_router_address.txt
+            runcmd "${CMD} rsh -c $container $pod python /usr/bin/qdmanage query --type=connection"  ${ARTIFACTS_DIR}/logs/${pod}_${container}_router_connection.txt
+            runcmd "${CMD} rsh -c $container $pod python /usr/bin/qdmanage query --type=connector" ${ARTIFACTS_DIR}/logs/${pod}_${container}_router_connector.txt
         fi
     done
 done
