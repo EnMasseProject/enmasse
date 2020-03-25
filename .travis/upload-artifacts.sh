@@ -2,9 +2,9 @@
 CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/common.sh
 SUCCESS=${1}
-COMMIT=${COMMIT:-latest}
+COMMIT=${COMMIT:-release-0.30}
 VERSION=`grep "release.version" pom.properties| cut -d'=' -f2`
-TAG=${TAG:-latest}
+TAG=${TAG:-release-0.30}
 
 if [[ "${TAG}" != "latest" ]]; then
     COMMIT=${TAG}
