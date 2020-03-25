@@ -58,12 +58,12 @@ public class Minikube extends Kubernetes {
     }
 
     private String getIp(String namespace, String serviceName) {
-        String [] output = runCommand("minikube", "service", "-n", namespace, "--format", "{{.IP}}", serviceName).split(" ");
+        String [] output = runCommand("minikube", "service", "-n", namespace, "--format", "{{.IP}}", serviceName, "--url=true").split(" ");
         return output[output.length - 1];
     }
 
     private String getPort(String namespace, String serviceName) {
-        String [] output = runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName).split(" ");
+        String [] output = runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName, "--url=true").split(" ");
         return output[output.length - 1];
     }
 
