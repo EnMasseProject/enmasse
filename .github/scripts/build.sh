@@ -5,6 +5,7 @@ echo "${VERSION}"
 
 echo "Make"
 make
+make PROFILE=framework systemtests
 
 echo "Build"
 make docker_build
