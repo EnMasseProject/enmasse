@@ -12,7 +12,7 @@ fi
 
 export PACKAGE=enmasse
 export REPOSITORY="travis"
-if [[ "$TAG" != "latest" ]]
+if [[ "$TAG" != "latest" && "$SUCCESS" == "true" ]]
 then
     export REPOSITORY="releases"
     export TRAVIS_BUILD_NUMBER="."
