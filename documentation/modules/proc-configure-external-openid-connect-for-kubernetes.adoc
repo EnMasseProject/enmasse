@@ -3,7 +3,7 @@
 // assembly-configuring.adoc
 
 [id='config-external-openid-connect-for-kubernetes']
-= Configuring {ProductName} Console to use cluster OpenID Connect
+= Configuring {ProductName} Console to use external OpenID Connect
 
 To deploy the console you must create a `consoleservice` resource refering to your OIDC Provider.
 
