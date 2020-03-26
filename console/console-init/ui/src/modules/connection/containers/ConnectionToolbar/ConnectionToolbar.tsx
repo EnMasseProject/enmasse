@@ -12,7 +12,8 @@ import {
   DataToolbarItem,
   DataToolbarToggleGroup,
   DataToolbar,
-  DataToolbarContent
+  DataToolbarContent,
+  DataToolbarChipGroup
 } from "@patternfly/react-core/dist/js/experimental";
 import {
   Dropdown,
@@ -287,25 +288,27 @@ export const ConnectionToolbar: React.FunctionComponent<IConnectionToolbarProps>
   };
 
   const onDelete = (
-    type: string | DataToolbarChip,
-    id: string | DataToolbarChip
+    category: string | DataToolbarChipGroup,
+    chip: DataToolbarChip | string
   ) => {
     let index;
 
-    switch (type) {
+    switch (category) {
       case "Hostname":
-        if (hostnames && id) {
-          index = hostnames.map(filter => filter.value).indexOf(id.toString());
+        if (hostnames && chip) {
+          index = hostnames
+            .map(filter => filter.value)
+            .indexOf(chip.toString());
           if (index >= 0) hostnames.splice(index, 1);
           setHostnames([...hostnames]);
         }
         break;
       case "Container":
-        if (containerIds && id) {
+        if (containerIds && chip) {
           const containers = containerIds;
           index = containerIds
             .map(filter => filter.value)
-            .indexOf(id.toString());
+            .indexOf(chip.toString());
           if (index >= 0) containers.splice(index, 1);
           setContainerIds([...containers]);
         }

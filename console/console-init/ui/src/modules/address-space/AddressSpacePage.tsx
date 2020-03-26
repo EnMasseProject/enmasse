@@ -22,6 +22,7 @@ import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { getHeaderForDeleteDialog, getDetailForDeleteDialog } from "./utils";
 import { TablePagination } from "components";
+import { ASToolbar } from "./containers/AddressSpaceFilterContainer/ASToolbar";
 
 export default function AddressSpacePage() {
   const { dispatch } = useStoreContext();
@@ -149,6 +150,9 @@ export default function AddressSpacePage() {
 
   return (
     <PageSection variant={PageSectionVariants.light}>
+      <ASToolbar />
+      <br />
+      <br />
       <Grid>
         <GridItem span={7}>
           <AddressSpaceToolbar

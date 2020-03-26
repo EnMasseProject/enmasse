@@ -24,7 +24,6 @@ import { POLL_INTERVAL, FetchPolicy, AddressTypes } from "constant";
 import { NoDataFound } from "components";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
-
 export default function AddressDetailPage() {
   const { namespace, name, type, addressname } = useParams();
   const { dispatch } = useStoreContext();
