@@ -5,7 +5,7 @@
 
 import React from "react";
 import { useStoreContext, MODAL_TYPES } from "context-state-reducer";
-import { DialogPrompt } from "components";
+import { DialogPrompt } from "components/DialogPrompt";
 import {
   EditAddressSpaceContainer,
   CreateAddressSpace
