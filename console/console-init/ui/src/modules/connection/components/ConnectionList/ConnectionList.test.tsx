@@ -6,10 +6,7 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import {
-  IConnection,
-  ConnectionList
-} from "modules/connection/components/ConnectionList/ConnectionList";
+import { IConnection, ConnectionList } from "./ConnectionList";
 
 describe("Connection List", () => {
   test("it renders a list of connections", () => {

@@ -5,7 +5,7 @@
 
 import React from "react";
 import { render } from "@testing-library/react";
-import { EmptyConnection } from "modules/connection/components/EmptyConnection/EmptyConnection";
+import { EmptyConnection } from "./EmptyConnection";
 
 describe("Empty State for Connection List", () => {
   test("it renders empty address state instead of list of addresses", () => {
