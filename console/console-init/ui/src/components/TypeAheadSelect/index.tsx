@@ -4,3 +4,4 @@
  */
 
 export * from "./TypeAheadSelect";
+export * from "./TypeAhead";
