@@ -8,6 +8,7 @@ export * from "./AddressSpaceConfiguration";
 export * from "./EditAddressSpace";
 export * from "./AddressSpaceReview";
 export * from "./AddressSpaceListKebab";
+export * from "./MessagingToolbar";
 export * from "./AddressSpaceHeader";
 export * from "./AddressSpaceNavigation";
 export * from "./MessagingDatatoolbarToggleGroup";

@@ -19,6 +19,7 @@ import {
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { DropdownWithToggle, TypeAhead } from "components";
+import { DataToolbarBreakpointMod } from "@patternfly/react-core/dist/js/components/DataToolbar/DataToolbarUtils";
 
 interface IMessagingToolbarToggleGroupProps {
   totalRecords: number;
@@ -95,10 +96,11 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
     }
     return false;
   };
-
   const toggleItems = (
     <>
-      <DataToolbarItem>
+      <DataToolbarItem
+        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
+      >
         <DataToolbarFilter
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
@@ -129,7 +131,9 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           )}
         </DataToolbarFilter>
       </DataToolbarItem>
-      <DataToolbarItem>
+      <DataToolbarItem
+        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
+      >
         <DataToolbarFilter
           chips={selectedNamespaces.map(filter => filter.value)}
           deleteChip={onDelete}
@@ -160,7 +164,9 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           )}
         </DataToolbarFilter>
       </DataToolbarItem>
-      <DataToolbarItem>
+      <DataToolbarItem
+        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
+      >
         <DataToolbarFilter
           chips={typeSelected ? [typeSelected] : []}
           deleteChip={onDelete}

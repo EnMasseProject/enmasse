@@ -8,13 +8,9 @@ import {
   SelectOption,
   SelectOptionObject,
   DataToolbarChipGroup,
-  DataToolbarChip,
-  DataToolbarItem,
-  DataToolbar,
-  DataToolbarContent
+  DataToolbarChip
 } from "@patternfly/react-core";
-import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
-import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "schema/ResponseTypes";
+import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
 import {
   FetchPolicy,
@@ -22,11 +18,10 @@ import {
   TypeAheadMessage
 } from "constant";
 import { getSelectOptionList, initalSelectOption } from "utils";
-import { AddressSpaceListKebab } from "modules/address-space/components";
 import { types, MODAL_TYPES, useStoreContext } from "context-state-reducer";
-import { useWindowDimensions, SortForMobileView } from "components";
-import { ISortBy } from "@patternfly/react-table";
-import { MessagingToolbarToggleGroup } from "modules/address-space/components";
+import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
+import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "schema/ResponseTypes";
+import { MessagingToolbar } from "modules/address-space/components";
 
 export interface IMessagingToolbarContainerProps {
   selectedNames: any[];
@@ -56,7 +51,6 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   isDeleteAllDisabled
 }) => {
   const client = useApolloClient();
-  const { width } = useWindowDimensions();
   const { dispatch } = useStoreContext();
   const [nameSelected, setNameSelected] = useState<string>();
   const [nameInput, setNameInput] = useState<string>();
@@ -68,10 +62,10 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   );
   const [typeIsExpanded, setTypeIsExpanded] = useState<boolean>(false);
 
-  const [filterValue, setFilterValue] = useState<string>("Name");
+  const [filterSelected, setFilterSelected] = useState<string>("Name");
 
   const onClearAllFilters = () => {
-    setFilterValue("Name");
+    setFilterSelected("Name");
     setSelectedNamespaces([]);
     setSelectedNames([]);
     setTypeSelected(null);
@@ -90,11 +84,6 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
     }
   };
 
-  const sortMenuItems = [
-    { key: "name", value: "Name", index: 1 },
-    { key: "creationTimestamp", value: "Time Created", index: 4 }
-  ];
-
   if (!nameOptions) {
     setNameOptions([initalSelectOption]);
   }
@@ -103,7 +92,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   }
 
   const onFilterSelect = (value: string) => {
-    setFilterValue(value);
+    setFilterSelected(value);
   };
   const onNameSelect = (e: any, selection: SelectOptionObject) => {
     setNameSelected(selection.toString());
@@ -279,15 +268,9 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
     setTypeIsExpanded(false);
   };
 
-  const onDeleteAllFilters = () => {
-    setFilterValue("Name");
-    setTypeSelected(null);
-    setSelectedNames([]);
-    setSelectedNamespaces([]);
-  };
   const onSearch = () => {
-    if (filterValue) {
-      if (filterValue.toLowerCase() === "name") {
+    if (filterSelected) {
+      if (filterSelected.toLowerCase() === "name") {
         if (nameSelected && nameSelected.trim() !== "" && selectedNames)
           if (
             selectedNames.map(filter => filter.value).indexOf(nameSelected) < 0
@@ -307,7 +290,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
               { value: nameInput.trim(), isExact: false }
             ]);
         setNameSelected(undefined);
-      } else if (filterValue.toLowerCase() === "namespace") {
+      } else if (filterSelected.toLowerCase() === "namespace") {
         if (
           namespaceSelected &&
           namespaceSelected.trim() !== "" &&
@@ -376,59 +359,38 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
     }
   };
 
-  const toolbarItems = (
-    <>
-      <MessagingToolbarToggleGroup
-        totalRecords={totalAddressSpaces}
-        filterSelected={filterValue}
-        nameSelected={nameSelected}
-        nameInput={nameInput}
-        namespaceSelected={namespaceSelected}
-        namespaceInput={namespaceInput}
-        nameOptions={nameOptions}
-        namespaceOptions={namespaceOptions}
-        typeIsExpanded={typeIsExpanded}
-        typeSelected={typeSelected}
-        selectedNames={selectedNames}
-        selectedNamespaces={selectedNamespaces}
-        onFilterSelect={onFilterSelect}
-        onNameSelect={onNameSelect}
-        onNameClear={onNameClear}
-        onNameFilter={onNameFilter}
-        onNamespaceSelect={onNamespaceSelect}
-        onNamespaceClear={onNamespaceClear}
-        onNamespaceFilter={onNamespaceFilter}
-        onTypeToggle={onTypeToggle}
-        onTypeSelect={onTypeSelect}
-        onDeleteAll={onDeleteAllFilters}
-        onSearch={onSearch}
-        onDelete={onDelete}
-      />
-      {width < 769 && (
-        <SortForMobileView
-          sortMenu={sortMenuItems}
-          sortValue={sortValue}
-          setSortValue={setSortValue}
-        />
-      )}
-      <DataToolbarItem>
-        <AddressSpaceListKebab
-          onCreateAddressSpace={onCreateAddressSpace}
-          onSelectDeleteAll={onSelectDeleteAll}
-          isDeleteAllDisabled={isDeleteAllDisabled}
-        />
-      </DataToolbarItem>
-    </>
-  );
-
   return (
-    <DataToolbar
-      id="data-toolbar-with-filter"
-      className="pf-m-toggle-group-container"
-      collapseListedFiltersBreakpoint="xl"
-      clearAllFilters={onClearAllFilters}
-    >
-      <DataToolbarContent>{toolbarItems}</DataToolbarContent>
-    </DataToolbar>
+    <MessagingToolbar
+      totalRecords={totalAddressSpaces}
+      filterSelected={filterSelected}
+      nameSelected={nameSelected}
+      nameInput={nameInput}
+      namespaceSelected={namespaceSelected}
+      namespaceInput={namespaceInput}
+      nameOptions={nameOptions}
+      namespaceOptions={namespaceOptions}
+      typeIsExpanded={typeIsExpanded}
+      typeSelected={typeSelected}
+      selectedNames={selectedNames}
+      selectedNamespaces={selectedNamespaces}
+      onFilterSelect={onFilterSelect}
+      onNameSelect={onNameSelect}
+      onNameClear={onNameClear}
+      onNameFilter={onNameFilter}
+      onNamespaceSelect={onNamespaceSelect}
+      onNamespaceClear={onNamespaceClear}
+      onNamespaceFilter={onNamespaceFilter}
+      onTypeToggle={onTypeToggle}
+      onTypeSelect={onTypeSelect}
+      onDeleteAll={onDeleteAll}
+      onSearch={onSearch}
+      onDelete={onDelete}
+      onCreateAddressSpace={onCreateAddressSpace}
+      isDeleteAllDisabled={isDeleteAllDisabled}
+      onSelectDeleteAll={onSelectDeleteAll}
+      sortValue={sortValue}
+      setSortValue={setSortValue}
+      onClearAllFilters={onClearAllFilters}
+    />
   );
 };
