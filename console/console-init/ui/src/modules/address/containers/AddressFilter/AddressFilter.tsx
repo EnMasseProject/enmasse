@@ -4,7 +4,10 @@
  */
 
 import React, { useState } from "react";
-import { DataToolbarChip } from "@patternfly/react-core/dist/js/experimental";
+import {
+  DataToolbarChip,
+  DataToolbarChipGroup
+} from "@patternfly/react-core/dist/js/experimental";
 import { useApolloClient } from "@apollo/react-hooks";
 import { IAddressListNameSearchResponse } from "schema/ResponseTypes";
 import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "graphql-module/queries";
@@ -141,16 +144,16 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   };
 
   const onDelete = (
-    type: string | DataToolbarChip,
-    id: string | DataToolbarChip
+    category: string | DataToolbarChipGroup,
+    chip: string | DataToolbarChip
   ) => {
-    switch (type) {
+    switch (category) {
       case "Address":
         let index;
-        if (filterNames && id) {
+        if (filterNames && chip) {
           index = filterNames
             .map(filter => filter.value)
-            .indexOf(id.toString());
+            .indexOf(chip.toString());
           if (index >= 0) filterNames.splice(index, 1);
           setFilterNames([...filterNames]);
         }
