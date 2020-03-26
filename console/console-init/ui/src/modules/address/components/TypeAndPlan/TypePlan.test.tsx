@@ -5,7 +5,7 @@
 
 import React from "react";
 import { render, getByTitle } from "@testing-library/react";
-import { TypePlan } from "modules/address/components";
+import { TypePlan } from "./TypePlan";
 
 describe("TypePlan", () => {
   test("it renders the plan", () => {
