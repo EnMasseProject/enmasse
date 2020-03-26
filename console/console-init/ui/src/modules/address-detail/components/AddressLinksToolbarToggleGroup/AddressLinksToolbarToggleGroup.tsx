@@ -4,7 +4,8 @@ import {
   DataToolbarGroup,
   DataToolbarFilter,
   DataToolbarItem,
-  DataToolbarChip
+  DataToolbarChip,
+  DataToolbarChipGroup
 } from "@patternfly/react-core/dist/js/experimental";
 import {
   Dropdown,
@@ -31,8 +32,8 @@ interface IAddressLinksToolbarToggleGroupProps {
   onChangeNameData: (value: string) => void;
   onChangeContainerData: (value: string) => void;
   onDelete: (
-    type: string | DataToolbarChip,
-    id: string | DataToolbarChip
+    category: string | DataToolbarChipGroup,
+    chip: string | DataToolbarChip
   ) => void;
   filterIsExpanded: boolean;
   setFilterIsExpanded: (value: boolean) => void;

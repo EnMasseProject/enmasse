@@ -12,7 +12,7 @@ import { ISortBy } from "@patternfly/react-table";
 import { useWindowDimensions, SortForMobileView } from "components";
 import { AddressLinksFilter } from "modules/address-detail/containers";
 
-interface AddressLinksToolbar {
+interface IAddressLinksToolbarProps {
   filterValue: string;
   setFilterValue: (value: string) => void;
   filterNames: any[];
@@ -28,7 +28,7 @@ interface AddressLinksToolbar {
   namespace: string;
 }
 
-const AddressLinksToolbar: React.FunctionComponent<AddressLinksToolbar> = ({
+const AddressLinksToolbar: React.FunctionComponent<IAddressLinksToolbarProps> = ({
   filterValue,
   setFilterValue,
   filterNames,
