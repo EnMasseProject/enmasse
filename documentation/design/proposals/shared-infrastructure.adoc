@@ -89,11 +89,26 @@ spec:
   router:
     image: # Optional. Allows overriding router image
 
-    replicas:
-      min: 2 # Min replicas will be deployed when infra is created
-      max: 4 # Max replicas that maybe scaled to
-      minReady: 1 # Allows 1 router to not be ready before alerting. Ends up creating PodDisruptionBudget
+    minReady: 1 # <- PodDisruptionBudgets
 
+    scalingStrategy:
+      # Either a static scale strategy that does not scale!
+      static:
+        replicas: 4 
+      # Or one that scales on the number of tenants?
+      vhost:
+        replicasRange:
+          min: 2
+          max: 4
+        # Create another router when we exceed this many vhosts
+        tenantsPerRouter: 100
+      # Or one that scales by the number of connections?
+      connection:
+        replicasRange:
+          min: 2
+          max: 4
+         # Create another when we have more than 100 connections per router
+        connectionsPerRouter: 100
     podTemplate: # Same as in standard infra config today. Based on Kubernetes spec
       spec:
         affinity: # Allow explicitly setting affinity rules to enforce specific nodes
@@ -105,11 +120,23 @@ spec:
 
   broker:
     image: # Optional. Allows overriding broker image
-    # Broker pool size is dynamically changing based on load
-    poolSize:
-      min: 1 # Can be > 0 to pre-create brokers
-      max: 5 # Will never create more brokers than this
-    replicas: 1 # Must be >= 1, defaults to 1. Larger values creates HA replicas that are spread using anti-affinity
+
+    # Determines how we scale brokers
+    scalingStrategy:
+      # Either fixed number of brokers
+      static:
+        poolSize: 3
+      # Or one that scales by the number of queue usage
+      addressUsage:
+        # I.e. create another broker when we exceed this amount of memory used for addresses
+        memoryUsagePerBroker: 100Mi 
+        poolSizeRange:
+          min: 0
+          max: 5
+
+    # For HA. Must be >= 1, defaults to 1. Larger values creates HA replicas that are spread using anti-affinity
+    replicas: 1 
+
     addressFullPolicy: BLOCK
     storageClassName: # Storage class name to use for PVCs.
     podTemplate:
@@ -120,14 +147,15 @@ spec:
         resources:
         priorityClassName:
 status:
-  router:
-    replicas: 3 # Current replicas based on operator decision
-  broker:
-    poolSize: 2 # Current number of brokers used
-    ... # Other broker settings - ensure 
+  phase: Active
+  conditions:
+  - type: RoutersCreated
+    status: True
+  - type: Ready
+    status: True
 ```
 
-When deployed, the above would have the minimum impact of creating 2 routers and 1 brokers. The brokers may be configured according to the address spaces they need to support.
+The brokers in a pool may be configured according to the address spaces they need to support.
 
 ==== MessagingPlan
 
