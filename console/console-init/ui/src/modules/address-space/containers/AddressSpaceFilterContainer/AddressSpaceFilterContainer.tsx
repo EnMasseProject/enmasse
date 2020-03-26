@@ -4,8 +4,12 @@
  */
 
 import React, { useState } from "react";
-import { DataToolbarChip } from "@patternfly/react-core/dist/js/experimental";
-import { SelectOption, SelectOptionObject } from "@patternfly/react-core";
+import {
+  SelectOption,
+  SelectOptionObject,
+  DataToolbarChipGroup,
+  DataToolbarChip
+} from "@patternfly/react-core";
 import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
 import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "schema/ResponseTypes";
 import { useApolloClient } from "@apollo/react-hooks";
@@ -113,25 +117,25 @@ export const AddressSpaceFilterContainer: React.FunctionComponent<IAddressSpaceF
   };
 
   const onDelete = (
-    type: string | DataToolbarChip,
-    id: string | DataToolbarChip
+    category: string | DataToolbarChipGroup,
+    chip: string | DataToolbarChip
   ) => {
     let index;
-    switch (type) {
+    switch (category) {
       case "Name":
-        if (filterNames && id) {
+        if (filterNames && chip) {
           index = filterNames
             .map(filter => filter.value)
-            .indexOf(id.toString());
+            .indexOf(chip.toString());
           if (index >= 0) filterNames.splice(index, 1);
           setFilterNames([...filterNames]);
         }
         break;
       case "Namespace":
-        if (filterNamespaces && id) {
+        if (filterNamespaces && chip) {
           index = filterNamespaces
             .map(filter => filter.value)
-            .indexOf(id.toString());
+            .indexOf(chip.toString());
           if (index >= 0) filterNamespaces.splice(index, 1);
           setFilterNamespaces([...filterNamespaces]);
         }
