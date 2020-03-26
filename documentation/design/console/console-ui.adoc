@@ -1,6 +1,9 @@
 :toc:
 :toclevels: 4
 
+= Enmasse - Console UI Design
+
+
 == Objective
 
 Currently, the Console in EnMasse actually comprises two separate web-applications that are hyperlinked together. These are known as the Global Console (which allows create/read/update/delete of address spaces), and the Address Space Console which allows the addresses within an address space to be managed and the connections to the address space to be seen. In addition the Address Space Console exposed address and connection level statistics.
