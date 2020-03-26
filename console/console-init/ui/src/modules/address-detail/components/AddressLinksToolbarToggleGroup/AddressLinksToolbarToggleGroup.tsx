@@ -7,16 +7,14 @@ import {
   DataToolbarChip
 } from "@patternfly/react-core/dist/js/experimental";
 import {
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
   InputGroup,
   Button,
   ButtonVariant,
-  Badge
+  Badge,
+  DropdownPosition
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import { TypeAheadSelect } from "components";
+import { TypeAheadSelect, DropdownWithToggle } from "components";
 import { ISelectOption } from "utils";
 
 interface IAddressLinksToolbarToggleGroupProps {
@@ -26,8 +24,8 @@ interface IAddressLinksToolbarToggleGroupProps {
   filterRole?: string;
   totalLinks: number;
   onAddInput: (event: any) => void;
-  onFilterSelect: (event: any) => void;
-  onRoleSelect: (event: any) => void;
+  onFilterSelect: (value: string) => void;
+  onRoleSelect: (value: string) => void;
   onChangeNameData: (value: string) => void;
   onChangeContainerData: (value: string) => void;
   onDelete: (
@@ -62,8 +60,6 @@ const AddressLinksToolbarToggleGroup: React.FunctionComponent<IAddressLinksToolb
   onChangeNameData,
   onChangeContainerData,
   onDelete,
-  filterIsExpanded,
-  setFilterIsExpanded,
   nameOptions,
   nameSelected,
   setNameSelected,
@@ -73,9 +69,7 @@ const AddressLinksToolbarToggleGroup: React.FunctionComponent<IAddressLinksToolb
   containerSelected,
   setContainerSelected,
   containerInput,
-  setContainerInput,
-  roleIsExpanded,
-  setRoleIsExpanded
+  setContainerInput
 }) => {
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
@@ -115,29 +109,18 @@ const AddressLinksToolbarToggleGroup: React.FunctionComponent<IAddressLinksToolb
     >
       <DataToolbarGroup variant="filter-group">
         <DataToolbarFilter categoryName="Filter">
-          <Dropdown
+          <DropdownWithToggle
             id="ad-links-filter-dropdown"
-            position="left"
-            onSelect={onFilterSelect}
-            isOpen={filterIsExpanded}
-            toggle={
-              <DropdownToggle onToggle={setFilterIsExpanded}>
+            position={DropdownPosition.left}
+            value={filterValue}
+            onSelectItem={onFilterSelect}
+            dropdownItemIdPrefix="ad-links-filter-dropdown-item"
+            toggleIcon={
+              <>
                 <FilterIcon />
                 &nbsp;
-                {filterValue}
-              </DropdownToggle>
+              </>
             }
-            dropdownItems={filterMenuItems.map(option => (
-              <DropdownItem
-                id={`ad-links-filter-dropdown-item${option.key}`}
-                key={option.key}
-                value={option.value}
-                itemID={option.key}
-                component={"button"}
-              >
-                {option.value}
-              </DropdownItem>
-            ))}
           />
         </DataToolbarFilter>
         <>
@@ -213,27 +196,13 @@ const AddressLinksToolbarToggleGroup: React.FunctionComponent<IAddressLinksToolb
               categoryName="Role"
             >
               {filterValue === "Role" && (
-                <Dropdown
+                <DropdownWithToggle
                   id="ad-links-filter-select-role"
-                  position="left"
-                  onSelect={onRoleSelect}
-                  isOpen={roleIsExpanded}
-                  toggle={
-                    <DropdownToggle onToggle={setRoleIsExpanded}>
-                      {filterRole || "Select Role"}
-                    </DropdownToggle>
-                  }
-                  dropdownItems={roleMenuItems.map(option => (
-                    <DropdownItem
-                      id={`ad-links-filter-select-option-role${option.key}`}
-                      key={option.key}
-                      value={option.value}
-                      itemID={option.key}
-                      component={"button"}
-                    >
-                      {option.value}
-                    </DropdownItem>
-                  ))}
+                  position={DropdownPosition.left}
+                  onSelectItem={onRoleSelect}
+                  value={filterRole || "Select Role"}
+                  dropdownItems={roleMenuItems}
+                  dropdownItemIdPrefix="d-links-filter-select-option-role"
                 />
               )}
             </DataToolbarFilter>

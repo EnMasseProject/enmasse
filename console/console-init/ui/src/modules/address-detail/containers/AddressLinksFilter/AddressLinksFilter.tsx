@@ -101,13 +101,11 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     }
   };
 
-  const onFilterSelect = (event: any) => {
-    setFilterValue(event.target.value);
-    setFilterIsExpanded(!filterIsExpanded);
+  const onFilterSelect = (value: string) => {
+    setFilterValue(value);
   };
-  const onRoleSelect = (event: any) => {
-    setFilterRole(event.target.value);
-    setRoleIsExpanded(!roleIsExpanded);
+  const onRoleSelect = (value: string) => {
+    setFilterRole(value);
   };
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);

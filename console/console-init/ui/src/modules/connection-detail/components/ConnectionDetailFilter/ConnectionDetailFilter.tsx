@@ -14,9 +14,7 @@ import {
   DataToolbarContent
 } from "@patternfly/react-core/dist/js/experimental";
 import {
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
+  DropdownPosition,
   InputGroup,
   Button,
   ButtonVariant,
@@ -29,7 +27,11 @@ import {
 import { useApolloClient } from "@apollo/react-hooks";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { ISortBy } from "@patternfly/react-table";
-import { useWindowDimensions, SortForMobileView } from "components";
+import {
+  useWindowDimensions,
+  SortForMobileView,
+  DropdownWithToggle
+} from "components";
 
 import {
   IConnectionLinksNameSearchResponse,
@@ -79,8 +81,6 @@ export const ConnectionDetailFilter: React.FunctionComponent<IConnectionDetailFi
 }) => {
   const { width } = useWindowDimensions();
   const client = useApolloClient();
-  const [filterIsExpanded, setFilterIsExpanded] = useState(false);
-  const [roleIsExpanded, setRoleIsExpanded] = useState(false);
   const [isSelectNameExpanded, setIsSelectNameExpanded] = useState<boolean>(
     false
   );
@@ -164,13 +164,11 @@ export const ConnectionDetailFilter: React.FunctionComponent<IConnectionDetailFi
     }
   };
 
-  const onFilterSelect = (event: any) => {
-    setFilterValue(event.target.value);
-    setFilterIsExpanded(!filterIsExpanded);
+  const onFilterSelect = (value: string) => {
+    setFilterValue(value);
   };
-  const onRoleSelect = (event: any) => {
-    setFilterRole(event.target.value);
-    setRoleIsExpanded(!roleIsExpanded);
+  const onRoleSelect = (value: string) => {
+    setFilterRole(value);
   };
 
   const onNameSelectToggle = () => {
@@ -341,29 +339,19 @@ export const ConnectionDetailFilter: React.FunctionComponent<IConnectionDetailFi
     <>
       <DataToolbarGroup variant="filter-group">
         <DataToolbarFilter categoryName="Filter">
-          <Dropdown
+          <DropdownWithToggle
             id="cl-filter-dropdown"
-            position="left"
-            onSelect={onFilterSelect}
-            isOpen={filterIsExpanded}
-            toggle={
-              <DropdownToggle onToggle={setFilterIsExpanded}>
+            position={DropdownPosition.left}
+            dropdownItems={filterMenuItems}
+            dropdownItemIdPrefix="cl-filter-dropdown-item"
+            value={(filterValue && filterValue.trim()) || "Filter"}
+            onSelectItem={onFilterSelect}
+            toggleIcon={
+              <>
                 <FilterIcon />
                 &nbsp;
-                {filterValue}
-              </DropdownToggle>
+              </>
             }
-            dropdownItems={filterMenuItems.map(option => (
-              <DropdownItem
-                id={`cl-filter-dropdown-item${option.key}`}
-                key={option.key}
-                value={option.value}
-                itemID={option.key}
-                component={"button"}
-              >
-                {option.value}
-              </DropdownItem>
-            ))}
           />
         </DataToolbarFilter>
         <>
@@ -499,27 +487,13 @@ export const ConnectionDetailFilter: React.FunctionComponent<IConnectionDetailFi
               categoryName="Role"
             >
               {filterValue === "Role" && (
-                <Dropdown
+                <DropdownWithToggle
                   id="cl-filter-dropdown-role"
-                  position="left"
-                  onSelect={onRoleSelect}
-                  isOpen={roleIsExpanded}
-                  toggle={
-                    <DropdownToggle onToggle={setRoleIsExpanded}>
-                      {filterRole || "Select Role"}
-                    </DropdownToggle>
-                  }
-                  dropdownItems={roleMenuItems.map(option => (
-                    <DropdownItem
-                      id={`cl-filter-dropdown-role${option.key}`}
-                      key={option.key}
-                      value={option.value}
-                      itemID={option.key}
-                      component={"button"}
-                    >
-                      {option.value}
-                    </DropdownItem>
-                  ))}
+                  position={DropdownPosition.left}
+                  onSelectItem={onRoleSelect}
+                  value={filterRole || "Select Role"}
+                  dropdownItems={roleMenuItems}
+                  dropdownItemIdPrefix="cl-filter-dropdown-role"
                 />
               )}
             </DataToolbarFilter>
