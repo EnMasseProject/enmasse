@@ -12,12 +12,12 @@ import {
   KebabToggleProps
 } from "@patternfly/react-core";
 
-export interface IDropdownWithKababToggleProps
+export interface IDropdownWithKebabToggleProps
   extends Omit<DropdownProps, "toggle"> {
   toggleId?: string;
 }
 
-export const DropdownWithKababToggle: React.FC<IDropdownWithKababToggleProps &
+export const DropdownWithKebabToggle: React.FC<IDropdownWithKebabToggleProps &
   KebabToggleProps> = ({
   id,
   className,
