@@ -199,7 +199,7 @@ public class OperatorManager {
         KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
     }
 
-    public void removeOlm() throws Exception {
+    public boolean removeOlm() throws Exception {
         Consumer<String> remover = (namespace) -> {
             KubeCMDClient.runOnCluster("delete", "subscriptions", "-l", "app=enmasse", "-n", namespace);
             KubeCMDClient.runOnCluster("delete", "operatorgroups", "-l", "app=enmasse", "-n", namespace);
@@ -218,7 +218,7 @@ public class OperatorManager {
         if (isEnmasseOlmDeployed(kube.getInfraNamespace())) {
             remover.accept(kube.getInfraNamespace());
         }
-        clean();
+        return clean();
     }
 
     public void removeExampleRoles(String namespace) {

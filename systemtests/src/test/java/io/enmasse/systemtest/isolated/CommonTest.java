@@ -116,7 +116,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .build();
         resourcesManager.setAddresses(dest);
 
-        kubernetes.awaitPodsReady(new TimeoutBudget(5, TimeUnit.MINUTES));
+        kubernetes.awaitPodsReady(standard.getMetadata().getNamespace(), new TimeoutBudget(5, TimeUnit.MINUTES));
 
         Multimap<String, String> podsContainersWithNoLog = HashMultimap.create();
 

@@ -240,7 +240,8 @@ public abstract class ResourceManager {
     }
 
     public void removeAuthService(AuthenticationService authService) throws Exception {
-        Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService.getMetadata().getName()).cascading(true).delete();
+        Kubernetes.getInstance().getAuthenticationServiceClient(authService.getMetadata().getNamespace())
+            .withName(authService.getMetadata().getName()).cascading(true).delete();
         TestUtils.waitUntilCondition("Auth service is deleted: " + authService.getMetadata().getName(), (phase) ->
                         TestUtils.listReadyPods(Kubernetes.getInstance(), authService.getMetadata().getNamespace()).stream().noneMatch(pod ->
                                 pod.getMetadata().getName().contains(authService.getMetadata().getName())),

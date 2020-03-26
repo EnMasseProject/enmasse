@@ -48,6 +48,8 @@ public class Environment {
     private static final String POSTGRESQL_PROJECT = "POSTGRESQL_PROJECT";
     private static final String H2_PROJECT = "H2_PROJECT";
     private static final String SCALE_CONFIG = "SCALE_CONFIG";
+    private static final String OCP4_EXTERNAL_IMAGE_REGISTRY = "OCP4_EXTERNAL_IMAGE_REGISTRY";
+    private static final String OCP4_INTERNAL_IMAGE_REGISTRY = "OCP4_INTERNAL_IMAGE_REGISTRY";
     private static Logger log = CustomLogger.getLogger();
     private static Environment instance;
     private final String namespace = System.getenv().getOrDefault(K8S_NAMESPACE_ENV, "enmasse-infra");
@@ -83,6 +85,8 @@ public class Environment {
             .map(OLMInstallationType::valueOf).orElse(OLMInstallationType.SPECIFIC);
     protected String templatesPath = System.getenv().getOrDefault(TEMPLATES_PATH,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
+    private final String clusterExternalImageRegistry = System.getenv().getOrDefault(OCP4_EXTERNAL_IMAGE_REGISTRY, "");
+    private final String clusterInternalImageRegistry = System.getenv().getOrDefault(OCP4_INTERNAL_IMAGE_REGISTRY, "");
     protected UserCredentials managementCredentials = new UserCredentials(null, null);
     protected UserCredentials defaultCredentials = new UserCredentials(null, null);
     protected UserCredentials sharedManagementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
@@ -299,5 +303,13 @@ public class Environment {
 
     public String getScaleConfig() {
         return scaleConfig;
+    }
+
+    public String getClusterExternalImageRegistry() {
+        return clusterExternalImageRegistry;
+    }
+
+    public String getClusterInternalImageRegistry() {
+        return clusterInternalImageRegistry;
     }
 }

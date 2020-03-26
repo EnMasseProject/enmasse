@@ -956,10 +956,10 @@ public abstract class Kubernetes {
 
     public abstract String getOlmNamespace();
 
-    public void awaitPodsReady(TimeoutBudget budget) throws InterruptedException {
+    public void awaitPodsReady(String namespace, TimeoutBudget budget) throws InterruptedException {
         List<Pod> unready;
         do {
-            unready = new ArrayList<>(listPods());
+            unready = new ArrayList<>(listPods(namespace));
             unready.removeIf(p -> TestUtils.isPodReady(p, true));
 
             if (!unready.isEmpty()) {
