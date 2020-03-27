@@ -30,7 +30,8 @@ import {
 } from "modules/address-space/utils";
 import {
   AddressSpaceList,
-  IAddressSpace
+  IAddressSpace,
+  EmptyAddressSpace
 } from "modules/address-space/components";
 
 export interface IAddressSpaceListContainerProps {
@@ -245,6 +246,7 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
         sortBy={sortBy}
         actionResolver={actionResolver}
       />
+      {addressSpaces.total > 0 ? "" : <EmptyAddressSpace />}
     </>
   );
 };

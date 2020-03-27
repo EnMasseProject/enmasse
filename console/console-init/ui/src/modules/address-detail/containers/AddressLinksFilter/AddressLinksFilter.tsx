@@ -11,7 +11,7 @@ import {
   ISearchAddressLinkNameResponse
 } from "schema/ResponseTypes";
 import { AddressLinksToolbarToggleGroup } from "modules/address-detail";
-import {DataToolbarChip, DataToolbarChipGroup} from "@patternfly/react-core";
+import { DataToolbarChip, DataToolbarChipGroup } from "@patternfly/react-core";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -100,13 +100,11 @@ const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProps> = ({
     }
   };
 
-  const onFilterSelect = (event: any) => {
-    setFilterValue(event.target.value);
-    setFilterIsExpanded(!filterIsExpanded);
+  const onFilterSelect = (value: string) => {
+    setFilterValue(value);
   };
-  const onRoleSelect = (event: any) => {
-    setFilterRole(event.target.value);
-    setRoleIsExpanded(!roleIsExpanded);
+  const onRoleSelect = (value: string) => {
+    setFilterRole(value);
   };
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);

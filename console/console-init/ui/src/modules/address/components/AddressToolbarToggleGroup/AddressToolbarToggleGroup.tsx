@@ -10,24 +10,22 @@ import {
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import {
   Badge,
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
   InputGroup,
   Button,
   ButtonVariant,
   SelectOptionObject,
   SelectVariant,
   Select,
-  SelectOption
+  SelectOption,
+  DropdownPosition
 } from "@patternfly/react-core";
-import { TypeAheadSelect } from "components";
+import { TypeAheadSelect, DropdownWithToggle } from "components";
 import { ISelectOption } from "utils";
 import { TYPEAHEAD_REQUIRED_LENGTH, TypeAheadMessage } from "constant";
 
 interface IAddressToolbarProps {
   totalAddresses: number;
-  onFilterSelect: (e: any) => void;
+  onFilterSelect: (value: string) => void;
   filterIsExpanded: boolean;
   setFilterIsExpanded: (value: boolean) => void;
   typeIsExpanded: boolean;
@@ -47,8 +45,8 @@ interface IAddressToolbarProps {
   nameInput: string;
   typeValue: string | null;
   statusValue: string | null;
-  onTypeSelect: (event: any) => void;
-  onStatusSelect: (event: any) => void;
+  onTypeSelect: (value: string) => void;
+  onStatusSelect: (value: string) => void;
   onNameSelectToggle: () => void;
   onNameSelect: (event: any, selection: string | SelectOptionObject) => void;
   isSelectNameExpanded: boolean;
@@ -60,12 +58,6 @@ interface IAddressToolbarProps {
 const AddressToolbarToggleGroup: React.FunctionComponent<IAddressToolbarProps> = ({
   totalAddresses,
   onFilterSelect,
-  filterIsExpanded,
-  setFilterIsExpanded,
-  statusIsExpanded,
-  setStatusIsExpanded,
-  typeIsExpanded,
-  setTypeIsExpanded,
   filterValue,
   filterNames,
   onDelete,
@@ -132,31 +124,18 @@ const AddressToolbarToggleGroup: React.FunctionComponent<IAddressToolbarProps> =
       >
         <DataToolbarGroup variant="filter-group">
           <DataToolbarFilter categoryName="Filter">
-            <Dropdown
+            <DropdownWithToggle
               id="al-filter-dropdown"
-              position="left"
-              onSelect={onFilterSelect}
-              isOpen={filterIsExpanded}
-              toggle={
-                <DropdownToggle onToggle={setFilterIsExpanded}>
+              position={DropdownPosition.left}
+              onSelectItem={onFilterSelect}
+              value={(filterValue && filterValue.trim()) || "Filter"}
+              dropdownItems={filterMenuItems}
+              toggleIcon={
+                <>
                   <FilterIcon />
                   &nbsp;
-                  {filterValue && filterValue.trim() !== ""
-                    ? filterValue
-                    : "Filter"}
-                </DropdownToggle>
+                </>
               }
-              dropdownItems={filterMenuItems.map(option => (
-                <DropdownItem
-                  id={`al-filter-dropdown${option.key}`}
-                  key={option.key}
-                  value={option.value}
-                  itemID={option.key}
-                  component={"button"}
-                >
-                  {option.value}
-                </DropdownItem>
-              ))}
             />
           </DataToolbarFilter>
           {filterValue && filterValue.trim() !== "" && (
@@ -231,27 +210,13 @@ const AddressToolbarToggleGroup: React.FunctionComponent<IAddressToolbarProps> =
                   categoryName="Type"
                 >
                   {filterValue === "Type" && (
-                    <Dropdown
+                    <DropdownWithToggle
                       id={"al-filter-select-type-dropdown"}
-                      position="left"
-                      onSelect={onTypeSelect}
-                      isOpen={typeIsExpanded}
-                      toggle={
-                        <DropdownToggle onToggle={setTypeIsExpanded}>
-                          {typeValue || "Select Type"}
-                        </DropdownToggle>
-                      }
-                      dropdownItems={typeMenuItems.map(option => (
-                        <DropdownItem
-                          id={`al-filter-select-type-dropdown-item${option.key}`}
-                          key={option.key}
-                          value={option.value}
-                          itemID={option.key}
-                          component={"button"}
-                        >
-                          {option.value}
-                        </DropdownItem>
-                      ))}
+                      position={DropdownPosition.left}
+                      onSelectItem={onTypeSelect}
+                      value={typeValue || "Select Type"}
+                      dropdownItems={typeMenuItems}
+                      dropdownItemIdPrefix="al-filter-select-type-dropdown-item"
                     />
                   )}
                 </DataToolbarFilter>
@@ -263,27 +228,13 @@ const AddressToolbarToggleGroup: React.FunctionComponent<IAddressToolbarProps> =
                   categoryName="Status"
                 >
                   {filterValue === "Status" && (
-                    <Dropdown
+                    <DropdownWithToggle
                       id={"al-filter-select-status-dropdown"}
-                      position="left"
-                      onSelect={onStatusSelect}
-                      isOpen={statusIsExpanded}
-                      toggle={
-                        <DropdownToggle onToggle={setStatusIsExpanded}>
-                          &nbsp;{statusValue || "Select Status"}
-                        </DropdownToggle>
-                      }
-                      dropdownItems={statusMenuItems.map(option => (
-                        <DropdownItem
-                          id={`al-filter-select-status-dropdown-item${option.key}`}
-                          key={option.key}
-                          value={option.value}
-                          itemID={option.key}
-                          component={"button"}
-                        >
-                          {option.value}
-                        </DropdownItem>
-                      ))}
+                      position={DropdownPosition.left}
+                      onSelectItem={onStatusSelect}
+                      value={statusValue || "Select Status"}
+                      dropdownItems={statusMenuItems}
+                      dropdownItemIdPrefix="al-filter-select-status-dropdown-item"
                     />
                   )}
                 </DataToolbarFilter>
