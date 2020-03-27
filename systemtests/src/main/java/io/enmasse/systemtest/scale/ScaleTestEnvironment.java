@@ -4,21 +4,25 @@
  */
 package io.enmasse.systemtest.scale;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.logs.CustomLogger;
+import org.slf4j.Logger;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.logs.CustomLogger;
-
 public class ScaleTestEnvironment {
 
     private static Logger log = CustomLogger.getLogger();
+    private static JsonNode jsonEnv;
 
-    private static final String SCALE_SLEEP_PER_CONNECTION_MILLIS ="SCALE_SLEEP_PER_CONNECTION_MILLIS";
-    private static final String SCALE_ADDRESSES_PER_TENANT ="SCALE_ADDRESSES_PER_TENANT";
+    private static final String SCALE_SLEEP_PER_CONNECTION_MILLIS = "SCALE_SLEEP_PER_CONNECTION_MILLIS";
+    private static final String SCALE_ADDRESSES_PER_TENANT = "SCALE_ADDRESSES_PER_TENANT";
 
     private static final String SCALE_SEND_MSG_PERIOD_MILLIS = "SCALE_SEND_MSG_PERIOD_MILLIS";
     private static final String SCALE_ADDRESSES_FAILURE_THRESHOLD = "SCALE_ADDRESSES_FAILURE_THRESHOLD";
@@ -89,6 +93,7 @@ public class ScaleTestEnvironment {
 
     public static synchronized ScaleTestEnvironment getInstance() {
         if (instance == null) {
+            loadJsonEnv();
             instance = new ScaleTestEnvironment();
         }
         return instance;
@@ -189,13 +194,24 @@ public class ScaleTestEnvironment {
     }
 
     private <T> T getOrDefault(String var, Function<String, T> converter, T defaultValue) {
-        String value = System.getenv(var);
+        String value = jsonEnv.get(var) == null ? System.getenv(var) : jsonEnv.get(var).asText();
         T returnValue = defaultValue;
         if (value != null) {
             returnValue = converter.apply(value);
         }
         values.add(Map.entry(var, String.valueOf(returnValue)));
         return returnValue;
+    }
+
+    private static void loadJsonEnv() {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            File jsonFile = new File(Environment.getInstance().getScaleConfig()).getAbsoluteFile();
+            jsonEnv = mapper.readTree(jsonFile);
+        } catch (Exception e) {
+            log.warn("Scale json configuration not provider or not exists");
+            jsonEnv = mapper.createObjectNode();
+        }
     }
 
 }
