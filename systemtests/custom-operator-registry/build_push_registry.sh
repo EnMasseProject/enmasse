@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 FROM=${1}
 CUSTOM_IMAGE=${2}
-REGISTRY=${3}
 
 rm -rf manifests
 id=$(docker create $FROM)
 docker cp $id:/manifests $PWD
-if [ "${REGISTRY}" != "" ]; then
-    find manifests -name "*.yaml" | xargs sed -e "s,registry.redhat.io/amq7/amq-online-,${REGISTRY}/rh-osbs/amq7-amq-online-,g" -i
-    find manifests -name "*.yaml" | xargs sed -e "s,registry.redhat.io/amq7-tech-preview/amq-online-,${REGISTRY}/rh-osbs/amq7-tech-preview-amq-online-,g" -i
+echo "manifests copied"
+MANIFESTS_CONTENT_REPLACER=./manifests_replacer.sh
+if [ -f "$MANIFESTS_CONTENT_REPLACER" ]; then
+    echo "executing $MANIFESTS_CONTENT_REPLACER"
+    bash $MANIFESTS_CONTENT_REPLACER
 fi
 docker rm -v $id
 

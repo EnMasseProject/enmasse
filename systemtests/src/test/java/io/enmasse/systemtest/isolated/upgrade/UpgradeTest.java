@@ -460,7 +460,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private void upgradeEnmasseOLM(Path upgradeTemplates, String previousVersion) throws Exception {
-        String customRegistryImageToUse = buildPushCustomOperatorRegistry(infraNamespace, upgradeTemplates, getVersionFromTemplateDir(upgradeTemplates));
+        String newVersion = getVersionFromTemplateDir(upgradeTemplates);
+        String customRegistryImageToUse = buildPushCustomOperatorRegistry(infraNamespace, upgradeTemplates, newVersion);
 
         String catalogSourceName = "enmasse-source";
         String catalogNamespace = infraNamespace;
@@ -470,8 +471,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             kubernetes.deletePod(infraNamespace, Map.of("olm.catalogSource", "enmasse-source"));
         }
 
-        String version = getVersionFromTemplateDir(upgradeTemplates);
-        String csvName = getCsvName(upgradeTemplates, version);
+        String csvName = getCsvName(upgradeTemplates, newVersion);
 
         //update subscription to point to new catalog and to use latest csv
         applySubscription(infraNamespace, catalogSourceName, catalogNamespace, csvName);
@@ -482,8 +482,6 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private String buildPushCustomOperatorRegistry(String namespace, Path templateDir, String version) throws Exception {
-        String manifestsRegistryReplacement = ""; //TODO fill this from env var
-
         String customRegistryImageToPush = environment.getClusterExternalImageRegistry()+"/"+namespace+"/systemtests-operator-registry:latest";
         String customRegistryImageToUse = environment.getClusterInternalImageRegistry()+"/"+namespace+"/systemtests-operator-registry:latest";
 
@@ -504,7 +502,9 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             olmManifestsImage = tree.get("spec").get("image").asText();
         }
 
-        var results = Exec.execute(Arrays.asList("make", "-C", "custom-operator-registry", "FROM="+olmManifestsImage, "TAG="+customRegistryImageToPush, "REGISTRY="+manifestsRegistryReplacement), true);
+        olmManifestsImage = olmManifestsImage.replace(environment.getClusterInternalImageRegistry(), environment.getClusterExternalImageRegistry());
+
+        var results = Exec.execute(Arrays.asList("make", "-C", "custom-operator-registry", "FROM="+olmManifestsImage, "TAG="+customRegistryImageToPush), true);
 
         assertTrue(results.getRetCode(), "custom operator registry image build failed ");
 
