@@ -871,6 +871,8 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			if consoleservice.Spec.Impersonation.UserHeader != "" {
 				install.ApplyEnvSimple(container, "IMPERSONATION_USER_HEADER", consoleservice.Spec.Impersonation.UserHeader)
 			}
+		} else {
+			install.RemoveEnv(container, "IMPERSONATION_ENABLE")
 		}
 
 		if value := util.GetBooleanEnvOrDefault("ENABLE_MONITORING_ANNOTATIONS", false); value {
