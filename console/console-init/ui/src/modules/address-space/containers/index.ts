@@ -4,4 +4,4 @@
  */
 
 export * from "./AddressSpaceListContainer";
-export * from "./AddressSpaceFilterContainer";
+export * from "./MessagingToolbarContainer";

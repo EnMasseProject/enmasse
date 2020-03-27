@@ -6,6 +6,8 @@
 import React from "react";
 import { LockOpenIcon, LockIcon } from "@patternfly/react-icons";
 import { IMetrics } from "schema/ResponseTypes";
+import { SelectOption } from "@patternfly/react-core";
+import { TypeAheadMessage } from "constant";
 
 interface ProtocolIcon {
   protocol: string;
@@ -38,5 +40,12 @@ const getFilteredValue = (object: IMetrics[], value: string) => {
   }
   return "";
 };
+const initalSelectOption = (
+  <SelectOption
+    value={TypeAheadMessage.MORE_CHAR_REQUIRED}
+    key="1"
+    isDisabled={true}
+  />
+);
 
-export { ConnectionProtocolFormat, getFilteredValue };
+export { ConnectionProtocolFormat, getFilteredValue, initalSelectOption };
