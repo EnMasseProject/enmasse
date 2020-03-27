@@ -5,19 +5,21 @@ import {
   Form,
   FormGroup,
   TextInput,
-  Dropdown,
-  DropdownPosition,
-  DropdownToggle,
-  DropdownItem
+  DropdownPosition
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
-import { IDropdownOption } from "components";
-import { dropdown_item_styles } from "modules/address-space";
-import { FetchPolicy } from "constants/constants";
+import { StyleSheet } from "@patternfly/react-styles";
+import { IDropdownOption, DropdownWithToggle } from "components";
 
 const styles = StyleSheet.create({
-  capitalize_labels: {
-    "text-transform": "capitalize"
+  dropdownItem: {
+    "text-transform": "capitalize",
+    fontWeight: "bold"
+  },
+  dropdown_align: {
+    display: "flex"
+  },
+  dropdown_toggle: {
+    flex: "1"
   }
 });
 interface IAddressConfigurationProps {
@@ -33,9 +35,9 @@ interface IAddressConfigurationProps {
   setIsPlanOpen: (value: boolean) => void;
   isTopicOpen: boolean;
   setIsTopicOpen: (value: boolean) => void;
-  onTypeSelect: (event: any) => void;
-  onPlanSelect: (event: any) => void;
-  onTopicSelect: (event: any) => void;
+  onTypeSelect: (value: string) => void;
+  onPlanSelect: (value: string) => void;
+  onTopicSelect: (value: string) => void;
   typeOptions: IDropdownOption[];
   planOptions: IDropdownOption[];
   topicsForSubscription: IDropdownOption[];
@@ -47,12 +49,6 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
   type,
   plan,
   topic,
-  isTypeOpen,
-  setIsTypeOpen,
-  isPlanOpen,
-  setIsPlanOpen,
-  isTopicOpen,
-  setIsTopicOpen,
   onTypeSelect,
   onPlanSelect,
   onTopicSelect,
@@ -93,70 +89,32 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
 
             <FormGroup label="Type" isRequired={true} fieldId="address-type">
               <br />
-              <Dropdown
+              <DropdownWithToggle
                 id="address-definition-type-dropdown"
+                className={styles.dropdown_align}
+                toggleClass={styles.dropdown_toggle}
+                dropdownItemClass={styles.dropdownItem}
                 position={DropdownPosition.left}
-                onSelect={onTypeSelect}
-                isOpen={isTypeOpen}
-                style={{ display: "flex" }}
-                toggle={
-                  <DropdownToggle
-                    style={{ flex: "1" }}
-                    onToggle={() => setIsTypeOpen(!isTypeOpen)}
-                  >
-                    {type}
-                  </DropdownToggle>
-                }
-                dropdownItems={typeOptions.map(option => (
-                  <DropdownItem
-                    id={`address-definition-type-dropdown-item${option.value}`}
-                    key={option.value}
-                    value={option.value}
-                    itemID={option.value}
-                    component={"button"}
-                  >
-                    <b className={css(styles.capitalize_labels)}>
-                      {option.label}
-                    </b>
-                    <br />
-                    {option.description ? option.description : ""}
-                  </DropdownItem>
-                ))}
+                onSelectItem={onTypeSelect}
+                value={type}
+                dropdownItems={typeOptions}
+                dropdownItemIdPrefix="address-definition-type-dropdown-item"
               />
             </FormGroup>
 
             <FormGroup label="Plan" isRequired={true} fieldId="address-plan">
               <br />
-              <Dropdown
+              <DropdownWithToggle
                 id="address-definition-plan-dropdown"
                 position={DropdownPosition.left}
-                onSelect={onPlanSelect}
-                isOpen={isPlanOpen}
-                style={{ display: "flex" }}
-                toggle={
-                  <DropdownToggle
-                    style={{ flex: "1", position: "inherit" }}
-                    isDisabled={type.trim() === ""}
-                    onToggle={() => setIsPlanOpen(!isPlanOpen)}
-                  >
-                    {plan}
-                  </DropdownToggle>
-                }
-                dropdownItems={planOptions.map(option => (
-                  <DropdownItem
-                    id={`address-definition-plan-dropdown-item${option.value}`}
-                    key={option.value}
-                    value={option.value}
-                    itemID={option.value}
-                    component={"button"}
-                  >
-                    <b>{option.label}</b>
-                    <br />
-                    <div className={css(dropdown_item_styles.format_item)}>
-                      {option.description}
-                    </div>
-                  </DropdownItem>
-                ))}
+                onSelectItem={onPlanSelect}
+                className={styles.dropdown_align}
+                toggleClass={styles.dropdown_toggle}
+                dropdownItemClass={styles.dropdownItem}
+                value={plan}
+                dropdownItems={planOptions}
+                dropdownItemIdPrefix="address-definition-plan-dropdown-item"
+                isDisabled={type.trim() === ""}
               />
             </FormGroup>
             {type && type === "subscription" && (
@@ -166,37 +124,18 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 fieldId="address-topic"
               >
                 <br />
-                <Dropdown
+                <DropdownWithToggle
                   id="address-definition-topic-dropdown"
+                  className={styles.dropdown_align}
+                  toggleClass={styles.dropdown_toggle}
+                  dropdownItemClass={styles.dropdownItem}
                   position={DropdownPosition.left}
-                  onSelect={onTopicSelect}
-                  isOpen={isTopicOpen}
-                  style={{ display: "flex" }}
-                  toggle={
-                    <DropdownToggle
-                      style={{ flex: "1", position: "inherit" }}
-                      onToggle={() => setIsTopicOpen(!isTopicOpen)}
-                      isDisabled={type.trim() !== "subscription"}
-                    >
-                      {topic}
-                    </DropdownToggle>
-                  }
-                  dropdownItems={
-                    topicsForSubscription &&
-                    topicsForSubscription.map(option => (
-                      <DropdownItem
-                        id={`address-definition-topic-dropdown-item${option.value}`}
-                        key={option.value}
-                        value={option.value}
-                        itemID={option.value}
-                        component={"button"}
-                      >
-                        <b>{option.label}</b>
-                        <br />
-                        {option.value}
-                      </DropdownItem>
-                    ))
-                  }
+                  onSelectItem={onTopicSelect}
+                  value={topic}
+                  dropdownItems={topicsForSubscription}
+                  dropdownItemIdPrefix="address-definition-topic-dropdown-item"
+                  isDisabled={type.trim() !== "subscription"}
+                  isDisplayLabelAndValue={true}
                 />
               </FormGroup>
             )}

@@ -16,8 +16,7 @@ import {
 import { css, StyleSheet } from "@patternfly/react-styles";
 
 export const dropdown_styles = StyleSheet.create({
-  format_description: { whiteSpace: "normal", textAlign: "justify" },
-  font_item: { fontWeight: "bold" }
+  format_description: { whiteSpace: "normal", textAlign: "justify" }
 });
 
 export interface IDropdownOption {
@@ -25,6 +24,7 @@ export interface IDropdownOption {
   label: string;
   disabled?: boolean;
   description?: string;
+  key?: string;
 }
 
 export interface IDropdownWithToggleProps
@@ -35,8 +35,10 @@ export interface IDropdownWithToggleProps
   component?: React.ReactNode;
   toggleClass?: string;
   value: string;
-  isItemDisplayBold?: boolean;
-  onSelectItem?: (value: string) => void;
+  onSelectItem: (value: string) => void;
+  dropdownItemIdPrefix?: string;
+  dropdownItemClass?: string;
+  isDisplayLabelAndValue?: boolean;
 }
 
 export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
@@ -52,43 +54,74 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   toggleClass,
   value,
   isDisabled,
-  isItemDisplayBold
+  dropdownItemIdPrefix,
+  dropdownItemClass,
+  isDisplayLabelAndValue
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>();
 
-  const dropdowItemCss = classNames({
-    [dropdown_styles.font_item]: isItemDisplayBold
-  });
+  const dropdowItemCss = classNames(dropdownItemClass);
 
   const onToggle = (isOpen: boolean) => {
     setIsOpen(isOpen);
   };
 
+  const onFocus = () => {
+    const element = document.getElementById(toggleId || id);
+    element && element.focus();
+  };
+
   const onSelect = (e: any) => {
-    const value = e.target.value || e.target.textContent;
+    const value =
+      e.target.value ||
+      e.currentTarget.firstChild.value ||
+      e.target.textContent;
     setIsOpen(!isOpen);
+    onFocus();
     if (onSelectItem) {
       onSelectItem(value);
     }
   };
 
-  const getDropdownItems = () => {
-    let items: React.ReactElement<IDropdownOption>[] = [];
-    if (dropdownItems && dropdownItems.length > 0) {
-      items = dropdownItems.map(option => (
-        <DropdownItem
-          id={`filter-dropdown-item${option.key}`}
-          key={option.key}
-          value={option.value}
-          itemID={option.key}
-          component={component || "button"}
-        >
-          <span className={dropdowItemCss}>{option.value}</span>
+  const getItems = (option: IDropdownOption) => {
+    if (isDisplayLabelAndValue) {
+      return (
+        <>
+          <span className={dropdowItemCss}>{option.label || option.value}</span>
+          <div>{option.value}</div>
           {option.description && (
             <div className={css(dropdown_styles.format_description)}>
               {option.description}
             </div>
           )}
+        </>
+      );
+    }
+
+    return (
+      <>
+        <span className={dropdowItemCss}>{option.label || option.value}</span>
+        {option.description && (
+          <div className={css(dropdown_styles.format_description)}>
+            {option.description}
+          </div>
+        )}
+      </>
+    );
+  };
+
+  const getDropdownItems = () => {
+    let items: React.ReactElement<IDropdownOption>[] = [];
+    if (dropdownItems && dropdownItems.length > 0) {
+      items = dropdownItems.map((option: IDropdownOption) => (
+        <DropdownItem
+          id={`${dropdownItemIdPrefix || id}${option.key}`}
+          key={option.key}
+          value={option.value}
+          itemID={option.key}
+          component={component || "button"}
+        >
+          {getItems(option)}
         </DropdownItem>
       ));
     }

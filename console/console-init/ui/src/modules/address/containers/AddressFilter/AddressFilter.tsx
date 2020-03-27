@@ -76,18 +76,15 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
         ]);
   };
 
-  const onFilterSelect = (event: any) => {
-    setFilterValue(event.target.value);
-    setFilterIsExpanded(!filterIsExpanded);
+  const onFilterSelect = (value: string) => {
+    setFilterValue(value);
   };
-  const onTypeSelect = (event: any) => {
-    setTypeValue(event.target.value);
-    setTypeIsExpanded(!typeIsExpanded);
+  const onTypeSelect = (value: string) => {
+    setTypeValue(value);
   };
 
-  const onStatusSelect = (event: any) => {
-    setStatusValue(event.target.value);
-    setStatusIsExpanded(!statusIsExpanded);
+  const onStatusSelect = (value: string) => {
+    setStatusValue(value);
   };
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);

@@ -14,7 +14,6 @@ import {
   SortByDirection
 } from "@patternfly/react-table";
 import { StyleSheet, css } from "@patternfly/react-styles";
-import { EmptyAddressSpace } from "modules/address-space/components/EmptyAddressSpace";
 
 export const StyleForTable = StyleSheet.create({
   scroll_overflow: {
@@ -55,25 +54,21 @@ export const AddressSpaceList: React.FunctionComponent<IAddressSpaceListProps> =
 }) => {
   return (
     <>
-      {totalItemsCount > 0 ? (
-        <div className={css(StyleForTable.scroll_overflow)}>
-          <Table
-            variant={TableVariant.compact}
-            onSelect={onSelect}
-            cells={cells}
-            rows={rows}
-            actionResolver={actionResolver}
-            aria-label="address space list"
-            onSort={onSort}
-            sortBy={sortBy}
-          >
-            <TableHeader id="aslist-table-header" />
-            <TableBody />
-          </Table>
-        </div>
-      ) : (
-        <EmptyAddressSpace />
-      )}
+      <div className={css(StyleForTable.scroll_overflow)}>
+        <Table
+          variant={TableVariant.compact}
+          onSelect={onSelect}
+          cells={cells}
+          rows={rows}
+          actionResolver={actionResolver}
+          aria-label="address space list"
+          onSort={onSort}
+          sortBy={sortBy}
+        >
+          <TableHeader id="aslist-table-header" />
+          <TableBody />
+        </Table>
+      </div>
     </>
   );
 };
