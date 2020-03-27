@@ -115,6 +115,7 @@ const AddressLinksToolbarToggleGroup: React.FunctionComponent<IAddressLinksToolb
             position={DropdownPosition.left}
             value={filterValue}
             onSelectItem={onFilterSelect}
+            dropdownItems={filterMenuItems}
             dropdownItemIdPrefix="ad-links-filter-dropdown-item"
             toggleIcon={
               <>
