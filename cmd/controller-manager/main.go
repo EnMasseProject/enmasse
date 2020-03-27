@@ -105,9 +105,9 @@ func main() {
 	customMetrics.Init()
 
 	// Install monitoring resources
-	monitoringEnabled := os.Getenv("ENABLE_MONITORING")
+	monitoringEnabled := util.GetBooleanEnv("ENABLE_MONITORING")
 
-	if monitoringEnabled == "true" {
+	if monitoringEnabled {
 		// Attempt to install the monitoring resources when the operator starts, and every 5 minutes thereafter
 		go func() {
 			ticker := time.NewTicker(5 * time.Minute)
@@ -221,7 +221,9 @@ func main() {
 	}
 
 	// Add the Metrics Service
-	addMetrics(ctx, cfg, namespace)
+	if monitoringEnabled {
+		addMetrics(ctx, cfg, namespace)
+	}
 
 	log.Info("Starting the operator")
 

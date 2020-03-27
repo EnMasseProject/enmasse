@@ -32,7 +32,6 @@ The following Ansible configuration settings are supported:
 |install_example_plans|Specifies whether to install example plans and infrastructure configurations |True |no
 |monitoring_namespace|Specifies the project where {ProductName} monitoring is installed. |Not applicable |yes
 |monitoring_operator|Specifies whether to install the monitoring infrastructure |Not applicable |no
-|monitoring|Specifies whether to install the service monitors, Prometheus rules, and Grafana dashboards for monitoring {ProductName} |Not applicable |no
 |===
 
 

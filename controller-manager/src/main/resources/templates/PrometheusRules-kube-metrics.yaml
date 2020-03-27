@@ -5,6 +5,7 @@ metadata:
     monitoring-key: middleware
     prometheus: k8s
     role: alert-rules
+    app: enmasse
   name: kube-metrics
   namespace: {{ index .Params "Namespace" }}
 spec:
