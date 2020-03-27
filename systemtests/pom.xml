@@ -339,6 +339,9 @@
                 <groups>framework</groups>
                 <skip.tests>false</skip.tests>
             </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
         </profile>
     </profiles>
 </project>
