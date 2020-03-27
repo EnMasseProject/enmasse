@@ -46,6 +46,7 @@ public class JunitExecutionListener implements TestExecutionListener {
 
         if (!env.skipCleanup()) {
             // clean up resources
+            LOGGER.info("Cleaning resources");
             performCleanup();
         } else {
             LOGGER.warn("Remove address spaces when test run finished - SKIPPED!");
@@ -55,6 +56,7 @@ public class JunitExecutionListener implements TestExecutionListener {
 
         if (!(env.skipCleanup() || env.skipUninstall())) {
             // clean up infrastructure after resources
+            LOGGER.info("Uninstalling infrastructure");
             performInfraCleanup();
         }
 

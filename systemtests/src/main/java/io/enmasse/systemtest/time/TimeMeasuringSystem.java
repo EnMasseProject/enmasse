@@ -37,7 +37,7 @@ public class TimeMeasuringSystem {
     private String testClass;
     private String testName;
 
-    private boolean logResults = true;
+    private boolean verboseLog = true;
 
     //===============================================================
     // private instance methods
@@ -51,13 +51,6 @@ public class TimeMeasuringSystem {
             instance = new TimeMeasuringSystem();
         }
         return instance;
-    }
-
-    private void setLogResults(boolean logResults) {
-        if (!logResults) {
-            log.info("Disabling logging results of {}", this.getClass().getName());
-        }
-        this.logResults = logResults;
     }
 
     //===============================================================
@@ -88,8 +81,8 @@ public class TimeMeasuringSystem {
         TimeMeasuringSystem.getInstance().saveCsvResults(sumData, "duration_sum_report");
     }
 
-    public static void disableResultsLogging() {
-        TimeMeasuringSystem.getInstance().setLogResults(false);
+    public static void disableVerboseLogging() {
+        TimeMeasuringSystem.getInstance().verboseLog = false;
     }
 
     private String createOperationsID(SystemtestsOperation operation) {
@@ -120,7 +113,9 @@ public class TimeMeasuringSystem {
         String id = createOperationsID(operation);
         try {
             addRecord(id, new MeasureRecord(System.currentTimeMillis()));
-            log.info("Start time of operation {} is correctly stored", id);
+            if (verboseLog) {
+                log.info("Start time of operation {} is correctly stored", id);
+            }
         } catch (Exception ex) {
             log.warn("Start time of operation {} is not set due to exception", id);
         }
@@ -133,7 +128,9 @@ public class TimeMeasuringSystem {
         }
         try {
             measuringMap.get(testClass).get(testName).get(id).setEndTime(System.currentTimeMillis());
-            log.info("End time of operation {} is correctly stored", id);
+            if (verboseLog) {
+                log.info("End time of operation {} is correctly stored", id);
+            }
         } catch (Exception ex) {
             log.warn("End time of operation {} is not set due to exception", id);
         }
@@ -148,7 +145,7 @@ public class TimeMeasuringSystem {
     }
 
     private void printResults() {
-        if (logResults) {
+        if (verboseLog) {
             measuringMap.forEach((testClassID, testClassRecords) -> {
                 log.info("================================================");
                 log.info("================================================");

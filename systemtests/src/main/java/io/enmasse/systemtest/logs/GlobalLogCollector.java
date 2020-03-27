@@ -30,11 +30,11 @@ import java.util.stream.Stream;
 
 public class GlobalLogCollector {
     private final static Logger LOGGER = CustomLogger.getLogger();
+    private static boolean verbose = true;
     private final Kubernetes kubernetes;
     private final Path logDir;
     private final String namespace;
     private boolean appendNamespaceToLogDir;
-    private boolean verbose;
 
     public GlobalLogCollector(Kubernetes kubernetes, Path logDir) {
         this(kubernetes, logDir, kubernetes.getInfraNamespace());
@@ -49,15 +49,14 @@ public class GlobalLogCollector {
         this.logDir = logDir;
         this.namespace = namespace;
         this.appendNamespaceToLogDir = appendNamespaceToLogDir;
-        this.verbose = true;
     }
 
     public void collectConfigMaps() {
         collectConfigMaps("global");
     }
 
-    public void disableVerboseLogging() {
-        this.verbose = false;
+    public static void globalDisableVerboseLogging() {
+        GlobalLogCollector.verbose = false;
     }
 
     public void collectConfigMaps(String operation) {
@@ -252,6 +251,7 @@ public class GlobalLogCollector {
 
     public static void saveInfraState(Path path) {
         try {
+            LOGGER.info("Saving pod logs and info...");
             Kubernetes kube = Kubernetes.getInstance();
             Files.createDirectories(path);
             List<Pod> pods = kube.listPods();

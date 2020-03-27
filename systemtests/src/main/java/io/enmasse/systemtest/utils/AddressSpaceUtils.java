@@ -40,8 +40,15 @@ import io.vertx.core.json.JsonObject;
 public class AddressSpaceUtils {
     private static Logger log = CustomLogger.getLogger();
 
+    //TODO make this configurable via env var
+    private static boolean verboseLogs = true;
+
     private AddressSpaceUtils() {
         //utility class no need to instantiate it
+    }
+
+    public static void disableVerboseLogs() {
+        verboseLogs = false;
     }
 
     public static void syncAddressSpaceObject(AddressSpace addressSpace) {
@@ -65,8 +72,10 @@ public class AddressSpaceUtils {
     }
 
     public static boolean existAddressSpace(String namespace, String addressSpaceName) {
-        log.info("Following addressspaces are deployed {} in namespace {}", Kubernetes.getInstance().getAddressSpaceClient(namespace).list().getItems().stream()
-                .map(addressSpace -> addressSpace.getMetadata().getName()).collect(Collectors.toList()), namespace);
+        if (verboseLogs) {
+            log.info("Following addressspaces are deployed {} in namespace {}", Kubernetes.getInstance().getAddressSpaceClient(namespace).list().getItems().stream()
+                    .map(addressSpace -> addressSpace.getMetadata().getName()).collect(Collectors.toList()), namespace);
+        }
         return Kubernetes.getInstance().getAddressSpaceClient(namespace).list().getItems().stream()
                 .map(addressSpace -> addressSpace.getMetadata().getName()).collect(Collectors.toList()).contains(addressSpaceName);
     }
@@ -95,8 +104,10 @@ public class AddressSpaceUtils {
             if (!isReady) {
                 Thread.sleep(10000);
             }
-            log.info("Waiting until Address space: '{}' messages {} will be in ready state", name,
-                    (clientAddressSpace != null && clientAddressSpace.getStatus() != null) ? clientAddressSpace.getStatus().getMessages() : null);
+            if (verboseLogs) {
+                log.info("Waiting until Address space: '{}' messages {} will be in ready state", name,
+                        (clientAddressSpace != null && clientAddressSpace.getStatus() != null) ? clientAddressSpace.getStatus().getMessages() : null);
+            }
         }
 
         if (!isReady) {
@@ -117,7 +128,9 @@ public class AddressSpaceUtils {
                 break;
             }
             Thread.sleep(10000);
-            log.info("Waiting until Address space: '{}' messages {} contains {}", addressSpace.getMetadata().getName(), addressSpace.getStatus().getMessages(), expected);
+            if (verboseLogs) {
+                log.info("Waiting until Address space: '{}' messages {} contains {}", addressSpace.getMetadata().getName(), addressSpace.getStatus().getMessages(), expected);
+            }
         }
         addressSpace = client.withName(name).get();
         if (!String.join("", addressSpace.getStatus().getMessages()).contains(expected)) {
@@ -136,8 +149,10 @@ public class AddressSpaceUtils {
             if (!isConfigApplied) {
                 Thread.sleep(2000);
             }
-            log.info("Waiting until Address space configuration will be applied. Current: {}",
-                    addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION));
+            if (verboseLogs) {
+                log.info("Waiting until Address space configuration will be applied. Current: {}",
+                        addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION));
+            }
         }
         isConfigApplied = !addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION).equals(currentConfig);
         if (!isConfigApplied) {
@@ -280,7 +295,9 @@ public class AddressSpaceUtils {
             if (!isReady) {
                 Thread.sleep(10000);
             }
-            log.info("Waiting until connectors of address space: '{}' messages {} will be in ready state", name, getConnectorStatuses(clientAddressSpace));
+            if (verboseLogs) {
+                log.info("Waiting until connectors of address space: '{}' messages {} will be in ready state", name, getConnectorStatuses(clientAddressSpace));
+            }
         }
         clientAddressSpace = client.withName(name).get();
         isReady = areAddressSpaceConnectorsReady(clientAddressSpace);

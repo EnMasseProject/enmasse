@@ -655,7 +655,7 @@ public class SystemtestsKubernetesApps {
 
         kubeCli.createSecret(namespace, getBrokerSecret(name, certBundle, user, password));
 
-        kubeCli.createDeploymentFromResource(namespace, getBrokerDeployment(name, user, password), 3, TimeUnit.MINUTES, false);
+        kubeCli.createDeploymentFromResource(namespace, getBrokerDeployment(name, user, password), 3, TimeUnit.MINUTES);
 
         ServicePort tlsPort = new ServicePortBuilder()
                 .withName("amqps")
@@ -798,9 +798,9 @@ public class SystemtestsKubernetesApps {
         String clientId = UUID.randomUUID().toString();
         log.info("Deploying scale test client {}", clientId);
         var labels = getScaleTestClientLabels(clientConfiguration.getClientType(), clientId);
-        kubeClient.createServiceFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientServiceResource(clientId, labels), false);
-        kubeClient.createDeploymentFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientDeployment(clientId, clientConfiguration, labels), 4, TimeUnit.MINUTES, false);
-        kubeClient.createIngressFromResource(SCALE_TEST_CLIENTS_PROJECT, getSystemtestsIngressResource(SCALE_TEST_CLIENT+"-"+clientId, 8080), false);
+        kubeClient.createServiceFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientServiceResource(clientId, labels));
+        kubeClient.createDeploymentFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientDeployment(clientId, clientConfiguration, labels), 4, TimeUnit.MINUTES);
+        kubeClient.createIngressFromResource(SCALE_TEST_CLIENTS_PROJECT, getSystemtestsIngressResource(SCALE_TEST_CLIENT+"-"+clientId, 8080));
         clientConfiguration.setClientId(clientId);
         TestUtils.waitForNReplicas(1, SCALE_TEST_CLIENTS_PROJECT, labels, new TimeoutBudget(30, TimeUnit.SECONDS));
     }
@@ -825,8 +825,7 @@ public class SystemtestsKubernetesApps {
         try {
             Files.createDirectories(logsPath);
             GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), logsPath, SCALE_TEST_CLIENTS_PROJECT);
-            collector.disableVerboseLogging();
-            collector.collectLogsOfPodsByLabels(SCALE_TEST_CLIENTS_PROJECT, clientId, labels);
+            collector.collectLogsOfPodsByLabels(SCALE_TEST_CLIENTS_PROJECT, null, labels);
         } catch (Exception e) {
             log.error("Failed to collect client {} logs", clientId, e);
         }
@@ -840,9 +839,9 @@ public class SystemtestsKubernetesApps {
             var clientType = deployment.getMetadata().getLabels().get(SCALE_TEST_CLIENT_TYPE_LABEL);
             collectLogsScaleTestClient(clientId, logsPath, getScaleTestClientLabels(ScaleTestClientType.fromValue(clientType), clientId));
             String resourcesName = SCALE_TEST_CLIENT + "-" + clientId;
-            kubeClient.deleteDeployment(SCALE_TEST_CLIENTS_PROJECT, resourcesName, false);
-            kubeClient.deleteService(SCALE_TEST_CLIENTS_PROJECT, resourcesName, false);
-            kubeClient.deleteIngress(SCALE_TEST_CLIENTS_PROJECT, resourcesName, false);
+            kubeClient.deleteDeployment(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
+            kubeClient.deleteService(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
+            kubeClient.deleteIngress(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
         }
 
         kubeClient.deleteNamespace(SCALE_TEST_CLIENTS_PROJECT);
@@ -1342,7 +1341,7 @@ public class SystemtestsKubernetesApps {
 
         return new DeploymentBuilder()
                 .withNewMetadata()
-                .withName(SCALE_TEST_CLIENT+"-"+clientId)
+                .withName(SCALE_TEST_CLIENT+"-"+clientId+"-"+System.currentTimeMillis())
                 .withLabels(labels)
                 .endMetadata()
                 .withNewSpec()
