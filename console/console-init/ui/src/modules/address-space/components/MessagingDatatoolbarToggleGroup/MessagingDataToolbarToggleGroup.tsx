@@ -21,7 +21,7 @@ import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { DropdownWithToggle, TypeAhead } from "components";
 import { DataToolbarBreakpointMod } from "@patternfly/react-core/dist/js/components/DataToolbar/DataToolbarUtils";
 
-interface IMessagingToolbarToggleGroupProps {
+export interface IMessagingToolbarToggleGroupProps {
   totalRecords: number;
   filterSelected?: string;
   nameSelected?: string;

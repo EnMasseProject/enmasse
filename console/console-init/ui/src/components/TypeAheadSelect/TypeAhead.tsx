@@ -5,22 +5,11 @@ import {
   SelectProps,
   SelectOptionObject
 } from "@patternfly/react-core";
-import { placeholder } from "@babel/types";
 
-interface ITypeAheadSelectProps {
-  ariaLabelTypeAhead?: string;
-  ariaLabelledBy?: string;
-  onSelect: (
-    event: React.MouseEvent | React.ChangeEvent,
-    value: string | SelectOptionObject,
-    isPlaceholder?: boolean
-  ) => void;
-  onClear: (event: React.MouseEvent) => void;
-  onFilter?: (e: React.ChangeEvent<HTMLInputElement>) => React.ReactElement[];
+export interface ITypeAheadSelectProps extends Omit<SelectProps, "onToggle"> {
   selected?: string;
   inputData?: string;
   options?: any[];
-  placeholderText?: string;
 }
 
 const TypeAhead: React.FunctionComponent<ITypeAheadSelectProps> = ({
@@ -40,7 +29,6 @@ const TypeAhead: React.FunctionComponent<ITypeAheadSelectProps> = ({
   };
   const onTypeAheadSelect = (e: any, selection: SelectOptionObject) => {
     onSelect && onSelect(e, selection);
-    // setSelected(selection.toString());
     setIsExpanded(false);
   };
 

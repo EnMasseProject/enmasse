@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { MessagingToolbarToggleGroup } from "../MessagingDatatoolbarToggleGroup";
 import { SortForMobileView, useWindowDimensions } from "components";
 import {
@@ -7,11 +7,12 @@ import {
   DataToolbarContent,
   SelectOptionObject,
   DataToolbarChipGroup,
-  DataToolbarChip
+  DataToolbarChip,
+  DataToolbarContentProps
 } from "@patternfly/react-core";
 import { AddressSpaceListKebab } from "modules/address-space/components";
 import { ISortBy } from "@patternfly/react-table";
-interface IMessageToolbarProps {
+export interface IMessageToolbarProps extends DataToolbarContentProps {
   totalRecords: number;
   filterSelected?: string;
   nameSelected?: string;
