@@ -51,6 +51,10 @@ public class AddressUtils {
     //TODO make this configurable via env var
     private static boolean verboseLogs = true;
 
+    private AddressUtils() {
+        //utility class no need to instantiate it
+    }
+
     public static void disableVerboseLogs() {
         verboseLogs = false;
     }
@@ -106,15 +110,21 @@ public class AddressUtils {
     }
 
     public static void setAddresses(TimeoutBudget budget, boolean wait, Address... addresses) throws Exception {
-        log.info("Addresses {} will be created", new Object[]{addresses});
+        if (verboseLogs) {
+            log.info("Creating addresses {}", new Object[]{addresses});
+        }
         String operationID = TimeMeasuringSystem.startOperation(addresses.length > 0 ? SystemtestsOperation.CREATE_ADDRESS : SystemtestsOperation.DELETE_ADDRESS);
-        log.info("Remove addresses in every addresses's address space");
+        if (verboseLogs) {
+            log.info("Remove addresses in every addresses's address space");
+        }
         for (Address address : addresses) {
             Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).cascading(true).delete();
         }
         for (Address address : addresses) {
             address = Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).create(address);
-            log.info("Address {} created", address.getMetadata().getName());
+            if (verboseLogs) {
+                log.info("Address {} created", address.getMetadata().getName());
+            }
         }
         if (wait) {
             waitForDestinationsReady(budget, addresses);
@@ -124,11 +134,15 @@ public class AddressUtils {
     }
 
     public static void appendAddresses(TimeoutBudget budget, boolean wait, Address... addresses) throws Exception {
-        log.info("Addresses {} will be appended", new Object[]{addresses});
+        if (verboseLogs) {
+            log.info("Appending addresses {}", new Object[]{addresses});
+        }
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
         for (Address address : addresses) {
             address = Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).create(address);
-            log.info("Address {} created", address.getMetadata().getName());
+            if (verboseLogs) {
+                log.info("Address {} created", address.getMetadata().getName());
+            }
         }
         if (wait) {
             waitForDestinationsReady(budget, addresses);
@@ -138,7 +152,7 @@ public class AddressUtils {
 
 
     public static void replaceAddress(Address destination, boolean wait, TimeoutBudget timeoutBudget) throws Exception {
-        log.info("Address {} will be replaced", destination);
+        log.info("Replacing address {}", destination);
         var client = Kubernetes.getInstance().getAddressClient(destination.getMetadata().getNamespace());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS);
         Address existing = client.withName(destination.getMetadata().getName()).get();

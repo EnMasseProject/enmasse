@@ -5,7 +5,8 @@
 package io.enmasse.systemtest.scale;
 
 import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThan;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -197,11 +198,11 @@ public class ScaleTestManager {
 
                         double connectionFailuresRatio = metricsClient.getConnectFailure().getValue() / totalMadeConnections;
 
-                        assertTrue(connectionFailuresRatio < connectionFailureRatioThreshold, "Connection failures ratio is "+connectionFailuresRatio);
+                        assertThat("Connection failures ratio in client "+clientId, connectionFailuresRatio, lessThan(connectionFailureRatioThreshold));
 
                         if (metricsClient.getReconnects().getValue() > 0) {
                             double reconnectFailuresRatio = metricsClient.getFailedReconnects().getValue() / metricsClient.getReconnects().getValue();
-                            assertTrue(reconnectFailuresRatio < reconnectFailureRatioThreshold, "Reconnects failures ratio is "+reconnectFailuresRatio);
+                            assertThat("Reconnects failures ratio in client "+clientId, reconnectFailuresRatio, lessThan(reconnectFailureRatioThreshold));
                         }
 
                         AssertingConsumer<AddressType> deliveriesChecker = type -> {
@@ -224,7 +225,7 @@ public class ScaleTestManager {
                             int totalNoAcceptedDeliveries = (int) (rejected + modified);
                             double noAcceptedDeliveriesRatio = totalNoAcceptedDeliveries / (totalNoAcceptedDeliveries + accepted);
 
-                            assertTrue(noAcceptedDeliveriesRatio < notAcceptedDeliveriesRatioThreshold, type.toString() + " deliveries: accepted:"+accepted+" rejected:"+rejected+" midified:"+modified);
+                            assertThat("Deliveries in client "+clientId+" accepted:"+accepted+" rejected:"+rejected+" modified:"+modified, noAcceptedDeliveriesRatio, lessThan(notAcceptedDeliveriesRatioThreshold));
                         };
                         if (client.getAddressesType() == null) {
                             deliveriesPredicate.accept(AddressType.ANYCAST);

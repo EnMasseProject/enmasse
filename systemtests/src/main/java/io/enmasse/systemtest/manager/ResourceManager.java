@@ -59,10 +59,6 @@ public abstract class ResourceManager {
         this.defaultAddSpaceIdentifier = defaultAddSpaceIdentifier;
     }
 
-    public void disableVerboseLogging() {
-        logCollector.disableVerboseLogging();
-    }
-
     public void setAddressSpaceType(String addressSpaceType) {
         this.addressSpaceType = addressSpaceType;
     }

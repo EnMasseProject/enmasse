@@ -71,6 +71,7 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.scale.downtime.DowntimeData;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
@@ -108,10 +109,11 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
     @BeforeAll
     void disableVerboseLogging() {
-        TimeMeasuringSystem.disableResultsLogging();
+        TimeMeasuringSystem.disableVerboseLogging();
         AddressUtils.disableVerboseLogs();
-        getResourceManager().disableVerboseLogging();
-        logCollector.disableVerboseLogging();
+        AddressSpaceUtils.disableVerboseLogs();
+        GlobalLogCollector.globalDisableVerboseLogging();
+        Kubernetes.disableVerboseLogging();
     }
 
     @BeforeEach
@@ -294,6 +296,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         ScaleTestManager manager = new ScaleTestManager(endpoint, userCredentials);
 
         Executors.newSingleThreadExecutor().execute(manager::monitorMetrics);
+        LOGGER.info("Addresses creation loop started");
         while (true) {
             try {
                 List<Address> addr = getTenantAddressBatch(addressSpace);
@@ -301,6 +304,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 getResourceManager().appendAddresses(false, addr.toArray(new Address[0]));
                 if (iterator % 200 == 0) {
                     List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
+                    LOGGER.info("Created {} addresses", currentAddresses.size());
                     AddressUtils.waitForDestinationsReady(new TimeoutBudget(15, TimeUnit.MINUTES), currentAddresses.toArray(new Address[0]));
 
                     manager.deployTenantClient(addressBatch, addressesPerTenant, env.getScaleSendMessagesPeriod());
@@ -548,12 +552,13 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         }
         int addresses = 0;
         int iterator = 0;
-
+        LOGGER.info("Creating {} addresses, equivalent to {} tenants", totalAddresses, totalAddresses/addressesPerTenant);
         while (addresses < totalAddresses) {
             try {
                 getResourceManager().appendAddresses(false, getTenantAddressBatch(addressSpace).toArray(new Address[0]));
-                addresses += 5;
+                addresses += addressesPerTenant;
                 if (iterator % 200 == 0) {
+                    LOGGER.info("Created {} addresses of {}", addresses, totalAddresses);
                     List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
                     AddressUtils.waitForDestinationsReady(currentAddresses.toArray(new Address[0]));
                 }
@@ -570,6 +575,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             }
             iterator++;
         }
+        LOGGER.info("Total {} addresses created", totalAddresses);
         List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
         AddressUtils.waitForDestinationsReady(currentAddresses.toArray(new Address[0]));
         currentAddresses.sort((a1, a2) -> {
@@ -618,13 +624,17 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     }
 
     private Duration addAddressAndMeasure() throws Exception {
-        long start = System.currentTimeMillis();
-        var addresses = getTenantAddressBatch(addressSpace).toArray(new Address[0]);
-        getResourceManager().appendAddresses(false, addresses);
-        AddressUtils.waitForDestinationsReady(addresses);
-        long end = System.currentTimeMillis();
-        long duration = end - start;
-        return Duration.ofMillis(duration);
+        try {
+            long start = System.currentTimeMillis();
+            var addresses = getTenantAddressBatch(addressSpace).toArray(new Address[0]);
+            getResourceManager().appendAddresses(false, addresses);
+            AddressUtils.waitForDestinationsReady(addresses);
+            long end = System.currentTimeMillis();
+            long duration = end - start;
+            return Duration.ofMillis(duration);
+        } catch (IllegalStateException e) {
+            throw new IllegalStateException("Error when creating addresses and measuring response time", e);
+        }
     }
 
     private void checkMetrics(AtomicReference<MetricsMonitoringResult> result) {

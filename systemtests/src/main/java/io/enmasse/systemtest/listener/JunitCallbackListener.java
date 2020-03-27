@@ -191,7 +191,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     private void saveKubernetesState(String description, ExtensionContext extensionContext, Throwable throwable) throws Throwable {
-        LOGGER.error("Test failed at {}: Saving pod logs and info...", description);
+        LOGGER.error("Test failed at {}", description);
         logPodsInInfraNamespace();
         if (env.isSkipSaveState()) {
             throw throwable;
@@ -201,7 +201,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     private void logPodsInInfraNamespace() {
-        LOGGER.info("Print all pods in infra namespace");
         KubeCMDClient.runOnCluster("get", "pods", "-n", kubernetes.getInfraNamespace(), "-o", "wide");
     }
 
