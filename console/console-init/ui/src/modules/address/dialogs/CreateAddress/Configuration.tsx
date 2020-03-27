@@ -83,12 +83,9 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
   const [isTopicOpen, setIsTopicOpen] = useState<boolean>(false);
   const client = useApolloClient();
 
-  const onTypeSelect = async (event: any) => {
-    if (
-      event.currentTarget.childNodes[0] &&
-      event.currentTarget.childNodes[0].value
-    ) {
-      const type = event.currentTarget.childNodes[0].value;
+  const onTypeSelect = async (value: string) => {
+    if (value) {
+      const type = value;
       setType(type);
       const addressPlans = await client.query<IAddressPlans>({
         query: RETURN_ADDRESS_PLANS(addressSpacePlan, type)
@@ -134,24 +131,18 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
   };
 
   const [isPlanOpen, setIsPlanOpen] = useState(false);
-  const onPlanSelect = (event: any) => {
-    event.currentTarget.childNodes[0] &&
-      setPlan(event.currentTarget.childNodes[0].value);
+  const onPlanSelect = (value: string) => {
+    setPlan(value);
     setIsPlanOpen(!isPlanOpen);
   };
-  const onTopicSelect = (event: any) => {
-    event.currentTarget.childNodes[0] &&
-      setTopic(event.currentTarget.childNodes[0].value);
-    setIsTopicOpen(!isTopicOpen);
+  const onTopicSelect = (value: string) => {
+    setTopic(value);
   };
-  const { loading, error, data } = useQuery<IAddressTypes>(
-    RETURN_ADDRESS_TYPES,
-    {
-      variables: {
-        a: addressSpaceType
-      }
+  const { loading, data } = useQuery<IAddressTypes>(RETURN_ADDRESS_TYPES, {
+    variables: {
+      a: addressSpaceType
     }
-  );
+  });
   if (loading) return <Loading />;
 
   const { addressTypes_v2 } = data || {
