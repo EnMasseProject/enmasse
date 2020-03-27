@@ -7,7 +7,7 @@ const UNKNOWN: string = "unknown";
 const POLL_INTERVAL: number = 5000;
 const POLL_INTERVAL_USER: number = 20000;
 const QUERY: string = "query";
-const MAX_ITEM_TO_FETCH_IN_TYPEAHEAD_DROPDOWN = 100;
+const MAX_ITEM_TO_FETCH_IN_TYPEAHEAD_DROPDOWN = 10;
 const NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA = 10;
 const TYPEAHEAD_REQUIRED_LENGTH: number = 5;
 enum FetchPolicy {

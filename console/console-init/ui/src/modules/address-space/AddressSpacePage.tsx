@@ -15,14 +15,16 @@ import {
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
 import { useMutation } from "@apollo/react-hooks";
-import { IAddressSpace, AddressSpaceToolbar } from "./components";
-import { AddressSpaceListContainer } from "./containers";
+import { IAddressSpace } from "./components";
+import {
+  AddressSpaceListContainer,
+  MessagingToolbarContainer
+} from "./containers";
 import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
 import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { getHeaderForDeleteDialog, getDetailForDeleteDialog } from "./utils";
 import { TablePagination } from "components";
-import { ASToolbar } from "./containers/AddressSpaceFilterContainer/ASToolbar";
 
 export default function AddressSpacePage() {
   const { dispatch } = useStoreContext();
@@ -150,18 +152,15 @@ export default function AddressSpacePage() {
 
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <ASToolbar />
-      <br />
-      <br />
       <Grid>
         <GridItem span={7}>
-          <AddressSpaceToolbar
-            filterNames={filterNames}
-            setFilterNames={setFilterNames}
-            filterNamespaces={filterNamespaces}
-            setFilterNamespaces={setFilterNamespaces}
-            filterType={filterType}
-            setFilterType={setFilterType}
+          <MessagingToolbarContainer
+            selectedNames={filterNames}
+            setSelectedNames={setFilterNames}
+            selectedNamespaces={filterNamespaces}
+            setSelectedNamespaces={setFilterNamespaces}
+            typeSelected={filterType}
+            setTypeSelected={setFilterType}
             totalAddressSpaces={totalAddressSpaces}
             sortValue={sortDropDownValue}
             setSortValue={setSortDropdownValue}
