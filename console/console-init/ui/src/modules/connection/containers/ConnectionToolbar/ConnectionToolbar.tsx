@@ -16,9 +16,6 @@ import {
   DataToolbarChipGroup
 } from "@patternfly/react-core/dist/js/experimental";
 import {
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
   InputGroup,
   Button,
   ButtonVariant,
@@ -26,11 +23,16 @@ import {
   SelectOption,
   SelectOptionObject,
   Select,
-  SelectVariant
+  SelectVariant,
+  DropdownPosition
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { ISortBy } from "@patternfly/react-table";
-import { useWindowDimensions, SortForMobileView } from "components";
+import {
+  useWindowDimensions,
+  SortForMobileView,
+  DropdownWithToggle
+} from "components";
 import { RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "graphql-module/queries";
 import { IConnectionListNameSearchResponse } from "schema/ResponseTypes";
 import {
@@ -68,11 +70,8 @@ export const ConnectionToolbar: React.FunctionComponent<IConnectionToolbarProps>
 }) => {
   const { width } = useWindowDimensions();
   const client = useApolloClient();
-  const [filterIsExpanded, setFilterIsExpanded] = useState(false);
-
-  const onFilterSelect = (event: any) => {
-    setFilterValue(event.target.value);
-    setFilterIsExpanded(!filterIsExpanded);
+  const onFilterSelect = (value: string) => {
+    setFilterValue(value);
   };
   const [isSelectHostnameExpanded, setIsSelectHostnameExpanded] = useState<
     boolean
@@ -334,31 +333,19 @@ export const ConnectionToolbar: React.FunctionComponent<IConnectionToolbarProps>
     <>
       <DataToolbarGroup variant="filter-group">
         <DataToolbarFilter categoryName="Filter">
-          <Dropdown
+          <DropdownWithToggle
             id="cl-filter-dropdown"
-            position="left"
-            onSelect={onFilterSelect}
-            isOpen={filterIsExpanded}
-            toggle={
-              <DropdownToggle onToggle={setFilterIsExpanded}>
+            position={DropdownPosition.left}
+            dropdownItems={filterMenuItems}
+            dropdownItemIdPrefix="cl-filter-dropdown-item"
+            value={(filterValue && filterValue.trim()) || "Filter"}
+            onSelectItem={onFilterSelect}
+            toggleIcon={
+              <>
                 <FilterIcon />
                 &nbsp;
-                {filterValue && filterValue.trim() !== ""
-                  ? filterValue
-                  : "Filter"}
-              </DropdownToggle>
+              </>
             }
-            dropdownItems={filterMenuItems.map(option => (
-              <DropdownItem
-                id={`cl-filter-dropdown-item${option.key}`}
-                key={option.key}
-                value={option.value}
-                itemID={option.key}
-                component={"button"}
-              >
-                {option.value}
-              </DropdownItem>
-            ))}
           />
         </DataToolbarFilter>
         <DataToolbarItem>

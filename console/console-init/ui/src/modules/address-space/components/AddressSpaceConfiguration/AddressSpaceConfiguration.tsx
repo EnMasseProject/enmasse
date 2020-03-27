@@ -19,7 +19,8 @@ import { DropdownWithToggle, IDropdownOption } from "components";
 export const dropdown_item_styles = StyleSheet.create({
   format_item: { whiteSpace: "normal", textAlign: "justify" },
   dropdown_align: { display: "flex" },
-  dropdown_toggle_align: { flex: "1" }
+  dropdown_toggle_align: { flex: "1" },
+  dropdown_item: { fontWeight: "bold" }
 });
 
 export interface IPlanOption {
@@ -83,10 +84,10 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                 id="cas-dropdown-namespace"
                 className={css(dropdown_item_styles.dropdown_align)}
                 toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
+                dropdownItemClass={dropdown_item_styles.dropdown_item}
                 position={DropdownPosition.left}
                 onSelectItem={onNameSpaceSelect}
                 dropdownItems={namespaceOptions}
-                isItemDisplayBold={true}
                 value={namespace}
               />
             </FormGroup>
@@ -148,9 +149,9 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                 onSelectItem={onPlanSelect}
                 className={css(dropdown_item_styles.dropdown_align)}
                 toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
+                dropdownItemClass={dropdown_item_styles.dropdown_item}
                 dropdownItems={planOptions}
                 isDisabled={type.trim() === ""}
-                isItemDisplayBold={true}
                 value={plan}
               />
             </FormGroup>
@@ -166,9 +167,9 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                 onSelectItem={onAuthenticationServiceSelect}
                 className={css(dropdown_item_styles.dropdown_align)}
                 toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
+                dropdownItemClass={dropdown_item_styles.dropdown_item}
                 dropdownItems={authenticationServiceOptions}
                 isDisabled={type.trim() === ""}
-                isItemDisplayBold={true}
                 value={authenticationService}
               />
             </FormGroup>
