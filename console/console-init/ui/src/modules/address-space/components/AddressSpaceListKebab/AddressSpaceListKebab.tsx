@@ -11,13 +11,8 @@ import {
   OverflowMenuItem,
   OverflowMenuControl
 } from "@patternfly/react-core/dist/js/experimental";
-import {
-  Dropdown,
-  DropdownItem,
-  Button,
-  ButtonVariant,
-  KebabToggle
-} from "@patternfly/react-core";
+import { DropdownItem, Button, ButtonVariant } from "@patternfly/react-core";
+import { DropdownWithKebabToggle } from "components";
 
 export interface IAddressSpaceListKebabProps {
   onCreateAddressSpace: () => void;
@@ -30,12 +25,6 @@ export const AddressSpaceListKebab: React.FC<IAddressSpaceListKebabProps> = ({
   onCreateAddressSpace,
   onSelectDeleteAll
 }) => {
-  const [isKebabOpen, setIsKebabOpen] = useState(false);
-
-  const onKebabToggle = (isOpen: boolean) => {
-    setIsKebabOpen(isOpen);
-  };
-
   const dropdownItems = [
     <DropdownItem
       id="as-list-delete-all"
@@ -66,18 +55,11 @@ export const AddressSpaceListKebab: React.FC<IAddressSpaceListKebabProps> = ({
           </OverflowMenuGroup>
         </OverflowMenuContent>
         <OverflowMenuControl hasAdditionalOptions>
-          <Dropdown
+          <DropdownWithKebabToggle
             id="al-filter-overflow-dropdown"
             onSelect={onSelectDeleteAll}
-            toggle={
-              <KebabToggle
-                id="al-filter-overflow-kebab"
-                onToggle={onKebabToggle}
-              />
-            }
-            isOpen={isKebabOpen}
-            isPlain
             dropdownItems={dropdownItems}
+            isPlain
           />
         </OverflowMenuControl>
       </OverflowMenu>

@@ -20,6 +20,7 @@ import {
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { TypeBadge } from "modules/address-detail/components";
 import { AddressTypes } from "constant";
+import { DropdownWithKebabToggle } from "components";
 
 export interface IAddressDetailHeaderProps {
   type: string;
@@ -69,14 +70,6 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
   onDelete,
   onPurge
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const onSelect = (result: any) => {
-    setIsOpen(!isOpen);
-  };
-  const onToggle = () => {
-    setIsOpen(!isOpen);
-  };
-
   const AddressTitle = () => (
     <Split gutter="md">
       <SplitItem>
@@ -162,13 +155,11 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
       );
     }
     return (
-      <Dropdown
+      <DropdownWithKebabToggle
         id="adheader-dropdown"
-        onSelect={onSelect}
-        position={DropdownPosition.right}
-        toggle={<KebabToggle id="adheader-kebab" onToggle={onToggle} />}
-        isOpen={isOpen}
         isPlain={true}
+        position={DropdownPosition.right}
+        toggleId="adheader-kebab"
         dropdownItems={dropdownItems}
       />
     );

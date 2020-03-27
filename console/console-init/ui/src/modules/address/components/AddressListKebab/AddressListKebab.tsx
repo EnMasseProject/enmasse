@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  DropdownItem,
-  Button,
-  ButtonVariant,
-  Dropdown,
-  KebabToggle
-} from "@patternfly/react-core";
+import { DropdownItem, Button, ButtonVariant } from "@patternfly/react-core";
 import {
   OverflowMenu,
   OverflowMenuContent,
@@ -13,6 +7,7 @@ import {
   OverflowMenuItem,
   OverflowMenuControl
 } from "@patternfly/react-core/dist/js/experimental";
+import { DropdownWithKebabToggle } from "components";
 
 interface IAddressListKebabProps {
   createAddressOnClick: () => void;
@@ -29,7 +24,6 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
   isDeleteAllDisabled,
   isPurgeAllDisabled
 }) => {
-  const [isKebabOpen, setIsKebabOpen] = useState(false);
   const dropdownItems = [
     <DropdownItem
       id="al-filter-dropdown-item-deleteall"
@@ -50,9 +44,6 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
       Purge Selected
     </DropdownItem>
   ];
-  const onKebabToggle = (isOpen: boolean) => {
-    setIsKebabOpen(isOpen);
-  };
 
   const onKebabSelect = async (event: any) => {
     if (event.target.value) {
@@ -62,7 +53,6 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
         await onDeleteAllAddress();
       }
     }
-    setIsKebabOpen(!isKebabOpen);
   };
   return (
     <>
@@ -82,18 +72,11 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
           </OverflowMenuGroup>
         </OverflowMenuContent>
         <OverflowMenuControl hasAdditionalOptions>
-          <Dropdown
+          <DropdownWithKebabToggle
             id="al-filter-overflow-dropdown"
             onSelect={onKebabSelect}
-            toggle={
-              <KebabToggle
-                id="al-filter-overflow-kebab"
-                onToggle={onKebabToggle}
-              />
-            }
-            isOpen={isKebabOpen}
-            isPlain
             dropdownItems={dropdownItems}
+            isPlain
           />
         </OverflowMenuControl>
       </OverflowMenu>
