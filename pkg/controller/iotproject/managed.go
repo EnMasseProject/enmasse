@@ -119,7 +119,7 @@ func updateManagedStatus(managedStatus *managedStatus, project *iotv1alpha1.IoTP
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
+func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, _ *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
 
 	now := time.Now()
 
@@ -318,6 +318,7 @@ func (r *ReconcileIoTProject) reconcileAddressSpace(ctx context.Context, project
 			managedStatus.remainingCreated[resourceTypeAddressSpace] = false
 			// re-try later to re-create
 			retryDelay = 10 * time.Second
+			log.Info("Re-queue: Address space scheduled for deletion, wait before re-creating")
 			return nil
 		}
 
@@ -368,13 +369,13 @@ func (r *ReconcileIoTProject) reconcileAdapterUser(ctx context.Context, project 
 
 	if err == nil {
 		managedStatus.remainingCreated[resourceTypeAdapterUser] = true
-		managedStatus.remainingReady[resourceTypeAdapterUser] = (adapterUser.Status.Phase == userv1beta1.UserActive)
+		managedStatus.remainingReady[resourceTypeAdapterUser] = adapterUser.Status.Phase == userv1beta1.UserActive
 	}
 
 	return reconcile.Result{}, err
 }
 
-func (r *ReconcileIoTProject) reconcileAddress(project *iotv1alpha1.IoTProject, strategy *iotv1alpha1.ManagedDownstreamStrategy, addressName string, plan string, typeName string, existing *enmassev1beta1.Address) error {
+func (r *ReconcileIoTProject) reconcileAddress(project *iotv1alpha1.IoTProject, _ *iotv1alpha1.ManagedDownstreamStrategy, addressName string, plan string, typeName string, existing *enmassev1beta1.Address) error {
 
 	if err := r.ensureControllerOwnerIsSet(project, existing); err != nil {
 		return err

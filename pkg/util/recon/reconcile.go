@@ -7,6 +7,7 @@ package recon
 
 import (
 	"context"
+	"github.com/enmasseproject/enmasse/pkg/util"
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -14,7 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/enmasseproject/enmasse/pkg/util"
 	"go.uber.org/multierr"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -49,7 +49,13 @@ func (r *ReconcileContext) AddResult(result reconcile.Result, err error) {
 		if result.Requeue {
 			r.requeue = true
 		}
-		r.requeueAfter = util.MaxDuration(r.requeueAfter, result.RequeueAfter)
+		if result.RequeueAfter > 0 {
+			if r.requeueAfter > 0 {
+				r.requeueAfter = util.MinDuration(r.requeueAfter, result.RequeueAfter)
+			} else {
+				r.requeueAfter = result.RequeueAfter
+			}
+		}
 	}
 }
 
@@ -57,13 +63,18 @@ func (r *ReconcileContext) NeedRequeue() bool {
 	return r.requeue || r.requeueAfter > 0
 }
 
+// Returns the plain result, with no error information.
+func (r *ReconcileContext) PlainResult() reconcile.Result {
+	return reconcile.Result{
+		Requeue:      r.requeue,
+		RequeueAfter: r.requeueAfter,
+	}
+}
+
 func (r *ReconcileContext) Error() error {
 	return r.error
 }
 
 func (r *ReconcileContext) Result() (reconcile.Result, error) {
-	return reconcile.Result{
-		Requeue:      r.requeue,
-		RequeueAfter: r.requeueAfter,
-	}, r.error
+	return r.PlainResult(), r.error
 }

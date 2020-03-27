@@ -142,7 +142,7 @@ func TestReconcile(t *testing.T) {
 	// First iteration should add the finalizer
 	result, err := r.Reconcile(reconcile.Request{NamespacedName: userType})
 	assert.Nil(t, err, "Unexpected reconcile error")
-	assert.True(t, result.Requeue)
+	assert.False(t, result.Requeue)
 
 	// Refetch
 	err = r.client.Get(context.TODO(), userType, user)
@@ -191,6 +191,6 @@ func TestReconcile(t *testing.T) {
 
 	result, err = r.Reconcile(reconcile.Request{NamespacedName: userType})
 	assert.Nil(t, err, "Unexpected reconcile error")
-	assert.True(t, result.Requeue)
+	assert.False(t, result.Requeue)
 	assert.Equal(t, 0, len(getFake(r.keycloakCache.get("standard")).Users["realm1"]))
 }

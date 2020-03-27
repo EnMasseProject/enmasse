@@ -7,7 +7,8 @@ package iotproject
 
 import (
 	"context"
-	"fmt"
+	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/loghandler"
 	"k8s.io/client-go/tools/record"
 	"reflect"
 
@@ -62,36 +63,37 @@ func add(mgr manager.Manager, r *ReconcileIoTProject) error {
 	}
 
 	// Watch for changes to primary resource IoTProject
-	err = c.Watch(&source.Kind{Type: &iotv1alpha1.IoTProject{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &iotv1alpha1.IoTProject{}}, loghandler.New(&handler.EnqueueRequestForObject{}, log, "IoTProject"))
 	if err != nil {
 		return err
 	}
 
 	// watch for messaging users
 
-	err = c.Watch(&source.Kind{Type: &userv1beta1.MessagingUser{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &userv1beta1.MessagingUser{}}, loghandler.New(&handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &iotv1alpha1.IoTProject{},
-	})
+	}, log.V(2), "MessagingUser"))
 	if err != nil {
 		return err
 	}
 
 	// watch for addresses
 
-	err = c.Watch(&source.Kind{Type: &enmassev1beta1.Address{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &enmassev1beta1.Address{}}, loghandler.New(&handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &iotv1alpha1.IoTProject{},
-	})
+	}, log.V(2), "Address"))
 	if err != nil {
 		return err
 	}
 
 	// Watch for address spaces
 
-	err = c.Watch(&source.Kind{Type: &enmassev1beta1.AddressSpace{}}, &handler.EnqueueRequestForOwner{
-		OwnerType: &iotv1alpha1.IoTProject{},
-	})
+	err = c.Watch(&source.Kind{Type: &enmassev1beta1.AddressSpace{}}, loghandler.New(&handler.EnqueueRequestForOwner{
+		IsController: false,
+		OwnerType:    &iotv1alpha1.IoTProject{},
+	}, log.V(2), "AddressSpace"))
 	if err != nil {
 		return err
 	}
@@ -110,7 +112,9 @@ type ReconcileIoTProject struct {
 	recorder record.EventRecorder
 }
 
-func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalProject *iotv1alpha1.IoTProject, reconciledProject *iotv1alpha1.IoTProject, currentError error) (reconcile.Result, error) {
+func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalProject *iotv1alpha1.IoTProject, reconciledProject *iotv1alpha1.IoTProject, rc *recon.ReconcileContext) (reconcile.Result, error) {
+
+	reqLogger := log.WithValues("Request.Namespace", originalProject.Namespace, "Request.Name", originalProject.Name)
 
 	newProject := reconciledProject.DeepCopy()
 
@@ -132,7 +136,7 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 
 		// eval ready state
 
-		if currentError == nil &&
+		if rc.Error() == nil &&
 			resourcesCreatedCondition.IsOk() &&
 			resourcesReadyCondition.IsOk() &&
 			newProject.Status.DownstreamEndpoint != nil {
@@ -151,9 +155,9 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 		var reason = ""
 		var message = ""
 		var status = corev1.ConditionUnknown
-		if currentError != nil {
+		if rc.Error() != nil {
 			reason = "ProcessingError"
-			message = currentError.Error()
+			message = rc.Error().Error()
 		}
 		if newProject.Status.Phase == iotv1alpha1.ProjectPhaseActive {
 			status = corev1.ConditionTrue
@@ -165,15 +169,38 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 	}
 
 	// update status
-	var err error = nil
+
 	if !reflect.DeepEqual(newProject, originalProject) {
-		log.Info("Project changed, updating status")
-		err = r.client.Status().Update(ctx, newProject)
+
+		reqLogger.Info("Project changed, updating status")
+		err := r.client.Status().Update(ctx, newProject)
+
+		// when something changed, we never ask for being re-queued
+		// but we do return the update error, which might re-trigger us
+
+		return reconcile.Result{}, err
+
+	} else {
+
+		reqLogger.Info("No project change", "needRequeue", rc.NeedRequeue())
+
+		if rc.Error() != nil && util.OnlyNonRecoverableErrors(rc.Error()) {
+
+			// we cannot recover based on the error, so don't report back that error, but record it
+
+			reqLogger.Info("Only non-recoverable errors", "error", rc.Error())
+			r.recorder.Event(originalProject, corev1.EventTypeWarning, "ReconcileError", rc.Error().Error())
+			return rc.PlainResult(), nil
+
+		} else {
+
+			// no change, just return the result, may re-queue
+
+			return rc.Result()
+
+		}
+
 	}
-
-	// return
-
-	return reconcile.Result{}, err
 
 }
 
@@ -182,13 +209,13 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 // returning an error will get the request re-queued
 func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling IoTProject")
+	reqLogger.V(2).Info("Reconciling IoTProject")
+
+	ctx := context.Background()
 
 	// Get project
 	project := &iotv1alpha1.IoTProject{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, project)
-
-	ctx := context.TODO()
+	err := r.client.Get(ctx, request.NamespacedName, project)
 
 	if err != nil {
 
@@ -206,26 +233,43 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
+	// make copy for change detection
+
 	original := project.DeepCopy()
+
 	// start reconcile process
 
 	rc := &recon.ReconcileContext{}
 
 	if project.DeletionTimestamp != nil && project.Status.Phase != iotv1alpha1.ProjectPhaseTerminating {
-		rc.Process(func() (result reconcile.Result, e error) {
-			return r.updateProjectStatus(ctx, original, project, nil)
-		})
-		return rc.Result()
+		reqLogger.Info("Re-queue after setting phase to terminating")
+		return r.updateProjectStatus(ctx, original, project, &recon.ReconcileContext{})
 	}
+
+	// process finalizers
 
 	rc.Process(func() (result reconcile.Result, e error) {
 		return finalizer.ProcessFinalizers(ctx, r.client, r.reader, r.recorder, project, finalizers)
 	})
 
-	if rc.Error() != nil || rc.NeedRequeue() {
-		log.Info("Re-queue after processing finalizers")
-		// processing finalizers required to requeue already, or failed
+	if rc.Error() != nil {
+		reqLogger.Error(rc.Error(), "Failed to process finalizers")
+		// processing finalizers failed
 		return rc.Result()
+	}
+
+	if rc.NeedRequeue() {
+		// persist changes from finalizers, this is signaled to use via "need requeue"
+		// Note: we cannot use "updateProjectStatus" here, as we don't update the status section
+		reqLogger.Info("Re-queue after processing finalizers")
+		if !reflect.DeepEqual(project, original) {
+			err := r.client.Update(ctx, project)
+			return reconcile.Result{}, err
+		} else {
+			return rc.Result()
+		}
+		// processing the finalizers required a persist step, and so we stop early
+		// the call to Update will re-trigger us, and we don't need to set "requeue"
 	}
 
 	// set the tenant name in the status section
@@ -239,41 +283,35 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 		// handling as external
 		// all information has to be externally configured, we are not managing anything
 
-		reqLogger.Info("Handle as external")
+		reqLogger.V(2).Info("Handle as external")
 
 		rc.Process(func() (result reconcile.Result, e error) {
 			return r.reconcileExternal(ctx, &request, project)
 		})
-		rc.Process(func() (result reconcile.Result, e error) {
-			return r.updateProjectStatus(ctx, original, project, rc.Error())
-		})
+		return r.updateProjectStatus(ctx, original, project, rc)
 
 	} else if project.Spec.DownstreamStrategy.ProvidedDownstreamStrategy != nil {
 
 		// handling as provided
 
-		reqLogger.Info("Handle as provided")
+		reqLogger.V(2).Info("Handle as provided")
 
 		rc.Process(func() (result reconcile.Result, e error) {
 			return r.reconcileProvided(ctx, &request, project)
 		})
-		rc.Process(func() (result reconcile.Result, e error) {
-			return r.updateProjectStatus(ctx, original, project, rc.Error())
-		})
+		return r.updateProjectStatus(ctx, original, project, rc)
 
 	} else if project.Spec.DownstreamStrategy.ManagedDownstreamStrategy != nil {
 
 		// handling as managed
 		// we create the addressspace, addresses and internal users
 
-		reqLogger.Info("Handle as managed")
+		reqLogger.V(2).Info("Handle as managed")
 
 		rc.Process(func() (result reconcile.Result, e error) {
 			return r.reconcileManaged(ctx, &request, project)
 		})
-		rc.Process(func() (result reconcile.Result, e error) {
-			return r.updateProjectStatus(ctx, original, project, rc.Error())
-		})
+		return r.updateProjectStatus(ctx, original, project, rc)
 
 	} else {
 
@@ -282,17 +320,12 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 		reqLogger.Info("Missing or unknown downstream strategy")
 
-		rc.Process(func() (result reconcile.Result, e error) {
-			err := fmt.Errorf("missing or unknown downstream strategy")
-			return r.updateProjectStatus(ctx, original, project, err)
+		// add error to rc
+		rc.ProcessSimple(func() error {
+			return util.NewConfigurationError("missing or unknown downstream strategy")
 		})
+		return r.updateProjectStatus(ctx, original, project, rc)
 
 	}
-
-	if rc.NeedRequeue() {
-		log.Info("Re-queue scheduled")
-	}
-
-	return rc.Result()
 
 }
