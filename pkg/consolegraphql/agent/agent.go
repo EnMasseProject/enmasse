@@ -25,7 +25,7 @@ import (
 
 type Delegate interface {
 	Collect(handler EventHandler) error
-	CommandDelegate(bearerToken string) (CommandDelegate, error)
+	CommandDelegate(bearerToken string, impersonateUser string) (CommandDelegate, error)
 	Shutdown()
 }
 
@@ -140,7 +140,7 @@ func (aad *amqpAgentDelegate) doCollect() error {
 
 	client, err := amqp.Dial(addr,
 		amqp.ConnTLSConfig(aad.tlsConfig),
-		amqp.ConnSASLXOAUTH2("unused", aad.bearerToken, amqpOverrideSaslFrameSize),
+		amqp.ConnSASLXOAUTH2("", aad.bearerToken, amqpOverrideSaslFrameSize),
 		amqp.ConnServerHostname(aad.host),
 		amqp.ConnProperty("product", "console-server"),
 		amqp.ConnConnectTimeout(aad.connectTimeout),
@@ -282,7 +282,7 @@ func (aad *amqpAgentDelegate) doCollect() error {
 	}
 }
 
-func (aad *amqpAgentDelegate) CommandDelegate(bearerToken string) (CommandDelegate, error) {
+func (aad *amqpAgentDelegate) CommandDelegate(bearerToken string, impersonateUser string) (CommandDelegate, error) {
 	aad.commandDelegatesMux.Lock()
 	defer aad.commandDelegatesMux.Unlock()
 
@@ -290,7 +290,7 @@ func (aad *amqpAgentDelegate) CommandDelegate(bearerToken string) (CommandDelega
 
 	now := time.Now()
 	if pair, present := aad.commandDelegates[key]; !present {
-		delegate := aad.newAgentDelegate(bearerToken)
+		delegate := aad.newAgentDelegate(bearerToken, impersonateUser)
 		aad.commandDelegates[key] = commandDelegatePair{
 			delegate: delegate,
 			lastUsed: now,
@@ -351,20 +351,22 @@ type agentCommandRequest struct {
 }
 
 type amqpAgentCommandDelegate struct {
-	bearerToken string
-	aac         *amqpAgentDelegate
-	request     chan *agentCommandRequest
-	stopped     chan struct{}
-	lastUsed    time.Time
+	bearerToken     string
+	impersonateUser string
+	aac             *amqpAgentDelegate
+	request         chan *agentCommandRequest
+	stopped         chan struct{}
+	lastUsed        time.Time
 }
 
-func (aad *amqpAgentDelegate) newAgentDelegate(token string) CommandDelegate {
+func (aad *amqpAgentDelegate) newAgentDelegate(token string, impersonateUser string) CommandDelegate {
 	a := &amqpAgentCommandDelegate{
-		bearerToken: token,
-		aac:         aad,
-		request:     make(chan *agentCommandRequest),
-		stopped:     make(chan struct{}),
-		lastUsed:    time.Now(),
+		bearerToken:     token,
+		impersonateUser: impersonateUser,
+		aac:             aad,
+		request:         make(chan *agentCommandRequest),
+		stopped:         make(chan struct{}),
+		lastUsed:        time.Now(),
 	}
 
 	a.connectAndProcessCommandsForever()
@@ -434,7 +436,7 @@ func (ad *amqpAgentCommandDelegate) doProcess(addr string) error {
 
 	client, err := amqp.Dial(addr,
 		amqp.ConnTLSConfig(ad.aac.tlsConfig),
-		amqp.ConnSASLXOAUTH2("unused", ad.bearerToken, amqpOverrideSaslFrameSize),
+		amqp.ConnSASLXOAUTH2(ad.impersonateUser, ad.bearerToken, amqpOverrideSaslFrameSize),
 		amqp.ConnServerHostname(ad.aac.host),
 		amqp.ConnProperty("product", "command-delegate; console-server"),
 		amqp.ConnConnectTimeout(ad.aac.connectTimeout),

@@ -25,6 +25,7 @@ MODULES=\
 	console-server \
 	example-roles \
 	example-plans \
+	example-console \
 	example-authservices \
 	example-olm \
 	iot/examples \

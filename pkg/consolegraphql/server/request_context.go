@@ -19,6 +19,7 @@ type RequestState struct {
 	User                 string
 	UserAccessToken      string
 	UseSession           bool
+	ImpersonateUser      bool
 }
 
 func ContextWithRequestState(requestState *RequestState, ctx context.Context) context.Context {

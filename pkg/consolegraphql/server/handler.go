@@ -17,6 +17,7 @@ import (
 	"github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 	"log"
@@ -32,55 +33,93 @@ const loggedOnUserSessionAttribute = "loggedOnUserSessionAttribute"
 var bearerRegexp = regexp.MustCompile(`^Bearer +(.*)$`)
 
 const forwardedHeader = "X-Forwarded-Access-Token"
+const forwardedUserHeader = "X-Forwarded-User"
 const authHeader = "Authorization"
 
-func AuthHandler(next http.Handler, sessionManager *scs.SessionManager) http.Handler {
+type ImpersonationConfig struct {
+	UserHeader *string
+}
+
+func getImpersonatedUser(req *http.Request, impersonationConfig *ImpersonationConfig) string {
+	if impersonationConfig != nil {
+		userHeader := forwardedUserHeader
+		if impersonationConfig.UserHeader != nil {
+			userHeader = *impersonationConfig.UserHeader
+		}
+		return req.Header.Get(userHeader)
+	}
+	return ""
+}
+
+func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, impersonationConfig *ImpersonationConfig) http.Handler {
 
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		var state *RequestState
 
-		accessToken := getAccessToken(req)
 		useSession := true
 		if healthProbe, _ := strconv.ParseBool(req.Header.Get("X-Health")); healthProbe {
 			useSession = false
 		}
 
+		accessToken := getAccessToken(req)
 		if accessToken == "" {
 			http.Error(rw, "No access token", http.StatusUnauthorized)
 			rw.WriteHeader(401)
 			return
 		}
 
-		accessTokenSha := getShaSum(accessToken)
+		impersonatedUser := getImpersonatedUser(req, impersonationConfig)
+
+		sessionSha, err := getShaSum(accessToken, impersonatedUser)
+
+		if err != nil {
+			http.Error(rw, "Error computing SHA256 digest", http.StatusInternalServerError)
+			rw.WriteHeader(500)
+		}
 
 		if useSession {
 			if sessionManager.Exists(req.Context(), sessionOwnerSessionAttribute) {
 				sessionOwnerAccessTokenSha := sessionManager.Get(req.Context(), sessionOwnerSessionAttribute).([]byte)
-				if !bytes.Equal(sessionOwnerAccessTokenSha, accessTokenSha) {
+				if !bytes.Equal(sessionOwnerAccessTokenSha, sessionSha) {
 					// This session must have belonged to a different accessToken, destroy it.
 					// New session created automatically.
 					_ = sessionManager.Destroy(req.Context())
-					sessionManager.Put(req.Context(), sessionOwnerSessionAttribute, accessTokenSha)
+					sessionManager.Put(req.Context(), sessionOwnerSessionAttribute, sessionSha)
 				}
 			} else {
-				sessionManager.Put(req.Context(), sessionOwnerSessionAttribute, accessTokenSha)
+				sessionManager.Put(req.Context(), sessionOwnerSessionAttribute, sessionSha)
 			}
 		}
 
-		kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-			clientcmd.NewDefaultClientConfigLoadingRules(),
-			&clientcmd.ConfigOverrides{
-				AuthInfo: api.AuthInfo{
-					Token: accessToken,
+		var kubeConfig clientcmd.ClientConfig
+		if impersonationConfig != nil {
+			kubeConfig = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+				clientcmd.NewDefaultClientConfigLoadingRules(),
+				&clientcmd.ConfigOverrides{},
+			)
+		} else {
+			kubeConfig = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+				clientcmd.NewDefaultClientConfigLoadingRules(),
+				&clientcmd.ConfigOverrides{
+					AuthInfo: api.AuthInfo{
+						Token: accessToken,
+					},
 				},
-			},
-		)
+			)
+		}
 
 		config, err := kubeConfig.ClientConfig()
 
-		//config.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
-		//	return &server.Tracer{RoundTripper: rt}
-		//}
+		// Set impersonation configuration options if they are provided.
+		if impersonatedUser != "" {
+			config.Impersonate = restclient.ImpersonationConfig{
+				UserName: impersonatedUser,
+			}
+		}
+
+		// config.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
+		// 	return &Tracer{RoundTripper: rt}
+		// }
 
 		kubeClient, err := kubernetes.NewForConfig(config)
 		if err != nil {
@@ -103,7 +142,12 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 			return
 		}
 
-		loggedOnUser := getLoggedOnUser(useSession, sessionManager, req, userClient)
+		var loggedOnUser string
+		if impersonationConfig != nil {
+			loggedOnUser = impersonatedUser
+		} else {
+			loggedOnUser = getLoggedOnUser(useSession, sessionManager, req, userClient)
+		}
 
 		var accessControllerState interface{}
 		if useSession {
@@ -111,14 +155,14 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager) http.Han
 		}
 
 		controller := accesscontroller.NewKubernetesRBACAccessController(kubeClient, accessControllerState)
-
 		state = &RequestState{
 			UserInterface:        userClient.Users(),
 			EnmasseV1beta1Client: coreClient,
 			AccessController:     controller,
 			User:                 loggedOnUser,
-			UserAccessToken:      accessToken,
+			UserAccessToken:      config.BearerToken,
 			UseSession:           useSession,
+			ImpersonateUser:      impersonationConfig != nil,
 		}
 
 		ctx := ContextWithRequestState(state, req.Context())
@@ -166,6 +210,7 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 			User:                 loggedOnUser,
 			UserAccessToken:      accessToken,
 			UseSession:           true,
+			ImpersonateUser:      false,
 		}
 
 		ctx := ContextWithRequestState(requestState, req.Context())
@@ -215,9 +260,19 @@ func getLoggedOnUser(useSession bool, sessionManager *scs.SessionManager, req *h
 	return loggedOnUser
 }
 
-func getShaSum(accessToken string) []byte {
-	accessTokenSha := sha256.Sum256([]byte(accessToken))
-	return accessTokenSha[:]
+func getShaSum(accessToken string, impersonationUser string) ([]byte, error) {
+	d := sha256.New()
+	_, err := d.Write([]byte(accessToken))
+	if err != nil {
+		return nil, err
+	}
+	_, err = d.Write([]byte(impersonationUser))
+	if err != nil {
+		return nil, err
+	}
+
+	shaSum := d.Sum(nil)
+	return shaSum[:], nil
 }
 
 func getAccessToken(req *http.Request) string {

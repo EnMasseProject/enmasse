@@ -1,0 +1,10 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: enmasse
+  name: enmasse.io:console-server-impersonate
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "users" ]
+    verbs: [ "impersonate"]

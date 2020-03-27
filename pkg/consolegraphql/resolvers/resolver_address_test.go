@@ -391,7 +391,7 @@ func (mcd *mockCommandDelegate) Shutdown() {
 	panic("unused")
 }
 
-func (mc *mockCollector) CommandDelegate(bearerToken string) (agent.CommandDelegate, error) {
+func (mc *mockCollector) CommandDelegate(bearerToken string, impersonateUser string) (agent.CommandDelegate, error) {
 	if delegate, present := mc.delegates[bearerToken]; present {
 		return delegate, nil
 	} else {
@@ -444,7 +444,7 @@ func TestPurgeQueue(t *testing.T) {
 	assert.NoError(t, err)
 
 	collector := r.GetCollector(infraUuid)
-	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken)
+	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken, "")
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, delegate.(*mockCommandDelegate).purgeCount)

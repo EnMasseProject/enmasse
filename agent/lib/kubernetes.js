@@ -54,7 +54,7 @@ function read(file) {
 }
 
 function get_options(options, path) {
-    return {
+    var opts = {
         hostname: options.host || process.env.KUBERNETES_SERVICE_HOST,
         port: options.port || process.env.KUBERNETES_SERVICE_PORT,
         rejectUnauthorized: false,
@@ -65,6 +65,10 @@ function get_options(options, path) {
             'Content-Type': 'application/json',
         }
     };
+    if (options.impersonateUser !== undefined) {
+        opts.headers['Impersonate-User'] = options.impersonateUser;
+    }
+    return opts;
 }
 
 function get_path(base, resource, options, timeout) {
@@ -422,6 +426,53 @@ module.exports.self_subject_access_review = function (options, namespace, verb, 
         });
     });
 };
+
+module.exports.whois = function (token) {
+    var opts = get_options({}, "/apis/authentication.k8s.io/v1/tokenreviews");
+    var object = {
+        kind: "TokenReview",
+        apiVersion: "authentication.k8s.io/v1",
+        spec: {
+            token: token
+        },
+        status: {authenticated: false}
+    };
+
+    return new Promise(function (resolve, reject) {
+        do_request('POST', JSON.stringify(object), opts, true).then(({statusCode, body}) =>
+        {
+            try {
+                if (body) {
+                    var result = JSON.parse(body);
+                    if (result && "status" in result) {
+                        var status = result["status"];
+                        var authenticated = status["authenticated"];
+                        var user = status["user"];
+                        var reason = status["error"];
+                        if (!authenticated) {
+                            reject(new Error(reason));
+                        } else {
+                            var response = {
+                                username: user.username,
+                                authenticated: authenticated,
+                                reason: reason
+                            };
+                            resolve(response);
+                        }
+                        return;
+                    }
+                    reject(new Error("Unexpectedly formed TokenReview response  : " + body));
+                } else {
+                    reject(new Error("Unexpectedly TokenReview response status code  : " + statusCode + " response body" + body));
+                }
+            } catch (e) {
+                reject(e);
+            }
+        }).catch((e) => {
+            reject(e);
+        });
+    });
+}
 
 module.exports.whoami = function (options) {
     var opts = get_options(options, "/apis/user.openshift.io/v1/users/~");

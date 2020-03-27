@@ -1,0 +1,16 @@
+[id='configure-console-on-kubernetes']
+= Configuring {ProductName} Console on Kubernetes
+
+To use the {ProductName} Console on Kubernetes, you must either configure Kubernetes to use
+https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens[OpenID Connect (OIDC)]
+as an Authentication Strategy, or configure the {ProductName} Console to use an OIDC provider not
+configured with the cluster.
+
+If you are running on a Kubernetes cluster with OIDC enabled, then the recommended way to configure
+the console is to use the OIDC provider of the cluster.
+
+If you are running on a managed Kubernetes cluster, the OIDC Authentication Strategy is usually not
+enabled, so configuring the console using an external OIDC provider is the only way.
+
+include::../modules/proc-configure-cluster-openid-connect-for-kubernetes.adoc[leveloffset=+1]
+include::../modules/proc-configure-external-openid-connect-for-kubernetes.adoc[leveloffset=+1]
