@@ -282,7 +282,8 @@ public class GlobalLogCollector {
 
             Files.writeString(path.resolve("describe_pods.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut());
             Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
-            Files.writeString(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut());
+            Files.writeString(path.resolve(String.format("events.%s.txt", kube.getInfraNamespace())), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut());
+            Files.writeString(path.resolve("events.txt"), KubeCMDClient.getAllEvents().getStdOut());
             Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(kube.getInfraNamespace()).getStdOut());
             Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pv").getStdOut());
             Files.writeString(path.resolve("pvcs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", Kubernetes.getInstance().getInfraNamespace()).getStdOut());
