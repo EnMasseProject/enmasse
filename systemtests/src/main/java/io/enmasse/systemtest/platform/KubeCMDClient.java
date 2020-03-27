@@ -310,6 +310,15 @@ public class KubeCMDClient {
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
+    public static ExecutionResultData getAllEvents() {
+        List<String> command = Arrays.asList(CMD, "get", "events",
+                "--all-namespaces=true",
+                "--output", "custom-columns=LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}",
+                "--sort-by={.lastTimestamp}");
+
+        return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
+    }
+
     public static ExecutionResultData getApiServices(String name) {
         List<String> command = Arrays.asList(CMD, "get", "apiservices", name,
                 "--output", "custom-columns=NAME:{.name}",
