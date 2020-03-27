@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { DropdownItem, Button, ButtonVariant } from "@patternfly/react-core";
 import {
   OverflowMenu,
