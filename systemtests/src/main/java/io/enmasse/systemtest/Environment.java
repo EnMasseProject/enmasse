@@ -47,6 +47,7 @@ public class Environment {
     private static final String INFINISPAN_PROJECT = "INFINISPAN_PROJECT";
     private static final String POSTGRESQL_PROJECT = "POSTGRESQL_PROJECT";
     private static final String H2_PROJECT = "H2_PROJECT";
+    private static final String SCALE_CONFIG = "SCALE_CONFIG";
     private static Logger log = CustomLogger.getLogger();
     private static Environment instance;
     private final String namespace = System.getenv().getOrDefault(K8S_NAMESPACE_ENV, "enmasse-infra");
@@ -81,6 +82,7 @@ public class Environment {
     protected UserCredentials defaultCredentials = new UserCredentials(null, null);
     protected UserCredentials sharedManagementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
     protected UserCredentials sharedDefaultCredentials = new UserCredentials("test", "test");
+    protected String scaleConfig = System.getenv().getOrDefault(SCALE_CONFIG, Paths.get(System.getProperty("user.dir"), "scale-config.json").toAbsolutePath().toString());
     /**
      * Skip removing address-spaces
      */
@@ -268,5 +270,9 @@ public class Environment {
 
     public String getH2Project() {
         return h2Project;
+    }
+
+    public String getScaleConfig() {
+        return scaleConfig;
     }
 }
