@@ -16,8 +16,8 @@ import {
   SortAmountDownIcon
 } from "@patternfly/react-icons";
 import { ISortBy } from "@patternfly/react-table";
-import { Dropdown, DropdownToggle, DropdownItem } from "@patternfly/react-core";
-import { useWindowDimensions } from "components";
+import { DropdownPosition } from "@patternfly/react-core";
+import { useWindowDimensions, DropdownWithToggle } from "components";
 
 interface ISortForMobileViewProps {
   sortMenu: any[];
@@ -29,7 +29,6 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
   sortValue,
   setSortValue
 }) => {
-  const [sortIsExpanded, setSortIsExpanded] = useState<boolean>(false);
   const { width } = useWindowDimensions();
   const [sortData, setSortData] = useState("");
   const [sortDirection, setSortDirection] = useState<string>();
@@ -44,10 +43,9 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
     }
   }, [sortValue]);
 
-  const onSortSelect = (event: any) => {
-    setSortData(event.target.value);
+  const onSortSelect = (value: string) => {
+    setSortData(value);
     setSortDirection(undefined);
-    setSortIsExpanded(!sortIsExpanded);
   };
 
   const onSortUp = () => {
@@ -82,27 +80,13 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
       <DataToolbarItem>
         {width < 769 && (
           <>
-            <Dropdown
+            <DropdownWithToggle
               id="sort-mobilevw-dropdown"
-              position="left"
-              onSelect={onSortSelect}
-              isOpen={sortIsExpanded}
-              toggle={
-                <DropdownToggle onToggle={setSortIsExpanded}>
-                  {sortData}
-                </DropdownToggle>
-              }
-              dropdownItems={sortMenu.map(option => (
-                <DropdownItem
-                  id={`sort-mobilevw-dropdown${option.key}`}
-                  key={option.key}
-                  value={option.value}
-                  itemID={option.key}
-                  component={"button"}
-                >
-                  {option.value}
-                </DropdownItem>
-              ))}
+              position={DropdownPosition.left}
+              onSelectItem={onSortSelect}
+              value={sortData}
+              dropdownItems={sortMenu}
+              dropdownItemIdPrefix="sort-mobilevw-dropdown"
             />
             &nbsp;&nbsp;
             {SortIcons}
