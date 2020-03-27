@@ -187,7 +187,7 @@ func (r *MemdbCache) Get(idxName string, keyPrefix string, filter ObjectFilter) 
 					} else {
 						ok, cont, err := filter(obj)
 						if err != nil {
-							return objs, fmt.Errorf("filter failed for type: %T", obj)
+							return objs, fmt.Errorf("filter failed for type: %T %+v", obj, err)
 						} else if ok {
 							objs = append(objs, obj)
 						}
