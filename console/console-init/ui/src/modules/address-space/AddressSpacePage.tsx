@@ -25,6 +25,7 @@ import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { getHeaderForDeleteDialog, getDetailForDeleteDialog } from "./utils";
 import { TablePagination } from "components";
+import { CreateProjectContainer } from "modules/msg-and-iot/dailogs/containers";
 
 export default function AddressSpacePage() {
   const { dispatch } = useStoreContext();
