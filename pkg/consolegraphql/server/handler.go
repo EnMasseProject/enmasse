@@ -14,9 +14,11 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/util"
-	"github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
+	userv1 "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
+	authv1 "k8s.io/api/authentication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	authtv1 "k8s.io/client-go/kubernetes/typed/authentication/v1"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
@@ -128,7 +130,7 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 			return
 		}
 
-		userClient, err := v1.NewForConfig(config)
+		userClient, err := userv1.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -143,10 +145,17 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 		}
 
 		var loggedOnUser string
-		if impersonationConfig != nil {
-			loggedOnUser = impersonatedUser
+		if useSession && sessionManager.Exists(req.Context(), loggedOnUserSessionAttribute) {
+			loggedOnUser = sessionManager.GetString(req.Context(), loggedOnUserSessionAttribute)
 		} else {
-			loggedOnUser = getLoggedOnUser(useSession, sessionManager, req, userClient)
+			if impersonationConfig != nil {
+				loggedOnUser = impersonatedUser
+			} else {
+				loggedOnUser = getLoggedOnUser(&accessToken, userClient.Users(), kubeClient.AuthenticationV1())
+			}
+			if useSession {
+				sessionManager.Put(req.Context(), loggedOnUserSessionAttribute, loggedOnUser)
+			}
 		}
 
 		var accessControllerState interface{}
@@ -156,13 +165,14 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 
 		controller := accesscontroller.NewKubernetesRBACAccessController(kubeClient, accessControllerState)
 		state = &RequestState{
-			UserInterface:        userClient.Users(),
-			EnmasseV1beta1Client: coreClient,
-			AccessController:     controller,
-			User:                 loggedOnUser,
-			UserAccessToken:      config.BearerToken,
-			UseSession:           useSession,
-			ImpersonateUser:      impersonationConfig != nil,
+			AuthenticationInterface: kubeClient.AuthenticationV1(),
+			UserInterface:           userClient.Users(),
+			EnmasseV1beta1Client:    coreClient,
+			AccessController:        controller,
+			User:                    loggedOnUser,
+			UserAccessToken:         config.BearerToken,
+			UseSession:              useSession,
+			ImpersonateUser:         impersonationConfig != nil,
 		}
 
 		ctx := ContextWithRequestState(state, req.Context())
@@ -187,7 +197,14 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 			return
 		}
 
-		userclient, err := v1.NewForConfig(config)
+		kubeClient, err := kubernetes.NewForConfig(config)
+		if err != nil {
+			log.Printf("Failed to build client set : %v", err)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		userclient, err := userv1.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -201,16 +218,23 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 			return
 		}
 
-		loggedOnUser := getLoggedOnUser(true, sessionManager, req, userclient)
+		var loggedOnUser string
+		if sessionManager.Exists(req.Context(), loggedOnUserSessionAttribute) {
+			loggedOnUser = sessionManager.GetString(req.Context(), loggedOnUserSessionAttribute)
+		} else {
+			loggedOnUser = getLoggedOnUser(nil, userclient.Users(), kubeClient.AuthenticationV1())
+			sessionManager.Put(req.Context(), loggedOnUserSessionAttribute, loggedOnUser)
+		}
 
 		requestState := &RequestState{
-			UserInterface:        userclient.Users(),
-			EnmasseV1beta1Client: coreClient,
-			AccessController:     accesscontroller.NewAllowAllAccessController(),
-			User:                 loggedOnUser,
-			UserAccessToken:      accessToken,
-			UseSession:           true,
-			ImpersonateUser:      false,
+			AuthenticationInterface: kubeClient.AuthenticationV1(),
+			UserInterface:           userclient.Users(),
+			EnmasseV1beta1Client:    coreClient,
+			AccessController:        accesscontroller.NewAllowAllAccessController(),
+			User:                    loggedOnUser,
+			UserAccessToken:         accessToken,
+			UseSession:              true,
+			ImpersonateUser:         false,
 		}
 
 		ctx := ContextWithRequestState(requestState, req.Context())
@@ -235,26 +259,22 @@ func UpdateAccessControllerState(ctx context.Context, loggedOnUser string, sessi
 	return loggedOnUser
 }
 
-func getLoggedOnUser(useSession bool, sessionManager *scs.SessionManager, req *http.Request, userClient *v1.UserV1Client) string {
+func getLoggedOnUser(accessToken *string, userInterface userv1.UserInterface, authenticationInterface authtv1.AuthenticationV1Interface) string {
 	loggedOnUser := "<unknown>"
-	if useSession {
-		if sessionManager.Exists(req.Context(), loggedOnUserSessionAttribute) {
-			loggedOnUser = sessionManager.GetString(req.Context(), loggedOnUserSessionAttribute)
-		} else {
-			if util.HasApi(util.UserGVK) {
-				usr, err := userClient.Users().Get("~", metav1.GetOptions{})
-				if err == nil {
-					loggedOnUser = usr.ObjectMeta.Name
-					sessionManager.Put(req.Context(), loggedOnUserSessionAttribute, loggedOnUser)
-				}
-			}
+
+	if util.HasApi(util.UserGVK) {
+		usr, err := userInterface.Get("~", metav1.GetOptions{})
+		if err == nil {
+			loggedOnUser = usr.ObjectMeta.Name
 		}
-	} else {
-		if util.HasApi(util.UserGVK) {
-			usr, err := userClient.Users().Get("~", metav1.GetOptions{})
-			if err == nil {
-				loggedOnUser = usr.ObjectMeta.Name
-			}
+	} else if accessToken != nil {
+		res, err := authenticationInterface.TokenReviews().Create(&authv1.TokenReview{
+			Spec: authv1.TokenReviewSpec{
+				Token: *accessToken,
+			},
+		})
+		if err == nil && res != nil && res.Status.Authenticated && res.Status.User.Username != "" {
+			loggedOnUser = res.Status.User.Username
 		}
 	}
 	return loggedOnUser

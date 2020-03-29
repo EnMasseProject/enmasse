@@ -10,16 +10,18 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	userv1 "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
+	authv1 "k8s.io/client-go/kubernetes/typed/authentication/v1"
 )
 
 type RequestState struct {
-	UserInterface        userv1.UserInterface
-	EnmasseV1beta1Client v1beta1.EnmasseV1beta1Interface
-	AccessController     accesscontroller.AccessController
-	User                 string
-	UserAccessToken      string
-	UseSession           bool
-	ImpersonateUser      bool
+	AuthenticationInterface authv1.AuthenticationV1Interface
+	UserInterface           userv1.UserInterface
+	EnmasseV1beta1Client    v1beta1.EnmasseV1beta1Interface
+	AccessController        accesscontroller.AccessController
+	User                    string
+	UserAccessToken         string
+	UseSession              bool
+	ImpersonateUser         bool
 }
 
 func ContextWithRequestState(requestState *RequestState, ctx context.Context) context.Context {

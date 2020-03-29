@@ -629,6 +629,9 @@ spec:
         - apiGroups: [ "" ]
           resources: [ "namespaces" ]
           verbs: [ "get", "list", "watch" ]
+        - apiGroups: [ "authentication.k8s.io" ]
+          resources: [ "tokenreviews" ]
+          verbs: [ "create" ]
       - serviceAccountName: iot-device-registry
         rules:
         - apiGroups: [ "authentication.k8s.io" ]

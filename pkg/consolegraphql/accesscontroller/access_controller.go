@@ -33,7 +33,7 @@ func NewAllowAllAccessController() AccessController {
 	return &allowAll{}
 }
 
-func (a *allowAll) CanRead(obj interface{}) (bool, error) {
+func (a *allowAll) CanRead(_ interface{}) (bool, error) {
 	return true, nil
 }
 
