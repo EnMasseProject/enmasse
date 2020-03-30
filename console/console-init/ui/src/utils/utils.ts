@@ -18,6 +18,7 @@ export interface ISelectOption {
   value: string;
   isDisabled?: boolean;
   key?: string;
+  label?: string;
 }
 
 /**
@@ -75,6 +76,7 @@ const getType = (type: string) => {
       return " Brokered";
   }
 };
+
 const removeForbiddenChars = (input: string) => {
   let escapedInput = input.replace(forbiddenBackslashRegexp, "\\\\");
   escapedInput = escapedInput.replace(forbiddenSingleQuoteRegexp, "''");
@@ -108,10 +110,158 @@ export const getTypeColor = (type: string) => {
   }
   return iconColor;
 };
+
 const dnsSubDomainRfc1123NameRegexp = new RegExp(
   "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
 );
 const messagingAddressNameRegexp = new RegExp("^[^#*\\s]+$");
+
+const kFormatter = (num: number) => {
+  const absoluteNumber: number = Math.abs(num);
+  const sign = Math.sign(num);
+  return absoluteNumber > 999
+    ? sign * parseInt((absoluteNumber / 1000).toFixed(1)) + "k"
+    : sign * absoluteNumber;
+};
+
+const uniqueId = () => {
+  return Math.random()
+    .toString(16)
+    .slice(-4);
+};
+
+const findIndexByProperty = (
+  items: any[],
+  targetProperty: string,
+  targetPropertyValue: string
+) => {
+  if (items && targetProperty && targetPropertyValue) {
+    return items.findIndex(
+      item => item[targetProperty] === targetPropertyValue
+    );
+  }
+  return -1;
+};
+
+const hasOwnProperty = (obj: Object, property: string) => {
+  if (obj && property) {
+    return obj.hasOwnProperty(property);
+  }
+};
+
+const getCombinedString = (a: string, b?: string) => {
+  let s: string = "";
+  s += a;
+  if (b !== undefined) {
+    s += ", ";
+    s += b;
+  }
+  return s;
+};
+
+const getLabelForTypeOfObject = (value: any) => {
+  switch (typeof value) {
+    case "object": {
+      if (Array.isArray(value)) {
+        return "Array";
+      } else {
+        return "Object";
+      }
+    }
+    case "string": {
+      //TODO: add validations for date and time
+      return "String";
+    }
+    case "number":
+      return "Numeric";
+    case "boolean":
+      return "Boolean";
+  }
+};
+
+const getJsonForMetadata = (object: any, type?: string) => {
+  const keys = Object.keys(object);
+  let data = [];
+  for (var i of keys) {
+    if (typeof object[i] === "object") {
+      if (Array.isArray(object[i])) {
+        const datas: any[] = getJsonForMetadata(object[i], "array");
+        data.push({
+          key: i,
+          value: datas,
+          type: "array",
+          typeLabel: getLabelForTypeOfObject(object[i])
+        });
+      } else {
+        const datas: any[] = getJsonForMetadata(object[i]);
+        data.push({
+          key: type && type === "array" ? "" : i,
+          value: datas,
+          type: "object",
+          typeLabel: getLabelForTypeOfObject(object[i])
+        });
+      }
+    } else {
+      data.push({
+        key: type && type === "array" ? "" : i,
+        value: object[i],
+        type: typeof object[i],
+        typeLabel: getLabelForTypeOfObject(object[i])
+      });
+    }
+  }
+  return data;
+};
+
+const getJsonForObject = (object: any) => {
+  const obj: any = {};
+  switch (object.type) {
+    case "array":
+      let res: any[] = [];
+      for (let i of object.value) {
+        const data = getJson(i);
+        res.push(data[i.key]);
+      }
+      obj[object.key] = res;
+      break;
+    case "object":
+      let objs: any = {};
+      for (let i of object.value) {
+        const data = getJsonForObject(i);
+        const key = Object.keys(data)[0];
+        const value = data[key];
+        objs[key] = value;
+      }
+      obj[object.key] = objs;
+      break;
+    default:
+      obj[object.key] = object.value;
+      break;
+  }
+  return obj;
+};
+
+const getJson = (objects: any[]) => {
+  let options: any[];
+  if (!Array.isArray(objects)) {
+    options = [objects];
+  } else {
+    options = objects;
+  }
+  let object: any = {};
+  for (let i of options) {
+    const data = getJsonForObject(i);
+    object = Object.assign(object, data);
+  }
+  return object;
+};
+
+const compareJsonObject = (object1: any, object2: any) => {
+  if (JSON.stringify(object1) === JSON.stringify(object2)) {
+    return true;
+  }
+  return false;
+};
 
 export {
   getSelectOptionList,
@@ -119,5 +269,13 @@ export {
   getType,
   removeForbiddenChars,
   dnsSubDomainRfc1123NameRegexp,
-  messagingAddressNameRegexp
+  messagingAddressNameRegexp,
+  kFormatter,
+  uniqueId,
+  findIndexByProperty,
+  hasOwnProperty,
+  getCombinedString,
+  getJsonForMetadata,
+  getJson,
+  compareJsonObject
 };
