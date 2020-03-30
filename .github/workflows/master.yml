@@ -47,8 +47,8 @@ jobs:
           java-version: 11.0.2
 
       - uses: ruby/setup-ruby@v1
-          with:
-            ruby-version: 2.6
+        with:
+          ruby-version: 2.6
 
       - name: Setup OLM
         run: ./.github/scripts/setup-olm.sh
