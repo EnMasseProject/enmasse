@@ -980,7 +980,7 @@ public class SystemtestsKubernetesApps {
                 .withNewSpec()
                 .addNewContainer()
                 .withName(API_PROXY)
-                .withImage("quay.io/enmasse/api-proxy:latest")
+                .withImage("quay.io/enmasse/api-proxy:0.1.0")
                 .withSecurityContext(new SecurityContextBuilder().withRunAsUser(0L).build())
                 .withPorts(new ContainerPortBuilder().withContainerPort(443).withName("https").withProtocol("TCP").build())
                 .withVolumeMounts(new VolumeMountBuilder().withMountPath("/etc/tls/private").withName("api-proxy-tls").withReadOnly(true).build())
