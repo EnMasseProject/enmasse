@@ -304,7 +304,7 @@ public class KubeCMDClient {
     public static ExecutionResultData getEvents(String namespace) {
         List<String> command = Arrays.asList(CMD, "get", "events",
                 "--namespace", namespace,
-                "--output", "custom-columns=LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}",
+                "--output", "custom-columns=\"LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}\"",
                 "--sort-by={.lastTimestamp}");
 
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
@@ -313,10 +313,14 @@ public class KubeCMDClient {
     public static ExecutionResultData getAllEvents() {
         List<String> command = Arrays.asList(CMD, "get", "events",
                 "--all-namespaces=true",
-                "--output", "custom-columns=LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}",
+                "--output", "custom-columns=\"LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}\"",
                 "--sort-by={.lastTimestamp}");
 
-        return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
+        ExecutionResultData data = Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
+        if (!data.getRetCode()) {
+            log.info("Error returning events: {}", data.getStdErr());
+        }
+        return data;
     }
 
     public static ExecutionResultData getApiServices(String name) {
