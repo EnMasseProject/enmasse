@@ -84,16 +84,13 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
   };
   return (
     <>
-      {connections.total > 0 ? (
-        <ConnectionList
-          rows={connectionList ? connectionList : []}
-          addressSpaceType={addressSpaceType}
-          sortBy={sortBy}
-          onSort={onSort}
-        />
-      ) : (
-        <EmptyConnection />
-      )}
+      <ConnectionList
+        rows={connectionList}
+        addressSpaceType={addressSpaceType}
+        sortBy={sortBy}
+        onSort={onSort}
+      />
+      {connections.total > 0 ? "" : <EmptyConnection />}
     </>
   );
 };
