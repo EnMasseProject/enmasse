@@ -10,6 +10,7 @@ import { IRowData, sortable } from "@patternfly/react-table";
 import { AddressSpaceStatus, AddressSpaceIcon } from "./AddressSpaceFormatter";
 import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
 import { getType } from "utils";
+import { Graph } from "components/Graphs";
 
 const getTableCells = (row: IAddressSpace) => {
   const tableRow: IRowData = {
@@ -45,6 +46,13 @@ const getTableCells = (row: IAddressSpace) => {
         title: (
           <>
             <FormatDistance date={row.creationTimestamp} /> ago
+          </>
+        )
+      },
+      {
+        title: (
+          <>
+            <Graph />
           </>
         )
       }
@@ -107,7 +115,8 @@ const getTableColumns = [
   },
   "Type",
   "Status",
-  { title: "Time created", transforms: [sortable] }
+  { title: "Time created", transforms: [sortable] },
+  { title: "Message Throughput" }
 ];
 
 export { getTableCells, getActionResolver, getTableColumns };
