@@ -179,7 +179,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
             <DropdownWithToggle
               id="ad-links-filter-select-role"
               toggleId="ad-links-filter-select-role"
-              dropdownItemId="ad-links-filter-select-option-role"
+              dropdownItemIdPrefix="ad-links-filter-select-option-role"
               position={DropdownPosition.left}
               onSelectItem={onRoleSelect}
               dropdownItems={roleOptions}
@@ -196,7 +196,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
       <DataToolbarFilter categoryName="Filter">
         <DropdownWithToggle
           id="ad-links-filter-dropdown"
-          dropdownItemId={"ad-links-filter-dropdown-item"}
+          dropdownItemIdPrefix={"ad-links-filter-dropdown-item"}
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}

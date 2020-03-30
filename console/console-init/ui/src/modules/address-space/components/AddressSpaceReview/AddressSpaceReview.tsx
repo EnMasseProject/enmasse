@@ -127,7 +127,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
               position={TooltipPosition.top}
               enableFlip={false}
               trigger={"manual"}
-              content={<div>Succesfully copied to the clipboard</div>}
+              content={<div>Successfully copied to the clipboard</div>}
               isVisible={isCopied}
             >
               <span>
