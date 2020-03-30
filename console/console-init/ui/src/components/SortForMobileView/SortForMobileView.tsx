@@ -86,7 +86,7 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
               onSelectItem={onSortSelect}
               value={sortData}
               dropdownItems={sortMenu}
-              dropdownItemId="sort-mobilevw-dropdown"
+              dropdownItemIdPrefix="sort-mobilevw-dropdown"
             />
             &nbsp;&nbsp;
             {SortIcons}
