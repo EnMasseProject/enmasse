@@ -18,7 +18,7 @@ import {
   DropdownItem
 } from "@patternfly/react-core";
 import { CogIcon } from "@patternfly/react-icons";
-import brandImg from "../brand_logo.svg";
+import brandImg from "assets/images/logo.svg";
 
 export default {
   title: "AppHeader"
