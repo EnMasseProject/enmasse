@@ -9,7 +9,7 @@ public enum MessageType {
 
     TELEMETRY("telemetry"),
     EVENT("event"),
-    COMMAND_RESPONSE("control/res");
+    COMMAND_RESPONSE("command/res");
 
     private String address;
 

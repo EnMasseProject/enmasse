@@ -110,7 +110,7 @@ public class AbstractStore implements HealthCheckProvider, AutoCloseable {
                         return Future.succeededFuture(r);
                     }
 
-                    final Span readSpan = TracingHelper.buildChildSpan(this.tracer, span.context(), "check optimistic lock")
+                    final Span readSpan = TracingHelper.buildChildSpan(this.tracer, span.context(), "check optimistic lock", getClass().getSimpleName())
                             .withTag("resource_version", resourceVersion.get())
                             .start();
 

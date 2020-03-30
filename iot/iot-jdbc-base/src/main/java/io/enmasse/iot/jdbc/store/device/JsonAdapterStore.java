@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.eclipse.hono.deviceregistry.service.credentials.CredentialKey;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.tracing.TracingHelper;
 import org.eclipse.hono.util.CredentialsConstants;
@@ -21,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import io.enmasse.iot.jdbc.store.Statement;
 import io.enmasse.iot.jdbc.store.StatementConfiguration;
-import io.enmasse.iot.registry.device.CredentialKey;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -98,7 +98,7 @@ public class JsonAdapterStore extends AbstractDeviceAdapterStore {
     @Override
     public Future<Optional<CredentialsReadResult>> findCredentials(final CredentialKey key, final SpanContext spanContext) {
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "find credentials")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "find credentials", getClass().getSimpleName())
                 .withTag("tenant_instance_id", key.getTenantId())
                 .withTag("auth_id", key.getAuthId())
                 .withTag("type", key.getType())

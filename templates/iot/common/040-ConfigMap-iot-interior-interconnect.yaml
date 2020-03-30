@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iot-interior-interconnect
+  labels:
+    application: enmasse
+data:
+  qdrouterd.conf: |2+
+    router {
+        mode: interior
+        id: Router.${HOSTNAME}
+    }
+    listener {
+        host: 0.0.0.0
+        port: 5672
+        role: normal
+        authenticatePeer: no
+        saslMechanisms: ANONYMOUS
+    }
+    listener {
+        host: 0.0.0.0
+        port: 8080
+        role: normal
+        http: true
+    }
+    listener {
+        role: inter-router
+        host: 0.0.0.0
+        port: 55672
+    }
+    address {
+        prefix: command_internal
+        distribution: balanced
+    }

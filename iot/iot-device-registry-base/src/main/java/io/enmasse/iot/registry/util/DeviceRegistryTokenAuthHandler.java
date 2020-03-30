@@ -6,13 +6,13 @@ package io.enmasse.iot.registry.util;
 
 import static io.enmasse.iot.utils.MoreFutures.finishHandler;
 
+import org.eclipse.hono.service.http.TracingHandler;
 import org.eclipse.hono.tracing.TracingHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
-import io.opentracing.contrib.vertx.ext.web.TracingHandler;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;

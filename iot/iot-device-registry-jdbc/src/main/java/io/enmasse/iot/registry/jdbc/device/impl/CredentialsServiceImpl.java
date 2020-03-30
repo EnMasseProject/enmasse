@@ -18,6 +18,8 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.eclipse.hono.deviceregistry.service.credentials.AbstractCredentialsService;
+import org.eclipse.hono.deviceregistry.service.tenant.TenantKey;
 import org.eclipse.hono.util.Constants;
 import org.eclipse.hono.util.CredentialsConstants;
 import org.eclipse.hono.util.CredentialsResult;
@@ -26,9 +28,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.jdbc.store.device.AbstractDeviceAdapterStore;
-import io.enmasse.iot.registry.device.AbstractCredentialsService;
-import io.enmasse.iot.registry.device.CredentialKey;
-import io.enmasse.iot.registry.tenant.TenantInformation;
 import io.opentracing.Span;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -46,8 +45,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     }
 
     @Override
-    protected Future<CredentialsResult<JsonObject>> processGet(final TenantInformation tenant, final CredentialKey key, final Span span) {
-
+    protected Future<CredentialsResult<JsonObject>> processGet(TenantKey tenant, org.eclipse.hono.deviceregistry.service.credentials.CredentialKey key, JsonObject clientContext, Span span) {
         return this.store.findCredentials(key, span.context())
                 .map(r -> {
 
@@ -78,7 +76,6 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
                     return CredentialsResult.from(HTTP_OK, payload, noCacheDirective());
 
                 });
-
     }
 
     public static boolean filterSecrets(final JsonObject secret) {

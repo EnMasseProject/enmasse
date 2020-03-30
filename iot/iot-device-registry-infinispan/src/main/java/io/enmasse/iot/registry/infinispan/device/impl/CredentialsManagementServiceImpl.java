@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
+import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import static io.enmasse.iot.infinispan.device.DeviceKey.deviceKey;
 import static io.enmasse.iot.registry.infinispan.Profiles.PROFILE_DEVICE_REGISTRY;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.fromInternal;
@@ -32,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.hono.auth.HonoPasswordEncoder;
 import org.eclipse.hono.client.ServiceInvocationException;
+import org.eclipse.hono.deviceregistry.service.credentials.AbstractCredentialsManagementService;
 import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -42,8 +44,6 @@ import org.springframework.stereotype.Component;
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.infinispan.device.DeviceCredential;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
-import io.enmasse.iot.registry.device.AbstractCredentialsManagementService;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 import io.vertx.core.Future;
@@ -62,8 +62,8 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     private final RemoteCache<io.enmasse.iot.infinispan.device.DeviceKey, DeviceInformation> managementCache;
 
     @Autowired
-    public CredentialsManagementServiceImpl(final Vertx vertx, final DeviceManagementCacheProvider cacheProvider, final HonoPasswordEncoder passwordEncoder) {
-        super(passwordEncoder, vertx);
+    public CredentialsManagementServiceImpl(final Vertx vertx, final DeviceManagementCacheProvider cacheProvider) {
+        super(vertx);
         this.managementCache = cacheProvider
                 .getDeviceManagementCache()
                 .orElseThrow(() -> new NoSuchElementException("Missing device management cache"));
@@ -73,8 +73,8 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     }
 
     @Override
-    protected Future<OperationResult<Void>> processSet(final DeviceKey key, final Optional<String> resourceVersion,
-            final List<CommonCredential> credentials, final Span span) {
+    protected Future<OperationResult<Void>> processUpdateCredentials(final DeviceKey key, final Optional<String> resourceVersion,
+                                                       final List<CommonCredential> credentials, final Span span) {
 
         final CompletableFuture<OperationResult<Void>> f = this.managementCache
 
@@ -207,7 +207,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     }
 
     @Override
-    protected Future<OperationResult<List<CommonCredential>>> processGet(final DeviceKey key, final Span span) {
+    protected Future<OperationResult<List<CommonCredential>>> processReadCredentials(final DeviceKey key, final Span span) {
 
         final CompletableFuture<OperationResult<List<CommonCredential>>> f = this.managementCache
 

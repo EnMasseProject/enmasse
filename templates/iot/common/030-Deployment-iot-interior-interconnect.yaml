@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-interior-interconnect
+  labels:
+    application: enmasse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      application: enmasse
+  template:
+    metadata:
+      labels:
+        application: enmasse
+    spec:
+      containers:
+      - env:
+        - name: APPLICATION_NAME
+          value: iot
+        - name: QDROUTERD_CONF
+          value: /etc/qpid-dispatch/qdrouterd.conf
+        - name: QDROUTERD_AUTO_MESH_DISCOVERY
+          value: QUERY
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        image: quay.io/interconnectedcloud/qdrouterd:1.10.0
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+        name: qdrouterd
+        ports:
+        - containerPort: 5672
+          name: amqp
+          protocol: TCP
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 55672
+          name: inter-router
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /etc/qpid-dispatch/
+          name: iot-interior-interconnect
+      volumes:
+      - configMap:
+          name: iot-interior-interconnect
+        name: iot-interior-interconnect

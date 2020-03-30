@@ -92,7 +92,7 @@ public class DeviceKey implements Serializable {
         return new DeviceKey(tenantHandle.getId(), deviceId);
     }
 
-    public static DeviceKey deviceKey(final io.enmasse.iot.registry.device.DeviceKey other) {
+    public static DeviceKey deviceKey(final org.eclipse.hono.deviceregistry.service.device.DeviceKey other) {
         Objects.requireNonNull(other);
 
         return new DeviceKey(other.getTenantId(), other.getDeviceId());

@@ -7,6 +7,7 @@ package io.enmasse.iot.registry.infinispan.device.impl;
 
 import static io.enmasse.iot.infinispan.device.CredentialKey.credentialKey;
 import static io.enmasse.iot.registry.infinispan.Profiles.PROFILE_DEVICE_REGISTRY;
+import io.enmasse.iot.registry.tenant.KubernetesTenantInformationService;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.time.Duration.between;
@@ -31,6 +32,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PreDestroy;
 
+import org.eclipse.hono.deviceregistry.service.credentials.AbstractCredentialsService;
+import org.eclipse.hono.deviceregistry.service.credentials.CredentialKey;
+import org.eclipse.hono.deviceregistry.service.tenant.TenantKey;
 import org.eclipse.hono.service.management.tenant.Tenant;
 import org.eclipse.hono.util.CacheDirective;
 import org.eclipse.hono.util.CredentialsConstants;
@@ -50,11 +54,8 @@ import org.springframework.stereotype.Component;
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.infinispan.device.DeviceCredential;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
-import io.enmasse.iot.registry.device.AbstractCredentialsService;
-import io.enmasse.iot.registry.device.CredentialKey;
 import io.enmasse.iot.registry.infinispan.config.DeviceServiceProperties;
 import io.enmasse.iot.registry.infinispan.util.Credentials;
-import io.enmasse.iot.registry.tenant.TenantInformation;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 import io.vertx.core.Future;
@@ -106,7 +107,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     }
 
     @Override
-    protected Future<CredentialsResult<JsonObject>> processGet(final TenantInformation tenant, final CredentialKey key, final Span span) {
+    protected Future<CredentialsResult<JsonObject>> processGet(final TenantKey tenant, final CredentialKey key, JsonObject clientContext, final Span span) {
 
         final CompletableFuture<CredentialsResult<JsonObject>> future = this.adapterCache
                 .getWithMetadataAsync(credentialKey(key))
@@ -146,7 +147,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private Duration calculateRemainingTtl(final TenantInformation tenant, final MetadataValue<?> result) {
+    private Duration calculateRemainingTtl(final TenantKey tenant, final MetadataValue<?> result) {
 
         if (result.getLifespan() > 0 && result.getCreated() > 0) {
 
@@ -160,7 +161,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         }
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final TenantInformation tenant, final io.enmasse.iot.infinispan.device.CredentialKey key,
+    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final TenantKey tenant, final io.enmasse.iot.infinispan.device.CredentialKey key,
             final Span span) {
 
         return searchCredentials(key)
@@ -189,30 +190,30 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
      *
      * @return The TTL. Must never return {@code null}.
      */
-    private Duration getStoreTtl(final TenantInformation tenant) {
+    private Duration getStoreTtl(final TenantKey tenant) {
 
-        return tenant.getTenant()
-                .map(Tenant::getDefaults)
-                .map(d -> d.get("ttl"))
-                .flatMap(v -> {
-                    if (v instanceof Number) {
-                        return Optional.of(((Number) v).longValue());
-                    } else if (v instanceof String) {
-                        return Optional.of(Long.parseLong((String) v));
-                    } else {
-                        return Optional.empty();
-                    }
-                })
-                .map(Duration::ofMillis)
-                .orElse(this.defaultTtl);
-
+        return ((KubernetesTenantInformationService) tenantInformationService).getTenant(tenant)
+                .map(t -> t.map(Tenant::getDefaults)
+                        .map(d -> d.get("ttl"))
+                        .flatMap(v -> {
+                            if (v instanceof Number) {
+                                return Optional.of(((Number) v).longValue());
+                            } else if (v instanceof String) {
+                                return Optional.of(Long.parseLong((String) v));
+                            } else {
+                                return Optional.empty();
+                            }
+                        })
+                        .map(Duration::ofMillis)
+                        .orElse(this.defaultTtl)
+                ).result();
     }
 
-    private <T> CompletionStage<CredentialsResult<T>> storeInvalidEntry(final TenantInformation tenant) {
+    private <T> CompletionStage<CredentialsResult<T>> storeInvalidEntry(final TenantKey tenant) {
         return completedFuture(notFound(getStoreTtl(tenant)));
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final TenantInformation tenant, final io.enmasse.iot.infinispan.device.CredentialKey key,
+    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final TenantKey tenant, final io.enmasse.iot.infinispan.device.CredentialKey key,
             final JsonObject cacheEntry) {
 
         final Duration ttl = getStoreTtl(tenant);
@@ -229,7 +230,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final TenantInformation tenant, final io.enmasse.iot.infinispan.device.CredentialKey key) {
+    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final TenantKey tenant, final io.enmasse.iot.infinispan.device.CredentialKey key) {
 
         final Duration ttl = getStoreTtl(tenant);
 

@@ -39,7 +39,8 @@ import io.vertx.core.json.JsonObject;
  * @see <a href="https://infinspan.org">https://infinspan.org</a>
  *
  */
-@Component
+//@Component
+//TODO - enable it again when https://github.com/EnMasseProject/enmasse/issues/4338 is implemented
 @Profile(PROFILE_DEVICE_CONNECTION)
 public class CacheDeviceConnectionService extends AbstractDeviceConnectionService {
 

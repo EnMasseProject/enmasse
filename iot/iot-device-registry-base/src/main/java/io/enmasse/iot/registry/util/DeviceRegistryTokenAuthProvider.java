@@ -4,6 +4,7 @@
  */
 package io.enmasse.iot.registry.util;
 
+import io.enmasse.iot.registry.tenant.KubernetesTenantInformationService;
 import static io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler.METHOD;
 import static io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler.TENANT;
 import static io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler.TOKEN;
@@ -29,7 +30,6 @@ import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.auth.TokenReview;
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.registry.tenant.TenantInformation;
-import io.enmasse.iot.registry.tenant.TenantInformationService;
 import io.enmasse.iot.utils.MoreFutures;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
@@ -62,7 +62,8 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
     private final Cache<String, TokenReview> tokens;
     private final Cache<String, Boolean> authorizations;
 
-    protected TenantInformationService tenantInformationService;
+    //TODO Revisit this when upgrading to Hono 1.3 - https://github.com/EnMasseProject/enmasse/issues/4341
+    protected KubernetesTenantInformationService tenantInformationService;
 
     public DeviceRegistryTokenAuthProvider(final Tracer tracer, final Duration tokenExpiration) {
         log.info("Using token cache expiration of {}", tokenExpiration);
@@ -79,7 +80,7 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
     }
 
     @Autowired
-    public void setTenantInformationService(final TenantInformationService tenantInformationService) {
+    public void setTenantInformationService(final KubernetesTenantInformationService tenantInformationService) {
         this.tenantInformationService = tenantInformationService;
     }
 
@@ -98,7 +99,7 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
         var f = this.tokens
                 .computeIfAbsentAsync(token, review -> {
                     span.log("cache miss");
-                    final Span childSpan = TracingHelper.buildChildSpan(this.tracer, span.context(), "perform token review")
+                    final Span childSpan = TracingHelper.buildChildSpan(this.tracer, span.context(), "perform token review", getClass().getSimpleName())
                             .start();
                     try {
                         return this.authApi.performTokenReview(token);
@@ -112,7 +113,7 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
                     span.log("eval result");
                     if (tokenReview != null && tokenReview.isAuthenticated()) {
                         return this.tenantInformationService
-                                .tenantExists(authInfo.getString(TENANT), HTTP_UNAUTHORIZED, span.context())
+                                .tenantExists(authInfo.getString(TENANT), HTTP_UNAUTHORIZED, span)
                                 .flatMap(tenant -> authorize(authInfo, tokenReview, tenant, span));
                     } else {
                         log.debug("Bearer token not authenticated");
@@ -130,7 +131,7 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
         final SpanContext context = TracingHelper.extractSpanContext(this.tracer, authInfo);
         if (context != null) {
             span = TracingHelper
-                    .buildChildSpan(this.tracer, context, operationName)
+                    .buildChildSpan(this.tracer, context, operationName, getClass().getSimpleName())
                     .start();
         } else {
             span = NoopSpan.INSTANCE;
@@ -146,7 +147,7 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
             verb = ResourceVerb.get;
         }
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, parentSpan.context(), "check user roles")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, parentSpan.context(), "check user roles", getClass().getSimpleName())
                 .withTag("namespace", tenant.getNamespace())
                 .withTag("name", tenant.getProjectName())
                 .withTag("tenant.name", tenant.getName())

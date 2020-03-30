@@ -89,6 +89,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         this.deviceId = UUID.randomUUID().toString();
         this.authId = UUID.randomUUID().toString();
         this.password = UUID.randomUUID().toString();
+        log.info("Registering device [deviceId]: {}, [authId]: {}, [password]: {}", deviceId, authId, password);
         this.httpClient = new HttpAdapterClient(this.httpAdapterEndpoint, this.authId, sharedIoTResourceManager.getTenantId(), this.password);
 
         // set up new random device
@@ -132,7 +133,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     void testRequestResponseCommand() throws Exception {
 
         final var reqId = UUID.randomUUID().toString();
-        final var replyToAddress = "control/" + sharedIoTResourceManager.getTenantId() + "/" + UUID.randomUUID().toString();
+        final var replyToAddress = "command_response/" + sharedIoTResourceManager.getTenantId() + "/" + UUID.randomUUID().toString();
 
         final AtomicReference<Future<List<ProtonDelivery>>> sentFuture = new AtomicReference<>();
 
@@ -223,6 +224,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
             commandMessage.setContentType("application/octet-stream");
             commandMessage.setBody(new Data(Binary.create(ByteBuffer.wrap(this.commandPayload.getBytes()))));
+            commandMessage.setAddress("command/" + sharedIoTResourceManager.getTenantId() + "/" + deviceId);
 
             if (messageCustomizer != null) {
                 messageCustomizer.accept(commandMessage);
@@ -231,7 +233,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
             // send request command
 
             log.info("Sending out command message");
-            var f2 = sharedIoTResourceManager.getAmqpClient().sendMessage("control/" + sharedIoTResourceManager.getTenantId() + "/" + deviceId, commandMessage)
+            var f2 = sharedIoTResourceManager.getAmqpClient().sendMessage("command/" + sharedIoTResourceManager.getTenantId(), commandMessage)
                     .whenComplete((res, err) -> {
                         String strres = null;
                         if (res != null) {

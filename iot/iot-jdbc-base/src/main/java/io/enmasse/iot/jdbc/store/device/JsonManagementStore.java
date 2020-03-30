@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.eclipse.hono.deviceregistry.service.credentials.CredentialKey;
+import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.tracing.TracingHelper;
 import org.eclipse.hono.util.CredentialsConstants;
@@ -21,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import io.enmasse.iot.jdbc.store.Statement;
 import io.enmasse.iot.jdbc.store.StatementConfiguration;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -75,11 +76,11 @@ public class JsonManagementStore extends AbstractDeviceManagementStore {
 
     @Override
     public Future<Boolean> setCredentials(final DeviceKey key, final List<CommonCredential> credentials, final Optional<String> resourceVersion,
-            final SpanContext spanContext) {
+                                          final SpanContext spanContext) {
 
         final String json = encodeCredentials(credentials);
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "set credentials")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "set credentials", getClass().getSimpleName())
                 .withTag("tenant_instance_id", key.getTenantId())
                 .withTag("device_id", key.getDeviceId())
                 .withTag("data", json)
@@ -145,7 +146,7 @@ public class JsonManagementStore extends AbstractDeviceManagementStore {
     @Override
     public Future<Optional<CredentialsReadResult>> getCredentials(final DeviceKey key, final SpanContext spanContext) {
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "get credentials")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "get credentials", getClass().getSimpleName())
                 .withTag("tenant_instance_id", key.getTenantId())
                 .withTag("device_id", key.getDeviceId())
                 .start();

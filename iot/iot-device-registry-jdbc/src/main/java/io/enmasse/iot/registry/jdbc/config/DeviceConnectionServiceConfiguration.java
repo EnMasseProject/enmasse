@@ -7,6 +7,7 @@ package io.enmasse.iot.registry.jdbc.config;
 
 import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_DEVICE_CONNECTION;
 
+import org.eclipse.hono.deviceregistry.service.deviceconnection.MapBasedDeviceConnectionsConfigProperties;
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionAmqpEndpoint;
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,8 @@ import org.springframework.context.annotation.Profile;
 import io.vertx.core.Vertx;
 
 @Configuration
-@Profile(PROFILE_DEVICE_CONNECTION)
+//@Profile(PROFILE_DEVICE_CONNECTION)
+//TODO - enable it again when https://github.com/EnMasseProject/enmasse/issues/4338 is implemented
 public class DeviceConnectionServiceConfiguration {
 
     /**
@@ -31,6 +33,12 @@ public class DeviceConnectionServiceConfiguration {
     @ConditionalOnBean(DeviceConnectionService.class)
     public DeviceConnectionAmqpEndpoint deviceConnectionAmqpEndpoint(final Vertx vertx) {
         return new DeviceConnectionAmqpEndpoint(vertx);
+    }
+
+    @Bean
+    //TODO - remove when https://github.com/EnMasseProject/enmasse/issues/4338 is implemented
+    public MapBasedDeviceConnectionsConfigProperties deviceConnectionsProperties() {
+        return new MapBasedDeviceConnectionsConfigProperties();
     }
 
 }
