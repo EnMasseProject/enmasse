@@ -44,7 +44,6 @@ export interface IAddressSpaceListProps extends TableProps {
 }
 
 export const AddressSpaceList: React.FunctionComponent<IAddressSpaceListProps> = ({
-  totalItemsCount,
   onSelect,
   onSort,
   rows,
