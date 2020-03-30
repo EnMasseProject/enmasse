@@ -91,11 +91,8 @@ export const ConnectionLinksContainer: React.FunctionComponent<IConnectionDetail
 
   return (
     <>
-      {linkRows && linkRows.length > 0 ? (
-        <ConnectionLinksList rows={linkRows} onSort={onSort} sortBy={sortBy} />
-      ) : (
-        <EmptyConnectionLinks />
-      )}
+      <ConnectionLinksList rows={linkRows} onSort={onSort} sortBy={sortBy} />
+      {!linkRows || (linkRows.length <= 0 && <EmptyConnectionLinks />)}
     </>
   );
 };
