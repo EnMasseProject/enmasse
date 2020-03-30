@@ -133,6 +133,11 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         if (this.type.equals(EnmasseInstallType.ANSIBLE)) {
             installEnmasseAnsible(Paths.get(templates), false);
         } else if(this.type.equals(EnmasseInstallType.OLM)) {
+            String csvVersionNumber = environment.enmasseOlmReplaces().substring(environment.enmasseOlmReplaces().indexOf(".")+1);
+            if (!version.equals(csvVersionNumber)) {
+                log.warn("Skipping OLM test from version {} , because replaces version is {}", version, environment.enmasseOlmReplaces());
+                return;
+            }
             installEnmasseOLM(Paths.get(templates), version);
         } else {
             installEnmasseBundle(Paths.get(templates), version);
@@ -395,8 +400,6 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
     private void installEnmasseOLM(Path templateDir, String version) throws Exception {
 
-//        String installationNamespace = OperatorManager.getInstance().getNamespaceByOlmInstallationType(olmType);
-
         if (olmType == OLMInstallationType.SPECIFIC) {
             kubernetes.createNamespace(infraNamespace, Collections.singletonMap("allowed", "true"));
         }
@@ -522,4 +525,5 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             return yaml.get("spec").get("startingCSV").asText();
         }
     }
+
 }
