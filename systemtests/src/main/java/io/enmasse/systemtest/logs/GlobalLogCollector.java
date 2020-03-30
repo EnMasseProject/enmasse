@@ -282,6 +282,10 @@ public class GlobalLogCollector {
 
             Files.writeString(path.resolve("describe_pods.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut());
             Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
+            Files.writeString(path.resolve("describe_addressspace.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "addressspaces", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("describe_address.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "addresses", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("addressspace.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("address.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve(String.format("events.%s.txt", kube.getInfraNamespace())), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut());
             Files.writeString(path.resolve("events.txt"), KubeCMDClient.getAllEvents().getStdOut());
             Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(kube.getInfraNamespace()).getStdOut());
