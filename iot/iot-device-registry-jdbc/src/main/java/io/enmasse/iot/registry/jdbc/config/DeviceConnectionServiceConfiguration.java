@@ -19,8 +19,7 @@ import org.springframework.context.annotation.Profile;
 import io.vertx.core.Vertx;
 
 @Configuration
-//@Profile(PROFILE_DEVICE_CONNECTION)
-//TODO - enable it again when https://github.com/EnMasseProject/enmasse/issues/4338 is implemented
+@Profile(PROFILE_DEVICE_CONNECTION)
 public class DeviceConnectionServiceConfiguration {
 
     /**
@@ -33,12 +32,6 @@ public class DeviceConnectionServiceConfiguration {
     @ConditionalOnBean(DeviceConnectionService.class)
     public DeviceConnectionAmqpEndpoint deviceConnectionAmqpEndpoint(final Vertx vertx) {
         return new DeviceConnectionAmqpEndpoint(vertx);
-    }
-
-    @Bean
-    //TODO - remove when https://github.com/EnMasseProject/enmasse/issues/4338 is implemented
-    public MapBasedDeviceConnectionsConfigProperties deviceConnectionsProperties() {
-        return new MapBasedDeviceConnectionsConfigProperties();
     }
 
 }

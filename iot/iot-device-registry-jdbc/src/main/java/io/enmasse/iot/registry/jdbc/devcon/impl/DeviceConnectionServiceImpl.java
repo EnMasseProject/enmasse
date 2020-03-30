@@ -8,6 +8,7 @@ package io.enmasse.iot.registry.jdbc.devcon.impl;
 import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_DEVICE_CONNECTION;
 
 import java.net.HttpURLConnection;
+import java.util.List;
 
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
 import org.eclipse.hono.util.DeviceConnectionConstants;
@@ -26,8 +27,7 @@ import io.vertx.core.json.JsonObject;
 /**
  * A {@link DeviceConnectionService} that use an JDBC as a backend service.
  */
-//@Component
-//TODO - enable it again when https://github.com/EnMasseProject/enmasse/issues/4338 is implemented
+@Component
 @Profile(PROFILE_DEVICE_CONNECTION)
 public class DeviceConnectionServiceImpl extends AbstractDeviceConnectionService {
 
@@ -62,6 +62,30 @@ public class DeviceConnectionServiceImpl extends AbstractDeviceConnectionService
                 .setLastKnownGateway(key, gatewayId, span.context())
                 .map(r -> DeviceConnectionResult.from(HttpURLConnection.HTTP_NO_CONTENT));
 
+    }
+
+    @Override
+    protected Future<DeviceConnectionResult> processSetCommandHandlingAdapterInstance(DeviceConnectionKey key, String adapterInstanceId, Span span) {
+        return this.store
+                .processSetCommandHandlingAdapterInstance(key, adapterInstanceId, span.context())
+                .map(r -> DeviceConnectionResult.from(HttpURLConnection.HTTP_NO_CONTENT));
+    }
+
+    @Override
+    protected Future<DeviceConnectionResult> processGetCommandHandlingAdapterInstances(DeviceConnectionKey key, List<String> viaGateways, Span span) {
+        return this.store
+                .readDeviceState(key, span.context())
+                .map(result -> result.flatMap(state -> state.getCommandHandlingAdapterInstance()))
+                .map(adapter -> adapter
+                        .map(adapterInstance -> DeviceConnectionResult.from(HttpURLConnection.HTTP_OK, getAdapterInstancesResultJson(key.getDeviceId(), adapterInstance)))
+                        .orElseGet(() -> DeviceConnectionResult.from(HttpURLConnection.HTTP_NOT_FOUND)));
+    }
+
+    @Override
+    protected Future<DeviceConnectionResult> processRemoveCommandHandlingAdapterInstance(DeviceConnectionKey key, String adapterInstanceId, Span span) {
+        return this.store
+                .processSetCommandHandlingAdapterInstance(key, null, span.context())
+                .map(r -> DeviceConnectionResult.from(HttpURLConnection.HTTP_NO_CONTENT));
     }
 
 }

@@ -14,3 +14,20 @@ update: |
    )
    DO UPDATE SET
       last_known_gateway=EXCLUDED.last_known_gateway
+
+updateAdapterInstance: |
+   INSERT INTO %s (
+      tenant_id,
+      device_id,
+      adapter_instance_id
+   ) VALUES (
+      :tenant_id,
+      :device_id,
+      :adapter_instance_id
+   )
+   ON CONFLICT (
+      tenant_id,
+      device_id
+   )
+   DO UPDATE SET
+      adapter_instance_id=EXCLUDED.adapter_instance_id

@@ -12,6 +12,7 @@ import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.eclipse.hono.util.DeviceConnectionResult.from;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
@@ -39,8 +40,7 @@ import io.vertx.core.json.JsonObject;
  * @see <a href="https://infinspan.org">https://infinspan.org</a>
  *
  */
-//@Component
-//TODO - enable it again when https://github.com/EnMasseProject/enmasse/issues/4338 is implemented
+@Component
 @Profile(PROFILE_DEVICE_CONNECTION)
 public class CacheDeviceConnectionService extends AbstractDeviceConnectionService {
 
@@ -94,4 +94,18 @@ public class CacheDeviceConnectionService extends AbstractDeviceConnectionServic
 
     }
 
+    @Override
+    protected Future<DeviceConnectionResult> processSetCommandHandlingAdapterInstance(io.enmasse.iot.registry.devcon.DeviceConnectionKey key, String adapterInstanceId, Span span) {
+        return null;
+    }
+
+    @Override
+    protected Future<DeviceConnectionResult> processGetCommandHandlingAdapterInstances(io.enmasse.iot.registry.devcon.DeviceConnectionKey key, List<String> viaGateways, Span span) {
+        return null;
+    }
+
+    @Override
+    protected Future<DeviceConnectionResult> processRemoveCommandHandlingAdapterInstance(io.enmasse.iot.registry.devcon.DeviceConnectionKey key, String adapterInstanceId, Span span) {
+        return null;
+    }
 }

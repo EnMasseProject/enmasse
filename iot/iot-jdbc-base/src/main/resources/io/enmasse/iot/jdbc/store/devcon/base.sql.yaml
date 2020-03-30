@@ -1,6 +1,7 @@
 read: |
    SELECT
-      last_known_gateway
+      last_known_gateway,
+      adapter_instance_id
    FROM
       %s
    WHERE
@@ -12,3 +13,25 @@ dropTenant: |
    DELETE FROM %s
    WHERE
       tenant_id=:tenant_id
+
+update: |
+   INSERT INTO %s (
+      tenant_id,
+      device_id,
+      last_known_gateway
+   ) VALUES (
+      :tenant_id,
+      :device_id,
+      :gateway_id
+   )
+
+updateAdapterInstance: |
+   INSERT INTO %s (
+      tenant_id,
+      device_id,
+      adapter_instance_id
+   ) VALUES (
+      :tenant_id,
+      :device_id,
+      :adapter_instance_id
+   )

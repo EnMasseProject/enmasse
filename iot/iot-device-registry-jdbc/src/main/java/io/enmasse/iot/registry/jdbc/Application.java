@@ -22,7 +22,6 @@ import io.vertx.core.Verticle;
 
 @ComponentScan("org.eclipse.hono.service.auth")
 @ComponentScan("org.eclipse.hono.service.metric")
-@ComponentScan("org.eclipse.hono.deviceregistry.service.deviceconnection")
 @ComponentScan("io.enmasse.iot.registry")
 @ComponentScan("io.enmasse.iot.service.base")
 @EnableAutoConfiguration
