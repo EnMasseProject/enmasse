@@ -46,8 +46,9 @@ jobs:
         with:
           java-version: 11.0.2
 
-      - name: Setup Ruby environment with ruby-build
-        uses: clupprich/ruby-build-action@v1.3.0
+      - uses: ruby/setup-ruby@v1
+          with:
+            ruby-version: 2.6
 
       - name: Setup OLM
         run: ./.github/scripts/setup-olm.sh
