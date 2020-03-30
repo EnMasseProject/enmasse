@@ -157,7 +157,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
         <DropdownWithToggle
           id="cl-filter-dropdown"
           toggleId={"cl-filter-dropdown"}
-          dropdownItemId="cl-filter-dropdown-item"
+          dropdownItemIdPrefix="cl-filter-dropdown-item"
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}
