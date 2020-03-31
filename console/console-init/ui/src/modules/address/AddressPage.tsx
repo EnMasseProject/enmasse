@@ -17,13 +17,13 @@ import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { useQuery, useMutation } from "@apollo/react-hooks";
 import { StyleSheet } from "@patternfly/react-styles";
 import { ISortBy } from "@patternfly/react-table";
-import { AddressListContainer } from "./containers/AddressListContainer";
+import { AddressListContainer } from "./containers";
 import {
   CURRENT_ADDRESS_SPACE_PLAN,
   DELETE_ADDRESS,
   PURGE_ADDRESS
 } from "graphql-module/queries";
-import { IAddress } from "modules/address/components/AddressList";
+import { IAddress } from "./components";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import {
   getFilteredAdressNames,

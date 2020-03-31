@@ -10,9 +10,11 @@ import {
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView, useWindowDimensions } from "components";
-import { AddressToggleGroup } from "../AddressToggleGroup";
 import { CreateAddress } from "modules/address/dialogs";
-import { AddressListKebab } from "../AddressListKebab";
+import {
+  AddressListKebab,
+  AddressToggleGroup
+} from "modules/address/components";
 
 export interface IAddressToolbarProps extends DataToolbarContentProps {
   totalRecords: number;

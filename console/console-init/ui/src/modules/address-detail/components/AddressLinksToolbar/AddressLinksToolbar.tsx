@@ -10,7 +10,7 @@ import {
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView, useWindowDimensions } from "components";
-import { AddressLinksToggleGroup } from "../AddressLinksToggleGroup";
+import { AddressLinksToggleGroup } from "modules/address-detail/components";
 
 export interface IAddressLinksToolbarProps extends DataToolbarContentProps {
   totalRecords: number;
