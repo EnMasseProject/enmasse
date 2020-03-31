@@ -9,22 +9,22 @@ import {
   PageSectionVariants,
   Title,
   GridItem,
-  Grid
+  Grid,
+  Divider
 } from "@patternfly/react-core";
-import { GridStylesForTableHeader } from "modules/address/AddressPage";
-import { ConnectionLinksContainer } from "modules/connection-detail/containers";
 import { useLocation } from "react-router";
 import { css } from "@patternfly/react-styles";
-import { ConnectionDetailFilter } from "modules/connection-detail/components";
 import { ISortBy } from "@patternfly/react-table";
-import { Divider } from "@patternfly/react-core/dist/js/experimental";
+import { GridStylesForTableHeader } from "modules/address/AddressPage";
+import { ConnectionLinksContainer } from "modules/connection-detail/containers";
 import { TablePagination } from "components";
+import { ConnectionLinksToolbarContainer } from "modules/connection-detail/containers";
 interface IConnectionDetailToolbarProps {
   name?: string;
   namespace?: string;
   connectionName?: string;
 }
-export const ConnectionDetailToolbar: React.FunctionComponent<IConnectionDetailToolbarProps> = ({
+export const ConnectionLinksWithToolbar: React.FunctionComponent<IConnectionDetailToolbarProps> = ({
   name,
   namespace,
   connectionName
@@ -34,10 +34,9 @@ export const ConnectionDetailToolbar: React.FunctionComponent<IConnectionDetailT
   const [totalLinks, setTotalLinks] = useState<number>(0);
   const page = parseInt(searchParams.get("page") || "", 10) || 0;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
-  const [filterValue, setFilterValue] = useState<string>("Name");
   const [filterNames, setFilterNames] = useState<Array<string>>([]);
   const [filterAddresses, setFilterAddresses] = useState<Array<string>>([]);
-  const [filterRole, setFilterRole] = useState<string>();
+  const [filterRole, setFilterRole] = useState<string | null>();
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
 
   const renderPagination = (page: number, perPage: number) => {
@@ -62,16 +61,14 @@ export const ConnectionDetailToolbar: React.FunctionComponent<IConnectionDetailT
       <br />
       <Grid>
         <GridItem span={6}>
-          <ConnectionDetailFilter
-            filterValue={filterValue}
-            setFilterValue={setFilterValue}
-            filterNames={filterNames}
-            setFilterNames={setFilterNames}
-            filterAddresses={filterAddresses}
-            setFilterAddresses={setFilterAddresses}
-            filterRole={filterRole}
-            setFilterRole={setFilterRole}
-            totalLinks={totalLinks}
+          <ConnectionLinksToolbarContainer
+            selectedNames={filterNames}
+            setSelectedNames={setFilterNames}
+            selectedAddresses={filterAddresses}
+            setSelectedAddresses={setFilterAddresses}
+            roleSelected={filterRole}
+            setRoleSelected={setFilterRole}
+            totalRecords={totalLinks}
             sortValue={sortDropDownValue}
             setSortValue={setSortDropdownValue}
             namespace={namespace || ""}
@@ -90,7 +87,7 @@ export const ConnectionDetailToolbar: React.FunctionComponent<IConnectionDetailT
         setTotalLinks={setTotalLinks}
         filterNames={filterNames}
         filterAddresses={filterAddresses}
-        filterRole={filterRole}
+        filterRole={filterRole || undefined}
         sortValue={sortDropDownValue}
         setSortValue={setSortDropdownValue}
       />
