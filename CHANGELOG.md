@@ -4,6 +4,7 @@
 * #4044: Ensure agent uses bi-directional AMQP idle-time-out for all connections
 * #4076: Avoid memory leak if connected router is disconnected
 * #4117: Add support for configuring console to use impersonation
+* #4172: [Kubernetes] Use headers for oauth-proxy to populate user information (for console/audit).
 
 
 ## 0.31.0
