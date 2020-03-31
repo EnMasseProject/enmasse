@@ -14,8 +14,10 @@ import {
 } from "@patternfly/react-core";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
-import { ConnectionContainer } from "modules/connection/containers";
-import { ConnectionToolbar } from "modules/connection/containers";
+import {
+  ConnectionContainer,
+  ConnectionToolbarContainer
+} from "modules/connection/containers";
 import { TablePagination } from "components";
 
 export default function ConnectionPage() {
@@ -48,18 +50,16 @@ export default function ConnectionPage() {
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
         <GridItem span={6}>
-          <ConnectionToolbar
-            filterValue={filterValue}
-            setFilterValue={setFilterValue}
-            hostnames={hostnames}
-            setHostnames={setHostnames}
-            containerIds={containerIds}
-            setContainerIds={setContainerIds}
-            totalConnections={totalConnections}
+          <ConnectionToolbarContainer
+            selectedHostnames={hostnames}
+            setSelectedHostnames={setHostnames}
+            selectedContainers={containerIds}
+            setSelectedContainers={setContainerIds}
+            totalRecords={totalConnections}
             sortValue={sortDropDownValue}
             setSortValue={setSortDropdownValue}
-            addressSpaceName={name}
-            namespace={namespace}
+            namespace={namespace || ""}
+            addressSpaceName={name || ""}
           />
         </GridItem>
         <GridItem span={6}>{renderPagination(page, perPage)}</GridItem>

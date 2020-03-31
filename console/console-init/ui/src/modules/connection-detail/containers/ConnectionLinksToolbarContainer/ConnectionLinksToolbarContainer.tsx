@@ -60,8 +60,8 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
   const [nameInput, setNameInput] = useState<string>();
   const [addressSelected, setAddressSelected] = useState<string>();
   const [addressInput, setAddressInput] = useState<string>();
-  const [nameOptions, setNameOptions] = useState<any[] | undefined>();
-  const [addressOptions, setAddressOptions] = useState<any[] | undefined>([]);
+  const [nameOptions, setNameOptions] = useState<any[]>();
+  const [addressOptions, setAddressOptions] = useState<any[]>();
   const [roleIsExpanded, setRoleIsExpanded] = useState<boolean>(false);
   const [filterSelected, setFilterSelected] = useState<string>("Name");
 
