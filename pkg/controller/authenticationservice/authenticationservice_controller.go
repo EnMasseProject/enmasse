@@ -131,7 +131,7 @@ func (r *ReconcileAuthenticationService) Reconcile(request reconcile.Request) (r
 
 func (r *ReconcileAuthenticationService) reconcileNoneAuthService(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (reconcile.Result, error) {
 	currentStatus := authservice.Status
-	applyNoneAuthServiceDefaults(ctx, r.client, r.scheme, authservice)
+	applyNoneAuthServiceDefaults(authservice)
 
 	rc := &recon.ReconcileContext{}
 	rc.ProcessSimple(func() error {
@@ -174,7 +174,7 @@ func (r *ReconcileAuthenticationService) reconcileStandardAuthService(ctx contex
 
 	currentStatus := authservice.Status
 	rc := &recon.ReconcileContext{}
-	applyStandardAuthServiceDefaults(ctx, r.client, r.scheme, authservice)
+	applyStandardAuthServiceDefaults(authservice)
 
 	rc.ProcessSimple(func() error {
 		return r.reconcileStandardCredentials(ctx, authservice)

@@ -5,7 +5,6 @@
 package authenticationservice
 
 import (
-	"context"
 	"fmt"
 
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
@@ -16,12 +15,10 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/apimachinery/pkg/runtime"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, authservice *adminv1beta1.AuthenticationService) {
+func applyStandardAuthServiceDefaults(authservice *adminv1beta1.AuthenticationService) {
 	if authservice.Spec.Standard == nil {
 		authservice.Spec.Standard = &adminv1beta1.AuthenticationServiceSpecStandard{}
 	}

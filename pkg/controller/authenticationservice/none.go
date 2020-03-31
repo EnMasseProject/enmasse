@@ -5,19 +5,15 @@
 package authenticationservice
 
 import (
-	"context"
-
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func applyNoneAuthServiceDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, authservice *adminv1beta1.AuthenticationService) {
+func applyNoneAuthServiceDefaults(authservice *adminv1beta1.AuthenticationService) {
 	if authservice.Spec.None == nil {
 		authservice.Spec.None = &adminv1beta1.AuthenticationServiceSpecNone{}
 	}
