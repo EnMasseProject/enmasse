@@ -9,9 +9,6 @@ import {
   ConnectionLinksList,
   ILink
 } from "modules/connection-detail/components/ConnectionLinksList/ConnectionLinksList";
-import { text, number, select } from "@storybook/addon-knobs";
-import { action } from "@storybook/addon-actions";
-import { ConnectionDetailFilter } from "modules/connection-detail/components";
 
 export default {
   title: "Connection Details"

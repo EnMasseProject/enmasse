@@ -5,3 +5,5 @@
 
 export * from "./ConnectionList";
 export * from "./EmptyConnection";
+export * from "./ConnectionsToolbar";
+export * from "./ConnectionsToggleGroup";

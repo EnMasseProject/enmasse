@@ -4,5 +4,4 @@
  */
 
 export * from "./AddressListContainer";
-export * from "./AddressFilter";
-export * from "./AddressListToolbar";
+export * from "./AddressToolbarContainer";
