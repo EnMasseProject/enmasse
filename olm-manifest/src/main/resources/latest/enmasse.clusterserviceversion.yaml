@@ -778,7 +778,7 @@ spec:
                 - name: CONSOLE_PROXY_KUBERNETES_IMAGE
                   value: "${CONSOLE_PROXY_KUBERNETES_IMAGE}"
                 - name: "FS_GROUP_FALLBACK_MAP"
-                  value: "{\"standard-authservice\": 1000}"
+                  value: "{}"
                 - name: ENABLE_MONITORING
                   value: "true"
                 - name: CONSOLE_LINK_SECTION_NAME
