@@ -5,19 +5,15 @@
 package authenticationservice
 
 import (
-	"context"
-
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func applyNoneAuthServiceDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, authservice *adminv1beta1.AuthenticationService) error {
+func applyNoneAuthServiceDefaults(authservice *adminv1beta1.AuthenticationService) {
 	if authservice.Spec.None == nil {
 		authservice.Spec.None = &adminv1beta1.AuthenticationServiceSpecNone{}
 	}
@@ -26,16 +22,15 @@ func applyNoneAuthServiceDefaults(ctx context.Context, client client.Client, sch
 		authservice.Spec.None.CertificateSecret = &corev1.SecretReference{
 			Name: secretName,
 		}
-		if !util.IsOpenshift() {
-			err := util.CreateSecret(ctx, client, scheme, authservice.Namespace, secretName, authservice, func(secret *corev1.Secret) error {
-				install.ApplyDefaultLabels(&secret.ObjectMeta, "none-authservice", secretName)
-				cn := util.ServiceToCommonName(authservice.Namespace, authservice.Name)
-				return util.GenerateSelfSignedCertSecret(cn, nil, nil, secret)
-			})
-			if err != nil {
-				return err
-			}
-		}
+	}
+}
+
+func applyNoneAuthServiceCert(authservice *adminv1beta1.AuthenticationService, secret *corev1.Secret) error {
+	// On OpenShift we use the automatic cluster certificate provider
+	install.ApplyDefaultLabels(&secret.ObjectMeta, "none-authservice", secret.Name)
+	if !util.IsOpenshift() && (!hasEntry(secret, "tls.key") || !hasEntry(secret, "tls.crt")) {
+		cn := util.ServiceToCommonName(authservice.Namespace, authservice.Name)
+		return util.GenerateSelfSignedCertSecret(cn, nil, nil, secret)
 	}
 	return nil
 }

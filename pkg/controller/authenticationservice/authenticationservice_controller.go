@@ -131,9 +131,11 @@ func (r *ReconcileAuthenticationService) Reconcile(request reconcile.Request) (r
 
 func (r *ReconcileAuthenticationService) reconcileNoneAuthService(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (reconcile.Result, error) {
 	currentStatus := authservice.Status
+	applyNoneAuthServiceDefaults(authservice)
+
 	rc := &recon.ReconcileContext{}
 	rc.ProcessSimple(func() error {
-		return applyNoneAuthServiceDefaults(ctx, r.client, r.scheme, authservice)
+		return r.reconcileCertificate(ctx, authservice, authservice.Spec.None.CertificateSecret.Name, applyNoneAuthServiceCert)
 	})
 
 	rc.Process(func() (reconcile.Result, error) {
@@ -172,8 +174,14 @@ func (r *ReconcileAuthenticationService) reconcileStandardAuthService(ctx contex
 
 	currentStatus := authservice.Status
 	rc := &recon.ReconcileContext{}
+	applyStandardAuthServiceDefaults(authservice)
+
 	rc.ProcessSimple(func() error {
-		return applyStandardAuthServiceDefaults(ctx, r.client, r.scheme, authservice)
+		return r.reconcileStandardCredentials(ctx, authservice)
+	})
+
+	rc.ProcessSimple(func() error {
+		return r.reconcileCertificate(ctx, authservice, authservice.Spec.Standard.CertificateSecret.Name, applyStandardAuthServiceCert)
 	})
 
 	rc.Process(func() (reconcile.Result, error) {
@@ -259,6 +267,18 @@ func (r *ReconcileAuthenticationService) updateStatus(ctx context.Context, auths
 	return reconcile.Result{}, nil
 }
 
+type ApplyCertificateFn func(authservice *adminv1beta1.AuthenticationService, existingSecret *corev1.Secret) error
+
+func (r *ReconcileAuthenticationService) reconcileCertificate(ctx context.Context, authservice *adminv1beta1.AuthenticationService, name string, applyFn ApplyCertificateFn) error {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: authservice.Namespace, Name: name},
+	}
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, secret, func() error {
+		return applyFn(authservice, secret)
+	})
+	return err
+}
+
 type ApplyDeploymentFn func(authservice *adminv1beta1.AuthenticationService, existingDeployment *appsv1.Deployment) error
 
 func (r *ReconcileAuthenticationService) reconcileDeployment(ctx context.Context, authservice *adminv1beta1.AuthenticationService, name string, fn ApplyDeploymentFn) (reconcile.Result, error) {
@@ -330,6 +350,16 @@ func (r *ReconcileAuthenticationService) reconcileStandardVolume(ctx context.Con
 		}
 	}
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileAuthenticationService) reconcileStandardCredentials(ctx context.Context, authservice *adminv1beta1.AuthenticationService) error {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: authservice.Namespace, Name: authservice.Spec.Standard.CredentialsSecret.Name},
+	}
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, secret, func() error {
+		return applyStandardAuthServiceCredentials(authservice, secret)
+	})
+	return err
 }
 
 func (r *ReconcileAuthenticationService) reconcileStandardRoute(ctx context.Context, name string, authservice *adminv1beta1.AuthenticationService) (reconcile.Result, error) {

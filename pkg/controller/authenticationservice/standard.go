@@ -5,7 +5,6 @@
 package authenticationservice
 
 import (
-	"context"
 	"fmt"
 
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
@@ -16,12 +15,10 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/apimachinery/pkg/runtime"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, authservice *adminv1beta1.AuthenticationService) error {
+func applyStandardAuthServiceDefaults(authservice *adminv1beta1.AuthenticationService) {
 	if authservice.Spec.Standard == nil {
 		authservice.Spec.Standard = &adminv1beta1.AuthenticationServiceSpecStandard{}
 	}
@@ -62,37 +59,54 @@ func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client,
 		authservice.Spec.Standard.CredentialsSecret = &corev1.SecretReference{
 			Name: secretName,
 		}
-		err := util.CreateSecret(ctx, client, scheme, authservice.Namespace, secretName, authservice, func(secret *corev1.Secret) error {
-			install.ApplyDefaultLabels(&secret.ObjectMeta, "standard-authservice", secretName)
-
-			secret.StringData = make(map[string]string)
-			secret.StringData["admin.username"] = "admin"
-			adminPassword, err := util.GeneratePassword(32)
-			if err != nil {
-				return err
-			}
-			secret.StringData["admin.password"] = adminPassword
-			return nil
-		})
-		if err != nil {
-			return err
-		}
 	}
+
 	if authservice.Spec.Standard.CertificateSecret == nil {
 		secretName := *authservice.Spec.Standard.ServiceName + "-cert"
 		authservice.Spec.Standard.CertificateSecret = &corev1.SecretReference{
 			Name: secretName,
 		}
+	}
+}
 
-		if !util.IsOpenshift() {
-			err := util.CreateSecret(ctx, client, scheme, authservice.Namespace, secretName, authservice, func(secret *corev1.Secret) error {
-				cn := util.ServiceToCommonName(authservice.Namespace, *authservice.Spec.Standard.ServiceName)
-				return util.GenerateSelfSignedCertSecret(cn, nil, nil, secret)
-			})
+func applyStandardAuthServiceCredentials(authservice *adminv1beta1.AuthenticationService, secret *corev1.Secret) error {
+	install.ApplyDefaultLabels(&secret.ObjectMeta, "standard-authservice", authservice.Spec.Standard.CredentialsSecret.Name)
+
+	if !hasEntry(secret, "admin.username") || !hasEntry(secret, "admin.password") {
+		secret.StringData = make(map[string]string)
+
+		if !hasEntry(secret, "admin.username") {
+			secret.StringData["admin.username"] = "admin"
+		}
+
+		if !hasEntry(secret, "admin.password") {
+			adminPassword, err := util.GeneratePassword(32)
 			if err != nil {
 				return err
 			}
+			secret.StringData["admin.password"] = adminPassword
 		}
+	}
+	return nil
+}
+
+func hasEntry(secret *corev1.Secret, key string) bool {
+	if secret == nil {
+		return false
+	}
+	if secret.Data == nil {
+		return false
+	}
+	_, ok := secret.Data[key]
+	return ok
+}
+
+func applyStandardAuthServiceCert(authservice *adminv1beta1.AuthenticationService, secret *corev1.Secret) error {
+	// On OpenShift we use the automatic cluster certificate provider
+	install.ApplyDefaultLabels(&secret.ObjectMeta, "standard-authservice", secret.Name)
+	if !util.IsOpenshift() && (!hasEntry(secret, "tls.key") || !hasEntry(secret, "tls.crt")) {
+		cn := util.ServiceToCommonName(authservice.Namespace, *authservice.Spec.Standard.ServiceName)
+		return util.GenerateSelfSignedCertSecret(cn, nil, nil, secret)
 	}
 	return nil
 }
