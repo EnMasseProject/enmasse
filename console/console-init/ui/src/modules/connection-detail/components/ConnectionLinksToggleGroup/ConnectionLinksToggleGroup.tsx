@@ -20,76 +20,74 @@ import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { DropdownWithToggle, TypeAhead } from "components";
 
-export interface IMessagingToolbarToggleGroupProps {
+export interface IConnectionLinksToggleGroupProps {
   totalRecords: number;
   filterSelected?: string;
   nameSelected?: string;
   nameInput?: string;
-  namespaceSelected?: string;
-  namespaceInput?: string;
+  addressSelected?: string;
+  addressInput?: string;
   nameOptions?: any[];
-  namespaceOptions?: any[];
-  typeIsExpanded: boolean;
-  typeSelected?: string | null;
+  addressOptions?: any[];
+  roleIsExpanded: boolean;
+  roleSelected?: string | null;
   selectedNames: Array<{ value: string; isExact: boolean }>;
-  selectedNamespaces: Array<{ value: string; isExact: boolean }>;
+  selectedAddresses: Array<{ value: string; isExact: boolean }>;
   onFilterSelect: (value: string) => void;
   onNameSelect: (e: any, selection: SelectOptionObject) => void;
   onNameClear: () => void;
   onNameFilter: (e: any) => any[];
-  onNamespaceSelect: (e: any, selection: SelectOptionObject) => void;
-  onNamespaceClear: () => void;
-  onNamespaceFilter: (e: any) => any[];
-  onTypeToggle: () => void;
-  onTypeSelect: (e: any, selection: SelectOptionObject) => void;
-  onDeleteAll: () => void;
+  onAddressSelect: (e: any, selection: SelectOptionObject) => void;
+  onAddressClear: () => void;
+  onAddressFilter: (e: any) => any[];
+  onRoleToggle: () => void;
+  onRoleSelect: (e: any, selection: SelectOptionObject) => void;
   onSearch: () => void;
   onDelete: (
     category: string | DataToolbarChipGroup,
     chip: string | DataToolbarChip
   ) => void;
 }
-const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarToggleGroupProps> = ({
+const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggleGroupProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,
   nameInput,
-  namespaceSelected,
-  namespaceInput,
+  addressSelected,
+  addressInput,
   nameOptions,
-  namespaceOptions,
-  typeIsExpanded,
-  typeSelected,
+  addressOptions,
+  roleIsExpanded,
+  roleSelected,
   selectedNames,
-  selectedNamespaces,
+  selectedAddresses,
   onFilterSelect,
   onNameSelect,
   onNameClear,
   onNameFilter,
-  onNamespaceSelect,
-  onNamespaceClear,
-  onNamespaceFilter,
-  onTypeToggle,
-  onTypeSelect,
-  onDeleteAll,
+  onAddressSelect,
+  onAddressClear,
+  onAddressFilter,
+  onRoleToggle,
+  onRoleSelect,
   onSearch,
   onDelete
 }) => {
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
-    { key: "filterNamespace", value: "Namespace" },
-    { key: "filterType", value: "Type" }
+    { key: "filterAddress", value: "Address" },
+    { key: "filterRole", value: "Role" }
   ];
-  const typeOptions: ISelectOption[] = [
-    { value: "Standard", isDisabled: false },
-    { value: "Brokered", isDisabled: false }
+  const roleOptions: ISelectOption[] = [
+    { value: "Sender", isDisabled: false },
+    { value: "Receiver", isDisabled: false }
   ];
 
   const checkIsFilterApplied = () => {
     if (
       (selectedNames && selectedNames.length > 0) ||
-      (selectedNamespaces && selectedNamespaces.length > 0) ||
-      (typeSelected && typeSelected.trim() !== "")
+      (selectedAddresses && selectedAddresses.length > 0) ||
+      (roleSelected && roleSelected.trim() !== "")
     ) {
       return true;
     }
@@ -134,27 +132,27 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
         breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
       >
         <DataToolbarFilter
-          chips={selectedNamespaces.map(filter => filter.value)}
+          chips={selectedAddresses.map(filter => filter.value)}
           deleteChip={onDelete}
-          categoryName="Namespace"
+          categoryName="Address"
         >
-          {filterSelected && filterSelected === "Namespace" && (
+          {filterSelected && filterSelected === "Address" && (
             <InputGroup>
               <TypeAhead
-                ariaLabelTypeAhead={"Select namespace"}
+                ariaLabelTypeAhead={"Select address"}
                 ariaLabelledBy={"typeahead-select-id"}
-                onSelect={onNamespaceSelect}
-                onClear={onNamespaceClear}
-                onFilter={onNamespaceFilter}
-                selected={namespaceSelected}
-                inputData={namespaceInput || ""}
-                options={namespaceOptions}
-                placeholderText={"Select namespace"}
+                onSelect={onAddressSelect}
+                onClear={onAddressClear}
+                onFilter={onAddressFilter}
+                selected={addressSelected}
+                inputData={addressInput || ""}
+                options={addressOptions}
+                placeholderText={"Select address"}
               />
               <Button
-                id="ad-links-filter-search-namespace"
+                id="ad-links-filter-search-address"
                 variant={ButtonVariant.control}
-                aria-label="search button for search namespace"
+                aria-label="search button for search address"
                 onClick={onSearch}
               >
                 <SearchIcon />
@@ -167,20 +165,20 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
         breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
       >
         <DataToolbarFilter
-          chips={typeSelected ? [typeSelected] : []}
+          chips={roleSelected ? [roleSelected] : []}
           deleteChip={onDelete}
-          categoryName="Type"
+          categoryName="Role"
         >
-          {filterSelected === "Type" && (
+          {filterSelected === "Role" && (
             <Select
               variant={SelectVariant.single}
-              aria-label="Select Type"
-              onToggle={onTypeToggle}
-              onSelect={onTypeSelect}
-              selections={typeSelected || "Select Type"}
-              isExpanded={typeIsExpanded}
+              aria-label="Select Role"
+              onToggle={onRoleToggle}
+              onSelect={onRoleSelect}
+              selections={roleSelected || "Select Role"}
+              isExpanded={roleIsExpanded}
             >
-              {typeOptions.map((option, index) => (
+              {roleOptions.map((option, index) => (
                 <SelectOption
                   isDisabled={option.isDisabled}
                   key={index}
@@ -234,4 +232,4 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
     </DataToolbarToggleGroup>
   );
 };
-export { MessagingToolbarToggleGroup };
+export { ConnectionLinksToggleGroup };

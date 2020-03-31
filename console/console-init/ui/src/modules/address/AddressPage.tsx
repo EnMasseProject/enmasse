@@ -17,14 +17,13 @@ import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { useQuery, useMutation } from "@apollo/react-hooks";
 import { StyleSheet } from "@patternfly/react-styles";
 import { ISortBy } from "@patternfly/react-table";
-import { AddressListToolbar } from "./containers/AddressListToolbar";
-import { AddressListContainer } from "./containers/AddressListContainer";
+import { AddressListContainer } from "./containers";
 import {
   CURRENT_ADDRESS_SPACE_PLAN,
   DELETE_ADDRESS,
   PURGE_ADDRESS
 } from "graphql-module/queries";
-import { IAddress } from "./components/AddressList";
+import { IAddress } from "./components";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import {
   getFilteredAdressNames,
@@ -38,6 +37,7 @@ import {
 import { compareObject } from "utils";
 import { TablePagination } from "components/TablePagination";
 import { AddressTypes } from "constant";
+import { AddressToolbarContainer } from "modules/address/containers";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -66,8 +66,7 @@ export default function AddressPage() {
   const { dispatch } = useStoreContext();
   useDocumentTitle("Address List");
   useA11yRouteChange();
-  const { name, namespace } = useParams();
-  const [filterValue, setFilterValue] = useState<string | null>("Address");
+  const { name, namespace, type } = useParams();
   const [filterNames, setFilterNames] = useState<Array<IFilterValue>>([]);
   const [typeValue, setTypeValue] = useState<string | null>(null);
   const [statusValue, setStatusValue] = useState<string | null>(null);
@@ -283,25 +282,24 @@ export default function AddressPage() {
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
         <GridItem span={7}>
-          <AddressListToolbar
-            filterValue={filterValue}
-            setFilterValue={setFilterValue}
-            filterNames={filterNames}
-            setFilterNames={setFilterNames}
-            typeValue={typeValue}
-            setTypeValue={setTypeValue}
-            statusValue={statusValue}
-            setStatusValue={setStatusValue}
-            totalAddresses={totalAddresses}
+          <AddressToolbarContainer
+            selectedNames={filterNames}
+            setSelectedNames={setFilterNames}
+            typeSelected={typeValue}
+            setTypeSelected={setTypeValue}
+            statusSelected={statusValue}
+            setStatusSelected={setStatusValue}
+            totalRecords={totalAddresses}
             sortValue={sortDropDownValue}
-            setOnCreationRefetch={setOnCreationRefetch}
             setSortValue={setSortDropdownValue}
-            isCreateWizardOpen={isCreateWizardOpen}
-            setIsCreateWizardOpen={setIsCreateWizardOpen}
+            namespace={namespace || ""}
+            addressspaceName={name || ""}
+            addressspaceType={type || ""}
             onDeleteAllAddress={onDeleteAll}
             onPurgeAllAddress={onPurgeAll}
             isDeleteAllDisabled={isDeleteAllOptionDisabled()}
             isPurgeAllDisabled={isPurgeAllOptionDisbled()}
+            setOnCreationRefetch={setOnCreationRefetch}
           />
         </GridItem>
         <GridItem span={5}>{renderPagination()}</GridItem>

@@ -25,7 +25,7 @@ import {
 import { getFilteredValue } from "utils";
 import { IConnectionDetailResponse } from "schema/ResponseTypes";
 import { RETURN_CONNECTION_DETAIL } from "graphql-module/queries";
-import { ConnectionDetailToolbar } from "./components/ConnectionDetailToolbar";
+import { ConnectionLinksWithToolbar } from "modules/connection-detail/components";
 import { POLL_INTERVAL, FetchPolicy } from "constant";
 import { NoDataFound } from "components";
 
@@ -138,7 +138,7 @@ export default function ConnectionDetailPage() {
     <>
       <ConnectionDetailHeader {...connectionDetail} addressSpaceType={type} />
       <PageSection>
-        <ConnectionDetailToolbar
+        <ConnectionLinksWithToolbar
           name={name}
           namespace={namespace}
           connectionName={connectionname}

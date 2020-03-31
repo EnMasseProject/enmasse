@@ -4,4 +4,4 @@
  */
 
 export * from "./ConnectionContainer";
-export * from "./ConnectionToolbar";
+export * from "./ConnectionToolbarContainer";
