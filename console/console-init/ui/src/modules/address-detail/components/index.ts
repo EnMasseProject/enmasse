@@ -7,4 +7,5 @@ export * from "./AddressDetailHeader";
 export * from "./AddressLinks";
 export * from "./TypeBadge";
 export * from "./EmptyAddressLinks";
-export * from "./AddressLinksToolbarToggleGroup";
+export * from "./AddressLinksToggleGroup";
+export * from "./AddressLinksToolbar";

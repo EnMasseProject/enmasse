@@ -16,8 +16,10 @@ import { ISortBy } from "@patternfly/react-table";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { css } from "@patternfly/react-styles";
 import { GridStylesForTableHeader } from "modules/address/AddressPage";
-import { AddressLinksContainer } from "modules/address-detail/containers/AddressLinksContainer";
-import { AddressLinksToolbar } from "modules/address-detail/containers/AddressLinksToolbar";
+import {
+  AddressLinksContainer,
+  AddressLinksToolbarContainer
+} from "modules/address-detail/containers";
 import { TablePagination } from "components/TablePagination";
 import { IFilterValue } from "modules/address/utils";
 
@@ -41,13 +43,12 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const [addresLinksTotal, setAddressLinksTotal] = useState<number>(0);
-  const [filterValue, setFilterValue] = useState<string>("Name");
   const [filterNames, setFilterNames] = useState<Array<IFilterValue>>([]);
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
   const [filterContainers, setFilterContainers] = useState<Array<IFilterValue>>(
     []
   );
-  const [filterRole, setFilterRole] = useState<string>();
+  const [filterRole, setFilterRole] = useState<string | null>();
   const renderPagination = () => {
     return (
       <TablePagination
@@ -69,16 +70,14 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
         </Title>
         <Grid>
           <GridItem span={7}>
-            <AddressLinksToolbar
-              filterValue={filterValue}
-              setFilterValue={setFilterValue}
-              filterNames={filterNames}
-              setFilterNames={setFilterNames}
-              filterContainers={filterContainers}
-              setFilterContainers={setFilterContainers}
-              filterRole={filterRole}
-              setFilterRole={setFilterRole}
-              totalLinks={addresLinksTotal}
+            <AddressLinksToolbarContainer
+              selectedNames={filterNames}
+              setSelectedNames={setFilterNames}
+              selectedContainers={filterContainers}
+              setSelectedContainers={setFilterContainers}
+              roleSelected={filterRole}
+              setRoleSelected={setFilterRole}
+              totalRecords={addresLinksTotal}
               sortValue={sortDropDownValue}
               setSortValue={setSortDropdownValue}
               namespace={addressspace_namespace}
@@ -100,7 +99,7 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
           filterContainers={filterContainers}
           sortValue={sortDropDownValue}
           setSortValue={setSortDropdownValue}
-          filterRole={filterRole}
+          filterRole={filterRole || undefined}
         />
         {renderPagination()}
       </PageSection>
