@@ -19,7 +19,7 @@ In the long term, the Global Console will also present key statistics about each
 
 == Global Console Design
 
-The Global Console is a Pattern Fly 4/React-JS application.  It is served by Oauth-proxy (https://github.com/openshift/oauth-proxy or https://github.com/pusher/oauth2_proxy).
+The Global Console is a Pattern Fly 4/React-JS application.  It is served by Oauth-proxy (https://github.com/openshift/oauth-proxy or https://oauth2-proxy.github.io/oauth2-proxy).
 
 Authentication is delegated to the Oauth-proxy component.
 
