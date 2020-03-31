@@ -384,6 +384,8 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 KubeCMDClient.runOnCluster("get", "deployments", "-n", kubernetes.getInfraNamespace(), "-o", "wide");
                 ExecutionResultData labelRes = KubeCMDClient.setResourceEnvVarByLabel(Optional.of(kubernetes.getInfraNamespace()), "deployment", Optional.of("agent"), "KUBERNETES_SERVICE_HOST", d.getMetadata().getName(), proxyDnsName);
                 assertTrue(labelRes.getRetCode());
+                labelRes = KubeCMDClient.setResourceEnvVarByLabel(Optional.of(kubernetes.getInfraNamespace()), "deployment", Optional.of("agent"), "KUBERNETES_SERVICE_PORT", d.getMetadata().getName(), "8443");
+                assertTrue(labelRes.getRetCode());
             });
 
             Iterator<Address> itr = Stream.generate(() -> {
