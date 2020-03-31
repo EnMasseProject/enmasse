@@ -374,10 +374,14 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                     .build();
             isolatedResourcesManager.createAddressSpaceList(standard);
 
-            // configure admin pod to use api proxy
+            // configure admin/agent pod to use api proxy
             Map<String, String> adminLabels = new HashMap<>();
             adminLabels.put(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(standard));
-            adminLabels.put(LabelKeys.NAME, "admin");
+            if ("brokered".equals(type)) {
+                adminLabels.put(LabelKeys.ROLE, "agent");
+            } else {
+                adminLabels.put(LabelKeys.NAME, "admin");
+            }
             adminLabels.put(LabelKeys.APP, "enmasse");
 
             kubernetes.listDeployments(adminLabels).forEach(d -> {
