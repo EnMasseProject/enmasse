@@ -19,6 +19,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
 
 public class StatementConfiguration {
 
@@ -58,7 +59,7 @@ public class StatementConfiguration {
             }
         }
 
-        final Yaml yaml = new Yaml();
+        final Yaml yaml = createYamlParser();
         @SuppressWarnings("unchecked")
         final Map<String, Object> properties = yaml.loadAs(input, Map.class);
         if (properties == null) {
@@ -151,6 +152,19 @@ public class StatementConfiguration {
             logger.info("{}\n{}", key, this.statements.get(key));
         }
 
+    }
+
+    /**
+     * Create a YAML parser which reject creating arbitrary Java objects.
+     * @return A new YAML parser, never returns {@code null}.
+     */
+    static Yaml createYamlParser() {
+        return new Yaml(new Constructor() {
+            @Override
+            protected Class<?> getClassForName(String name) throws ClassNotFoundException {
+                throw new IllegalArgumentException("Class instantiation is disabled");
+            }
+        });
     }
 
 }
