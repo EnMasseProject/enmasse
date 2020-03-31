@@ -10,11 +10,13 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/gob"
 	"github.com/alexedwards/scs/v2"
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/util"
-	"github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
+	userapiv1 "github.com/openshift/api/user/v1"
+	userv1 "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
@@ -34,6 +36,8 @@ var bearerRegexp = regexp.MustCompile(`^Bearer +(.*)$`)
 
 const forwardedHeader = "X-Forwarded-Access-Token"
 const forwardedUserHeader = "X-Forwarded-User"
+const forwardedEmailHeader = "X-Forwarded-Email"
+const forwardedPreferredHeader = "X-Forwarded-Preferred-Username"
 const authHeader = "Authorization"
 
 type ImpersonationConfig struct {
@@ -52,6 +56,7 @@ func getImpersonatedUser(req *http.Request, impersonationConfig *ImpersonationCo
 }
 
 func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, impersonationConfig *ImpersonationConfig) http.Handler {
+	gob.Register(userapiv1.User{})
 
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		var state *RequestState
@@ -128,7 +133,7 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 			return
 		}
 
-		userClient, err := v1.NewForConfig(config)
+		userClient, err := userv1.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -142,11 +147,16 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 			return
 		}
 
-		var loggedOnUser string
-		if impersonationConfig != nil {
-			loggedOnUser = impersonatedUser
+		var loggedOnUser userapiv1.User
+		if useSession {
+			if sessionManager.Exists(req.Context(), loggedOnUserSessionAttribute) {
+				loggedOnUser = sessionManager.Get(req.Context(), loggedOnUserSessionAttribute).(userapiv1.User)
+			} else {
+				loggedOnUser = getLoggedOnUser(req, userClient, impersonatedUser)
+				sessionManager.Put(req.Context(), loggedOnUserSessionAttribute, loggedOnUser)
+			}
 		} else {
-			loggedOnUser = getLoggedOnUser(useSession, sessionManager, req, userClient)
+			loggedOnUser = getLoggedOnUser(req, userClient, impersonatedUser)
 		}
 
 		var accessControllerState interface{}
@@ -156,13 +166,12 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 
 		controller := accesscontroller.NewKubernetesRBACAccessController(kubeClient, accessControllerState)
 		state = &RequestState{
-			UserInterface:        userClient.Users(),
 			EnmasseV1beta1Client: coreClient,
 			AccessController:     controller,
 			User:                 loggedOnUser,
 			UserAccessToken:      config.BearerToken,
 			UseSession:           useSession,
-			ImpersonateUser:      impersonationConfig != nil,
+			ImpersonatedUser:     impersonatedUser,
 		}
 
 		ctx := ContextWithRequestState(state, req.Context())
@@ -172,6 +181,8 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 }
 
 func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, accessToken string) http.Handler {
+	gob.Register(userapiv1.User{})
+
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 
 		kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -187,7 +198,7 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 			return
 		}
 
-		userclient, err := v1.NewForConfig(config)
+		userclient, err := userv1.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -201,16 +212,15 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 			return
 		}
 
-		loggedOnUser := getLoggedOnUser(true, sessionManager, req, userclient)
+		loggedOnUser := getLoggedOnUser(req, userclient, "")
 
 		requestState := &RequestState{
-			UserInterface:        userclient.Users(),
 			EnmasseV1beta1Client: coreClient,
 			AccessController:     accesscontroller.NewAllowAllAccessController(),
 			User:                 loggedOnUser,
 			UserAccessToken:      accessToken,
 			UseSession:           true,
-			ImpersonateUser:      false,
+			ImpersonatedUser:     "",
 		}
 
 		ctx := ContextWithRequestState(requestState, req.Context())
@@ -221,7 +231,7 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 func UpdateAccessControllerState(ctx context.Context, loggedOnUser string, sessionManager *scs.SessionManager) string {
 	requestState := GetRequestStateFromContext(ctx)
 	if requestState != nil {
-		loggedOnUser = requestState.User
+		loggedOnUser = requestState.User.Name
 		if requestState.UseSession {
 			if updated, accessControllerState := requestState.AccessController.GetState(); updated {
 				if accessControllerState == nil {
@@ -235,29 +245,35 @@ func UpdateAccessControllerState(ctx context.Context, loggedOnUser string, sessi
 	return loggedOnUser
 }
 
-func getLoggedOnUser(useSession bool, sessionManager *scs.SessionManager, req *http.Request, userClient *v1.UserV1Client) string {
-	loggedOnUser := "<unknown>"
-	if useSession {
-		if sessionManager.Exists(req.Context(), loggedOnUserSessionAttribute) {
-			loggedOnUser = sessionManager.GetString(req.Context(), loggedOnUserSessionAttribute)
-		} else {
-			if util.HasApi(util.UserGVK) {
-				usr, err := userClient.Users().Get("~", metav1.GetOptions{})
-				if err == nil {
-					loggedOnUser = usr.ObjectMeta.Name
-					sessionManager.Put(req.Context(), loggedOnUserSessionAttribute, loggedOnUser)
-				}
-			}
-		}
-	} else {
-		if util.HasApi(util.UserGVK) {
-			usr, err := userClient.Users().Get("~", metav1.GetOptions{})
-			if err == nil {
-				loggedOnUser = usr.ObjectMeta.Name
-			}
+func getLoggedOnUser(req *http.Request, userClient *userv1.UserV1Client, impersonatedUser string) userapiv1.User {
+	createUser := func(userId string) userapiv1.User {
+		return userapiv1.User{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: userId,
+			},
+			FullName:   userId,
+			Identities: []string{userId},
 		}
 	}
-	return loggedOnUser
+
+	if util.HasApi(util.UserGVK) {
+		usr, err := userClient.Users().Get("~", metav1.GetOptions{})
+		if err == nil {
+			return *usr
+		}
+	} else if impersonatedUser != "" {
+		return createUser(impersonatedUser)
+	}
+
+	userId := "unknown"
+	if req.Header.Get(forwardedPreferredHeader) != "" {
+		userId = req.Header.Get(forwardedPreferredHeader)
+	} else if req.Header.Get(forwardedEmailHeader) != "" {
+		userId = req.Header.Get(forwardedEmailHeader)
+	} else if req.Header.Get(forwardedUserHeader) != "" {
+		userId = req.Header.Get(forwardedUserHeader)
+	}
+	return createUser(userId)
 }
 
 func getShaSum(accessToken string, impersonationUser string) ([]byte, error) {
