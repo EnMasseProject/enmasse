@@ -9,6 +9,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -25,17 +26,18 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(NON_NULL)
 public class JdbcDeviceRegistry {
 
+    @JsonUnwrapped
     @JsonInclude(NON_DEFAULT)
-    private boolean disabled;
+    private CommonDeviceRegistry commonDeviceRegistry = new CommonDeviceRegistry();
 
     private JdbcRegistryServer server;
 
-    public boolean isDisabled() {
-        return disabled;
+    public void setCommonDeviceRegistry(CommonDeviceRegistry commonDeviceRegistry) {
+        this.commonDeviceRegistry = commonDeviceRegistry;
     }
 
-    public void setDisabled(boolean disabled) {
-        this.disabled = disabled;
+    public CommonDeviceRegistry getCommonDeviceRegistry() {
+        return commonDeviceRegistry;
     }
 
     public JdbcRegistryServer getServer() {

@@ -5,7 +5,6 @@
 
 package io.enmasse.iot.model.v1;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -26,8 +25,8 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(NON_NULL)
 public class JdbcDeviceConnection {
 
-    @JsonInclude(NON_DEFAULT)
-    private boolean disabled;
+    @JsonUnwrapped
+    private CommonDeviceRegistry commonDeviceRegistry;
 
     @JsonUnwrapped
     private ServiceConfig serviceConfig;
@@ -36,12 +35,12 @@ public class JdbcDeviceConnection {
 
     private JdbcDeviceConnectionServer server;
 
-    public boolean isDisabled() {
-        return disabled;
+    public CommonDeviceRegistry getCommonDeviceRegistry() {
+        return commonDeviceRegistry;
     }
 
-    public void setDisabled(boolean disabled) {
-        this.disabled = disabled;
+    public void setCommonDeviceRegistry(CommonDeviceRegistry commonDeviceRegistry) {
+        this.commonDeviceRegistry = commonDeviceRegistry;
     }
 
     public JdbcDeviceConnectionServer getServer() {

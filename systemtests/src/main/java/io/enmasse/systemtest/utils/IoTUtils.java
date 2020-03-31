@@ -133,7 +133,8 @@ public class IoTUtils {
         if (config.getSpec().getServices() != null &&
                 config.getSpec().getServices().getDeviceRegistry() != null &&
                 config.getSpec().getServices().getDeviceRegistry().getJdbc() != null &&
-                !config.getSpec().getServices().getDeviceRegistry().getJdbc().isDisabled() &&
+                config.getSpec().getServices().getDeviceRegistry().getJdbc().getCommonDeviceRegistry() != null &&
+                !config.getSpec().getServices().getDeviceRegistry().getJdbc().getCommonDeviceRegistry().isDisabled() &&
                 config.getSpec().getServices().getDeviceRegistry().getJdbc().getServer() != null &&
                 config.getSpec().getServices().getDeviceRegistry().getJdbc().getServer().getExternal() != null) {
 
