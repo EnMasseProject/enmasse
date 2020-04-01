@@ -54,6 +54,11 @@ public class Environment {
     private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
     private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
     private final String enmasseDocs = System.getProperty(ENMASSE_DOCS_SYSTEM_PROPERTY);
+    private final String enmasseOlmDocsUrl = System.getProperty("enmasse.olm.docs.url");
+    private final String enmasseOlmAboutName = System.getProperty("enmasse.olm.about.name");
+    private final String enmasseOlmAboutUrl = System.getProperty("enmasse.olm.about.url");
+    private final String enmasseOlmDocConfigUrl = System.getProperty("enmasse.olm.doc.configure.url");
+    private final String enmasseOlmDocIotUrl = System.getProperty("enmasse.olm.doc.iot.url");
     private String kubernetesDomain = System.getenv(K8S_DOMAIN_ENV);
     private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
@@ -182,6 +187,26 @@ public class Environment {
 
     public String enmasseDocs() {
         return enmasseDocs;
+    }
+
+    public String enmasseOlmDocsUrl() {
+        return enmasseOlmDocsUrl;
+    }
+
+    public String enmasseOlmAboutName() {
+        return enmasseOlmAboutName;
+    }
+
+    public String enmasseOlmAboutUrl() {
+        return enmasseOlmAboutUrl;
+    }
+
+    public String enmasseOlmDocConfigUrl() {
+        return enmasseOlmDocConfigUrl;
+    }
+
+    public String enmasseOlmDocIotUrl() {
+        return enmasseOlmDocIotUrl;
     }
 
     public String kubernetesDomain() {
