@@ -9,6 +9,9 @@ import (
 	"context"
 	"fmt"
 
+	"crypto/sha256"
+	"encoding/hex"
+
 	logr "github.com/go-logr/logr"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
@@ -25,6 +28,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
+
+const ANNOTATION_ROUTER_CONFIG_DIGEST = "enmasse.io/router-config-digest"
 
 type RouterController struct {
 	client         client.Client
@@ -50,24 +55,53 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	setDefaultRouterScalingStrategy(&infra.Spec.Router)
 
 	routerInfraName := getRouterInfraName(infra)
-	statefulset := &appsv1.StatefulSet{
-		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
-	}
-	certSecretName := cert.GetCertSecretName(statefulset)
+	certSecretName := cert.GetCertSecretName(routerInfraName)
 
 	// Update router condition
 	routersCreated := infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraRoutersCreated)
 	routersCreated.SetStatus(corev1.ConditionTrue, "", "")
 
 	return common.WithConditionUpdate(routersCreated, func() error {
-		_, err := controllerutil.CreateOrUpdate(ctx, r.client, statefulset, func() error {
+		// Reconcile static router config
+		routerConfig := generateConfig(&infra.Spec.Router)
+		routerConfigBytes, err := serializeConfig(&routerConfig)
+		if err != nil {
+			return err
+		}
+		config := &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
+			Data: map[string]string{
+				"qdrouterd.json": string(routerConfigBytes),
+			},
+		}
+
+		_, err = controllerutil.CreateOrUpdate(ctx, r.client, config, func() error {
+			if err := controllerutil.SetControllerReference(infra, config, r.scheme); err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+
+		rawSha := sha256.Sum256(routerConfigBytes)
+		routerConfigSha := hex.EncodeToString(rawSha[:])
+
+		// Reconcile statefulset of the router
+		statefulset := &appsv1.StatefulSet{
+			ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
+		}
+		_, err = controllerutil.CreateOrUpdate(ctx, r.client, statefulset, func() error {
 			if err := controllerutil.SetControllerReference(infra, statefulset, r.scheme); err != nil {
 				return err
 			}
 
 			install.ApplyStatefulSetDefaults(statefulset, "router", infra.Name)
-			statefulset.Labels["infra"] = infra.Name
-			statefulset.Spec.Template.Labels["infra"] = infra.Name
+			statefulset.Labels[common.LABEL_INFRA] = infra.Name
+			statefulset.Spec.Template.Labels[common.LABEL_INFRA] = infra.Name
+
+			statefulset.Annotations[ANNOTATION_ROUTER_CONFIG_DIGEST] = routerConfigSha
 
 			applyScalingStrategy(infra.Spec.Router.ScalingStrategy, statefulset)
 
@@ -108,10 +142,10 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 			return err
 		}
 
+		// Reconcile router service
 		service := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
 		}
-
 		_, err = controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
 			if err := controllerutil.SetControllerReference(infra, service, r.scheme); err != nil {
 				return err
@@ -134,28 +168,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 			return err
 		}
 
-		routerConfig := generateConfig(&infra.Spec.Router)
-		routerConfigBytes, err := serializeConfig(&routerConfig)
-		if err != nil {
-			return err
-		}
-		config := &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
-			Data: map[string]string{
-				"qdrouterd.json": string(routerConfigBytes),
-			},
-		}
-
-		_, err = controllerutil.CreateOrUpdate(ctx, r.client, config, func() error {
-			if err := controllerutil.SetControllerReference(infra, config, r.scheme); err != nil {
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-
+		// Reconcile router certificate
 		_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset)
 		if err != nil {
 			return err

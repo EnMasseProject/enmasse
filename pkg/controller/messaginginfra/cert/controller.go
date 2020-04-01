@@ -130,7 +130,7 @@ func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, 
 		return nil, err
 	}
 
-	secretName := GetCertSecretName(set)
+	secretName := GetCertSecretName(set.Name)
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
 	}
@@ -226,6 +226,6 @@ func getDigest(data []byte) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func GetCertSecretName(set *appsv1.StatefulSet) string {
-	return fmt.Sprintf("%s-cert", set.Name)
+func GetCertSecretName(name string) string {
+	return fmt.Sprintf("%s-cert", name)
 }

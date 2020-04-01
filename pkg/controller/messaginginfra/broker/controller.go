@@ -43,7 +43,7 @@ func NewBrokerController(client client.Client, scheme *runtime.Scheme, certContr
 
 func getBrokerLabels(infra *v1beta2.MessagingInfra) map[string]string {
 	labels := make(map[string]string, 0)
-	labels["infra"] = infra.Name
+	labels[common.LABEL_INFRA] = infra.Name
 	labels["component"] = "broker"
 	labels["app"] = "enmasse"
 
@@ -115,7 +115,7 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, statefulset *appsv1.StatefulSet) error {
 	logger.Info("Creating broker", "name", statefulset.Name)
 
-	certSecretName := cert.GetCertSecretName(statefulset)
+	certSecretName := cert.GetCertSecretName(statefulset.Name)
 
 	_, err := controllerutil.CreateOrUpdate(ctx, b.client, statefulset, func() error {
 		if err := controllerutil.SetControllerReference(infra, statefulset, b.scheme); err != nil {
@@ -123,8 +123,8 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 		}
 
 		install.ApplyStatefulSetDefaults(statefulset, "broker", statefulset.Name)
-		statefulset.Labels["infra"] = infra.Name
-		statefulset.Spec.Template.Labels["infra"] = infra.Name
+		statefulset.Labels[common.LABEL_INFRA] = infra.Name
+		statefulset.Spec.Template.Labels[common.LABEL_INFRA] = infra.Name
 
 		statefulset.Spec.ServiceName = statefulset.Name
 		statefulset.Spec.Replicas = int32ptr(1)
