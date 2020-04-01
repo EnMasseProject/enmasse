@@ -14,6 +14,7 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
+	"github.com/enmasseproject/enmasse/pkg/state"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
@@ -22,6 +23,7 @@ import (
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	intstr "k8s.io/apimachinery/pkg/util/intstr"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -31,13 +33,15 @@ type BrokerController struct {
 	client         client.Client
 	scheme         *runtime.Scheme
 	certController *cert.CertController
+	stateManager   state.StateManager
 }
 
-func NewBrokerController(client client.Client, scheme *runtime.Scheme, certController *cert.CertController) *BrokerController {
+func NewBrokerController(client client.Client, scheme *runtime.Scheme, certController *cert.CertController, stateManager state.StateManager) *BrokerController {
 	return &BrokerController{
 		client:         client,
 		scheme:         scheme,
 		certController: certController,
+		stateManager:   stateManager,
 	}
 }
 
@@ -71,25 +75,28 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 			return err
 		}
 
+		hosts := make(map[string]bool, 0)
 		for _, broker := range brokers.Items {
 			err := b.reconcileBroker(ctx, logger, infra, &broker)
 			if err != nil {
 				return err
 			}
+
+			hosts[toHost(&broker)] = true
 		}
 
 		toCreate := numBrokersToCreate(infra.Spec.Broker.ScalingStrategy, brokers.Items)
 		if toCreate > 0 {
 			logger.Info("Creating brokers", "toCreate", toCreate)
 			for i := 0; i < toCreate; i++ {
-				statefulset := &appsv1.StatefulSet{
+				broker := &appsv1.StatefulSet{
 					ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: fmt.Sprintf("broker-%s-%s", infra.Name, util.RandomBrokerName())},
 				}
-				err = b.reconcileBroker(ctx, logger, infra, statefulset)
+				err = b.reconcileBroker(ctx, logger, infra, broker)
 				if err != nil {
 					return err
 				}
-
+				hosts[toHost(broker)] = true
 			}
 
 		}
@@ -102,13 +109,25 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 				if err != nil {
 					return err
 				}
+				delete(hosts, toHost(&brokers.Items[i]))
 				toDelete--
 			}
 		} else {
 			logger.Info("No changes to broker pool")
 		}
+
+		// Update discoverable brokers
+		newHosts := make([]string, 0)
+		for host, _ := range hosts {
+			newHosts = append(newHosts, host)
+		}
+		b.stateManager.GetOrCreateInfra(infra.Name, infra.Namespace).UpdateBrokers(newHosts)
 		return nil
 	})
+}
+
+func toHost(broker *appsv1.StatefulSet) string {
+	return fmt.Sprintf("%s-0.%s.%s.svc", broker.Name, broker.Name, broker.Namespace)
 }
 
 func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, statefulset *appsv1.StatefulSet) error {
@@ -175,6 +194,13 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 			install.ApplyVolumeMountSimple(container, "init", "/opt/apache-artemis/custom", false)
 			install.ApplyVolumeMountSimple(container, "certs", "/etc/enmasse-certs", false)
 
+			container.Ports = []corev1.ContainerPort{
+				{
+					ContainerPort: 5671,
+					Name:          "amqps",
+				},
+			}
+
 			return nil
 		})
 		if err != nil {
@@ -201,12 +227,37 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 		}
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}
 
-	_, err = b.certController.ReconcileCert(ctx, logger, infra, statefulset)
+	// Reconcile service
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: statefulset.Name},
+	}
+	_, err = controllerutil.CreateOrUpdate(ctx, b.client, service, func() error {
+		if err := controllerutil.SetControllerReference(infra, service, b.scheme); err != nil {
+			return err
+		}
+		install.ApplyServiceDefaults(service, "broker", infra.Name)
+		service.Spec.ClusterIP = "None"
+		service.Spec.Selector = statefulset.Spec.Template.Labels
+		service.Spec.Ports = []corev1.ServicePort{
+			{
+				Port:       5671,
+				Protocol:   corev1.ProtocolTCP,
+				TargetPort: intstr.FromString("amqps"),
+				Name:       "amqps",
+			},
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = b.certController.ReconcileCert(ctx, logger, infra, statefulset, toHost(statefulset))
 	if err != nil {
 		return err
 	}

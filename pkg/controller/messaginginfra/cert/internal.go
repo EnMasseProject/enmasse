@@ -78,30 +78,38 @@ func generateCa(caKey []byte, caCert []byte, expiryDate time.Time) ([]byte, []by
 		return nil, nil, err
 	}
 
-	return encodePemKey(caPrivateKey), encodePemCert(caBytes), nil
+	encodedPemKey, err := encodePemKey(caPrivateKey)
+	if err != nil {
+		return nil, nil, err
+	}
+	encodedPemCert, err := encodePemCert(caBytes)
+	if err != nil {
+		return nil, nil, err
+	}
+	return encodedPemKey, encodedPemCert, nil
 }
 
-func generateCert(keyPem []byte, certPem []byte, caKeyPem []byte, caCertPem []byte, expiryDate time.Time, dnsNames []string) ([]byte, []byte, []byte, error) {
+func generateCert(keyPem []byte, certPem []byte, caKeyPem []byte, caCertPem []byte, expiryDate time.Time, dnsNames []string) ([]byte, []byte, []byte, []byte, error) {
 	caKey, err := parsePemKey(caKeyPem)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	caCert, err := parsePemCertificate(caCertPem)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	var certPrivateKey *rsa.PrivateKey
 	if keyPem == nil {
 		certPrivateKey, err = rsa.GenerateKey(rand.Reader, 4096)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, nil, nil, err
 		}
 	} else {
 		certPrivateKey, err = parsePemKey(keyPem)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, nil, nil, err
 		}
 	}
 
@@ -109,7 +117,7 @@ func generateCert(keyPem []byte, certPem []byte, caKeyPem []byte, caCertPem []by
 	if certPem != nil {
 		existingCert, err := parsePemCertificate(certPem)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, nil, nil, err
 		}
 		serialNumber = existingCert.SerialNumber.Add(existingCert.SerialNumber, big.NewInt(1))
 	}
@@ -136,20 +144,34 @@ func generateCert(keyPem []byte, certPem []byte, caKeyPem []byte, caCertPem []by
 
 	certBytes, err := x509.CreateCertificate(rand.Reader, cert, caCert, &certPrivateKey.PublicKey, caKey)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	c, err := x509.ParseCertificate(certBytes)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
-	store, err := pkcs12.Encode(rand.Reader, certPrivateKey, c, []*x509.Certificate{caCert}, "enmasse")
+	keyStore, err := pkcs12.Encode(rand.Reader, certPrivateKey, c, []*x509.Certificate{caCert}, "enmasse")
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
-	return encodePemKey(certPrivateKey), encodePemCert(certBytes), store, nil
+	trustStore, err := pkcs12.EncodeTrustStore(rand.Reader, []*x509.Certificate{caCert}, "enmasse")
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	encodedPemKey, err := encodePemKey(certPrivateKey)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+	encodedPemCert, err := encodePemCert(certBytes)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	return encodedPemKey, encodedPemCert, keyStore, trustStore, nil
 }
 
 func parsePemCertificate(data []byte) (*x509.Certificate, error) {
@@ -172,21 +194,27 @@ func parsePemKey(data []byte) (*rsa.PrivateKey, error) {
 	return key, err
 }
 
-func encodePemKey(key *rsa.PrivateKey) []byte {
+func encodePemKey(key *rsa.PrivateKey) ([]byte, error) {
 	certPrivateKeyPem := new(bytes.Buffer)
-	pem.Encode(certPrivateKeyPem, &pem.Block{
+	err := pem.Encode(certPrivateKeyPem, &pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	})
-	return certPrivateKeyPem.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	return certPrivateKeyPem.Bytes(), nil
 }
 
-func encodePemCert(certBytes []byte) []byte {
+func encodePemCert(certBytes []byte) ([]byte, error) {
 	certPem := new(bytes.Buffer)
-	pem.Encode(certPem, &pem.Block{
+	err := pem.Encode(certPem, &pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return certPem.Bytes()
+	return certPem.Bytes(), nil
 }

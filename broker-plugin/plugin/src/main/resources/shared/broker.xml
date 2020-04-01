@@ -70,8 +70,8 @@ under the License.
       <metrics-plugin class-name="org.apache.activemq.artemis.core.server.metrics.plugins.ArtemisPrometheusMetricsPlugin" />
 
       <acceptors>
-         <acceptor name="artemis">tcp://0.0.0.0:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=CORE</acceptor>
-         <acceptor name="amqps-internal">tcp://0.0.0.0:55671?protocols=AMQP;saslMechanisms=ANONYMOUS;sslEnabled=true;keyStorePath=${KEYSTORE_PATH};keyStorePassword=enmasse;trustStorePath=${TRUSTSTORE_PATH};trustStorePassword=enmasse;verifyHost=false;needClientAuth=true</acceptor>
+         <acceptor name="artemis">tcp://127.0.0.1:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=CORE</acceptor>
+         <acceptor name="amqps">tcp://0.0.0.0:5671?protocols=AMQP;saslMechanisms=EXTERNAL;sslEnabled=true;keyStorePath=${KEYSTORE_PATH};keyStorePassword=enmasse;trustStorePath=${TRUSTSTORE_PATH};trustStorePassword=enmasse;verifyHost=false;needClientAuth=true</acceptor>
       </acceptors>
 
       <address-settings>

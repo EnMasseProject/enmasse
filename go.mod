@@ -66,5 +66,5 @@ require (
 	k8s.io/kube-aggregator v0.0.0
 	pack.ag/amqp v0.12.6
 	sigs.k8s.io/controller-runtime v0.4.0
-	software.sslmate.com/src/go-pkcs12 v0.0.0-20190322163127-6e380ad96778
+	software.sslmate.com/src/go-pkcs12 v0.0.0-20200408181440-2981468c0ff3
 )

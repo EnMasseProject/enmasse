@@ -7,13 +7,23 @@ package amqpcommand
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
 	"pack.ag/amqp"
 )
+
+type Client interface {
+	Start()
+	Stop()
+	Connected() bool
+	RequestWithTimeout(message *amqp.Message, timeout time.Duration) (*amqp.Message, error)
+	Request(message *amqp.Message) (*amqp.Message, error)
+}
 
 type CommandClient struct {
 	addr           string
@@ -26,7 +36,11 @@ type CommandClient struct {
 	commandResponseAddress string
 
 	request chan *commandRequest
+
+	connected int32
 }
+
+var _ Client = &CommandClient{}
 
 type commandRequest struct {
 	commandMessage *amqp.Message
@@ -38,7 +52,7 @@ type commandResponse struct {
 	err             error
 }
 
-func NewCommandClient(addr string, commandAddress string, commandResponseAddress string, opts ...amqp.ConnOption) *CommandClient {
+func NewCommandClient(addr string, commandAddress string, commandResponseAddress string, opts ...amqp.ConnOption) Client {
 	return &CommandClient{
 		addr:                   addr,
 		commandAddress:         commandAddress,
@@ -47,6 +61,7 @@ func NewCommandClient(addr string, commandAddress string, commandResponseAddress
 		request:                make(chan *commandRequest),
 		stop:                   make(chan struct{}),
 		stopped:                make(chan struct{}),
+		connected:              0,
 	}
 }
 
@@ -56,17 +71,22 @@ func (c *CommandClient) Start() {
 		defer log.Printf("Command Client %s - stopped", c.addr)
 
 		for {
-
-			err := c.doProcess()
-			if err != nil {
-				backoff := computeBackoff(err)
-				log.Printf("Command Client %s - restarting - backoff %s(s), %v", c.addr, backoff, err)
-				if backoff > 0 {
-					time.Sleep(backoff)
-				}
-			} else {
-				// Shutdown
+			select {
+			case <-c.stop:
 				return
+			default:
+				err := c.doProcess()
+				if err != nil {
+					atomic.StoreInt32(&c.connected, 0)
+					backoff := computeBackoff(err)
+					log.Printf("Command Client %s - restarting - backoff %s(s), %v", c.addr, backoff, err)
+					if backoff > 0 {
+						time.Sleep(backoff)
+					}
+				} else {
+					// Shutdown
+					return
+				}
 			}
 		}
 	}()
@@ -91,6 +111,7 @@ func (c *CommandClient) doProcess() error {
 	background := context.Background()
 	defer func() { _ = session.Close(background) }()
 
+	log.Printf("Command address %s", c.commandAddress)
 	sender, err := session.NewSender(
 		amqp.LinkTargetAddress(c.commandAddress),
 		amqp.LinkSenderSettle(amqp.ModeMixed),
@@ -108,15 +129,17 @@ func (c *CommandClient) doProcess() error {
 		return err
 	}
 	replyTo := receiver.Address()
+	log.Printf("Receiver address is %s", replyTo)
 
 	defer func() { _ = receiver.Close(background) }()
+
+	atomic.StoreInt32(&c.connected, 1)
 
 	requests := make(map[string]*commandRequest)
 	for {
 		select {
 		case req := <-c.request:
 			if req == nil {
-				log.Printf("Shutdown")
 				return nil
 			}
 
@@ -163,6 +186,27 @@ func (c *CommandClient) Stop() {
 	<-c.stopped
 }
 
+func (c *CommandClient) RequestWithTimeout(message *amqp.Message, timeout time.Duration) (*amqp.Message, error) {
+	response := make(chan commandResponse, 1)
+	request := &commandRequest{
+		commandMessage: message,
+		response:       response,
+	}
+
+	c.request <- request
+
+	select {
+	case result := <-response:
+		if result.err != nil {
+			return nil, result.err
+		} else {
+			return result.responseMessage, nil
+		}
+	case <-time.After(timeout):
+		return nil, fmt.Errorf("Timed out waiting for response")
+	}
+}
+
 func (c *CommandClient) Request(message *amqp.Message) (*amqp.Message, error) {
 	response := make(chan commandResponse)
 	request := &commandRequest{
@@ -177,6 +221,10 @@ func (c *CommandClient) Request(message *amqp.Message) (*amqp.Message, error) {
 	} else {
 		return result.responseMessage, nil
 	}
+}
+
+func (c *CommandClient) Connected() bool {
+	return atomic.LoadInt32(&c.connected) > 0
 }
 
 func computeBackoff(err error) time.Duration {

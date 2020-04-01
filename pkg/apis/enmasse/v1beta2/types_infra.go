@@ -85,10 +85,11 @@ type MessagingInfraCondition struct {
 type MessagingInfraConditionType string
 
 const (
-	MessagingInfraReady          MessagingInfraConditionType = "Ready"
-	MessagingInfraCaCreated      MessagingInfraConditionType = "CaCreated"
-	MessagingInfraBrokersCreated MessagingInfraConditionType = "BrokersCreated"
-	MessagingInfraRoutersCreated MessagingInfraConditionType = "RoutersCreated"
+	MessagingInfraReady            MessagingInfraConditionType = "Ready"
+	MessagingInfraCaCreated        MessagingInfraConditionType = "CaCreated"
+	MessagingInfraBrokersCreated   MessagingInfraConditionType = "BrokersCreated"
+	MessagingInfraRoutersCreated   MessagingInfraConditionType = "RoutersCreated"
+	MessagingInfraBrokersConnected MessagingInfraConditionType = "BrokersConnected"
 )
 
 type MessagingInfraPhase string
@@ -97,6 +98,7 @@ const (
 	MessagingInfraPending     MessagingInfraPhase = "Pending"
 	MessagingInfraConfiguring MessagingInfraPhase = "Configuring"
 	MessagingInfraActive      MessagingInfraPhase = "Active"
+	MessagingInfraTerminating MessagingInfraPhase = "Terminating"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

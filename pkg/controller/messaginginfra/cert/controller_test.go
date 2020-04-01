@@ -109,6 +109,10 @@ func TestCertNew(t *testing.T) {
 	_, _, _, err = pkcs12.DecodeChain(secret.Data["keystore.p12"], "enmasse")
 	assert.Nil(t, err)
 
+	// Check that we can decode the valid truststore
+	_, err = pkcs12.DecodeTrustStore(secret.Data["truststore.p12"], "enmasse")
+	assert.Nil(t, err)
+
 	// Ensure running it again does not change anything
 	key := secret.Data["tls.key"]
 	crt := secret.Data["tls.crt"]

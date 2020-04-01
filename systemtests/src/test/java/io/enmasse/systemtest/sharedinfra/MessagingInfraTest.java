@@ -43,6 +43,10 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
         assertNotNull(condition);
         assertEquals("True", condition.getStatus());
 
+        waitForConditionTrue(infra, "Ready");
+        waitForConditionTrue(infra, "BrokersCreated");
+        waitForConditionTrue(infra, "RoutersCreated");
+        waitForConditionTrue(infra, "BrokersConnected");
 
         assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router")).size());
         assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker")).size());
@@ -68,6 +72,7 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
                 .build();
         infraResourceManager.createResource(infra);
 
+        waitForConditionTrue(infra, "BrokersConnected");
         TestUtils.waitForNReplicas(3, infra.getMetadata().getNamespace(), Map.of("component", "router"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(2)));
         TestUtils.waitForNReplicas(2, infra.getMetadata().getNamespace(), Map.of("component", "broker"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(2)));
 
@@ -92,7 +97,29 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
                 .build();
         infraResourceManager.createResource(infra);
 
-        TestUtils.waitForNReplicas(2, infra.getMetadata().getNamespace(), Map.of("component", "router"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(2)));
-        TestUtils.waitForNReplicas(1, infra.getMetadata().getNamespace(), Map.of("component", "broker"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(2)));
+        waitForConditionTrue(infra, "BrokersConnected");
+        TestUtils.waitForNReplicas(2, infra.getMetadata().getNamespace(), Map.of("component", "router"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
+        TestUtils.waitForNReplicas(1, infra.getMetadata().getNamespace(), Map.of("component", "broker"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
+    }
+
+    private void waitForConditionTrue(MessagingInfra infra, String conditionName) throws InterruptedException {
+        TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
+        while (!budget.timeoutExpired()) {
+            if (infra.getStatus() != null) {
+                MessagingInfraCondition condition = MessagingInfraCrd.getCondition(infra.getStatus().getConditions(), conditionName);
+                if (condition != null && "True".equals(condition.getStatus())) {
+                    break;
+                }
+            }
+            Thread.sleep(1000);
+            infra = MessagingInfraCrd.getClient().inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
+            assertNotNull(infra);
+        }
+        infra = MessagingInfraCrd.getClient().inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
+        assertNotNull(infra);
+        assertNotNull(infra.getStatus());
+        MessagingInfraCondition condition = MessagingInfraCrd.getCondition(infra.getStatus().getConditions(), conditionName);
+        assertNotNull(condition);
+        assertEquals("True", condition.getStatus());
     }
 }

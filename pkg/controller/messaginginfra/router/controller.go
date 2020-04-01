@@ -17,6 +17,7 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
+	"github.com/enmasseproject/enmasse/pkg/state"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -35,13 +36,15 @@ type RouterController struct {
 	client         client.Client
 	scheme         *runtime.Scheme
 	certController *cert.CertController
+	stateManager   state.StateManager
 }
 
-func NewRouterController(client client.Client, scheme *runtime.Scheme, certController *cert.CertController) *RouterController {
+func NewRouterController(client client.Client, scheme *runtime.Scheme, certController *cert.CertController, stateManager state.StateManager) *RouterController {
 	return &RouterController{
 		client:         client,
 		scheme:         scheme,
 		certController: certController,
+		stateManager:   stateManager,
 	}
 }
 
@@ -50,9 +53,9 @@ func NewRouterController(client client.Client, scheme *runtime.Scheme, certContr
  */
 func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) error {
 
-	logger.Info("Reconciling routers", "router", infra.Spec.Router)
-
 	setDefaultRouterScalingStrategy(&infra.Spec.Router)
+
+	logger.Info("Reconciling routers", "router", infra.Spec.Router)
 
 	routerInfraName := getRouterInfraName(infra)
 	certSecretName := cert.GetCertSecretName(routerInfraName)
@@ -69,14 +72,14 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 		}
 		config := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
-			Data: map[string]string{
-				"qdrouterd.json": string(routerConfigBytes),
-			},
 		}
 
 		_, err = controllerutil.CreateOrUpdate(ctx, r.client, config, func() error {
 			if err := controllerutil.SetControllerReference(infra, config, r.scheme); err != nil {
 				return err
+			}
+			config.Data = map[string]string{
+				"qdrouterd.json": string(routerConfigBytes),
 			}
 			return nil
 		})
@@ -119,10 +122,16 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 				install.ApplyEnvSimple(container, "QDROUTERD_AUTO_MESH_DISCOVERY", "INFER")
 				install.ApplyEnvSimple(container, "QDROUTERD_AUTO_MESH_SERVICE_NAME", routerInfraName)
 
-				container.Ports = []corev1.ContainerPort{{
-					ContainerPort: 55672,
-					Name:          "inter-router",
-				}}
+				container.Ports = []corev1.ContainerPort{
+					{
+						ContainerPort: 55672,
+						Name:          "inter-router",
+					},
+					{
+						ContainerPort: 7777,
+						Name:          "management",
+					},
+				}
 
 				return nil
 			})
@@ -168,10 +177,18 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 		}
 
 		// Reconcile router certificate
-		_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset)
+		_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset,
+			fmt.Sprintf("%s.%s.svc", service.Name, service.Namespace))
 		if err != nil {
 			return err
 		}
+
+		// Update discoverable routers
+		hosts := make([]string, 0)
+		for i := 0; i < int(*statefulset.Spec.Replicas); i++ {
+			hosts = append(hosts, fmt.Sprintf("%s-%d.%s.%s.svc", statefulset.Name, i, statefulset.Name, statefulset.Namespace))
+		}
+		r.stateManager.GetOrCreateInfra(infra.Name, infra.Namespace).UpdateRouters(hosts)
 		return nil
 	})
 }

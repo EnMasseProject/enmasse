@@ -62,7 +62,7 @@ function pre_configuration() {
     echo "export CONTAINER_ID=$HOSTNAME" >> $BROKER_CUSTOM/bin/env.sh
     if [ "$ADDRESS_SPACE_TYPE" == "shared" ]; then
         echo "export KEYSTORE_PATH=/etc/enmasse-certs/keystore.p12" >> $BROKER_CUSTOM/bin/env.sh
-        echo "export TRUSTSTORE_PATH=/etc/enmasse-certs/keystore.p12" >> $BROKER_CUSTOM/bin/env.sh
+        echo "export TRUSTSTORE_PATH=/etc/enmasse-certs/truststore.p12" >> $BROKER_CUSTOM/bin/env.sh
     else
         echo "export KEYSTORE_PATH=$instanceDir/etc/enmasse-keystore.jks" >> $BROKER_CUSTOM/bin/env.sh
         echo "export TRUSTSTORE_PATH=$instanceDir/etc/enmasse-truststore.jks" >> $BROKER_CUSTOM/bin/env.sh
@@ -123,7 +123,7 @@ function configure_ssl() {
         # Use pre-generated store
         mkdir -p $BROKER_CUSTOM/certs
         export CUSTOM_KEYSTORE_PATH=/etc/enmasse-certs/keystore.p12
-        export CUSTOM_TRUSTSTORE_PATH=/etc/enmasse-certs/keystore.p12
+        export CUSTOM_TRUSTSTORE_PATH=/etc/enmasse-certs/truststore.p12
     else
         export CUSTOM_KEYSTORE_PATH=$BROKER_CUSTOM/certs/enmasse-keystore.jks
         export CUSTOM_TRUSTSTORE_PATH=$BROKER_CUSTOM/certs/enmasse-truststore.jks

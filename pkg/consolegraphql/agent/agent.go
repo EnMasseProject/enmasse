@@ -352,7 +352,7 @@ type agentCommandRequest struct {
 
 type amqpAgentCommandDelegate struct {
 	aac           *amqpAgentDelegate
-	commandClient *amqpcommand.CommandClient
+	commandClient amqpcommand.Client
 	lastUsed      time.Time
 }
 
