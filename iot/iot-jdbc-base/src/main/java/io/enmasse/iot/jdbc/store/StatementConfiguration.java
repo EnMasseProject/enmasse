@@ -60,8 +60,11 @@ public class StatementConfiguration {
         }
 
         final Yaml yaml = createYamlParser();
-        @SuppressWarnings("unchecked")
-        final Map<String, Object> properties = yaml.loadAs(input, Map.class);
+        /*
+         * we must load using "load(input)" not "loadAs(input, Map.class)", because the
+         * latter would require to construct a class (Map) by name, which we do not support.
+         */
+        final Map<String, Object> properties = yaml.load(input);
         if (properties == null) {
             // we could read the source, but it was empty
             return this;
@@ -162,7 +165,7 @@ public class StatementConfiguration {
         return new Yaml(new Constructor() {
             @Override
             protected Class<?> getClassForName(String name) throws ClassNotFoundException {
-                throw new IllegalArgumentException("Class instantiation is disabled");
+                throw new IllegalArgumentException("Class instantiation is not supported");
             }
         });
     }
