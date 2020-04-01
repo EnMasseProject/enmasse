@@ -44,7 +44,7 @@ func NewBrokerController(client client.Client, scheme *runtime.Scheme, certContr
 func getBrokerLabels(infra *v1beta2.MessagingInfra) map[string]string {
 	labels := make(map[string]string, 0)
 	labels["infra"] = infra.Name
-	labels["component"] = fmt.Sprintf("broker-%s", infra.Name)
+	labels["component"] = "broker"
 	labels["app"] = "enmasse"
 
 	return labels
@@ -122,7 +122,9 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 			return err
 		}
 
-		install.ApplyStatefulSetDefaults(statefulset, fmt.Sprintf("broker-%s", infra.Name), statefulset.Name)
+		install.ApplyStatefulSetDefaults(statefulset, "broker", statefulset.Name)
+		statefulset.Labels["infra"] = infra.Name
+		statefulset.Spec.Template.Labels["infra"] = infra.Name
 
 		statefulset.Spec.ServiceName = statefulset.Name
 		statefulset.Spec.Replicas = int32ptr(1)

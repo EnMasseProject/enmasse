@@ -66,6 +66,8 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 			}
 
 			install.ApplyStatefulSetDefaults(statefulset, "router", infra.Name)
+			statefulset.Labels["infra"] = infra.Name
+			statefulset.Spec.Template.Labels["infra"] = infra.Name
 
 			applyScalingStrategy(infra.Spec.Router.ScalingStrategy, statefulset)
 
