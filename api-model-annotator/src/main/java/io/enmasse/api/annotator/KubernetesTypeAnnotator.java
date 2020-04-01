@@ -13,7 +13,8 @@ package io.enmasse.api.annotator;
  * This file is copied from
  * https://github.com/fabric8io/kubernetes-client/blob/master/kubernetes-model/kubernetes-model-annotator/src/main/java/io/fabric8/kubernetes/annotator/KubernetesTypeAnnotator.java
  *
- * A small modification to this class is needed to work with EnMasse types and a newer version of the generator.
+ * Modifications to this class is needed to work with EnMasse types and a newer version of the generator:
+ * - Set generateBuilderPackage = false to align with existing Java types in api-model.
  */
 
 import com.fasterxml.jackson.annotation.JsonInclude;
