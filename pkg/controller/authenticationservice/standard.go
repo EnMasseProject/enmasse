@@ -70,7 +70,7 @@ func applyStandardAuthServiceDefaults(authservice *adminv1beta1.AuthenticationSe
 }
 
 func applyStandardAuthServiceCredentials(authservice *adminv1beta1.AuthenticationService, secret *corev1.Secret) error {
-	install.ApplyDefaultLabels(&secret.ObjectMeta, "standard-authservice", authservice.Spec.Standard.CredentialsSecret.Name)
+	install.ApplyDefaultLabels(&secret.ObjectMeta, "standard-authservice", secret.Name)
 
 	if !hasEntry(secret, "admin.username") || !hasEntry(secret, "admin.password") {
 		secret.StringData = make(map[string]string)
@@ -104,7 +104,7 @@ func hasEntry(secret *corev1.Secret, key string) bool {
 func applyStandardAuthServiceCert(authservice *adminv1beta1.AuthenticationService, secret *corev1.Secret) error {
 	// On OpenShift we use the automatic cluster certificate provider
 	install.ApplyDefaultLabels(&secret.ObjectMeta, "standard-authservice", secret.Name)
-	if !util.IsOpenshift() && (!hasEntry(secret, "tls.key") || !hasEntry(secret, "tls.crt")) {
+	if !hasEntry(secret, "tls.key") || !hasEntry(secret, "tls.crt") {
 		cn := util.ServiceToCommonName(authservice.Namespace, *authservice.Spec.Standard.ServiceName)
 		return util.GenerateSelfSignedCertSecret(cn, nil, nil, secret)
 	}

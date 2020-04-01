@@ -28,7 +28,7 @@ func applyNoneAuthServiceDefaults(authservice *adminv1beta1.AuthenticationServic
 func applyNoneAuthServiceCert(authservice *adminv1beta1.AuthenticationService, secret *corev1.Secret) error {
 	// On OpenShift we use the automatic cluster certificate provider
 	install.ApplyDefaultLabels(&secret.ObjectMeta, "none-authservice", secret.Name)
-	if !util.IsOpenshift() && (!hasEntry(secret, "tls.key") || !hasEntry(secret, "tls.crt")) {
+	if !hasEntry(secret, "tls.key") || !hasEntry(secret, "tls.crt") {
 		cn := util.ServiceToCommonName(authservice.Namespace, authservice.Name)
 		return util.GenerateSelfSignedCertSecret(cn, nil, nil, secret)
 	}
