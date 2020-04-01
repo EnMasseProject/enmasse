@@ -167,6 +167,11 @@
                     <systemProperties>
                         <enmasse.version>${release.version}</enmasse.version>
                         <enmasse.docs>${application.docs}</enmasse.docs>
+                        <enmasse.olm.docs.url>${olm.csv.doc.url}</enmasse.olm.docs.url>
+                        <enmasse.olm.about.name>${olm.csv.about.name}</enmasse.olm.about.name>
+                        <enmasse.olm.about.url>${olm.csv.about.url}</enmasse.olm.about.url>
+                        <enmasse.olm.doc.configure.url>${olm.csv.doc.configure.url}</enmasse.olm.doc.configure.url>
+                        <enmasse.olm.doc.iot.url>${olm.csv.doc.iot.url}</enmasse.olm.doc.iot.url>
                     </systemProperties>
                     <includes>
                         <include>io.enmasse.systemtest.**</include>
