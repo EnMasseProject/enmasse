@@ -15,7 +15,7 @@ To deploy the console you must create a `consoleservice` resource refering to yo
 ** Client secret
 +
 NOTE: If using a public OIDC provider (such as Google, Azure, GitHub, etc) the
-https://pusher.github.io/oauth2_proxy/auth-configuration[OAuthProxy configuration guide] offers specific guidance.
+https://oauth2-proxy.github.io/oauth2-proxy/auth-configuration[OAuthProxy configuration guide] offers specific guidance.
 
 .Procedure
 

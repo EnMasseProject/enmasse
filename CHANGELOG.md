@@ -5,6 +5,7 @@
 * #4076: Avoid memory leak if connected router is disconnected
 * #4117: Add support for configuring console to use impersonation
 * #4172: [Kubernetes] Use headers for oauth-proxy to populate user information (for console/audit).
+* #4224: oauth2_proxy is now hosted by a new organisation (https://oauth2-proxy.github.io/oauth2-proxy/)
 
 
 ## 0.31.0
