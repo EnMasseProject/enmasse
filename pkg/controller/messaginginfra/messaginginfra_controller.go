@@ -180,6 +180,12 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 		}
 		return nil
 	})
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Update status (if it has changed)
+	err = ic.UpdateStatus()
 
 	return reconcile.Result{}, err
 }
@@ -197,14 +203,27 @@ type infraContext struct {
 func (i *infraContext) Process(processor func(infra *v1beta2.MessagingInfra) (reconcile.Result, error)) (reconcile.Result, error) {
 	result, err := processor(i.infra)
 	if !reflect.DeepEqual(i.status, i.infra.Status) {
-		err := i.client.Status().Update(i.ctx, i.infra)
+		// If there was an error and the status has changed, perform an update so that
+		// errors are visible to the user.
 		if err != nil {
+			_ = i.UpdateStatus()
 			return result, err
 		}
-		i.status = i.infra.Status.DeepCopy()
-		result.Requeue = true
 	}
 	return result, err
+}
+
+func (i *infraContext) UpdateStatus() error {
+	if !reflect.DeepEqual(i.status, i.infra.Status) {
+		err := i.client.Status().Update(i.ctx, i.infra)
+		if err != nil {
+			log.Error(err, "Status update failed", "infra", i.infra.Name)
+			// If this fails, at least report the original error in the log
+			return err
+		}
+		i.status = i.infra.Status.DeepCopy()
+	}
+	return nil
 }
 
 func (i *infraContext) ProcessSimple(processor func(infra *v1beta2.MessagingInfra) error) error {
