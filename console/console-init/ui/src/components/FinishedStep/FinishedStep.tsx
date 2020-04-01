@@ -31,7 +31,7 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
     }
   };
   useEffect(() => {
-    const interval = setInterval(() => tick(), 1000);
+    const interval = setInterval(() => tick(), 500);
     return () => clearInterval(interval);
   }, [percent]);
 

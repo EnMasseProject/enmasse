@@ -21,7 +21,7 @@ import { isMessagingProjectValid } from "modules/msg-and-iot/dailogs/utils";
 import { MessagingProjectReview } from "modules/msg-and-iot/dailogs/components";
 import { FinishedStep } from "components";
 const CreateProjectContainer: React.FunctionComponent = () => {
-  const [isWizardOpen, setIsWizardOpen] = useState<boolean>(true);
+  const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
     IMessagingProjectInput
   >();
@@ -103,9 +103,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
   };
   const finishedStep = {
     name: "Finish",
-    component: (
-      <FinishedStep onClose={onToggle} sucess={isCreatedSuccessfully} />
-    ),
+    component: <FinishedStep onClose={onToggle} sucess={true} />,
     isFinishedStep: true
   };
   const configurationStepForMessaging = MessagingProjectConfiguration(
@@ -230,7 +228,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
   return (
     <>
       <Button variant="primary" onClick={onToggle}>
-        Show Wizard
+        Create
       </Button>
       {isWizardOpen && (
         <Wizard
