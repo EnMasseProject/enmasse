@@ -22,6 +22,7 @@ public final class AddressSpaceControllerOptions {
     private String environment;
 
     private String wildcardCertSecret;
+    private boolean disableExternalCertProvisioning;
 
     private Duration resyncInterval;
     private Duration recheckInterval;
@@ -90,6 +91,8 @@ public final class AddressSpaceControllerOptions {
         options.setInstallDefaultResources(getEnv(env, "INSTALL_DEFAULT_RESOURCES").map(Boolean::parseBoolean).orElse(true));
 
         options.setWildcardCertSecret(getEnv(env, "WILDCARD_ENDPOINT_CERT_SECRET").orElse(null));
+
+        options.setDisableExternalCertProvisioning(getEnv(env, "DISABLE_EXTERNAL_CERT_PROVISIONING").map(Boolean::parseBoolean).orElse(false));
 
         options.setResyncInterval(getEnv(env, "RESYNC_INTERVAL")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
@@ -200,6 +203,7 @@ public final class AddressSpaceControllerOptions {
                 ", kubernetesApiConnectTimeout='" + kubernetesApiConnectTimeout + '\'' +
                 ", kubernetesApiReadTimeout='" + kubernetesApiReadTimeout + '\'' +
                 ", kubernetesApiWriteTimeout='" + kubernetesApiWriteTimeout + '\'' +
+                ", disableCertProvisioning='" + disableExternalCertProvisioning + '\'' +
                 '}';
     }
 
@@ -257,5 +261,13 @@ public final class AddressSpaceControllerOptions {
 
     public void setRouterStatusCheckInterval(Duration routerStatusCheckInterval) {
         this.routerStatusCheckInterval = routerStatusCheckInterval;
+    }
+
+    public boolean isDisableExternalCertProvisioning() {
+        return disableExternalCertProvisioning;
+    }
+
+    public void setDisableExternalCertProvisioning(boolean disableExternalCertProvisioning) {
+        this.disableExternalCertProvisioning = disableExternalCertProvisioning;
     }
 }

@@ -109,7 +109,7 @@ public class AddressSpaceController {
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
         CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
-        AuthController authController = new AuthController(certManager, eventLogger, certProviderFactory);
+        AuthController authController = new AuthController(certManager, eventLogger, certProviderFactory, options.isDisableExternalCertProvisioning());
         AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
         AuthenticationServiceResolver authenticationServiceResolver = new AuthenticationServiceResolver(authenticationServiceRegistry);
 
