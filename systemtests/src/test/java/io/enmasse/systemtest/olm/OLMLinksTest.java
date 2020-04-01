@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.olm;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.NON_PR;
 import static io.enmasse.systemtest.TestTag.OLM;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -32,6 +33,7 @@ import io.vertx.core.json.JsonObject;
 
 @Tag(OLM)
 @Tag(ACCEPTANCE)
+@Tag(NON_PR)
 @SupportedInstallType(value = EnmasseInstallType.OLM, olmInstallType = OLMInstallationType.DEFAULT)
 @SeleniumChrome
 public class OLMLinksTest extends TestBase implements ITestBaseIsolated {
