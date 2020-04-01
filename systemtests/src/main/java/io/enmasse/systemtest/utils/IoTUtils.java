@@ -75,7 +75,7 @@ public class IoTUtils {
     public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
         TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
-        var iotConfigAccess = kubernetes.getIoTConfigClient().withName(config.getMetadata().getName());
+        var iotConfigAccess = kubernetes.getIoTConfigClient(config.getMetadata().getNamespace()).withName(config.getMetadata().getName());
         while (budget.timeLeft() >= 0 && !isReady) {
             config = iotConfigAccess.get();
             isReady = config.getStatus() != null && "Active".equals(config.getStatus().getPhase());

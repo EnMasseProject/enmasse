@@ -101,6 +101,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	// prime cache with isOpenShift information
+	log.Info("Running on OpenShift", "result", util.IsOpenshift())
+	log.Info("Running on OpenShift 4", "result", util.IsOpenshift4())
+
 	// Register custom metrics
 	customMetrics.Init()
 

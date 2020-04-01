@@ -168,13 +168,13 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, ""); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, ""); err != nil {
 		return err
 	}
 
 	// endpoint key/cert
 
-	if err := applyAdapterEndpointDeployment(adapter.EndpointConfig, deployment, nameHttpAdapter); err != nil {
+	if err := applyAdapterEndpointDeployment(r.client, adapter.EndpointConfig, deployment, nameHttpAdapter); err != nil {
 		return err
 	}
 
@@ -215,7 +215,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterService(config *iotv1alpha1.IoT
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileHttpAdapterConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileHttpAdapterConfigMap(_ *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 

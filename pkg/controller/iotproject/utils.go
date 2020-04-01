@@ -7,6 +7,7 @@ package iotproject
 
 import (
 	"context"
+	"github.com/enmasseproject/enmasse/pkg/util/iot"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -43,10 +44,6 @@ func StringOrDefault(value string, defaultValue string) string {
 	}
 }
 
-func getIoTConfigName() (string, error) {
-	return util.GetEnvOrError("IOT_CONFIG_NAME")
-}
-
 // get infrastructure config
 func getIoTConfigInstance(ctx context.Context, r client.Reader) (*iotv1alpha1.IoTConfig, error) {
 
@@ -54,7 +51,7 @@ func getIoTConfigInstance(ctx context.Context, r client.Reader) (*iotv1alpha1.Io
 	if err != nil {
 		return nil, err
 	}
-	name, err := getIoTConfigName()
+	name, err := iot.GetIoTConfigName()
 	if err != nil {
 		return nil, err
 	}

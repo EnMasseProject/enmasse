@@ -168,13 +168,13 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, ""); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, ""); err != nil {
 		return err
 	}
 
 	// endpoint key/cert
 
-	if err := applyAdapterEndpointDeployment(adapter.EndpointConfig, deployment, nameLoraWanAdapter); err != nil {
+	if err := applyAdapterEndpointDeployment(r.client, adapter.EndpointConfig, deployment, nameLoraWanAdapter); err != nil {
 		return err
 	}
 

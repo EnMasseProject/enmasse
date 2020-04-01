@@ -169,13 +169,13 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, ""); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, ""); err != nil {
 		return err
 	}
 
 	// endpoint key/cert
 
-	if err := applyAdapterEndpointDeployment(adapter.EndpointConfig, deployment, nameSigfoxAdapter); err != nil {
+	if err := applyAdapterEndpointDeployment(r.client, adapter.EndpointConfig, deployment, nameSigfoxAdapter); err != nil {
 		return err
 	}
 

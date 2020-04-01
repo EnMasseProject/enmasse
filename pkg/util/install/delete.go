@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -128,6 +128,30 @@ func DeleteIgnoreNotFound(ctx context.Context, client client.Client, obj runtime
 		return nil
 	} else {
 		return err
+	}
+
+}
+
+// Delete an object, if it is owned by the owner.
+// Otherwise leave it alone. If the object doesn't exists, this will be reported as an error which can be checked by IsNotFound(err)
+func DeleteIfOwnedBy(ctx context.Context, c client.Client, objectKey client.ObjectKey, obj runtime.Object, owner runtime.Object, controller bool) (OwnerResult, error) {
+
+	if err := c.Get(ctx, objectKey, obj); err != nil {
+		return 0, err
+	}
+
+	result, err := RemoveAsOwner(owner, obj, controller)
+	if err != nil {
+		return 0, err
+	}
+
+	switch result {
+	case Found: // found and removed
+		return result, c.Update(ctx, obj)
+	case FoundAndEmpty: // found, removed and no more owners
+		return result, c.Delete(ctx, obj)
+	default:
+		return result, nil
 	}
 
 }

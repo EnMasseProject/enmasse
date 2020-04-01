@@ -7,6 +7,9 @@ package iotconfig
 
 import (
 	"context"
+	"github.com/enmasseproject/enmasse/pkg/util/iot"
+	"github.com/enmasseproject/enmasse/pkg/util/loghandler"
+	"github.com/pkg/errors"
 	"k8s.io/client-go/tools/record"
 	"reflect"
 
@@ -40,13 +43,16 @@ import (
 
 const ControllerName = "iotconfig-controller"
 
-const DeviceConnectionTypeAnnotation = "iot.enmasse.io/deviceConnection.type"
+const iotPrefix = "iot.enmasse.io"
+const iotServiceCaConfigMapName = "iot-service-ca"
 
-const RegistryTypeAnnotation = "iot.enmasse.io/registry.type"
-const RegistryJdbcModeAnnotation = "iot.enmasse.io/registry.jdbc.mode"
+const DeviceConnectionTypeAnnotation = iotPrefix + "/deviceConnection.type"
 
-const RegistryAdapterFeatureLabel = "iot.enmasse.io/registry-adapter"
-const RegistryManagementFeatureLabel = "iot.enmasse.io/registry-management"
+const RegistryTypeAnnotation = iotPrefix + "/registry.type"
+const RegistryJdbcModeAnnotation = iotPrefix + "/registry.jdbc.mode"
+
+const RegistryAdapterFeatureLabel = iotPrefix + "/registry-adapter"
+const RegistryManagementFeatureLabel = iotPrefix + "/registry-management"
 
 func AllRegistryFeatures() []string {
 	return []string{RegistryAdapterFeatureLabel, RegistryManagementFeatureLabel}
@@ -56,16 +62,28 @@ var log = logf.Log.WithName("controller_iotconfig")
 
 // Gets called by parent "init", adding as to the manager
 func Add(mgr manager.Manager) error {
+	name, err := iot.GetIoTConfigName()
+	if err != nil {
+		return errors.Wrap(err, "Failed to get IoTConfig name")
+	}
+
+	namespace, err := util.GetInfrastructureNamespace()
+	if err != nil {
+		return errors.Wrap(err, "Infrastructure namespace not set")
+	}
+
 	return add(mgr, newReconciler(
 		mgr,
-		util.GetEnvOrDefault("ENMASSE_IOT_CONFIG_NAME", "default"),
+		namespace,
+		name,
 	))
 }
 
-func newReconciler(mgr manager.Manager, configName string) *ReconcileIoTConfig {
+func newReconciler(mgr manager.Manager, infraNamespace string, configName string) *ReconcileIoTConfig {
 	return &ReconcileIoTConfig{
 		client:     mgr.GetClient(),
 		scheme:     mgr.GetScheme(),
+		namespace:  infraNamespace,
 		configName: configName,
 		recorder:   mgr.GetEventRecorderFor(ControllerName),
 	}
@@ -73,6 +91,7 @@ func newReconciler(mgr manager.Manager, configName string) *ReconcileIoTConfig {
 
 type watching struct {
 	obj       runtime.Object
+	name      string
 	openshift bool
 }
 
@@ -85,7 +104,7 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 	}
 
 	// Watch for changes to primary resource IoTConfig
-	err = c.Watch(&source.Kind{Type: &iotv1alpha1.IoTConfig{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &iotv1alpha1.IoTConfig{}}, loghandler.New(&handler.EnqueueRequestForObject{}, log, "IoTConfig"))
 	if err != nil {
 		return err
 	}
@@ -93,13 +112,13 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 	// watch owned objects
 
 	for _, w := range []watching{
-		{&appsv1.Deployment{}, false},
-		{&corev1.Service{}, false},
-		{&corev1.ConfigMap{}, false},
-		{&corev1.Secret{}, false},
-		{&corev1.PersistentVolumeClaim{}, false},
+		{&appsv1.Deployment{}, "Deployment", false},
+		{&corev1.Service{}, "Service", false},
+		{&corev1.ConfigMap{}, "ConfigMap", false},
+		{&corev1.Secret{}, "Secret", false},
+		{&corev1.PersistentVolumeClaim{}, "PersistentVolumeClaim", false},
 
-		{&routev1.Route{}, true},
+		{&routev1.Route{}, "Route", true},
 	} {
 
 		if w.openshift && !util.IsOpenshift() {
@@ -107,15 +126,27 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 			continue
 		}
 
-		err = c.Watch(&source.Kind{Type: w.obj}, &handler.EnqueueRequestForOwner{
+		err = c.Watch(&source.Kind{Type: w.obj}, loghandler.New(&handler.EnqueueRequestForOwner{
 			OwnerType:    &iotv1alpha1.IoTConfig{},
 			IsController: true,
-		})
+		}, log.V(2), w.name))
 		if err != nil {
 			return err
 		}
 
 	}
+
+	// watch secrets referenced by infrastructure
+
+	s, err := NewSecretHandler(r.client, r.configName)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create secret event handler")
+	}
+	if err := c.Watch(&source.Kind{Type: &corev1.Secret{}}, s); err != nil {
+		return err
+	}
+
+	// done
 
 	return nil
 }
@@ -133,6 +164,8 @@ type ReconcileIoTConfig struct {
 	// The name of the configuration we are watching
 	// we are watching only one config, in our own namespace
 	configName string
+	// The name of the infrastructure namespace
+	namespace string
 }
 
 // Reconcile
@@ -192,6 +225,9 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	})
 	rc.ProcessSimple(func() error {
 		return r.processCollector(ctx, config)
+	})
+	rc.ProcessSimple(func() error {
+		return r.processInterServiceCAConfigMap(ctx, config)
 	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processAuthService(ctx, config)

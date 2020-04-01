@@ -280,7 +280,7 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, serviceNameForTls); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, serviceNameForTls); err != nil {
 		return err
 	}
 

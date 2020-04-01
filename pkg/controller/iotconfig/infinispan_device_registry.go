@@ -159,7 +159,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, nameDeviceRegistry); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, nameDeviceRegistry); err != nil {
 		return err
 	}
 

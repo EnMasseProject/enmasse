@@ -12,9 +12,13 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/kubernetes"
 	"net/url"
 	"os"
+	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,13 +29,15 @@ import (
 )
 
 var (
-	openshift *bool
-	apis      = make(map[string]bool, 0)
-	log       = logf.Log.WithName("util")
+	openshift  *bool
+	openshift4 *bool
+	apis       = make(map[string]bool, 0)
+	log        = logf.Log.WithName("util")
 )
 
 const ConnectsTo = "app.openshift.io/connects-to"
 const EnMasseOpenshiftEnvVar = "ENMASSE_OPENSHIFT"
+const EnMasseOpenshift4EnvVar = "ENMASSE_OPENSHIFT4"
 
 var UserGVK = userapiv1.GroupVersion.WithKind("User")
 
@@ -44,6 +50,16 @@ func IsOpenshift() bool {
 
 	return *openshift
 
+}
+
+// detect if we are running on openshift 4
+func IsOpenshift4() bool {
+	if openshift4 == nil {
+		b := detectOpenshift4()
+		openshift4 = &b
+	}
+
+	return *openshift4
 }
 
 func HasApi(gvk schema.GroupVersionKind) bool {
@@ -149,6 +165,69 @@ func detectOpenshift() bool {
 	}
 
 	return HasApi(UserGVK)
+}
+
+func detectOpenshift4() bool {
+
+	log.Info("Detect if openshift 4 is running")
+
+	value, ok := os.LookupEnv(EnMasseOpenshift4EnvVar)
+	if ok {
+		log.Info("Set by env-var '" + EnMasseOpenshift4EnvVar + "': " + value)
+		return strings.ToLower(value) == "true"
+	}
+
+	if !IsOpenshift() {
+		// we not running on any version of OpenShift
+		return false
+	}
+
+	cfg, err := config.GetConfig()
+	if err != nil {
+		log.Error(err, "Error getting config")
+		return false
+	}
+
+	cli, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		log.Error(err, "Error creating client")
+		return false
+	}
+
+	var v *version.Info
+	retries := 10
+	for retries > 0 {
+		v, err = cli.ServerVersion()
+		if err == nil && v != nil {
+			break
+		}
+		retries--
+	}
+
+	if err != nil || v == nil {
+		log.Error(err, "Error getting kubernetes version")
+		return false
+	}
+
+	log.Info("Version Info", "version", v, "major", v.Major, "minor", v.Minor)
+
+	m, err := regexp.MatchString(`^\d+\+$`, v.Minor)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to compile regexp for version check: %v", err))
+	}
+	if !m {
+		log.Error(err, "Unknown kubernetes version format")
+		return false
+	}
+
+	minor, err := strconv.ParseInt(strings.TrimRight(v.Minor, "+"), 10, 32)
+	if err != nil {
+		log.Error(err, "Error parsing kubernetes version")
+		return false
+	}
+
+	return v.Major == "1" && minor > 11
+
 }
 
 func OpenshiftUri() (*url.URL, bool, error) {

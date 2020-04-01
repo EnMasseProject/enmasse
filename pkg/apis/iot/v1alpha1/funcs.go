@@ -167,7 +167,7 @@ func (c *CommonCondition) SetStatusOkOrElse(ok bool, reason string, message stri
 	if ok {
 		c.SetStatusOk()
 	} else {
-		c.SetStatus(corev1.ConditionTrue, "", "")
+		c.SetStatus(corev1.ConditionFalse, reason, message)
 	}
 }
 
