@@ -7,8 +7,7 @@
 // !standard.address.subscription.shortDescription:A subscription on a specified topic
 // !standard.address.subscription.longDescription:start
 Using the subscription address type you can create a subscription for a topic that holds messages
-published to the topic even if the subscriber is not attached. The consumer accesses the subscription  using the following address syntax: <topic-address>::<subscription-address>. For example, for a subscription `mysub` on a topic `mytopic` the consumer accesses the subscription from the address `mytopic::mysub`. The default setting permits only a single consumer per subscription. This setting can be changed by editing the `maxConsumers` attribute of the subscription address.
+published to the topic even if the subscriber is not attached. The consumer accesses the subscription  using the following address syntax: <topic-address>::<subscription-address>. For example, for a subscription `mysub` on a topic `mytopic` the consumer accesses the subscription from the address `mytopic::mysub`. The default setting permits only a single consumer per subscription. This setting can be changed by editing the `maxConsumers` field of the subscription address.
 
 NOTE: The `maxConsumers` setting cannot be modified for existing subscriptions.
 // !standard.address.subscription.longDescription:stop
-
