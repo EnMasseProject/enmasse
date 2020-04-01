@@ -134,9 +134,11 @@ func (r *ReconcileAuthenticationService) reconcileNoneAuthService(ctx context.Co
 	applyNoneAuthServiceDefaults(authservice)
 
 	rc := &recon.ReconcileContext{}
-	rc.ProcessSimple(func() error {
-		return r.reconcileCertificate(ctx, authservice, authservice.Spec.None.CertificateSecret.Name, applyNoneAuthServiceCert)
-	})
+	if !util.IsOpenshift() {
+		rc.ProcessSimple(func() error {
+			return r.reconcileCertificate(ctx, authservice, authservice.Spec.None.CertificateSecret.Name, applyNoneAuthServiceCert)
+		})
+	}
 
 	rc.Process(func() (reconcile.Result, error) {
 		return r.reconcileDeployment(ctx, authservice, authservice.Name, applyNoneAuthServiceDeployment)
@@ -180,9 +182,11 @@ func (r *ReconcileAuthenticationService) reconcileStandardAuthService(ctx contex
 		return r.reconcileStandardCredentials(ctx, authservice)
 	})
 
-	rc.ProcessSimple(func() error {
-		return r.reconcileCertificate(ctx, authservice, authservice.Spec.Standard.CertificateSecret.Name, applyStandardAuthServiceCert)
-	})
+	if !util.IsOpenshift() {
+		rc.ProcessSimple(func() error {
+			return r.reconcileCertificate(ctx, authservice, authservice.Spec.Standard.CertificateSecret.Name, applyStandardAuthServiceCert)
+		})
+	}
 
 	rc.Process(func() (reconcile.Result, error) {
 		return r.reconcileService(ctx, authservice, *authservice.Spec.Standard.ServiceName, applyStandardAuthServiceService)
@@ -274,6 +278,9 @@ func (r *ReconcileAuthenticationService) reconcileCertificate(ctx context.Contex
 		ObjectMeta: metav1.ObjectMeta{Namespace: authservice.Namespace, Name: name},
 	}
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, secret, func() error {
+		if err := controllerutil.SetControllerReference(authservice, secret, r.scheme); err != nil {
+			return err
+		}
 		return applyFn(authservice, secret)
 	})
 	return err
@@ -357,6 +364,9 @@ func (r *ReconcileAuthenticationService) reconcileStandardCredentials(ctx contex
 		ObjectMeta: metav1.ObjectMeta{Namespace: authservice.Namespace, Name: authservice.Spec.Standard.CredentialsSecret.Name},
 	}
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, secret, func() error {
+		if err := controllerutil.SetControllerReference(authservice, secret, r.scheme); err != nil {
+			return err
+		}
 		return applyStandardAuthServiceCredentials(authservice, secret)
 	})
 	return err
