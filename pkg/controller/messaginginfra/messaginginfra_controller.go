@@ -181,7 +181,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 		return nil
 	})
 
-	return reconcile.Result{}, nil
+	return reconcile.Result{}, err
 }
 
 /*
