@@ -1,4 +1,4 @@
-FROM quay.io/enmasse/java-base:11-4
+FROM quay.io/enmasse/java-base:11-5
 
 ARG version
 ARG commit
@@ -9,4 +9,4 @@ ADD target/address-space-controller-${maven_version}-dist.tar.gz /
 
 ENV LOG_LEVEL info
 
-CMD ["/opt/run-java/launch_java.sh", "/opt/address-space-controller.jar"]
+CMD ["/opt/run-java/launch_java.sh", "-jar", "/opt/address-space-controller.jar"]
