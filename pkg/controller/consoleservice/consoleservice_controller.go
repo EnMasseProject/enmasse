@@ -485,7 +485,7 @@ func (r *ReconcileConsoleService) reconcilePrometheusRule(ctx context.Context, c
 					Rules: []monitoringv1.Rule{
 						{
 							Record: "enmasse_component_health",
-							Expr:   intstr.FromString("up{job='console',namespace='enmasse-infra'} or on(namespace) (1- absent(up{job='console',namespace='enmasse-infra'}))"),
+							Expr:   intstr.FromString("up{job='console',namespace='" + util.GetEnvOrDefault("NAMESPACE", "enmasse-infra") + "'} or on(namespace) (1- absent(up{job='console',namespace='" + util.GetEnvOrDefault("NAMESPACE", "enmasse-infra") + "'}))"),
 						},
 					},
 				},
