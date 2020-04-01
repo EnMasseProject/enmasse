@@ -43,6 +43,7 @@ func NewBrokerController(client client.Client, scheme *runtime.Scheme, certContr
 
 func getBrokerLabels(infra *v1beta2.MessagingInfra) map[string]string {
 	labels := make(map[string]string, 0)
+	labels["infra"] = infra.Name
 	labels["component"] = fmt.Sprintf("broker-%s", infra.Name)
 	labels["app"] = "enmasse"
 
