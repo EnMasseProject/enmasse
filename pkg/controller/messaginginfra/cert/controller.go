@@ -57,7 +57,6 @@ func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, in
 	}
 
 	caCreated := infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraCaCreated)
-	caCreated.SetStatus(corev1.ConditionTrue, "", "")
 	return common.WithConditionUpdate(caCreated, func() error {
 		_, err := controllerutil.CreateOrUpdate(ctx, c.client, secret, func() error {
 			if err := controllerutil.SetControllerReference(infra, secret, c.scheme); err != nil {

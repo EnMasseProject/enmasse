@@ -59,7 +59,6 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 
 	// Update router condition
 	routersCreated := infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraRoutersCreated)
-	routersCreated.SetStatus(corev1.ConditionTrue, "", "")
 
 	return common.WithConditionUpdate(routersCreated, func() error {
 		// Reconcile static router config

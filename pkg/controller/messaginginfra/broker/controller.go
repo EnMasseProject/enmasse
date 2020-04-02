@@ -63,13 +63,12 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 
 	// Update broker condition
 	brokersCreated := infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraBrokersCreated)
-	brokersCreated.SetStatus(corev1.ConditionTrue, "", "")
 
 	return common.WithConditionUpdate(brokersCreated, func() error {
 		brokers := appsv1.StatefulSetList{}
 		err := b.client.List(ctx, &brokers, client.InNamespace(infra.Namespace), client.MatchingLabels(labels))
 		if err != nil {
-			return nil
+			return err
 		}
 
 		for _, broker := range brokers.Items {

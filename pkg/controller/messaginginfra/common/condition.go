@@ -15,6 +15,8 @@ func WithConditionUpdate(condition *v1beta2.MessagingInfraCondition, fn func() e
 	err := fn()
 	if err != nil {
 		condition.SetStatus(corev1.ConditionFalse, "", err.Error())
+	} else {
+		condition.SetStatus(corev1.ConditionTrue, "", "")
 	}
 	return err
 }
