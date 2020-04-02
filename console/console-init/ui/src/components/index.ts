@@ -23,3 +23,4 @@ export * from "./NoDataFound";
 export * from "./FinishedStep";
 export * from "./Editor";
 export * from "./FormAndJson";
+export * from "./InputText";
