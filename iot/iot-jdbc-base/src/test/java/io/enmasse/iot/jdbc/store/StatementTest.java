@@ -5,17 +5,20 @@
 
 package io.enmasse.iot.jdbc.store;
 
+import static java.nio.file.Files.isRegularFile;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.ConstructorException;
 
 public class StatementTest {
@@ -54,44 +57,55 @@ public class StatementTest {
     }
 
     /**
-     * Test that we didn't break basic YAML loading.
+     * Test that we didn't break basic YAML with out override method.
      */
     @Test
-    public void testPlainYamlStillWorks() {
-        final Yaml parser = StatementConfiguration.createYamlParser();
-        parser.load("foo: bar");
+    public void testPlainYamlStillWorksForStatementConfig() {
+
+        String yaml = "read: SELECT 1";
+
+        var cfg = StatementConfiguration.empty()
+                .overrideWith(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)), false);
+
+        assertEquals("SELECT 1", cfg.getRequiredStatment("read").expand().getSql());
+
     }
 
     /**
-     * Test that we create a YAML parser which reject class instantiation.
+     * The creating a file via the value of a map item.
      */
     @Test
-    public void testObjectCreationRejected(@TempDir Path tempDir) {
-        final Path markerFile = tempDir.resolve("testObjectCreationRejected.marker");
-        final String yaml = "!!java.io.FileOutputStream [" + markerFile.toAbsolutePath().toString() + "]";
+    public void testObjectCreationRejectedMapValue(@TempDir Path tempDir) {
+        final Path markerFile = tempDir.resolve("testObjectCreationRejectedMapValue.marker");
+        final String yaml = "read: !!java.io.FileOutputStream [" + markerFile.toAbsolutePath().toString() + "]";
 
-        assertThrows(ConstructorException.class, () -> {
-            final Yaml parser = StatementConfiguration.createYamlParser();
-            parser.load(yaml);
-        });
-
-        assertFalse(Files.isRegularFile(markerFile), "Marker file must not exist");
+        assertNoMarkerFile(markerFile, yaml);
     }
 
     /**
-     * Test that we actually make use of the parser, preventing class instantiation.
+     * The creating a file via a plain value.
      */
     @Test
-    public void testObjectCreationRejectedFull(@TempDir Path tempDir) {
-        final Path markerFile = tempDir.resolve("testObjectCreationRejectedFull.marker");
+    public void testObjectCreationRejectedPlainValue(@TempDir Path tempDir) {
+        final Path markerFile = tempDir.resolve("testObjectCreationRejectedPlainValue.marker");
         final String yaml = "!!java.io.FileOutputStream [" + markerFile.toAbsolutePath().toString() + "]";
 
-        assertThrows(ConstructorException.class, () -> {
+        assertNoMarkerFile(markerFile, yaml);
+    }
+
+    private void assertNoMarkerFile(final Path markerFile, final String yaml) {
+        Exception expected = null;
+        try {
             var cfg = StatementConfiguration.empty();
             cfg.overrideWith(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)), false);
-        });
+        } catch (Exception e) {
+            // delay test for later
+            expected = e;
+        }
 
-        assertFalse(Files.isRegularFile(markerFile), "Marker file must not exist");
+        assertFalse(isRegularFile(markerFile), "Marker file must not exist");
+        assertNotNull(expected);
+        assertThat(expected, instanceOf(ConstructorException.class));
     }
 
 }
