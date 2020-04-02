@@ -11,7 +11,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"github.com/google/uuid"
+	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 	"net"
@@ -351,49 +351,57 @@ type agentCommandRequest struct {
 }
 
 type amqpAgentCommandDelegate struct {
-	bearerToken     string
-	impersonateUser string
-	aac             *amqpAgentDelegate
-	request         chan *agentCommandRequest
-	stopped         chan struct{}
-	lastUsed        time.Time
+	aac           *amqpAgentDelegate
+	commandClient *amqpcommand.CommandClient
+	lastUsed      time.Time
 }
 
 func (aad *amqpAgentDelegate) newAgentDelegate(token string, impersonateUser string) CommandDelegate {
+	commandClient := amqpcommand.NewCommandClient(buildAmqpAddress(aad.host, aad.port),
+		agentCommandAddress,
+		agentCommandResponseAddress,
+		amqp.ConnTLSConfig(aad.tlsConfig),
+		amqp.ConnSASLXOAUTH2(impersonateUser, aad.bearerToken, amqpOverrideSaslFrameSize),
+		amqp.ConnServerHostname(aad.host),
+		amqp.ConnProperty("product", "command-delegate; console-server"),
+		amqp.ConnConnectTimeout(aad.connectTimeout),
+		amqp.ConnMaxFrameSize(aad.maxFrameSize))
+
 	a := &amqpAgentCommandDelegate{
-		bearerToken:     token,
-		impersonateUser: impersonateUser,
-		aac:             aad,
-		request:         make(chan *agentCommandRequest),
-		stopped:         make(chan struct{}),
-		lastUsed:        time.Now(),
+		aac:           aad,
+		commandClient: commandClient,
+		lastUsed:      time.Now(),
 	}
 
-	a.connectAndProcessCommandsForever()
+	a.commandClient.Start()
 	return a
 }
 
 func (ad *amqpAgentCommandDelegate) PurgeAddress(address v1.ObjectMeta) error {
-	response := make(chan error)
-	request := &agentCommandRequest{
-		commandMessage: &amqp.Message{
-			Properties: &amqp.MessageProperties{
-				Subject: "purge_address",
-			},
-			Value: map[interface{}]interface{}{
-				"address": address.Name,
-			},
+	request := &amqp.Message{
+		Properties: &amqp.MessageProperties{
+			Subject: "purge_address",
 		},
-		response: response,
+		Value: map[interface{}]interface{}{
+			"address": address.Name,
+		},
 	}
 
-	ad.request <- request
-	result := <-response
-
-	if result != nil {
-		return fmt.Errorf("failed to purge address %s : %s", address.Name, result)
+	response, err := ad.commandClient.Request(request)
+	if err != nil {
+		return fmt.Errorf("failed to purge address %s : %s", address.Name, err)
 	}
-	return nil
+
+	if outcome, present := response.ApplicationProperties["outcome"]; present {
+		if oc, ok := outcome.(bool); ok && oc {
+			return nil
+		} else {
+			if e, present := response.ApplicationProperties["error"]; present && e != nil {
+				return fmt.Errorf("failed to purge address %s : %s", address.Name, e)
+			}
+		}
+	}
+	return fmt.Errorf("failed to purge address %s : command %+v failed for unknown reason", address.Name, request)
 }
 
 func (ad *amqpAgentCommandDelegate) LastUsed() time.Time {
@@ -401,136 +409,7 @@ func (ad *amqpAgentCommandDelegate) LastUsed() time.Time {
 }
 
 func (ad *amqpAgentCommandDelegate) Shutdown() {
-	close(ad.request)
-	<-ad.stopped
-}
-
-func (ad *amqpAgentCommandDelegate) connectAndProcessCommandsForever() {
-
-	go func() {
-		defer close(ad.stopped)
-		defer log.Printf("Agent Command Delegate %s - stopped", ad.aac.infraUuid)
-
-		addr := buildAmqpAddress(ad.aac.host, ad.aac.port)
-
-		for {
-
-			err := ad.doProcess(addr)
-			if err != nil {
-				backoff := computeBackoff(err)
-				log.Printf("Agent Command Delegate %s - restarting - backoff %s(s), %v", ad.aac.infraUuid, backoff, err)
-				if backoff > 0 {
-					time.Sleep(backoff)
-				}
-			} else {
-				// Shutdown
-				return
-			}
-		}
-	}()
-
-}
-
-func (ad *amqpAgentCommandDelegate) doProcess(addr string) error {
-	log.Printf("Agent Command Delegate %s - connecting %s", ad.aac.infraUuid, addr)
-
-	client, err := amqp.Dial(addr,
-		amqp.ConnTLSConfig(ad.aac.tlsConfig),
-		amqp.ConnSASLXOAUTH2(ad.impersonateUser, ad.bearerToken, amqpOverrideSaslFrameSize),
-		amqp.ConnServerHostname(ad.aac.host),
-		amqp.ConnProperty("product", "command-delegate; console-server"),
-		amqp.ConnConnectTimeout(ad.aac.connectTimeout),
-		amqp.ConnMaxFrameSize(ad.aac.maxFrameSize),
-	)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = client.Close()
-	}()
-	log.Printf("Agent Command Delegate %s - connected %s", ad.aac.infraUuid, addr)
-
-	session, err := client.NewSession()
-	if err != nil {
-		return err
-	}
-	background := context.Background()
-	defer func() { _ = session.Close(background) }()
-
-	sender, err := session.NewSender(
-		amqp.LinkTargetAddress(agentCommandAddress),
-		amqp.LinkSenderSettle(amqp.ModeMixed),
-	)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = sender.Close(background) }()
-
-	receiver, err := session.NewReceiver(
-		amqp.LinkSourceAddress(agentCommandResponseAddress),
-	)
-	if err != nil {
-		return err
-	}
-	replyTo := receiver.Address()
-
-	defer func() { _ = receiver.Close(background) }()
-
-	requests := make(map[string]*agentCommandRequest)
-	for {
-		select {
-		case req := <-ad.request:
-			if req == nil {
-				log.Printf("Shutdown")
-				return nil
-			}
-
-			msgId := uuid.New().String()
-			req.commandMessage.Properties.MessageID = msgId
-			req.commandMessage.Properties.ReplyTo = replyTo
-
-			requests[msgId] = req
-
-			err = sender.Send(background, req.commandMessage)
-			if err != nil {
-				log.Printf("failed to accept command %+v %s", req.commandMessage, err)
-				req.response <- err
-			}
-		default:
-			// Receive next message
-			msg, err := receiveWithTimeout(background, receiver, 250*time.Millisecond)
-			if err != nil {
-				return err
-			} else if msg != nil {
-				err := msg.Accept()
-				if err != nil {
-					return err
-				}
-
-				if key, ok := msg.Properties.CorrelationID.(string); ok {
-					if req, present := requests[key]; present {
-						delete(requests, key)
-
-						if outcome, present := msg.ApplicationProperties["outcome"]; present {
-							if oc, ok := outcome.(bool); ok && oc {
-								req.response <- nil
-								continue
-							} else {
-								if e, present := msg.ApplicationProperties["error"]; present && e != nil {
-									req.response <- fmt.Errorf("%s", e)
-									continue
-								}
-							}
-						}
-						req.response <- fmt.Errorf("command %+v failed for unknown reason", req)
-						continue
-					} else {
-						log.Printf("Unable to find request with id %s (ignored)", key)
-					}
-				}
-			}
-		}
-	}
+	ad.commandClient.Stop()
 }
 
 func buildAmqpAddress(host string, port int32) string {
