@@ -24,3 +24,4 @@ export * from "./SelectWithToggle";
 export * from "./FinishedStep";
 export * from "./Editor";
 export * from "./FormAndJson";
+export * from "./InputText";
