@@ -32,13 +32,15 @@ public class AuthController implements Controller {
     private final CertManager certManager;
     private final EventLogger eventLogger;
     private final CertProviderFactory certProviderFactory;
+    private final boolean disableExternalCertProvisioning;
 
     public AuthController(CertManager certManager,
                           EventLogger eventLogger,
-                          CertProviderFactory certProviderFactory) {
+                          CertProviderFactory certProviderFactory, boolean disableExternalCertProvisioning) {
         this.certManager = certManager;
         this.eventLogger = eventLogger;
         this.certProviderFactory = certProviderFactory;
+        this.disableExternalCertProvisioning = disableExternalCertProvisioning;
     }
 
     public void issueExternalCertificates(AddressSpace addressSpace) {
@@ -136,7 +138,10 @@ public class AuthController implements Controller {
         if (addressSpaceCa != null) {
             issueComponentCertificates(addressSpace, addressSpaceCa);
         }
-        issueExternalCertificates(addressSpace);
+
+        if (!disableExternalCertProvisioning) {
+            issueExternalCertificates(addressSpace);
+        }
         return addressSpace;
     }
 
