@@ -8,35 +8,10 @@ package resolvers
 import (
 	"context"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
-	"github.com/enmasseproject/enmasse/pkg/util"
 	v1 "github.com/openshift/api/user/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (r *queryResolver) Whoami(ctx context.Context) (*v1.User, error) {
-	if util.HasApi(util.UserGVK) {
-		requestState := server.GetRequestStateFromContext(ctx)
-		return requestState.UserInterface.Get("~", metav1.GetOptions{})
-	} else {
-		// The Kubernetes server has no API exposing the user's name
-		requestState := server.GetRequestStateFromContext(ctx)
-		if requestState.ImpersonateUser {
-			return &v1.User{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: requestState.User,
-				},
-				FullName:   requestState.User,
-				Identities: []string{requestState.User},
-			}, nil
-		} else {
-			// TODO: Use TokenReview's?
-			return &v1.User{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "unknown",
-				},
-				FullName:   "unknown",
-				Identities: []string{"unknown"},
-			}, nil
-		}
-	}
+	requestState := server.GetRequestStateFromContext(ctx)
+	return &requestState.User, nil
 }

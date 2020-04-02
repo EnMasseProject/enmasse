@@ -254,12 +254,8 @@ func (r *mutationResolver) PurgeAddress(ctx context.Context, input metav1.Object
 	}
 
 	token := requestState.UserAccessToken
-	impersonateUser := ""
-	if requestState.ImpersonateUser {
-		impersonateUser = requestState.User
-	}
 
-	commandDelegate, e := collector.CommandDelegate(token, impersonateUser)
+	commandDelegate, e := collector.CommandDelegate(token, requestState.ImpersonatedUser)
 	if e != nil {
 		return nil, e
 	}
