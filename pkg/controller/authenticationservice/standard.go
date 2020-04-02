@@ -55,7 +55,7 @@ func applyStandardAuthServiceDefaults(authservice *adminv1beta1.AuthenticationSe
 		}
 	}
 	if authservice.Spec.Standard.CredentialsSecret == nil {
-		secretName := "keycloak-credentials"
+		secretName := *authservice.Spec.Standard.ServiceName + "-credentials"
 		authservice.Spec.Standard.CredentialsSecret = &corev1.SecretReference{
 			Name: secretName,
 		}
