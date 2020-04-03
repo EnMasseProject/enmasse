@@ -7,7 +7,9 @@ package io.enmasse.systemtest.iot;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -39,6 +41,7 @@ public class MessageSendTester {
     private static final Logger log = CustomLogger.getLogger();
     private Type type = Type.TELEMETRY;
     private int amount = 1;
+    private int payloadSize = 0;
     private Consume consume = Consume.BEFORE;
     private Duration delay = Duration.ofSeconds(1);
     private Duration additionalSendTimeout = Duration.ZERO;
@@ -148,6 +151,17 @@ public class MessageSendTester {
     }
 
     /**
+     * Set the target payload size.
+     * <p>
+     * Will fill up the generated payload to reach the target payload size. If the target payload size
+     * is too small to hold the internally generated payload, then the message send test will fail.
+     */
+    public MessageSendTester payloadSize(final int payloadSize) {
+        this.payloadSize = payloadSize;
+        return this;
+    }
+
+    /**
      * Execute the test.
      * <br>
      * This must not change the state of this instance. This method may be called multiple times.
@@ -209,13 +223,13 @@ public class MessageSendTester {
         /**
          * Send a single message.
          *
-         * @param type        the type to send.
-         * @param payload     the payload to send, may be {@code null}.
+         * @param type the type to send.
+         * @param payload the payload to send, may be {@code null}.
          * @param sendTimeout timeout for the send operation.
          * @return {@code true} if the message was accepted, {@code false} otherwise.
          * @throws Exception In case anything went wrong.
          */
-        public boolean send(Type type, JsonObject payload, Duration sendTimeout) throws Exception;
+        public boolean send(Type type, Buffer payload, Duration sendTimeout) throws Exception;
     }
 
     @FunctionalInterface
@@ -277,6 +291,11 @@ public class MessageSendTester {
      */
     private class Executor implements AutoCloseable {
 
+        /**
+         * Limits the number of characters when logging messages.
+         */
+        private static final int MAX_MESSAGE_DUMP_LENGTH = 200;
+
         private final String testId;
         private final List<ReceivedMessage> receivedMessages = new LinkedList<>();
         private long sendTime;
@@ -294,6 +313,7 @@ public class MessageSendTester {
 
             final long delay = MessageSendTester.this.delay.toMillis();
             final int amount = MessageSendTester.this.amount;
+            final int payloadSize = MessageSendTester.this.payloadSize;
 
             // setup consumer (before)
             if (Consume.BEFORE == MessageSendTester.this.consume) {
@@ -306,6 +326,9 @@ public class MessageSendTester {
             var sendTimeout = TimeoutBudget.ofDuration(sendDuration);
 
             // send
+            if (payloadSize > 0) {
+                log.info("Sending messages - payloadSize: {}", payloadSize);
+            }
             int i = 0;
             while (i < amount) {
 
@@ -318,7 +341,8 @@ public class MessageSendTester {
                 payload.put("timestamp", System.currentTimeMillis());
                 payload.put("test-id", this.testId);
                 payload.put("index", i);
-                if (MessageSendTester.this.sender.send(MessageSendTester.this.type, payload, Duration.ofSeconds(1))) {
+                final Buffer filledPayload = fillWithPayload(payload, payloadSize);
+                if (MessageSendTester.this.sender.send(MessageSendTester.this.type, filledPayload, Duration.ofSeconds(1))) {
                     i++;
                 }
 
@@ -364,7 +388,8 @@ public class MessageSendTester {
             }
 
             if (receiveBudget.timeoutExpired() && missing <= MessageSendTester.this.acceptableMessageLoss) {
-                // we are still waiting for all messages, but the timeout expired and we are in the acceptable loss range - success
+                // we are still waiting for all messages, but the timeout expired and we are in the acceptable loss
+                // range - success
                 return true;
             }
 
@@ -399,7 +424,13 @@ public class MessageSendTester {
 
         private void handleMessage(final Message message) {
 
-            log.info("Received message - {}", message);
+            if (log.isInfoEnabled()) {
+                String str = message.toString();
+                if (str.length() > MAX_MESSAGE_DUMP_LENGTH) {
+                    str = str.substring(0, MAX_MESSAGE_DUMP_LENGTH) + "…";
+                }
+                log.info("Received message - {}", str);
+            }
 
             var body = message.getBody();
             if (!(body instanceof Data)) {
@@ -418,8 +449,7 @@ public class MessageSendTester {
             handleValidMessage(message, timestamp, json);
         }
 
-        private void handleInvalidMessage(final Message message) {
-        }
+        private void handleInvalidMessage(final Message message) {}
 
         private void handleValidMessage(final Message message, long timestamp, final JsonObject payload) {
             var diff = System.currentTimeMillis() - timestamp;
@@ -447,6 +477,50 @@ public class MessageSendTester {
         public void close() throws Exception {
             stopConsumer();
         }
+    }
+
+    /**
+     * The number of bytes it will take to add the "extra" field.
+     */
+    final static int FIXED_JSON_EXTRA_SIZE = "\"extra\":\"\"".getBytes(StandardCharsets.UTF_8).length;
+
+    /**
+     * Fill up the message with extra payload to get an exact payload size (in bytes).
+     * <p>
+     * If the payload size if greater than zero, it will always requires {@link #FIXED_JSON_EXTRA_SIZE}
+     * of bytes remaining for an empty object and {@link #FIXED_JSON_EXTRA_SIZE} plus one for an object
+     * which already contains a field.
+     *
+     * @param payload The payload to modify.
+     * @param payloadSize The target payload size. If this is zero or less, this operation is a no-op.
+     * @throws IllegalArgumentException if the target payload size is lower than the already provided
+     *         payload.
+     */
+    static Buffer fillWithPayload(final JsonObject payload, final int payloadSize) {
+
+        final Buffer buffer = payload.toBuffer();
+
+        if (payloadSize <= 0) {
+            return buffer;
+        }
+
+        // if the object is empty, there will be no extra comma
+        final int extraComma = payload.isEmpty() ? 0 : 1;
+        final int actualSize = buffer.length();
+        final int fixed = FIXED_JSON_EXTRA_SIZE + extraComma;
+
+        if (actualSize + fixed > payloadSize) {
+            // we are already "too big"
+            throw new IllegalArgumentException(String.format("Provided payload size already exceeds maximum (actual: %d + %d, target: %d)",
+                    actualSize, fixed, payloadSize));
+        }
+
+        final int diff = payloadSize - actualSize - fixed;
+        final char[] fill = new char[diff];
+        Arrays.fill(fill, 'a');
+        payload.put("extra", String.valueOf(fill));
+
+        return payload.toBuffer();
     }
 
 }

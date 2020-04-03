@@ -158,9 +158,10 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         // send the reply to the command
 
         TestUtils.runUntilPass(5, () -> {
-            this.httpClient.send(COMMAND_RESPONSE, "/" + responseId, new JsonObject().put("data", "command-response"), is(HTTP_ACCEPTED), request -> {
-                request.putHeader("hono-cmd-status", "202" /* accepted */);
-            }, Duration.ofSeconds(5));
+            this.httpClient.send(COMMAND_RESPONSE, "/" + responseId,
+                    new JsonObject().put("data", "command-response").toBuffer(),
+                    is(HTTP_ACCEPTED),
+                    request -> request.putHeader("hono-cmd-status", "202" /* accepted */), Duration.ofSeconds(5));
         });
 
         assertCloudTelemetryMessage(f1);

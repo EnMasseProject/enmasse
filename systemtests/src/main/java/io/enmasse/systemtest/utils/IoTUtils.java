@@ -354,12 +354,12 @@ public class IoTUtils {
             try {
                 switch (type) {
                     case EVENT: {
-                        var response = adapterClient.sendEvent(json, any());
+                        var response = adapterClient.sendEvent(json.toBuffer(), any());
                         logResponseIfLastTryFailed(phase, response, message);
                         return response.statusCode() == HTTP_ACCEPTED;
                     }
                     case TELEMETRY: {
-                        var response = adapterClient.sendTelemetry(json, any());
+                        var response = adapterClient.sendTelemetry(json.toBuffer(), any());
                         logResponseIfLastTryFailed(phase, response, message);
                         return response.statusCode() == HTTP_ACCEPTED;
                     }

@@ -5,13 +5,29 @@
 
 package io.enmasse.systemtest.mqtt;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.TestUtils;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.BiFunction;
+
+import javax.net.ssl.SNIHostName;
+import javax.net.ssl.SNIServerName;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.X509TrustManager;
+
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -31,27 +47,13 @@ import org.eclipse.paho.client.mqttv3.MqttTopic;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 
-import javax.net.ssl.SNIHostName;
-import javax.net.ssl.SNIServerName;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.X509TrustManager;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.function.BiFunction;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 
 public class MqttClientFactory {
 
@@ -312,151 +314,206 @@ public class MqttClientFactory {
         @Override
         public void close() throws MqttException {
             connectedClients.remove(this);
-            mqttClient.close();
+            // if we are connected ...
+            // otherwise we try to talk the client into closing...
+            if (mqttClient.isConnected()) {
+                // ... we need to disconnect first, otherwise the close will fail
+                mqttClient.disconnectForcibly(0, 100);
+            }
+            try {
+                mqttClient.close();
+            } catch (MqttException e) {
+                // and it still might fail ... due to its internal state
+                switch (e.getReasonCode()) {
+                    case MqttException.REASON_CODE_CONNECT_IN_PROGRESS:
+                        // if paho thinks it is still "connection" (vs connected), we can't do anything
+                        log.info("Suppressing MQTT close exception", e);
+                        break;
+                    default:
+                        throw e;
+                }
+            }
+
         }
 
+        @Override
         public IMqttToken connect() throws MqttException, MqttSecurityException {
-            return mqttClient.connect(options);
+            return this.mqttClient.connect(this.options);
         }
 
+        @Override
         public IMqttToken connect(MqttConnectOptions options) throws MqttException, MqttSecurityException {
             throw new UnsupportedOperationException("Use the zero args this method.");
         }
 
+        @Override
         public IMqttToken connect(Object userContext, IMqttActionListener callback) throws MqttException, MqttSecurityException {
             return mqttClient.connect(options, userContext, callback);
         }
 
+        @Override
         public IMqttToken connect(MqttConnectOptions options, Object userContext, IMqttActionListener callback) throws MqttException, MqttSecurityException {
             throw new UnsupportedOperationException("Use the zero args this method.");
         }
 
+        @Override
         public IMqttToken disconnect() throws MqttException {
             return mqttClient.disconnect();
         }
 
+        @Override
         public IMqttToken disconnect(long quiesceTimeout) throws MqttException {
             return mqttClient.disconnect(quiesceTimeout);
         }
 
+        @Override
         public IMqttToken disconnect(Object userContext, IMqttActionListener callback) throws MqttException {
             return mqttClient.disconnect(userContext, callback);
         }
 
+        @Override
         public IMqttToken disconnect(long quiesceTimeout, Object userContext, IMqttActionListener callback) throws MqttException {
             return mqttClient.disconnect(quiesceTimeout, userContext, callback);
         }
 
+        @Override
         public void disconnectForcibly() throws MqttException {
             mqttClient.disconnectForcibly();
         }
 
+        @Override
         public void disconnectForcibly(long disconnectTimeout) throws MqttException {
             mqttClient.disconnectForcibly(disconnectTimeout);
         }
 
+        @Override
         public void disconnectForcibly(long quiesceTimeout, long disconnectTimeout) throws MqttException {
             mqttClient.disconnectForcibly(quiesceTimeout, disconnectTimeout);
         }
 
+        @Override
         public boolean isConnected() {
             return mqttClient.isConnected();
         }
 
+        @Override
         public String getClientId() {
             return mqttClient.getClientId();
         }
 
+        @Override
         public String getServerURI() {
             return mqttClient.getServerURI();
         }
 
+        @Override
         public IMqttDeliveryToken publish(String topic, byte[] payload, int qos, boolean retained) throws MqttException, MqttPersistenceException {
             return mqttClient.publish(topic, payload, qos, retained);
         }
 
+        @Override
         public IMqttDeliveryToken publish(String topic, byte[] payload, int qos, boolean retained, Object userContext, IMqttActionListener callback)
                 throws MqttException, MqttPersistenceException {
             return mqttClient.publish(topic, payload, qos, retained, userContext, callback);
         }
 
+        @Override
         public IMqttDeliveryToken publish(String topic, MqttMessage message) throws MqttException, MqttPersistenceException {
             return mqttClient.publish(topic, message);
         }
 
+        @Override
         public IMqttDeliveryToken publish(String topic, MqttMessage message, Object userContext, IMqttActionListener callback) throws MqttException, MqttPersistenceException {
             return mqttClient.publish(topic, message, userContext, callback);
         }
 
+        @Override
         public void reconnect() throws MqttException {
             mqttClient.reconnect();
         }
 
+        @Override
         public boolean removeMessage(IMqttDeliveryToken token) throws MqttException {
             return mqttClient.removeMessage(token);
         }
 
+        @Override
         public IMqttToken subscribe(String topicFilter, int qos) throws MqttException {
             return mqttClient.subscribe(topicFilter, qos);
         }
 
+        @Override
         public IMqttToken subscribe(String topicFilter, int qos, Object userContext, IMqttActionListener callback) throws MqttException {
             return mqttClient.subscribe(topicFilter, qos, userContext, callback);
         }
 
+        @Override
         public IMqttToken subscribe(String[] topicFilters, int[] qos) throws MqttException {
             return mqttClient.subscribe(topicFilters, qos);
         }
 
+        @Override
         public IMqttToken subscribe(String[] topicFilters, int[] qos, Object userContext, IMqttActionListener callback) throws MqttException {
             return mqttClient.subscribe(topicFilters, qos, userContext, callback);
         }
 
+        @Override
         public IMqttToken subscribe(String topicFilter, int qos, Object userContext, IMqttActionListener callback, IMqttMessageListener messageListener) throws MqttException {
             return mqttClient.subscribe(topicFilter, qos, userContext, callback, messageListener);
         }
 
+        @Override
         public IMqttToken subscribe(String topicFilter, int qos, IMqttMessageListener messageListener) throws MqttException {
             return mqttClient.subscribe(topicFilter, qos, messageListener);
         }
 
+        @Override
         public IMqttToken subscribe(String[] topicFilters, int[] qos, IMqttMessageListener[] messageListeners) throws MqttException {
             return mqttClient.subscribe(topicFilters, qos, messageListeners);
         }
 
+        @Override
         public IMqttToken subscribe(String[] topicFilters, int[] qos, Object userContext, IMqttActionListener callback, IMqttMessageListener[] messageListeners)
                 throws MqttException {
             return mqttClient.subscribe(topicFilters, qos, userContext, callback, messageListeners);
         }
 
+        @Override
         public IMqttToken unsubscribe(String topicFilter) throws MqttException {
             return mqttClient.unsubscribe(topicFilter);
         }
 
+        @Override
         public IMqttToken unsubscribe(String[] topicFilters) throws MqttException {
             return mqttClient.unsubscribe(topicFilters);
         }
 
+        @Override
         public IMqttToken unsubscribe(String topicFilter, Object userContext, IMqttActionListener callback) throws MqttException {
             return mqttClient.unsubscribe(topicFilter, userContext, callback);
         }
 
+        @Override
         public IMqttToken unsubscribe(String[] topicFilters, Object userContext, IMqttActionListener callback) throws MqttException {
             return mqttClient.unsubscribe(topicFilters, userContext, callback);
         }
 
+        @Override
         public void setCallback(MqttCallback callback) {
             mqttClient.setCallback(callback);
         }
 
+        @Override
         public IMqttDeliveryToken[] getPendingDeliveryTokens() {
             return mqttClient.getPendingDeliveryTokens();
         }
 
+        @Override
         public void setManualAcks(boolean manualAcks) {
             mqttClient.setManualAcks(manualAcks);
         }
 
+        @Override
         public void messageArrivedComplete(int messageId, int qos) throws MqttException {
             mqttClient.messageArrivedComplete(messageId, qos);
         }
