@@ -165,22 +165,18 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 			Name:          "https",
 		}}
 		container.ReadinessProbe = &corev1.Probe{
-			InitialDelaySeconds: 60,
+			InitialDelaySeconds: 30,
 			Handler: corev1.Handler{
-				HTTPGet: &corev1.HTTPGetAction{
-					Port:   intstr.FromString("https"),
-					Path:   "/auth",
-					Scheme: "HTTPS",
+				TCPSocket: &corev1.TCPSocketAction{
+					Port:   intstr.FromString("amqps"),
 				},
 			},
 		}
 		container.LivenessProbe = &corev1.Probe{
 			InitialDelaySeconds: 120,
 			Handler: corev1.Handler{
-				HTTPGet: &corev1.HTTPGetAction{
-					Port:   intstr.FromString("https"),
-					Path:   "/auth",
-					Scheme: "HTTPS",
+				TCPSocket: &corev1.TCPSocketAction{
+					Port:   intstr.FromString("amqps"),
 				},
 			},
 		}
