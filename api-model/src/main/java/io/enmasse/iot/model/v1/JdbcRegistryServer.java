@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -18,17 +18,16 @@ import io.sundr.builder.annotations.Inline;
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
-                value = "done"
-                )
-        )
+                value = "done"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class InfinispanServer {
-    private ExternalInfinispanServer external;
+public class JdbcRegistryServer {
+    private ExternalJdbcRegistryServer external;
 
-    public void setExternal(ExternalInfinispanServer external) {
+    public void setExternal(ExternalJdbcRegistryServer external) {
         this.external = external;
     }
-    public ExternalInfinispanServer getExternal() {
+
+    public ExternalJdbcRegistryServer getExternal() {
         return external;
     }
 }

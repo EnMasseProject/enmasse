@@ -21,6 +21,7 @@ import org.infinispan.util.concurrent.IsolationLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.config.InfinispanProperties;
@@ -30,6 +31,7 @@ import io.enmasse.iot.infinispan.device.DeviceInformation;
 import io.enmasse.iot.infinispan.device.DeviceKey;
 
 @Component
+@Lazy
 public class DeviceManagementCacheProvider extends AbstractCacheProvider {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceManagementCacheProvider.class);
@@ -110,11 +112,11 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
     }
 
     public RemoteCache<DeviceKey, DeviceInformation> getOrCreateDeviceManagementCache() {
-        return getOrCreateCache(properties.getDevicesCacheName(), this::buildDeviceManagementConfiguration);
+        return getOrCreateCache(properties.getCacheNames().getDevices(), this::buildDeviceManagementConfiguration);
     }
 
     public Optional<RemoteCache<DeviceKey, DeviceInformation>> getDeviceManagementCache() {
-        return getCache(properties.getDevicesCacheName());
+        return getCache(properties.getCacheNames().getDevices());
     }
 
     public org.infinispan.configuration.cache.Configuration buildAdapterCredentialsConfiguration() {
@@ -132,11 +134,11 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
     }
 
     public RemoteCache<CredentialKey, String> getOrCreateAdapterCredentialsCache() {
-        return getOrCreateCache(properties.getAdapterCredentialsCacheName(), this::buildAdapterCredentialsConfiguration);
+        return getOrCreateCache(properties.getCacheNames().getAdapterCredentials(), this::buildAdapterCredentialsConfiguration);
     }
 
     public Optional<RemoteCache<CredentialKey, String>> getAdapterCredentialsCache() {
-        return getCache(properties.getAdapterCredentialsCacheName());
+        return getCache(properties.getCacheNames().getAdapterCredentials());
     }
 
     public void checkSchema() {

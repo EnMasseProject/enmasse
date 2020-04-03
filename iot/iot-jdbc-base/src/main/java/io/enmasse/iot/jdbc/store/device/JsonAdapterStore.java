@@ -5,10 +5,7 @@
 
 package io.enmasse.iot.jdbc.store.device;
 
-import static io.enmasse.iot.jdbc.store.StatementConfiguration.DEFAULT_PATH;
-
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,11 +19,9 @@ import org.eclipse.hono.util.CredentialsConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.iot.jdbc.store.SQL;
 import io.enmasse.iot.jdbc.store.Statement;
 import io.enmasse.iot.jdbc.store.StatementConfiguration;
 import io.enmasse.iot.registry.device.CredentialKey;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -37,31 +32,21 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLClient;
 
-public class JsonStore extends AbstractDeviceStore {
+public class JsonAdapterStore extends AbstractDeviceAdapterStore {
 
-    private static final Logger log = LoggerFactory.getLogger(JsonStore.class);
+    private static final Logger log = LoggerFactory.getLogger(JsonAdapterStore.class);
 
     public static final String DEFAULT_TABLE_NAME_JSON = "devices";
 
-    private final Statement readCredentialsStatement;
     private final Statement findCredentialsStatement;
-
-    private final Statement updateCredentialsStatement;
-    private final Statement updateCredentialsVersionedStatement;
 
     private final boolean hierarchical;
 
-    public JsonStore(final SQLClient client, final Tracer tracer, final boolean hierarchical, final StatementConfiguration cfg) throws IOException {
+    public JsonAdapterStore(final SQLClient client, final Tracer tracer, final boolean hierarchical, final StatementConfiguration cfg) throws IOException {
         super(client, tracer, cfg);
         cfg.dump(log);
 
         this.hierarchical = hierarchical;
-
-        this.readCredentialsStatement = cfg
-                .getRequiredStatment("readCredentials")
-                .validateParameters(
-                        "tenant_id",
-                        "device_id");
 
         this.findCredentialsStatement = cfg
                 .getRequiredStatment("findCredentials")
@@ -70,54 +55,6 @@ public class JsonStore extends AbstractDeviceStore {
                         "type",
                         "auth_id");
 
-        this.updateCredentialsStatement = cfg
-                .getRequiredStatment("updateCredentials")
-                .validateParameters(
-                        "tenant_id",
-                        "device_id",
-                        "next_version",
-                        "data");
-
-        this.updateCredentialsVersionedStatement = cfg
-                .getRequiredStatment("updateCredentialsVersioned")
-                .validateParameters(
-                        "tenant_id",
-                        "device_id",
-                        "next_version",
-                        "data",
-                        "expected_version");
-
-    }
-
-    @Override
-    public Future<Boolean> setCredentials(final DeviceKey key, final List<CommonCredential> credentials, final Optional<String> resourceVersion,
-            final SpanContext spanContext) {
-
-        final String json = encodeCredentials(credentials);
-
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "set credentials")
-                .withTag("tenant_instance_id", key.getTenantId())
-                .withTag("device_id", key.getDeviceId())
-                .withTag("data", json)
-                .start();
-
-        resourceVersion.ifPresent(version -> span.setTag("version", version));
-
-        final Statement statement = resourceVersion.isPresent() ? this.updateCredentialsVersionedStatement : this.updateCredentialsStatement;
-        var f = updateJsonField(key, statement, json, resourceVersion, span)
-                .map(result -> result.getUpdated() > 0);
-
-        return MoreFutures
-                .whenComplete(f, span::finish);
-
-    }
-
-    private String encodeCredentials(final List<CommonCredential> credentials) {
-        if (this.hierarchical) {
-            return encodeCredentialsHierarchical(credentials);
-        } else {
-            return Json.encode(credentials.toArray(CommonCredential[]::new));
-        }
     }
 
     static String encodeCredentialsHierarchical(final List<CommonCredential> credentials) {
@@ -156,49 +93,6 @@ public class JsonStore extends AbstractDeviceStore {
         authObject = new JsonObject();
         typeObject.put(authId, authObject);
         return authObject;
-    }
-
-    @Override
-    public Future<Optional<CredentialsReadResult>> getCredentials(final DeviceKey key, final SpanContext spanContext) {
-
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "get credentials")
-                .withTag("tenant_instance_id", key.getTenantId())
-                .withTag("device_id", key.getDeviceId())
-                .start();
-
-        var f = read(this.client, key, this.readCredentialsStatement, span)
-                .<Optional<CredentialsReadResult>>flatMap(r -> {
-                    var entries = r.getRows(true);
-                    span.log(Map.of(
-                            "event", "read result",
-                            "rows", entries.size()));
-                    switch (entries.size()) {
-                        case 0:
-                            return Future.succeededFuture(Optional.empty());
-                        case 1:
-                            try {
-                                var entry = entries.get(0);
-                                var deviceId = entry.getString("device_id");
-                                var credentialsString = entry.getString("credentials");
-                                var credentials = decodeCredentials(credentialsString);
-                                var version = Optional.ofNullable(entry.getString("version"));
-                                log.debug("Converted - deviceId: {}, version: {}, credentials: {} -> {}", deviceId, version, credentialsString, credentials);
-                                return Future.succeededFuture(Optional.of(new CredentialsReadResult(deviceId, credentials, version)));
-                            } catch (Exception e) {
-                                log.info("Failed to convert result", e);
-                                return Future.failedFuture(e);
-                            }
-
-                        default:
-                            TracingHelper.logError(span, "Found multiple entries for a single device");
-                            return Future.failedFuture(new IllegalStateException("Found multiple entries for a single device"));
-                    }
-
-                });
-
-        return MoreFutures
-                .whenComplete(f, span::finish);
-
     }
 
     @Override
@@ -310,22 +204,6 @@ public class JsonStore extends AbstractDeviceStore {
         copyField(from, to, CredentialsConstants.FIELD_SECRETS);
         copyField(from, to, "comment");
         copyField(from, to, "ext");
-    }
-
-    public static StatementConfiguration defaultConfiguration(final String jdbcUrl, final Optional<String> tableName, boolean hierarchical) throws IOException {
-
-        final String dialect = SQL.getDatabaseDialect(jdbcUrl);
-        final String tableNameString = tableName.orElse(DEFAULT_TABLE_NAME_JSON);
-        final String jsonModel = hierarchical ? "json.tree" : "json.flat";
-
-        final Path base = DEFAULT_PATH.resolve("device");
-
-        return StatementConfiguration
-                .empty(tableNameString)
-                .overideWithDefaultPattern("base", dialect, AbstractDeviceStore.class, base)
-                .overideWithDefaultPattern("json", dialect, JsonStore.class, base)
-                .overideWithDefaultPattern(jsonModel, dialect, JsonStore.class, base);
-
     }
 
 }

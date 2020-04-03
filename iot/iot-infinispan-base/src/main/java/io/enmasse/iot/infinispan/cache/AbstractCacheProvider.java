@@ -32,7 +32,13 @@ public abstract class AbstractCacheProvider implements AutoCloseable {
 
     public AbstractCacheProvider(final InfinispanProperties properties) {
         this.properties = properties;
-        log.info("Using Infinispan - host: {}, port: {}", properties.getHost(), properties.getPort());
+        log.info("Using Infinispan - host: {}, port: {}, user: {}, tls: {}", properties.getHost(), properties.getPort(), properties.getUsername(), properties.isUseTls());
+        log.info("             TLS - use: {}, trustStore: {}", properties.isUseTls(), properties.getTrustStorePath());
+        log.info("            SASL - server: {}, realm: {}", properties.getSaslServerName(), properties.getSaslRealm());
+        log.info("          Caches - adapter: {}, devices: {}, states: {}",
+                properties.getCacheNames().getAdapterCredentials(),
+                properties.getCacheNames().getDevices(),
+                properties.getCacheNames().getDeviceConnections());
     }
 
     @PostConstruct
@@ -130,7 +136,7 @@ public abstract class AbstractCacheProvider implements AutoCloseable {
 
         } else {
 
-            return this.<K,V>getCache(cacheName)
+            return this.<K, V>getCache(cacheName)
                     .orElseThrow(() -> new IllegalStateException(String.format("Cache '%s' not found, and not requested to create", cacheName)));
 
         }
@@ -141,9 +147,9 @@ public abstract class AbstractCacheProvider implements AutoCloseable {
 
         log.debug("CacheConfig - {}\n{}", cacheName, configuration.toXMLString(cacheName));
 
-            return this.remoteCacheManager
-                    .administration()
-                    .getOrCreateCache(cacheName, configuration);
+        return this.remoteCacheManager
+                .administration()
+                .getOrCreateCache(cacheName, configuration);
 
     }
 }

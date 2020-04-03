@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -24,7 +23,6 @@ import io.enmasse.iot.jdbc.store.OptimisticLockingException;
 import io.enmasse.iot.jdbc.store.SQL;
 import io.enmasse.iot.jdbc.store.Statement;
 import io.enmasse.iot.jdbc.store.StatementConfiguration;
-import io.enmasse.iot.registry.device.CredentialKey;
 import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.utils.MoreFutures;
 import io.enmasse.iot.utils.MoreThrowables;
@@ -42,23 +40,19 @@ import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.sql.UpdateResult;
 
-public class TableStore extends AbstractDeviceStore {
+public class TableManagementStore extends AbstractDeviceManagementStore {
 
-    private static final Logger log = LoggerFactory.getLogger(TableStore.class);
-
-    public static final String DEFAULT_TABLE_NAME_CREDENTIALS = "device_credentials";
-    public static final String DEFAULT_TABLE_NAME_REGISTRATIONS = "device_registrations";
+    private static final Logger log = LoggerFactory.getLogger(TableManagementStore.class);
 
     private final Statement readForUpdateStatement;
     private final Statement readForUpdateVersionedStatement;
-    private final Statement findCredentialsStatement;
     private final Statement readCredentialsStatement;
 
     private final Statement insertCredentialEntryStatement;
     private final Statement deleteAllCredentialsStatement;
     private final Statement updateDeviceVersionStatement;
 
-    public TableStore(final SQLClient client, final Tracer tracer, final StatementConfiguration cfg) throws IOException {
+    public TableManagementStore(final SQLClient client, final Tracer tracer, final StatementConfiguration cfg) throws IOException {
         super(client, tracer, cfg);
         cfg.dump(log);
 
@@ -77,13 +71,6 @@ public class TableStore extends AbstractDeviceStore {
                 .validateParameters(
                         "tenant_id",
                         "device_id");
-
-        this.findCredentialsStatement = cfg
-                .getRequiredStatment("findCredentials")
-                .validateParameters(
-                        "tenant_id",
-                        "type",
-                        "auth_id");
 
         this.insertCredentialEntryStatement = cfg
                 .getRequiredStatment("insertCredentialEntry")
@@ -152,7 +139,7 @@ public class TableStore extends AbstractDeviceStore {
                 .flatMap(connection -> readDeviceForUpdate(connection, key, resourceVersion, span)
 
                         // check if we got back a result, if not this will abort early
-                        .flatMap(TableStore::extractVersionForUpdate)
+                        .flatMap(TableManagementStore::extractVersionForUpdate)
 
                         // take the version and start processing on
                         .flatMap(version -> this.deleteAllCredentialsStatement
@@ -260,7 +247,7 @@ public class TableStore extends AbstractDeviceStore {
 
                         // check if we got back a result, if not this will abort early
 
-                        .flatMap(TableStore::extractVersionForUpdate)
+                        .flatMap(TableManagementStore::extractVersionForUpdate)
 
                         // read credentials
 
@@ -286,73 +273,6 @@ public class TableStore extends AbstractDeviceStore {
 
         return MoreFutures
                 .whenComplete(f, span::finish);
-
-    }
-
-    @Override
-    public Future<Optional<CredentialsReadResult>> findCredentials(final CredentialKey key, final SpanContext spanContext) {
-
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "find credentials")
-                .withTag("auth_id", key.getAuthId())
-                .withTag("type", key.getType())
-                .withTag("tenant_instance_id", key.getTenantId())
-                .start();
-
-        var expanded = this.findCredentialsStatement.expand(params -> {
-            params.put("tenant_id", key.getTenantId());
-            params.put("type", key.getType());
-            params.put("auth_id", key.getAuthId());
-        });
-
-        log.debug("findCredentials - statement: {}", expanded);
-        var f = expanded.trace(this.tracer, span).query(this.client)
-                .<Optional<CredentialsReadResult>>flatMap(r -> {
-                    var entries = r.getRows(true);
-                    span.log(Map.of(
-                            "event", "read result",
-                            "rows", entries.size()));
-
-                    final Set<String> deviceIds = entries.stream()
-                            .map(o -> o.getString("device_id"))
-                            .filter(o -> o != null)
-                            .collect(Collectors.toSet());
-
-                    int num = deviceIds.size();
-                    if (num <= 0) {
-                        return Future.succeededFuture(Optional.empty());
-                    } else if (num > 1) {
-                        TracingHelper.logError(span, "Found multiple entries for a single device");
-                        return Future.failedFuture(new IllegalStateException("Found multiple entries for a single device"));
-                    }
-
-                    // we know now that we have exactly one entry
-                    final String deviceId = deviceIds.iterator().next();
-
-                    final List<CommonCredential> credentials = entries.stream()
-                            .map(o -> o.getString("data"))
-                            .map(s -> Json.decodeValue(s, CommonCredential.class))
-                            .collect(Collectors.toList());
-
-                    return Future.succeededFuture(Optional.of(new CredentialsReadResult(deviceId, credentials, Optional.empty())));
-                });
-
-        return MoreFutures
-                .whenComplete(f, span::finish);
-
-    }
-
-    public static StatementConfiguration defaultConfiguration(final String jdbcUrl, final Optional<String> tableNameCredentials, final Optional<String> tableNameRegistrations)
-            throws IOException {
-
-        final String dialect = SQL.getDatabaseDialect(jdbcUrl);
-
-        final String tableNameCredentialsString = tableNameCredentials.orElse(DEFAULT_TABLE_NAME_CREDENTIALS);
-        final String tableNameRegistrationsString = tableNameRegistrations.orElse(DEFAULT_TABLE_NAME_REGISTRATIONS);
-
-        return StatementConfiguration
-                .empty(tableNameRegistrationsString, tableNameCredentialsString)
-                .overideWithDefaultPattern("base", dialect, AbstractDeviceStore.class, StatementConfiguration.DEFAULT_PATH.resolve("device"))
-                .overideWithDefaultPattern("table", dialect, TableStore.class, StatementConfiguration.DEFAULT_PATH.resolve("device"));
 
     }
 

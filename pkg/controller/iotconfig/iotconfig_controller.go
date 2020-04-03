@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -40,8 +40,17 @@ import (
 
 const ControllerName = "iotconfig-controller"
 
+const DeviceConnectionTypeAnnotation = "iot.enmasse.io/deviceConnection.type"
+
 const RegistryTypeAnnotation = "iot.enmasse.io/registry.type"
 const RegistryJdbcModeAnnotation = "iot.enmasse.io/registry.jdbc.mode"
+
+const RegistryAdapterFeatureLabel = "iot.enmasse.io/registry-adapter"
+const RegistryManagementFeatureLabel = "iot.enmasse.io/registry-management"
+
+func AllRegistryFeatures() []string {
+	return []string{RegistryAdapterFeatureLabel, RegistryManagementFeatureLabel}
+}
 
 var log = logf.Log.WithName("controller_iotconfig")
 
@@ -191,16 +200,10 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return r.processTenantService(ctx, config)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		switch config.EvalDeviceRegistryImplementation() {
-		case iotv1alpha1.DeviceRegistryInfinispan:
-			return r.processInfinispanDeviceRegistry(ctx, config)
-		case iotv1alpha1.DeviceRegistryFileBased:
-			return r.processFileDeviceRegistry(ctx, config)
-		case iotv1alpha1.DeviceRegistryJdbc:
-			return r.processJdbcDeviceRegistry(ctx, config)
-		default:
-			return reconcile.Result{}, util.NewConfigurationError("illegal device registry configuration")
-		}
+		return r.processDeviceConnection(ctx, config)
+	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processDeviceRegistry(ctx, config)
 	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processHttpAdapter(ctx, config, qdrProxyConfigCtx)

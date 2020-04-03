@@ -1,11 +1,12 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
 import static io.enmasse.iot.infinispan.device.DeviceKey.deviceKey;
+import static io.enmasse.iot.registry.infinispan.Profiles.PROFILE_DEVICE_REGISTRY;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.fromInternal;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.toInternal;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -35,6 +36,7 @@ import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
@@ -48,6 +50,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
 @Component
+@Profile(PROFILE_DEVICE_REGISTRY)
 public class CredentialsManagementServiceImpl extends AbstractCredentialsManagementService {
 
     // Adapter cache :

@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.jdbc.device.impl;
 
+import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_REGISTRY_MANAGEMENT;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -19,9 +20,10 @@ import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.util.CacheDirective;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.jdbc.store.device.AbstractDeviceStore;
+import io.enmasse.iot.jdbc.store.device.AbstractDeviceManagementStore;
 import io.enmasse.iot.registry.device.AbstractCredentialsManagementService;
 import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.registry.jdbc.config.DeviceServiceProperties;
@@ -30,13 +32,14 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
 @Component
+@Profile(PROFILE_REGISTRY_MANAGEMENT)
 public class CredentialsManagementServiceImpl extends AbstractCredentialsManagementService {
 
-    private final AbstractDeviceStore store;
+    private final AbstractDeviceManagementStore store;
     private final Optional<CacheDirective> ttl;
 
     @Autowired
-    public CredentialsManagementServiceImpl(final Vertx vertx, final HonoPasswordEncoder passwordEncoder, final AbstractDeviceStore store, final DeviceServiceProperties properties) {
+    public CredentialsManagementServiceImpl(final Vertx vertx, final HonoPasswordEncoder passwordEncoder, final AbstractDeviceManagementStore store, final DeviceServiceProperties properties) {
         super(passwordEncoder, vertx);
         this.store = store;
         this.ttl = Optional.of(CacheDirective.maxAgeDirective(properties.getCredentialsTtl().toSeconds()));

@@ -5,6 +5,9 @@
 
 package io.enmasse.iot.registry.jdbc.config;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
 import org.eclipse.hono.config.ServiceConfigProperties;
 import org.eclipse.hono.util.Constants;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,9 +17,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.enmasse.iot.utils.ConfigBase;
-
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 
 @Configuration
 public class RestEndpointConfiguration {
@@ -33,12 +33,11 @@ public class RestEndpointConfiguration {
      *
      * @return The properties.
      */
-    @Qualifier(Constants.QUALIFIER_REST)
     @Bean
-    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".registry.rest")
+    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".rest")
+    @Qualifier(Constants.QUALIFIER_REST)
     public ServiceConfigProperties restProperties() {
-        final ServiceConfigProperties props = new ServiceConfigProperties();
-        return props;
+        return new ServiceConfigProperties();
     }
 
     public Duration getAuthTokenCacheExpiration() {

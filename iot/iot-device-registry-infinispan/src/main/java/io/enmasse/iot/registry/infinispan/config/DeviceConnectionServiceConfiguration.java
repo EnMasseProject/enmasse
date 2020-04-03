@@ -1,12 +1,14 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.iot.registry.infinispan.config;
 
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionAmqpEndpoint;
+import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,8 +22,9 @@ public class DeviceConnectionServiceConfiguration {
      *
      * @return The handler.
      */
-    @Bean
     @Autowired
+    @Bean
+    @ConditionalOnBean(DeviceConnectionService.class)
     public DeviceConnectionAmqpEndpoint deviceConnectionAmqpEndpoint(final Vertx vertx) {
         return new DeviceConnectionAmqpEndpoint(vertx);
     }

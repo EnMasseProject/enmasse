@@ -4,16 +4,23 @@ metadata:
   name: default
 spec:
   services:
-    deviceRegistry:
-      infinispan:
+    deviceConnection:
+      jdbc:
         server:
           external:
-            host: infinispan
-            port: 11222
-            username: app
-            password: test12
-            saslServerName: hotrod
-            saslRealm: ApplicationRealm
+            username: registry
+            password: user12
+            url: jdbc:postgresql://postgresql/device-registry
+    deviceRegistry:
+      jdbc:
+        server:
+          external:
+            mode: JSON_TREE
+            management:
+              connection:
+                username: registry
+                password: user12
+                url: jdbc:postgresql://postgresql/device-registry
   adapters:
     mqtt:
       enabled: true

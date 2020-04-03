@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -7,7 +7,52 @@ package io.enmasse.iot.infinispan.config;
 
 import com.google.common.base.MoreObjects;
 
+// Align with ExternalInfinispanServer
 public class InfinispanProperties {
+
+    public static class CacheNames {
+        private static final String DEFAULT_ADAPTER_CREDENTIALS_CACHE_NAME = "adapterCredentials";
+        private static final String DEFAULT_DEVICE_CONNECTIONS_CACHE_NAME = "deviceStates";
+        private static final String DEFAULT_DEVICES_CACHE_NAME = "devices";
+
+        private String adapterCredentials = DEFAULT_ADAPTER_CREDENTIALS_CACHE_NAME;
+        private String deviceConnections = DEFAULT_DEVICE_CONNECTIONS_CACHE_NAME;
+        private String devices = DEFAULT_DEVICES_CACHE_NAME;
+
+        public void setAdapterCredentials(String adapterCredentialsCacheName) {
+            this.adapterCredentials = adapterCredentialsCacheName;
+        }
+
+        public String getAdapterCredentials() {
+            return adapterCredentials;
+        }
+
+        public void setDeviceConnections(String deviceStatesCacheName) {
+            this.deviceConnections = deviceStatesCacheName;
+        }
+
+        public String getDeviceConnections() {
+            return deviceConnections;
+        }
+
+        public void setDevices(String devicesCacheName) {
+            this.devices = devicesCacheName;
+        }
+
+        public String getDevices() {
+            return devices;
+        }
+
+        @Override
+        public String toString() {
+             return MoreObjects.toStringHelper(this)
+                     .add("adapterCredentials", this.adapterCredentials)
+                     .add("devices", this.devices)
+                     .add("deviceConnections", this.deviceConnections)
+                     .toString();
+        }
+
+    }
 
     private static final boolean DEFAULT_TRY_CREATE = false;
     public static final boolean DEFAULT_UPLOAD_SCHEMA = true;
@@ -18,10 +63,7 @@ public class InfinispanProperties {
     private static final int DEFAULT_PORT = 11222;
     private static final boolean DEFAULT_USE_TLS = false;
 
-    private static final String DEFAULT_ADAPTER_CREDENTIALS_CACHE_NAME = "adapterCredentials";
-    private static final String DEFAULT_DEVICE_STATES_CACHE_NAME = "deviceStates";
-    private static final String DEFAULT_DEVICES_CACHE_NAME = "devices";
-
+    private static final int DEFAULT_DELETION_CHUNK_SIZE = 0;
 
     private boolean tryCreate = DEFAULT_TRY_CREATE;
 
@@ -29,6 +71,8 @@ public class InfinispanProperties {
     private int port = DEFAULT_PORT;
 
     private boolean useTls = DEFAULT_USE_TLS;
+
+    private int deletionChunkSize = DEFAULT_DELETION_CHUNK_SIZE;
 
     /**
      * If {@code true}, then schema should be uploaded to the registry.
@@ -45,6 +89,8 @@ public class InfinispanProperties {
 
     private boolean failOnSchemaMismatch = DEFAULT_FAIL_ON_SCHEMA_MISMATCH;
 
+    private CacheNames cacheNames = new CacheNames();
+
     private String trustStorePath;
 
     private String username;
@@ -52,16 +98,20 @@ public class InfinispanProperties {
     private String saslRealm;
     private String saslServerName;
 
-    private String adapterCredentialsCacheName = DEFAULT_ADAPTER_CREDENTIALS_CACHE_NAME;
-    private String deviceStatesCacheName = DEFAULT_DEVICE_STATES_CACHE_NAME;
-    private String devicesCacheName = DEFAULT_DEVICES_CACHE_NAME;
-
     public void setTryCreate(boolean tryCreate) {
         this.tryCreate = tryCreate;
     }
 
     public boolean isTryCreate() {
         return tryCreate;
+    }
+
+    public void setDeletionChunkSize(int deletionChunkSize) {
+        this.deletionChunkSize = deletionChunkSize;
+    }
+
+    public int getDeletionChunkSize() {
+        return deletionChunkSize;
     }
 
     public void setUploadSchema(boolean uploadSchema) {
@@ -152,28 +202,12 @@ public class InfinispanProperties {
         return saslServerName;
     }
 
-    public void setAdapterCredentialsCacheName(String adapterCredentialsCacheName) {
-        this.adapterCredentialsCacheName = adapterCredentialsCacheName;
+    public void setCacheNames(CacheNames cacheNames) {
+        this.cacheNames = cacheNames;
     }
 
-    public String getAdapterCredentialsCacheName() {
-        return adapterCredentialsCacheName;
-    }
-
-    public void setDeviceStatesCacheName(String deviceStatesCacheName) {
-        this.deviceStatesCacheName = deviceStatesCacheName;
-    }
-
-    public String getDeviceStatesCacheName() {
-        return deviceStatesCacheName;
-    }
-
-    public void setDevicesCacheName(String devicesCacheName) {
-        this.devicesCacheName = devicesCacheName;
-    }
-
-    public String getDevicesCacheName() {
-        return devicesCacheName;
+    public CacheNames getCacheNames() {
+        return cacheNames;
     }
 
     @Override
@@ -188,9 +222,7 @@ public class InfinispanProperties {
                 .add("trustStorePath", this.trustStorePath)
                 .add("tryCreate", this.tryCreate)
                 .add("uploadSchema", this.uploadSchema)
-                .add("adapterCredentialsCacheName", this.adapterCredentialsCacheName)
-                .add("devicesCacheName", this.devicesCacheName)
-                .add("deviceStatesCacheName", this.deviceStatesCacheName)
+                .add("cacheNames", this.cacheNames)
                 .toString();
     }
 }

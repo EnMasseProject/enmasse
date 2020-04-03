@@ -260,7 +260,7 @@ public class GlobalLogCollector {
             }
             Kubernetes kube = Kubernetes.getInstance();
             Files.createDirectories(path);
-            List<Pod> pods = kube.listPods();
+            List<Pod> pods = kube.listAllPods();
             for (Pod p : pods) {
                 try {
                     List<Container> containers = kube.getContainersFromPod(p.getMetadata().getName());
@@ -298,8 +298,12 @@ public class GlobalLogCollector {
             Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pv").getStdOut());
             Files.writeString(path.resolve("pvcs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", Kubernetes.getInstance().getInfraNamespace()).getStdOut());
             Files.writeString(path.resolve("storageclass.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "storageclass", "-o", "yaml").getStdOut());
+            Files.writeString(path.resolve("addressspaces.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "addressspace", "-o", "yaml").getStdOut());
+            Files.writeString(path.resolve("addresses.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "address", "-o", "yaml").getStdOut());
+            Files.writeString(path.resolve("users.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "messaginguser", "-o", "yaml").getStdOut());
             if (TestInfo.getInstance().isClassIoT()) {
                 Files.writeString(path.resolve("iotconfig.yaml"), KubeCMDClient.getIoTConfig(kube.getInfraNamespace()).getStdOut());
+                Files.writeString(path.resolve("iotprojects.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "iotproject", "-o", "yaml").getStdOut());
                 GlobalLogCollector collectors = new GlobalLogCollector(kube, path, kube.getInfraNamespace());
                 collectors.collectAllAdapterQdrProxyState();
             }

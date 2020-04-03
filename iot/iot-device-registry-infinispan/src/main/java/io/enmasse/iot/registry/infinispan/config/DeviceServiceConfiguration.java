@@ -1,22 +1,27 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.iot.registry.infinispan.config;
 
+import static io.enmasse.iot.registry.infinispan.Profiles.PROFILE_DEVICE_REGISTRY;
+
 import org.eclipse.hono.auth.HonoPasswordEncoder;
 import org.eclipse.hono.auth.SpringBasedHonoPasswordEncoder;
 import org.eclipse.hono.service.credentials.CredentialsAmqpEndpoint;
+import org.eclipse.hono.service.credentials.CredentialsService;
 import org.eclipse.hono.service.management.credentials.CredentialsManagementHttpEndpoint;
 import org.eclipse.hono.service.management.credentials.CredentialsManagementService;
 import org.eclipse.hono.service.management.device.DeviceManagementHttpEndpoint;
 import org.eclipse.hono.service.management.device.DeviceManagementService;
 import org.eclipse.hono.service.registration.RegistrationAmqpEndpoint;
+import org.eclipse.hono.service.registration.RegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler;
 import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthProvider;
@@ -33,8 +38,9 @@ public class DeviceServiceConfiguration {
      *
      * @return The handler.
      */
-    @Bean
     @Autowired
+    @Bean
+    @ConditionalOnBean(RegistrationService.class)
     public RegistrationAmqpEndpoint registrationAmqpEndpoint(final Vertx vertx) {
         return new RegistrationAmqpEndpoint(vertx);
     }
@@ -44,8 +50,9 @@ public class DeviceServiceConfiguration {
      *
      * @return The handler.
      */
-    @Bean
     @Autowired
+    @Bean
+    @ConditionalOnBean(CredentialsService.class)
     public CredentialsAmqpEndpoint credentialsAmqpEndpoint(final Vertx vertx) {
         return new CredentialsAmqpEndpoint(vertx);
     }
@@ -55,9 +62,9 @@ public class DeviceServiceConfiguration {
      *
      * @return The handler.
      */
+    @Autowired
     @Bean
     @ConditionalOnBean(DeviceManagementService.class)
-    @Autowired
     public DeviceManagementHttpEndpoint registrationHttpEndpoint(final Vertx vertx) {
         return new DeviceManagementHttpEndpoint(vertx);
     }
@@ -67,9 +74,9 @@ public class DeviceServiceConfiguration {
      *
      * @return The handler.
      */
+    @Autowired
     @Bean
     @ConditionalOnBean(CredentialsManagementService.class)
-    @Autowired
     public CredentialsManagementHttpEndpoint credentialsHttpEndpoint(final Vertx vertx) {
         return new CredentialsManagementHttpEndpoint(vertx);
     }
@@ -99,6 +106,7 @@ public class DeviceServiceConfiguration {
      */
     @Bean
     @Autowired
+    @Profile(PROFILE_DEVICE_REGISTRY)
     public HonoPasswordEncoder passwordEncoder(DeviceServiceProperties deviceServiceProperties) {
         return new SpringBasedHonoPasswordEncoder(deviceServiceProperties.getMaxBcryptIterations());
     }

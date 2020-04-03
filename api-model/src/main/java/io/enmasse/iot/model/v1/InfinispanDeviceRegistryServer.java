@@ -18,18 +18,17 @@ import io.sundr.builder.annotations.Inline;
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
-                value = "done"))
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class ExternalJdbcService extends JdbcConnectionInformation {
+                value = "done"
+                )
+        )
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class InfinispanDeviceRegistryServer {
+    private ExternalInfinispanDeviceRegistryServer external;
 
-    private String tableName;
-
-    public String getTableName() {
-        return tableName;
+    public void setExternal(ExternalInfinispanDeviceRegistryServer external) {
+        this.external = external;
     }
-
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
+    public ExternalInfinispanDeviceRegistryServer getExternal() {
+        return external;
     }
-
 }

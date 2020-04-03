@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -23,11 +23,19 @@ import io.sundr.builder.annotations.Inline;
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ServicesConfig {
+    private DeviceConnectionServiceConfig deviceConnection;
     private DeviceRegistryServiceConfig deviceRegistry;
     private AuthenticationServiceConfig authentication;
     private TenantServiceConfig tenant;
     private CollectorConfig collector;
     private OperatorConfig operator;
+
+    public DeviceConnectionServiceConfig getDeviceConnection() {
+        return deviceConnection;
+    }
+    public void setDeviceConnection(DeviceConnectionServiceConfig deviceConnection) {
+        this.deviceConnection = deviceConnection;
+    }
 
     public DeviceRegistryServiceConfig getDeviceRegistry() {
         return deviceRegistry;

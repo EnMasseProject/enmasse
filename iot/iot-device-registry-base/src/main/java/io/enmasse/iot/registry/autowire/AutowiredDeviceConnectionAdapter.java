@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -8,6 +8,7 @@ package io.enmasse.iot.registry.autowire;
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
 import org.eclipse.hono.service.deviceconnection.EventBusDeviceConnectionAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
  * in a Spring Boot environment.
  */
 @Component
+@ConditionalOnBean(DeviceConnectionService.class)
 public final class AutowiredDeviceConnectionAdapter extends EventBusDeviceConnectionAdapter {
 
     private DeviceConnectionService service;

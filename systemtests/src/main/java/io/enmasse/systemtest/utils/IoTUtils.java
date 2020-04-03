@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest.utils;
@@ -64,6 +64,9 @@ public class IoTUtils {
     private static final String IOT_HTTP_ADAPTER = "iot-http-adapter";
     private static final String IOT_AUTH_SERVICE = "iot-auth-service";
     private static final String IOT_DEVICE_REGISTRY = "iot-device-registry";
+    private static final String IOT_DEVICE_REGISTRY_ADAPTER = "iot-device-registry-adapter";
+    private static final String IOT_DEVICE_REGISTRY_MANAGEMENT = "iot-device-registry-management";
+    private static final String IOT_DEVICE_CONNECTION = "iot-device-connection";
     private static final String IOT_TENANT_SERVICE = "iot-tenant-service";
 
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
@@ -72,9 +75,9 @@ public class IoTUtils {
     public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
         TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
-        var iotConfigClient = kubernetes.getIoTConfigClient();
+        var iotConfigAccess = kubernetes.getIoTConfigClient().withName(config.getMetadata().getName());
         while (budget.timeLeft() >= 0 && !isReady) {
-            config = iotConfigClient.withName(config.getMetadata().getName()).get();
+            config = iotConfigAccess.get();
             isReady = config.getStatus() != null && "Active".equals(config.getStatus().getPhase());
             if (!isReady) {
                 log.info("Waiting until IoTConfig: '{}' will be in ready state", config.getMetadata().getName());
@@ -95,7 +98,11 @@ public class IoTUtils {
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception {
         log.info("Deleting IoTConfig: {} in namespace: {}", config.getMetadata().getName(), config.getMetadata().getNamespace());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
-        kubernetes.getIoTConfigClient(config.getMetadata().getNamespace()).withName(config.getMetadata().getName()).cascading(true).delete();
+        kubernetes
+            .getIoTConfigClient(config.getMetadata().getNamespace())
+            .withName(config.getMetadata().getName())
+            .withPropagationPolicy("Background")
+            .delete();
         TestUtils.waitForNReplicas(0, false, config.getMetadata().getNamespace(), IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -111,12 +118,43 @@ public class IoTUtils {
     }
 
     private static String[] getExpectedDeploymentsNames(IoTConfig config) {
-        Collection<String> expectedDeployments = new ArrayList<>();
+
+        final Collection<String> expectedDeployments = new ArrayList<>();
+
+        // protocol adapters
+
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getHttp, IOT_HTTP_ADAPTER);
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getLoraWan, IOT_LORAWAN_ADAPTER);
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getMqtt, IOT_MQTT_ADAPTER);
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getSigfox, IOT_SIGFOX_ADAPTER);
-        expectedDeployments.addAll(Arrays.asList(IOT_AUTH_SERVICE, IOT_DEVICE_REGISTRY, IOT_TENANT_SERVICE));
+
+        // device registry
+
+        if (config.getSpec().getServices() != null &&
+                config.getSpec().getServices().getDeviceRegistry() != null &&
+                config.getSpec().getServices().getDeviceRegistry().getJdbc() != null &&
+                config.getSpec().getServices().getDeviceRegistry().getJdbc().getCommonDeviceRegistry() != null &&
+                !config.getSpec().getServices().getDeviceRegistry().getJdbc().getCommonDeviceRegistry().isDisabled() &&
+                config.getSpec().getServices().getDeviceRegistry().getJdbc().getServer() != null &&
+                config.getSpec().getServices().getDeviceRegistry().getJdbc().getServer().getExternal() != null) {
+
+            var external = config.getSpec().getServices().getDeviceRegistry().getJdbc().getServer().getExternal();
+            if ( external.getManagement() != null && external.getAdapter() != null ) {
+                expectedDeployments.add(IOT_DEVICE_REGISTRY_ADAPTER);
+                expectedDeployments.add(IOT_DEVICE_REGISTRY_MANAGEMENT);
+            } else if (external.getManagement() == null && external.getAdapter() != null ) {
+                expectedDeployments.add(IOT_DEVICE_REGISTRY_ADAPTER);
+            } else {
+                expectedDeployments.add(IOT_DEVICE_REGISTRY);
+            }
+        } else {
+            expectedDeployments.add(IOT_DEVICE_REGISTRY);
+        }
+
+        // common services
+
+        expectedDeployments.addAll(Arrays.asList(IOT_AUTH_SERVICE, IOT_DEVICE_CONNECTION, IOT_TENANT_SERVICE));
+
         return expectedDeployments.toArray(String[]::new);
     }
 
@@ -213,7 +251,7 @@ public class IoTUtils {
 
         kubernetes.getIoTProjectClient(project.getMetadata().getNamespace())
                 .withName(project.getMetadata().getName())
-                .cascading(true)
+                .withPropagationPolicy("Background")
                 .delete();
 
         // wait until the IoTProject is deleted

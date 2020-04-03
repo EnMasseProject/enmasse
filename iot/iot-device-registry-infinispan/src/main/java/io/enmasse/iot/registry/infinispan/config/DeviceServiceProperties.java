@@ -1,19 +1,23 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.iot.registry.infinispan.config;
 
+import static io.enmasse.iot.registry.infinispan.Profiles.PROFILE_DEVICE_REGISTRY;
+
 import java.time.Duration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import io.enmasse.iot.utils.ConfigBase;
 
 @Configuration
-@ConfigurationProperties(ConfigBase.CONFIG_BASE + ".registry.device")
+@ConfigurationProperties(ConfigBase.CONFIG_BASE + ".registry")
+@Profile(PROFILE_DEVICE_REGISTRY)
 public class DeviceServiceProperties {
 
     private static final int DEFAULT_TASK_EXECUTOR_QUEUE_SIZE = 1024;
@@ -24,7 +28,6 @@ public class DeviceServiceProperties {
     private Duration credentialsTtl = DEFAULT_CREDENTIALS_TTL;
 
     private int maxBcryptIterations = DEFAULT_MAX_BCRYPT_ITERATIONS;
-
 
     public int getTaskExecutorQueueSize() {
         return this.taskExecutorQueueSize;

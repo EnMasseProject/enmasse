@@ -1,18 +1,12 @@
 /*
- *  Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.iot.tools.cleanup;
 
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.enmasse.iot.tools.cleanup.config.CleanerConfig;
 
 public class Application {
 
@@ -20,31 +14,56 @@ public class Application {
 
     public static void main(final String args[]) throws Exception {
 
-        final Optional<Path> configFile = Arrays
-                .asList(args)
-                .stream()
-                .findFirst()
-                .map(Path::of);
+        log.info("Starting tenant cleanup");
 
-        log.debug("config file: {}", configFile);
+        cleanupDeviceRegistry();
+        cleanupDeviceConnection();
 
-        final String type = System.getenv("registry.type");
-        if (type == null) {
-            return;
+        log.info("Finished tenant cleanup");
+
+        System.exit(0);
+
+    }
+
+    private static void cleanupDeviceConnection() throws Exception {
+        String connectionType = System.getenv("deviceConnection.type");
+        if (connectionType == null) {
+            connectionType = "<missing>";
         }
 
-        switch (type) {
+        switch (connectionType) {
             case "infinispan":
-                try (InfinispanTenantCleaner app = new InfinispanTenantCleaner(CleanerConfig.load(configFile))) {
+                // nothing to clean up
+                break;
+            case "jdbc":
+                try (JdbcDeviceConnectionTenantCleaner app = new JdbcDeviceConnectionTenantCleaner()) {
+                    app.run();
+                }
+                break;
+            default:
+                throw new IllegalArgumentException(String.format("Illegal connection type: '%s'", connectionType));
+        }
+    }
+
+    private static void cleanupDeviceRegistry() throws Exception {
+        String registryTpe = System.getenv("registry.type");
+        if (registryTpe == null) {
+            registryTpe = "<missing>";
+        }
+
+        switch (registryTpe) {
+            case "infinispan":
+                try (InfinispanDeviceRegistryCleaner app = new InfinispanDeviceRegistryCleaner()) {
                     app.run();
                 }
                 break;
             case "jdbc":
-                try (JdbcTenantCleaner app = new JdbcTenantCleaner()) {
+                try (JdbcDeviceRegsitryTenantCleaner app = new JdbcDeviceRegsitryTenantCleaner()) {
                     app.run();
                 }
                 break;
+            default:
+                throw new IllegalArgumentException(String.format("Illegal registry type: '%s'", registryTpe));
         }
-
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -22,12 +22,11 @@ public class AmqpEndpointConfiguration {
      *
      * @return The properties.
      */
-    @Qualifier(Constants.QUALIFIER_AMQP)
     @Bean
-    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".registry.amqp")
+    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".amqp")
+    @Qualifier(Constants.QUALIFIER_AMQP)
     public ServiceConfigProperties amqpProperties() {
-        final ServiceConfigProperties props = new ServiceConfigProperties();
-        return props;
+        return new ServiceConfigProperties();
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -8,6 +8,7 @@ package io.enmasse.iot.model.v1;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -24,11 +25,20 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(NON_NULL)
-public class FileBasedDeviceRegistry {
+public class InfinispanDeviceConnection {
 
+    @JsonUnwrapped
+    private CommonDeviceRegistry commonDeviceRegistry;
     private ContainerConfig container;
     private JavaContainerOptions java;
-    private Integer numberOfDevicesPerTenant;
+    private InfinispanDeviceConnectionServer server;
+
+    public CommonDeviceRegistry getCommonDeviceRegistry() {
+        return commonDeviceRegistry;
+    }
+    public void setCommonDeviceRegistry(CommonDeviceRegistry commonDeviceRegistry) {
+        this.commonDeviceRegistry = commonDeviceRegistry;
+    }
 
     public ContainerConfig getContainer() {
         return container;
@@ -37,11 +47,11 @@ public class FileBasedDeviceRegistry {
         this.container = container;
     }
 
-    public Integer getNumberOfDevicesPerTenant() {
-        return numberOfDevicesPerTenant;
+    public InfinispanDeviceConnectionServer getServer() {
+        return server;
     }
-    public void setNumberOfDevicesPerTenant(Integer numberOfDevicesPerTenant) {
-        this.numberOfDevicesPerTenant = numberOfDevicesPerTenant;
+    public void setServer(InfinispanDeviceConnectionServer server) {
+        this.server = server;
     }
 
     public void setJava(JavaContainerOptions java) {

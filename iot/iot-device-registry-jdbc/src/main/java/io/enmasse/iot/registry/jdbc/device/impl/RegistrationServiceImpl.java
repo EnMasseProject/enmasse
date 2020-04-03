@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.jdbc.device.impl;
 
+import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_REGISTRY_ADAPTER;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -13,9 +14,10 @@ import static org.eclipse.hono.util.RegistrationResult.from;
 import org.eclipse.hono.util.RegistrationConstants;
 import org.eclipse.hono.util.RegistrationResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.jdbc.store.device.AbstractDeviceStore;
+import io.enmasse.iot.jdbc.store.device.AbstractDeviceAdapterStore;
 import io.enmasse.iot.registry.device.AbstractRegistrationService;
 import io.enmasse.iot.registry.device.DeviceKey;
 import io.opentracing.Span;
@@ -23,12 +25,13 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 @Component
+@Profile(PROFILE_REGISTRY_ADAPTER)
 public class RegistrationServiceImpl extends AbstractRegistrationService {
 
-    private final AbstractDeviceStore store;
+    private final AbstractDeviceAdapterStore store;
 
     @Autowired
-    public RegistrationServiceImpl(final AbstractDeviceStore store) {
+    public RegistrationServiceImpl(final AbstractDeviceAdapterStore store) {
         this.store = store;
     }
 

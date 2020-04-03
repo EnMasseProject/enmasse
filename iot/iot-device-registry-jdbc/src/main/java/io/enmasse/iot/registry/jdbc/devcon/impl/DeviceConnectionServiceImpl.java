@@ -5,12 +5,15 @@
 
 package io.enmasse.iot.registry.jdbc.devcon.impl;
 
+import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_DEVICE_CONNECTION;
+
 import java.net.HttpURLConnection;
 
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
 import org.eclipse.hono.util.DeviceConnectionConstants;
 import org.eclipse.hono.util.DeviceConnectionResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.jdbc.store.devcon.Store;
@@ -24,6 +27,7 @@ import io.vertx.core.json.JsonObject;
  * A {@link DeviceConnectionService} that use an JDBC as a backend service.
  */
 @Component
+@Profile(PROFILE_DEVICE_CONNECTION)
 public class DeviceConnectionServiceImpl extends AbstractDeviceConnectionService {
 
     private Store store;

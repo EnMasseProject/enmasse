@@ -1,11 +1,12 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
 import static io.enmasse.iot.infinispan.device.CredentialKey.credentialKey;
+import static io.enmasse.iot.registry.infinispan.Profiles.PROFILE_DEVICE_REGISTRY;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.time.Duration.between;
@@ -43,6 +44,7 @@ import org.infinispan.query.dsl.QueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
@@ -59,6 +61,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 @Component
+@Profile(PROFILE_DEVICE_REGISTRY)
 public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     private static final Logger log = LoggerFactory.getLogger(CredentialsServiceImpl.class);

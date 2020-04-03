@@ -1,11 +1,12 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package install
 
 import (
+	"reflect"
 	"testing"
 
 	appv1 "k8s.io/api/apps/v1"
@@ -126,5 +127,40 @@ func TestTwoContainers(t *testing.T) {
 	}
 	if d.Spec.Template.Spec.Containers[1].Image != "baz" {
 		t.Errorf("Container image must be 'baz', was: '%s'", d.Spec.Template.Spec.Containers[0].Image)
+	}
+}
+
+func TestDeleteOthersWithPrefix(t *testing.T) {
+
+	input := []corev1.Container{
+		{Name: "foo"},
+		{Name: "ext-bar"},
+		{Name: "ext-baz"},
+	}
+	output := DeleteOtherContainers(input, "ext-", []string{"ext-baz"})
+	expected := []corev1.Container{
+		{Name: "foo"},
+		{Name: "ext-baz"},
+	}
+
+	if !reflect.DeepEqual(output, expected) {
+		t.Errorf("Failed\n\texpected: %v\n\tactual: %v", expected, output)
+	}
+}
+
+func TestDeleteOthersWithoutPrefix(t *testing.T) {
+
+	input := []corev1.Container{
+		{Name: "foo"},
+		{Name: "ext-bar"},
+		{Name: "ext-baz"},
+	}
+	output := DeleteOtherContainers(input, "", []string{"ext-baz"})
+	expected := []corev1.Container{
+		{Name: "ext-baz"},
+	}
+
+	if !reflect.DeepEqual(output, expected) {
+		t.Errorf("Failed\n\texpected: %v\n\tactual: %v", expected, output)
 	}
 }
