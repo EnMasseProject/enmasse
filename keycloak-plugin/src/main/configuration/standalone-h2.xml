@@ -106,10 +106,10 @@
                 </handlers>
             </root-logger>
             <formatter name="PATTERN">
-                <pattern-formatter pattern="%d{yyyy-MM-dd}T%d{HH:mm:ss.SSS}Z %-5p [%c{1}] %m%n"/>
+                <pattern-formatter pattern="%d{yyyy-MM-dd}T%d{HH:mm:ss.SSS}Z %-5p [%t] [%c{1}] %m%n"/>
             </formatter>
             <formatter name="COLOR-PATTERN">
-                <pattern-formatter pattern="%K%d{yyyy-MM-dd}T%d{HH:mm:ss.SSS}Z %-5p [%c{1}] %m%n"/>
+                <pattern-formatter pattern="%K%d{yyyy-MM-dd}T%d{HH:mm:ss.SSS}Z %-5p [%t] [%c{1}] %m%n"/>
             </formatter>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:bean-validation:1.0"/>
@@ -564,6 +564,8 @@
                   <property name="tlsHost" value="0.0.0.0"/>
                   <property name="tlsPort" value="5671"/>
                   <property name="defaultDomain" value="enmasse"/>
+                  <property name="numAmqpServerInstances" value="${env.ENMASSE_NUM_AMQP_SERVER_INSTANCES:4}"/>
+                  <property name="numAmqpsServerInstances" value="${env.ENMASSE_NUM_AMQPS_SERVER_INSTANCES:4}"/>
                 </properties>
               </provider>
             </spi>

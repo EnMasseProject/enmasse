@@ -150,8 +150,12 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
                     if(saslHostname == null) {
                         saslHostname = config.get("defaultDomain","");
                     }
-                    saslMechanism = mechanismImpl.get().newInstance(keycloakSessionFactory, saslHostname, config, amqpServer);
-
+                    try {
+                        saslMechanism = mechanismImpl.get().newInstance(keycloakSessionFactory, saslHostname, config, amqpServer);
+                    } catch (Exception e) {
+                        sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);
+                        done = true;
+                    }
                 } else {
 
                     sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);
@@ -191,8 +195,8 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
                 Thread.currentThread().interrupt();
                 done = true;
                 sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                LOG.warn("Unrecoverable exception during SASL negotiation", e);
                 done = true;
                 sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);
             }
