@@ -641,7 +641,16 @@ public class RouterConfigController implements Controller {
                 linkRoutes.add(linkRouteOut);
             }
 
-            remoteConnector.setRole(Role.route_container);
+            remoteConnector.setRole(Role.forValue(connector.getRole()));
+
+            if (connector.getIdleTimeout() != null) {
+                remoteConnector.setIdleTimeoutSeconds(connector.getIdleTimeout());
+            }
+
+            if (connector.getMaxFrameSize() != null) {
+                remoteConnector.setMaxFrameSize(connector.getMaxFrameSize());
+            }
+
             connectors.add(remoteConnector);
         }
 
