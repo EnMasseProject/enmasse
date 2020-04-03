@@ -7,7 +7,7 @@ package iotconfig
 
 import (
 	"context"
-	"fmt"
+	"k8s.io/client-go/tools/record"
 	"reflect"
 
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -37,6 +37,8 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
+
+const ControllerName = "iotconfig-controller"
 
 const RegistryTypeAnnotation = "iot.enmasse.io/registry.type"
 const RegistryJdbcModeAnnotation = "iot.enmasse.io/registry.jdbc.mode"
@@ -56,6 +58,7 @@ func newReconciler(mgr manager.Manager, configName string) *ReconcileIoTConfig {
 		client:     mgr.GetClient(),
 		scheme:     mgr.GetScheme(),
 		configName: configName,
+		recorder:   mgr.GetEventRecorderFor(ControllerName),
 	}
 }
 
@@ -67,7 +70,7 @@ type watching struct {
 func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 
 	// Create a new controller
-	c, err := controller.New("iotconfig-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New(ControllerName, mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
@@ -114,8 +117,9 @@ var _ reconcile.Reconciler = &ReconcileIoTConfig{}
 type ReconcileIoTConfig struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client   client.Client
+	scheme   *runtime.Scheme
+	recorder record.EventRecorder
 
 	// The name of the configuration we are watching
 	// we are watching only one config, in our own namespace
@@ -137,7 +141,7 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 
 	if err != nil {
 
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 
 			reqLogger.Info("Config was not found")
 
@@ -195,7 +199,7 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		case iotv1alpha1.DeviceRegistryJdbc:
 			return r.processJdbcDeviceRegistry(ctx, config)
 		default:
-			return reconcile.Result{}, fmt.Errorf("illegal device registry configuration")
+			return reconcile.Result{}, util.NewConfigurationError("illegal device registry configuration")
 		}
 	})
 	rc.Process(func() (reconcile.Result, error) {
@@ -231,6 +235,12 @@ func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, original *iotv1al
 
 	syncConfigCondition(&config.Status)
 
+	if config.Status.Phase == iotv1alpha1.ConfigPhaseActive &&
+		config.Status.Phase != original.Status.Phase {
+		// record event that the infrastructure was successfully activated
+		r.recorder.Eventf(config, corev1.EventTypeNormal, "Activated", "IoT infrastructure successfully activated")
+	}
+
 	// update status
 	var updateError error = nil
 	if !reflect.DeepEqual(config, original) {
@@ -249,9 +259,16 @@ func (r *ReconcileIoTConfig) updateFinalStatus(ctx context.Context, original *io
 		return r.updateStatus(ctx, original, config, rc.Error())
 	})
 
-	// return result ... including status update
+	// check if error is non-recoverable
 
-	return rc.Result()
+	if rc.Error() != nil && util.OnlyNonRecoverableErrors(rc.Error()) {
+		r.recorder.Eventf(config, corev1.EventTypeWarning, "NonRecoverableError", "Configuration failed: %v", rc.Error())
+		// strip away error
+		return rc.PlainResult(), nil
+	} else {
+		// return result ... including status update
+		return rc.Result()
+	}
 }
 
 func (r *ReconcileIoTConfig) failWrongConfigName(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {

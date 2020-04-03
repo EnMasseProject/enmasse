@@ -8,8 +8,11 @@ package messaginguser
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"k8s.io/client-go/tools/record"
+	"reflect"
 	"strings"
+	"time"
 
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
@@ -33,6 +36,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 var log = logf.Log.WithName("controller_messaginguser")
@@ -104,6 +109,10 @@ func (r *ReconcileMessagingUser) Reconcile(request reconcile.Request) (reconcile
 		return reconcile.Result{}, err
 	}
 
+	// make copy for change detection
+
+	original := user.DeepCopy()
+
 	rc := &recon.ReconcileContext{}
 
 	reqLogger.V(1).Info("checkFinalizer", "user", user.ObjectMeta)
@@ -111,30 +120,40 @@ func (r *ReconcileMessagingUser) Reconcile(request reconcile.Request) (reconcile
 		return r.checkFinalizer(ctx, reqLogger, user)
 	})
 
-	if rc.Error() != nil || rc.NeedRequeue() {
+	if rc.Error() != nil {
+		// processing finalizers failed
 		return rc.Result()
+	}
+
+	if rc.NeedRequeue() {
+		// persist possible changes from finalizers, this is signaled to use via "need requeue"
+		if !reflect.DeepEqual(original, user) {
+			err := r.client.Update(ctx, user)
+			// processing the finalizers required a persist step, and so we stop early
+			// the call to Update will re-trigger us, and we don't need to set "requeue" explicitly
+			return reconcile.Result{}, errors.Wrap(err, "Failed to update after finalizers")
+		} else {
+			return rc.Result()
+		}
 	}
 
 	lastMessage := user.Status.Message
 	user.Status.Message = ""
-	rc.ProcessSimple(func() error {
-		if user.Status.Phase == "" {
-			user.Status.Phase = userv1beta1.UserPending
-			err := r.client.Status().Update(ctx, user)
-			if err != nil {
-				return err
-			}
+
+	if user.Status.Phase == "" {
+		// set and persist the current phase
+		user.Status.Phase = userv1beta1.UserPending
+		if err := r.client.Status().Update(ctx, user); err != nil {
+			return reconcile.Result{}, errors.Wrap(err, "Failed to set status to Pending")
 		}
-		return nil
-	})
+	}
 
 	reqLogger.V(1).Info("createOrUpdate", "user", user.ObjectMeta)
-	rc.Process(func() (reconcile.Result, error) {
-		if user.Status.Phase != userv1beta1.UserTerminating {
+	if user.Status.Phase != userv1beta1.UserTerminating {
+		rc.Process(func() (reconcile.Result, error) {
 			return r.createOrUpdateUser(ctx, reqLogger, user)
-		}
-		return reconcile.Result{}, nil
-	})
+		})
+	}
 
 	if rc.Error() != nil {
 		user.Status.Message = rc.Error().Error()
@@ -146,11 +165,15 @@ func (r *ReconcileMessagingUser) Reconcile(request reconcile.Request) (reconcile
 			user.Status.Generation = user.Generation
 			err := r.client.Status().Update(ctx, user)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "Failed to update status after reconcile")
 			}
 		}
 		return nil
 	})
+
+	if rc.NeedRequeue() {
+		reqLogger.Info("Need requeue", "result", rc.PlainResult())
+	}
 
 	return rc.Result()
 }
@@ -159,17 +182,30 @@ func (r *ReconcileMessagingUser) createOrUpdateUser(ctx context.Context, logger 
 
 	addressSpace, err := r.lookupAddressSpace(ctx, logger, user)
 	if err != nil {
-		return reconcile.Result{Requeue: true}, err
+		if apierrors.IsNotFound(err) {
+			logger.Info(fmt.Sprintf("Addresspace not (yet) found for user %s/%s", strings.Split(user.Name, ".")[0], user.Namespace))
+			return reconcile.Result{RequeueAfter: time.Second * 10}, nil
+		}
+		return reconcile.Result{}, err
 	}
 
+	if addressSpace.Spec.AuthenticationService == nil {
+		// authentication service is not set yet, we need to wait
+		logger.Info(fmt.Sprintf("Authentication service not (yet) set for address space %s/%s", addressSpace.Namespace, addressSpace.Name))
+		return reconcile.Result{RequeueAfter: time.Second * 10}, nil
+	}
 	authenticationService, err := r.lookupAuthenticationService(ctx, logger, addressSpace)
 	if err != nil {
-		return reconcile.Result{Requeue: true}, err
+		if apierrors.IsNotFound(err) {
+			return reconcile.Result{RequeueAfter: time.Second * 10}, nil
+		}
+		return reconcile.Result{}, err
 	}
 
 	if authenticationService.Spec.Type == adminv1beta1.Standard {
 		if !isAuthserviceAvailable(authenticationService) {
-			return reconcile.Result{}, fmt.Errorf("Authentication service %s is not yet available", authenticationService.Name)
+			logger.Info(fmt.Sprintf("Authentication service %s is not yet available", authenticationService.Name))
+			return reconcile.Result{RequeueAfter: time.Second * 10}, nil
 		}
 		if user.Status.Phase == userv1beta1.UserPending {
 			user.Status.Phase = userv1beta1.UserConfiguring

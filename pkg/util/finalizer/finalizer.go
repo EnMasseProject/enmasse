@@ -81,7 +81,10 @@ func removeFinalizer(name string, list []string) []string {
 //
 // If the deletion timestamp is non-nil, it will iterate over the finalizers, and call the destructor for the first
 // finalizer it still finds in the list (in any order). If the deconstructor returns as "finished", then will remove
-// the finalizer from the list, update the object, and request to be re-queued.
+// the finalizer from the list, and request to be re-queued.
+//
+// **Note:** When the function requests to be re-queue, the object's finalizer list was changed, and this change
+// must be persisted by the caller!
 func ProcessFinalizers(ctx context.Context, client client.Client, reader client.Reader, recorder record.EventRecorder, obj runtime.Object, finalizers []Finalizer) (reconcile.Result, error) {
 
 	object, ok := obj.(v1.Object)
@@ -110,8 +113,7 @@ func ProcessFinalizers(ctx context.Context, client client.Client, reader client.
 			// the list of finalizers has changed, update and return
 			object.SetFinalizers(current)
 			log.Info("Re-queue: added finalizer")
-			return reconcile.Result{Requeue: true},
-				errors.Wrap(client.Update(ctx, obj), "Failed adding finalizers")
+			return reconcile.Result{Requeue: true}, nil
 		}
 
 	} else {
@@ -151,12 +153,13 @@ func ProcessFinalizers(ctx context.Context, client client.Client, reader client.
 					// we had no error, and do not need to check again, so remove the finalizer
 
 					// remove it from the list, and set the update
+
 					c := current
 					object.SetFinalizers(removeFinalizer(f.Name, c))
+
 					// persist, and re-schedule for the next finalizer
 					log.Info("Re-queue: removed finalizer")
-					return reconcile.Result{Requeue: true},
-						errors.Wrap(client.Update(ctx, obj), "Failed updating finalizers")
+					return reconcile.Result{Requeue: true}, nil
 
 				} else {
 
