@@ -361,7 +361,7 @@ func (aad *amqpAgentDelegate) newAgentDelegate(token string, impersonateUser str
 		agentCommandAddress,
 		agentCommandResponseAddress,
 		amqp.ConnTLSConfig(aad.tlsConfig),
-		amqp.ConnSASLXOAUTH2(impersonateUser, aad.bearerToken, amqpOverrideSaslFrameSize),
+		amqp.ConnSASLXOAUTH2(impersonateUser, token, amqpOverrideSaslFrameSize),
 		amqp.ConnServerHostname(aad.host),
 		amqp.ConnProperty("product", "command-delegate; console-server"),
 		amqp.ConnConnectTimeout(aad.connectTimeout),
