@@ -123,6 +123,7 @@ func (c *CommandClient) doProcess() error {
 			msgId := uuid.New().String()
 			req.commandMessage.Properties.MessageID = msgId
 			req.commandMessage.Properties.ReplyTo = replyTo
+			req.commandMessage.Properties.CorrelationID = msgId
 
 			requests[msgId] = req
 
