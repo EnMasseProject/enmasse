@@ -72,6 +72,7 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.cluster.ClusterType;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
 import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
 import io.enmasse.systemtest.platform.cluster.NoClusterException;
@@ -129,6 +130,48 @@ public abstract class Kubernetes {
             t.printStackTrace();
             throw new ExceptionInInitializerError(t);
         }
+    }
+
+    /**
+     * Check if tests are running a platform which is compatible to a specific OpenShift version
+     * (OpenShift or CRC).
+     *
+     * @param version The version to check for.
+     * @return {@code true} if running the requested OpenShift version, {@code false} otherwise.
+     */
+    public static boolean isOpenShiftCompatible(OpenShiftVersion version) {
+
+        if (!isOpenShift() || !isCRC()) {
+            return false;
+        }
+
+        if (version == null || version == OpenShiftVersion.WHATEVER) {
+            return true;
+        }
+
+        return Kubernetes.getInstance().getOcpVersion() == version;
+
+    }
+
+    /**
+     * Check if tests are running on something which is compatible with OpenShift (OpenShift or CRC).
+     */
+    public static boolean isOpenShiftCompatible() {
+        return isOpenShiftCompatible(OpenShiftVersion.WHATEVER);
+    }
+
+    /**
+     * Check if tests are running on OpenShift (excluding CRC).
+     */
+    public static boolean isOpenShift() {
+        return Kubernetes.getInstance().getCluster().toString().equals(ClusterType.OPENSHIFT.toString().toLowerCase());
+    }
+
+    /**
+     * Check if tests are running on OpenShift in CRC.
+     */
+    public static boolean isCRC() {
+        return Kubernetes.getInstance().getCluster().toString().equals(ClusterType.CRC.toString().toLowerCase());
     }
 
     protected Kubernetes(Environment environment, Supplier<KubernetesClient> clientSupplier) {

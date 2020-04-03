@@ -5,10 +5,10 @@
 package io.enmasse.systemtest.manager;
 
 import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newDefaultInstance;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTProject;
 
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -17,17 +17,14 @@ import org.slf4j.Logger;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.certs.CertBundle;
-import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
+import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
@@ -127,31 +124,11 @@ public class SharedIoTManager extends ResourceManager {
     }
 
     private void createNewIoTConfig() throws Exception {
-        CertBundle certBundle = CertificateUtils.createCertBundle();
-        sharedIoTConfig = new IoTConfigBuilder()
-                .withNewMetadata()
-                .withName("default")
-                .withNamespace(kubernetes.getInfraNamespace())
-                .endMetadata()
-
-                .withNewSpec()
-
-                .withServices(DefaultDeviceRegistry.newDefaultInstance())
-
-                .withNewAdapters()
-                .withNewMqtt()
-                .withNewEndpoint()
-                .withNewKeyCertificateStrategy()
-                .withCertificate(ByteBuffer.wrap(certBundle.getCert().getBytes()))
-                .withKey(ByteBuffer.wrap(certBundle.getKey().getBytes()))
-                .endKeyCertificateStrategy()
-                .endEndpoint()
-                .endMqtt()
-                .endAdapters()
-
-                .endSpec()
-
+        sharedIoTConfig = IoTTestSession
+                .createDefaultConfig()
+                .editOrNewSpec().withServices(newDefaultInstance()).endSpec()
                 .build();
+
         createIoTConfig(sharedIoTConfig);
     }
 

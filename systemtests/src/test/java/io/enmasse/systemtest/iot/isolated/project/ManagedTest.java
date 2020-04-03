@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.iot.isolated.project;
 
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newDefaultInstance;
 import static io.enmasse.systemtest.utils.AddressSpaceUtils.addressSpaceExists;
 import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
 import static java.time.Duration.ofMinutes;
@@ -11,7 +12,6 @@ import static java.time.Duration.ofSeconds;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.junit.Assert.assertThat;
 
-import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -32,7 +32,6 @@ import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.iot.model.v1.DoneableIoTProject;
 import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.iot.model.v1.IoTProjectList;
@@ -41,15 +40,13 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
-import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
-import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
@@ -75,27 +72,8 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
 
     @BeforeEach
     public void initClients () throws Exception {
-        CertBundle certBundle = CertificateUtils.createCertBundle();
-        IoTConfig iotConfig = new IoTConfigBuilder()
-                .withNewMetadata()
-                .withName("default")
-                .withNamespace(kubernetes.getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-
-                .withServices(DefaultDeviceRegistry.newDefaultInstance())
-
-                .withNewAdapters()
-                .withNewMqtt()
-                .withNewEndpoint()
-                .withNewKeyCertificateStrategy()
-                .withCertificate(ByteBuffer.wrap(certBundle.getCert().getBytes()))
-                .withKey(ByteBuffer.wrap(certBundle.getKey().getBytes()))
-                .endKeyCertificateStrategy()
-                .endEndpoint()
-                .endMqtt()
-                .endAdapters()
-                .endSpec()
+        IoTConfig iotConfig = IoTTestSession.createDefaultConfig()
+                .editOrNewSpec().withServices(newDefaultInstance()).endSpec()
                 .build();
 
         isolatedIoTManager.createIoTConfig(iotConfig);

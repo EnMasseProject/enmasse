@@ -399,6 +399,13 @@ public class KubeCMDClient {
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
+    public static ExecutionResultData getSecrets(String namespace) {
+        List<String> command = Arrays.asList(CMD, "get", "secrets",
+                "--namespace", namespace,
+                "--output", "yaml");
+        return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
+    }
+
     public static ExecutionResultData getIoTConfig(String namespace) {
         List<String> command = Arrays.asList(CMD, "get", "iotconfig", "--namespace", namespace, "--output", "yaml");
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);

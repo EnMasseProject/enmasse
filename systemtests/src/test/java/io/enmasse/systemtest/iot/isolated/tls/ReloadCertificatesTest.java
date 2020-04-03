@@ -5,191 +5,130 @@
 
 package io.enmasse.systemtest.iot.isolated.tls;
 
+import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
 import static java.time.Duration.ofMinutes;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.net.HttpURLConnection;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.iot.ITestIoTShared;
+import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.condition.OpenShift;
-import io.enmasse.systemtest.condition.OpenShiftVersion;
-import io.enmasse.systemtest.iot.CredentialsRegistryClient;
-import io.enmasse.systemtest.iot.DeviceRegistryClient;
-import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.IoTTestSession;
+import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.enmasse.systemtest.utils.UserUtils;
-import io.enmasse.user.model.v1.Operation;
-import io.enmasse.user.model.v1.User;
-import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
-public class ReloadCertificatesTest extends TestBase implements ITestIoTShared {
-
-    private final String deviceId = UUID.randomUUID().toString();
-    private final String deviceAuthId = UUID.randomUUID().toString();
-    private final String devicePassword = UUID.randomUUID().toString();
-    private final String businessApplicationUsername = UUID.randomUUID().toString();
-    private final String businessApplicationPassword = UUID.randomUUID().toString();
-    private Endpoint deviceRegistryEndpoint;
-    private DeviceRegistryClient registryClient;
-    private CredentialsRegistryClient credentialsClient;
-    private AmqpClient businessApplicationClient;
-    private HttpAdapterClient adapterClient;
-    private KubernetesClient client;
+public class ReloadCertificatesTest extends TestBase implements ITestIoTIsolated {
 
     private static final String NAMESPACE = Kubernetes.getInstance().getInfraNamespace();
 
-    @BeforeEach
-    void initEnv() throws Exception {
-        deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
-        registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
-        credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
-        registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
-        credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, deviceAuthId, devicePassword);
-
-        User businessApplicationUser = UserUtils.createUserResource(new UserCredentials(businessApplicationUsername, businessApplicationPassword))
-                .editSpec()
-                .withAuthorization(
-                        Collections.singletonList(new UserAuthorizationBuilder()
-                                .withAddresses(
-                                        IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantId(),
-                                        IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantId() + "/*",
-                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantId(),
-                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantId() + "/*")
-                                .withOperations(Operation.recv)
-                                .build()))
-                .endSpec()
-                .done();
-
-        AddressSpace addressSpace =
-                resourcesManager.getAddressSpace(IOT_PROJECT_NAMESPACE, getSharedIoTProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
-
-        resourcesManager.createOrUpdateUser(addressSpace, businessApplicationUser);
-
-        businessApplicationClient = getAmqpClientFactory().createQueueClient(addressSpace);
-        businessApplicationClient.getConnectOptions()
-                .setUsername(businessApplicationUsername)
-                .setPassword(businessApplicationPassword);
-
-        Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        adapterClient = new HttpAdapterClient(httpAdapterEndpoint, deviceAuthId, sharedIoTResourceManager.getTenantId(), devicePassword);
-
-        client = kubernetes.getClient();
-    }
-
-    @AfterEach
-    void cleanEnv(ExtensionContext context) throws Exception {
-        if (credentialsClient != null) {
-            credentialsClient.deleteAllCredentials(sharedIoTResourceManager.getTenantId(), deviceId);
-        }
-        if (registryClient != null) {
-            registryClient.deleteDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId);
-            registryClient.getDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
-        }
-        if (adapterClient != null) {
-            adapterClient.close();
-        }
-        var addressSpace = getSharedAddressSpace();
-        if (addressSpace != null) {
-            resourcesManager.removeUser(addressSpace, businessApplicationUsername);
-        }
-    }
-
-    @AfterEach
-    void closeClient() throws Exception {
-        // close in a dedicated method to ensure it gets called in any case
-        if (businessApplicationClient != null) {
-            businessApplicationClient.close();
-            businessApplicationClient = null;
-        }
-    }
+    private KubernetesClient client = Kubernetes.getInstance().getClient();
 
     @Test
-    @OpenShift(version = OpenShiftVersion.OCP4)
+    @OpenShift(version = OCP4)
     public void testRecreateCertificate() throws Exception {
 
-        // ensure everything works before starting
+        IoTTestSession
+                .createDefault()
+                .adapters(HTTP)
+                .config(config -> {
+                    // ensure we are using the service-ca
+                    config.editOrNewSpec()
+                        .withNewInterServiceCertificates()
+                        .withNewServiceCAStrategy()
+                        .endServiceCAStrategy()
+                        .endInterServiceCertificates()
+                        .endSpec();
+                })
+                .run((session) -> {
 
-        assertTelemetryWorks();
+                    var deviceId = UUID.randomUUID().toString();
+                    var authId = UUID.randomUUID().toString();
+                    var password = UUID.randomUUID().toString();
+                    var device = session.newDevice(deviceId)
+                            .register()
+                            .setPassword(authId, password);
 
-        // get current pod
+                    // ensure everything works before starting
 
-        var deploymentAccess = this.client
-                .apps().deployments()
-                .inNamespace(NAMESPACE)
-                .withName("iot-http-adapter");
+                    assertTelemetryWorks(session, device);
 
-        var pod = this.client
-                .pods()
-                .inNamespace(NAMESPACE).withLabels(Map.of(
-                        "app", "enmasse",
-                        "name", "iot-http-adapter"))
-                .list().getItems().stream()
-                .map(p -> p.getMetadata().getName())
-                .findFirst()
-                .orElse(null);
+                    // get current pod
 
-        assertNotNull(pod);
+                    var deploymentAccess = this.client
+                            .apps().deployments()
+                            .inNamespace(NAMESPACE)
+                            .withName("iot-http-adapter");
 
-        // then: reset http adapter key/cert
+                    var pod = this.client
+                            .pods()
+                            .inNamespace(NAMESPACE).withLabels(Map.of(
+                                    "app", "enmasse",
+                                    "name", "iot-http-adapter"))
+                            .list().getItems().stream()
+                            .map(p -> p.getMetadata().getName())
+                            .findFirst()
+                            .orElse(null);
 
-        var deleteResult = this.client.secrets()
-                .inNamespace(NAMESPACE)
-                .withName("iot-http-adapter-tls")
-                .delete();
+                    assertNotNull(pod);
 
-        assertEquals(Boolean.TRUE, deleteResult);
+                    // then: reset http adapter key/cert
 
-        final TimeoutBudget budget = ofDuration(ofMinutes(10));
+                    var deleteResult = this.client.secrets()
+                            .inNamespace(NAMESPACE)
+                            .withName("iot-http-adapter-tls")
+                            .delete();
 
-        // wait until the deployment has changed
+                    assertEquals(Boolean.TRUE, deleteResult);
 
-        var initialVersion = deploymentAccess.get().getMetadata().getResourceVersion();
-        TestUtils.waitForChangedResourceVersion(budget, initialVersion, () -> {
-            return Optional.ofNullable(deploymentAccess.get())
-                    .map(d -> d.getMetadata().getResourceVersion())
-                    .orElse(initialVersion);
-        });
+                    final TimeoutBudget budget = ofDuration(ofMinutes(10));
 
-        // and wait until the IoTConfig is ready again
+                    // wait until the deployment has changed
 
-        IoTUtils.waitForIoTConfigReady(Kubernetes.getInstance(), getSharedIoTConfig());
+                    var initialVersion = deploymentAccess.get().getMetadata().getResourceVersion();
+                    TestUtils.waitForChangedResourceVersion(budget, initialVersion, () -> {
+                        return Optional.ofNullable(deploymentAccess.get())
+                                .map(d -> d.getMetadata().getResourceVersion())
+                                .orElse(initialVersion);
+                    });
 
-        // now try to send messages again
+                    // and wait until the IoTConfig is ready again
 
-        assertTelemetryWorks();
+                    IoTUtils.waitForIoTConfigReady(Kubernetes.getInstance(), session.getConfig());
+
+                    // now try to send messages again
+
+                    assertTelemetryWorks(session, device);
+
+                });
+
     }
 
-    protected void assertTelemetryWorks() throws Exception {
-        new MessageSendTester()
-                .type(MessageSendTester.Type.TELEMETRY)
-                .delay(Duration.ofMillis(500))
-                .consumerFactory(ConsumerFactory.of(this.businessApplicationClient, sharedIoTResourceManager.getTenantId()))
-                .sender(this.adapterClient::send)
-                .amount(30)
-                .consume(MessageSendTester.Consume.BEFORE)
-                .execute();
+    protected void assertTelemetryWorks(final IoTTestSession session, final Device device) throws Exception {
+        try (var adapterClient = device.createHttpAdapterClient()) {
+            new MessageSendTester()
+                    .type(MessageSendTester.Type.TELEMETRY)
+                    .delay(Duration.ofMillis(500))
+                    .consumerFactory(ConsumerFactory.of(session.getConsumerClient(), session.getTenantId()))
+                    .sender(adapterClient::send)
+                    .amount(30)
+                    .consume(MessageSendTester.Consume.BEFORE)
+                    .execute();
+        }
+
     }
 }

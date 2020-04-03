@@ -274,38 +274,47 @@ func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, original *iotv1al
 
 	syncConfigCondition(&config.Status)
 
-	if config.Status.Phase == iotv1alpha1.ConfigPhaseActive &&
-		config.Status.Phase != original.Status.Phase {
-		// record event that the infrastructure was successfully activated
-		r.recorder.Eventf(config, corev1.EventTypeNormal, "Activated", "IoT infrastructure successfully activated")
+	if config.Status.Phase != original.Status.Phase {
+		switch config.Status.Phase {
+		case iotv1alpha1.ConfigPhaseActive:
+			// record event that the infrastructure was successfully activated
+			r.recorder.Eventf(config, corev1.EventTypeNormal, "Activated", "IoT infrastructure successfully activated")
+		case iotv1alpha1.ConfigPhaseFailed:
+			// record event that the infrastructure failed
+			r.recorder.Eventf(config, corev1.EventTypeNormal, "Failed", "IoT infrastructure failed")
+		}
 	}
 
 	// update status
-	var updateError error = nil
+
 	if !reflect.DeepEqual(config, original) {
-		log.Info("Configuration changed, updating status")
-		updateError = r.client.Status().Update(ctx, config)
+		log.Info("IoTConfig changed, updating status")
+		return r.client.Status().Update(ctx, config)
 	}
 
-	return updateError
+	// no update needed
+
+	return nil
 }
 
 func (r *ReconcileIoTConfig) updateFinalStatus(ctx context.Context, original *iotv1alpha1.IoTConfig, config *iotv1alpha1.IoTConfig, rc *recon.ReconcileContext) (reconcile.Result, error) {
 
 	// do a status update
 
-	rc.ProcessSimple(func() error {
-		return r.updateStatus(ctx, original, config, rc.Error())
-	})
+	err := r.updateStatus(ctx, original, config, rc.Error())
 
 	// check if error is non-recoverable
 
 	if rc.Error() != nil && util.OnlyNonRecoverableErrors(rc.Error()) {
 		r.recorder.Eventf(config, corev1.EventTypeWarning, "NonRecoverableError", "Configuration failed: %v", rc.Error())
-		// strip away error
-		return rc.PlainResult(), nil
+		log.Error(rc.Error(), "All non-recoverable errors. Stop trying to reconcile.")
+		// strip away error, only return update error
+		return rc.PlainResult(), err
 	} else {
-		// return result ... including status update
+		// return result ... including status update error
+		if err != nil {
+			rc.AddResult(reconcile.Result{}, err)
+		}
 		return rc.Result()
 	}
 }
