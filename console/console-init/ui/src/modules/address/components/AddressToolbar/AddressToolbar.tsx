@@ -48,7 +48,6 @@ export interface IAddressToolbarProps extends DataToolbarContentProps {
   isDeleteAllDisabled: boolean;
   isPurgeAllDisabled: boolean;
   onClickCreateAddress: () => void;
-  setOnCreationRefetch: (value: boolean) => void;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
   namespace: string;
@@ -85,7 +84,6 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps> = ({
   isDeleteAllDisabled,
   isPurgeAllDisabled,
   onClickCreateAddress,
-  setOnCreationRefetch,
   isCreateWizardOpen,
   setIsCreateWizardOpen,
   namespace,
@@ -146,7 +144,6 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps> = ({
             addressSpaceType={addressspaceType || ""}
             isCreateWizardOpen={isCreateWizardOpen}
             setIsCreateWizardOpen={setIsCreateWizardOpen}
-            setOnCreationRefetch={setOnCreationRefetch}
           />
         )}
       </DataToolbarItem>

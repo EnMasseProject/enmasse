@@ -150,6 +150,17 @@ export default function AddressSpacePage() {
     return true;
   };
 
+  const renderPagination = () => {
+    return (
+      <TablePagination
+        itemCount={totalAddressSpaces}
+        variant={"top"}
+        page={page}
+        perPage={perPage}
+      />
+    );
+  };
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
@@ -168,20 +179,12 @@ export default function AddressSpacePage() {
             isDeleteAllDisabled={isDeleteAllOptionDisabled()}
           />
         </GridItem>
-        <GridItem span={5}>
-          <TablePagination
-            itemCount={totalAddressSpaces}
-            variant={"top"}
-            page={page}
-            perPage={perPage}
-          />
-        </GridItem>
+        <GridItem span={5}>{renderPagination()}</GridItem>
       </Grid>
       <Divider />
       <AddressSpaceListContainer
         page={page}
         perPage={perPage}
-        totalItemsCount={totalAddressSpaces}
         setTotalAddressSpaces={setTotalAddressSpaces}
         filterNames={filterNames}
         filterNamespaces={filterNamespaces}
@@ -192,12 +195,7 @@ export default function AddressSpacePage() {
         onSelectAddressSpace={onSelectAddressSpace}
         onSelectAllAddressSpace={onSelectAllAddressSpace}
       />
-      <TablePagination
-        itemCount={totalAddressSpaces}
-        variant={"top"}
-        page={page}
-        perPage={perPage}
-      />
+      {renderPagination()}
     </PageSection>
   );
 }

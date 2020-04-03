@@ -19,20 +19,15 @@ import {
 } from "constant";
 import { getSelectOptionList, initalSelectOption } from "utils";
 import {
-  RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH,
-  RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH,
   RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH,
   RETURN_ADDRESS_SPACE_DETAIL
 } from "graphql-module/queries";
 import {
-  ISearchAddressLinkNameResponse,
-  ISearchAddressLinkContainerResponse,
   IAddressListNameSearchResponse,
   IAddressSpacesResponse
 } from "schema/ResponseTypes";
-import { AddressLinksToolbar } from "modules/address-detail/components";
 import { AddressToolbar } from "modules/address/components";
-import { useParams } from "@reach/router";
+import { useParams } from "react-router";
 
 export interface IAddressToolbarContainerProps {
   selectedNames: any[];
@@ -51,7 +46,6 @@ export interface IAddressToolbarContainerProps {
   onPurgeAllAddress: () => void;
   isDeleteAllDisabled: boolean;
   isPurgeAllDisabled: boolean;
-  setOnCreationRefetch: (value: boolean) => void;
 }
 
 export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarContainerProps> = ({
@@ -70,8 +64,7 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
   onDeleteAllAddress,
   onPurgeAllAddress,
   isDeleteAllDisabled,
-  isPurgeAllDisabled,
-  setOnCreationRefetch
+  isPurgeAllDisabled
 }) => {
   const client = useApolloClient();
   const [nameSelected, setNameSelected] = useState<string>();
@@ -225,6 +218,7 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
     setNameInput(undefined);
     setNameSelected(undefined);
   };
+
   const onDelete = (
     category: string | DataToolbarChipGroup,
     chip: string | DataToolbarChip
@@ -299,7 +293,6 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
       isDeleteAllDisabled={isDeleteAllDisabled}
       isPurgeAllDisabled={isPurgeAllDisabled}
       onClickCreateAddress={createAddressOnClick}
-      setOnCreationRefetch={setOnCreationRefetch}
       isCreateWizardOpen={isCreateWizardOpen}
       setIsCreateWizardOpen={setIsCreateWizardOpen}
       namespace={namespace}
