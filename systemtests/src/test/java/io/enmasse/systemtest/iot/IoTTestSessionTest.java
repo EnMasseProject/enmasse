@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -21,6 +22,7 @@ import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 public class IoTTestSessionTest {
 
     @Test
+    @Disabled("Disabled as it requires Kubernetes to run")
     public void testEnableAdapter() throws Exception {
         AtomicBoolean called = new AtomicBoolean();
 
