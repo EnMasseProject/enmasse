@@ -24,13 +24,14 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.Flow.Subscriber;
 
 /**
  * Class represent abstract client which keeps common features of client
  */
 public abstract class AbstractClient {
     private static Logger log = CustomLogger.getLogger();
-    private final Object lock = new Object();
+    private static final Object lock = new Object();
     private final int DEFAULT_ASYNC_TIMEOUT = 300_000;
     private final int DEFAULT_SYNC_TIMEOUT = 60_000;
     protected ArrayList<ClientArgument> allowedArgs = new ArrayList<>();
@@ -42,6 +43,7 @@ public abstract class AbstractClient {
     private List<String> executable;
     private String podName;
     private String podNamespace;
+    private Subscriber<String> streamSubscriber;
     /**
      * Important: this is not any container_id nor nothing related with amqp, this is just an identifier for logging in our tests
      */
@@ -188,6 +190,16 @@ public abstract class AbstractClient {
     protected abstract List<String> transformExecutableCommand(String executableCommand);
 
     /**
+     * Subscriber for the standard output of the client process
+     * The provided subscriber will get it's method onNext invoked on each new line written in the client process standard output
+     *
+     * @param streamSubscriber
+     */
+    public void setStreamSubscriber(Subscriber<String> streamSubscriber) {
+        this.streamSubscriber = streamSubscriber;
+    }
+
+    /**
      * Run clients
      *
      * @param timeout kill timeout in ms
@@ -197,7 +209,7 @@ public abstract class AbstractClient {
         messages.clear();
         try {
             executor = new Exec(logPath);
-            int ret = executor.exec(prepareCommand(), timeout);
+            int ret = executor.exec(prepareCommand(), timeout, streamSubscriber);
             synchronized (lock) {
                 log.info("{} {} Return code - {}", this.getClass().getName(), clientType, ret);
                 if (logToOutput) {
@@ -305,6 +317,12 @@ public abstract class AbstractClient {
             executor.stop();
         } catch (Exception ex) {
             log.warn("Client stop raise exception: " + ex.getMessage());
+        }
+    }
+
+    public void parseResults() {
+        synchronized (lock) {
+            parseToJson(executor.getStdOut());
         }
     }
 

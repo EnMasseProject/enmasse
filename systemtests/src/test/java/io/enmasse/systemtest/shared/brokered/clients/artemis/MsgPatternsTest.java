@@ -6,12 +6,23 @@ package io.enmasse.systemtest.shared.brokered.clients.artemis;
 
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.artemis.ArtemisJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.artemis.ArtemisJMSClientSender;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
+
+    @Override
+    protected AbstractClient senderFactory() throws Exception {
+        return new ArtemisJMSClientSender();
+    }
+
+    @Override
+    protected AbstractClient receiverFactory() throws Exception {
+        return new ArtemisJMSClientReceiver();
+    }
 
     @Test
     void testBasicMessage() throws Exception {
@@ -21,13 +32,13 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     @Test
     @DisplayName("testRoundRobinReceiver")
     void testRoundRobinReceiver() throws Exception {
-        doRoundRobinReceiverTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
+        doRoundRobinReceiverTest();
     }
 
     @Test
     @DisplayName("testTopicSubscribe")
     void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
+        doTopicSubscribeTest();
     }
 
     @Test
@@ -48,7 +59,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     @Test
     @DisplayName("testMessageSelectorTopic")
     void testMessageSelectorTopic() throws Exception {
-        doMessageSelectorTopicTest(new ArtemisJMSClientSender(), new ArtemisJMSClientSender(),
-                new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
+        doMessageSelectorTopicTest();
     }
+
 }

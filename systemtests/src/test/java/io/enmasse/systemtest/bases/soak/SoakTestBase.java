@@ -12,7 +12,6 @@ import io.enmasse.systemtest.SysytemTestsErrorCollector;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -20,6 +19,8 @@ import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.shared.standard.TopicTest;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.ThrowingRunner;
+
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -55,7 +56,7 @@ public abstract class SoakTestBase extends TestBase {
     // Runner tests methods
     //========================================================================================================
 
-    protected void runTestInLoop(int durationMinutes, ThrowableRunner test) throws Exception {
+    protected void runTestInLoop(int durationMinutes, ThrowingRunner test) throws Exception {
         log.info(String.format("Starting test running for %d minutes at %s",
                 durationMinutes, new Date().toString()));
         int fails = 0;

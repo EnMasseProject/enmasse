@@ -11,23 +11,30 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestBaseShared;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClientRun;
+import io.enmasse.systemtest.messagingclients.ReceiverTester;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.ThrowingSupplier;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.function.Executable;
+import org.slf4j.Logger;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,7 +42,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExternalClients
 public abstract class ClientTestBase extends TestBase implements ITestBaseShared {
+    Logger LOGGER = CustomLogger.getLogger();
     protected Path logPath = null;
     private List<AbstractClient> clients;
 
@@ -65,6 +77,10 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
             clients.clear();
         }
     }
+
+    protected abstract AbstractClient senderFactory() throws Exception;
+
+    protected abstract AbstractClient receiverFactory() throws Exception;
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) throws Exception {
         return websocket ? AddressSpaceUtils.getMessagingWssRoute(addressSpace) : AddressSpaceUtils.getMessagingRoute(addressSpace);
@@ -124,9 +140,8 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 String.format("Expected %d received messages", expectedMsgCount));
     }
 
-    protected void doRoundRobinReceiverTest(AbstractClient sender, AbstractClient receiver, AbstractClient receiver2)
-            throws Exception {
-        clients.addAll(Arrays.asList(sender, receiver, receiver2));
+    protected void doRoundRobinReceiverTest() throws Exception {
+        var sender = getSender();
         int expectedMsgCount = 10;
 
         Address dest = new AddressBuilder()
@@ -151,43 +166,87 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withMessageBody("msg no. %d")
                 .withTimeout(30);
 
-        ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
-                .withClientEngine(receiver)
+        Supplier<ReceiverTester> receiverTesterSupplier = () -> new ReceiverTester(expectedMsgCount / 2,
+                () -> new ExternalMessagingClient()
+                .withClientEngine(getSender())
                 .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
-                .withCount(expectedMsgCount / 2)
-                .withTimeout(250);
+                .withTimeout(30));
 
-        ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
-                .withClientEngine(receiver2)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
-                .withAddress(dest)
-                .withCredentials(defaultCredentials)
-                .withCount(expectedMsgCount / 2)
-                .withTimeout(250);
+        var receivers = new ArrayList<ExternalMessagingClientRun>();
+        {
+            var receiverTester = receiverTesterSupplier.get();
+            ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
+                    .withClientEngine(getReceiver())
+                    .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                    .withAddress(dest)
+                    .withCredentials(defaultCredentials)
+                    .withStreamSubscriber(receiverTester);
+            receivers.add(ExternalMessagingClientRun.of(receiverClient1, receiverTester));
+        }
 
-        Future<Boolean> recResult = receiverClient1.runAsync();
-        Future<Boolean> rec2Result = receiverClient2.runAsync();
+        {
+            var receiverTester = receiverTesterSupplier.get();
+            ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
+                    .withClientEngine(getReceiver())
+                    .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                    .withAddress(dest)
+                    .withCredentials(defaultCredentials)
+                    .withStreamSubscriber(receiverTester);
+            receivers.add(ExternalMessagingClientRun.of(receiverClient2, receiverTester));
+        }
 
-        Thread.sleep(15000);
+        receivers.forEach(receiver -> receiver.runAsync());
 
+        for (var receiver : receivers) {
+            receiver.getReceiverTester().waitForReceiverAttached();
+        }
+
+        LOGGER.info("Starting test, running sender");
+        LOGGER.info("Waiting for sender to finish");
         assertTrue(senderClient.run(), "Sender failed, expected return code 0");
-        assertTrue(recResult.get(), "Receiver failed, expected return code 0");
-        assertTrue(rec2Result.get(), "Receiver failed, expected return code 0");
-
         assertEquals(expectedMsgCount, senderClient.getMessages().size(),
                 String.format("Expected %d sent messages", expectedMsgCount));
+        senderClient.stop();
 
-        assertAll(
-                () -> assertEquals(expectedMsgCount / 2, receiverClient1.getMessages().size(),
-                        String.format("Expected %d received messages", expectedMsgCount / 2)),
-                () -> assertEquals(expectedMsgCount / 2, receiverClient2.getMessages().size(),
-                        String.format("Expected %d sent messages", expectedMsgCount / 2)));
+        LOGGER.info("Waiting for receivers to finish");
+
+        for (var receiver : receivers) {
+            assertTrue(receiver.getReceiverTester().getExpectedMessagesResult().get(200, TimeUnit.SECONDS),
+                    String.format("Subscriber didn't receive expected messages in time, received %d expected %d", receiver.getReceiverTester().getReceivedMessages(), expectedMsgCount / 2));
+        }
+
+        for (var receiver : receivers) {
+            if (receiver.getResult().isDone()) {
+                assertFalse(receiver.getResult().get(), "Subscriber had return code 1, which is unexpected at this point");
+                Assertions.fail("Subscriber failed");
+            }
+        }
+
+        LOGGER.info("Stopping receivers");
+
+        for (var receiver : receivers) {
+            receiver.getClient().stop();
+            receiver.getResult().get(10, TimeUnit.SECONDS);
+            receiver.getClient().gatherResults();
+        }
+
+        LOGGER.info("Verifiying receivers results");
+
+        receivers.forEach(receiver -> {
+            int totalMessages = (expectedMsgCount / 2) + receiver.getReceiverTester().getTestMessagesReceived();
+            assertEquals(totalMessages, receiver.getClient().getMessages().size(),
+                    String.format("Expected %d total received messages", totalMessages));
+            assertEquals(expectedMsgCount / 2, receiver.getReceiverTester().getReceivedMessages(),
+                    String.format("Expected %d received messages", expectedMsgCount / 2));
+        });
+
     }
 
-    protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2) throws Exception {
-        clients.addAll(Arrays.asList(sender, subscriber, subscriber2));
+    protected void doTopicSubscribeTest() throws Exception {
+        var sender = getSender();
+        var subscribers = getReceivers(2);
         int expectedMsgCount = 10;
 
         Address dest = new AddressBuilder()
@@ -213,40 +272,74 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withTimeout(30)
                 .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST");
 
-        ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
-                .withClientEngine(subscriber)
+        Supplier<ReceiverTester> receiverTesterSupplier = () -> new ReceiverTester(expectedMsgCount,
+                () -> new ExternalMessagingClient()
+                .withClientEngine(getSender())
                 .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
-                .withCount(expectedMsgCount)
-                .withTimeout(250)
-                .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST");
+                .withTimeout(30)
+                .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST"));
 
-        ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
-                .withClientEngine(subscriber2)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
-                .withAddress(dest)
-                .withCredentials(defaultCredentials)
-                .withCount(expectedMsgCount)
-                .withTimeout(250)
-                .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST");
+        var receivers = new ArrayList<ExternalMessagingClientRun>();
+        for (var subscriber : subscribers) {
+            var receiverTester = receiverTesterSupplier.get();
+            var receiverClient = new ExternalMessagingClient()
+                    .withClientEngine(subscriber)
+                    .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                    .withAddress(dest)
+                    .withCredentials(defaultCredentials)
+                    .withAdditionalArgument(ClientArgument.DEST_TYPE, "MULTICAST")
+                    .withStreamSubscriber(receiverTester);
+            receivers.add(ExternalMessagingClientRun.of(receiverClient, receiverTester));
+        }
 
-        Future<Boolean> recResult = receiverClient1.runAsync();
-        Future<Boolean> recResult2 = receiverClient2.runAsync();
+        receivers.forEach(receiver -> receiver.runAsync());
 
-        Thread.sleep(15000);
+        LOGGER.info("Waiting for receivers to attach");
+        for (var receiver : receivers) {
+            receiver.getReceiverTester().waitForReceiverAttached();
+        }
 
-        assertAll(
-                () -> assertTrue(senderClient.run(), "Producer failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, senderClient.getMessages().size(),
-                        String.format("Expected %d sent messages", expectedMsgCount)));
-        assertAll(
-                () -> assertTrue(recResult.get(), "Subscriber failed, expected return code 0"),
-                () -> assertTrue(recResult2.get(), "Subscriber failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, receiverClient1.getMessages().size(),
-                        String.format("Expected %d received messages", expectedMsgCount)),
-                () -> assertEquals(expectedMsgCount, receiverClient2.getMessages().size(),
-                        String.format("Expected %d received messages", expectedMsgCount)));
+        LOGGER.info("Starting test, running sender");
+        LOGGER.info("Waiting for sender to finish");
+        assertTrue(senderClient.run(), "Producer failed, expected return code 0");
+        assertEquals(expectedMsgCount, senderClient.getMessages().size(),
+                        String.format("Expected %d sent messages", expectedMsgCount));
+        senderClient.stop();
+
+        LOGGER.info("Waiting for receivers to finish");
+
+        for (var receiver : receivers) {
+            assertTrue(receiver.getReceiverTester().getExpectedMessagesResult().get(30, TimeUnit.SECONDS),
+                    String.format("Subscriber didn't receive expected messages in time, received %d expected %d", receiver.getReceiverTester().getReceivedMessages(), expectedMsgCount));
+        }
+
+        for (var receiver : receivers) {
+            if (receiver.getResult().isDone()) {
+                assertFalse(receiver.getResult().get(), "Subscriber had return code 1, which is unexpected at this point");
+                Assertions.fail("Subscriber failed");
+            }
+        }
+
+        LOGGER.info("Stopping receivers");
+
+        for (var receiver : receivers) {
+            receiver.getClient().stop();
+            receiver.getResult().get(10, TimeUnit.SECONDS);
+            receiver.getClient().gatherResults();
+        }
+
+        LOGGER.info("Verifiying receivers results");
+
+        receivers.forEach(receiver -> {
+            int totalMessages = expectedMsgCount + receiver.getReceiverTester().getTestMessagesReceived();
+            assertEquals(totalMessages, receiver.getClient().getMessages().size(),
+                    String.format("Expected %d total received messages", totalMessages));
+            assertEquals(expectedMsgCount, receiver.getReceiverTester().getReceivedMessages(),
+                    String.format("Expected %d received messages", expectedMsgCount));
+        });
+
     }
 
     protected void doMessageBrowseTest(AbstractClient sender, AbstractClient receiver_browse, AbstractClient receiver_receive)
@@ -420,87 +513,158 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                         String.format("Expected %d received messages 'a OR b'", expectedMsgCount)));
     }
 
-    protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient sender2,
-                                              AbstractClient subscriber, AbstractClient subscriber2) throws Exception {
-        clients.addAll(Arrays.asList(sender, sender2, subscriber, subscriber2));
+    protected void doMessageSelectorTopicTest() throws Exception {
+        var sender1 = getSender();
         int expectedMsgCount = 5;
 
         Address topic = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "selector-topic" + ClientType.getAddressName(sender)))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "selector-topic" + ClientType.getAddressName(sender1)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
-                .withAddress("selector-topic" + ClientType.getAddressName(sender))
+                .withAddress("selector-topic" + ClientType.getAddressName(sender1))
                 .withPlan(getDefaultPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
         resourcesManager.setAddresses(topic);
 
         //set up senders
-        ExternalMessagingClient senderClient1 = new ExternalMessagingClient()
-                .withClientEngine(sender)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
-                .withCount(expectedMsgCount)
-                .withAddress(topic)
-                .withCredentials(defaultCredentials)
-                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~red")
-                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~12.65")
-                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "a~true")
-                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "b~false")
-                .withTimeout(250)
-                .withMessageBody("msg no. %d");
+        var senders = new ArrayList<ExternalMessagingClientRun>();
+        {
+            ExternalMessagingClient senderClient1 = new ExternalMessagingClient()
+                    .withClientEngine(sender1)
+                    .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                    .withCount(expectedMsgCount)
+                    .withAddress(topic)
+                    .withCredentials(defaultCredentials)
+                    .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~red")
+                    .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~12.65")
+                    .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "a~true")
+                    .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "b~false")
+                    .withTimeout(250)
+                    .withMessageBody("msg no. %d");
+            senders.add(ExternalMessagingClientRun.of(senderClient1));
+        }
 
-        ExternalMessagingClient senderClient2 = new ExternalMessagingClient()
-                .withClientEngine(sender2)
+        {
+            ExternalMessagingClient senderClient2 = new ExternalMessagingClient()
+                    .withClientEngine(getSender())
+                    .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                    .withCount(expectedMsgCount)
+                    .withAddress(topic)
+                    .withCredentials(defaultCredentials)
+                    .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~blue")
+                    .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~11.65")
+                    .withTimeout(250)
+                    .withMessageBody("msg no. %d");
+            senders.add(ExternalMessagingClientRun.of(senderClient2));
+        }
+
+        Supplier<ReceiverTester> receiverTesterSupplier = () -> new ReceiverTester(expectedMsgCount,
+                () -> new ExternalMessagingClient()
+                .withClientEngine(getSender())
                 .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
-                .withCount(expectedMsgCount)
                 .withAddress(topic)
                 .withCredentials(defaultCredentials)
-                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~blue")
-                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~11.65")
-                .withTimeout(250)
-                .withMessageBody("msg no. %d");
+                .withTimeout(30)
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "colour~red")
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "a~true")
+                .withAdditionalArgument(ClientArgument.MSG_PROPERTY, "number~11.65"));
+
+        var receivers = new ArrayList<ExternalMessagingClientRun>();
 
         //set up subscriber1
-        ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
-                .withClientEngine(subscriber)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
-                .withCount(expectedMsgCount)
-                .withCredentials(defaultCredentials)
-                .withAddress(topic)
-                .withTimeout(250)
-                .withAdditionalArgument(ClientArgument.SELECTOR, "colour = 'red' AND a");
-
+        {
+            var receiverTester1 = receiverTesterSupplier.get();
+            ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
+                    .withClientEngine(getReceiver())
+                    .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                    .withCredentials(defaultCredentials)
+                    .withAddress(topic)
+                    .withAdditionalArgument(ClientArgument.SELECTOR, "colour = 'red' AND a")
+                    .withStreamSubscriber(receiverTester1);
+            receivers.add(ExternalMessagingClientRun.of(receiverClient1, receiverTester1, "colour = 'red' AND a"));
+        }
         //set up subscriber2
-        ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
-                .withClientEngine(subscriber2)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
-                .withCount(expectedMsgCount)
-                .withCredentials(defaultCredentials)
-                .withAddress(topic)
-                .withTimeout(250)
-                .withAdditionalArgument(ClientArgument.SELECTOR, "number < 12.5");
+        {
+            var receiverTester2 = receiverTesterSupplier.get();
+            ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
+                    .withClientEngine(getReceiver())
+                    .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                    .withCredentials(defaultCredentials)
+                    .withAddress(topic)
+                    .withAdditionalArgument(ClientArgument.SELECTOR, "number < 12.5")
+                    .withStreamSubscriber(receiverTester2);
+            receivers.add(ExternalMessagingClientRun.of(receiverClient2, receiverTester2, "number < 12.5"));
+        }
 
-        Future<Boolean> result1 = receiverClient1.runAsync();
-        Future<Boolean> result2 = receiverClient2.runAsync();
+        receivers.forEach(receiver -> receiver.runAsync());
 
-        Thread.sleep(15000);
+        LOGGER.info("Waiting for receivers to attach");
+        CompletableFuture.allOf(receivers.stream()
+                .map(ExternalMessagingClientRun::getReceiverTester)
+                .map(tester -> {
+                    return CompletableFuture.runAsync(() ->{
+                        try {
+                            tester.waitForReceiverAttached();
+                        } catch(Exception e) {
+                            LOGGER.error("Error waiting for receiver to attach", e);
+                        }
+                    },r-> new Thread(r).run());
+                })
+                .toArray(CompletableFuture[]::new)).join();
 
-        assertTrue(senderClient1.run(), "Sender failed, expected return code 0");
-        assertTrue(senderClient2.run(), "Sender2 failed, expected return code 0");
-        assertTrue(result1.get(), "Receiver 'colour = red' failed, expected return code 0");
-        assertTrue(result2.get(), "Receiver 'number < 12.5' failed, expected return code 0");
+//        for (var receiver : receivers) {
+//            receiver.getReceiverTester().waitForReceiverAttached();
+//        }
 
-        assertEquals(expectedMsgCount, senderClient1.getMessages().size(),
-                String.format("Expected %d sent messages", expectedMsgCount));
-        assertEquals(expectedMsgCount, senderClient2.getMessages().size(),
-                String.format("Expected %d sent messages", expectedMsgCount));
-        assertEquals(expectedMsgCount, receiverClient1.getMessages().size(),
-                String.format("Expected %d received messages 'colour = red' AND a", expectedMsgCount));
-        assertEquals(expectedMsgCount, receiverClient2.getMessages().size(),
-                String.format("Expected %d received messages 'number < 12.5'", expectedMsgCount));
+        LOGGER.info("Starting test, running sender");
+        senders.forEach(sender -> sender.runAsync());
+
+        LOGGER.info("Waiting for sender to finish");
+        for (var sender : senders) {
+            assertTrue(sender.getResult().get(), "Producer failed, expected return code 0");
+            assertEquals(expectedMsgCount, sender.getClient().getMessages().size(),
+                            String.format("Expected %d sent messages", expectedMsgCount));
+            sender.getClient().stop();
+        }
+
+        LOGGER.info("Waiting for receivers to finish");
+
+        for (var receiver : receivers) {
+            assertTrue(receiver.getReceiverTester().getExpectedMessagesResult().get(200, TimeUnit.SECONDS),
+                    String.format("Subscriber didn't receive expected messages in time, received %d expected %d", receiver.getReceiverTester().getReceivedMessages(), expectedMsgCount));
+        }
+
+        for (var receiver : receivers) {
+            if (receiver.getResult().isDone()) {
+                assertFalse(receiver.getResult().get(), "Subscriber had return code 1, which is unexpected at this point");
+                Assertions.fail("Subscriber failed");
+            }
+        }
+
+        LOGGER.info("Stopping receivers");
+
+        for (var receiver : receivers) {
+            receiver.getClient().stop();
+            receiver.getResult().get(10, TimeUnit.SECONDS);
+            receiver.getClient().gatherResults();
+        }
+
+        LOGGER.info("Verifiying receivers results");
+
+        for (var receiver : receivers) {
+
+            int totalMessages = expectedMsgCount + receiver.getReceiverTester().getTestMessagesReceived();
+            assertEquals(totalMessages, receiver.getClient().getMessages().size(),
+                    String.format("Expected %d total received messages %s", totalMessages, receiver.getDescriptor()));
+
+            assertEquals(expectedMsgCount, receiver.getReceiverTester().getReceivedMessages(),
+                    String.format("Expected %d received messages %s", expectedMsgCount, receiver.getDescriptor()));
+        }
+
     }
 
     protected void doTestUserPermissions(AbstractClient sender, AbstractClient receiver) throws Exception {
@@ -582,6 +746,34 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), publisher);
         resourcesManager.createOrUpdateUser(getSharedAddressSpace(), consumer);
+    }
+
+    private AbstractClient getSender() {
+        return getSenders(1).get(0);
+    }
+
+    private AbstractClient getReceiver() {
+        return getReceivers(1).get(0);
+    }
+
+    private List<AbstractClient> getSenders(int num) {
+        return getClients(num, this::senderFactory);
+    }
+
+    private List<AbstractClient> getReceivers(int num) {
+        return getClients(num, this::receiverFactory);
+    }
+
+    private List<AbstractClient> getClients(int num, ThrowingSupplier<AbstractClient> factory) {
+        var c = IntStream.range(0, num).mapToObj(i -> {
+            try {
+                return factory.get();
+            } catch ( Exception e ) {
+                throw new IllegalStateException(e);
+            }
+        }).collect(Collectors.toList());
+        clients.addAll(c);
+        return c;
     }
 
 }

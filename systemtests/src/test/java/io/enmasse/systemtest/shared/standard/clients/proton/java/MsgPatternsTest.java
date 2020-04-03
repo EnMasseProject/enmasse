@@ -6,6 +6,7 @@ package io.enmasse.systemtest.shared.standard.clients.proton.java;
 
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import org.junit.jupiter.api.Disabled;
@@ -18,6 +19,16 @@ import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 @Tag(ACCEPTANCE)
 class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
 
+    @Override
+    protected AbstractClient senderFactory() throws Exception {
+        return new ProtonJMSClientSender(logPath);
+    }
+
+    @Override
+    protected AbstractClient receiverFactory() throws Exception {
+        return new ProtonJMSClientReceiver(logPath);
+    }
+
     @Test
     void testBasicMessage() throws Exception {
         doBasicMessageTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath));
@@ -26,7 +37,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
     @Test
     @DisplayName("testTopicSubscribe")
     void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath));
+        doTopicSubscribeTest();
     }
 
     @Test
@@ -38,7 +49,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
     @Test
     @DisplayName("testMessageSelectorTopic")
     void testMessageSelectorTopic() throws Exception {
-        doMessageSelectorTopicTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientSender(logPath),
-                new ProtonJMSClientReceiver(logPath), new ProtonJMSClientReceiver(logPath));
+        doMessageSelectorTopicTest();
     }
+
 }

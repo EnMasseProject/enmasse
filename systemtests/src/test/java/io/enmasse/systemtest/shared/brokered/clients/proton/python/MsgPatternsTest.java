@@ -6,12 +6,23 @@ package io.enmasse.systemtest.shared.brokered.clients.proton.python;
 
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.proton.python.PythonClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.python.PythonClientSender;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
+
+    @Override
+    protected AbstractClient senderFactory() throws Exception {
+        return new PythonClientSender(logPath);
+    }
+
+    @Override
+    protected AbstractClient receiverFactory() throws Exception {
+        return new PythonClientReceiver(logPath);
+    }
 
     @Test
     void testBasicMessage() throws Exception {
@@ -21,13 +32,13 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     @Test
     @DisplayName("testRoundRobinReceiver")
     void testRoundRobinReceiver() throws Exception {
-        doRoundRobinReceiverTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
+        doRoundRobinReceiverTest();
     }
 
     @Test
     @DisplayName("testTopicSubscribe")
     void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new PythonClientSender(logPath), new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
+        doTopicSubscribeTest();
     }
 
     @Test
@@ -48,7 +59,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     @Test
     @DisplayName("testMessageSelectorTopic")
     void testMessageSelectorTopic() throws Exception {
-        doMessageSelectorTopicTest(new PythonClientSender(logPath), new PythonClientSender(logPath),
-                new PythonClientReceiver(logPath), new PythonClientReceiver(logPath));
+        doMessageSelectorTopicTest();
     }
+
 }

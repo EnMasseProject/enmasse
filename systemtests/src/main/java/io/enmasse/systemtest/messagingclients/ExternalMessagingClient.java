@@ -13,6 +13,7 @@ import io.vertx.core.json.JsonArray;
 
 import java.util.Objects;
 import java.util.concurrent.Future;
+import java.util.concurrent.Flow.Subscriber;
 
 public class ExternalMessagingClient {
     private AbstractClient client;
@@ -85,6 +86,14 @@ public class ExternalMessagingClient {
         return this;
     }
 
+    public ExternalMessagingClient withStreamSubscriber(Subscriber<String> streamSubscriber) {
+        Objects.requireNonNull(this.client);
+        this.client.setStreamSubscriber(streamSubscriber);
+        withCount(1000);//just a big number so client can receive all possible test messages and real test messages
+        withTimeout(400);//also big timeout so there is no time restriction, test timeout will be managed in the provided subscriber
+        return this;
+    }
+
     //===================================================================
     //                          Content methods
     //===================================================================
@@ -141,5 +150,9 @@ public class ExternalMessagingClient {
 
     public void stop() {
         this.client.stop();
+    }
+
+    public void gatherResults() {
+        this.client.parseResults();
     }
 }

@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.executor;
 
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
 import org.slf4j.Logger;
 
@@ -15,14 +14,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.Flow.Publisher;
+import java.util.concurrent.Flow.Subscriber;
 import java.util.regex.Pattern;
 
 /**
@@ -39,7 +42,6 @@ public class Exec {
     private boolean appendLineSeparator;
     private static final Pattern PATH_SPLITTER = Pattern.compile(System.getProperty("path.separator"));
     protected static final Object lock = new Object();
-    protected static final Environment env = Environment.getInstance();
 
     public Exec() {
         this.appendLineSeparator = true;
@@ -94,7 +96,8 @@ public class Exec {
      * @throws ExecutionException
      */
     public int exec(List<String> commands) throws IOException, InterruptedException, ExecutionException {
-        return exec(commands, 0);
+        return exec(commands, 0, null);
+
     }
 
     /**
@@ -108,13 +111,28 @@ public class Exec {
      * @throws ExecutionException
      */
     public int exec(List<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
+        return exec(commands, timeout, null);
+    }
+
+    /**
+     * Method executes external command
+     *
+     * @param commands arguments for command
+     * @param timeout  timeout in ms for kill
+     * @param streamSubscriber subscriber for standard output
+     * @return returns ecode of execution
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public int exec(List<String> commands, int timeout, Subscriber<String> streamSubscriber) throws IOException, InterruptedException, ExecutionException {
         log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
         ProcessBuilder builder = new ProcessBuilder();
         builder.command(commands);
         builder.directory(new File(System.getProperty("user.dir")));
         process = builder.start();
 
-        Future<String> output = readStdOutput();
+        Future<String> output = readStdOutput(streamSubscriber);
         Future<String> error = readStdError();
 
         int retCode = 1;
@@ -160,13 +178,17 @@ public class Exec {
     /**
      * Get standard output of execution
      *
+     * @param streamSubscriber
+     *
      * @return future string output
      */
-    private Future<String> readStdOutput() {
+    private Future<String> readStdOutput(Subscriber<String> streamSubscriber) {
         stdOutReader = new StreamGobbler(process.getInputStream());
+        if (streamSubscriber != null) {
+            stdOutReader.subscribe(streamSubscriber);
+        }
         return stdOutReader.read();
     }
-
     /**
      * Get standard error output of execution
      *
@@ -220,7 +242,7 @@ public class Exec {
     public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator) {
         try {
             Exec executor = new Exec(appendLineSeparator);
-            int ret = executor.exec(command, timeout);
+            int ret = executor.exec(command, timeout, null);
             synchronized (lock) {
                 if (logToOutput) {
                     log.info("Return code: {}", ret);
@@ -242,9 +264,10 @@ public class Exec {
     /**
      * Class represent async reader
      */
-    class StreamGobbler {
+    private class StreamGobbler implements Publisher<String>{
         private InputStream is;
         private StringBuilder data = new StringBuilder();
+        private Collection<Subscriber<? super String>> subscribers = new ConcurrentLinkedQueue<>();
 
         /**
          * Constructor of StreamGobbler
@@ -275,19 +298,30 @@ public class Exec {
                 try {
                     log.debug("Reading stream {}", is);
                     while (scanner.hasNextLine()) {
-                        data.append(scanner.nextLine());
+                        String line = scanner.nextLine();
+                        data.append(line);
                         if (appendLineSeparator) {
                             data.append(System.getProperty("line.separator"));
                         }
+                        subscribers.forEach(sub -> sub.onNext(line));
                     }
                     scanner.close();
                     return data.toString();
                 } catch (Exception e) {
+                    subscribers.forEach(sub -> sub.onError(e));
                     throw new CompletionException(e);
                 } finally {
                     scanner.close();
+                    subscribers.forEach(sub -> sub.onComplete());
                 }
             }, runnable -> new Thread(runnable).start());
         }
+
+        @Override
+        public void subscribe(Subscriber<? super String> subscriber) {
+            subscriber.onSubscribe(null);
+            subscribers.add(subscriber);
+        }
+
     }
 }

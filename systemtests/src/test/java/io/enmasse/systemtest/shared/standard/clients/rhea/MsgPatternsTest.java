@@ -6,6 +6,7 @@ package io.enmasse.systemtest.shared.standard.clients.rhea;
 
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import org.junit.jupiter.api.Disabled;
@@ -17,6 +18,16 @@ import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
 @Tag(ACCEPTANCE)
 class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
+
+    @Override
+    protected AbstractClient senderFactory() throws Exception {
+        return new RheaClientSender(logPath);
+    }
+
+    @Override
+    protected AbstractClient receiverFactory() throws Exception {
+        return new RheaClientReceiver(logPath);
+    }
 
     @Test
     void testBasicMessage() throws Exception {
@@ -31,7 +42,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
     @Test
     @DisplayName("testTopicSubscribe")
     void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
+        doTopicSubscribeTest();
     }
 
     @Test
@@ -43,7 +54,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
     @Test
     @DisplayName("testMessageSelectorTopic")
     void testMessageSelectorTopic() throws Exception {
-        doMessageSelectorTopicTest(new RheaClientSender(logPath), new RheaClientSender(logPath),
-                new RheaClientReceiver(logPath), new RheaClientReceiver(logPath));
+        doMessageSelectorTopicTest();
     }
+
 }

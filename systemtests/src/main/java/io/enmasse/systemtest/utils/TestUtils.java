@@ -355,9 +355,9 @@ public class TestUtils {
      * @param retries  Number of retries.
      * @param callable Code to execute.
      */
-    public static void runUntilPass(int retries, ThrowingCallable callable) throws InterruptedException {
+    public static void runUntilPass(int retries, ThrowingRunner callable) throws InterruptedException {
         runUntilPass(retries, () -> {
-            callable.call();
+            callable.run();
             return null;
         });
     }
@@ -693,12 +693,6 @@ public class TestUtils {
                     }
                     return inSync == routerPods.size();
                 }, new TimeoutBudget(10, TimeUnit.MINUTES));
-    }
-
-
-    @FunctionalInterface
-    public interface ThrowingCallable {
-        void call() throws Exception;
     }
 
     public static Path getFailedTestLogsPath(ExtensionContext extensionContext) {

@@ -6,7 +6,6 @@ package io.enmasse.systemtest.listener;
 
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -18,6 +17,7 @@ import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.ThrowingRunner;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -177,7 +177,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         saveKubernetesState("Test after all", context, throwable);
     }
 
-    private void handleCallBackError(String description, ExtensionContext context, ThrowableRunner runnable) throws Exception {
+    private void handleCallBackError(String description, ExtensionContext context, ThrowingRunner runnable) throws Exception {
         try {
             runnable.run();
         } catch (Exception ex) {
