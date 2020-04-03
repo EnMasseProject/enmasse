@@ -617,11 +617,6 @@
                 <artifactId>junit-platform-launcher</artifactId>
                 <version>${junit.platform.launcher.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-runner</artifactId>
-                <version>${junit.platform.runner.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>io.github.artsok</groupId>
