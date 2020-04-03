@@ -8,6 +8,9 @@
 * #4224: oauth2_proxy is now hosted by a new organisation (https://oauth2-proxy.github.io/oauth2-proxy/)
 
 
+## 0.31.1
+* #4241: Fix a race in upgrader logic that prevented upgrade from continuing
+
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
 *  #3686: Add metrics endpoint to controller-managerxs
