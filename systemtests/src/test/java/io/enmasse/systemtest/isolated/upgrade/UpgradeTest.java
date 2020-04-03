@@ -19,6 +19,7 @@ import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
@@ -431,6 +432,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
         TestUtils.waitForPodReady("enmasse-operator", infraNamespace);
 
+        Thread.sleep(30_000);
+
         KubeCMDClient.applyFromFile(infraNamespace, Paths.get(templateDir.toString(), "install", "components", "example-plans"));
         KubeCMDClient.applyFromFile(infraNamespace, Paths.get(templateDir.toString(), "install", "components", "example-authservices", "standard-authservice.yaml"));
 
@@ -507,9 +510,16 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
         olmManifestsImage = olmManifestsImage.replace(environment.getClusterInternalImageRegistry(), environment.getClusterExternalImageRegistry());
 
-        var results = Exec.execute(Arrays.asList("make", "-C", "custom-operator-registry", "FROM="+olmManifestsImage, "TAG="+customRegistryImageToPush), true);
-
-        assertTrue(results.getRetCode(), "custom operator registry image build failed ");
+        int retries = 2;
+        ExecutionResultData results = null;
+        while (retries > 0) {
+            results = Exec.execute(Arrays.asList("make", "-C", "custom-operator-registry", "FROM="+olmManifestsImage, "TAG="+customRegistryImageToPush), true);
+            if(results.getRetCode()) {
+                return customRegistryImageToUse;
+            }
+            retries--;
+        }
+        assertTrue(results != null && results.getRetCode(), "custom operator registry image build failed ");
 
         return customRegistryImageToUse;
     }
