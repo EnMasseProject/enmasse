@@ -71,7 +71,7 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
-                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
                 .withNewAuthenticationService()
                 .withName("standard-authservice")
                 .endAuthenticationService()
