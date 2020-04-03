@@ -102,6 +102,7 @@ func (c *CommandClient) doProcess() error {
 
 	receiver, err := session.NewReceiver(
 		amqp.LinkSourceAddress(c.commandResponseAddress),
+		amqp.LinkAddressDynamic(),
 	)
 	if err != nil {
 		return err
